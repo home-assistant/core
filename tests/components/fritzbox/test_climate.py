@@ -1,12 +1,14 @@
 """Tests for AVM Fritz!Box climate component."""
 
 from datetime import timedelta
+import re
 from unittest.mock import Mock, _Call, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from requests.exceptions import HTTPError
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -32,11 +34,22 @@ from homeassistant.components.fritzbox.climate import (
     PRESET_SUMMER,
 )
 from homeassistant.components.fritzbox.const import DOMAIN
+from homeassistant.components.fritzbox.services import (
+    ATTR_DURATION,
+    SERVICE_SET_WINDOW_CLOSE,
+    SERVICE_SET_WINDOW_OPEN,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_DEVICES, Platform
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    CONF_DEVICES,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import (
@@ -487,6 +500,118 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
 
     state = hass.states.get(f"{CLIMATE_DOMAIN}.new_climate")
     assert state
+
+
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        {ATTR_DURATION: 1},
+        {ATTR_DURATION: 30},
+        {ATTR_DURATION: 86400},
+    ],
+)
+async def test_set_window_open_good(
+    hass: HomeAssistant,
+    fritz: Mock,
+    service_data: dict[str, int],
+) -> None:
+    """Test set_window_open action with valid durations."""
+    device = FritzDeviceClimateMock()
+
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+    assert fritz().update_devices.call_count == 1
+
+    device_reg = dr.async_get(hass)
+    device_entry = device_reg.async_get_device(identifiers={(DOMAIN, device.ain)})
+    assert device_entry
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_WINDOW_OPEN,
+        {ATTR_DEVICE_ID: device_entry.id, **service_data},
+        True,
+    )
+    assert fritz().set_window_open.call_count == 1
+    assert fritz().set_window_open.call_args.args == (
+        device.ain,
+        service_data[ATTR_DURATION],
+        True,
+    )
+
+
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        (
+            {ATTR_DURATION: 0},
+            re.escape(
+                "value must be at least 1 for dictionary value @ data['duration']"
+            ),
+        ),
+        (
+            {ATTR_DURATION: 86401},
+            re.escape(
+                "value must be at most 86400 for dictionary value @ data['duration']"
+            ),
+        ),
+    ],
+)
+async def test_set_window_open_bad(
+    hass: HomeAssistant,
+    fritz: Mock,
+    service_data: tuple[dict[str, int], str],
+) -> None:
+    """Test set_window_open action with invalid durations."""
+    device = FritzDeviceClimateMock()
+
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+    assert fritz().update_devices.call_count == 1
+
+    device_reg = dr.async_get(hass)
+    device_entry = device_reg.async_get_device(identifiers={(DOMAIN, device.ain)})
+    assert device_entry
+
+    with pytest.raises(vol.error.MultipleInvalid, match=service_data[1]):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_WINDOW_OPEN,
+            {ATTR_DEVICE_ID: device_entry.id, **service_data[0]},
+            True,
+        )
+
+    assert fritz().set_window_open.call_count == 0
+
+
+async def test_set_window_close(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test set_window_close action."""
+    device = FritzDeviceClimateMock()
+
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+    assert fritz().update_devices.call_count == 1
+
+    device_reg = dr.async_get(hass)
+    device_entry = device_reg.async_get_device(identifiers={(DOMAIN, device.ain)})
+    assert device_entry
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_WINDOW_CLOSE,
+        {ATTR_DEVICE_ID: device_entry.id},
+        True,
+    )
+
+    assert fritz().set_window_open.call_count == 1
+    assert fritz().set_window_open.call_args.args == (
+        device.ain,
+        0,
+        True,
+    )
 
 
 @pytest.mark.parametrize(
