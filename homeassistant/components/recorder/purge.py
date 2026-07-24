@@ -90,11 +90,13 @@ def purge_old_data(
                 instance, session, events_batch_size, purge_before
             )
 
-        statistics_runs = _select_statistics_runs_to_purge(
+        statistics_runs, statistics_runs_has_more = _select_statistics_runs_to_purge(
             session, purge_before, instance.max_bind_vars
         )
-        short_term_statistics = _select_short_term_statistics_to_purge(
-            session, purge_before, instance.max_bind_vars
+        short_term_statistics, short_term_statistics_has_more = (
+            _select_short_term_statistics_to_purge(
+                session, purge_before, instance.max_bind_vars
+            )
         )
         if statistics_runs:
             _purge_statistics_runs(session, statistics_runs)
@@ -102,7 +104,11 @@ def purge_old_data(
         if short_term_statistics:
             _purge_short_term_statistics(session, short_term_statistics)
 
-        if has_more_to_purge or statistics_runs or short_term_statistics:
+        if (
+            has_more_to_purge
+            or statistics_runs_has_more
+            or short_term_statistics_has_more
+        ):
             # Return false, as we might not be done yet.
             _LOGGER.debug("Purging hasn't fully completed yet")
             return False
@@ -365,14 +371,16 @@ def _purge_unused_data_ids(
 
 def _select_statistics_runs_to_purge(
     session: Session, purge_before: datetime, max_bind_vars: int
-) -> list[int]:
-    """Return a list of statistic runs to purge.
+) -> tuple[list[int], bool]:
+    """Return a list of statistic runs to purge and if there may be more.
 
     Takes care to keep the newest run.
     """
     statistic_runs = session.execute(
         find_statistics_runs_to_purge(purge_before, max_bind_vars)
     ).all()
+    # Only a full batch can have more rows to purge
+    has_more = len(statistic_runs) == max_bind_vars
     statistic_runs_list = [run_id for (run_id,) in statistic_runs]
     # Exclude the newest statistics run
     if (
@@ -381,18 +389,20 @@ def _select_statistics_runs_to_purge(
         statistic_runs_list.remove(last_run)
 
     _LOGGER.debug("Selected %s statistic runs to remove", len(statistic_runs))
-    return statistic_runs_list
+    return statistic_runs_list, has_more
 
 
 def _select_short_term_statistics_to_purge(
     session: Session, purge_before: datetime, max_bind_vars: int
-) -> list[int]:
-    """Return a list of short term statistics to purge."""
+) -> tuple[list[int], bool]:
+    """Return a list of short term statistics to purge and if there may be more."""
     statistics = session.execute(
         find_short_term_statistics_to_purge(purge_before, max_bind_vars)
     ).all()
     _LOGGER.debug("Selected %s short term statistics to remove", len(statistics))
-    return [statistic_id for (statistic_id,) in statistics]
+    # Only a full batch can have more rows to purge
+    has_more = len(statistics) == max_bind_vars
+    return [statistic_id for (statistic_id,) in statistics], has_more
 
 
 def _select_legacy_detached_state_and_attributes_and_data_ids_to_purge(
