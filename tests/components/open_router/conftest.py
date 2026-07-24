@@ -81,6 +81,8 @@ def mock_config_entry(
         data={
             CONF_API_KEY: "bla",
         },
+        version=1,
+        minor_version=3,
         subentries_data=[
             ConfigSubentryData(
                 data=conversation_subentry_data,

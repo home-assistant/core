@@ -67,9 +67,6 @@ async def async_migrate_entry(
         for subentry in entry.subentries.values():
             current_value = subentry.data.get(CONF_WEB_SEARCH)
 
-            if isinstance(current_value, str):
-                continue
-
             updated_data = {
                 **subentry.data,
                 CONF_WEB_SEARCH: "plugin" if current_value is True else "off",
