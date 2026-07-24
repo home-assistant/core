@@ -21,6 +21,7 @@ class SupportedModels(StrEnum):
     CEILING_LIGHT = "ceiling_light"
     CURTAIN = "curtain"
     HYGROMETER = "hygrometer"
+    HYGROMETER_PRO = "hygrometer_pro"
     HYGROMETER_CO2 = "hygrometer_co2"
     LIGHT_STRIP = "light_strip"
     CONTACT = "contact"
@@ -121,6 +122,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.KEYPAD_VISION: SupportedModels.KEYPAD_VISION,
     SwitchbotModel.KEYPAD_VISION_PRO: SupportedModels.KEYPAD_VISION_PRO,
     SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
+    SwitchbotModel.METER_PRO: SupportedModels.HYGROMETER_PRO,
     SwitchbotModel.LOCK_VISION_PRO: SupportedModels.LOCK_VISION_PRO,
     SwitchbotModel.LOCK_VISION: SupportedModels.LOCK_VISION,
     SwitchbotModel.LOCK_PRO_WIFI: SupportedModels.LOCK_PRO_WIFI,
@@ -135,7 +137,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.METER: SupportedModels.HYGROMETER,
     SwitchbotModel.IO_METER: SupportedModels.HYGROMETER,
-    SwitchbotModel.METER_PRO: SupportedModels.HYGROMETER,
+    SwitchbotModel.METER_PRO: SupportedModels.HYGROMETER_PRO,
     SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
     SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
     SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,

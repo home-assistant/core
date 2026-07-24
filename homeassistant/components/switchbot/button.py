@@ -40,8 +40,8 @@ async def async_setup_entry(
             ]
         )
 
-    if isinstance(coordinator.device, switchbot.SwitchbotMeterProCO2):
-        entities.append(SwitchBotMeterProCO2SyncDateTimeButton(coordinator))
+    if isinstance(coordinator.device, switchbot.SwitchbotMeterPro):
+        entities.append(SwitchBotMeterProSyncDateTimeButton(coordinator))
 
     if (
         isinstance(coordinator.device, switchbot.SwitchbotLock)
@@ -109,10 +109,10 @@ class SwitchBotArtFramePrevButton(SwitchBotArtFrameButtonBase):
         await self._device.prev_image()
 
 
-class SwitchBotMeterProCO2SyncDateTimeButton(SwitchbotEntity, ButtonEntity):
-    """Button to sync date and time on Meter Pro CO2."""
+class SwitchBotMeterProSyncDateTimeButton(SwitchbotEntity, ButtonEntity):
+    """Button to sync date and time on Meter Pro (and Meter Pro CO2)."""
 
-    _device: switchbot.SwitchbotMeterProCO2
+    _device: switchbot.SwitchbotMeterPro
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "sync_datetime"
 
