@@ -5,13 +5,7 @@ import logging
 from typing import override
 
 from aidot.client import AidotClient
-from aidot.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_AES_KEY,
-    CONF_DEVICE_LIST,
-    CONF_ID,
-    CONF_TYPE,
-)
+from aidot.const import CONF_ACCESS_TOKEN
 from aidot.device_client import DeviceClient, DeviceStatusData
 from aidot.exceptions import AidotAuthFailed, AidotUserOrPassIncorrect
 
@@ -101,18 +95,9 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Update data async."""
         try:
-            data = await self.client.async_get_all_device()
+            current_devices = await self.client.async_get_all_device()
         except AidotAuthFailed as error:
             raise ConfigEntryAuthFailed from error
-        current_devices = {
-            device[CONF_ID]: device
-            for device in data[CONF_DEVICE_LIST]
-            if (
-                device[CONF_TYPE] == "light"
-                and CONF_AES_KEY in device
-                and device[CONF_AES_KEY][0] is not None
-            )
-        }
 
         removed_ids = set(self.device_coordinators) - set(current_devices)
         for dev_id in removed_ids:
@@ -139,7 +124,7 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
     def token_fresh_cb(self) -> None:
         """Update token."""
         self.hass.config_entries.async_update_entry(
-            self.config_entry, data=self.client.login_info.copy()
+            self.config_entry, data=self.client.login_info
         )
 
     async def async_auto_login(self) -> None:

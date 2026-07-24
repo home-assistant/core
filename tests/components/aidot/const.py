@@ -1,7 +1,5 @@
 """Const for the aidot tests."""
 
-from aidot.const import CONF_DEVICE_LIST
-
 TEST_COUNTRY = "US"
 TEST_EMAIL = "test@gmail.com"
 TEST_PASSWORD = "123456"
@@ -48,4 +46,4 @@ TEST_DEVICE1 = {
     },
 }
 
-TEST_DEVICE_LIST = {CONF_DEVICE_LIST: [TEST_DEVICE1]}
+TEST_DEVICE_LIST = {"device_id": TEST_DEVICE1}
