@@ -1,7 +1,7 @@
 """Sensor platform for mobile_app."""
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
@@ -82,6 +82,7 @@ async def async_setup_entry(
 class MobileAppSensor(MobileAppEntity, RestoreSensor):
     """Representation of a mobile app sensor."""
 
+    @override
     async def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""
         config = self._config
@@ -128,6 +129,7 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
         return state
 
     @callback
+    @override
     def _async_update_attr_from_config(self) -> None:
         """Update the entity from the config."""
         super()._async_update_attr_from_config()

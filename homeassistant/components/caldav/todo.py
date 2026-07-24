@@ -4,7 +4,7 @@ import asyncio
 from datetime import date, datetime, timedelta
 from functools import partial
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import caldav
 from caldav.lib.error import DAVError, NotFoundError
@@ -60,6 +60,16 @@ async def async_setup_entry(
     )
 
 
+def _get_todo_items(calendar: caldav.Calendar) -> list[TodoItem]:
+    """Fetch and parse todo items."""
+    results = calendar.search(todo=True, include_completed=True)
+    return [
+        todo_item
+        for resource in results
+        if (todo_item := _todo_item(resource)) is not None
+    ]
+
+
 def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
     """Convert a caldav Todo into a TodoItem."""
     if (
@@ -108,19 +118,11 @@ class WebDavTodoListEntity(TodoListEntity):
 
     async def async_update(self) -> None:
         """Update To-do list entity state."""
-        results = await self.hass.async_add_executor_job(
-            partial(
-                self._calendar.search,
-                todo=True,
-                include_completed=True,
-            )
+        self._attr_todo_items = await self.hass.async_add_executor_job(
+            _get_todo_items, self._calendar
         )
-        self._attr_todo_items = [
-            todo_item
-            for resource in results
-            if (todo_item := _todo_item(resource)) is not None
-        ]
 
+    @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         item_data: dict[str, Any] = {}
@@ -141,6 +143,7 @@ class WebDavTodoListEntity(TodoListEntity):
         except (requests.ConnectionError, requests.Timeout, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
+    @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a To-do item."""
         uid: str = cast(str, item.uid)
@@ -177,6 +180,7 @@ class WebDavTodoListEntity(TodoListEntity):
         except (requests.ConnectionError, requests.Timeout, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
+    @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete To-do items."""
         tasks = (
