@@ -302,6 +302,9 @@
     "cannot_connect": {
       "message": "An error occurred while trying to connect to the Proxmox VE instance."
     },
+    "entity_not_found": {
+      "message": "{kind} {id} was not found on any Proxmox VE node."
+    },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate."
     },
