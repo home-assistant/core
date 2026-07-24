@@ -1,0 +1,121 @@
+# serializer version: 1
+# name: test_diagnostics_empty_data
+  dict({
+    'activity_coordinator': dict({
+      'active_energy_burned': False,
+      'distance': False,
+      'floors': False,
+      'last_update_success': True,
+      'steps': False,
+      'total_calories': False,
+    }),
+    'body_coordinator': dict({
+      'body_fat': False,
+      'last_update_success': True,
+      'resting_heart_rate': False,
+      'weight': False,
+    }),
+    'config_entry': dict({
+      'auth_implementation': 'google_health',
+      'token': dict({
+        'access_token': '**REDACTED**',
+        'expires_at': 1784764800,
+        'refresh_token': '**REDACTED**',
+        'scope': 'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly https://www.googleapis.com/auth/googlehealth.profile.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/userinfo.profile',
+        'token_type': 'Bearer',
+      }),
+    }),
+    'sleep_coordinator': dict({
+      'last_update_success': True,
+      'sleep': False,
+    }),
+  })
+# ---
+# name: test_diagnostics_full_data
+  dict({
+    'activity_coordinator': dict({
+      'active_energy_burned': True,
+      'distance': True,
+      'floors': True,
+      'last_update_success': True,
+      'steps': True,
+      'total_calories': True,
+    }),
+    'body_coordinator': dict({
+      'body_fat': True,
+      'last_update_success': True,
+      'resting_heart_rate': True,
+      'weight': True,
+    }),
+    'config_entry': dict({
+      'auth_implementation': 'google_health',
+      'token': dict({
+        'access_token': '**REDACTED**',
+        'expires_at': 1784764800,
+        'refresh_token': '**REDACTED**',
+        'scope': 'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly https://www.googleapis.com/auth/googlehealth.profile.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/userinfo.profile',
+        'token_type': 'Bearer',
+      }),
+    }),
+    'sleep_coordinator': dict({
+      'last_update_success': True,
+      'sleep': True,
+    }),
+  })
+# ---
+# name: test_diagnostics_partial_scopes[scopes0]
+  dict({
+    'activity_coordinator': dict({
+      'active_energy_burned': True,
+      'distance': True,
+      'floors': True,
+      'last_update_success': True,
+      'steps': True,
+      'total_calories': True,
+    }),
+    'body_coordinator': None,
+    'config_entry': dict({
+      'auth_implementation': 'google_health',
+      'token': dict({
+        'access_token': '**REDACTED**',
+        'expires_at': 1784764800,
+        'refresh_token': '**REDACTED**',
+        'scope': 'https://www.googleapis.com/auth/googlehealth.profile.readonly https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly',
+        'token_type': 'Bearer',
+      }),
+    }),
+    'sleep_coordinator': None,
+  })
+# ---
+# name: test_diagnostics_update_failed
+  dict({
+    'activity_coordinator': dict({
+      'active_energy_burned': True,
+      'distance': True,
+      'floors': True,
+      'last_update_success': False,
+      'steps': True,
+      'total_calories': True,
+    }),
+    'body_coordinator': dict({
+      'body_fat': True,
+      'last_update_success': True,
+      'resting_heart_rate': True,
+      'weight': True,
+    }),
+    'config_entry': dict({
+      'auth_implementation': 'google_health',
+      'token': dict({
+        'access_token': '**REDACTED**',
+        'expires_at': 1784764800,
+        'refresh_token': '**REDACTED**',
+        'scope': 'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly https://www.googleapis.com/auth/googlehealth.profile.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/userinfo.profile',
+        'token_type': 'Bearer',
+      }),
+    }),
+    'sleep_coordinator': dict({
+      'last_update_success': True,
+      'sleep': True,
+    }),
+  })
+# ---
