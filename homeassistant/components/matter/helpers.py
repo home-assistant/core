@@ -76,6 +76,18 @@ def get_device_id(
     return f"{operational_instance_id}-{postfix}"
 
 
+def get_node_device_identifier(
+    server_info: ServerInfoMessage, node_id: int
+) -> tuple[str, str]:
+    """Return the device registry identifier for the node-level device of a node."""
+    fabric_id_hex = f"{server_info.compressed_fabric_id:016X}"
+    node_id_hex = f"{node_id:016X}"
+    return (
+        DOMAIN,
+        f"{ID_TYPE_DEVICE_ID}_{fabric_id_hex}-{node_id_hex}-MatterNodeDevice",
+    )
+
+
 @callback
 def node_from_ha_device_id(hass: HomeAssistant, ha_device_id: str) -> MatterNode | None:
     """Get node id from ha device id."""

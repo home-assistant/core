@@ -4,17 +4,25 @@ from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
 
+from matter_server.client.exceptions import ServerVersionTooOld
 from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import dataclass_to_dict
+from matter_server.common.models import EventType, NetworkTopology
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api import ActiveConnection
+from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ActiveConnection
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 
 from .adapter import MatterAdapter
-from .helpers import MissingNode, get_matter, node_from_ha_device_id
+from .helpers import (
+    MissingNode,
+    get_matter,
+    get_node_device_identifier,
+    node_from_ha_device_id,
+)
 
 ID = "id"
 TYPE = "type"
@@ -22,6 +30,9 @@ DEVICE_ID = "device_id"
 
 
 ERROR_NODE_NOT_FOUND = "node_not_found"
+
+# minimum server schema version that provides network topology
+TOPOLOGY_SCHEMA_VERSION = 13
 
 
 @callback
@@ -36,6 +47,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_open_commissioning_window)
     websocket_api.async_register_command(hass, websocket_remove_matter_fabric)
     websocket_api.async_register_command(hass, websocket_interview_node)
+    websocket_api.async_register_command(hass, websocket_network_topology)
+    websocket_api.async_register_command(hass, websocket_subscribe_network_topology)
 
 
 def async_get_node(
@@ -115,6 +128,8 @@ def async_handle_failed_command[**_P](
             connection.send_error(msg[ID], str(err.error_code), err.args[0])
         except MissingNode as err:
             connection.send_error(msg[ID], ERROR_NODE_NOT_FOUND, err.args[0])
+        except ServerVersionTooOld as err:
+            connection.send_error(msg[ID], ERR_NOT_SUPPORTED, err.args[0])
 
     return async_handle_failed_command_func
 
@@ -328,3 +343,123 @@ async def websocket_interview_node(
     """Interview a node."""
     await matter.matter_client.interview_node(node_id=node.node_id)
     connection.send_result(msg[ID])
+
+
+@callback
+def _topology_supported(
+    connection: ActiveConnection, msg: dict[str, Any], matter: MatterAdapter
+) -> bool:
+    """Check if the server supports network topology, send an error if not."""
+    server_info = matter.matter_client.server_info
+    if server_info is None or server_info.schema_version < TOPOLOGY_SCHEMA_VERSION:
+        connection.send_error(
+            msg[ID],
+            ERR_NOT_SUPPORTED,
+            "The Matter server does not support network topology "
+            f"(requires schema version {TOPOLOGY_SCHEMA_VERSION}).",
+        )
+        return False
+    return True
+
+
+@callback
+def _serialize_topology(
+    hass: HomeAssistant, matter: MatterAdapter, topology: NetworkTopology
+) -> dict[str, Any]:
+    """Serialize a topology snapshot, annotating nodes with HA device ids."""
+    server_info = matter.matter_client.server_info
+    dev_reg = dr.async_get(hass)
+    result: dict[str, Any] = dataclass_to_dict(topology)
+    for node in result["nodes"]:
+        device = None
+        if (node_id := node.get("node_id")) is not None and server_info is not None:
+            device = dev_reg.async_get_device(
+                identifiers={get_node_device_identifier(server_info, node_id)}
+            )
+        node["ha_device_id"] = device.id if device else None
+    return result
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/network_topology",
+        vol.Optional("refresh", default=False): bool,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter_adapter
+async def websocket_network_topology(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: MatterAdapter,
+) -> None:
+    """Get the network topology graph."""
+    if not _topology_supported(connection, msg, matter):
+        return
+    topology = await matter.matter_client.get_network_topology(refresh=msg["refresh"])
+    connection.send_result(msg[ID], _serialize_topology(hass, matter, topology))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/subscribe_network_topology",
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter_adapter
+async def websocket_subscribe_network_topology(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: MatterAdapter,
+) -> None:
+    """Subscribe to network topology updates."""
+    if not _topology_supported(connection, msg, matter):
+        return
+
+    initial_sent = False
+    # updates are full snapshots, so only the newest buffered one matters
+    buffered: NetworkTopology | None = None
+
+    @callback
+    def forward_topology(event: EventType, topology: NetworkTopology) -> None:
+        nonlocal buffered
+        if not initial_sent:
+            buffered = topology
+            return
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], _serialize_topology(hass, matter, topology)
+            )
+        )
+
+    # subscribe before the fetch: the fetch opts this client in server-side,
+    # and an update may arrive before the command result does
+    unsubscribe = matter.matter_client.subscribe_events(
+        callback=forward_topology,
+        event_filter=EventType.NETWORK_TOPOLOGY_UPDATED,
+    )
+    try:
+        topology = await matter.matter_client.get_network_topology()
+    except Exception:
+        unsubscribe()
+        raise
+    connection.subscriptions[msg[ID]] = unsubscribe
+    connection.send_result(msg[ID])
+    connection.send_message(
+        websocket_api.event_message(
+            msg[ID], _serialize_topology(hass, matter, topology)
+        )
+    )
+    if buffered is not None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], _serialize_topology(hass, matter, buffered)
+            )
+        )
+    initial_sent = True
