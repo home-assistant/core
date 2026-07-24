@@ -102,14 +102,7 @@
     },
     "sensor": {
       "activation_reason": {
-        "name": "Activation reason",
-        "state": {
-          "external": "External",
-          "manual": "Manual",
-          "none": "Inactive",
-          "schedule": "Schedule",
-          "setup": "Setup"
-        }
+        "name": "Activation reason"
       },
       "aqua_contour_error": {
         "name": "Error",

@@ -88,9 +88,6 @@ async def test_setup(
             {
                 Battery.battery_level.uuid: Battery.battery_level.encode(100),
                 Valve.remaining_open_time.uuid: Valve.remaining_open_time.encode(10),
-                Valve.activation_reason.uuid: Valve.activation_reason.encode(
-                    ActivationReason.SCHEDULE
-                ),
             },
             id="timer",
         ),
