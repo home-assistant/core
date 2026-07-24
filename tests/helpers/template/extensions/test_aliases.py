@@ -12,18 +12,18 @@ from homeassistant.helpers import (
 from homeassistant.helpers.entity_registry import COMPUTED_NAME
 
 from tests.common import MockConfigEntry
-from tests.helpers.template.helpers import assert_result_info, render_to_info
+from tests.helpers.template.helpers import assert_result_info, render, render_to_info
 
 
 @pytest.mark.parametrize(
     "template",
     [
-        "{{ aliases('sensor.fake') }}",
-        "{{ 'sensor.fake' | aliases }}",
-        "{{ aliases('unknown_slug') }}",
-        "{{ 'unknown_slug' | aliases }}",
-        "{{ aliases(42) }}",
-        "{{ 42 | aliases }}",
+        pytest.param("{{ aliases('sensor.fake') }}", id="unknown-entity-global"),
+        pytest.param("{{ 'sensor.fake' | aliases }}", id="unknown-entity-filter"),
+        pytest.param("{{ aliases('unknown_slug') }}", id="unknown-slug-global"),
+        pytest.param("{{ 'unknown_slug' | aliases }}", id="unknown-slug-filter"),
+        pytest.param("{{ aliases(42) }}", id="non-string-global"),
+        pytest.param("{{ 42 | aliases }}", id="non-string-filter"),
     ],
 )
 async def test_aliases_unknown(hass: HomeAssistant, template: str) -> None:
@@ -146,6 +146,10 @@ async def test_aliases_area_before_floor(
     assert_result_info(info, ["Area Alias"])
     assert info.rate_limit is None
 
+    info = render_to_info(hass, f"{{{{ '{area.id}' | aliases }}}}")
+    assert_result_info(info, ["Area Alias"])
+    assert info.rate_limit is None
+
 
 async def test_aliases_type_reaches_colliding_floor(
     hass: HomeAssistant,
@@ -182,6 +186,10 @@ async def test_aliases_type_restricts_registry(
     assert_result_info(info, [])
     assert info.rate_limit is None
 
+    info = render_to_info(hass, f"{{{{ '{area.id}' | aliases('entity') }}}}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
     info = render_to_info(hass, f"{{{{ aliases('{area.id}', 'floor') }}}}")
     assert_result_info(info, [])
     assert info.rate_limit is None
@@ -190,11 +198,13 @@ async def test_aliases_type_restricts_registry(
 @pytest.mark.parametrize(
     "template",
     [
-        "{{ aliases('sensor.fake', 'device') }}",
-        "{{ 'sensor.fake' | aliases('') }}",
+        pytest.param("{{ aliases('sensor.fake', 'device') }}", id="global-unknown"),
+        pytest.param("{{ 'sensor.fake' | aliases('device') }}", id="filter-unknown"),
+        pytest.param("{{ aliases('sensor.fake', '') }}", id="global-empty"),
+        pytest.param("{{ 'sensor.fake' | aliases('') }}", id="filter-empty"),
     ],
 )
 async def test_aliases_invalid_type(hass: HomeAssistant, template: str) -> None:
-    """Test an unknown alias_type raises a template error."""
-    with pytest.raises(TemplateError):
-        render_to_info(hass, template).result()
+    """Test an unknown alias_type raises a template error naming the valid values."""
+    with pytest.raises(TemplateError, match="alias_type must be omitted or one of"):
+        render(hass, template)
