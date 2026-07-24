@@ -574,6 +574,8 @@ class RoborockWetDryVacUpdateCoordinator(
         """Initialize."""
         super().__init__(hass, config_entry, device)
         self.api = api
+        self._setup_completed = False
+        self._unsub_push: Callable[[], None] | None = None
         supported_schema_ids = device.product.supported_schema_ids
         self.request_protocols = [
             protocol
@@ -582,9 +584,17 @@ class RoborockWetDryVacUpdateCoordinator(
         ]
 
     @override
+    async def _async_setup(self) -> None:
+        """Listen for state the device pushes on its own."""
+        self._unsub_push = await self.api.add_listener(self._handle_push)
+
+    @override
     async def _async_update_data(
         self,
     ) -> dict[RoborockDyadDataProtocol, StateType]:
+        if not self._setup_completed:
+            await self._async_setup()
+            self._setup_completed = True
         try:
             return await self.api.query_values(self.request_protocols)
         except RoborockException as ex:
@@ -593,6 +603,19 @@ class RoborockWetDryVacUpdateCoordinator(
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             ) from ex
+
+    @callback
+    def _handle_push(self, values: dict[RoborockDyadDataProtocol, StateType]) -> None:
+        """Apply an unsolicited state push from the device."""
+        self.async_set_updated_data({**(self.data or {}), **values})
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Unsubscribe the push listener on shutdown."""
+        if self._unsub_push is not None:
+            self._unsub_push()
+            self._unsub_push = None
+        await super().async_shutdown()
 
 
 class RoborockDataUpdateCoordinatorB01(DataUpdateCoordinator[B01Props]):
