@@ -172,7 +172,6 @@ LIGHTS: dict[DeviceCategory, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
             color_data=DPCode.COLOUR_DATA,
-            fallback_color_data_mode=FallbackColorDataMode.V2,
         ),
     ),
     DeviceCategory.HXD: (
