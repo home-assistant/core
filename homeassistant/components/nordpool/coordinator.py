@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the Nord Pool integration."""
 
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from typing import TYPE_CHECKING, override
 
 import aiohttp
@@ -55,21 +55,26 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
 
     def get_next_data_interval(self, now: datetime) -> datetime:
         """Compute next time an update should occur."""
-        next_data_run = now + timedelta(hours=1)
-        next_run = next_data_run.replace(minute=0, second=0, microsecond=0)
+        if self.has_current_day_data and self.has_tomorrow_data:
+            _date = get_nordpool_current_time().date() + timedelta(days=1)
+            _time = time()
+            next_run = datetime.combine(_date, _time, NORDPOOL_TIMEZONE)
+        else:
+            next_data_run = get_nordpool_current_time() + timedelta(hours=1)
+            next_run = next_data_run.replace(minute=0, second=0, microsecond=0)
         LOGGER.debug("Next data update at %s", next_run.astimezone(NORDPOOL_TIMEZONE))
-        return next_run
+        return next_run.astimezone(dt_util.UTC)
 
     def get_next_15_interval(self, now: datetime) -> datetime:
         """Compute next time we need to notify listeners."""
-        next_run = now + timedelta(minutes=15)
+        next_run = get_nordpool_current_time() + timedelta(minutes=15)
         next_minute = next_run.minute // 15 * 15
         next_run = next_run.replace(minute=next_minute, second=0, microsecond=0)
 
         LOGGER.debug(
             "Next listener update at %s", next_run.astimezone(NORDPOOL_TIMEZONE)
         )
-        return next_run
+        return next_run.astimezone(dt_util.UTC)
 
     @override
     async def async_shutdown(self) -> None:
@@ -104,6 +109,12 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
             self.async_set_update_error(err)
             return
         self.async_set_updated_data(data)
+        if self.has_current_day_data and self.has_tomorrow_data:
+            self.data_unsub = async_track_point_in_utc_time(
+                self.hass,
+                self.fetch_data,
+                self.get_next_data_interval(now),
+            )
 
     async def handle_data(self, initial: bool = False) -> DeliveryPeriodsData:
         """Fetch data from Nord Pool."""
@@ -173,3 +184,19 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
         """Return tomorrow's day data if available."""
         tomorrow = get_nordpool_current_time().date() + timedelta(days=1)
         return self.data.entries.get(tomorrow)
+
+    @property
+    def has_current_day_data(self) -> bool:
+        """Return True if current day's data is available."""
+        current_day = get_nordpool_current_time().date()
+        if self.data and self.data.entries:
+            return current_day in self.data.entries
+        return False
+
+    @property
+    def has_tomorrow_data(self) -> bool:
+        """Return True if tomorrow's data is available."""
+        tomorrow = get_nordpool_current_time().date() + timedelta(days=1)
+        if self.data and self.data.entries:
+            return tomorrow in self.data.entries
+        return False
