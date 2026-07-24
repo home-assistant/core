@@ -42,8 +42,6 @@ class PortainerContainerUpdateEntityDescription(UpdateEntityDescription):
 
     installed_version: Callable[[LocalImageInformation], str | None]
     latest_version: Callable[[PortainerImageUpdateStatus | None], str | None]
-    release_summary: Callable[[PortainerContainerData], str | None]
-    release_url: Callable[[LocalImageInformation], str | None]
     update_func: Callable[
         [Portainer, int, str],
         Awaitable[DockerContainer],
@@ -60,55 +58,21 @@ def _short_digest(digest: str) -> str:
     return f"{algorithm}{separator}{hex_digest[:12]}"
 
 
-def _image_labels(data: LocalImageInformation) -> dict[str, str]:
-    """Return the labels baked into the image itself."""
-    return (data.config or {}).get("Labels") or {}
-
-
-def _installed_version(data: LocalImageInformation) -> str | None:
-    """Return the digest of the image the container currently runs.
-
-    An image built locally and never pushed carries no repo digest.
-    """
-    if not data.repo_digests:
-        return None
-    return _short_digest(data.repo_digests[0].partition("@")[2])
-
-
-def _release_summary(data: PortainerContainerData) -> str | None:
-    """Return the image reference, with the image's own version label if it has one."""
-    image = data.container.image
-    if version := _image_labels(data.local_image).get(
-        "org.opencontainers.image.version"
-    ):
-        return f"{image} ({version})"
-    return image
-
-
-def _release_url(data: LocalImageInformation) -> str | None:
-    """Return the project URL the image advertises."""
-    labels = _image_labels(data)
-    url = labels.get("org.opencontainers.image.source") or labels.get(
-        "org.opencontainers.image.url"
-    )
-    if url and url.startswith(("http://", "https://")):
-        return url
-    return None
-
-
 CONTAINER_IMAGE: tuple[PortainerContainerUpdateEntityDescription] = (
     PortainerContainerUpdateEntityDescription(
         key="container_image_update",
         translation_key="container_image_update",
         entity_category=EntityCategory.CONFIG,
-        installed_version=_installed_version,
+        installed_version=lambda data: (
+            _short_digest(data.repo_digests[0].partition("@")[2])
+            if data.repo_digests
+            else None
+        ),
         latest_version=lambda data: (
             _short_digest(digest)
             if data is not None and (digest := data.registry_digest)
             else None
         ),
-        release_summary=_release_summary,
-        release_url=_release_url,
         update_func=(
             lambda portainer, endpoint_id, container_id: portainer.container_recreate(
                 endpoint_id=endpoint_id,
@@ -194,18 +158,6 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
     def latest_version(self) -> str | None:
         """Return latest version."""
         return self.entity_description.latest_version(self.container_data.image_status)
-
-    @override
-    @property
-    def release_summary(self) -> str | None:
-        """Return the release summary."""
-        return self.entity_description.release_summary(self.container_data)
-
-    @override
-    @property
-    def release_url(self) -> str | None:
-        """Return the release URL."""
-        return self.entity_description.release_url(self.container_data.local_image)
 
     @override
     async def async_install(
