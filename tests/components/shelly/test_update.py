@@ -7,11 +7,13 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.shelly.const import (
+    CONF_SLEEP_PERIOD,
     DOMAIN,
     GEN1_RELEASE_URL,
     GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
 )
+from homeassistant.components.shelly.update import _async_setup_block_entry
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
@@ -33,6 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -45,7 +48,7 @@ from . import (
     register_entity,
 )
 
-from tests.common import mock_restore_cache
+from tests.common import MockConfigEntry, mock_restore_cache
 
 
 @pytest.fixture(autouse=True)
@@ -401,6 +404,240 @@ async def test_rpc_update(
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-sys-fwupdate"
+
+
+async def test_rpc_lora_update(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC device LoRa update entity, idle state."""
+    entity_id = "update.test_name_lora_add_on_firmware"
+    monkeypatch.setitem(
+        mock_rpc_device.status,
+        "lora",
+        {
+            "fw_version": "1",
+            "available_updates": {
+                "stable": {"version": "2"},
+            },
+        },
+    )
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
+    assert state.attributes[ATTR_LATEST_VERSION] == "2"
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+    assert state.attributes[ATTR_RELEASE_URL] is None
+    supported_feat = state.attributes[ATTR_SUPPORTED_FEATURES]
+    assert supported_feat == UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-lora-loraupdate"
+
+
+async def test_rpc_lora_update_no_update_available(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC device LoRa update entity when no update is available."""
+    entity_id = "update.test_name_lora_add_on_firmware"
+    monkeypatch.setitem(
+        mock_rpc_device.status,
+        "lora",
+        {
+            "fw_version": "1",
+            "available_updates": {},
+        },
+    )
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
+    assert state.attributes[ATTR_LATEST_VERSION] == "1"
+
+
+async def test_rpc_lora_update_in_progress(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC device LoRa update entity, install and updating state."""
+    entity_id = "update.test_name_lora_add_on_firmware"
+    monkeypatch.setitem(
+        mock_rpc_device.status,
+        "lora",
+        {
+            "fw_version": "1",
+            "available_updates": {
+                "stable": {"version": "2"},
+            },
+        },
+    )
+    await init_integration(hass, 2)
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert mock_rpc_device.trigger_add_on_ota_update.call_count == 1
+
+    monkeypatch.setitem(
+        mock_rpc_device.status["lora"],
+        "update",
+        {"state": "updating", "progress": 50},
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 50
+
+
+async def test_rpc_lora_update_success(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC device LoRa update entity, update completed."""
+    entity_id = "update.test_name_lora_add_on_firmware"
+    monkeypatch.setitem(
+        mock_rpc_device.status,
+        "lora",
+        {
+            "fw_version": "1",
+            "update": {"state": "updating", "progress": 90},
+            "available_updates": {
+                "stable": {"version": "2"},
+            },
+        },
+    )
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 90
+
+    monkeypatch.setitem(
+        mock_rpc_device.status,
+        "lora",
+        {
+            "fw_version": "2",
+            "update": {"state": "idle"},
+            "available_updates": {
+                "stable": {"version": "2"},
+            },
+        },
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "2"
+    assert state.attributes[ATTR_LATEST_VERSION] == "2"
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+
+@pytest.mark.parametrize(
+    ("exc", "error"),
+    [
+        (
+            DeviceConnectionError,
+            "Device communication error occurred while triggering"
+            " OTA update for Test name",
+        ),
+        (
+            RpcCallError(-1, "error"),
+            "RPC call error occurred while triggering OTA update for Test name",
+        ),
+    ],
+)
+async def test_rpc_lora_update_errors(
+    hass: HomeAssistant,
+    exc: Exception,
+    error: str,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC device LoRa update connection/call errors."""
+    monkeypatch.setitem(
+        mock_rpc_device.status,
+        "lora",
+        {
+            "fw_version": "1",
+            "available_updates": {
+                "stable": {"version": "2"},
+            },
+        },
+    )
+    monkeypatch.setattr(
+        mock_rpc_device, "trigger_add_on_ota_update", AsyncMock(side_effect=exc)
+    )
+    await init_integration(hass, 2)
+
+    with pytest.raises(HomeAssistantError, match=error):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.test_name_lora_add_on_firmware"},
+            blocking=True,
+        )
+
+
+async def test_rpc_lora_update_auth_error(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC device LoRa update authentication error."""
+    monkeypatch.setitem(
+        mock_rpc_device.status,
+        "lora",
+        {
+            "fw_version": "1",
+            "available_updates": {
+                "stable": {"version": "2"},
+            },
+        },
+    )
+    monkeypatch.setattr(
+        mock_rpc_device,
+        "trigger_add_on_ota_update",
+        AsyncMock(side_effect=InvalidAuthError),
+    )
+    entry = await init_integration(hass, 2)
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: "update.test_name_lora_add_on_firmware"},
+        blocking=True,
+    )
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
 
 
 async def test_rpc_sleeping_update(
@@ -779,3 +1016,113 @@ async def test_rpc_update_auth_error(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == entry.entry_id
+
+
+async def test_async_setup_block_entry_skips_sleeping_device(
+    hass: HomeAssistant,
+) -> None:
+    """Test _async_setup_block_entry adds no entities for a sleeping BLOCK device.
+
+    The integration never forwards the update platform for sleeping BLOCK
+    devices, so this internal guard is exercised directly.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_SLEEP_PERIOD: 1000})
+    async_add_entities = Mock()
+
+    _async_setup_block_entry(hass, entry, async_add_entities)
+
+    async_add_entities.assert_not_called()
+
+
+async def test_block_sleeping_device_no_update_entity(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+) -> None:
+    """Test no update entity is created for a sleeping BLOCK device."""
+    await init_integration(hass, 1, sleep_period=1000)
+
+    assert hass.states.get("update.test_name_firmware") is None
+
+
+async def test_rpc_lora_update_connection_error_while_in_progress(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC LoRa update swallows connection error if update is still in progress."""
+    monkeypatch.setitem(
+        mock_rpc_device.status,
+        "lora",
+        {
+            "fw_version": "1",
+            "available_updates": {
+                "stable": {"version": "2"},
+            },
+        },
+    )
+
+    async def _trigger_and_become_unreachable() -> None:
+        """Simulate the device starting the update before dropping off the network."""
+        mock_rpc_device.status["lora"]["update"] = {"state": "updating", "progress": 0}
+        raise DeviceConnectionError
+
+    monkeypatch.setattr(
+        mock_rpc_device,
+        "trigger_add_on_ota_update",
+        AsyncMock(side_effect=_trigger_and_become_unreachable),
+    )
+    await init_integration(hass, 2)
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: "update.test_name_lora_add_on_firmware"},
+        blocking=True,
+    )
+
+
+async def test_rpc_update_unknown_ota_event(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC update OTA callback ignores unrelated event types."""
+    entity_id = "update.test_name_firmware"
+    monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
+    monkeypatch.setitem(
+        mock_rpc_device.status["sys"],
+        "available_updates",
+        {
+            "stable": {"version": "2"},
+        },
+    )
+    await init_integration(hass, 2)
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "event": "ota_begin",
+                    "id": 1,
+                    "ts": 1668522399.2,
+                }
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+
+    platform = next(iter(entity_platform.async_get_platforms(hass, DOMAIN)))
+    entity = platform.entities[entity_id]
+    entity._ota_progress_callback({"event": "unknown_event"})
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 0
