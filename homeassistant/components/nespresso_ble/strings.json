@@ -1,0 +1,66 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "The Nespresso machine discovered via Bluetooth."
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "machine_status": {
+        "name": "Machine status",
+        "state": {
+          "brewing": "Brewing",
+          "capsule_reading": "Reading capsule",
+          "cleaning": "Cleaning",
+          "cooldown": "Cooling down",
+          "descaling": "Descaling",
+          "descaling_ready": "Descaling ready",
+          "emptying": "Emptying",
+          "error": "Error",
+          "factory_reset": "Factory reset",
+          "heating": "Heating",
+          "initializing": "Initializing",
+          "maintenance_menu": "Maintenance menu",
+          "overheated": "Overheated",
+          "paused": "Paused",
+          "power_save": "Power save",
+          "ready": "Ready",
+          "rinsing": "Rinsing",
+          "service_mode": "Service mode",
+          "setup": "Setup",
+          "standby": "Standby",
+          "tank_empty": "Tank empty",
+          "updating": "Updating"
+        }
+      },
+      "water_hardness": {
+        "name": "Water hardness"
+      }
+    }
+  },
+  "exceptions": {
+    "device_not_found": {
+      "message": "Could not find Nespresso device with address {address}: {reason}"
+    },
+    "update_failed": {
+      "message": "Unable to fetch data from the machine: {error}"
+    }
+  }
+}
