@@ -10,7 +10,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict, TypeVar, cast
+import typing
+from typing import Any, Generic, Literal, NotRequired, TypedDict, TypeVar, cast
 
 import voluptuous as vol
 
@@ -57,6 +58,169 @@ STEP_ID_OPTIONAL_STEPS = {
     FlowResultType.MENU,
     FlowResultType.SHOW_PROGRESS,
 }
+
+
+ConditionOperator = Literal["eq", "not_eq", "in", "not_in", "exists", "not_exists"]
+
+
+class FieldCondition(TypedDict):
+    """Condition matching a sibling field's value in the same step."""
+
+    field: str
+    operator: NotRequired[ConditionOperator]
+    value: NotRequired[Any]
+
+
+class AndCondition(TypedDict):
+    """Condition that matches when all sub-conditions match."""
+
+    condition: Literal["and"]
+    conditions: list[Condition]
+
+
+class OrCondition(TypedDict):
+    """Condition that matches when any sub-condition matches."""
+
+    condition: Literal["or"]
+    conditions: list[Condition]
+
+
+class NotCondition(TypedDict):
+    """Condition that matches when no sub-condition matches."""
+
+    condition: Literal["not"]
+    conditions: list[Condition]
+
+
+type Condition = FieldCondition | AndCondition | OrCondition | NotCondition
+
+
+# Sentinel distinguishing an absent field from an explicit ``None`` value.
+_MISSING = object()
+
+
+def _condition_value_is_empty(value: Any) -> bool:
+    return value is _MISSING or value is None or value == ""
+
+
+def _strict_equal(actual: Any, value: Any) -> bool:
+    """Compare by value and type, so a boolean never equals a number.
+
+    A missing field and an omitted condition value are both undefined, so they
+    equal each other but nothing else, and containers never compare equal,
+    matching a renderer where a missing value is distinct from ``None`` and
+    separately parsed lists or dicts are distinct references.
+    """
+    if actual is _MISSING or value is _MISSING:
+        return actual is value
+    if isinstance(actual, (list, tuple, dict)) or isinstance(
+        value, (list, tuple, dict)
+    ):
+        return False
+    if isinstance(actual, bool) != isinstance(value, bool):
+        return False
+    return bool(actual == value)
+
+
+def _evaluate_field_condition(
+    condition: Mapping[str, Any], data: Mapping[str, Any]
+) -> bool:
+    actual = data.get(condition["field"], _MISSING)
+    value = condition.get("value", _MISSING)
+    match condition.get("operator", "eq"):
+        case "eq":
+            return _strict_equal(actual, value)
+        case "not_eq":
+            return not _strict_equal(actual, value)
+        case "in":
+            return isinstance(value, (list, tuple)) and any(
+                _strict_equal(actual, item) for item in value
+            )
+        case "not_in":
+            return isinstance(value, (list, tuple)) and not any(
+                _strict_equal(actual, item) for item in value
+            )
+        case "exists":
+            return not _condition_value_is_empty(actual)
+        case "not_exists":
+            return _condition_value_is_empty(actual)
+        case _:
+            return False
+
+
+def evaluate_condition(condition: Mapping[str, Any], data: Mapping[str, Any]) -> bool:
+    """Evaluate a field condition against submitted step data."""
+    if (combinator := condition.get("condition")) is not None:
+        conditions: list[Mapping[str, Any]] = condition.get("conditions", [])
+        match combinator:
+            case "and":
+                return all(evaluate_condition(sub, data) for sub in conditions)
+            case "or":
+                return any(evaluate_condition(sub, data) for sub in conditions)
+            case "not":
+                return not any(evaluate_condition(sub, data) for sub in conditions)
+            case _:
+                return False
+    return _evaluate_field_condition(condition, data)
+
+
+def is_field_visible(
+    visible_condition: bool | Mapping[str, Any] | list[Mapping[str, Any]],
+    data: Mapping[str, Any],
+) -> bool:
+    """Return True when a field's visible condition matches the submitted data.
+
+    A list of conditions is combined with AND.
+    """
+    if visible_condition is True:
+        return True
+    if visible_condition is False:
+        return False
+    # An empty list has no condition to fail, so the field is visible.
+    conditions = (
+        visible_condition
+        if isinstance(visible_condition, list)
+        else [visible_condition]
+    )
+    return all(evaluate_condition(condition, data) for condition in conditions)
+
+
+class Required(vol.Required):
+    """Required schema marker that can be conditionally shown.
+
+    Unless the ``visible`` condition matches the other fields, the field is not
+    rendered, is treated as optional, and its value is omitted from the
+    submitted data. A list of conditions is combined with AND.
+    """
+
+    def __init__(
+        self,
+        *args: Any,
+        visible: bool | Condition | list[Condition] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a required marker."""
+        super().__init__(*args, **kwargs)
+        self.visible = visible
+
+
+class Optional(vol.Optional):
+    """Optional schema marker that can be conditionally shown.
+
+    Unless the ``visible`` condition matches the other fields, the field is not
+    rendered and its value is omitted from the submitted data. A list of
+    conditions is combined with AND.
+    """
+
+    def __init__(
+        self,
+        *args: Any,
+        visible: bool | Condition | list[Condition] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize an optional marker."""
+        super().__init__(*args, **kwargs)
+        self.visible = visible
 
 
 _FlowContextT = TypeVar("_FlowContextT", bound="FlowContext", default="FlowContext")
@@ -131,8 +295,8 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     description: str | None
     errors: dict[str, str] | None
     extra: str
-    flow_id: Required[str]
-    handler: Required[_HandlerT]
+    flow_id: typing.Required[str]
+    handler: typing.Required[_HandlerT]
     last_step: bool | None
     menu_options: Container[str]
     preview: str | None
@@ -351,8 +515,11 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             data_schema := cur_step.get("data_schema")
         ) is not None and user_input is not None:
             data_schema = cast(vol.Schema, data_schema)
+            validation_schema, validation_input = _strip_hidden_fields(
+                data_schema, user_input
+            )
             try:
-                user_input = data_schema(user_input)
+                user_input = validation_schema(validation_input)
             except vol.Invalid as ex:
                 raised_errors = [ex]
                 if isinstance(ex, vol.MultipleInvalid):
@@ -937,3 +1104,120 @@ class section:
     def __call__(self, value: Any) -> Any:
         """Validate input."""
         return self.schema(value)
+
+
+def _schema_has_visible(data_schema: vol.Schema) -> bool:
+    """Return True if the schema (or a nested section) has a visible marker."""
+    if not isinstance(data_schema.schema, dict):
+        return False
+    for key, val in data_schema.schema.items():
+        if getattr(key, "visible", None) is not None:
+            return True
+        if isinstance(val, section) and _schema_has_visible(val.schema):
+            return True
+    return False
+
+
+def _strip_hidden_fields[_T: Mapping[str, Any]](
+    data_schema: vol.Schema, user_input: _T
+) -> tuple[vol.Schema, _T]:
+    """Remove currently hidden fields from the schema and the submitted input.
+
+    A field whose ``visible`` condition does not match is treated as optional and
+    its value is omitted, so a hidden required field must not fail validation and
+    a hidden field must not inject a default or keep a stale value. Conditions are
+    evaluated against the input with schema defaults applied, so a field omitted
+    by the client resolves the same as one that was submitted. Because a hidden
+    field holds no value, visibility is resolved until stable: once hidden, a
+    field reads as absent to the conditions of the other fields. Returns the
+    schema and input unchanged when every field is visible, leaving schemas
+    without visibility conditions untouched.
+    """
+    if not _schema_has_visible(data_schema):
+        return data_schema, user_input
+
+    eval_data = dict(user_input)
+    conditions: dict[Any, Any] = {}
+    for key in data_schema.schema:
+        name = key.schema if isinstance(key, vol.Marker) else key
+        if (
+            isinstance(key, (vol.Optional, vol.Required))
+            and name not in eval_data
+            and not isinstance(key.default, vol.Undefined)
+        ):
+            eval_data[name] = key.default()
+        if (visible_condition := getattr(key, "visible", None)) is not None:
+            conditions[name] = visible_condition
+
+    # Match the frontend: hide fields in schema order, dropping each value before
+    # the next field's condition is evaluated.
+    hidden_names: set[Any] = set()
+    changed = True
+    while changed:
+        changed = False
+        for name, condition in conditions.items():
+            if name not in hidden_names and not is_field_visible(condition, eval_data):
+                hidden_names.add(name)
+                eval_data.pop(name, None)
+                changed = True
+
+    new_schema: dict[Any, Any] = {}
+    new_input: dict[str, Any] | None = None
+    for key, val in data_schema.schema.items():
+        name = key.schema if isinstance(key, vol.Marker) else key
+
+        if name in hidden_names:
+            if name in user_input:
+                if new_input is None:
+                    new_input = dict(user_input)
+                new_input.pop(name, None)
+            continue
+
+        if isinstance(val, section) and isinstance(
+            section_input := eval_data.get(name), Mapping
+        ):
+            inner_schema, inner_input = _strip_hidden_fields(val.schema, section_input)
+            if inner_schema is not val.schema:
+                new_val = copy.copy(val)
+                new_val.schema = inner_schema
+                new_schema[key] = new_val
+                if new_input is None:
+                    new_input = dict(user_input)
+                new_input[name] = inner_input
+                continue
+
+        new_schema[key] = val
+
+    if new_input is None and len(new_schema) == len(data_schema.schema):
+        return data_schema, user_input
+    return (
+        vol.Schema(new_schema, extra=data_schema.extra, required=data_schema.required),
+        cast(_T, new_input if new_input is not None else user_input),
+    )
+
+
+def add_visible_conditions_to_serialized_schema(
+    data_schema: vol.Schema, serialized: list[dict[str, Any]]
+) -> None:
+    """Add `visible` conditions from schema markers to the serialized fields.
+
+    `voluptuous_serialize` does not emit marker metadata beyond `description`, so
+    a marker's `visible` argument is injected here after conversion.
+    Recurses into serialized sections.
+    """
+    if not isinstance(data_schema.schema, dict):
+        return
+
+    fields_by_name: dict[Any, tuple[Any, Any]] = {}
+    for key, val in data_schema.schema.items():
+        name = key.schema if isinstance(key, vol.Marker) else key
+        fields_by_name[name] = (key, val)
+
+    for field in serialized:
+        if (entry := fields_by_name.get(field.get("name"))) is None:
+            continue
+        key, val = entry
+        if (visible_condition := getattr(key, "visible", None)) is not None:
+            field["visible"] = visible_condition
+        if isinstance(val, section) and isinstance(field.get("schema"), list):
+            add_visible_conditions_to_serialized_schema(val.schema, field["schema"])

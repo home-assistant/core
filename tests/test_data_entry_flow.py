@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
+import voluptuous_serialize
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import Event, HomeAssistant, callback
@@ -1301,3 +1302,409 @@ async def test_show_advanced_options(
         "removed in HA Core 2027.6. Use a user friendly way to present additional "
         "options in the UI, for example a section instead"
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("condition", "data", "expected"),
+    [
+        ({"field": "a", "value": 1}, {"a": 1}, True),
+        ({"field": "a", "value": 1}, {"a": 2}, False),
+        ({"field": "a", "operator": "eq", "value": "x"}, {"a": "x"}, True),
+        ({"field": "a", "operator": "not_eq", "value": 1}, {"a": 2}, True),
+        ({"field": "a", "operator": "not_eq", "value": 1}, {"a": 1}, False),
+        ({"field": "a", "value": True}, {"a": 1}, False),
+        ({"field": "a", "value": 1}, {"a": True}, False),
+        # an absent field is not equal to an explicit None value
+        ({"field": "a", "value": None}, {}, False),
+        ({"field": "a", "value": None}, {"a": None}, True),
+        # an omitted condition value only matches an absent field
+        ({"field": "a"}, {}, True),
+        ({"field": "a"}, {"a": None}, False),
+        ({"field": "a"}, {"a": "x"}, False),
+        ({"field": "a", "operator": "not_eq"}, {}, False),
+        ({"field": "a", "operator": "not_eq"}, {"a": "x"}, True),
+        # containers never compare equal
+        ({"field": "a", "value": ["x"]}, {"a": ["x"]}, False),
+        ({"field": "a", "operator": "not_eq", "value": ["x"]}, {"a": ["x"]}, True),
+        ({"field": "a", "operator": "in", "value": [["x"]]}, {"a": ["x"]}, False),
+        ({"field": "a", "operator": "in", "value": [True]}, {"a": 1}, False),
+        ({"field": "a", "operator": "in", "value": [1, 2]}, {"a": 2}, True),
+        ({"field": "a", "operator": "in", "value": [1, 2]}, {"a": 3}, False),
+        ({"field": "a", "operator": "in", "value": "notalist"}, {"a": "n"}, False),
+        ({"field": "a", "operator": "not_in", "value": [1, 2]}, {"a": 3}, True),
+        ({"field": "a", "operator": "exists"}, {"a": "x"}, True),
+        ({"field": "a", "operator": "exists"}, {"a": ""}, False),
+        ({"field": "a", "operator": "exists"}, {}, False),
+        ({"field": "a", "operator": "not_exists"}, {}, True),
+        ({"field": "a", "operator": "not_exists"}, {"a": None}, True),
+        ({"field": "a", "operator": "not_exists"}, {"a": 0}, False),
+        (
+            {"condition": "and", "conditions": [{"field": "a", "value": 1}]},
+            {"a": 1},
+            True,
+        ),
+        (
+            {
+                "condition": "and",
+                "conditions": [{"field": "a", "value": 1}, {"field": "b", "value": 2}],
+            },
+            {"a": 1, "b": 3},
+            False,
+        ),
+        (
+            {
+                "condition": "or",
+                "conditions": [{"field": "a", "value": 1}, {"field": "b", "value": 2}],
+            },
+            {"a": 9, "b": 2},
+            True,
+        ),
+        (
+            {"condition": "not", "conditions": [{"field": "a", "value": 1}]},
+            {"a": 9},
+            True,
+        ),
+        (
+            {"condition": "not", "conditions": [{"field": "a", "value": 1}]},
+            {"a": 1},
+            False,
+        ),
+        ({"condition": "unknown", "conditions": []}, {}, False),
+    ],
+)
+def test_evaluate_condition(condition: dict, data: dict, expected: bool) -> None:
+    """Test the condition evaluator mirrors the frontend semantics."""
+    assert data_entry_flow.evaluate_condition(condition, data) is expected
+
+
+@pytest.mark.parametrize(
+    ("visible", "data", "expected"),
+    [
+        (True, {}, True),
+        (False, {}, False),
+        ([], {}, True),
+        ({"field": "a", "value": 1}, {"a": 1}, True),
+        ({"field": "a", "value": 1}, {"a": 2}, False),
+        (
+            [{"field": "a", "value": 1}, {"field": "b", "value": 2}],
+            {"a": 1, "b": 2},
+            True,
+        ),
+        (
+            [{"field": "a", "value": 1}, {"field": "b", "value": 2}],
+            {"a": 1, "b": 9},
+            False,
+        ),
+    ],
+)
+def test_is_field_visible(
+    visible: bool | dict | list, data: dict, expected: bool
+) -> None:
+    """Test visible condition resolution mirrors the frontend semantics."""
+    assert data_entry_flow.is_field_visible(visible, data) is expected
+
+
+async def test_hidden_required_field_skips_validation(
+    manager: MockFlowManager,
+) -> None:
+    """Test a required field is only enforced while it is not hidden."""
+    schema = vol.Schema(
+        {
+            vol.Required("use_tls", default=True): bool,
+            data_entry_flow.Required(
+                "cert_path",
+                visible={"field": "use_tls", "value": True},
+            ): str,
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # cert_path is hidden (use_tls is False), so a missing value validates
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {"use_tls": False})
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"use_tls": False}
+
+    # cert_path is visible (use_tls is True) and missing, so validation fails
+    form = await manager.async_init("test")
+    with pytest.raises(data_entry_flow.InvalidData) as err:
+        await manager.async_configure(form["flow_id"], {"use_tls": True})
+    assert "cert_path" in err.value.schema_errors
+
+    # cert_path is visible and provided, so validation passes
+    form = await manager.async_init("test")
+    result = await manager.async_configure(
+        form["flow_id"], {"use_tls": True, "cert_path": "cert.pem"}
+    )
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"use_tls": True, "cert_path": "cert.pem"}
+
+
+async def test_hidden_field_is_omitted_from_data(manager: MockFlowManager) -> None:
+    """Test a hidden field injects no default and drops a stale value."""
+    schema = vol.Schema(
+        {
+            vol.Required("use_tls", default=True): bool,
+            data_entry_flow.Optional(
+                "cert_path",
+                default="default.pem",
+                visible={"field": "use_tls", "value": True},
+            ): str,
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # cert_path is hidden, so its default is not injected into the data
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {"use_tls": False})
+    assert result["data"] == {"use_tls": False}
+
+    # a stale value for a hidden field is dropped
+    form = await manager.async_init("test")
+    result = await manager.async_configure(
+        form["flow_id"], {"use_tls": False, "cert_path": "stale.pem"}
+    )
+    assert result["data"] == {"use_tls": False}
+
+    # while visible, the default is applied as usual
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {"use_tls": True})
+    assert result["data"] == {"use_tls": True, "cert_path": "default.pem"}
+
+
+async def test_hidden_required_field_in_section(manager: MockFlowManager) -> None:
+    """Test conditional required validation inside a section."""
+    schema = vol.Schema(
+        {
+            vol.Required("advanced"): data_entry_flow.section(
+                vol.Schema(
+                    {
+                        vol.Required("mode", default="simple"): str,
+                        data_entry_flow.Required(
+                            "token",
+                            visible={"field": "mode", "value": "advanced"},
+                        ): str,
+                    }
+                ),
+            )
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # token is hidden (mode is "simple"), missing value validates
+    form = await manager.async_init("test")
+    result = await manager.async_configure(
+        form["flow_id"], {"advanced": {"mode": "simple"}}
+    )
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+
+    # token is visible (mode is "advanced") and missing, validation fails
+    form = await manager.async_init("test")
+    with pytest.raises(data_entry_flow.InvalidData):
+        await manager.async_configure(
+            form["flow_id"], {"advanced": {"mode": "advanced"}}
+        )
+
+
+async def test_hidden_condition_uses_defaults(manager: MockFlowManager) -> None:
+    """Test conditions see schema defaults for fields the client omitted."""
+    schema = vol.Schema(
+        {
+            vol.Optional("mode", default="simple"): str,
+            data_entry_flow.Required(
+                "token",
+                visible={"field": "mode", "value": "advanced"},
+            ): str,
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # "mode" is omitted but defaults to "simple", so "token" is hidden
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {})
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"mode": "simple"}
+
+
+async def test_hidden_section_is_dropped(manager: MockFlowManager) -> None:
+    """Test a hidden section is removed entirely, not kept as an empty dict."""
+    schema = vol.Schema(
+        {
+            vol.Required("enable_advanced", default=False): bool,
+            data_entry_flow.Required(
+                "advanced",
+                visible={"field": "enable_advanced", "value": True},
+            ): data_entry_flow.section(
+                vol.Schema({vol.Required("token"): str}),
+            ),
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # the section is hidden, so a missing section validates
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {"enable_advanced": False})
+    assert result["data"] == {"enable_advanced": False}
+
+    # stale nested data for the hidden section is dropped
+    form = await manager.async_init("test")
+    result = await manager.async_configure(
+        form["flow_id"], {"enable_advanced": False, "advanced": {"token": "stale"}}
+    )
+    assert result["data"] == {"enable_advanced": False}
+
+
+async def test_hidden_field_reads_as_absent_to_other_conditions(
+    manager: MockFlowManager,
+) -> None:
+    """Test a hidden field holds no value for the conditions of other fields."""
+    schema = vol.Schema(
+        {
+            vol.Optional("mode", default="simple"): str,
+            # visible only while "advanced", so its default must not leak to "extra"
+            data_entry_flow.Optional(
+                "token",
+                default="from_default",
+                visible={"field": "mode", "value": "advanced"},
+            ): str,
+            data_entry_flow.Required(
+                "extra",
+                visible={"field": "token", "operator": "exists"},
+            ): str,
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # "token" is hidden, so it reads as absent and hides the required "extra"
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {"mode": "simple"})
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"mode": "simple"}
+
+    # "token" is visible, so "extra" stays required
+    form = await manager.async_init("test")
+    with pytest.raises(data_entry_flow.InvalidData) as err:
+        await manager.async_configure(form["flow_id"], {"mode": "advanced"})
+    assert "extra" in err.value.schema_errors
+
+
+async def test_hidden_fields_resolved_in_schema_order(
+    manager: MockFlowManager,
+) -> None:
+    """Test a hidden field drops before a later field's condition is evaluated."""
+    schema = vol.Schema(
+        {
+            # Always hidden but defaulted; must read as absent to "extra" below it.
+            data_entry_flow.Optional(
+                "token",
+                default="from_default",
+                visible=False,
+            ): str,
+            data_entry_flow.Required(
+                "extra",
+                visible={"field": "token", "operator": "not_exists"},
+            ): str,
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # "token" is hidden and drops out, so "extra" sees it as absent and stays required
+    form = await manager.async_init("test")
+    with pytest.raises(data_entry_flow.InvalidData) as err:
+        await manager.async_configure(form["flow_id"], {})
+    assert "extra" in err.value.schema_errors
+
+
+async def test_hidden_field_in_defaulted_section(manager: MockFlowManager) -> None:
+    """Test nested hidden fields are stripped for an omitted defaulted section."""
+    schema = vol.Schema(
+        {
+            vol.Optional("advanced", default={"mode": "simple"}): (
+                data_entry_flow.section(
+                    vol.Schema(
+                        {
+                            vol.Required("mode", default="simple"): str,
+                            data_entry_flow.Required(
+                                "token",
+                                visible={"field": "mode", "value": "advanced"},
+                            ): str,
+                        }
+                    ),
+                )
+            )
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # the section is omitted; its default hides the nested required "token"
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {})
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"advanced": {"mode": "simple"}}
+
+
+def test_add_visible_conditions_to_serialized_schema() -> None:
+    """Test visible conditions are injected into the serialized schema."""
+    condition = {"field": "use_tls", "value": True}
+    schema = vol.Schema(
+        {
+            vol.Required("use_tls", default=True): bool,
+            data_entry_flow.Required("cert_path", visible=condition): str,
+        }
+    )
+    serialized = voluptuous_serialize.convert(
+        schema, custom_serializer=cv.custom_serializer
+    )
+    data_entry_flow.add_visible_conditions_to_serialized_schema(schema, serialized)
+
+    fields = {field["name"]: field for field in serialized}
+    assert "visible" not in fields["use_tls"]
+    assert fields["cert_path"]["visible"] == condition
