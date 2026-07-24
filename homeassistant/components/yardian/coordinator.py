@@ -69,6 +69,9 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
         self._model = entry.data["model"]
         self._serial = entry.data.get("serialNumber")
 
+        # Lock to serialize API commands and prevent race conditions
+        self.api_lock = asyncio.Lock()
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
@@ -90,10 +93,10 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
         )
         try:
             async with asyncio.timeout(10):
-                # Fetch device state and operation info; specific exceptions are
-                # handled by the outer block to avoid double-logging.
-                dev_state = await self.controller.fetch_device_state()
-                oper_info = await self.controller.fetch_oper_info()
+                # Acquire the lock so we don't fetch stale data while a command is firing
+                async with self.api_lock:
+                    dev_state = await self.controller.fetch_device_state()
+                    oper_info = await self.controller.fetch_oper_info()
 
         except TimeoutError as e:
             raise UpdateFailed("Timeout communicating with device") from e
