@@ -204,11 +204,20 @@ def mock_job_api_attention(
 
 
 @pytest.fixture
+def mock_file_metadata_api() -> Generator[dict[str, Any]]:
+    """Mock PrusaLink print file metadata."""
+    resp: dict[str, Any] = {}
+    with patch("pyprusalink.PrusaLink.get_file_metadata", return_value=resp):
+        yield resp
+
+
+@pytest.fixture
 def mock_api(
     mock_version_api: dict[str, str],
     mock_info_api: dict[str, Any],
     mock_get_legacy_printer: dict[str, Any],
     mock_get_status_idle: dict[str, Any],
     mock_job_api_idle: None,
+    mock_file_metadata_api: dict[str, Any],
 ) -> None:
     """Mock PrusaLink API."""
