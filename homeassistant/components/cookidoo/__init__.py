@@ -65,9 +65,20 @@ def _migrate_identifiers(
         device_registry.async_update_device(dev.id, new_identifiers=new_identifiers)
     for ent in entity_entries:
         if ent.unique_id and ent.unique_id.startswith(f"{old_prefix}_"):
+            new_entity_unique_id = f"{new_unique_id}{ent.unique_id[len(old_prefix) :]}"
+            if (
+                existing_entity_id := entity_registry.async_get_entity_id(
+                    ent.domain, ent.platform, new_entity_unique_id
+                )
+            ) and existing_entity_id != ent.entity_id:
+                existing_ent = entity_registry.async_get(existing_entity_id)
+                if existing_ent and existing_ent.config_entry_id == config_entry.entry_id:
+                    entity_registry.async_remove(ent.entity_id)
+                    continue
+
             entity_registry.async_update_entity(
                 ent.entity_id,
-                new_unique_id=f"{new_unique_id}{ent.unique_id[len(old_prefix) :]}",
+                new_unique_id=new_entity_unique_id,
             )
 
 
