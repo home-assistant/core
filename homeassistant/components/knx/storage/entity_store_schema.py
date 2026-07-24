@@ -64,23 +64,31 @@ from .const import (
     CONF_DPT,
     CONF_ENTITY,
     CONF_GA_ACTIVE,
+    CONF_GA_AIR_PRESSURE,
     CONF_GA_ANGLE,
     CONF_GA_BLUE_BRIGHTNESS,
     CONF_GA_BLUE_SWITCH,
     CONF_GA_BRIGHTNESS,
+    CONF_GA_BRIGHTNESS_EAST,
+    CONF_GA_BRIGHTNESS_NORTH,
+    CONF_GA_BRIGHTNESS_SOUTH,
+    CONF_GA_BRIGHTNESS_WEST,
     CONF_GA_COLOR,
     CONF_GA_COLOR_TEMP,
     CONF_GA_CONTROLLER_MODE,
     CONF_GA_CONTROLLER_STATUS,
     CONF_GA_DATE,
     CONF_GA_DATETIME,
+    CONF_GA_DAY_NIGHT,
     CONF_GA_FAN_SPEED,
     CONF_GA_FAN_SWING,
     CONF_GA_FAN_SWING_HORIZONTAL,
+    CONF_GA_FROST_ALARM,
     CONF_GA_GREEN_BRIGHTNESS,
     CONF_GA_GREEN_SWITCH,
     CONF_GA_HEAT_COOL,
     CONF_GA_HUE,
+    CONF_GA_HUMIDITY,
     CONF_GA_HUMIDITY_CURRENT,
     CONF_GA_ON_OFF,
     CONF_GA_OP_MODE_COMFORT,
@@ -91,6 +99,7 @@ from .const import (
     CONF_GA_OSCILLATION,
     CONF_GA_POSITION_SET,
     CONF_GA_POSITION_STATE,
+    CONF_GA_RAIN_ALARM,
     CONF_GA_RED_BRIGHTNESS,
     CONF_GA_RED_SWITCH,
     CONF_GA_SATURATION,
@@ -102,6 +111,7 @@ from .const import (
     CONF_GA_STEP,
     CONF_GA_STOP,
     CONF_GA_SWITCH,
+    CONF_GA_TEMPERATURE,
     CONF_GA_TEMPERATURE_CURRENT,
     CONF_GA_TEMPERATURE_TARGET,
     CONF_GA_TEXT,
@@ -110,7 +120,11 @@ from .const import (
     CONF_GA_VALVE,
     CONF_GA_WHITE_BRIGHTNESS,
     CONF_GA_WHITE_SWITCH,
+    CONF_GA_WIND_ALARM,
+    CONF_GA_WIND_BEARING,
+    CONF_GA_WIND_SPEED,
     CONF_IGNORE_AUTO_MODE,
+    CONF_INVERT_DAY_NIGHT,
     CONF_SPEED,
     CONF_TARGET_TEMPERATURE,
 )
@@ -793,6 +807,41 @@ SENSOR_KNX_SCHEMA = AllSerializeFirst(
     _sensor_attribute_sub_validator,
 )
 
+WEATHER_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_TEMPERATURE): GASelector(
+            write=False, state_required=True, valid_dpt="9.001"
+        ),
+        vol.Optional(CONF_GA_HUMIDITY): GASelector(write=False, valid_dpt="9.007"),
+        vol.Optional(CONF_GA_AIR_PRESSURE): GASelector(
+            write=False, valid_dpt=["9.006", "14.058"]
+        ),
+        vol.Optional(CONF_GA_WIND_SPEED): GASelector(write=False, valid_dpt="9.005"),
+        vol.Optional(CONF_GA_WIND_BEARING): GASelector(write=False, valid_dpt="5.003"),
+        "section_brightness": KNXSectionFlat(collapsible=True),
+        vol.Optional(CONF_GA_BRIGHTNESS_EAST): GASelector(
+            write=False, valid_dpt="9.004"
+        ),
+        vol.Optional(CONF_GA_BRIGHTNESS_SOUTH): GASelector(
+            write=False, valid_dpt="9.004"
+        ),
+        vol.Optional(CONF_GA_BRIGHTNESS_WEST): GASelector(
+            write=False, valid_dpt="9.004"
+        ),
+        vol.Optional(CONF_GA_BRIGHTNESS_NORTH): GASelector(
+            write=False, valid_dpt="9.004"
+        ),
+        "section_day_night": KNXSectionFlat(collapsible=True),
+        vol.Optional(CONF_GA_DAY_NIGHT): GASelector(write=False, valid_dpt="1.024"),
+        vol.Optional(CONF_INVERT_DAY_NIGHT, default=False): selector.BooleanSelector(),
+        "section_alarms": KNXSectionFlat(collapsible=True),
+        vol.Optional(CONF_GA_RAIN_ALARM): GASelector(write=False, valid_dpt="1"),
+        vol.Optional(CONF_GA_FROST_ALARM): GASelector(write=False, valid_dpt="1"),
+        vol.Optional(CONF_GA_WIND_ALARM): GASelector(write=False, valid_dpt="1"),
+        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+    }
+)
+
 KNX_SCHEMA_FOR_PLATFORM = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_KNX_SCHEMA,
     Platform.BUTTON: BUTTON_KNX_SCHEMA,
@@ -808,6 +857,7 @@ KNX_SCHEMA_FOR_PLATFORM = {
     Platform.SWITCH: SWITCH_KNX_SCHEMA,
     Platform.TEXT: TEXT_KNX_SCHEMA,
     Platform.TIME: TIME_KNX_SCHEMA,
+    Platform.WEATHER: WEATHER_KNX_SCHEMA,
 }
 
 ENTITY_STORE_DATA_SCHEMA: VolSchemaType = vol.All(

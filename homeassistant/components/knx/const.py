@@ -206,6 +206,7 @@ SUPPORTED_PLATFORMS_UI: Final = {
     Platform.SWITCH,
     Platform.TEXT,
     Platform.TIME,
+    Platform.WEATHER,
 }
 
 # Map KNX controller modes to HA modes. This list might not be complete.
