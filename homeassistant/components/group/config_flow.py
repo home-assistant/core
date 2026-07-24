@@ -22,7 +22,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .binary_sensor import CONF_ALL, async_create_preview_binary_sensor
 from .button import async_create_preview_button
-from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC, DOMAIN
+from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC, DOMAIN, GROUP_TYPES
 from .cover import async_create_preview_cover
 from .entity import GroupEntity
 from .event import async_create_preview_event
@@ -33,6 +33,7 @@ from .media_player import MediaPlayerGroup, async_create_preview_media_player
 from .notify import async_create_preview_notify
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
+from .util import async_hide_members
 from .valve import async_create_preview_valve
 
 _STATISTIC_MEASURES = [
@@ -158,22 +159,6 @@ SWITCH_CONFIG_SCHEMA = basic_group_config_schema("switch").extend(
         vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
     }
 )
-
-
-GROUP_TYPES = [
-    "binary_sensor",
-    "button",
-    "cover",
-    "event",
-    "fan",
-    "light",
-    "lock",
-    "media_player",
-    "notify",
-    "sensor",
-    "switch",
-    "valve",
-]
 
 
 async def choose_options_step(options: dict[str, Any]) -> str:
@@ -357,7 +342,7 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
         """Hide the group members if requested."""
         if options[CONF_HIDE_MEMBERS]:
-            _async_hide_members(
+            async_hide_members(
                 self.hass, options[CONF_ENTITIES], er.RegistryEntryHider.INTEGRATION
             )
 
@@ -371,7 +356,7 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         hidden_by = (
             er.RegistryEntryHider.INTEGRATION if options[CONF_HIDE_MEMBERS] else None
         )
-        _async_hide_members(hass, options[CONF_ENTITIES], hidden_by)
+        async_hide_members(hass, options[CONF_ENTITIES], hidden_by)
 
     @staticmethod
     @override
@@ -388,19 +373,6 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
             )
             PREVIEW_OPTIONS_SCHEMA[group_type] = await schema(None)
         websocket_api.async_register_command(hass, ws_start_preview)
-
-
-def _async_hide_members(
-    hass: HomeAssistant, members: list[str], hidden_by: er.RegistryEntryHider | None
-) -> None:
-    """Hide or unhide group members."""
-    registry = er.async_get(hass)
-    for member in members:
-        if not (entity_id := er.async_resolve_entity_id(registry, member)):
-            continue
-        if entity_id not in registry.entities:
-            continue
-        registry.async_update_entity(entity_id, hidden_by=hidden_by)
 
 
 @websocket_api.websocket_command(

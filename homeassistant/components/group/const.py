@@ -25,3 +25,18 @@ ATTR_ENTITIES = "entities"
 ATTR_OBJECT_ID = "object_id"
 ATTR_ORDER = "order"
 ATTR_ALL = "all"
+
+GROUP_TYPES = [
+    "binary_sensor",
+    "button",
+    "cover",
+    "event",
+    "fan",
+    "light",
+    "lock",
+    "media_player",
+    "notify",
+    "sensor",
+    "switch",
+    "valve",
+]
