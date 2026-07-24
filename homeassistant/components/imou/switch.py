@@ -10,7 +10,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -97,14 +97,7 @@ async def async_setup_entry(
             if imou_device_identifier(device) in device_keys
         )
 
-    coordinator.new_device_callbacks.append(_add_switches)
-
-    @callback
-    def _remove_new_device_callback() -> None:
-        if _add_switches in coordinator.new_device_callbacks:
-            coordinator.new_device_callbacks.remove(_add_switches)
-
-    entry.async_on_unload(_remove_new_device_callback)
+    entry.async_on_unload(coordinator.register_new_device_callback(_add_switches))
     _add_switches(coordinator.devices)
 
 

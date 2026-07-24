@@ -22,7 +22,10 @@ from homeassistant.components.http import DOMAIN
 from homeassistant.components.http.config import (
     _DEFAULT_CONFIG,
     AUTO_REVERT_DELAY,
+    ERROR_APPLY_FAILED,
+    ERROR_NOT_PROMOTED,
     HTTP_STORAGE_SCHEMA,
+    ActiveConfigType,
     async_get_and_load_store,
     default_server_port,
 )
@@ -399,23 +402,51 @@ async def test_peer_cert(hass: HomeAssistant, tmp_path: Path) -> None:
     assert len(mock_load_verify_locations.mock_calls) == 1
 
 
+# Fixed slot-creation times for seeded configs.
+STABLE_CREATED_AT = "2026-06-01T00:00:00+00:00"
+PENDING_CREATED_AT = "2026-07-01T00:00:00+00:00"
+
+
+def _stored_config(
+    config: dict,
+    *,
+    created_at: str = PENDING_CREATED_AT,
+    error: str | None = None,
+    error_message: str | None = None,
+) -> dict:
+    """Return a schema-normalised config slot as persisted at storage version 2.2."""
+    return {
+        **HTTP_STORAGE_SCHEMA(config),
+        "created_at": created_at,
+        "error": error,
+        "error_message": error_message,
+    }
+
+
 def _stable_http_storage(
-    stable: dict, *, pending: dict | None = None, yaml_migration_done: bool = True
+    stable: dict,
+    *,
+    pending: dict | None = None,
+    pending_error: str | None = None,
+    yaml_migration_done: bool = True,
 ) -> dict:
     """Build a hass_storage entry seeded with a confirmed-working stable config.
 
     ``stable`` (and ``pending`` if given) are normalised through the storage
-    schema, matching what real users have on disk after migration / writes —
-    the load path does direct key access and assumes the payload is complete.
+    schema and carry the created_at/error metadata, matching what real users
+    have on disk after migration / writes — the load path does direct key
+    access and assumes the payload is complete. A ``pending_error`` seeds the
+    pending config as already failed/reverted.
     """
-    normalised_stable = dict(HTTP_STORAGE_SCHEMA(stable))
-    normalised_pending = dict(HTTP_STORAGE_SCHEMA(pending)) if pending else None
     return {
         "version": 2,
+        "minor_version": 2,
         "key": DOMAIN,
         "data": {
-            "stable": normalised_stable,
-            "pending": normalised_pending,
+            "stable": _stored_config(stable, created_at=STABLE_CREATED_AT),
+            "pending": (
+                _stored_config(pending, error=pending_error) if pending else None
+            ),
             "yaml_migration_done": yaml_migration_done,
         },
     }
@@ -492,7 +523,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
     hass.config.recovery_mode = True
 
     with patch(
-        "homeassistant.components.http.get_url", side_effect=NoURLAvailableError
+        "homeassistant.components.http.server.get_url", side_effect=NoURLAvailableError
     ) as mock_get_url:
         assert await async_setup_component(hass, DOMAIN, {}) is True
         await hass.async_start()
@@ -525,7 +556,8 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(
     hass.config.recovery_mode = True
 
     with patch(
-        "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
+        "homeassistant.components.http.server.x509.CertificateBuilder",
+        side_effect=OSError,
     ) as mock_builder:
         assert await async_setup_component(hass, DOMAIN, {}) is True
         await hass.async_start()
@@ -566,7 +598,8 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
     hass.config.recovery_mode = True
 
     with patch(
-        "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
+        "homeassistant.components.http.server.x509.CertificateBuilder",
+        side_effect=OSError,
     ) as mock_builder:
         assert await async_setup_component(hass, DOMAIN, {}) is False
         await hass.async_start()
@@ -639,7 +672,7 @@ async def test_create_server_passes_configuration(hass: HomeAssistant) -> None:
 
 async def test_cors_defaults(hass: HomeAssistant) -> None:
     """Test the CORS default settings."""
-    with patch("homeassistant.components.http.setup_cors") as mock_setup:
+    with patch("homeassistant.components.http.server.setup_cors") as mock_setup:
         assert await async_setup_component(hass, DOMAIN, {})
 
     assert len(mock_setup.mock_calls) == 1
@@ -980,7 +1013,7 @@ async def test_supervisor_http_config_view(
     assert resp.status == HTTPStatus.NOT_FOUND
 
     with patch(
-        "homeassistant.components.http.is_supervisor_unix_socket_request",
+        "homeassistant.components.http.server.is_supervisor_unix_socket_request",
         return_value=True,
     ):
         # Served over the Supervisor Unix socket with the live server config.
@@ -1000,6 +1033,7 @@ async def test_supervisor_http_config_view(
         assert (await resp.json())["server_host"] == ["1.2.3.4"]
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_yaml_migration_to_storage(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
@@ -1032,13 +1066,10 @@ async def test_yaml_migration_to_storage(
 
     stored = hass_storage[DOMAIN]["data"]
     assert stored["yaml_migration_done"] is True
-    assert stored["stable"]["server_port"] == 8123  # untouched defaults
-    pending = stored["pending"]
-    assert pending is not None
-    assert pending["server_port"] == 9123
-    assert pending["cors_allowed_origins"] == ["https://example.com"]
-    assert pending["trusted_proxies"] == ["127.0.0.0/8"]
-    assert pending["ip_ban_enabled"] is False
+    assert stored["stable"] == _DEFAULT_CONFIG  # untouched defaults
+    assert stored["pending"] == _stored_config(
+        yaml_conf, created_at=dt_util.utcnow().isoformat()
+    )
 
 
 async def test_yaml_migration_matches_stable_no_pending(
@@ -1057,11 +1088,18 @@ async def test_yaml_migration_matches_stable_no_pending(
         "ssl_profile": "modern",
         "use_x_frame_options": True,
     }
+    stored_stable = {
+        **existing_stable,
+        "created_at": STABLE_CREATED_AT,
+        "error": None,
+        "error_message": None,
+    }
     hass_storage[DOMAIN] = {
         "version": 2,
+        "minor_version": 2,
         "key": DOMAIN,
         "data": {
-            "stable": existing_stable,
+            "stable": stored_stable,
             "pending": None,
             "yaml_migration_done": False,
         },
@@ -1080,7 +1118,7 @@ async def test_yaml_migration_matches_stable_no_pending(
 
     stored = hass_storage[DOMAIN]["data"]
     assert stored["pending"] is None
-    assert stored["stable"] == existing_stable
+    assert stored["stable"] == stored_stable
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
     assert issue is not None
@@ -1112,6 +1150,7 @@ async def test_yaml_migration_matches_stable_no_pending(
         ),
     ],
 )
+@pytest.mark.usefixtures("freezer")
 async def test_yaml_migration_stable_lost_trusted_proxy_masks(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -1151,10 +1190,16 @@ async def test_yaml_migration_stable_lost_trusted_proxy_masks(
 
     stored = hass_storage[DOMAIN]["data"]
     assert stored["yaml_migration_done"] is True
-    assert stored["pending"] == expected_pending
+    assert stored["pending"] == (
+        _stored_config(expected_pending, created_at=dt_util.utcnow().isoformat())
+        if expected_pending is not None
+        else None
+    )
     assert stored["stable"]["trusted_proxies"] == expected_stable_proxies
+    assert stored["stable"]["created_at"] == STABLE_CREATED_AT
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_yaml_migration_differs_from_stable_creates_pending(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
@@ -1169,11 +1214,18 @@ async def test_yaml_migration_differs_from_stable_creates_pending(
         "ssl_profile": "modern",
         "use_x_frame_options": True,
     }
+    stored_stable = {
+        **existing_stable,
+        "created_at": STABLE_CREATED_AT,
+        "error": None,
+        "error_message": None,
+    }
     hass_storage[DOMAIN] = {
         "version": 2,
+        "minor_version": 2,
         "key": DOMAIN,
         "data": {
-            "stable": existing_stable,
+            "stable": stored_stable,
             "pending": None,
             "yaml_migration_done": False,
         },
@@ -1185,7 +1237,7 @@ async def test_yaml_migration_differs_from_stable_creates_pending(
     await hass.async_block_till_done()
 
     stored = hass_storage[DOMAIN]["data"]
-    assert stored["stable"] == existing_stable
+    assert stored["stable"] == stored_stable
     assert stored["pending"] == {
         "server_port": 8765,
         "cors_allowed_origins": ["https://cast.home-assistant.io"],
@@ -1193,6 +1245,9 @@ async def test_yaml_migration_differs_from_stable_creates_pending(
         "ip_ban_enabled": False,
         "ssl_profile": "modern",
         "use_x_frame_options": True,
+        "created_at": dt_util.utcnow().isoformat(),
+        "error": None,
+        "error_message": None,
     }
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
@@ -1292,6 +1347,8 @@ async def test_setup_uses_stable_config_when_no_yaml(
     await hass.async_block_till_done()
 
     assert hass.config.api.port == 9876
+    store = await async_get_and_load_store(hass)
+    assert store.active_config_type is ActiveConfigType.STABLE
 
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml") is None
     assert (
@@ -1313,6 +1370,8 @@ async def test_setup_prefers_pending_over_stable_in_normal_mode(
     await hass.async_block_till_done()
 
     assert hass.config.api.port == 9999
+    store = await async_get_and_load_store(hass)
+    assert store.active_config_type is ActiveConfigType.PENDING
 
 
 async def test_recovery_mode_falls_back_to_stable(
@@ -1330,6 +1389,8 @@ async def test_recovery_mode_falls_back_to_stable(
     await hass.async_block_till_done()
 
     assert hass.config.api.port == 9876
+    store = await async_get_and_load_store(hass)
+    assert store.active_config_type is ActiveConfigType.STABLE
 
 
 async def test_recovery_mode_with_no_storage(
@@ -1383,6 +1444,7 @@ async def test_recovery_mode_ignores_yaml(
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml") is None
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_setup_migrates_v1_storage_to_v2(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -1403,13 +1465,66 @@ async def test_setup_migrates_v1_storage_to_v2(
     # boot after store migration. With no YAML http config, the default config is migrated to the pending slot and used. Therefore we assert below the default port (8123)
     assert hass.config.api.port == 8123
     assert hass_storage[DOMAIN]["version"] == 2
+    assert hass_storage[DOMAIN]["minor_version"] == 2
     data = hass_storage[DOMAIN]["data"]
     # The v1→v2 migration normalises the payload through the storage schema,
     # so the v2 stable slot is well-formed (all keys present) on disk.
-    assert data["stable"]["server_port"] == 9876
-    assert data["stable"]["ip_ban_enabled"] is True
-    assert data["pending"] == _DEFAULT_CONFIG
+    assert data["stable"] == _stored_config(
+        {"server_port": 9876}, created_at=dt_util.utcnow().isoformat()
+    )
+    assert data["pending"] == _stored_config(
+        {}, created_at=dt_util.utcnow().isoformat()
+    )
     assert data["yaml_migration_done"] is True
+
+
+@pytest.mark.usefixtures("freezer")
+async def test_setup_migrates_v2_1_storage_to_v2_2(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """v2.1 config slots gain the created_at/error metadata; pending stays armed."""
+    hass_storage[DOMAIN] = {
+        "version": 2,
+        "minor_version": 1,
+        "key": DOMAIN,
+        "data": {
+            "stable": dict(HTTP_STORAGE_SCHEMA({"server_port": 9876})),
+            "pending": dict(HTTP_STORAGE_SCHEMA({"server_port": 9999})),
+            "yaml_migration_done": True,
+        },
+    }
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.config.api.port == 9999
+    store = await async_get_and_load_store(hass)
+    assert store.active_config_type is ActiveConfigType.PENDING
+    assert store.pending == {
+        **HTTP_STORAGE_SCHEMA({"server_port": 9999}),
+        "created_at": dt_util.utcnow().isoformat(),
+        "error": None,
+        "error_message": None,
+    }
+    assert store.stable == {
+        **HTTP_STORAGE_SCHEMA({"server_port": 9876}),
+        "created_at": dt_util.utcnow().isoformat(),
+        "error": None,
+        "error_message": None,
+    }
+    # The migrated payload is written back to disk right away.
+    assert hass_storage[DOMAIN]["minor_version"] == 2
+    assert hass_storage[DOMAIN]["data"] == {
+        "stable": _stored_config(
+            {"server_port": 9876}, created_at=dt_util.utcnow().isoformat()
+        ),
+        "pending": _stored_config(
+            {"server_port": 9999}, created_at=dt_util.utcnow().isoformat()
+        ),
+        "yaml_migration_done": True,
+    }
 
 
 @pytest.mark.parametrize(
@@ -1431,6 +1546,7 @@ def test_default_server_port(
         assert default_server_port() == expected_port
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_setup_port_env_var_used_as_default(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -1444,15 +1560,19 @@ async def test_setup_port_env_var_used_as_default(
         await hass.async_block_till_done()
 
     assert hass.config.api.port == 80
-    assert hass_storage["http"]["data"]["pending"]["server_port"] == 80
+    assert hass_storage["http"]["data"]["pending"] == _stored_config(
+        {"server_port": 80}, created_at=dt_util.utcnow().isoformat()
+    )
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_websocket_http_config(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test the http/config, configure and promote websocket commands."""
+    created_at = dt_util.utcnow().isoformat()
     assert await async_setup_component(hass, "http", {})
     await async_setup_component(hass, "websocket_api", {})
     await hass.async_start()
@@ -1472,6 +1592,8 @@ async def test_websocket_http_config(
         "stable": _DEFAULT_CONFIG,
         "pending": None,
         "revert_at": None,
+        "active_config_type": "stable",
+        "default": _DEFAULT_CONFIG,
     }
 
     new_config = {
@@ -1490,21 +1612,32 @@ async def test_websocket_http_config(
     response = await ws_client.receive_json()
     assert response["success"]
     assert response["result"] == {"restart": True}
-    pending = hass_storage["http"]["data"]["pending"]
-    assert pending["server_port"] == 9123
-    assert pending["trusted_proxies"] == ["127.0.0.0/8"]
+    assert hass_storage["http"]["data"]["pending"] == {
+        **new_config,
+        "created_at": created_at,
+        "error": None,
+        "error_message": None,
+    }
     await hass.async_block_till_done()
     assert len(restart_calls) == 1
 
     # Stable is unchanged until the user promotes, but the pending config is
-    # now returned alongside it.
+    # now returned alongside it. The staged config is not active yet: the
+    # restart that would apply it is mocked in this test.
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
     assert response["success"]
     assert response["result"] == {
         "stable": _DEFAULT_CONFIG,
-        "pending": new_config,
+        "pending": {
+            **new_config,
+            "created_at": created_at,
+            "error": None,
+            "error_message": None,
+        },
         "revert_at": None,
+        "active_config_type": "stable",
+        "default": _DEFAULT_CONFIG,
     }
 
     # Promote: pending becomes stable, pending is cleared.
@@ -1512,15 +1645,27 @@ async def test_websocket_http_config(
     response = await ws_client.receive_json()
     assert response["success"]
     assert hass_storage["http"]["data"]["pending"] is None
-    assert hass_storage["http"]["data"]["stable"]["server_port"] == 9123
+    assert hass_storage["http"]["data"]["stable"] == {
+        **new_config,
+        "created_at": created_at,
+        "error": None,
+        "error_message": None,
+    }
 
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "stable": new_config,
+        "stable": {
+            **new_config,
+            "created_at": created_at,
+            "error": None,
+            "error_message": None,
+        },
         "pending": None,
         "revert_at": None,
+        "active_config_type": "stable",
+        "default": _DEFAULT_CONFIG,
     }
 
     # Promoting again with no pending is rejected.
@@ -1536,7 +1681,19 @@ async def test_websocket_http_config(
     response = await ws_client.receive_json()
     assert response["success"]
     assert response["result"] == {"restart": True}
-    assert hass_storage["http"]["data"]["pending"]["server_port"] == 7000
+    assert hass_storage["http"]["data"]["pending"] == _stored_config(
+        {"server_port": 7000}, created_at=created_at
+    )
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 2
+
+    # Re-staging the identical armed config keeps the entry -> no restart.
+    await ws_client.send_json_auto_id(
+        {"type": "http/config/configure", "config": {"server_port": 7000}}
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"restart": False}
     await hass.async_block_till_done()
     assert len(restart_calls) == 2
 
@@ -1547,7 +1704,12 @@ async def test_websocket_http_config(
     assert response["success"]
     assert response["result"] == {"restart": True}
     assert hass_storage["http"]["data"]["pending"] is None
-    assert hass_storage["http"]["data"]["stable"]["server_port"] == 9123
+    assert hass_storage["http"]["data"]["stable"] == {
+        **new_config,
+        "created_at": created_at,
+        "error": None,
+        "error_message": None,
+    }
     await hass.async_block_till_done()
     assert len(restart_calls) == 3
 
@@ -1558,6 +1720,152 @@ async def test_websocket_http_config(
     assert response["result"] == {"restart": False}
     await hass.async_block_till_done()
     assert len(restart_calls) == 3
+
+
+async def test_websocket_configure_verifies_new_port(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_create_server: Mock,
+) -> None:
+    """Configuring a new port probes that it can be bound before restarting."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {"type": "http/config/configure", "config": {"server_port": 9123}}
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"restart": True}
+
+    # One bind for setup, one for the probe of the new config.
+    assert mock_create_server.call_count == 2
+    assert mock_create_server.call_args_list[1].args[0].server_port == 9123
+
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "bind_error",
+    [
+        OSError(errno.EADDRINUSE, "Address already in use"),
+        PermissionError(errno.EACCES, "Permission denied"),
+        socket.gaierror(socket.EAI_NONAME, "Name or service not known"),
+    ],
+    ids=["address-in-use", "permission-denied", "unresolvable-host"],
+)
+async def test_websocket_configure_rejects_unbindable_config(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    mock_create_server: Mock,
+    bind_error: OSError,
+) -> None:
+    """A new config whose address cannot be bound is rejected without a restart."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+    mock_create_server.side_effect = bind_error
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {"type": "http/config/configure", "config": {"server_port": 9123}}
+    )
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "bind_failed"
+    assert response["error"]["message"] == (
+        f"Failed to create HTTP server at port 9123: {bind_error}"
+    )
+
+    # The rejected config is not stored and no restart is triggered.
+    assert hass_storage[DOMAIN]["data"]["pending"] is None
+    assert len(restart_calls) == 0
+
+
+async def test_websocket_configure_rejects_unusable_ssl(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """A new config whose SSL certificate cannot be loaded is rejected."""
+    cert_path, key_path = _setup_broken_ssl_pem_files(tmp_path)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "http/config/configure",
+            "config": {
+                "server_port": 9123,
+                "ssl_certificate": str(cert_path),
+                "ssl_key": str(key_path),
+            },
+        }
+    )
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "bind_failed"
+    assert "Could not use SSL certificate" in response["error"]["message"]
+
+    assert hass_storage[DOMAIN]["data"]["pending"] is None
+    assert len(restart_calls) == 0
+
+
+async def test_websocket_configure_same_port_skips_bind_check(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    mock_create_server: Mock,
+) -> None:
+    """No bind probe runs when the new config keeps the currently bound port.
+
+    The running server holds the port until the restart releases it, so a
+    probe would always fail against ourselves.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+    # Any probe would fail; success proves the check was skipped.
+    mock_create_server.side_effect = OSError(errno.EADDRINUSE, "Address already in use")
+
+    current_port = default_server_port()
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "http/config/configure",
+            "config": {
+                "server_port": current_port,
+                "cors_allowed_origins": ["https://example.com"],
+            },
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"restart": True}
+    assert hass_storage[DOMAIN]["data"]["pending"]["server_port"] == current_port
+
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 1
 
 
 async def test_pending_config_auto_reverts_to_stable(
@@ -1590,23 +1898,68 @@ async def test_pending_config_auto_reverts_to_stable(
     response = await ws_client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "stable": HTTP_STORAGE_SCHEMA({"server_port": 9876}),
-        "pending": HTTP_STORAGE_SCHEMA({"server_port": 9999}),
+        "stable": _stored_config({"server_port": 9876}, created_at=STABLE_CREATED_AT),
+        "pending": _stored_config({"server_port": 9999}),
         "revert_at": revert_at.isoformat(),
+        "active_config_type": "pending",
+        "default": _DEFAULT_CONFIG,
     }
 
-    # After the delay elapses without a promotion, pending is dropped and a
-    # restart is requested so the stable config is applied.
+    # After the delay elapses without a promotion, pending is marked reverted
+    # and a restart is requested so the stable config is applied.
     freezer.tick(AUTO_REVERT_DELAY)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass_storage["http"]["data"] == {
-        "stable": HTTP_STORAGE_SCHEMA({"server_port": 9876}),
-        "pending": None,
+        "stable": _stored_config({"server_port": 9876}, created_at=STABLE_CREATED_AT),
+        "pending": _stored_config({"server_port": 9999}, error=ERROR_NOT_PROMOTED),
         "yaml_migration_done": True,
     }
     assert len(restart_calls) == 1
+
+    # The reverted config cannot be promoted; it must be staged again.
+    await ws_client.send_json_auto_id({"type": "http/config/promote"})
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "not_allowed"
+
+    # Re-staging the same config arms a fresh trial -> restart.
+    await ws_client.send_json_auto_id(
+        {"type": "http/config/configure", "config": {"server_port": 9999}}
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"restart": True}
+    assert hass_storage["http"]["data"]["pending"] == _stored_config(
+        {"server_port": 9999}, created_at=dt_util.utcnow().isoformat()
+    )
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 2
+
+
+async def test_setup_ignores_reverted_pending(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """A reverted pending config is kept for display but never trialed again."""
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {"server_port": 9876},
+        pending={"server_port": 9999},
+        pending_error=ERROR_NOT_PROMOTED,
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.config.api.port == 9876
+    store = await async_get_and_load_store(hass)
+    assert store.active_config_type is ActiveConfigType.STABLE
+    assert store.revert_deadline is None
+    assert store.pending == _stored_config(
+        {"server_port": 9999}, error=ERROR_NOT_PROMOTED
+    )
 
 
 @pytest.mark.parametrize(
@@ -1618,6 +1971,7 @@ async def test_pending_config_auto_reverts_to_stable(
     ],
     ids=["address-in-use", "permission-denied", "unresolvable-host"],
 )
+@pytest.mark.usefixtures("freezer")
 async def test_pending_config_reverted_in_place_on_bind_failure(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -1642,10 +1996,15 @@ async def test_pending_config_reverted_in_place_on_bind_failure(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    # The pending config is dropped and this same start continues on stable.
+    # The pending config is kept as a draft for the frontend to show alongside
+    # the error persisted on it; this same start continues on stable.
     assert hass_storage["http"]["data"] == {
-        "stable": HTTP_STORAGE_SCHEMA({"server_port": 9876}),
-        "pending": None,
+        "stable": _stored_config({"server_port": 9876}, created_at=STABLE_CREATED_AT),
+        "pending": _stored_config(
+            {"server_port": 80},
+            error=ERROR_APPLY_FAILED,
+            error_message=str(bind_error),
+        ),
         "yaml_migration_done": True,
     }
     assert hass.config.api is not None
@@ -1656,10 +2015,21 @@ async def test_pending_config_reverted_in_place_on_bind_failure(
     assert len(restart_calls) == 0
     store = await async_get_and_load_store(hass)
     assert store.revert_deadline is None
+    assert store.active_config_type is ActiveConfigType.STABLE
     assert "could not be applied, reverting" in caplog.text
     assert "previous HTTP configuration has been restored (server port 9876)" in (
         caplog.text
     )
+
+    # Staging a new config supersedes the failed one.
+    await store.async_set_pending(HTTP_STORAGE_SCHEMA({"server_port": 9000}))
+    assert store.pending == {
+        **HTTP_STORAGE_SCHEMA({"server_port": 9000}),
+        "created_at": dt_util.utcnow().isoformat(),
+        "error": None,
+        "error_message": None,
+    }
+
     stable_server.close()
     await stable_server.wait_closed()
 
@@ -1677,8 +2047,23 @@ async def test_pending_config_reverted_in_place_on_ssl_failure(
     pending["ssl_key"] = "/nonexistent/key.pem"
     hass_storage[DOMAIN] = {
         "version": 2,
+        "minor_version": 2,
         "key": DOMAIN,
-        "data": {"stable": stable, "pending": pending, "yaml_migration_done": True},
+        "data": {
+            "stable": {
+                **stable,
+                "created_at": STABLE_CREATED_AT,
+                "error": None,
+                "error_message": None,
+            },
+            "pending": {
+                **pending,
+                "created_at": PENDING_CREATED_AT,
+                "error": None,
+                "error_message": None,
+            },
+            "yaml_migration_done": True,
+        },
     }
 
     restart_calls = async_mock_service(hass, "homeassistant", "restart")
@@ -1686,11 +2071,21 @@ async def test_pending_config_reverted_in_place_on_ssl_failure(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    assert hass_storage["http"]["data"]["pending"] is None
+    stored_pending = hass_storage["http"]["data"]["pending"]
+    assert stored_pending == {
+        **pending,
+        "created_at": PENDING_CREATED_AT,
+        "error": ERROR_APPLY_FAILED,
+        "error_message": ANY,
+    }
     assert hass.config.api is not None
     assert hass.config.api.port == 9876
     assert hass.config.api.use_ssl is False
     assert len(restart_calls) == 0
+    assert (
+        "Could not use SSL certificate from /nonexistent/cert.pem"
+        in stored_pending["error_message"]
+    )
 
 
 async def test_pending_config_reverted_in_place_on_ssl_peer_cert_failure(
@@ -1716,8 +2111,23 @@ async def test_pending_config_reverted_in_place_on_ssl_peer_cert_failure(
     pending["ssl_peer_certificate"] = "/nonexistent/peer.pem"
     hass_storage[DOMAIN] = {
         "version": 2,
+        "minor_version": 2,
         "key": DOMAIN,
-        "data": {"stable": stable, "pending": pending, "yaml_migration_done": True},
+        "data": {
+            "stable": {
+                **stable,
+                "created_at": STABLE_CREATED_AT,
+                "error": None,
+                "error_message": None,
+            },
+            "pending": {
+                **pending,
+                "created_at": PENDING_CREATED_AT,
+                "error": None,
+                "error_message": None,
+            },
+            "yaml_migration_done": True,
+        },
     }
 
     restart_calls = async_mock_service(hass, "homeassistant", "restart")
@@ -1726,7 +2136,14 @@ async def test_pending_config_reverted_in_place_on_ssl_peer_cert_failure(
         assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    assert hass_storage["http"]["data"]["pending"] is None
+    stored_pending = hass_storage["http"]["data"]["pending"]
+    assert stored_pending == {
+        **pending,
+        "created_at": PENDING_CREATED_AT,
+        "error": ERROR_APPLY_FAILED,
+        "error_message": ANY,
+    }
+    assert stored_pending["error_message"] is not None
     assert hass.config.api is not None
     assert hass.config.api.port == 9876
     assert hass.config.api.use_ssl is False
@@ -1758,8 +2175,18 @@ async def test_stable_config_ssl_peer_cert_failure_fails_setup(
     stable["ssl_peer_certificate"] = "/nonexistent/peer.pem"
     hass_storage[DOMAIN] = {
         "version": 2,
+        "minor_version": 2,
         "key": DOMAIN,
-        "data": {"stable": stable, "pending": None, "yaml_migration_done": True},
+        "data": {
+            "stable": {
+                **stable,
+                "created_at": STABLE_CREATED_AT,
+                "error": None,
+                "error_message": None,
+            },
+            "pending": None,
+            "yaml_migration_done": True,
+        },
     }
 
     with patch("ssl.SSLContext.load_cert_chain"):
@@ -1847,7 +2274,7 @@ async def test_stable_config_bind_failure_fails_setup(
 
     assert len(restart_calls) == 0
     assert hass_storage["http"]["data"] == {
-        "stable": HTTP_STORAGE_SCHEMA({"server_port": 80}),
+        "stable": _stored_config({"server_port": 80}, created_at=STABLE_CREATED_AT),
         "pending": None,
         "yaml_migration_done": True,
     }
@@ -1860,21 +2287,27 @@ async def test_pending_and_stable_config_bind_failure_fails_setup(
 ) -> None:
     """Setup fails when the trialed pending and the stable config cannot bind.
 
-    The pending config must already be cleared and persisted, so the recovery
-    boot and future normal starts use stable instead of re-trialing it.
+    The pending config is kept as a draft so the user can review or amend it;
+    the recovery boot ignores it and uses stable.
     """
     hass_storage[DOMAIN] = _stable_http_storage(
         {"server_port": 9876}, pending={"server_port": 80}
     )
 
-    mock_create_server.side_effect = [
-        OSError(errno.EADDRINUSE, "Address already in use"),
-        OSError(errno.EADDRINUSE, "Address already in use"),
-    ]
+    bind_error = OSError(errno.EADDRINUSE, "Address already in use")
+    mock_create_server.side_effect = [bind_error, bind_error]
 
     assert not await async_setup_component(hass, DOMAIN, {})
 
-    assert hass_storage["http"]["data"]["pending"] is None
+    assert hass_storage["http"]["data"] == {
+        "stable": _stored_config({"server_port": 9876}, created_at=STABLE_CREATED_AT),
+        "pending": _stored_config(
+            {"server_port": 80},
+            error=ERROR_APPLY_FAILED,
+            error_message=str(bind_error),
+        ),
+        "yaml_migration_done": True,
+    }
 
 
 async def test_create_server_normalizes_unencodable_host(
@@ -1925,10 +2358,8 @@ async def test_recovery_mode_bind_failure_falls_back_to_default_config(
     hass.config.recovery_mode = True
 
     default_server = await _ephemeral_server(hass)
-    mock_create_server.side_effect = [
-        OSError(errno.EADDRINUSE, "Address already in use"),
-        default_server,
-    ]
+    bind_error = OSError(errno.EADDRINUSE, "Address already in use")
+    mock_create_server.side_effect = [bind_error, default_server]
 
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -1939,8 +2370,18 @@ async def test_recovery_mode_bind_failure_falls_back_to_default_config(
     assert mock_create_server.call_args_list[1].args[0].server_port == (
         default_server_port()
     )
-    assert hass_storage["http"]["data"]["stable"] == HTTP_STORAGE_SCHEMA(
-        {"server_port": 80}
+    assert hass_storage["http"]["data"]["stable"] == _stored_config(
+        {"server_port": 80}, created_at=STABLE_CREATED_AT
+    )
+    store = await async_get_and_load_store(hass)
+    assert store.active_config_type is ActiveConfigType.DEFAULT
+    # The bind failure is recorded on the stable slot in memory only; stable
+    # errors are never persisted.
+    assert store.stable == _stored_config(
+        {"server_port": 80},
+        created_at=STABLE_CREATED_AT,
+        error=ERROR_APPLY_FAILED,
+        error_message=str(bind_error),
     )
     default_server.close()
     await default_server.wait_closed()
@@ -1995,14 +2436,17 @@ async def test_pending_config_promote_cancels_revert(
     response = await ws_client.receive_json()
     assert response["success"]
 
-    # The deadline is cleared once the config is confirmed.
+    # The deadline is cleared once the config is confirmed, and the running
+    # config is now reported as stable since promotion moved it to that slot.
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "stable": HTTP_STORAGE_SCHEMA({"server_port": 9999}),
+        "stable": _stored_config({"server_port": 9999}),
         "pending": None,
         "revert_at": None,
+        "active_config_type": "stable",
+        "default": _DEFAULT_CONFIG,
     }
 
     # The cancelled revert must not fire after the delay.
@@ -2011,7 +2455,7 @@ async def test_pending_config_promote_cancels_revert(
     await hass.async_block_till_done()
 
     assert hass_storage["http"]["data"] == {
-        "stable": HTTP_STORAGE_SCHEMA({"server_port": 9999}),
+        "stable": _stored_config({"server_port": 9999}),
         "pending": None,
         "yaml_migration_done": True,
     }

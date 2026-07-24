@@ -135,8 +135,8 @@ def async_remove_helper_devices(
     hass: HomeAssistant,
     *,
     helper_config_entry_id: str,
-    source_device_id: str,
-    sweep_helper_devices: bool = False,
+    source_device_id: str | None,
+    remove_all_devices: bool = False,
     keep_device_ids: Collection[str] = (),
 ) -> None:
     """Migrate a helper which has tried to own a device instead of just linking to it.
@@ -146,13 +146,15 @@ def async_remove_helper_devices(
     now owns a split of it (linked by the pre-migration composite_device_id); a helper that
     declared the source device's identifiers or connections in its device_info afterwards
     now owns a fork (a separate device that copied that identity). This removes the helper's
-    duplicate device(s) and relinks its entities to the source device.
+    duplicate device(s) and relinks its entities to the source device, or detaches them when
+    the source has no concrete device to hold the link.
 
     :param helper_config_entry_id: The config entry id of the helper being migrated.
-    :param source_device_id: The device the helper should link to. May be the pre-migration
-        composite id (as a helper that stored the device id before it was split passes) or a
-        concrete source device.
-    :param sweep_helper_devices: By default only the helper's single duplicate of
+    :param source_device_id: The device the helper should link its entities to. A concrete
+        device relinks the entities to it. A pre-migration composite id and None have no
+        concrete device to hold the link, so the entities are detached; in targeted mode
+        a composite or None source with no matching duplicate is a no-op.
+    :param remove_all_devices: By default only the helper's single duplicate of
         source_device_id (a split or fork) is removed. When True, every device the
         helper owns except source_device_id and keep_device_ids is removed instead -
         even when source_device_id no longer exists, in which case the helper's
@@ -160,16 +162,21 @@ def async_remove_helper_devices(
         created but never removed itself, such as a fork left behind for each
         previously selected source device.
     :param keep_device_ids: Devices the helper legitimately owns which must not be removed.
-        Only consulted when sweep_helper_devices is True.
+        Only consulted when remove_all_devices is True.
     """
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
-    source_device = device_registry.async_get(source_device_id)
+    source_device = (
+        device_registry.async_get(source_device_id)
+        if source_device_id is not None
+        else None
+    )
     if source_device is None:
-        # The source device is gone. In sweep mode the helper's devices are still removed,
-        # leaving its entities without a device; targeted mode has no duplicate to match.
-        if sweep_helper_devices:
+        # No source device (gone, or none selected). In remove-all mode the helper's devices
+        # are still removed, leaving its entities without a device; targeted mode has no
+        # duplicate to match.
+        if remove_all_devices:
             _sweep_helper_devices(
                 device_registry,
                 entity_registry,
@@ -186,21 +193,9 @@ def async_remove_helper_devices(
     composite_device_id = (
         source_device.composite_device_id if source_is_concrete else source_device_id
     )
-    split_devices = (
-        device_registry.async_get_devices_for_composite_device_id(composite_device_id)
-        if composite_device_id is not None
-        else []
-    )
+    target_device_id = source_device_id if source_is_concrete else None
 
-    # The helper's entities are relinked to the source device: itself when concrete, else
-    # the composite's recorded primary owner's split.
-    target_device_id = (
-        source_device_id
-        if source_is_concrete
-        else _composite_source_split_id(split_devices, helper_config_entry_id)
-    )
-
-    if sweep_helper_devices:
+    if remove_all_devices:
         _sweep_helper_devices(
             device_registry,
             entity_registry,
@@ -217,36 +212,6 @@ def async_remove_helper_devices(
             composite_device_id,
             target_device_id,
         )
-
-
-def _composite_source_split_id(
-    split_devices: list[dr.DeviceEntry], helper_config_entry_id: str
-) -> str | None:
-    """Return the source split of a composite device.
-
-    This is the split owned by the composite's recorded primary config entry - the rule
-    _restore_composite_device uses. Devices migrated from before 2024.7 have no recorded
-    primary (primary_config_entry, and thus composite_primary_config_entry, is None), so
-    fall back to a surviving non-helper split, mirroring _restore_composite_device's
-    fallback to the first split. None when source_device_id is not a composite id or the
-    helper owns every split.
-    """
-    non_helper_splits = [
-        device
-        for device in split_devices
-        if device.config_entry_id != helper_config_entry_id
-    ]
-    if not non_helper_splits:
-        return None
-    primary_config_entry_id = split_devices[0].composite_primary_config_entry
-    return next(
-        (
-            device.id
-            for device in non_helper_splits
-            if device.config_entry_id == primary_config_entry_id
-        ),
-        non_helper_splits[0].id,
-    )
 
 
 def _remove_duplicate_helper_device(
