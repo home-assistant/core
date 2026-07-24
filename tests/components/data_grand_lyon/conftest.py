@@ -2,9 +2,12 @@
 
 from collections.abc import Generator
 from datetime import datetime
+import io
 from unittest.mock import AsyncMock, patch
+import zipfile
 
 from data_grand_lyon_ha import (
+    TclLinePictogram,
     TclParkAndRide,
     TclPassage,
     TclPassageType,
@@ -171,6 +174,29 @@ MOCK_PARK_AND_RIDES = [
 ]
 
 
+MOCK_LINE_PICTOGRAMS = [
+    TclLinePictogram(
+        code_ligne="C3",
+        picto_mode="C3_mode.svg",
+        picto_ligne="C3_ligne.svg",
+        picto_complet="C3_complet.svg",
+    )
+]
+
+MOCK_PICTOGRAM_SVG = b'<svg xmlns="http://www.w3.org/2000/svg"><text>C3</text></svg>'
+
+
+def _build_pictograms_zip() -> bytes:
+    """Build an in-memory ZIP archive holding the mock pictogram SVG."""
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("C3_complet.svg", MOCK_PICTOGRAM_SVG)
+    return buffer.getvalue()
+
+
+MOCK_PICTOGRAMS_ZIP = _build_pictograms_zip()
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -279,4 +305,6 @@ def mock_tcl_client() -> Generator[AsyncMock]:
         client.get_tcl_stops.return_value = MOCK_TCL_STOPS
         client.get_velov_stations.return_value = MOCK_VELOV_STATIONS
         client.get_tcl_park_and_rides.return_value = MOCK_PARK_AND_RIDES
+        client.get_tcl_line_pictograms.return_value = MOCK_LINE_PICTOGRAMS
+        client.get_tcl_line_pictograms_zip.return_value = MOCK_PICTOGRAMS_ZIP
         yield client

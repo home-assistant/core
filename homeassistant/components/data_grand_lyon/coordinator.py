@@ -10,7 +10,9 @@ from data_grand_lyon_ha import (
     TclParkAndRide,
     TclPassage,
     VelovStation,
+    extract_tcl_pictogram_from_zip,
     filter_tcl_passages_by_lines_stops,
+    find_tcl_line_pictogram_by_code,
     find_tcl_park_and_ride_by_id,
     find_velov_stations_by_ids,
     sort_tcl_passages_by_time,
@@ -41,6 +43,7 @@ class DataGrandLyonData:
     tcl_coordinator: DataGrandLyonTclCoordinator
     velov_coordinator: DataGrandLyonVelovCoordinator
     park_and_ride_coordinator: DataGrandLyonParkAndRideCoordinator
+    pictogram_coordinator: DataGrandLyonPictogramCoordinator
 
 
 type DataGrandLyonConfigEntry = ConfigEntry[DataGrandLyonData]
@@ -237,3 +240,67 @@ class DataGrandLyonParkAndRideCoordinator(
                     subentry.subentry_id,
                 )
         return parks
+
+
+class DataGrandLyonPictogramCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
+    """Coordinator for TCL line pictograms (SVG images).
+
+    Pictograms are a best-effort bonus: a failure here only makes the image
+    entities unavailable and never blocks the rest of the integration, so this
+    coordinator never raises ConfigEntryAuthFailed.
+    """
+
+    config_entry: DataGrandLyonConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: DataGrandLyonConfigEntry,
+        client: DataGrandLyonClient,
+    ) -> None:
+        """Initialize the coordinator."""
+        self.client = client
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN}_pictograms",
+            update_interval=timedelta(days=1),
+        )
+
+    @override
+    async def _async_update_data(self) -> dict[str, bytes]:
+        """Fetch and extract the line pictogram for each monitored stop."""
+        stop_subentries = list(
+            self.config_entry.get_subentries_of_type(SUBENTRY_TYPE_STOP)
+        )
+        if not stop_subentries:
+            return {}
+
+        try:
+            lines = await self.client.get_tcl_line_pictograms()
+            zip_bytes = await self.client.get_tcl_line_pictograms_zip()
+        except (ClientError, TimeoutError) as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_pictograms",
+            ) from err
+
+        pictograms: dict[str, bytes] = {}
+        for subentry in stop_subentries:
+            line = subentry.data[CONF_LINE]
+            picto = find_tcl_line_pictogram_by_code(lines, line)
+            svg = (
+                extract_tcl_pictogram_from_zip(zip_bytes, picto.picto_complet)
+                if picto is not None
+                else None
+            )
+            if svg is not None:
+                pictograms[subentry.subentry_id] = svg
+            else:
+                LOGGER.warning(
+                    "No pictogram found for line %s (subentry %s)",
+                    line,
+                    subentry.subentry_id,
+                )
+        return pictograms
