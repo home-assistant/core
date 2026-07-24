@@ -1808,7 +1808,7 @@ openwrt-ubus-rpc==0.0.3
 opower==0.18.6
 
 # homeassistant.components.oralb
-oralb-ble==1.1.1
+oralb-ble==1.1.3
 
 # homeassistant.components.oru
 oru==0.1.11
