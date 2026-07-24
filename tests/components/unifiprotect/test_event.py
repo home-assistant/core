@@ -79,6 +79,7 @@ async def test_doorbell_ring(
         spec=PublicBootstrap,
         relays={},
         sirens={},
+        fobs={},
         arm_mode=None,
         arm_profiles={},
     )
@@ -167,6 +168,7 @@ async def test_package_detected(
         spec=PublicBootstrap,
         relays={},
         sirens={},
+        fobs={},
         arm_mode=None,
         arm_profiles={},
     )

@@ -1,0 +1,15 @@
+# serializer version: 1
+# name: test_fob_button_event_types
+  list([
+    'function',
+    'alarm_hub_button',
+    'arm',
+    'disarm',
+    'night',
+    'panic',
+    'left',
+    'right',
+    'input1',
+    'input2',
+  ])
+# ---

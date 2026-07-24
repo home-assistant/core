@@ -10,6 +10,8 @@ from typing import Any, cast, override
 from uiprotect.data import (
     NVR,
     Camera,
+    Fob,
+    FobAwayState,
     Light,
     ModelType,
     ProtectAdoptableDeviceModel,
@@ -52,6 +54,7 @@ from .entity import (
     ProtectDeviceEntity,
     ProtectEntityDescription,
     ProtectEventMixin,
+    ProtectFobEntity,
     ProtectNVREntity,
     T,
     async_all_device_entities,
@@ -591,6 +594,91 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
 }
 
 
+def _fob_battery_level(fob: Fob) -> int | None:
+    """Return the key fob battery percentage, if it has been reported."""
+    if (battery := fob.wireless_connection_state.battery_status) is not None:
+        return battery.percentage
+    return None
+
+
+def _fob_signal_strength(fob: Fob) -> int | None:
+    """Return the key fob Bluetooth signal strength, if it has been reported."""
+    if (signal := fob.wireless_connection_state.signal_state) is not None:
+        return signal.signal_strength
+    return None
+
+
+def _fob_status(fob: Fob) -> str | None:
+    """Return the key fob presence state.
+
+    ``FobAwayState`` carries an ``UNKNOWN`` member that the library coerces
+    unrecognized wire values into; map it to ``None`` (unknown state) rather
+    than a value the enum sensor's ``options`` do not list.
+    """
+    if (away_state := fob.away_state) is FobAwayState.UNKNOWN:
+        return None
+    return away_state.value.lower()
+
+
+@dataclass(frozen=True, kw_only=True)
+class ProtectFobSensorEntityDescription(SensorEntityDescription):
+    """Describes a UniFi Protect key fob sensor entity."""
+
+    value_fn: Callable[[Fob], int | str | None]
+
+
+FOB_SENSORS: tuple[ProtectFobSensorEntityDescription, ...] = (
+    ProtectFobSensorEntityDescription(
+        key="battery_level",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_fob_battery_level,
+    ),
+    ProtectFobSensorEntityDescription(
+        key="signal_strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_fob_signal_strength,
+    ),
+    ProtectFobSensorEntityDescription(
+        key="status",
+        translation_key="fob_status",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["online", "recently_seen", "no_recent_heartbeat", "device_lost"],
+        value_fn=_fob_status,
+    ),
+)
+
+
+class ProtectFobSensor(ProtectFobEntity, SensorEntity):
+    """A sensor entity for a UniFi Protect key fob (Public API)."""
+
+    entity_description: ProtectFobSensorEntityDescription
+    _fob_state_attrs = ("_attr_available", "_attr_native_value")
+
+    def __init__(
+        self,
+        data: ProtectData,
+        fob: Fob,
+        description: ProtectFobSensorEntityDescription,
+    ) -> None:
+        """Initialize the key fob sensor."""
+        self.entity_description = description
+        self._attr_unique_id = f"{fob.mac}_{description.key}"
+        super().__init__(data, fob)
+
+    @callback
+    @override
+    def _async_update_from_fob(self, fob: Fob) -> None:
+        self._attr_native_value = self.entity_description.value_fn(fob)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
@@ -629,6 +717,16 @@ async def async_setup_entry(
     entities += _async_nvr_entities(data)
 
     async_add_entities(entities)
+
+    # The public bootstrap is primed only with an API key and supported NVR
+    # firmware; without it there are no fobs to expose.
+    api = data.api
+    if api.has_public_bootstrap:
+        async_add_entities(
+            ProtectFobSensor(data, fob, description)
+            for fob in api.public_bootstrap.fobs.values()
+            for description in FOB_SENSORS
+        )
 
 
 @callback
