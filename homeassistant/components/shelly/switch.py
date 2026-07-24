@@ -97,7 +97,7 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
         attribute: str,
         description: RpcSwitchDescription,
     ) -> None:
-        """Initialize select."""
+        """Initialize switch."""
         super().__init__(coordinator, key, attribute, description)
 
         if description.key in ("cb", "switch", "script"):
