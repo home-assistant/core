@@ -1,5 +1,6 @@
 """The tests for the notify smtp platform."""
 
+import gzip
 from pathlib import Path
 import re
 from smtplib import (
@@ -136,6 +137,40 @@ def test_send_message(
     with patch("email.utils.make_msgid", return_value=sample_email):
         result, _ = message.send_message(message_data, data=data)
         assert content_type in result
+
+
+def test_send_message_with_unsniffable_jpeg(
+    hass: HomeAssistant, message: MockSMTP, tmp_path: Path
+) -> None:
+    """Verify a JPEG the stdlib cannot sniff is still attached as an image.
+
+    JPEGs written by ffmpeg for camera.snapshot start with an SOI + COM
+    marker instead of JFIF/Exif, which MIMEImage does not recognize.
+    """
+    image_file = tmp_path / "doorphone.jpg"
+    image_file.write_bytes(
+        bytes.fromhex("ffd8fffe0010") + b"Lavc62.28.102\x00" + bytes.fromhex("ffdb")
+    )
+    message.hass = hass
+    hass.config.allowlist_external_dirs.add(tmp_path)
+    with patch("email.utils.make_msgid", return_value="<mock@mock>"):
+        result, _ = message.send_message("Test msg", data={"images": [str(image_file)]})
+    assert "Content-Type: image/jpeg" in result
+    assert "application/octet-stream" not in result
+
+
+def test_send_message_with_compressed_image(
+    hass: HomeAssistant, message: MockSMTP, tmp_path: Path
+) -> None:
+    """Verify a compressed image is attached as a file, not a plain image."""
+    image_file = tmp_path / "diagram.svgz"
+    image_file.write_bytes(gzip.compress(b"<svg xmlns='http://www.w3.org/2000/svg'/>"))
+    message.hass = hass
+    hass.config.allowlist_external_dirs.add(tmp_path)
+    with patch("email.utils.make_msgid", return_value="<mock@mock>"):
+        result, _ = message.send_message("Test msg", data={"images": [str(image_file)]})
+    assert "application/octet-stream" in result
+    assert "Content-Type: image/" not in result
 
 
 @pytest.mark.parametrize(
