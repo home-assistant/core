@@ -159,9 +159,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry Switch platform from a config entry."""
 
-    entities: list[SwitchEntity] = []
+    entities: list[SwitchEntity]
 
     for vehicle in entry.runtime_data.vehicles:
+        entities = []
         for description in VEHICLE_DESCRIPTIONS:
             if vehicle.poll or not firmware_at_least(
                 vehicle.firmware, description.streaming_firmware
@@ -178,23 +179,24 @@ async def async_setup_entry(
                         vehicle, description, entry.runtime_data.scopes
                     )
                 )
+        async_add_entities(entities, config_subentry_id=vehicle.subentry_id)
 
-    entities.extend(
-        TeslemetryChargeFromGridSwitchEntity(
-            energysite,
-            entry.runtime_data.scopes,
-        )
-        for energysite in entry.runtime_data.energysites
-        if energysite.info_coordinator.data.get("components_battery")
-        and energysite.info_coordinator.data.get("components_solar")
-    )
-    entities.extend(
-        TeslemetryStormModeSwitchEntity(energysite, entry.runtime_data.scopes)
-        for energysite in entry.runtime_data.energysites
-        if energysite.info_coordinator.data.get("components_storm_mode_capable")
-    )
-
-    async_add_entities(entities)
+    for energysite in entry.runtime_data.energysites:
+        entities = []
+        if energysite.info_coordinator.data.get(
+            "components_battery"
+        ) and energysite.info_coordinator.data.get("components_solar"):
+            entities.append(
+                TeslemetryChargeFromGridSwitchEntity(
+                    energysite,
+                    entry.runtime_data.scopes,
+                )
+            )
+        if energysite.info_coordinator.data.get("components_storm_mode_capable"):
+            entities.append(
+                TeslemetryStormModeSwitchEntity(energysite, entry.runtime_data.scopes)
+            )
+        async_add_entities(entities, config_subentry_id=energysite.subentry_id)
 
 
 class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):

@@ -21,21 +21,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry Calendar platform from a config entry."""
 
-    entities_to_add: list[CalendarEntity] = []
+    for energy in entry.runtime_data.energysites:
+        entities_to_add: list[CalendarEntity] = []
 
-    entities_to_add.extend(
-        TeslemetryTariffSchedule(energy, "tariff_content_v2")
-        for energy in entry.runtime_data.energysites
-        if energy.info_coordinator.data.get("tariff_content_v2_seasons")
-    )
+        if energy.info_coordinator.data.get("tariff_content_v2_seasons"):
+            entities_to_add.append(
+                TeslemetryTariffSchedule(energy, "tariff_content_v2")
+            )
 
-    entities_to_add.extend(
-        TeslemetryTariffSchedule(energy, "tariff_content_v2_sell_tariff")
-        for energy in entry.runtime_data.energysites
-        if energy.info_coordinator.data.get("tariff_content_v2_sell_tariff_seasons")
-    )
+        if energy.info_coordinator.data.get("tariff_content_v2_sell_tariff_seasons"):
+            entities_to_add.append(
+                TeslemetryTariffSchedule(energy, "tariff_content_v2_sell_tariff")
+            )
 
-    async_add_entities(entities_to_add)
+        async_add_entities(entities_to_add, config_subentry_id=energy.subentry_id)
 
 
 def _is_day_in_range(day_of_week: int, from_day: int, to_day: int) -> bool:
