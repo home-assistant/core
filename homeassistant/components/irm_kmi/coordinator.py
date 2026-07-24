@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the IRM KMI integration."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
@@ -18,6 +18,8 @@ from homeassistant.util.dt import utcnow
 
 from .data import ProcessedCoordinatorData
 from .utils import preferred_language
+
+API_FAILURE_GRACE_MULTIPLIER = 2.5
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +45,11 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
         )
         self._api = api_client
         self._location = entry.data[CONF_LOCATION]
+        # We have to track the last successful update separately from the coordinator's built-in last_update_success,
+        # because _async_update_data can return old data without raising an exception, which still counts as a
+        # successful update for the coordinator.
+        self._last_successful_api_update: datetime | None = None
+        self._api_reachable: bool | None = None
 
     @override
     async def _async_update_data(self) -> ProcessedCoordinatorData:
@@ -63,26 +70,40 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
             )
 
         except IrmKmiApiError as err:
+            self._api_reachable = False
+
             if (
-                self.last_update_success_time is not None
+                self.data is not None
+                and self._last_successful_api_update is not None
                 and self.update_interval is not None
-                and self.last_update_success_time - utcnow()
-                < timedelta(seconds=2.5 * self.update_interval.seconds)
+                and utcnow() - self._last_successful_api_update
+                < API_FAILURE_GRACE_MULTIPLIER * self.update_interval
             ):
                 return self.data
 
-            _LOGGER.warning(
-                "Could not connect to the API since %s", self.last_update_success_time
+            success_info = (
+                f"Last success time is: {self._last_successful_api_update.isoformat()}"
+                if self._last_successful_api_update is not None
+                else "No successful API update yet."
             )
             raise UpdateFailed(
-                f"Error communicating with API for general forecast: {err}. "
-                f"Last success time is: {self.last_update_success_time}"
+                f"Error communicating with API for general forecast: {err}. {success_info}"
             ) from err
 
-        if not self.last_update_success:
-            _LOGGER.warning("Successfully reconnected to the API")
+        data = await self.process_api_data()
+        was_previously_successful = self._last_successful_api_update is not None
+        self._last_successful_api_update = utcnow()
 
-        return await self.process_api_data()
+        if self._api_reachable is False:
+            message = (
+                "Successfully reconnected to the API"
+                if was_previously_successful
+                else "Successfully connected to the API"
+            )
+            _LOGGER.info(message)
+        self._api_reachable = True
+
+        return data
 
     async def process_api_data(self) -> ProcessedCoordinatorData:
         """From the API data, create the object that will be used in the entities."""
