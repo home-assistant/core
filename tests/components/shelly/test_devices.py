@@ -598,6 +598,7 @@ async def test_blu_trv_device_info(
         "duo_bulb_gen3",
         "power_strip_gen4",
         "presence_gen4",
+        "pro1cb_gen2",
         "wall_display_xl",
     ],
 )

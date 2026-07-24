@@ -1,11 +1,11 @@
-"""Constants for the Midea LAN integration."""
+"""Constants for the Midea integration."""
 
 from enum import IntEnum
 import logging
 
 _LOGGER = logging.getLogger(__package__)
 
-DOMAIN = "midea_lan"
+DOMAIN = "midea"
 
 
 CONF_KEY = "key"
