@@ -60,7 +60,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'streaming',
+    'state': 'idle',
   })
 # ---
 # name: test_entity[camera.hall-entry]
@@ -124,7 +124,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'streaming',
+    'state': 'idle',
   })
 # ---
 # name: test_entity[camera.netatmo_doorbell-entry]
