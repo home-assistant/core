@@ -4,7 +4,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
@@ -17,6 +17,9 @@ from homeassistant.components.climate import (
     PRESET_SLEEP,
 )
 from homeassistant.config_entries import ConfigEntry
+
+if TYPE_CHECKING:
+    from .coordinator import ViCareCoordinator
 
 
 class HeatingProgram(enum.StrEnum):
@@ -74,12 +77,13 @@ VICARE_TO_HA_PRESET_HEATING = {
 }
 
 
-@dataclass(frozen=True)
+@dataclass
 class ViCareDevice:
     """Dataclass holding the device api and config."""
 
     config: PyViCareDeviceConfig
     api: PyViCareDevice
+    coordinator: ViCareCoordinator | None = None
 
 
 @dataclass(frozen=True)
