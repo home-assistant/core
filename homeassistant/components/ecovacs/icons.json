@@ -196,6 +196,9 @@
     }
   },
   "services": {
+    "mower_raw_get_positions": {
+      "service": "mdi:map-marker-radius-outline"
+    },
     "raw_get_positions": {
       "service": "mdi:map-marker-radius-outline"
     }
