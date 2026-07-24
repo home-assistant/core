@@ -11,7 +11,7 @@ from aiohttp.web_urldispatcher import StaticResource
 from lru import LRU
 
 CACHE_TIME: Final = 31 * 86400  # = 1 month
-CACHE_HEADER = f"public, max-age={CACHE_TIME}"
+CACHE_HEADER = f"public, max-age={CACHE_TIME}, immutable"
 CACHE_HEADERS: Mapping[str, str] = {CACHE_CONTROL: CACHE_HEADER}
 RESPONSE_CACHE: LRU[tuple[str, Path], tuple[Path, str]] = LRU(512)
 
