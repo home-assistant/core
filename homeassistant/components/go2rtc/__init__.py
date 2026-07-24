@@ -32,6 +32,7 @@ from homeassistant.components.camera import (
     WebRTCMessage,
     WebRTCSendMessage,
     async_register_webrtc_provider,
+    get_camera_from_entity_id,
     get_dynamic_camera_stream_settings,
 )
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
@@ -62,6 +63,8 @@ from .const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    HA_MANAGED_RTSP_HOST,
+    HA_MANAGED_RTSP_PORT,
     HA_MANAGED_URL,
     RECOMMENDED_VERSION,
 )
@@ -115,6 +118,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 _DATA_GO2RTC: HassKey[Go2RtcConfig] = HassKey(DOMAIN)
+
+
+class _UnusableStreamSourceError(HomeAssistantError):
+    """The camera's source is missing or unusable by go2rtc (not transient)."""
+
+
 _RETRYABLE_ERRORS = (ClientConnectionError, ServerConnectionError)
 type Go2RtcConfigEntry = ConfigEntry[WebRTCProvider]
 
@@ -122,6 +131,7 @@ type Go2RtcConfigEntry = ConfigEntry[WebRTCProvider]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up WebRTC."""
     url: str | None = None
+    managed = False
     username: str | None = None
     password: str | None = None
 
@@ -185,6 +195,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
 
         url = HA_MANAGED_URL
+        managed = True
     elif username and password:
         # Create session with BasicAuth if credentials are provided
         auth = BasicAuth(username, password)
@@ -192,7 +203,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         session = async_get_clientsession(hass)
 
-    hass.data[_DATA_GO2RTC] = Go2RtcConfig(url, session)
+    hass.data[_DATA_GO2RTC] = Go2RtcConfig(url, session, managed)
     discovery_flow.async_create_flow(
         hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
     )
@@ -203,6 +214,34 @@ async def _remove_go2rtc_entries(hass: HomeAssistant) -> None:
     """Remove go2rtc config entries, if any."""
     for entry in hass.config_entries.async_entries(DOMAIN):
         await hass.config_entries.async_remove(entry.entry_id)
+
+
+async def async_get_rtsp_stream_url(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Return the local RTSP restream URL for a camera, or None.
+
+    Registers the camera's stream with the Home Assistant managed go2rtc server
+    when needed, so every consumer of the returned URL shares go2rtc's single
+    upstream connection to the camera. Best-effort: returns None whenever the
+    restream cannot be provided, so the caller can fall back to the raw source.
+    """
+    if (config := hass.data.get(_DATA_GO2RTC)) is None or not config.managed:
+        return None
+    if not (entries := hass.config_entries.async_loaded_entries(DOMAIN)):
+        return None
+    provider = entries[0].runtime_data
+    try:
+        camera = get_camera_from_entity_id(hass, entity_id)
+        # Resolve first so a transient camera error propagates instead of
+        # reaching the unusable-source teardown in async_update_stream_source.
+        stream_source = await provider.async_get_stream_source(camera)
+        await provider.async_update_stream_source(camera, stream_source)
+    except (HomeAssistantError, Go2RtcClientError) as err:
+        _LOGGER.debug("Not providing RTSP restream URL for %s: %s", entity_id, err)
+        return None
+    return (
+        f"rtsp://{HA_MANAGED_RTSP_HOST}:{HA_MANAGED_RTSP_PORT}"
+        f"/{get_camera_identifier(camera)}"
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bool:
@@ -305,7 +344,7 @@ class WebRTCProvider(CameraWebRTCProvider):
     ) -> None:
         """Handle the WebRTC offer and return the answer via the provided callback."""
         try:
-            await self._update_stream_source(camera)
+            await self.async_update_stream_source(camera)
         except HomeAssistantError as err:
             send_message(WebRTCError("go2rtc_webrtc_offer_failed", str(err)))
             return
@@ -358,26 +397,42 @@ class WebRTCProvider(CameraWebRTCProvider):
         height: int | None = None,
     ) -> bytes | None:
         """Get an image from the camera."""
-        await self._update_stream_source(camera)
+        await self.async_update_stream_source(camera)
         return await self._rest_client.get_jpeg_snapshot(
             get_camera_identifier(camera), width, height
         )
 
-    async def _update_stream_source(self, camera: Camera) -> None:
-        """Update the stream source in go2rtc config if needed."""
+    async def async_get_stream_source(self, camera: Camera) -> str:
+        """Return the camera's stream source as usable by go2rtc.
+
+        Raises _UnusableStreamSourceError when the source is missing or
+        unsupported; a transient error from the camera itself propagates
+        unchanged.
+        """
         if not (stream_source := await camera.stream_source()):
-            await self.teardown()
-            raise HomeAssistantError("Camera has no stream source")
+            raise _UnusableStreamSourceError("Camera has no stream source")
 
         if camera.platform.platform_name == "generic":
             # This is a workaround to use ffmpeg for generic cameras
             # A proper fix will be added in the future together
             # with supporting multiple streams per camera
-            stream_source = "ffmpeg:" + stream_source
+            stream_source = _FFMPEG + ":" + stream_source
 
         if not self.async_is_supported(stream_source):
-            await self.teardown()
-            raise HomeAssistantError("Stream source is not supported by go2rtc")
+            raise _UnusableStreamSourceError("Stream source is not supported by go2rtc")
+
+        return stream_source
+
+    async def async_update_stream_source(
+        self, camera: Camera, stream_source: str | None = None
+    ) -> None:
+        """Register or update the camera's stream source in go2rtc if needed."""
+        if stream_source is None:
+            try:
+                stream_source = await self.async_get_stream_source(camera)
+            except _UnusableStreamSourceError:
+                await self.teardown()
+                raise
 
         camera_prefs = await get_dynamic_camera_stream_settings(
             self._hass, camera.entity_id
@@ -436,3 +491,6 @@ class Go2RtcConfig:
 
     url: str
     session: ClientSession
+    # A user-provided server at the managed URL does not expose the managed
+    # RTSP endpoint, so ownership cannot be inferred from the URL.
+    managed: bool
