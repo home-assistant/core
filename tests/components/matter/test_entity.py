@@ -456,6 +456,99 @@ async def test_non_bridged_entity_does_not_subscribe_to_reachable(
 _COMPOSED_ENTITY_ID = "switch.my_device"
 # AttributePath for BridgedDeviceBasicInformation.Reachable on parent endpoint 42.
 _COMPOSED_PARENT_REACHABLE_ATTR_PATH = "42/57/17"
+_COMPOSED_CHILD_ONOFF_ATTR_PATH = "40/6/0"
+
+
+async def test_composed_entity_available_when_child_reports_activity(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test a child report overrides an incorrect parent Reachable=false."""
+    matter_node = await setup_integration_with_node_fixture(
+        hass, "fritz_bridge", matter_client
+    )
+
+    state = hass.states.get(_COMPOSED_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    set_node_attribute(matter_node, 40, 6, 0, True)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        event=EventType.ATTRIBUTE_UPDATED,
+        data=True,
+        attribute_path=_COMPOSED_CHILD_ONOFF_ATTR_PATH,
+    )
+
+    state = hass.states.get(_COMPOSED_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_composed_entity_child_activity_does_not_override_disconnected_node(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test child activity cannot keep an entity available when its node is offline."""
+    matter_node = await setup_integration_with_node_fixture(
+        hass, "fritz_bridge", matter_client
+    )
+
+    set_node_attribute(matter_node, 40, 6, 0, True)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        event=EventType.ATTRIBUTE_UPDATED,
+        data=True,
+        attribute_path=_COMPOSED_CHILD_ONOFF_ATTR_PATH,
+    )
+    state = hass.states.get(_COMPOSED_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    matter_node.node_data.available = False
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_UPDATED, data=matter_node
+    )
+
+    state = hass.states.get(_COMPOSED_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_composed_entity_parent_report_supersedes_child_activity(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test a fresh parent Reachable=false report restores unavailability."""
+    matter_node = await setup_integration_with_node_fixture(
+        hass, "fritz_bridge", matter_client
+    )
+
+    set_node_attribute(matter_node, 40, 6, 0, True)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        event=EventType.ATTRIBUTE_UPDATED,
+        data=True,
+        attribute_path=_COMPOSED_CHILD_ONOFF_ATTR_PATH,
+    )
+    state = hass.states.get(_COMPOSED_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        event=EventType.ATTRIBUTE_UPDATED,
+        data=False,
+        attribute_path=_COMPOSED_PARENT_REACHABLE_ATTR_PATH,
+    )
+
+    state = hass.states.get(_COMPOSED_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_composed_entity_state_updates_when_parent_reachable_changes(
