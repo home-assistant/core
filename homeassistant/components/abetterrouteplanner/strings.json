@@ -1,0 +1,98 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "api_unauthorized": "Could not verify your A Better Routeplanner account.",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "cannot_connect": "Failed to connect to A Better Routeplanner.",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "no_vehicles": "No vehicles were found on this A Better Routeplanner account.",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "error": {
+      "select_at_least_one": "Select at least one vehicle to track."
+    },
+    "step": {
+      "pick_vehicles": {
+        "data": {
+          "vehicle_ids": "Vehicles to track"
+        },
+        "data_description": {
+          "vehicle_ids": "Each selected vehicle is added as a device in Home Assistant. Unselect vehicles you don't want to track here."
+        },
+        "description": "Choose which of your A Better Routeplanner vehicles you'd like to manage in Home Assistant.",
+        "title": "Pick vehicles"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_capacity": {
+        "name": "Battery capacity"
+      },
+      "battery_temperature": {
+        "name": "Battery temperature"
+      },
+      "calibrated_ref_cons": {
+        "name": "Calibrated ref cons"
+      },
+      "charging_state": {
+        "name": "Charging state",
+        "state": {
+          "charging_ac": "Charging (AC)",
+          "charging_dc": "Charging (DC)",
+          "charging_unknown": "Charging",
+          "not_charging": "Not charging",
+          "plugged_in": "Plugged in"
+        }
+      },
+      "odometer": {
+        "name": "Odometer"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "range": {
+        "name": "Range"
+      },
+      "soc": {
+        "name": "SoC"
+      },
+      "soe": {
+        "name": "SoE"
+      },
+      "soh": {
+        "name": "State of health"
+      },
+      "voltage": {
+        "name": "Voltage"
+      }
+    }
+  },
+  "exceptions": {
+    "abrp_session_invalid": {
+      "message": "A Better Routeplanner rejected the authentication session; please re-authenticate."
+    },
+    "abrp_update_failed": {
+      "message": "Failed to fetch vehicle data from A Better Routeplanner."
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "oauth2_session_not_valid": {
+      "message": "The OAuth2 session is no longer valid; please re-authenticate."
+    },
+    "oauth2_token_refresh_failed": {
+      "message": "Failed to refresh the OAuth2 access token."
+    }
+  }
+}
