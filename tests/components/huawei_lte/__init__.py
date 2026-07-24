@@ -302,7 +302,45 @@ def magic_client() -> MagicMock:
         traffic_statistics=traffic_statistics,
     )
     net = MagicMock(current_plmn=current_plmn, net_mode=net_mode)
-    sms = MagicMock(sms_count=sms_count)
+    get_sms_list = MagicMock(
+        return_value={
+            "Count": "2",
+            "Messages": {
+                "Message": [
+                    {
+                        "Smstat": "0",
+                        "Index": "40001",
+                        "Phone": "+1234567890",
+                        "Content": "Test message 1",
+                        "Date": "2026-03-29 10:00:00",
+                        "Sca": None,
+                        "SaveType": "4",
+                        "Priority": "0",
+                        "SmsType": "1",
+                    },
+                    {
+                        "Smstat": "1",
+                        "Index": "40002",
+                        "Phone": "+0987654321",
+                        "Content": "Test message 2",
+                        "Date": "2026-03-29 09:00:00",
+                        "Sca": None,
+                        "SaveType": "4",
+                        "Priority": "0",
+                        "SmsType": "1",
+                    },
+                ]
+            },
+        }
+    )
+    delete_sms = MagicMock(return_value="OK")
+    set_read = MagicMock(return_value="OK")
+    sms = MagicMock(
+        sms_count=sms_count,
+        get_sms_list=get_sms_list,
+        delete_sms=delete_sms,
+        set_read=set_read,
+    )
     dial_up = MagicMock(mobile_dataswitch=mobile_dataswitch)
     lan = MagicMock(host_info=lan_host_info)
     wlan = MagicMock(
