@@ -5052,6 +5052,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "onida_infrared": {
+      "name": "Onida Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "onkyo": {
       "name": "Onkyo",
       "integration_type": "device",
