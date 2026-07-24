@@ -806,10 +806,10 @@ async def test_timer_events(
         True,
     )
 
-    # Increase timer beyond original time and check total_seconds has increased
+    # Increase timer beyond original time. created_seconds (the timer's
+    # original duration) stays fixed; only seconds_left grows.
     mock_client.send_voice_assistant_timer_event.reset_mock()
 
-    total_seconds += 5 * 60
     await intent_helper.async_handle(
         hass,
         "test",
@@ -829,6 +829,24 @@ async def test_timer_events(
         ANY,
         True,
     )
+
+
+async def test_no_timer_list_without_timers_flag(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a voice device without the TIMERS flag gets no timer list entity."""
+    await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.async_entity_ids("timer_list") == []
 
 
 async def test_unknown_timer_event(
@@ -854,7 +872,7 @@ async def test_unknown_timer_event(
     assert dev is not None
 
     with patch(
-        "homeassistant.components.esphome.assist_satellite._TIMER_EVENT_TYPES.from_hass",
+        "homeassistant.components.esphome.timer_list._TIMER_EVENT_TYPES.from_hass",
         side_effect=KeyError,
     ):
         await intent_helper.async_handle(

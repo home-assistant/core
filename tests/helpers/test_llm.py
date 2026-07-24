@@ -7,7 +7,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
-from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.script import ScriptConfig
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, State
@@ -25,7 +24,7 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_setup_timer_list_entity
 
 
 @pytest.fixture(autouse=True)
@@ -318,9 +317,7 @@ async def test_assist_api_get_timer_tools(
 
     assert "HassStartTimer" not in [tool.name for tool in api.tools]
 
-    llm_context.device_id = "test_device"
-
-    async_register_timer_handler(hass, "test_device", lambda *args: None)
+    llm_context.device_id = await async_setup_timer_list_entity(hass)
 
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert "HassStartTimer" in [tool.name for tool in api.tools]
@@ -758,7 +755,7 @@ Static Context: An overview of the areas and the devices in this smart home:
     )
 
     # Register device for timers
-    async_register_timer_handler(hass, device.id, lambda *args: None)
+    await async_setup_timer_list_entity(hass, device.id)
 
     api = await llm.async_get_api(hass, "assist", llm_context)
     # The no_timer_prompt is gone

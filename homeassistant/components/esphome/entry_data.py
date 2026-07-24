@@ -287,6 +287,7 @@ class RuntimeEntryData:
             if self.device_info.voice_assistant_feature_flags_compat(self.api_version):
                 needed_platforms.add(Platform.BINARY_SENSOR)
                 needed_platforms.add(Platform.SELECT)
+                needed_platforms.add(Platform.TIMER_LIST)
 
         # Make a dict of the EntityInfo by type and send
         # them to the listeners for each specific EntityInfo type

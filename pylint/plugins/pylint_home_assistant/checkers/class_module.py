@@ -100,6 +100,7 @@ _ENTITY_COMPONENTS: set[str] = set(ENTITY_COMPONENTS).union(
         "script",
         "tag",
         "timer",
+        "timer_list",
     }
 )
 

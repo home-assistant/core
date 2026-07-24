@@ -63,7 +63,6 @@ from homeassistant.components.anthropic.entity import (
     _convert_content,
 )
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
-from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.llm import LLMTools
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
@@ -92,7 +91,7 @@ from . import (
     create_web_search_result_block,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_setup_timer_list_entity
 
 
 async def test_entity(
@@ -525,7 +524,7 @@ async def test_assist_api_tools_conversion(
         hass.states.async_set(f"{domain}.test", "on")
         async_expose_entity(hass, "conversation", f"{domain}.test", True)
 
-    async_register_timer_handler(hass, "test_device", lambda *args: None)
+    device_id = await async_setup_timer_list_entity(hass)
 
     agent_id = "conversation.claude_conversation"
 
@@ -534,7 +533,7 @@ async def test_assist_api_tools_conversion(
     ]
 
     await conversation.async_converse(
-        hass, "hello", None, Context(), agent_id=agent_id, device_id="test_device"
+        hass, "hello", None, Context(), agent_id=agent_id, device_id=device_id
     )
 
     tools = mock_create_stream.mock_calls[0][2]["tools"]

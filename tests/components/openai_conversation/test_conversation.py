@@ -17,7 +17,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
-from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
@@ -48,7 +47,7 @@ from . import (
     create_web_search_item,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_setup_timer_list_entity
 from tests.components.conversation import (
     MockChatLog,
     mock_chat_log,  # noqa: F401
@@ -505,7 +504,7 @@ async def test_assist_api_tools_conversion(
         hass.states.async_set(f"{domain}.test", "on")
         async_expose_entity(hass, "conversation", f"{domain}.test", True)
 
-    async_register_timer_handler(hass, "test_device", lambda *args: None)
+    device_id = await async_setup_timer_list_entity(hass)
 
     mock_create_stream.return_value = [
         create_message_item(id="msg_A", text="Cool", output_index=0)
@@ -517,7 +516,7 @@ async def test_assist_api_tools_conversion(
         None,
         Context(),
         agent_id="conversation.openai_conversation",
-        device_id="test_device",
+        device_id=device_id,
     )
 
     tools = mock_create_stream.mock_calls[0][2]["tools"]

@@ -5,10 +5,16 @@ import pytest
 from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import llm as intent_llm
-from homeassistant.components.intent.timers import async_register_timer_handler
-from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers import llm
+from homeassistant.components.local_timer_list import LocalTimerListEntity
+from homeassistant.components.timer_list import (
+    DATA_COMPONENT as TIMER_LIST_DATA_COMPONENT,
+    DOMAIN as TIMER_LIST_DOMAIN,
+)
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er, llm
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 COVER_ENTITY_ID = "cover.test"
 
@@ -53,17 +59,33 @@ async def test_timer_intents_require_timer_device(hass: HomeAssistant) -> None:
     assert "HassStartTimer" not in await _tool_names(hass)
 
 
+async def _add_timer_device(hass: HomeAssistant) -> str:
+    """Create a device with a timer_list entity and return its device id."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", entry.entry_id)},
+    )
+    component = hass.data[TIMER_LIST_DATA_COMPONENT]
+    await component.async_add_entities(
+        [LocalTimerListEntity(name="Timers", unique_id=device.id)]
+    )
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        TIMER_LIST_DOMAIN, TIMER_LIST_DOMAIN, device.id
+    )
+    assert entity_id is not None
+    entity_registry.async_update_entity(entity_id, device_id=device.id)
+    return device.id
+
+
 async def test_timer_intents_offered_for_timer_device(hass: HomeAssistant) -> None:
-    """Test timer intents are exposed for a timer-capable device."""
-
-    @callback
-    def handle_timer(*args: object) -> None:
-        pass
-
-    async_register_timer_handler(hass, "test_device", handle_timer)
+    """Test timer intents are exposed for a device with a timer_list entity."""
+    device_id = await _add_timer_device(hass)
 
     result = await llm_component.async_get_tools(
-        hass, _llm_context(device_id="test_device"), "assist"
+        hass, _llm_context(device_id=device_id), "assist"
     )
     names = {tool.name for tool in result.tools}
     assert "HassStartTimer" in names
