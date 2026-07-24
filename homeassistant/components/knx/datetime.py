@@ -32,7 +32,12 @@ from .const import (
     KNX_ADDRESS,
     KNX_MODULE_KEY,
 )
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .storage.const import CONF_ENTITY, CONF_GA_DATETIME
 from .storage.util import ConfigExtractor
@@ -120,7 +125,7 @@ class KnxYamlDateTime(_KNXDateTime, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.remote_value.group_address),
+            unique_id=build_yaml_unique_id(self._device.remote_value.group_address),
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )

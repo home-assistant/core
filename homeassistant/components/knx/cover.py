@@ -27,7 +27,12 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_SYNC_STATE, DOMAIN, KNX_MODULE_KEY, CoverConf
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .schema import CoverSchema
 from .storage.const import (
@@ -222,9 +227,9 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=(
-                f"{self._device.updown.group_address}_"
-                f"{self._device.position_target.group_address}"
+            unique_id=build_yaml_unique_id(
+                self._device.updown.group_address,
+                self._device.position_target.group_address,
             ),
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),

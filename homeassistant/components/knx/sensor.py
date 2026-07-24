@@ -44,6 +44,7 @@ from .entity import (
     KnxUiEntityPlatformController,
     KnxYamlEntity,
     _KnxEntityBase,
+    build_yaml_unique_id,
 )
 from .knx_module import KNXModule
 from .schema import SensorSchema
@@ -212,7 +213,9 @@ class KnxYamlSensor(_KnxSensor, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.sensor_value.group_address_state),
+            unique_id=build_yaml_unique_id(
+                self._device.sensor_value.group_address_state
+            ),
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )

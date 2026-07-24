@@ -35,7 +35,12 @@ from .const import (
     NumberConf,
 )
 from .dpt import get_supported_dpts
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .storage.const import CONF_ENTITY, CONF_GA_SENSOR
 from .storage.util import ConfigExtractor
@@ -118,7 +123,7 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.sensor_value.group_address),
+            unique_id=build_yaml_unique_id(self._device.sensor_value.group_address),
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )

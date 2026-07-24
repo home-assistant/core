@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .const import KNX_ADDRESS, KNX_MODULE_KEY
-from .entity import KnxYamlEntity
+from .entity import KnxYamlEntity, build_yaml_unique_id
 from .knx_module import KNXModule
 
 
@@ -49,7 +49,7 @@ class KNXNotify(KnxYamlEntity, NotifyEntity):
         self._device = _create_notification_instance(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.remote_value.group_address),
+            unique_id=build_yaml_unique_id(self._device.remote_value.group_address),
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
