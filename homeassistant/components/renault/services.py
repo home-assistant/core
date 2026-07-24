@@ -132,6 +132,18 @@ async def charge_start(service_call: ServiceCall) -> None:
     LOGGER.debug("Charge start result: %s", result.raw_data)
 
 
+async def charge_set_immediate(service_call: ServiceCall) -> None:
+    """Set vehicle to immediate charging mode."""
+    proxy = get_vehicle_proxy(service_call)
+
+    LOGGER.debug("Charge immediate mode attempt")
+    result = await proxy.set_charge_mode("always_charging")
+    LOGGER.debug("Charge immediate mode result: %s", result)
+    LOGGER.debug(
+        "It may take some time before this change is reflected in your vehicle"
+    )
+
+
 async def charge_set_schedules(service_call: ServiceCall) -> None:
     """Set charge schedules."""
     schedules: list[dict[str, Any]] = service_call.data[
@@ -224,6 +236,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "charge_start",
         charge_start,
         schema=SERVICE_CHARGE_START_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "charge_set_immediate",
+        charge_set_immediate,
+        schema=SERVICE_VEHICLE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
