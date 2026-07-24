@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, Mock
 
+import pytest
+
 from homeassistant.components import notify
 from homeassistant.components.slack import DOMAIN
 from homeassistant.components.slack.notify import (
@@ -10,6 +12,7 @@ from homeassistant.components.slack.notify import (
     SlackNotificationService,
 )
 from homeassistant.const import ATTR_ICON, CONF_API_KEY, CONF_NAME, CONF_PLATFORM
+from homeassistant.exceptions import ServiceValidationError
 
 from . import CONF_DATA
 
@@ -108,3 +111,17 @@ async def test_message_as_reply() -> None:
     mock_fn.assert_called_once()
     _, kwargs = mock_fn.call_args
     assert kwargs["thread_ts"] == expected_ts
+
+
+async def test_invalid_message_data() -> None:
+    """Tests that invalid message data raises an error and sends no message."""
+    mock_client = Mock()
+    mock_client.chat_postMessage = AsyncMock()
+    service = SlackNotificationService(None, mock_client, CONF_DATA)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await service.async_send_message("test", data={"not_a_valid_key": "value"})
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_message_data"
+    mock_client.chat_postMessage.assert_not_called()
