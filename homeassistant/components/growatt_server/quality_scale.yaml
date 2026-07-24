@@ -73,4 +73,8 @@ rules:
   # Platinum
   async-dependency: todo
   inject-websession: todo
-  strict-typing: todo
+  strict-typing:
+    status: todo
+    comment: >-
+      Integration code is fully typed but growattServer library lacks py.typed
+      (PEP 561). Waiting on upstream.
