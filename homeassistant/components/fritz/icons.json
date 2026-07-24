@@ -29,6 +29,9 @@
       "gb_sent": {
         "default": "mdi:upload"
       },
+      "ipv6_prefix": {
+        "default": "mdi:earth"
+      },
       "kb_s_received": {
         "default": "mdi:download"
       },
