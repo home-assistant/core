@@ -962,6 +962,9 @@
       "total_volatile_organic_compound": {
         "name": "Total volatile organic compound"
       },
+      "total_water": {
+        "name": "Total water"
+      },
       "total_watering_time": {
         "name": "Total watering time"
       },
