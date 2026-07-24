@@ -1,10 +1,16 @@
 """Fixtures for the Honeywell Lyric integration tests."""
 
+from collections.abc import Generator
 from time import time
+from unittest.mock import patch
 
+from aiolyric import Lyric
+from aiolyric.objects.location import LyricLocation
+from aiolyric.objects.priority import LyricPriority
 import pytest
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -13,7 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -88,12 +93,11 @@ PRIORITY_RESPONSE = {
 
 @pytest.fixture
 async def setup_credentials(hass: HomeAssistant) -> None:
-    """Register lyric application credentials, matching test_config_flow.py."""
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    """Register lyric application credentials."""
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
 
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "cred"
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
     )
 
 
@@ -103,12 +107,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            # Matches the credential name registered by setup_credentials via
-            # async_import_client_credential(..., "cred") - confirmed against
-            # test_config_flow.py's test_full_flow, which asserts a real
-            # completed flow ends up with auth_implementation == "cred", not
-            # DOMAIN.
-            "auth_implementation": "cred",
+            "auth_implementation": DOMAIN,
             "token": {
                 "access_token": "mock-access-token",
                 "refresh_token": "mock-refresh-token",
@@ -120,23 +119,37 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_lyric_api(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
-    """Mock the /locations and /priority HTTP endpoints with real-shaped data.
+def mock_lyric_api() -> Generator[None]:
+    """Patch the aiolyric client to build real Location/Priority objects.
 
-    Registered at the aiohttp transport level, so the real aiolyric client
-    and coordinator code runs unmodified - only the network call itself is
-    faked, using the actual field names Resideo returns.
+    Patches Lyric.get_locations/get_thermostat_rooms directly rather than
+    mocking HTTP responses, so tests exercise real aiolyric parsing (the
+    same LyricLocation/LyricPriority code reading the actual field names
+    Resideo returns) without depending on network-mocking machinery.
     """
-    aioclient_mock.get(
-        f"{BASE_URL}/locations?apikey={CLIENT_ID}",
-        json=LOCATIONS_RESPONSE,
-    )
-    aioclient_mock.get(
-        f"{BASE_URL}/devices/thermostats/{DEVICE_ID}/priority"
-        f"?apikey={CLIENT_ID}&locationId={LOCATION_ID}",
-        json=PRIORITY_RESPONSE,
-    )
-    return aioclient_mock
+
+    async def get_locations(self: Lyric) -> None:
+        self._locations = [
+            LyricLocation(self._client, location) for location in LOCATIONS_RESPONSE
+        ]
+        self._locations_dict = {
+            location.location_id: location for location in self._locations
+        }
+
+    async def get_thermostat_rooms(
+        self: Lyric, location_id: str, device_id: str
+    ) -> None:
+        priority = LyricPriority(PRIORITY_RESPONSE)
+        self._priorities_dict[priority.device_id] = priority
+        self._rooms_dict[priority.device_id] = {
+            room.id: room for room in priority.current_priority.rooms
+        }
+
+    with (
+        patch.object(Lyric, "get_locations", get_locations),
+        patch.object(Lyric, "get_thermostat_rooms", get_thermostat_rooms),
+    ):
+        yield
 
 
 async def async_setup_lyric_entry(

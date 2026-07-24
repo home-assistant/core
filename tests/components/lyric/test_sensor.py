@@ -1,16 +1,18 @@
 """Tests for the Honeywell Lyric sensor platform."""
 
 from datetime import datetime
+from unittest.mock import patch
+
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lyric.sensor import get_datetime_from_future_time
-from homeassistant.const import EntityCategory
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MAC_ID, async_setup_lyric_entry
+from .conftest import async_setup_lyric_entry
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 def test_get_datetime_from_future_time_none() -> None:
@@ -29,29 +31,16 @@ def test_get_datetime_from_future_time_valid() -> None:
     assert isinstance(result, datetime)
 
 
-async def test_schedule_status_sensor_end_to_end(
+async def test_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_credentials: None,
-    mock_lyric_api: AiohttpClientMocker,
+    mock_lyric_api: None,
     mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the schedule status diagnostic sensor via a real config entry setup.
+    """Test the Lyric sensor platform via a real config entry setup."""
+    with patch("homeassistant.components.lyric.PLATFORMS", [Platform.SENSOR]):
+        await async_setup_lyric_entry(hass, mock_config_entry)
 
-    scheduleStatus comes from the base /locations response (not the
-    /priority endpoint), so it has no known aiolyric field-name mismatch
-    and passes for real against the currently-pinned release.
-    """
-    await async_setup_lyric_entry(hass, mock_config_entry)
-
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", "lyric", f"{MAC_ID}_schedule_status"
-    )
-    assert entity_id
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "Resume"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
