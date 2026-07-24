@@ -60,7 +60,7 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
     _attr_default_options: Mapping[str, Any] | None = None
     _attr_supported_languages: list[str]
     _attr_supported_options: list[str] | None = None
-    _attr_use_file_cache: bool | True = True
+    _attr_use_file_cache: bool = True
 
     @property
     @final
