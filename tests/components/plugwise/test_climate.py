@@ -119,8 +119,8 @@ async def test_adam_climate_entity_climate_changes(
     assert mock_smile_adam.set_schedule_state.call_count == 2
     mock_smile_adam.set_schedule_state.assert_called_with(
         "c50f167537524366a5af7aa3942feb1e",
-        STATE_OFF,
         "GF7  Woonkamer",
+        STATE_OFF,
     )
 
     with pytest.raises(
@@ -242,7 +242,9 @@ async def test_adam_restore_state_climate(
         )
         # Verify set_schedule_state was called with the restored schedule
         mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
-            "f871b8c4d63549319221e294e4f88074", STATE_ON, "Badkamer"
+            "f871b8c4d63549319221e294e4f88074",
+            "Badkamer",
+            STATE_ON,
         )
         assert mock_smile_adam_heat_cool.set_schedule_state.call_count == 1
 
@@ -336,7 +338,9 @@ async def test_adam_off_regulation_mode_change(
         blocking=True,
     )
     mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
-        "f871b8c4d63549319221e294e4f88074", STATE_OFF, "Badkamer"
+        "f871b8c4d63549319221e294e4f88074",
+        "Badkamer",
+        STATE_OFF,
     )
 
 
@@ -494,8 +498,8 @@ async def test_adam_3_climate_entity_attributes(
         # And set_schedule_state was called with the restored last_active_schedule
         mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
             "f871b8c4d63549319221e294e4f88074",
-            STATE_ON,
             "Badkamer",
+            STATE_ON,
         )
 
 
@@ -622,8 +626,8 @@ async def test_anna_climate_entity_climate_changes(
     assert mock_smile_anna.set_schedule_state.call_count == 1
     mock_smile_anna.set_schedule_state.assert_called_with(
         "c784ee9fdab44e1395b8dee7d7a497d5",
-        STATE_OFF,
         "standaard",
+        STATE_OFF,
     )
 
     data = mock_smile_anna.async_update.return_value
@@ -642,8 +646,8 @@ async def test_anna_climate_entity_climate_changes(
         assert mock_smile_anna.set_schedule_state.call_count == 2
         mock_smile_anna.set_schedule_state.assert_called_with(
             "c784ee9fdab44e1395b8dee7d7a497d5",
-            STATE_ON,
             "standaard",
+            STATE_ON,
         )
 
     # Mock user deleting last schedule from app or browser

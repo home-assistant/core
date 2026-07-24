@@ -8,8 +8,10 @@
       "heating_state": false
     },
     "dev_class": "heater_central",
+    "dhw_modes": ["comfort", "eco"],
     "location": "bc93488efab249e5bc54fd7e175a6f91",
     "maximum_boiler_temperature": {
+      "current": 19.0,
       "lower_bound": 25.0,
       "resolution": 0.01,
       "setpoint": 50.0,
@@ -17,6 +19,7 @@
     },
     "model": "Generic heater",
     "name": "OpenTherm",
+    "select_dhw_mode": "eco",
     "sensors": {
       "intended_boiler_temperature": 17.5,
       "water_temperature": 19.0
@@ -31,6 +34,7 @@
       "low_battery": false
     },
     "dev_class": "zone_thermostat",
+    "firmware": "2025-11-10T01:00:00+01:00",
     "hardware": "1",
     "location": "f2bf9048bef64cc5b6d5110154e33c81",
     "model": "Emma Pro",

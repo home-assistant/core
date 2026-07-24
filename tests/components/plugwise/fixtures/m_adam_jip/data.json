@@ -328,14 +328,18 @@
       "heating_state": false
     },
     "dev_class": "heater_central",
+    "dhw_mode": "eco",
+    "dhw_modes": ["comfort", "eco"],
     "location": "9e4433a9d69f40b3aefd15e74395eaec",
     "max_dhw_temperature": {
+      "current": 37.3,
       "lower_bound": 40.0,
       "resolution": 0.01,
       "setpoint": 60.0,
       "upper_bound": 60.0
     },
     "maximum_boiler_temperature": {
+      "current": 37.3,
       "lower_bound": 20.0,
       "resolution": 0.01,
       "setpoint": 90.0,

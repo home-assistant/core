@@ -39,10 +39,12 @@
       "heating_state": false
     },
     "dev_class": "heater_central",
+    "dhw_modes": ["comfort", "eco"],
     "location": "da7be222ab3b420c927f3e49fade0304",
     "model": "Generic heater",
     "model_id": "HR24",
     "name": "OpenTherm",
+    "select_dhw_mode": "comfort",
     "sensors": {
       "intended_boiler_temperature": 0.0,
       "modulation_level": 0.0,
