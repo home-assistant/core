@@ -437,6 +437,28 @@
       "message": "Cannot update value for {name}"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Update frequency"
+        },
+        "data_description": {
+          "scan_interval": "How often the device is polled for updated data."
+        },
+        "title": "Indevolt options"
+      }
+    }
+  },
+  "selector": {
+    "scan_interval": {
+      "options": {
+        "frequency_high": "High frequency",
+        "frequency_low": "Low frequency",
+        "frequency_medium": "Medium frequency (default)"
+      }
+    }
+  },
   "services": {
     "charge": {
       "description": "Real-time control: Starts charging with configured power until the target SOC is reached.",
