@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["google", "homeassistant.helpers.location"],
-  "requirements": ["google-maps-routing==0.6.15"]
+  "requirements": ["google-maps-routing==0.10.0"]
 }
