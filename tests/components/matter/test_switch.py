@@ -234,6 +234,83 @@ async def test_evse_sensor(
     )
 
 
+@pytest.mark.parametrize("node_fixture", ["ikea_klippbok_water_leak"])
+async def test_boolean_state_configuration_alarm_enabled_switches(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test Boolean State Configuration alarm enabled switches."""
+
+    def get_switch_entry(translation_key: str) -> er.RegistryEntry:
+        """Return the registry entry for an alarm switch."""
+        for state in hass.states.async_all(Platform.SWITCH):
+            entry = entity_registry.async_get(state.entity_id)
+            if entry and entry.translation_key == translation_key:
+                return entry
+        pytest.fail(f"Missing switch for {translation_key}")
+
+    visual_entry = get_switch_entry("visual_alarm_enabled")
+    audible_entry = get_switch_entry("audible_alarm_enabled")
+    visual_entity_id = visual_entry.entity_id
+    audible_entity_id = audible_entry.entity_id
+
+    visual_state = hass.states.get(visual_entity_id)
+    audible_state = hass.states.get(audible_entity_id)
+    assert visual_state
+    assert audible_state
+    assert visual_entry == snapshot(name=f"{visual_entity_id}-entry")
+    assert visual_state == snapshot(name=f"{visual_entity_id}-state")
+    assert audible_entry == snapshot(name=f"{audible_entity_id}-entry")
+    assert audible_state == snapshot(name=f"{audible_entity_id}-state")
+    assert visual_state.state == "on"
+    assert audible_state.state == "on"
+
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": visual_entity_id},
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
+            alarmsToEnableDisable=2,
+        ),
+    )
+
+    set_node_attribute(matter_node, 1, 128, 5, 2)
+    await trigger_subscription_callback(hass, matter_client)
+
+    visual_state = hass.states.get(visual_entity_id)
+    audible_state = hass.states.get(audible_entity_id)
+    assert visual_state
+    assert audible_state
+    assert visual_state.state == "off"
+    assert audible_state.state == "on"
+
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": visual_entity_id},
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 2
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
+            alarmsToEnableDisable=3,
+        ),
+    )
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_speaker"])
 async def test_speaker_mute_uses_onoff_commands(
     hass: HomeAssistant,
