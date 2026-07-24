@@ -35,6 +35,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
     MediaType,
 )
 from homeassistant.components.samsungtv.const import (
@@ -75,7 +76,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.setup import async_setup_component
 
@@ -91,6 +92,7 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_object_fixture,
+    mock_restore_cache,
 )
 
 ENTITY_ID = f"{MP_DOMAIN}.mock_title"
@@ -1501,3 +1503,38 @@ async def test_upnp_failed_re_subscribe_events(
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
     assert "Device rejected re-subscription" in caplog.text
+
+
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
+async def test_restore_supported_features_cached(
+    hass: HomeAssistant,
+    remote_websocket: Mock,
+) -> None:
+    """Test supported_features is restored from cache on cold start.
+
+    When the TV is off during startup, the entity should restore any
+    previously-known features (except TURN_ON) from the last state.
+    """
+    remote_websocket.is_alive.return_value = False
+
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                ENTITY_ID,
+                STATE_OFF,
+                attributes={
+                    ATTR_SUPPORTED_FEATURES: (
+                        SUPPORT_SAMSUNGTV | MediaPlayerEntityFeature.VOLUME_SET
+                    ),
+                },
+            )
+        ],
+    )
+    await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_OFF
+    supported = state.attributes[ATTR_SUPPORTED_FEATURES]
+    assert supported & MediaPlayerEntityFeature.VOLUME_SET
