@@ -9,6 +9,7 @@ from aio_wattwaechter import (
     Wattwaechter,
     WattwaechterAuthenticationError,
     WattwaechterConnectionError,
+    WattwaechterError,
     WattwaechterNoDataError,
 )
 from aio_wattwaechter.models import MeterData, SystemInfo
@@ -98,7 +99,7 @@ class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
         system: SystemInfo | None
         try:
             system = await self.client.system_info()
-        except WattwaechterConnectionError, WattwaechterAuthenticationError:
+        except WattwaechterError:
             system = None
 
         return WattwaechterData(meter=data, system=system)

@@ -5,13 +5,18 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from aio_wattwaechter import WattwaechterConnectionError
+from aio_wattwaechter import (
+    WattwaechterConnectionError,
+    WattwaechterError,
+    WattwaechterNotFoundError,
+    WattwaechterRateLimitError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.wattwaechter.const import DEFAULT_SCAN_INTERVAL, DOMAIN
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -62,33 +67,50 @@ async def test_minimal_meter_data(
     assert _get_entity_id("31.7.0") is None
 
 
-async def test_diagnostic_sensors_unknown_without_system_info(
+@pytest.mark.parametrize(
+    "error",
+    [
+        WattwaechterConnectionError("offline"),
+        WattwaechterRateLimitError("rate limited"),
+        WattwaechterNotFoundError("not found"),
+    ],
+    ids=["connection", "rate_limit", "not_found"],
+)
+async def test_system_info_error_is_best_effort(
     hass: HomeAssistant,
+    error: WattwaechterError,
     mock_config_entry: MockConfigEntry,
     mock_client: AsyncMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test diagnostic sensors report unknown when system info is unavailable."""
-    mock_client.system_info.side_effect = WattwaechterConnectionError("offline")
+    """Test a system-info failure keeps meter sensors up; diagnostics go unknown."""
+    mock_client.system_info.side_effect = error
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(
+    # Meter sensors must stay available despite the best-effort system-info error.
+    meter_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_1.8.0"
+    )
+    assert meter_id is not None
+    assert hass.states.get(meter_id).state != STATE_UNAVAILABLE
+
+    ssid_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_ssid"
     )
-    assert entity_id is not None
+    assert ssid_id is not None
     assert (
-        entity_registry.async_get(entity_id).disabled_by
+        entity_registry.async_get(ssid_id).disabled_by
         is er.RegistryEntryDisabler.INTEGRATION
     )
 
     # Diagnostic sensors are disabled by default; enable and reload for a state.
-    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    entity_registry.async_update_entity(ssid_id, disabled_by=None)
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert hass.states.get(ssid_id).state == STATE_UNKNOWN
 
 
 async def test_sensor_value_unknown_when_obis_stops_reporting(
