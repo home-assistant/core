@@ -6705,6 +6705,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "solyx_energy": {
+      "name": "Solyx Energy",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "soma": {
       "name": "Soma Connect",
       "integration_type": "hub",
