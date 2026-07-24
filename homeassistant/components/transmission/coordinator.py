@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
 import logging
 from typing import override
@@ -13,6 +13,7 @@ from transmission_rpc.session import SessionStats
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID, ATTR_NAME, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -53,6 +54,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
     """Transmission dataupdate coordinator class."""
 
     config_entry: TransmissionConfigEntry
+    _EVENT_NOTIFICATION_DELAY_STEP: float = 0.1
 
     def __init__(
         self,
@@ -69,6 +71,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         self._started_torrents: list[transmission_rpc.Torrent] = []
         self._event_listeners: dict[str, EventCallback] = {}
         self.torrents: list[transmission_rpc.Torrent] = []
+        self._event_notification_delay: float = 0.0
         super().__init__(
             hass,
             config_entry=entry,
@@ -99,16 +102,31 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         self._event_listeners.pop(listener_id, None)
 
     @callback
-    def _async_notify_event_listeners(self, event: TransmissionEventData) -> None:
+    def _async_notify_event_listeners(
+        self, event: TransmissionEventData, _now: datetime | None = None
+    ) -> None:
         """Notify event listeners in the event loop."""
         for listener in list(self._event_listeners.values()):
             listener(event)
+
+    def _schedule_event_notifications(
+        self, events: list[TransmissionEventData]
+    ) -> None:
+        """Schedule event notifications with staggered delays."""
+        for event in events:
+            async_call_later(
+                self.hass,
+                self._event_notification_delay,
+                partial(self._async_notify_event_listeners, event),
+            )
+            self._event_notification_delay += self._EVENT_NOTIFICATION_DELAY_STEP
 
     @override
     async def _async_update_data(self) -> SessionStats:
         """Update transmission data."""
         data = await self.hass.async_add_executor_job(self.update)
 
+        self._event_notification_delay = 0.0
         self.check_completed_torrent()
         self.check_started_torrent()
         self.check_removed_torrent()
@@ -144,6 +162,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
             torrent for torrent in self.torrents if torrent.status == "seeding"
         ]
 
+        events: list[TransmissionEventData] = []
         for torrent in current_completed_torrents:
             if torrent.id not in old_completed_torrents:
                 # Once event triggers are out of labs we can remove the bus event
@@ -163,8 +182,9 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     download_path=torrent.download_dir or "",
                     labels=torrent.labels,
                 )
-                self._async_notify_event_listeners(event)
+                events.append(event)
 
+        self._schedule_event_notifications(events)
         self._completed_torrents = current_completed_torrents
 
     def check_started_torrent(self) -> None:
@@ -175,6 +195,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
             torrent for torrent in self.torrents if torrent.status == "downloading"
         ]
 
+        events: list[TransmissionEventData] = []
         for torrent in current_started_torrents:
             if torrent.id not in old_started_torrents:
                 # Once event triggers are out of labs we can remove the bus event
@@ -194,14 +215,16 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     download_path=torrent.download_dir or "",
                     labels=torrent.labels,
                 )
-                self._async_notify_event_listeners(event)
+                events.append(event)
 
+        self._schedule_event_notifications(events)
         self._started_torrents = current_started_torrents
 
     def check_removed_torrent(self) -> None:
         """Get removed torrent functionality."""
         current_torrents = {torrent.id for torrent in self.torrents}
 
+        events: list[TransmissionEventData] = []
         for torrent in self._all_torrents:
             if torrent.id not in current_torrents:
                 # Once event triggers are out of labs we can remove the bus event
@@ -221,8 +244,9 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     download_path=torrent.download_dir or "",
                     labels=torrent.labels,
                 )
-                self._async_notify_event_listeners(event)
+                events.append(event)
 
+        self._schedule_event_notifications(events)
         self._all_torrents = self.torrents.copy()
 
     def start_torrents(self) -> None:
