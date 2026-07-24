@@ -29,6 +29,7 @@ from .const import (
     MODEL_NEO_WATER_VALVE,
     MODEL_TOP_EV_CHARGER_EVE01,
     ROLE_GENERIC,
+    RPC_ERROR_CODE_REMOTE_DISABLED,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
@@ -156,7 +157,7 @@ class RpcCircuitBreakerSwitch(RpcSwitch):
         try:
             await method(*params)
         except RpcCallError as err:
-            if err.code == -110:
+            if err.code == RPC_ERROR_CODE_REMOTE_DISABLED:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="circuit_breaker_remote_disabled",
