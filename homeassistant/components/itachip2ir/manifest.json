@@ -1,0 +1,18 @@
+{
+  "domain": "itachip2ir",
+  "name": "iTach IP2IR",
+  "codeowners": ["@orandasoft"],
+  "config_flow": true,
+  "dependencies": [],
+  "dhcp": [
+    {
+      "macaddress": "000C1E*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/itachip2ir",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["homeassistant.components.itachip2ir", "pyitach"],
+  "quality_scale": "gold",
+  "requirements": ["pyitach==0.1.0"]
+}
