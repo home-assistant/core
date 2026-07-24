@@ -1,0 +1,12 @@
+{
+  "domain": "beatbot",
+  "name": "Beatbot",
+  "codeowners": ["@dddddl"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/beatbot",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "loggers": ["beatbot_cloud"],
+  "quality_scale": "bronze",
+  "requirements": ["beatbot-cloud==0.2.0"]
+}

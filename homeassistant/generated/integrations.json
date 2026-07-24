@@ -723,6 +723,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "beatbot": {
+      "name": "Beatbot",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "bega": {
       "name": "BEGA",
       "iot_standards": [
