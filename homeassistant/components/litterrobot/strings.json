@@ -84,6 +84,11 @@
         "name": "Reset waste drawer"
       }
     },
+    "light": {
+      "night_light": {
+        "name": "Night light"
+      }
+    },
     "select": {
       "brightness_level": {
         "name": "Panel brightness",
