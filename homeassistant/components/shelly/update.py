@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any, Final, cast, override
 
 from aioshelly.const import RPC_GENERATIONS
@@ -25,6 +24,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
     CONF_SLEEP_PERIOD,
     DOMAIN,
+    LOGGER,
     OTA_BEGIN,
     OTA_ERROR,
     OTA_PROGRESS,
@@ -41,8 +41,6 @@ from .entity import (
     async_setup_entry_rpc,
 )
 from .utils import get_device_entry_gen, get_release_url
-
-LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 

@@ -38,11 +38,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
 
     lat = data[CONF_LATITUDE]
     lng = data[CONF_LONGITUDE]
-    distance = data[CONF_RADIUS]
 
     # Check that the provided latitude/longitude provide a response
     try:
-        test_data = await client.observations.latLong(lat, lng, distance=distance)
+        test_data = await client.observations.latLong(lat, lng)
 
     except InvalidKeyError as exc:
         raise InvalidAuth from exc
