@@ -1,8 +1,10 @@
 """Tests for the Sonos Alarm switch platform."""
 
+from collections.abc import Callable, Coroutine
 from copy import copy
 from datetime import timedelta
-from unittest.mock import Mock, patch
+from typing import Any
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from soco.exceptions import SoCoException, SoCoUPnPException
@@ -277,14 +279,14 @@ async def test_alarm_create_delete(
 
 async def test_alarm_change_device(
     hass: HomeAssistant,
-    async_setup_sonos,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
     alarm_clock: SonosMockAlarmClock,
     alarm_clock_extended: SonosMockAlarmClock,
     alarm_event: SonosMockEvent,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     soco_factory: SoCoMockFactory,
-    discover,
+    discover: MagicMock,
 ) -> None:
     """Test Sonos Alarm being moved to a different speaker.
 
