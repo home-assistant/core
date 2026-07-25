@@ -1,7 +1,5 @@
 """Base entity for Rejseplanen integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 
