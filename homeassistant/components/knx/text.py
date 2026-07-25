@@ -75,7 +75,6 @@ class _KnxText(TextEntity, RestoreEntity):
     """Representation of a KNX text."""
 
     _device: XknxNotification
-    _attr_native_max = 14
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -129,6 +128,9 @@ class KnxYamlText(_KnxText, KnxYamlEntity):
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         self._attr_mode = config[CONF_MODE]
+        self._attr_native_max_length = (
+            self._device.remote_value.dpt_class.payload_length
+        )
 
 
 class KnxUiText(_KnxText, KnxUiEntity):
@@ -159,3 +161,6 @@ class KnxUiText(_KnxText, KnxUiEntity):
             value_type=knx_conf.get_dpt(CONF_GA_TEXT),
         )
         self._attr_mode = TextMode(knx_conf.get(CONF_MODE))
+        self._attr_native_max_length = (
+            self._device.remote_value.dpt_class.payload_length
+        )
