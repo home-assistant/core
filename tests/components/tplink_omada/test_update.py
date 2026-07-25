@@ -464,7 +464,9 @@ async def test_controller_software_update_install_raises(
 
     await _async_setup_update_platform(hass, mock_config_entry)
 
-    entity = OmadaControllerUpdate(mock_config_entry.runtime_data.controller_coordinator)
+    entity = OmadaControllerUpdate(
+        mock_config_entry.runtime_data.controller_coordinator
+    )
 
     with pytest.raises(
         HomeAssistantError, match="No controller firmware update is available"
