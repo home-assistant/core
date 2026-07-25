@@ -92,9 +92,8 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
             type(self.controller).__name__,
         )
         try:
-            async with asyncio.timeout(10):
-                # Acquire the lock so we don't fetch stale data while a command is firing
-                async with self.api_lock:
+            async with self.api_lock:
+                async with asyncio.timeout(10):
                     dev_state = await self.controller.fetch_device_state()
                     oper_info = await self.controller.fetch_oper_info()
 

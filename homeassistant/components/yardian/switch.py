@@ -76,9 +76,12 @@ class YardianSwitch(YardianZoneEntity, SwitchEntity):
         self.coordinator.data.active_zones.add(self._zone_id)
         self.async_write_ha_state()
 
-        # Hand the slow API work to the background task
         duration = kwargs.get("duration", DEFAULT_WATERING_DURATION)
-        self.hass.async_create_task(self._async_send_command(True, duration))
+        async with self.coordinator.api_lock:
+            await self.coordinator.controller.start_irrigation(self._zone_id, duration)
+            await asyncio.sleep(SWITCH_ON_REFRESH_DELAY)
+
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -86,21 +89,8 @@ class YardianSwitch(YardianZoneEntity, SwitchEntity):
         self.coordinator.data.active_zones.discard(self._zone_id)
         self.async_write_ha_state()
 
-        # Hand the slow API work to the background task
-        self.hass.async_create_task(self._async_send_command(False))
-
-    async def _async_send_command(self, is_on: bool, duration: int = 0) -> None:
-        """Background task to safely communicate with the slow Yardian hardware."""
-        # Wait our turn in line
         async with self.coordinator.api_lock:
-            # Send the actual command
-            if is_on:
-                await self.coordinator.controller.start_irrigation(
-                    self._zone_id, duration
-                )
-                await asyncio.sleep(SWITCH_ON_REFRESH_DELAY)
-            else:
-                await self.coordinator.controller.stop_zone(self._zone_id)
-                await asyncio.sleep(SWITCH_OFF_REFRESH_DELAY)
+            await self.coordinator.controller.stop_zone(self._zone_id)
+            await asyncio.sleep(SWITCH_OFF_REFRESH_DELAY)
 
         await self.coordinator.async_request_refresh()
