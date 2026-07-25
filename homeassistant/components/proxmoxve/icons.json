@@ -21,6 +21,9 @@
       }
     },
     "button": {
+      "hibernate": {
+        "default": "mdi:power-sleep"
+      },
       "reset": {
         "default": "mdi:restart"
       },
@@ -44,9 +47,6 @@
       },
       "stop_all": {
         "default": "mdi:stop"
-      },
-      "suspend": {
-        "default": "mdi:power-sleep"
       },
       "suspend_all": {
         "default": "mdi:pause"

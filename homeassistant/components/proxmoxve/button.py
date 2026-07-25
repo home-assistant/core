@@ -131,8 +131,8 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
         device_class=ButtonDeviceClass.RESTART,
     ),
     ProxmoxVMButtonEntityDescription(
-        key="suspend",
-        translation_key="suspend",
+        key="hibernate",
+        translation_key="hibernate",
         press_action=lambda coordinator, node, vmid: (
             coordinator.proxmox.nodes(node).qemu(vmid).status.suspend.post()
         ),
