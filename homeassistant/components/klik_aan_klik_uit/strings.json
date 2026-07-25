@@ -8,7 +8,7 @@
     "error": {},
     "step": {
       "pairing_mode": {
-        "description": "Bring device into learn mode by pushing it's button for more than 2 seconds, then press Ok.",
+        "description": "Bring the device into learn mode by pushing its button for more than 2 seconds, then press OK.",
         "title": "Pair device"
       },
       "pairing_result": {

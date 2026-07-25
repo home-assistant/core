@@ -7,7 +7,13 @@
       "packet_download_speed": {
         "default": "mdi:transmission-tower"
       },
+      "packet_download_speed_no_rollover_handling": {
+        "default": "mdi:transmission-tower"
+      },
       "packet_upload_speed": {
+        "default": "mdi:transmission-tower"
+      },
+      "packet_upload_speed_no_rollover_handling": {
         "default": "mdi:transmission-tower"
       },
       "packets_received": {
