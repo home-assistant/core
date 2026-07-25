@@ -214,12 +214,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
         }
 
-        if model.startswith("o"):
+        if model.startswith(("o", "gpt-5")):
             model_args["reasoning"] = {
                 "effort": conversation_subentry.data.get(
                     CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
                 )
             }
+
+        if model.startswith("gpt-5"):
+            # Reasoning models don't support top_p and temperature
+            del model_args["top_p"]
+            del model_args["temperature"]
 
         try:
             response: Response = await client.responses.create(**model_args)

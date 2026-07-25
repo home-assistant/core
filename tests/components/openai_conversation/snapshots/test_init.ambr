@@ -14,7 +14,7 @@
     'labels': set({
     }),
     'manufacturer': 'OpenAI',
-    'model': 'gpt-4o-mini',
+    'model': 'gpt-5-nano',
     'model_id': None,
     'name': 'OpenAI Conversation',
     'name_by_user': None,
