@@ -152,3 +152,66 @@ async def test_victron_main_topic_sensor(
     assert state.state == "mppt_active"
     # Entity uses device name only (no separate entity name)
     assert state.attributes["friendly_name"] == "Multi RS Solar"
+
+
+async def test_native_unit_of_measurement_cost_metric(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+) -> None:
+    """Test native_unit_of_measurement returns currency for COST metric type."""
+    victron_hub, _mock_config_entry = init_integration
+
+    hass.config.currency = "USD"
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/evcharger/0/Session/Cost",
+        '{"value": 12.34}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.ev_charging_station_last_session_cost")
+    assert state is not None
+    assert state.attributes["unit_of_measurement"] == "USD"
+    assert state.state == "12.34"
+
+
+async def test_native_unit_of_measurement_with_device_class(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+) -> None:
+    """Test native_unit_of_measurement returns unit for metrics with device class."""
+    victron_hub, _mock_config_entry = init_integration
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/battery/0/Dc/0/Current",
+        '{"value": 10.5}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.battery_dc_bus_current")
+    assert state is not None
+    assert state.attributes["unit_of_measurement"] == "A"
+
+
+async def test_native_unit_of_measurement_special_unit(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+) -> None:
+    """Test native_unit_of_measurement returns special units like %."""
+    victron_hub, _mock_config_entry = init_integration
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/battery/0/Soc",
+        '{"value": 85}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.battery_charge")
+    assert state is not None
+    assert state.attributes["unit_of_measurement"] == "%"
