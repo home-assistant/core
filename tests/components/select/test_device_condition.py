@@ -1,7 +1,5 @@
 """The tests for Select device conditions."""
 
-from __future__ import annotations
-
 import pytest
 from pytest_unordered import unordered
 import voluptuous_serialize
@@ -140,7 +138,10 @@ async def test_if_selected_option(
                     "action": {
                         "service": "test.automation",
                         "data": {
-                            "result": "option1 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "result": (
+                                "option1 - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -159,7 +160,10 @@ async def test_if_selected_option(
                     "action": {
                         "service": "test.automation",
                         "data": {
-                            "result": "option2 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "result": (
+                                "option2 - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -229,7 +233,10 @@ async def test_if_selected_option_legacy(
                     "action": {
                         "service": "test.automation",
                         "data": {
-                            "result": "option1 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "result": (
+                                "option1 - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

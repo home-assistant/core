@@ -1,10 +1,8 @@
 """Support for MelCloud device binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import dataclasses
-from typing import Any
+from typing import Any, override
 
 from pymelcloud import DEVICE_TYPE_ATW
 
@@ -170,6 +168,7 @@ class MelDeviceBinarySensor(MelCloudEntity, BinarySensorEntity):
         self._attr_device_info = coordinator.device_info
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.value_fn(self.coordinator)

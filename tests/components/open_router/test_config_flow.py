@@ -20,10 +20,9 @@ from . import get_subentry_id, setup_integration
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
-    hass: HomeAssistant,
-    mock_open_router_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_open_router_client: AsyncMock
 ) -> None:
     """Test the full config flow."""
 
@@ -43,10 +42,10 @@ async def test_full_flow(
     assert result["data"] == {CONF_API_KEY: "bla"}
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_second_account(
     hass: HomeAssistant,
     mock_open_router_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that a second account with a different API key can be added."""
@@ -73,10 +72,10 @@ async def test_second_account(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_errors(
     hass: HomeAssistant,
     mock_open_router_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -105,10 +104,10 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_entry(
     hass: HomeAssistant,
     mock_open_router_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test aborting the flow if an entry already exists."""
@@ -411,10 +410,10 @@ async def test_reconfigure_ai_task_abort(
     [(True, True), (False, False)],
     indirect=["web_search"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_create_conversation_agent_web_search(
     hass: HomeAssistant,
     mock_open_router_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     web_search: bool,
     expected_web_search: bool,
@@ -452,10 +451,10 @@ async def test_create_conversation_agent_web_search(
     ("current_web_search", "expected_default"),
     [(True, True), (False, False)],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_conversation_subentry_web_search_default(
     hass: HomeAssistant,
     mock_open_router_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     current_web_search: bool,
     expected_default: bool,
@@ -491,10 +490,10 @@ async def test_reconfigure_conversation_subentry_web_search_default(
         (["assist", "non-existent"], ["assist"], ["assist"]),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_conversation_subentry_llm_api_schema(
     hass: HomeAssistant,
     mock_open_router_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     current_llm_apis: list[str],
     suggested_llm_apis: list[str],

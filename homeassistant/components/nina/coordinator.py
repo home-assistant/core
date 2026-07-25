@@ -1,12 +1,10 @@
 """DataUpdateCoordinator for the nina integration."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 import re
-from typing import Any
+from typing import Any, override
 
 from pynina import ApiError, Nina
 
@@ -78,6 +76,7 @@ class NINADataUpdateCoordinator(
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, list[NinaWarningData]]:
         """Update data."""
         async with asyncio.timeout(10):
@@ -125,7 +124,10 @@ class NINADataUpdateCoordinator(
                     self.headline_filter, raw_warn.headline, flags=re.IGNORECASE
                 ):
                     _LOGGER.debug(
-                        f"Ignore warning ({raw_warn.id}) by headline filter ({self.headline_filter}) with headline: {raw_warn.headline}"
+                        "Ignore warning (%s) by headline filter (%s) with headline: %s",
+                        raw_warn.id,
+                        self.headline_filter,
+                        raw_warn.headline,
                     )
                     continue
 
@@ -137,7 +139,10 @@ class NINADataUpdateCoordinator(
                     self.area_filter, affected_areas_string, flags=re.IGNORECASE
                 ):
                     _LOGGER.debug(
-                        f"Ignore warning ({raw_warn.id}) by area filter ({self.area_filter}) with area: {affected_areas_string}"
+                        "Ignore warning (%s) by area filter (%s) with area: %s",
+                        raw_warn.id,
+                        self.area_filter,
+                        affected_areas_string,
                     )
                     continue
 

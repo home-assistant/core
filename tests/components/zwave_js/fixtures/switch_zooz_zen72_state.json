@@ -13,7 +13,7 @@
   "productType": 28672,
   "firmwareVersion": "10.0.1",
   "zwavePlusVersion": 2,
-  "location": "**REDACTED**",
+  "location": "",
   "deviceConfig": {
     "filename": "/usr/src/app/store/.config-db/devices/0x027a/zen72.json",
     "isEmbedded": true,

@@ -56,7 +56,14 @@ async def test_discount_games(
         "start_time": "2022-10-18 08:00:00",
         "end_time": "2022-11-01 08:00:00",
         "location": "",
-        "description": "In Shadow of the Tomb Raider Definitive Edition experience the final chapter of Lara\u2019s origin as she is forged into the Tomb Raider she is destined to be.\n\nhttps://store.epicgames.com/fr/p/shadow-of-the-tomb-raider",
+        "description": (
+            "In Shadow of the Tomb Raider Definitive Edition"
+            " experience the final chapter of Lara\u2019s origin"
+            " as she is forged into the Tomb Raider she is"
+            " destined to be.\n\n"
+            "https://store.epicgames.com/fr/p/"
+            "shadow-of-the-tomb-raider"
+        ),
     }
 
 
@@ -81,7 +88,16 @@ async def test_free_games(
         "start_time": "2022-10-27 08:00:00",
         "end_time": "2022-11-03 08:00:00",
         "location": "",
-        "description": "Take control of the most technologically advanced army in the Imperium - The Adeptus Mechanicus. Your every decision will weigh heavily on the outcome of the mission, in this turn-based tactical game. Will you be blessed by the Omnissiah?\n\nhttps://store.epicgames.com/fr/p/warhammer-mechanicus-0e4b71",
+        "description": (
+            "Take control of the most technologically"
+            " advanced army in the Imperium - The Adeptus"
+            " Mechanicus. Your every decision will weigh"
+            " heavily on the outcome of the mission, in"
+            " this turn-based tactical game. Will you be"
+            " blessed by the Omnissiah?\n\n"
+            "https://store.epicgames.com/fr/p/"
+            "warhammer-mechanicus-0e4b71"
+        ),
     }
 
 

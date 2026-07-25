@@ -1,8 +1,7 @@
 """DataUpdate Coordinator, and base Entity and Device models for Toon."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -19,6 +18,7 @@ class ToonDisplayDeviceEntity(ToonEntity):
     """Defines a Toon display device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this thermostat."""
         agreement = self.coordinator.data.agreement
@@ -35,6 +35,7 @@ class ToonElectricityMeterDeviceEntity(ToonEntity):
     """Defines a Electricity Meter device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
@@ -55,6 +56,7 @@ class ToonGasMeterDeviceEntity(ToonEntity):
     """Defines a Gas Meter device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
@@ -75,6 +77,7 @@ class ToonWaterMeterDeviceEntity(ToonEntity):
     """Defines a Water Meter device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
@@ -95,6 +98,7 @@ class ToonSolarDeviceEntity(ToonEntity):
     """Defines a Solar Device device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
@@ -115,6 +119,7 @@ class ToonBoilerModuleDeviceEntity(ToonEntity):
     """Defines a Boiler Module device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
@@ -136,6 +141,7 @@ class ToonBoilerDeviceEntity(ToonEntity):
     """Defines a Boiler device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id

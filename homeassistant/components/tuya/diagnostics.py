@@ -1,7 +1,5 @@
 """Diagnostics support for Tuya."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tuya_device_handlers.helpers.diagnostics import customer_device_as_dict

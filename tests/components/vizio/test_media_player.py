@@ -1,7 +1,5 @@
 """Tests for Vizio config flow."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Generator
 from contextlib import asynccontextmanager
 from datetime import timedelta
@@ -127,7 +125,7 @@ def _get_ha_power_state(vizio_power_state: bool) -> str:
 
 
 def _assert_sources_and_volume(attr: dict[str, Any], vizio_device_class: str) -> None:
-    """Assert source list, source, and volume level based on attr dict and device class."""
+    """Assert source list, source, and volume level based on device class."""
     assert attr[ATTR_INPUT_SOURCE_LIST] == INPUT_LIST
     assert attr[ATTR_INPUT_SOURCE] == CURRENT_INPUT
     assert (
@@ -153,7 +151,7 @@ def _get_attr_and_assert_base_attr(
 async def _cm_for_test_setup_without_apps(
     all_settings: dict[str, Any], vizio_power_state: bool
 ) -> AsyncIterator[None]:
-    """Context manager to setup test for Vizio devices without including app specific patches."""
+    """Context manager to setup test for Vizio devices without app patches."""
     with (
         patch(
             "homeassistant.components.vizio.VizioAsync.get_all_settings",
@@ -408,7 +406,8 @@ async def test_services(
         "eq",
         "Music",
     )
-    # Test that the update_setting service does config validation/transformation correctly
+    # Test that the update_setting service does config
+    # validation/transformation correctly
     await _test_service(
         hass,
         DOMAIN,
@@ -718,7 +717,8 @@ async def test_apps_update(
                 await hass.async_block_till_done()
                 async_fire_time_changed(hass, dt_util.now() + timedelta(days=2))
                 await hass.async_block_till_done()
-                # Check source list, remove TV inputs, and verify that the integration is
+                # Check source list, remove TV inputs, and verify that
+                # the integration is
                 # now using the APP_LIST list
                 sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
                 apps = list(set(sources) - set(INPUT_LIST))

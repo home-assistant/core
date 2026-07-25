@@ -2,9 +2,10 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from httpx import RequestError
-from wolf_comm.models import Parameter
+from wolf_comm.models import Device, Parameter
 from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import FetchFailed, ParameterReadError, WolfClient
 
@@ -16,7 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type WolflinkConfigEntry = ConfigEntry[WolfLinkCoordinator]
+type WolflinkConfigEntry = ConfigEntry[dict[int, "WolfLinkCoordinator"]]
 
 
 class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
@@ -29,39 +30,54 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
         hass: HomeAssistant,
         entry: WolflinkConfigEntry,
         wolf_client: WolfClient,
-        parameters: list[Parameter],
-        gateway_id: int,
-        device_id: int,
+        device: Device,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             config_entry=entry,
-            name=DOMAIN,
+            name=f"{DOMAIN} {device.name}",
             update_interval=timedelta(seconds=60),
         )
         self._wolf_client = wolf_client
-        self.parameters = parameters
-        self._gateway_id = gateway_id
-        self.device_id = device_id
+        self.parameters: list[Parameter] = []
+        self._gateway_id = device.gateway
+        self.device_id = device.id
+        self.device_name = device.name
+        self._system_share_id = device.system_share_id
         self._refetch_parameters = False
 
+    @override
+    async def _async_setup(self) -> None:
+        """Fetch parameters once during initial setup."""
+        try:
+            self.parameters = await fetch_parameters(
+                self._wolf_client, self._gateway_id, self.device_id
+            )
+        except (FetchFailed, RequestError) as exception:
+            raise UpdateFailed(
+                f"Error communicating with API: {exception}"
+            ) from exception
+
+    @override
     async def _async_update_data(self) -> dict[int, tuple[int, str]]:
         """Update all stored entities for Wolf SmartSet."""
         try:
             if not await self._wolf_client.fetch_system_state_list(
-                self.device_id, self._gateway_id
+                self.device_id, self._gateway_id, self._system_share_id
             ):
                 self._refetch_parameters = True
                 raise UpdateFailed(
                     "Could not fetch values from server because device is offline."
                 )
             if self._refetch_parameters:
-                self.parameters = await fetch_parameters(
-                    self._wolf_client, self._gateway_id, self.device_id
-                )
-                self._refetch_parameters = False
+                try:
+                    self.parameters = await fetch_parameters(
+                        self._wolf_client, self._gateway_id, self.device_id
+                    )
+                finally:
+                    self._refetch_parameters = False
             values = {
                 v.value_id: v.value
                 for v in await self._wolf_client.fetch_value(
@@ -98,7 +114,8 @@ async def fetch_parameters(
 ) -> list[Parameter]:
     """Fetch all available parameters with usage of WolfClient.
 
-    By default Reglertyp entity is removed because API will not provide value for this parameter.
+    By default Reglertyp entity is removed because API
+    will not provide value for this parameter.
     """
     fetched_parameters = await client.fetch_parameters(gateway_id, device_id)
     return [param for param in fetched_parameters if param.name != "Reglertyp"]

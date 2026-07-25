@@ -24,6 +24,12 @@
       "reset_air_filter_consumable": {
         "default": "mdi:air-filter"
       },
+      "reset_dock_cleaning_brush_consumable": {
+        "default": "mdi:brush"
+      },
+      "reset_dock_strainer_consumable": {
+        "default": "mdi:filter"
+      },
       "reset_main_brush_consumable": {
         "default": "mdi:brush"
       },
@@ -32,6 +38,11 @@
       },
       "reset_side_brush_consumable": {
         "default": "mdi:brush"
+      }
+    },
+    "image": {
+      "map": {
+        "default": "mdi:floor-plan"
       }
     },
     "number": {
@@ -117,11 +128,17 @@
       }
     },
     "switch": {
+      "button_light": {
+        "default": "mdi:lightbulb"
+      },
       "child_lock": {
         "default": "mdi:account-lock"
       },
       "dnd_switch": {
         "default": "mdi:bell-cancel"
+      },
+      "dust_collection": {
+        "default": "mdi:delete"
       },
       "off_peak_switch": {
         "default": "mdi:power-plug"

@@ -10,16 +10,16 @@
 # name: test_entry_diagnostics
   dict({
     'communication_status': 'OK',
-    'energy_today': 123.4,
+    'energy_today': 123,
     'hardware_version': 'M10',
     'meter_status': 'OK',
     'num_inverters': 1,
     'pac': 1234,
-    'registry_key': 'WSMQKHTQ3JVYQWA9',
-    'reported_datetime': '19900101 23:01:45',
+    'registry_key': 'A-2',
+    'reported_datetime': '19900101 23:00',
     'serial_number': '123456778',
-    'serial_or_registry_id': 'EAB9615C0001',
-    'software_version': '19703-826R+17511-707R',
+    'serial_or_registry_id': '1223',
+    'software_version': '123-23',
     'status': 'OK',
     'wifi_enabled': False,
   })

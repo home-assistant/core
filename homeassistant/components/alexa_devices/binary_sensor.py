@@ -1,10 +1,8 @@
 """Support for binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from aioamazondevices.const.metadata import SENSOR_STATE_OFF
 from aioamazondevices.structures import AmazonDevice
@@ -15,7 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 import homeassistant.helpers.entity_registry as er
@@ -120,7 +118,7 @@ async def async_setup_entry(
         for serial_num in coordinator.data:
             unique_id = f"{serial_num}-{sensor_desc.key}"
             if entity_id := entity_registry.async_get_entity_id(
-                BINARY_SENSOR_DOMAIN, DOMAIN, unique_id
+                Platform.BINARY_SENSOR, DOMAIN, unique_id
             ):
                 _LOGGER.debug("Removing deprecated entity %s", entity_id)
                 entity_registry.async_remove(entity_id)
@@ -151,6 +149,7 @@ class AmazonBinarySensorEntity(AmazonEntity, BinarySensorEntity):
     entity_description: AmazonBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
         return self.entity_description.is_on_fn(
@@ -158,6 +157,7 @@ class AmazonBinarySensorEntity(AmazonEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (

@@ -385,7 +385,8 @@ async def test_form_exception(hass: HomeAssistant, picnic_api) -> None:
 
 async def test_form_already_configured(hass: HomeAssistant, picnic_api) -> None:
     """Test that an entry with unique id can only be added once."""
-    # Create a mocked config entry and make sure to use the same user_id as set for the picnic_api mock response.
+    # Create a mocked config entry and make sure to use the same
+    # user_id as set for the picnic_api mock response.
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=picnic_api().get_user()["user_id"],
@@ -441,7 +442,8 @@ async def test_step_reauth(hass: HomeAssistant, picnic_api) -> None:
         )
         await hass.async_block_till_done()
 
-    # Check that the returned flow has type abort because of successful re-authentication
+    # Check that the returned flow has type abort because of
+    # successful re-authentication
     assert result_configure["type"] is FlowResultType.ABORT
     assert result_configure["reason"] == "reauth_successful"
 
@@ -487,7 +489,8 @@ async def test_step_reauth_failed(hass: HomeAssistant, picnic_api) -> None:
 
 async def test_step_reauth_different_account(hass: HomeAssistant, picnic_api) -> None:
     """Test the re-auth flow when authentication is done with a different account."""
-    # Create a mocked config entry, unique_id should be different that the user id in the api response
+    # Create a mocked config entry, unique_id should be different
+    # that the user id in the api response
     conf = {CONF_ACCESS_TOKEN: "a3p98fsen.a39p3fap", CONF_COUNTRY_CODE: "NL"}
 
     entry = MockConfigEntry(

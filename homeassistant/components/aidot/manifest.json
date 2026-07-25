@@ -1,0 +1,11 @@
+{
+  "domain": "aidot",
+  "name": "AiDot",
+  "codeowners": ["@s1eedz", "@HongBryan"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/aidot",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["python-aidot==0.3.53"]
+}

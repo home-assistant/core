@@ -1,8 +1,6 @@
 """Support for SimpliSafe binary sensors."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from simplipy.device import DeviceTypes, DeviceV3
 from simplipy.device.sensor.v3 import SensorV3
@@ -120,11 +118,13 @@ class TriggeredBinarySensor(SimpliSafeEntity, BinarySensorEntity):
         self._device: SensorV3
 
     @callback
+    @override
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
         self._attr_is_on = self._device.triggered
 
     @callback
+    @override
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
         """Update the entity when new data comes from the websocket."""
         LOGGER.debug(
@@ -153,6 +153,7 @@ class BatteryBinarySensor(SimpliSafeEntity, BinarySensorEntity):
         self._device: DeviceV3
 
     @callback
+    @override
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
         self._attr_is_on = self._device.low_battery

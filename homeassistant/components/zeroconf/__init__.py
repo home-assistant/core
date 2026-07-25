@@ -1,7 +1,5 @@
 """Support for exposing Home Assistant via Zeroconf."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from ipaddress import IPv4Address, IPv6Address
 import logging
@@ -260,8 +258,6 @@ async def _async_get_local_service_info(hass: HomeAssistant) -> AsyncServiceInfo
         "internal_url": "",
         # Old base URL, for backward compatibility
         "base_url": "",
-        # Always needs authentication
-        "requires_api_password": True,
     }
 
     # Get instance URL's

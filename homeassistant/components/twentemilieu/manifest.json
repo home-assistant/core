@@ -7,6 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["twentemilieu"],
-  "quality_scale": "silver",
+  "quality_scale": "platinum",
   "requirements": ["twentemilieu==3.0.0"]
 }

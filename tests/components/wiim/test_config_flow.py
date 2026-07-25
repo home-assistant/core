@@ -38,7 +38,7 @@ async def setup_internal_url(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.mark.usefixtures("mock_probe_player", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_probe_player")
 async def test_user_flow_create_entry(hass: HomeAssistant) -> None:
     """Test the user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -77,7 +77,6 @@ async def test_user_flow_abort_when_homeassistant_url_missing(
     mock_probe_player.assert_not_called()
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant, mock_probe_player: AsyncMock
 ) -> None:
@@ -105,7 +104,6 @@ async def test_user_flow_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_no_probe(
     hass: HomeAssistant, mock_probe_player: AsyncMock
 ) -> None:
@@ -157,7 +155,7 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_probe_player", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_probe_player")
 async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     """Test the zeroconf discovery flow."""
 
@@ -211,7 +209,6 @@ async def test_zeroconf_flow_no_probe(
     assert result["reason"] == "cannot_connect"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_flow_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

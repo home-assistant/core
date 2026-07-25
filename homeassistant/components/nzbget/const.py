@@ -6,6 +6,7 @@ DOMAIN = "nzbget"
 ATTR_SPEED = "speed"
 
 # Defaults
+CONF_MORE_OPTIONS = "more_options"
 DEFAULT_NAME = "NZBGet"
 DEFAULT_PORT = 6789
 DEFAULT_SPEED_LIMIT = 1000  # 1 Megabyte/Sec

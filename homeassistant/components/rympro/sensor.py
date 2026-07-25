@@ -1,8 +1,7 @@
 """Sensor for RymPro meters."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -101,6 +100,7 @@ class RymProSensor(CoordinatorEntity[RymProDataUpdateCoordinator], SensorEntity)
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.coordinator.data[self._meter_id][self.entity_description.value_key]

@@ -1,7 +1,5 @@
 """Translation string lookup helpers."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable, Mapping
 from contextlib import suppress
@@ -283,7 +281,8 @@ class _TranslationCache:
             if updated_placeholders != cached_placeholders:
                 _LOGGER.error(
                     (
-                        "Validation of translation placeholders for localized (%s) string "
+                        "Validation of translation placeholders"
+                        " for localized (%s) string "
                         "%s failed: (%s != %s)"
                     ),
                     language,
@@ -466,7 +465,7 @@ def async_translate_state(
     translation_key: str | None,
     device_class: str | None,
 ) -> str:
-    """Translate provided state using cached translations for currently selected language."""
+    """Translate provided state using cached translations."""
     if state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
         return state
     language = hass.config.language
@@ -502,7 +501,7 @@ def async_translate_state_attr(
     device_class: str | None,
     attribute_name: str,
 ) -> str:
-    """Translate provided state attribute value using cached translations for currently selected language."""
+    """Translate state attribute value using cached translations."""
     language = hass.config.language
     if platform is not None and translation_key is not None:
         localize_key = (

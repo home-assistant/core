@@ -1,7 +1,5 @@
 """Base entity for Firefly III integration."""
 
-from __future__ import annotations
-
 from pyfirefly.models import Account, Budget, Category
 from yarl import URL
 

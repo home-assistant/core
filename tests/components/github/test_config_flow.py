@@ -21,9 +21,9 @@ from .const import MOCK_ACCESS_TOKEN
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_user_flow_implementation(
     hass: HomeAssistant,
-    mock_setup_entry: None,
     github_device_client: AsyncMock,
     github_client: AsyncMock,
     device_activation_event: asyncio.Event,

@@ -10,16 +10,24 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_ignores_limit_entities_with_wrong_unit,
     assert_trigger_options_supported,
+    parametrize_numerical_attribute_changed_trigger_states,
+    parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
 )
+
+# Brightness is stored as a uint8 (0-255) but the trigger threshold is in
+# percent (0-100). The generic numerical-attribute helpers feed values in
+# the threshold's percent space and scale them by `attribute_value_scale`
+# to land on the entity's storage values; for brightness that's
+# 255/100 = 2.55 (so 0/50/60/100 -> 0/127.5/153/255).
+_BRIGHTNESS_VALUE_SCALE = 255 / 100
 
 
 @pytest.fixture
@@ -28,151 +36,24 @@ async def target_lights(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "light")
 
 
-def parametrize_brightness_changed_trigger_states(
-    trigger: str, state: str, attribute: str
-) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for brightness changed triggers.
-
-    Note: The brightness in the trigger configuration is in percentage (0-100) scale,
-    the underlying attribute in the state is in uint8 (0-255) scale.
-    """
-    return [
-        *parametrize_trigger_states(
-            trigger=trigger,
-            trigger_options={"threshold": {"type": "any"}},
-            target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 128}),
-                (state, {attribute: 255}),
-            ],
-            other_states=[(state, {attribute: None})],
-            retrigger_on_target_state=True,
-        ),
-        *parametrize_trigger_states(
-            trigger=trigger,
-            trigger_options={"threshold": {"type": "above", "value": {"number": 10}}},
-            target_states=[
-                (state, {attribute: 128}),
-                (state, {attribute: 255}),
-            ],
-            other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 0}),
-            ],
-            retrigger_on_target_state=True,
-        ),
-        *parametrize_trigger_states(
-            trigger=trigger,
-            trigger_options={"threshold": {"type": "below", "value": {"number": 90}}},
-            target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 128}),
-            ],
-            other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 255}),
-            ],
-            retrigger_on_target_state=True,
-        ),
-    ]
+_CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
+_BRIGHTNESS_CROSSED_THRESHOLD = {
+    "threshold": {"type": "above", "value": {"number": 50}}
+}
 
 
-def parametrize_brightness_crossed_threshold_trigger_states(
-    trigger: str, state: str, attribute: str
-) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for brightness crossed threshold triggers.
-
-    Note: The brightness in the trigger configuration is in percentage (0-100) scale,
-    the underlying attribute in the state is in uint8 (0-255) scale.
-    """
-    return [
-        *parametrize_trigger_states(
-            trigger=trigger,
-            trigger_options={
-                "threshold": {
-                    "type": "between",
-                    "value_min": {"number": 10},
-                    "value_max": {"number": 90},
-                }
-            },
-            target_states=[
-                (state, {attribute: 128}),
-                (state, {attribute: 153}),
-            ],
-            other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 0}),
-                (state, {attribute: 255}),
-            ],
-        ),
-        *parametrize_trigger_states(
-            trigger=trigger,
-            trigger_options={
-                "threshold": {
-                    "type": "outside",
-                    "value_min": {"number": 10},
-                    "value_max": {"number": 90},
-                }
-            },
-            target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 255}),
-            ],
-            other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 128}),
-                (state, {attribute: 153}),
-            ],
-        ),
-        *parametrize_trigger_states(
-            trigger=trigger,
-            trigger_options={"threshold": {"type": "above", "value": {"number": 10}}},
-            target_states=[
-                (state, {attribute: 128}),
-                (state, {attribute: 255}),
-            ],
-            other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 0}),
-            ],
-        ),
-        *parametrize_trigger_states(
-            trigger=trigger,
-            trigger_options={"threshold": {"type": "below", "value": {"number": 90}}},
-            target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 128}),
-            ],
-            other_states=[
-                (state, {attribute: None}),
-                (state, {attribute: 255}),
-            ],
-        ),
-    ]
-
-
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "light.brightness_changed",
-        "light.brightness_crossed_threshold",
-        "light.turned_off",
-        "light.turned_on",
-    ],
-)
-async def test_light_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the light triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
         ("light.turned_on", {}, True, True),
         ("light.turned_off", {}, True, True),
+        ("light.brightness_changed", _CHANGED_THRESHOLD, False, False),
+        (
+            "light.brightness_crossed_threshold",
+            _BRIGHTNESS_CROSSED_THRESHOLD,
+            True,
+            True,
+        ),
     ],
 )
 async def test_light_trigger_options_validation(
@@ -192,7 +73,6 @@ async def test_light_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("light"),
@@ -212,7 +92,7 @@ async def test_light_trigger_options_validation(
         ),
     ],
 )
-async def test_light_state_trigger_behavior_any(
+async def test_light_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
@@ -222,8 +102,8 @@ async def test_light_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the light state trigger fires when any light state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test light trigger fires when any light changes state."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
@@ -235,7 +115,6 @@ async def test_light_state_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("light"),
@@ -243,15 +122,21 @@ async def test_light_state_trigger_behavior_any(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_brightness_changed_trigger_states(
-            "light.brightness_changed", STATE_ON, ATTR_BRIGHTNESS
+        *parametrize_numerical_attribute_changed_trigger_states(
+            "light.brightness_changed",
+            STATE_ON,
+            ATTR_BRIGHTNESS,
+            attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
-        *parametrize_brightness_crossed_threshold_trigger_states(
-            "light.brightness_crossed_threshold", STATE_ON, ATTR_BRIGHTNESS
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "light.brightness_crossed_threshold",
+            STATE_ON,
+            ATTR_BRIGHTNESS,
+            attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
     ],
 )
-async def test_light_state_attribute_trigger_behavior_any(
+async def test_light_state_attribute_trigger_behavior_each(
     hass: HomeAssistant,
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
@@ -261,8 +146,8 @@ async def test_light_state_attribute_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the light state trigger fires when any light state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test light trigger fires when any light changes state."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
@@ -274,7 +159,6 @@ async def test_light_state_attribute_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("light"),
@@ -304,7 +188,7 @@ async def test_light_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the light state trigger fires when the first light changes to a specific state."""
+    """Test light trigger fires when first light changes state."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_lights,
@@ -317,7 +201,6 @@ async def test_light_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("light"),
@@ -325,8 +208,11 @@ async def test_light_state_trigger_behavior_first(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_brightness_crossed_threshold_trigger_states(
-            "light.brightness_crossed_threshold", STATE_ON, ATTR_BRIGHTNESS
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "light.brightness_crossed_threshold",
+            STATE_ON,
+            ATTR_BRIGHTNESS,
+            attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
     ],
 )
@@ -340,7 +226,7 @@ async def test_light_state_attribute_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the light state trigger fires when the first light state changes to a specific state."""
+    """Test light trigger fires on first light state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_lights,
@@ -353,7 +239,6 @@ async def test_light_state_attribute_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("light"),
@@ -373,7 +258,7 @@ async def test_light_state_attribute_trigger_behavior_first(
         ),
     ],
 )
-async def test_light_state_trigger_behavior_last(
+async def test_light_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
@@ -383,8 +268,8 @@ async def test_light_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the light state trigger fires when the last light changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test light trigger fires when last light changes state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
@@ -396,7 +281,6 @@ async def test_light_state_trigger_behavior_last(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("light"),
@@ -404,12 +288,15 @@ async def test_light_state_trigger_behavior_last(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_brightness_crossed_threshold_trigger_states(
-            "light.brightness_crossed_threshold", STATE_ON, ATTR_BRIGHTNESS
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "light.brightness_crossed_threshold",
+            STATE_ON,
+            ATTR_BRIGHTNESS,
+            attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
     ],
 )
-async def test_light_state_attribute_trigger_behavior_last(
+async def test_light_state_attribute_trigger_behavior_all(
     hass: HomeAssistant,
     target_lights: dict[str, list[str]],
     trigger_target_config: dict,
@@ -419,8 +306,8 @@ async def test_light_state_attribute_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the light state trigger fires when the last light state changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test light trigger fires when all lights have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_lights,
         trigger_target_config=trigger_target_config,
@@ -432,7 +319,6 @@ async def test_light_state_attribute_trigger_behavior_last(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "limit_entities"),
     [

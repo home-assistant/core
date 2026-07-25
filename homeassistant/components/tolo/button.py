@@ -1,5 +1,7 @@
 """TOLO Sauna Button controls."""
 
+from typing import override
+
 from tololib import LampMode
 
 from homeassistant.components.button import ButtonEntity
@@ -40,6 +42,7 @@ class ToloLampNextColorButton(ToloSaunaCoordinatorEntity, ButtonEntity):
         self._attr_unique_id = f"{entry.entry_id}_lamp_next_color"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -47,6 +50,7 @@ class ToloLampNextColorButton(ToloSaunaCoordinatorEntity, ButtonEntity):
             and self.coordinator.data.settings.lamp_mode == LampMode.MANUAL
         )
 
+    @override
     def press(self) -> None:
         """Execute action when lamp change color button was pressed."""
         self.coordinator.client.lamp_change_color()

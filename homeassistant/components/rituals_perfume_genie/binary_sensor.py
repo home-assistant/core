@@ -1,9 +1,8 @@
 """Support for Rituals Perfume Genie binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyrituals import Diffuser
 
@@ -63,6 +62,7 @@ class RitualsBinarySensorEntity(DiffuserEntity, BinarySensorEntity):
     entity_description: RitualsBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
         return self.entity_description.is_on_fn(self.coordinator.diffuser)

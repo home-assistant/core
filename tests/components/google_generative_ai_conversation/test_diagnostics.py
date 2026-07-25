@@ -1,4 +1,4 @@
-"""Tests for the diagnostics data provided by the Google Generative AI Conversation integration."""
+"""Tests for the Google Generative AI Conversation diagnostics."""
 
 from syrupy.assertion import SnapshotAssertion
 
@@ -8,7 +8,6 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_HARASSMENT_BLOCK_THRESHOLD,
     CONF_HATE_BLOCK_THRESHOLD,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
@@ -21,6 +20,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
 )
+from homeassistant.const import CONF_PROMPT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

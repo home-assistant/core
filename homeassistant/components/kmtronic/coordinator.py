@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiohttp.client_exceptions import ClientConnectorError, ClientResponseError
 from pykmtronic.hub import KMTronicHubAPI
@@ -39,6 +40,7 @@ class KMtronicCoordinator(DataUpdateCoordinator[None]):
         )
         self.hub = hub
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch the latest data from the source."""
         try:

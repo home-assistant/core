@@ -21,7 +21,7 @@ IP_ALT = "192.0.2.2"
 
 CONNECTED_STATIONS = [
     ConnectedStationInfo(
-        mac_address="AA:BB:CC:DD:EE:FF",
+        mac_address="00:00:5E:00:53:01",
         vap_type=WIFI_VAP_MAIN_AP,
         band=WIFI_BAND_5G,
         rx_rate=87800,
@@ -48,7 +48,7 @@ DISCOVERY_INFO = ZeroconfServiceInfo(
         "FirmwareVersion": "5.6.1",
         "FirmwareDate": "2020-10-23",
         "PS": "",
-        "PlcMacAddress": "AA:BB:CC:DD:EE:FF",
+        "PlcMacAddress": "00:00:5E:00:53:00",
     },
 )
 
@@ -69,7 +69,7 @@ DISCOVERY_INFO_CHANGED = ZeroconfServiceInfo(
         "FirmwareVersion": "5.6.1",
         "FirmwareDate": "2020-10-23",
         "PS": "",
-        "PlcMacAddress": "AA:BB:CC:DD:EE:FF",
+        "PlcMacAddress": "00:00:5E:00:53:00",
     },
 )
 
@@ -103,7 +103,7 @@ GUEST_WIFI_CHANGED = WifiGuestAccessGet(
 
 NEIGHBOR_ACCESS_POINTS = [
     NeighborAPInfo(
-        mac_address="AA:BB:CC:DD:EE:FF",
+        mac_address="00:00:5E:00:53:04",
         ssid="wifi",
         band=WIFI_BAND_2G,
         channel=1,
@@ -115,19 +115,19 @@ NEIGHBOR_ACCESS_POINTS = [
 PLCNET = LogicalNetwork(
     devices=[
         {
-            "mac_address": "AA:BB:CC:DD:EE:FF",
+            "mac_address": "00:00:5E:00:53:00",
             "attached_to_router": False,
             "topology": LOCAL,
             "user_device_name": "test1",
         },
         {
-            "mac_address": "11:22:33:44:55:66",
+            "mac_address": "00:00:5E:00:53:02",
             "attached_to_router": True,
             "topology": REMOTE,
             "user_device_name": "test2",
         },
         {
-            "mac_address": "12:34:56:78:9A:BC",
+            "mac_address": "00:00:5E:00:53:03",
             "attached_to_router": False,
             "topology": REMOTE,
             "user_device_name": "test3",
@@ -135,14 +135,14 @@ PLCNET = LogicalNetwork(
     ],
     data_rates=[
         {
-            "mac_address_from": "AA:BB:CC:DD:EE:FF",
-            "mac_address_to": "11:22:33:44:55:66",
+            "mac_address_from": "00:00:5E:00:53:00",
+            "mac_address_to": "00:00:5E:00:53:02",
             "rx_rate": 100.0,
             "tx_rate": 100.0,
         },
         {
-            "mac_address_from": "AA:BB:CC:DD:EE:FF",
-            "mac_address_to": "12:34:56:78:9A:BC",
+            "mac_address_from": "00:00:5E:00:53:00",
+            "mac_address_to": "00:00:5E:00:53:03",
             "rx_rate": 150.0,
             "tx_rate": 150.0,
         },
@@ -152,20 +152,20 @@ PLCNET = LogicalNetwork(
 PLCNET_ATTACHED = LogicalNetwork(
     devices=[
         {
-            "mac_address": "AA:BB:CC:DD:EE:FF",
+            "mac_address": "00:00:5E:00:53:00",
             "attached_to_router": True,
         }
     ],
     data_rates=[
         {
-            "mac_address_from": "AA:BB:CC:DD:EE:FF",
-            "mac_address_to": "11:22:33:44:55:66",
+            "mac_address_from": "00:00:5E:00:53:00",
+            "mac_address_to": "00:00:5E:00:53:02",
             "rx_rate": 100.0,
             "tx_rate": 100.0,
         },
         {
-            "mac_address_from": "AA:BB:CC:DD:EE:FF",
-            "mac_address_to": "12:34:56:78:9A:BC",
+            "mac_address_from": "00:00:5E:00:53:00",
+            "mac_address_to": "00:00:5E:00:53:03",
             "rx_rate": 150.0,
             "tx_rate": 150.0,
         },

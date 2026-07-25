@@ -1,12 +1,10 @@
 """The Google Weather coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TypeVar
+from typing import TypeVar, override
 
 from google_weather_api import (
     CurrentConditionsResponse,
@@ -87,6 +85,7 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
         self._data_type_name = data_type_name
         self._api_method = api_method
 
+    @override
     async def _async_update_data(self) -> T:
         """Fetch data from API and handle errors."""
         try:

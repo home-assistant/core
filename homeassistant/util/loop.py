@@ -1,7 +1,5 @@
 """asyncio loop utilities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import functools
 from functools import cache
@@ -161,8 +159,10 @@ def raise_for_blocking_call(
             f"{mapped_args.get('args')} inside the event loop by "
             f"{'custom ' if integration_frame.custom_integration else ''}"
             f"integration '{integration_frame.integration}' at "
-            f"{integration_frame.relative_filename}, line {integration_frame.line_number}:"
-            f" {integration_frame.line}. (offender: {offender_filename}, line "
+            f"{integration_frame.relative_filename}, line "
+            f"{integration_frame.line_number}:"
+            f" {integration_frame.line}. "
+            f"(offender: {offender_filename}, line "
             f"{offender_lineno}: {offender_line}), please {report_issue}\n"
             f"{_dev_help_message(func.__name__)}"
         )

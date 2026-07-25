@@ -40,7 +40,7 @@ async def test_availability(
     entity_registry: er.EntityRegistry,
     mock_nextdns_client: AsyncMock,
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service causes an error."""
+    """Ensure we mark entities unavailable when service causes an error."""
     with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mock_config_entry)
 

@@ -1,7 +1,5 @@
 """The Uptime Kuma integration."""
 
-from __future__ import annotations
-
 from pythonkuma.update import UpdateChecker
 
 from homeassistant.const import Platform

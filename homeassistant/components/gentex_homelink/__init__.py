@@ -1,7 +1,5 @@
 """The homelink integration."""
 
-from __future__ import annotations
-
 from aiohttp import ClientResponseError
 from homelink.mqtt_provider import MQTTProvider
 

@@ -54,9 +54,10 @@ async def test_flow_fails(
     mock_setup_entry,
     mock_flexit_bacnet,
 ) -> None:
-    """Test that we return 'cannot_connect' error when attempting to connect to an incorrect IP address.
+    """Test 'cannot_connect' error for incorrect IP address.
 
-    The flexit_bacnet library raises asyncio.exceptions.TimeoutError in that scenario.
+    The flexit_bacnet library raises
+    asyncio.exceptions.TimeoutError in that scenario.
     """
     mock_flexit_bacnet.update.side_effect = error
     result = await hass.config_entries.flow.async_configure(

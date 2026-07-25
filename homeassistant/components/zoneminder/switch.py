@@ -1,9 +1,7 @@
 """Support for ZoneMinder switches."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from zoneminder.monitor import Monitor, MonitorState
@@ -74,14 +72,17 @@ class ZMSwitchMonitors(SwitchEntity):
         self._state = self._monitor.function == self._on_state
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._state
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self._monitor.function = self._on_state
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self._monitor.function = self._off_state

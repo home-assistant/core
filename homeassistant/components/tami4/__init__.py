@@ -1,7 +1,5 @@
 """The Tami4Edge integration."""
 
-from __future__ import annotations
-
 from Tami4EdgeAPI import Tami4EdgeAPI, exceptions
 
 from homeassistant.const import Platform

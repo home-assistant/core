@@ -171,7 +171,7 @@ def test_dependency_version_range_prepare_update(
 
 @pytest.mark.usefixtures("mock_forbidden_package_names")
 def test_check_dependency_package_names(integration: Integration) -> None:
-    """Test dependency package names check for forbidden package names is working correctly."""
+    """Test dependency package names check for forbidden names."""
     package = "homeassistant"
     pkg = "my_package"
 
@@ -276,6 +276,7 @@ def test_check_dependency_file_names(integration: Integration) -> None:
         PackagePath("py.typed"),
         PackagePath("my_package.py"),
         PackagePath("some_script.Pth"),
+        PackagePath("entry_point.start"),
         PackagePath("my_package-1.0.0.dist-info/METADATA"),
     ]
     with (
@@ -289,20 +290,25 @@ def test_check_dependency_file_names(integration: Integration) -> None:
         assert _packages_checked_files_cache[pkg]["file_names"] == {
             "py.typed",
             "some_script.Pth",
+            "entry_point.start",
         }
-        assert len(integration.errors) == 2
+        assert len(integration.errors) == 3
         assert f"Package {pkg} has a forbidden file 'py.typed' in {package}" in [
             x.error for x in integration.errors
         ]
         assert f"Package {pkg} has a forbidden file 'some_script.Pth' in {package}" in [
             x.error for x in integration.errors
         ]
+        assert (
+            f"Package {pkg} has a forbidden file 'entry_point.start' in {package}"
+            in [x.error for x in integration.errors]
+        )
         integration.errors.clear()
 
         # Repeated call should use cache
         assert check_dependency_files(integration, package, pkg, ()) is False
         assert mock_files.call_count == 1
-        assert len(integration.errors) == 2
+        assert len(integration.errors) == 3
         integration.errors.clear()
 
     # All good

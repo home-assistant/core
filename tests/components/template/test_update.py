@@ -47,7 +47,6 @@ TEST_LATEST_TEMPLATE = "{{ '2.0' }}"
 
 TEST_UPDATE = TemplatePlatformSetup(
     update.DOMAIN,
-    None,
     "template_update",
     make_test_trigger(TEST_INSTALLED_SENSOR, TEST_LATEST_SENSOR, TEST_SENSOR_ID),
 )
@@ -123,21 +122,6 @@ async def setup_single_attribute_update(
             {attribute: attribute_template} if attribute and attribute_template else {}
         ),
     )
-
-
-async def test_legacy_platform_config(hass: HomeAssistant) -> None:
-    """Test a legacy platform does not create update entities."""
-    with assert_setup_component(1, update.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            update.DOMAIN,
-            {"update": {"platform": "template", "updates": {"anything": {}}}},
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-    assert hass.states.async_all("update") == []
 
 
 async def test_setup_config_entry(
@@ -461,7 +445,10 @@ async def test_install_action(hass: HomeAssistant, calls: list[ServiceCall]) -> 
         ),
         (
             "icon",
-            "{% if is_state('sensor.installed_update', 'on') %}mdi:something{% endif %}",
+            (
+                "{% if is_state('sensor.installed_update', 'on') %}"
+                "mdi:something{% endif %}"
+            ),
             ATTR_ICON,
             "mdi:something",
         ),
@@ -701,7 +688,10 @@ async def test_update_percent_template(
             TEST_INSTALLED_TEMPLATE,
             TEST_LATEST_TEMPLATE,
             "update_percentage",
-            "{% set e = 'sensor.test_update' %}{{ states(e) if e | has_value else None }}",
+            (
+                "{% set e = 'sensor.test_update' %}"
+                "{{ states(e) if e | has_value else None }}"
+            ),
         )
     ],
 )

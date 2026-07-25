@@ -127,7 +127,7 @@ async def test_list_select_entities(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test ListSelect entities are discovered and working from a laundrywasher fixture."""
+    """Test ListSelect entities from a laundrywasher fixture."""
     state = hass.states.get("select.laundrywasher_temperature_level")
     assert state
     assert state.state == "Colors"
@@ -203,7 +203,7 @@ async def test_map_select_entities(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test MatterMapSelectEntity entities are discovered and working from a laundrywasher fixture."""
+    """Test MatterMapSelectEntity entities from a laundrywasher fixture."""
     # NumberOfRinses
     state = hass.states.get("select.laundrywasher_number_of_rinses")
     assert state
@@ -221,7 +221,7 @@ async def test_pump(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test MatterAttributeSelectEntity entities are discovered and working from a pump fixture."""
+    """Test MatterAttributeSelectEntity entities from a pump fixture."""
     # OperationMode
     state = hass.states.get("select.mock_pump_mode")
     assert state
@@ -240,7 +240,7 @@ async def test_microwave_oven(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test ListSelect entity is discovered and working from a microwave oven fixture."""
+    """Test ListSelect entity from a microwave oven fixture."""
 
     # SupportedWatts    from MicrowaveOvenControl cluster (1/96/6)
     # SelectedWattIndex from MicrowaveOvenControl cluster (1/96/7)
@@ -346,7 +346,8 @@ async def test_door_lock_operating_mode_select(
     state = hass.states.get(entity_id)
     assert state.state == "privacy"
 
-    # Select another supported option (NoRemoteLockUnlock) via service to validate mapping
+    # Select another supported option (NoRemoteLockUnlock) via service
+    # to validate mapping
     matter_client.write_attribute.reset_mock()
     await hass.services.async_call(
         "select",

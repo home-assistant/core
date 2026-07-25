@@ -58,7 +58,8 @@ async def test_login_error(
         ANY,
         exc=UpCloudAPIError(
             error_code="AUTHENTICATION_FAILED",
-            error_message="Authentication failed using the given username and password.",
+            error_message="Authentication failed using the given"
+            " username and password.",
         ),
     )
     result = await hass.config_entries.flow.async_init(

@@ -390,7 +390,7 @@ async def test_reconfigure_flow_different_device(
     mock_elgato: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test reconfigure aborts when the device at the new host has a different serial."""
+    """Test reconfigure aborts when new host has a different serial."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)

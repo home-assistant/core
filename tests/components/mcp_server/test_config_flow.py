@@ -47,11 +47,9 @@ async def test_form(
         ({CONF_LLM_HASS_API: []}, {CONF_LLM_HASS_API: "llm_api_required"}),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_errors(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    params: dict[str, Any],
-    errors: dict[str, str],
+    hass: HomeAssistant, params: dict[str, Any], errors: dict[str, str]
 ) -> None:
     """Test we get the errors on invalid user input."""
     result = await hass.config_entries.flow.async_init(

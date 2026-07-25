@@ -1,17 +1,14 @@
 """Common fixtures for the Nobø Ecohub tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pynobo import nobo as pynobo_nobo
 import pytest
 
 from homeassistant.components.nobo_hub import PLATFORMS
-from homeassistant.components.nobo_hub.const import (
-    CONF_AUTO_DISCOVERED,
-    CONF_SERIAL,
-    DOMAIN,
-)
+from homeassistant.components.nobo_hub.const import CONF_SERIAL, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 
@@ -46,19 +43,28 @@ def ip_address() -> str:
 
 
 @pytest.fixture
-def auto_discovered() -> bool:
-    """Return whether the config entry was auto-discovered."""
-    return False
-
-
-@pytest.fixture
 def connect_exc() -> BaseException | None:
     """Exception to raise from hub.connect(), or None for success."""
     return None
 
 
 @pytest.fixture
-def mock_config_entry(ip_address: str, auto_discovered: bool) -> MockConfigEntry:
+def config_entry_options() -> dict[str, Any]:
+    """Return the options stored on the config entry."""
+    return {}
+
+
+@pytest.fixture
+def hub_connected() -> bool:
+    """Whether the mocked hub reports itself connected after setup."""
+    return True
+
+
+@pytest.fixture
+def mock_config_entry(
+    ip_address: str,
+    config_entry_options: dict[str, Any],
+) -> MockConfigEntry:
     """Return a mock Nobø Ecohub config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -67,14 +73,15 @@ def mock_config_entry(ip_address: str, auto_discovered: bool) -> MockConfigEntry
         data={
             CONF_SERIAL: SERIAL,
             CONF_IP_ADDRESS: ip_address,
-            CONF_AUTO_DISCOVERED: auto_discovered,
         },
+        options=config_entry_options,
     )
 
 
 @pytest.fixture
 def mock_nobo_class(
     connect_exc: BaseException | None,
+    hub_connected: bool,
 ) -> Generator[MagicMock]:
     """Patch the integration's imported `nobo` class with a populated hub instance."""
     with patch("homeassistant.components.nobo_hub.nobo", autospec=True) as mock_cls:
@@ -82,6 +89,7 @@ def mock_nobo_class(
         if connect_exc is not None:
             hub.connect.side_effect = connect_exc
 
+        hub.connected = hub_connected
         hub.hub_serial = SERIAL
         hub.hub_info = {
             "name": "My Eco Hub",
@@ -98,10 +106,12 @@ def mock_nobo_class(
                 "temp_eco_c": "17",
             },
         }
-        model = MagicMock()
-        # Direct assignment overrides MagicMock's auto-attr for `.name`.
-        model.name = "Panel heater"
-        model.has_temp_sensor = True
+        model = pynobo_nobo.Model(
+            model_id="183",
+            type="THERMOSTAT_FLOOR",
+            name="Panel heater",
+            has_temp_sensor=True,
+        )
         hub.components = {
             "200000059091": {
                 "serial": "200000059091",

@@ -1,10 +1,8 @@
 """Config flow to configure the OpenUV component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyopenuv import Client
 from pyopenuv.errors import OpenUvError
@@ -134,6 +132,7 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: OpenUvConfigEntry,
     ) -> SchemaOptionsFlowHandler:
@@ -170,6 +169,7 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self._async_verify(data, "reauth_confirm", STEP_REAUTH_SCHEMA)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

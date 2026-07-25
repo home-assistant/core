@@ -1,10 +1,8 @@
 """Support for LIFX lights."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 import aiolifx_effects as aiolifx_effects_module
 import voluptuous as vol
@@ -68,7 +66,7 @@ LIFX_SET_STATE_SCHEMA: VolDictType = {
 SERVICE_LIFX_SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
 
 LIFX_SET_HEV_CYCLE_STATE_SCHEMA: VolDictType = {
-    ATTR_POWER: vol.Required(cv.boolean),
+    vol.Required(ATTR_POWER): cv.boolean,
     ATTR_DURATION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=86400)),
 }
 
@@ -150,22 +148,26 @@ class LIFXLight(LIFXEntity, LightEntity):
         self._attr_effect = None
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         fade = self.bulb.power_level / 65535
         return convert_16_to_8(int(fade * self.bulb.color[HSBK_BRIGHTNESS]))
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature of this light in kelvin."""
         return int(self.bulb.color[HSBK_KELVIN])
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return bool(self.bulb.power_level != 0)
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return the name of the currently running effect."""
         if effect := self.effects_conductor.effect(self.bulb):
@@ -199,10 +201,12 @@ class LIFXLight(LIFXEntity, LightEntity):
                 _async_refresh,
             )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         await self.set_state(**{**kwargs, ATTR_POWER: True})
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.set_state(**{**kwargs, ATTR_POWER: False})
@@ -363,6 +367,7 @@ class LIFXLight(LIFXEntity, LightEntity):
             context=self._context,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -376,6 +381,7 @@ class LIFXLight(LIFXEntity, LightEntity):
             self.postponed_update()
             self.postponed_update = None
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         self._cancel_postponed_update()
@@ -398,17 +404,20 @@ class LIFXColor(LIFXLight):
     ]
 
     @property
+    @override
     def supported_color_modes(self) -> set[ColorMode]:
         """Return the supported color modes."""
         return {ColorMode.COLOR_TEMP, ColorMode.HS}
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         has_sat = self.bulb.color[HSBK_SATURATION]
         return ColorMode.HS if has_sat else ColorMode.COLOR_TEMP
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hs value."""
         hue, sat, _, _ = self.bulb.color
@@ -427,6 +436,7 @@ class LIFXMultiZone(LIFXColor):
         SERVICE_EFFECT_STOP,
     ]
 
+    @override
     async def transform(
         self,
         hsbk: list[float | int | None],
@@ -504,6 +514,7 @@ class LIFXMultiZone(LIFXColor):
 class LIFXExtendedMultiZone(LIFXMultiZone):
     """Representation of a LIFX device that supports extended multizone messages."""
 
+    @override
     async def transform(
         self,
         hsbk: list[float | int | None],

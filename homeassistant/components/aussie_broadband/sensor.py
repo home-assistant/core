@@ -1,11 +1,9 @@
 """Support for Aussie Broadband metric sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import re
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -164,6 +162,7 @@ class AussieBroadandSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         parent = self.coordinator.data[self.entity_description.key]

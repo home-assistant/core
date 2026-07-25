@@ -1,7 +1,5 @@
 """Support for Huawei LTE sensors."""
 
-from __future__ import annotations
-
 from bisect import bisect
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -9,6 +7,7 @@ from datetime import datetime, timedelta
 import ipaddress
 import logging
 import re
+from typing import override
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -77,7 +76,7 @@ def format_last_reset_elapsed_seconds(value: str | None) -> datetime | None:
     if value is None:
         return None
     try:
-        last_reset = datetime.now() - timedelta(seconds=int(value))
+        last_reset = datetime.now() - timedelta(seconds=int(value))  # pylint: disable=home-assistant-enforce-naive-now
         last_reset.replace(microsecond=0)
     except ValueError:
         return None
@@ -157,7 +156,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="WanIPAddress",
                 translation_key="wan_ip_address",
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "WanIPv6Address": HuaweiSensorEntityDescription(
                 key="WanIPv6Address",
@@ -332,7 +330,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 suggested_display_precision=0,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "nrrsrq": HuaweiSensorEntityDescription(
                 key="nrrsrq",
@@ -342,7 +339,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 icon_fn=lambda x: signal_icon((-20, -15, -10), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "nrsinr": HuaweiSensorEntityDescription(
                 key="nrsinr",
@@ -353,7 +349,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 suggested_display_precision=0,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "nrtxpower": HuaweiSensorEntityDescription(
                 key="nrtxpower",
@@ -420,7 +415,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 suggested_display_precision=0,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "rsrq": HuaweiSensorEntityDescription(
                 key="rsrq",
@@ -430,7 +424,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 icon_fn=lambda x: signal_icon((-20, -15, -10), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "rssi": HuaweiSensorEntityDescription(
                 key="rssi",
@@ -441,7 +434,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 suggested_display_precision=0,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "rxlev": HuaweiSensorEntityDescription(
                 key="rxlev",
@@ -463,7 +455,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 suggested_display_precision=0,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "tac": HuaweiSensorEntityDescription(
                 key="tac",
@@ -814,11 +805,12 @@ async def async_setup_entry(
                 _LOGGER.debug("Ignoring sensor %s.%s due to None value", key, item)
                 continue
             if not (desc := SENSOR_META[key].descriptions.get(item)):
-                _LOGGER.debug(  # pylint: disable=hass-logger-period # false positive
+                _LOGGER.debug(  # pylint: disable=home-assistant-logger-period # false positive
                     (
                         "Ignoring unknown sensor %s.%s. "
                         "Opening an issue at GitHub against the "
-                        "huawei_lte integration would be appreciated, so we may be able to "
+                        "huawei_lte integration would be appreciated, "
+                        "so we may be able to "
                         "add support for it in a future release. "
                         'Include the sensor name "%s.%s" in the issue, '
                         "as well as any information you may have about it, "
@@ -856,6 +848,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         self.item = item
         self.entity_description = entity_description
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
@@ -865,6 +858,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
                 f"{SENSOR_DOMAIN}/{self.entity_description.last_reset_item}"
             )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from needed data on remove."""
         await super().async_will_remove_from_hass()
@@ -875,20 +869,24 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
             )
 
     @property
+    @override
     def _device_unique_id(self) -> str:
         return f"{self.key}.{self.item}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return sensor state."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return sensor's unit of measurement."""
         return self.entity_description.native_unit_of_measurement or self._unit
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return icon for sensor."""
         if self.entity_description.icon_fn:
@@ -896,6 +894,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         return super().icon
 
     @property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Return device class for sensor."""
         if self.entity_description.device_class_fn:
@@ -904,10 +903,12 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         return super().device_class
 
     @property
+    @override
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         return self._last_reset
 
+    @override
     async def async_update(self) -> None:
         """Update state."""
         try:

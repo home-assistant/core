@@ -1,10 +1,8 @@
 """Support for WiZ effect speed numbers."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pywizlight import wizlight
 
@@ -28,6 +26,9 @@ class WizNumberEntityDescription(NumberEntityDescription):
     required_feature: str
     set_value_fn: Callable[[wizlight, int], Coroutine[None, None, None]]
     value_fn: Callable[[wizlight], int | None]
+    # Optional fallback, checked against runtime state when required_feature is
+    # not advertised by the bulb type.
+    supported_fn: Callable[[wizlight], bool] | None = None
 
 
 async def _async_set_speed(device: wizlight, speed: int) -> None:
@@ -59,9 +60,28 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
         value_fn=lambda device: cast(int | None, device.state.get_ratio()),
         set_value_fn=_async_set_ratio,
         required_feature="dual_head",
+        # Some ratio-based dual-head lights do not advertise this feature.
+        supported_fn=lambda device: (
+            device.state is not None and device.state.get_ratio() is not None
+        ),
         entity_category=EntityCategory.CONFIG,
     ),
 )
+
+
+def _supports_number_description(
+    device: wizlight, description: WizNumberEntityDescription
+) -> bool:
+    """Return whether the device supports a number description.
+
+    When the bulb type does not advertise the required feature, ``supported_fn``
+    is evaluated as a fallback. It inspects the current runtime state (e.g.
+    whether a ratio is present), so the result depends on the device state at
+    call time.
+    """
+    return getattr(device.bulbtype.features, description.required_feature, False) or (
+        description.supported_fn is not None and description.supported_fn(device)
+    )
 
 
 async def async_setup_entry(
@@ -73,9 +93,7 @@ async def async_setup_entry(
     async_add_entities(
         WizSpeedNumber(entry.runtime_data, entry.title, description)
         for description in NUMBERS
-        if getattr(
-            entry.runtime_data.bulb.bulbtype.features, description.required_feature
-        )
+        if _supports_number_description(entry.runtime_data.bulb, description)
     )
 
 
@@ -95,6 +113,7 @@ class WizSpeedNumber(WizEntity, NumberEntity):
         self._async_update_attrs()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -103,11 +122,13 @@ class WizSpeedNumber(WizEntity, NumberEntity):
         )
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         if (value := self.entity_description.value_fn(self._device)) is not None:
             self._attr_native_value = float(value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the speed value."""
         await self.entity_description.set_value_fn(self._device, int(value))

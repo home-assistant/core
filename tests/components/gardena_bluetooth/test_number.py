@@ -26,6 +26,8 @@ from . import AQUA_CONTOUR_SERVICE_INFO, WATER_TIMER_SERVICE_INFO, setup_entry
 
 from tests.common import MockConfigEntry
 
+pytestmark = pytest.mark.usefixtures("constant_advertisements")
+
 
 @pytest.mark.parametrize(
     ("service_info", "uuid", "raw", "entity_id"),
@@ -64,17 +66,6 @@ from tests.common import MockConfigEntry
                 AquaContourWatering.manual_watering_time.encode(10),
             ],
             "number.mock_title_manual_watering_time",
-        ),
-        (
-            AQUA_CONTOUR_SERVICE_INFO,
-            AquaContourWatering.remaining_watering_time.uuid,
-            [
-                AquaContourWatering.remaining_watering_time.encode(100),
-                AquaContourWatering.remaining_watering_time.encode(10),
-                CharacteristicNoAccess("Test for no access"),
-                GardenaBluetoothException("Test for errors on bluetooth"),
-            ],
-            "number.mock_title_remaining_watering_time",
         ),
         (
             AQUA_CONTOUR_SERVICE_INFO,
@@ -141,13 +132,6 @@ async def test_setup(
             100,
             100,
             "number.mock_title_manual_watering_time",
-        ),
-        (
-            AQUA_CONTOUR_SERVICE_INFO,
-            AquaContourWatering.remaining_watering_time,
-            100,
-            100,
-            "number.mock_title_remaining_watering_time",
         ),
     ],
 )

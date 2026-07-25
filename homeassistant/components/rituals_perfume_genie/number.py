@@ -1,10 +1,8 @@
 """Support for Rituals Perfume Genie numbers."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyrituals import Diffuser
 
@@ -58,10 +56,12 @@ class RitualsNumberEntity(DiffuserEntity, NumberEntity):
     entity_description: RitualsNumberEntityDescription
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the number value."""
         return self.entity_description.value_fn(self.coordinator.diffuser)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         if not value.is_integer():

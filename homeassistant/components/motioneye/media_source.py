@@ -1,10 +1,8 @@
 """motionEye Media Source Implementation."""
 
-from __future__ import annotations
-
 import logging
 from pathlib import PurePath
-from typing import cast
+from typing import cast, override
 
 from motioneye_client.const import KEY_MEDIA_LIST, KEY_MIME_TYPE, KEY_PATH
 
@@ -61,6 +59,7 @@ class MotionEyeMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         config_id, device_id, kind, path = self._parse_identifier(item.identifier)
@@ -97,6 +96,7 @@ class MotionEyeMediaSource(MediaSource):
             tuple(data + base)[:4],  # type: ignore[operator]
         )
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,
@@ -124,7 +124,7 @@ class MotionEyeMediaSource(MediaSource):
     def _get_config_or_raise(self, config_id: str) -> MotionEyeConfigEntry:
         """Get a config entry from a URL."""
         entry = self.hass.config_entries.async_get_entry(config_id)
-        if not entry or entry.state != ConfigEntryState.LOADED:
+        if not entry or entry.state is not ConfigEntryState.LOADED:
             raise MediaSourceError(f"Unable to find config entry with id: {config_id}")
         return entry
 

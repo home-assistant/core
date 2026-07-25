@@ -1,13 +1,15 @@
 """Anglian Water data coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyanglianwater import AnglianWater
-from pyanglianwater.exceptions import ExpiredAccessTokenError, UnknownEndpointError
+from pyanglianwater.exceptions import (
+    ConsentRequiredError,
+    ExpiredAccessTokenError,
+    UnknownEndpointError,
+)
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
@@ -56,12 +58,17 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data from Anglian Water's API."""
         try:
             await self.api.update(self.config_entry.data[CONF_ACCOUNT_NUMBER])
             await self._insert_statistics()
-        except (ExpiredAccessTokenError, UnknownEndpointError) as err:
+        except (
+            ConsentRequiredError,
+            ExpiredAccessTokenError,
+            UnknownEndpointError,
+        ) as err:
             raise UpdateFailed from err
 
     async def _insert_statistics(self) -> None:
@@ -97,8 +104,10 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 if not meter.readings or len(meter.readings) == 0:
                     _LOGGER.debug("No recent usage statistics found, skipping update")
                     continue
-                # Anglian Water stats are hourly, the read_at time is the time that the meter took the reading
-                # We remove 1 hour from this so that the data is shown in the correct hour on the dashboards
+                # Anglian Water stats are hourly, the read_at time
+                # is the time that the meter took the reading.
+                # We remove 1 hour from this so that the data is
+                # shown in the correct hour on the dashboards
                 parsed_read_at = dt_util.parse_datetime(meter.readings[0]["read_at"])
                 if not parsed_read_at:
                     _LOGGER.debug(
@@ -132,8 +141,9 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
 
                 if not stats or not stats.get(usage_statistic_id):
                     _LOGGER.debug(
-                        "Could not find existing statistics during period lookup for %s, "
-                        "falling back to last stored statistic",
+                        "Could not find existing statistics during"
+                        " period lookup for %s, falling back to"
+                        " last stored statistic",
                         usage_statistic_id,
                     )
                     allow_update_last_stored_hour = True

@@ -124,7 +124,7 @@ async def test_duration_enabled_without_tado_default(
 async def test_duration_enabled_with_tado_default(
     hass: HomeAssistant, entry: ConfigEntry, tado: Tado
 ) -> None:
-    """Test overlay method selection when ended up with timer overlay and None duration."""
+    """Test overlay method selection with timer overlay and None duration."""
     zone_fallback = CONST_OVERLAY_TIMER
     expected_duration = 45000
     tado = dummy_tado_connector(

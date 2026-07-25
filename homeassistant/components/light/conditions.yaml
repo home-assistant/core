@@ -7,12 +7,9 @@
       required: true
       default: any
       selector:
-        select:
-          translation_key: condition_behavior
-          options:
-            - all
-            - any
-    for:
+        automation_behavior:
+          mode: condition
+    for: &condition_for
       required: true
       default: 00:00:00
       selector:
@@ -39,6 +36,7 @@ is_brightness:
   target: *condition_light_target
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:

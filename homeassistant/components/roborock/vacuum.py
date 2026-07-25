@@ -1,7 +1,7 @@
 """Support for Roborock vacuum class."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from roborock.data import RoborockStateCode, SCWindMapping, WorkStatusMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import (
@@ -24,6 +24,7 @@ from homeassistant.exceptions import (
     ServiceNotSupported,
     ServiceValidationError,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -31,6 +32,7 @@ from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
     RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
+    RoborockCoordinatorType,
     RoborockDataUpdateCoordinator,
 )
 from .entity import (
@@ -43,12 +45,12 @@ _LOGGER = logging.getLogger(__name__)
 
 STATE_CODE_TO_STATE = {
     RoborockStateCode.starting: VacuumActivity.IDLE,  # "Starting"
-    RoborockStateCode.attaching_the_mop: VacuumActivity.DOCKED,  # "Attaching the mop"
-    RoborockStateCode.charger_disconnected: VacuumActivity.IDLE,  # "Charger disconnected"
+    RoborockStateCode.attaching_the_mop: VacuumActivity.DOCKED,
+    RoborockStateCode.charger_disconnected: VacuumActivity.IDLE,
     RoborockStateCode.idle: VacuumActivity.IDLE,  # "Idle"
-    RoborockStateCode.remote_control_active: VacuumActivity.CLEANING,  # "Remote control active"
+    RoborockStateCode.remote_control_active: VacuumActivity.CLEANING,
     RoborockStateCode.cleaning: VacuumActivity.CLEANING,  # "Cleaning"
-    RoborockStateCode.detaching_the_mop: VacuumActivity.DOCKED,  # "Detaching the mop"
+    RoborockStateCode.detaching_the_mop: VacuumActivity.DOCKED,
     RoborockStateCode.returning_home: VacuumActivity.RETURNING,  # "Returning home"
     RoborockStateCode.manual_mode: VacuumActivity.CLEANING,  # "Manual mode"
     RoborockStateCode.charging: VacuumActivity.DOCKED,  # "Charging"
@@ -62,9 +64,9 @@ STATE_CODE_TO_STATE = {
     RoborockStateCode.going_to_target: VacuumActivity.CLEANING,  # "Going to target"
     RoborockStateCode.zoned_cleaning: VacuumActivity.CLEANING,  # "Zoned cleaning"
     RoborockStateCode.segment_cleaning: VacuumActivity.CLEANING,  # "Segment cleaning"
-    RoborockStateCode.emptying_the_bin: VacuumActivity.DOCKED,  # "Emptying the bin" on s7+
-    RoborockStateCode.washing_the_mop: VacuumActivity.DOCKED,  # "Washing the mop" on s7maxV
-    RoborockStateCode.going_to_wash_the_mop: VacuumActivity.RETURNING,  # "Going to wash the mop" on s7maxV
+    RoborockStateCode.emptying_the_bin: VacuumActivity.DOCKED,
+    RoborockStateCode.washing_the_mop: VacuumActivity.DOCKED,
+    RoborockStateCode.going_to_wash_the_mop: VacuumActivity.RETURNING,
     RoborockStateCode.charging_complete: VacuumActivity.DOCKED,  # "Charging complete"
     RoborockStateCode.device_offline: VacuumActivity.ERROR,  # "Device offline"
 }
@@ -112,16 +114,29 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Roborock sensor."""
-    async_add_entities(
-        RoborockVacuum(coordinator) for coordinator in config_entry.runtime_data.v1
-    )
-    async_add_entities(
-        RoborockQ7Vacuum(coordinator)
-        for coordinator in config_entry.runtime_data.b01_q7
-    )
-    async_add_entities(
-        RoborockQ10Vacuum(coordinator)
-        for coordinator in config_entry.runtime_data.b01_q10
+    coordinators = config_entry.runtime_data
+
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        if isinstance(coordinator, RoborockDataUpdateCoordinator):
+            async_add_entities([RoborockVacuum(coordinator)])
+        elif isinstance(coordinator, RoborockB01Q7UpdateCoordinator):
+            async_add_entities([RoborockQ7Vacuum(coordinator)])
+        elif isinstance(coordinator, RoborockB01Q10UpdateCoordinator):
+            async_add_entities([RoborockQ10Vacuum(coordinator)])
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
+        )
     )
 
 
@@ -159,6 +174,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         self._maps_trait = coordinator.properties_api.maps
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator.
 
@@ -166,19 +182,23 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         what was available when the area mapping was last configured.
         """
         super()._handle_coordinator_update()
+        # Avoid creating false-alarm issues if home map info is not yet loaded
+        if self._home_trait.home_map_info is None:
+            return
         last_seen = self.last_seen_segments
         if last_seen is None:
             # No area mapping has been configured yet; nothing to check.
             return
         current_ids = {
             f"{map_flag}_{room.segment_id}"
-            for map_flag, map_info in (self._home_trait.home_map_info or {}).items()
+            for map_flag, map_info in self._home_trait.home_map_info.items()
             for room in map_info.rooms
         }
         if current_ids != {seg.id for seg in last_seen}:
             self.async_create_segments_issue()
 
     @property
+    @override
     def fan_speed_list(self) -> list[str]:
         """Get the list of available fan speeds."""
         if self.coordinator.data is None:
@@ -186,6 +206,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         return [mode.value for mode in self._status_trait.fan_speed_options]
 
     @property
+    @override
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
         if self.coordinator.data is None or self._status_trait.state is None:
@@ -193,12 +214,14 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         return STATE_CODE_TO_STATE.get(self._status_trait.state)
 
     @property
+    @override
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
         if self.coordinator.data is None:
             return None
         return self._status_trait.fan_speed_name
 
+    @override
     async def async_start(self) -> None:
         """Start the vacuum."""
         command = RoborockCommand.APP_START
@@ -213,26 +236,32 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
                 command = RoborockCommand.APP_RESUME_BUILD_MAP
         await self.send(command)
 
+    @override
     async def async_pause(self) -> None:
         """Pause the vacuum."""
         await self.send(RoborockCommand.APP_PAUSE)
 
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
         await self.send(RoborockCommand.APP_STOP)
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Send vacuum back to base."""
         await self.send(RoborockCommand.APP_CHARGE)
 
+    @override
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Spot clean."""
         await self.send(RoborockCommand.APP_SPOT)
 
+    @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate vacuum."""
         await self.send(RoborockCommand.FIND_ME)
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
         if self.coordinator.data is None:
@@ -255,6 +284,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         """Send vacuum to a specific target point."""
         await self.send(RoborockCommand.APP_GOTO_TARGET, [x, y])
 
+    @override
     async def async_get_segments(self) -> list[Segment]:
         """Get the segments that can be cleaned."""
         home_map_info = self._home_trait.home_map_info
@@ -270,6 +300,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             for room in map_info.rooms
         ]
 
+    @override
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Clean the specified segments."""
         parsed: list[tuple[int, int]] = []
@@ -291,6 +322,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             [{"segments": current_map_segments}],
         )
 
+    @override
     async def async_send_command(
         self,
         command: str,
@@ -376,11 +408,13 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
         )
 
     @property
+    @override
     def fan_speed_list(self) -> list[str]:
         """Get the list of available fan speeds."""
         return SCWindMapping.keys()
 
     @property
+    @override
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
         if self.coordinator.data.status is not None:
@@ -388,10 +422,12 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
         return None
 
     @property
+    @override
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
         return self.coordinator.data.wind_name
 
+    @override
     async def async_start(self) -> None:
         """Start the vacuum."""
         try:
@@ -405,6 +441,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                 },
             ) from err
 
+    @override
     async def async_pause(self) -> None:
         """Pause the vacuum."""
         try:
@@ -418,6 +455,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                 },
             ) from err
 
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
         try:
@@ -431,6 +469,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                 },
             ) from err
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Send vacuum back to base."""
         try:
@@ -444,6 +483,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                 },
             ) from err
 
+    @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate vacuum."""
         try:
@@ -457,6 +497,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                 },
             ) from err
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
         try:
@@ -480,6 +521,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                 },
             ) from err
 
+    @override
     async def async_send_command(
         self,
         command: str,
@@ -523,6 +565,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
         | VacuumEntityFeature.LOCATE
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
+        | VacuumEntityFeature.CLEAN_AREA
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
@@ -542,6 +585,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
             coordinator,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register trait listener for push-based status updates."""
         await super().async_added_to_hass()
@@ -550,6 +594,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
         )
 
     @property
+    @override
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
         if self.coordinator.api.status.status is not None:
@@ -557,12 +602,14 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
         return None
 
     @property
+    @override
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
         if (fan_level := self.coordinator.api.status.fan_level) is not None:
             return fan_level.value
         return None
 
+    @override
     async def async_start(self) -> None:
         """Start the vacuum."""
         try:
@@ -576,6 +623,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                 },
             ) from err
 
+    @override
     async def async_pause(self) -> None:
         """Pause the vacuum."""
         try:
@@ -589,6 +637,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                 },
             ) from err
 
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
         try:
@@ -602,6 +651,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                 },
             ) from err
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Send vacuum back to base."""
         try:
@@ -615,6 +665,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                 },
             ) from err
 
+    @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate vacuum."""
         try:
@@ -628,6 +679,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                 },
             ) from err
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
         try:
@@ -651,6 +703,31 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                 },
             ) from err
 
+    @override
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments that can be cleaned."""
+        return [
+            Segment(id=str(room.id), name=room.name)
+            for room in self.coordinator.api.map.rooms
+        ]
+
+    @override
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Clean the specified segments."""
+        try:
+            await self.coordinator.api.vacuum.clean_segments(
+                [int(seg_id) for seg_id in segment_ids]
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "clean_segments",
+                },
+            ) from err
+
+    @override
     async def async_send_command(
         self,
         command: str,

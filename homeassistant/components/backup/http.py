@@ -1,7 +1,5 @@
 """Http view for the Backup integration."""
 
-from __future__ import annotations
-
 import asyncio
 from http import HTTPStatus
 import threading

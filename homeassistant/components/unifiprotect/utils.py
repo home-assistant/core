@@ -1,24 +1,22 @@
 """UniFi Protect Integration utils."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Generator, Iterable
 import contextlib
 from functools import wraps
 from pathlib import Path
 import socket
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate, cast
 
 from aiohttp import CookieJar
 from uiprotect import ProtectApiClient
 from uiprotect.data import (
     Bootstrap,
-    CameraChannel,
-    Light,
+    ChannelQuality,
     LightModeEnableType,
     LightModeType,
     ProtectAdoptableDeviceModel,
 )
+from uiprotect.data.public_devices import PublicDeviceModel, PublicLight
 from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.const import (
@@ -37,13 +35,13 @@ from .const import (
     CONF_ALL_UPDATES,
     CONF_OVERRIDE_CHOST,
     DEVICES_FOR_SUBSCRIBE,
+    DEVICES_WS_SUBSCRIBED_MODELS,
     DOMAIN,
     ModelType,
 )
 
 if TYPE_CHECKING:
     from .data import UFPConfigEntry
-    from .entity import BaseProtectEntity
 
 
 @callback
@@ -58,7 +56,7 @@ def _async_short_mac(mac: str) -> str:
     return _async_unifi_mac_from_hass(mac)[-6:]
 
 
-async def _async_resolve(hass: HomeAssistant, host: str) -> str | None:
+async def _async_resolve(hass: HomeAssistant, host: str) -> str | int | None:
     """Resolve a hostname to an ip."""
     with contextlib.suppress(OSError):
         return next(
@@ -97,15 +95,14 @@ def async_get_devices(
 
 
 @callback
-def async_get_light_motion_current(obj: Light) -> str:
-    """Get light motion mode for Flood Light."""
-
-    if (
-        obj.light_mode_settings.mode is LightModeType.MOTION
-        and obj.light_mode_settings.enable_at is LightModeEnableType.DARK
-    ):
+def async_get_light_motion_current_public(obj: PublicDeviceModel) -> str | None:
+    """Get light motion mode for a Flood Light from the public API."""
+    settings = cast(PublicLight, obj).light_mode_settings
+    if (mode := settings.mode) is None:
+        return None
+    if mode is LightModeType.MOTION and settings.enable_at is LightModeEnableType.DARK:
         return f"{LightModeType.MOTION.value}_dark"
-    return obj.light_mode_settings.mode.value
+    return mode.value
 
 
 @callback
@@ -126,6 +123,7 @@ def async_create_api_client(
         session=session,
         public_api_session=public_api_session,
         subscribed_models=DEVICES_FOR_SUBSCRIBE,
+        devices_ws_subscribed_models=DEVICES_WS_SUBSCRIBED_MODELS,
         override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
         ignore_unadopted=False,
@@ -135,17 +133,15 @@ def async_create_api_client(
 
 
 @callback
-def get_camera_base_name(channel: CameraChannel) -> str:
-    """Get base name for cameras channel."""
+def get_camera_base_name(quality: ChannelQuality) -> str:
+    """Get base name for a camera's RTSPS quality channel."""
 
-    camera_name = channel.name
-    if channel.name != "Package Camera":
-        camera_name = f"{channel.name} resolution channel"
-
-    return camera_name
+    if quality is ChannelQuality.PACKAGE:
+        return "Package Camera"
+    return f"{quality.value.title()} resolution channel"
 
 
-def async_ufp_instance_command[_EntityT: "BaseProtectEntity", **_P](
+def async_ufp_instance_command[_EntityT, **_P](
     func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate UniFi Protect entity instance commands to handle exceptions.

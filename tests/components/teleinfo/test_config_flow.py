@@ -170,6 +170,11 @@ async def test_usb_discovery_not_teleinfo(
         data=USB_DISCOVERY_INFO,
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usb_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_teleinfo_device"
 
@@ -202,6 +207,11 @@ async def test_usb_discovery_already_configured_updates_path(
         ),
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usb_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     # Path should be updated to the new device path
@@ -225,6 +235,11 @@ async def test_usb_discovery_manual_entry_duplicate(
         data=USB_DISCOVERY_INFO,
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usb_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
@@ -243,6 +258,11 @@ async def test_usb_discovery_decode_error_aborts(
         context={"source": SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usb_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_teleinfo_device"

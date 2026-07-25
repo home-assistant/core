@@ -1,10 +1,8 @@
 """YoLink select platform."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from yolink.client_request import ClientRequest
 from yolink.const import ATTR_DEVICE_SPRINKLER
@@ -97,6 +95,7 @@ class YoLinkSelectEntity(YoLinkEntity, SelectEntity):
         )
 
     @callback
+    @override
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
         if (
@@ -110,6 +109,7 @@ class YoLinkSelectEntity(YoLinkEntity, SelectEntity):
         self._attr_current_option = current_value
         self.async_write_ha_state()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         if await self.entity_description.on_option_selected(self.coordinator, option):

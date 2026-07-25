@@ -1,9 +1,8 @@
 """Coordinator for the venstar component."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
+from typing import override
 
 from requests import RequestException
 from venstarcolortouch import VenstarColorTouch
@@ -39,6 +38,7 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator[None
         self.client = venstar_connection
         self.runtimes: list[dict[str, int]] = []
 
+    @override
     async def _async_update_data(self) -> None:
         """Update the state.
 

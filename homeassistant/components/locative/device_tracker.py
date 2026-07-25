@@ -1,5 +1,7 @@
 """Support for the Locative platform."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+
+from typing import override
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
@@ -44,16 +46,19 @@ class LocativeEntity(TrackerEntity):
         self._unsub_dispatcher = None
 
     @property
+    @override
     def name(self):
         """Return the name of the device."""
         return self._name
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
             self.hass, TRACKER_UPDATE, self._async_receive_data
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
         self._unsub_dispatcher()

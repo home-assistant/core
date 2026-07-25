@@ -19,7 +19,7 @@ async def test_device_without_mac_address(
     openwebif_device_mock: AsyncMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that a device gets successfully registered when the device doesn't report a MAC address."""
+    """Test device registration when device doesn't report a MAC address."""
     openwebif_device_mock.get_about.return_value = await async_load_json_object_fixture(
         hass, "device_about_without_mac.json", DOMAIN
     )

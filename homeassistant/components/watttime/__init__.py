@@ -1,7 +1,5 @@
 """The WattTime integration."""
 
-from __future__ import annotations
-
 from aiowatttime import Client
 from aiowatttime.errors import InvalidCredentialsError, WattTimeError
 

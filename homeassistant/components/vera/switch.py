@@ -1,8 +1,6 @@
 """Support for Vera switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import pyvera as veraApi
 
@@ -43,18 +41,21 @@ class VeraSwitch(VeraEntity[veraApi.VeraSwitch], SwitchEntity):
         VeraEntity.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         self.vera_device.switch_on()
         self._attr_is_on = True
         self.schedule_update_ha_state()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         self.vera_device.switch_off()
         self._attr_is_on = False
         self.schedule_update_ha_state()
 
+    @override
     def update(self) -> None:
         """Update device state."""
         super().update()

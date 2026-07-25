@@ -1,6 +1,6 @@
 """Weather entity for Apple WeatherKit integration."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from apple_weatherkit import DataSetType
 
@@ -142,8 +142,9 @@ class WeatherKitWeather(
         WeatherKitEntity.__init__(self, coordinator, unique_id_suffix=None)
 
     @property
+    @override
     def supported_features(self) -> WeatherEntityFeature:
-        """Determine supported features based on available data sets reported by WeatherKit."""
+        """Determine supported features based on available data sets."""
         features = WeatherEntityFeature(0)
 
         if not self.coordinator.supported_data_sets:
@@ -166,6 +167,7 @@ class WeatherKitWeather(
         return self.data[ATTR_CURRENT_WEATHER]
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the current condition."""
         condition_code = cast(str, self.current_weather.get("conditionCode"))
@@ -177,61 +179,73 @@ class WeatherKitWeather(
         return condition
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.current_weather.get("temperature")
 
     @property
+    @override
     def native_apparent_temperature(self) -> float | None:
         """Return the current apparent_temperature."""
         return self.current_weather.get("temperatureApparent")
 
     @property
+    @override
     def native_dew_point(self) -> float | None:
         """Return the current dew_point."""
         return self.current_weather.get("temperatureDewPoint")
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return the current pressure."""
         return self.current_weather.get("pressure")
 
     @property
+    @override
     def humidity(self) -> float | None:
         """Return the current humidity."""
         return cast(float, self.current_weather.get("humidity")) * 100
 
     @property
+    @override
     def cloud_coverage(self) -> float | None:
         """Return the current cloud_coverage."""
         return cast(float, self.current_weather.get("cloudCover")) * 100
 
     @property
+    @override
     def uv_index(self) -> float | None:
         """Return the current uv_index."""
         return self.current_weather.get("uvIndex")
 
     @property
+    @override
     def native_visibility(self) -> float | None:
         """Return the current visibility."""
         return cast(float, self.current_weather.get("visibility")) / 1000
 
     @property
+    @override
     def native_wind_gust_speed(self) -> float | None:
         """Return the current wind_gust_speed."""
         return self.current_weather.get("windGust")
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the current wind_speed."""
         return self.current_weather.get("windSpeed")
 
     @property
+    @override
     def wind_bearing(self) -> float | None:
         """Return the current wind_bearing."""
         return self.current_weather.get("windDirection")
 
     @callback
+    @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast."""
         daily_forecast = self.data.get(ATTR_FORECAST_DAILY)
@@ -242,6 +256,7 @@ class WeatherKitWeather(
         return [_map_daily_forecast(f) for f in forecast]
 
     @callback
+    @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast."""
         hourly_forecast = self.data.get(ATTR_FORECAST_HOURLY)

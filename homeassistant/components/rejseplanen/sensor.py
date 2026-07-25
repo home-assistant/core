@@ -4,12 +4,11 @@ For more info on the API see:
 https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import override
 import zoneinfo
 
 from py_rejseplan.dataclasses.departure import Departure
@@ -261,6 +260,7 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
             self._departure_type
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to Home Assistant."""
         await super().async_added_to_hass()
@@ -299,6 +299,7 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
             self._departure_cleanup_unsubscribe()
             self._departure_cleanup_unsubscribe = None
 
+    @override
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -313,6 +314,7 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
         self.async_write_ha_state()
         self._schedule_next_cleanup()
 
+    @override
     @property
     def native_value(self) -> StateType | datetime | None:
         """Return the state of the sensor."""

@@ -5,6 +5,7 @@ from dataclasses import replace
 from http import HTTPStatus
 import io
 import socket
+import struct
 from unittest.mock import ANY, AsyncMock, Mock, patch
 import wave
 
@@ -29,7 +30,7 @@ from homeassistant.components import (
     tts,
 )
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
     KEY_ASSIST_PIPELINE,
 )
 from homeassistant.components.assist_satellite import (
@@ -38,7 +39,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteWakeWord,
 )
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.esphome.assist_satellite import VoiceAssistantUDPServer
 from homeassistant.components.esphome.const import NO_WAKE_WORD
@@ -77,7 +78,7 @@ async def test_no_satellite_without_voice_assistant(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that an assist satellite entity is not created if a voice assistant is not present."""
+    """Test satellite entity is not created without a voice assistant."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={},
@@ -258,12 +259,14 @@ async def test_pipeline_api_audio(
             {"tts_start_streaming": "1"},
         )
 
+        intent_response = intent_helper.IntentResponse("en")
+        intent_response.async_set_speech("test response")
         event_callback(
             PipelineEvent(
                 type=PipelineEventType.INTENT_END,
                 data={
                     "intent_output": conversation.ConversationResult(
-                        response=intent_helper.IntentResponse("en"),
+                        response=intent_response,
                         conversation_id=conversation_id,
                         continue_conversation=True,
                     ).as_dict()
@@ -275,6 +278,7 @@ async def test_pipeline_api_audio(
             {
                 "conversation_id": conversation_id,
                 "continue_conversation": "1",
+                "speech": "test response",
             },
         )
 
@@ -617,7 +621,7 @@ async def test_pipeline_media_player(
     mock_esphome_device: MockESPHomeDeviceType,
     mock_wav: bytes,
 ) -> None:
-    """Test a complete pipeline run with the TTS response sent to a media player instead of a speaker.
+    """Test pipeline run with TTS response sent to a media player.
 
     This test is not as comprehensive as test_pipeline_api_audio since we're
     mainly focused on tts_response_finished getting automatically called.
@@ -1785,7 +1789,7 @@ async def test_intent_progress_optimization(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that intent progress events are only sent when early TTS streaming is available."""
+    """Test intent progress events only sent with early TTS streaming."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={
@@ -1981,7 +1985,7 @@ async def test_secondary_pipeline(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that the secondary pipeline is used when the secondary wake word is given."""
+    """Test secondary pipeline is used with secondary wake word."""
     assert await async_setup_component(hass, "assist_pipeline", {})
     pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
     pipeline_id_to_name: dict[str, str] = {}
@@ -2290,3 +2294,456 @@ async def test_custom_wake_words(
     # Check non-existent wake word
     req = await http_client.get("/api/esphome/wake_words/wrong_wake_word.json")
     assert req.status == HTTPStatus.NOT_FOUND
+
+
+async def test_multichannel_audio(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test that stt-start event can switch audio channels."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.SPEAKER
+            | VoiceAssistantFeature.API_AUDIO
+            | VoiceAssistantFeature.MULTI_CHANNEL_AUDIO
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    pipeline_finished = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        event_callback = kwargs["event_callback"]
+
+        # STT
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.STT_START,
+                data={
+                    "engine": "test-stt-engine",
+                    "metadata": {},
+                    "audio_processing": {
+                        # Request non-enhanced audio (channel 1)
+                        "prefers_auto_gain_enabled": False,
+                        "prefers_noise_reduction_enabled": False,
+                    },
+                },
+            )
+        )
+
+        stt_stream = kwargs["stt_stream"]
+
+        chunks = [chunk async for chunk in stt_stream]
+
+        # Verify correct channel
+        assert chunks == [b"channel 1"]
+
+        pipeline_finished.set()
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+    ):
+        async with asyncio.timeout(1):
+            await satellite.handle_pipeline_start(
+                conversation_id="",
+                flags=VoiceAssistantCommandFlag(0),  # stt
+                audio_settings=VoiceAssistantAudioSettings(),
+                wake_word_phrase=None,
+            )
+            await satellite.handle_audio(b"channel 0", b"channel 1")
+            await satellite.handle_pipeline_stop(abort=False)
+            await pipeline_finished.wait()
+
+
+async def test_multichannel_audio_fallback_channel_0(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test that channel 0 is used if multi-channel audio isn't supported."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.SPEAKER
+            | VoiceAssistantFeature.API_AUDIO
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    pipeline_finished = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        event_callback = kwargs["event_callback"]
+
+        # STT
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.STT_START,
+                data={
+                    "engine": "test-stt-engine",
+                    "metadata": {},
+                    "audio_processing": {
+                        # Request non-enhanced audio (channel 1)
+                        "prefers_auto_gain_enabled": False,
+                        "prefers_noise_reduction_enabled": False,
+                    },
+                },
+            )
+        )
+
+        stt_stream = kwargs["stt_stream"]
+
+        chunks = [chunk async for chunk in stt_stream]
+
+        # Non-enhanced audio (channel 1) was requested, but it isn't supported.
+        assert chunks == [b"channel 0"]
+
+        pipeline_finished.set()
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+    ):
+        async with asyncio.timeout(1):
+            await satellite.handle_pipeline_start(
+                conversation_id="",
+                flags=VoiceAssistantCommandFlag(0),  # stt
+                audio_settings=VoiceAssistantAudioSettings(),
+                wake_word_phrase=None,
+            )
+            await satellite.handle_audio(b"channel 0", b"channel 1")
+            await satellite.handle_pipeline_stop(abort=False)
+            await pipeline_finished.wait()
+
+
+def _make_wav_header(
+    riff: bytes = b"RIFF",
+    wave_fmt: bytes = b"WAVE",
+    chunk_id: bytes = b"fmt ",
+    chunk_size: int = 16,
+    audio_format: int = 1,
+    num_channels: int = 1,
+    sample_rate: int = 16000,
+    bits_per_sample: int = 16,
+    data_chunk_id: bytes = b"data",
+    data_chunk_size: int = 0,
+) -> bytes:
+    """Build a WAV header for testing."""
+    header = struct.pack("<4sI4s", riff, 36 + data_chunk_size, wave_fmt)
+    header += struct.pack("<4sI", chunk_id, chunk_size)
+    if chunk_size >= 16:
+        block_align = num_channels * (bits_per_sample // 8)
+        byte_rate = sample_rate * block_align
+        header += struct.pack(
+            "<HHIIHH",
+            audio_format,
+            num_channels,
+            sample_rate,
+            byte_rate,
+            block_align,
+            bits_per_sample,
+        )
+    if chunk_size > 16:
+        header += b"\x00" * (chunk_size - 16)
+    header += struct.pack("<4sI", data_chunk_id, data_chunk_size)
+    return header
+
+
+class _ChunkedMockResultStream(MockResultStream):
+    """MockResultStream that yields pre-defined chunks."""
+
+    def __init__(
+        self, hass: HomeAssistant, extension: str, chunks: list[bytes]
+    ) -> None:
+        super().__init__(hass, extension, b"")
+        self.chunks = chunks
+
+    async def async_stream_result(self):
+        for chunk in self.chunks:
+            yield chunk
+
+
+@pytest.mark.parametrize(
+    "wav_data",
+    [
+        pytest.param(
+            _make_wav_header(riff=b"RIF_"),
+            id="invalid_riff_header",
+        ),
+        pytest.param(
+            _make_wav_header(audio_format=2),
+            id="unsupported_audio_format",
+        ),
+        pytest.param(
+            _make_wav_header(num_channels=2),
+            id="incorrect_channels",
+        ),
+        pytest.param(
+            _make_wav_header(sample_rate=22050),
+            id="incorrect_sample_rate",
+        ),
+        pytest.param(
+            _make_wav_header(bits_per_sample=8),
+            id="incorrect_bits_per_sample",
+        ),
+        pytest.param(
+            struct.pack("<4sI4s", b"RIFF", 20, b"WAVE")
+            + struct.pack("<4sI", b"data", 0),
+            id="missing_fmt_chunk",
+        ),
+        pytest.param(
+            struct.pack("<4sI4s", b"RIFF", 100, b"WAVE")
+            + struct.pack("<4sI", b"fmt ", 8)
+            + b"\x00" * 8
+            + struct.pack("<4sI", b"data", 4)
+            + b"\x01\x02\x03\x04",
+            id="fmt_chunk_too_small",
+        ),
+    ],
+)
+async def test_stream_tts_audio_invalid_wav(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    wav_data: bytes,
+) -> None:
+    """Test that invalid WAV headers are rejected without sending audio."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    stream = _ChunkedMockResultStream(hass, "wav", [wav_data])
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_not_called()
+
+
+async def test_stream_tts_audio_junk_chunk_skipping(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test skipping unknown chunks in _stream_tts_audio."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    # Skipping unknown chunks
+    junk_chunk = struct.pack("<4sI", b"JUNK", 4) + b"junk"
+    header_with_junk = (
+        struct.pack("<4sI4s", b"RIFF", 100, b"WAVE")
+        + junk_chunk
+        + struct.pack("<4sI", b"fmt ", 16)
+        + struct.pack("<HHIIHH", 1, 1, 16000, 32000, 2, 16)
+        + struct.pack("<4sI", b"data", 8)
+        + b"\x00" * 8
+    )
+    stream = _ChunkedMockResultStream(hass, "wav", [header_with_junk])
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_called_once_with(b"\x00" * 8)
+
+
+async def test_stream_tts_audio_byte_fragmentation(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test fragmentation of incoming stream bytes."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    full_wav = _make_wav_header(data_chunk_size=4) + b"\x01\x02\x03\x04"
+    byte_chunks = [bytes([b]) for b in full_wav]
+    stream = _ChunkedMockResultStream(hass, "wav", byte_chunks)
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_called_once_with(b"\x01\x02\x03\x04")
+
+
+async def test_stream_tts_audio_multi_chunk_pacing(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test multi-chunk streaming with sleep/wait logic."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    wav_with_16000bytes = _make_wav_header(data_chunk_size=16000) + b"\x00" * 16000
+    stream = _ChunkedMockResultStream(hass, "wav", [wav_with_16000bytes])
+    await satellite._stream_tts_audio(stream, samples_per_chunk=512)
+    assert mock_client.send_voice_assistant_audio.call_count == 16
+    for i in range(15):
+        assert mock_client.send_voice_assistant_audio.call_args_list[i].args == (
+            b"\x00" * 1024,
+        )
+    assert mock_client.send_voice_assistant_audio.call_args_list[15].args == (
+        b"\x00" * 640,
+    )
+
+
+async def test_stream_tts_audio_cancel_between_chunks(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test cancel/abort when self._is_running becomes False (between chunks)."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    header_chunk = _make_wav_header(data_chunk_size=8)
+
+    async def async_stream_cancel():
+        yield header_chunk
+        satellite._is_running = False
+        yield b"\x00" * 8
+
+    stream = _ChunkedMockResultStream(hass, "wav", [])
+    stream.async_stream_result = async_stream_cancel
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_not_called()
+
+
+async def test_stream_tts_audio_cancel_inner_loop(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test cancel/abort when self._is_running becomes False (inner chunk loop)."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    audio_data = b"\x00" * 2048
+    full_wav = _make_wav_header(data_chunk_size=len(audio_data)) + audio_data
+
+    original_send = satellite._send_tts_audio
+
+    def send_then_stop(payload: bytes) -> None:
+        original_send(payload)
+        satellite._is_running = False
+
+    stream = _ChunkedMockResultStream(hass, "wav", [full_wav])
+    with patch.object(satellite, "_send_tts_audio", side_effect=send_then_stop):
+        await satellite._stream_tts_audio(stream, samples_per_chunk=512)
+    assert mock_client.send_voice_assistant_audio.call_count == 1
+
+
+async def test_stream_tts_audio_odd_junk_padding(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test odd-sized JUNK chunk with RIFF word-alignment padding."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    odd_junk_chunk = (
+        struct.pack("<4sI", b"JUNK", 5) + b"junk!" + b"\x00"
+    )  # 5 bytes + 1 pad
+    header_with_odd_junk = (
+        struct.pack("<4sI4s", b"RIFF", 200, b"WAVE")
+        + odd_junk_chunk
+        + struct.pack("<4sI", b"fmt ", 16)
+        + struct.pack("<HHIIHH", 1, 1, 16000, 32000, 2, 16)
+        + struct.pack("<4sI", b"data", 4)
+        + b"\xaa\xbb\xcc\xdd"
+    )
+    stream = _ChunkedMockResultStream(hass, "wav", [header_with_odd_junk])
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_called_once_with(b"\xaa\xbb\xcc\xdd")
+
+
+async def test_stream_tts_audio_trailing_metadata(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test trailing metadata after data chunk is not forwarded as audio."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    audio_payload = b"\x11\x22" * 4  # 8 bytes of audio
+    trailing_list = struct.pack("<4sI", b"LIST", 4) + b"INFO"
+    wav_with_trailing = (
+        _make_wav_header(data_chunk_size=len(audio_payload))
+        + audio_payload
+        + trailing_list
+    )
+    stream = _ChunkedMockResultStream(hass, "wav", [wav_with_trailing])
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_called_once_with(audio_payload)

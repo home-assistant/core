@@ -1,10 +1,8 @@
 """Support for Apache Kafka."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import json
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from aiokafka import AIOKafkaProducer
 import voluptuous as vol
@@ -77,6 +75,7 @@ class DateTimeJSONEncoder(json.JSONEncoder):
     Additionally add encoding for datetime objects as isoformat.
     """
 
+    @override
     def default(self, o: Any) -> str:
         """Implement encoding logic."""
         if isinstance(o, datetime):

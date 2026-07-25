@@ -1,8 +1,7 @@
 """Control a MQTT alarm."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 import voluptuous as vol
 
@@ -131,10 +130,12 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     _attributes_extra_blocked = MQTT_ALARM_ATTRIBUTES_BLOCKED
 
     @staticmethod
+    @override
     def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._value_template = MqttValueTemplate(
@@ -189,16 +190,19 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         self._attr_alarm_state = AlarmControlPanelState(payload)
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
             CONF_STATE_TOPIC, self._state_message_received, {"_attr_alarm_state"}
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command.
 
@@ -210,6 +214,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         payload: str = self._config[CONF_PAYLOAD_DISARM]
         await self._publish(code, payload)
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command.
 
@@ -221,6 +226,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action: str = self._config[CONF_PAYLOAD_ARM_HOME]
         await self._publish(code, action)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command.
 
@@ -232,6 +238,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action: str = self._config[CONF_PAYLOAD_ARM_AWAY]
         await self._publish(code, action)
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command.
 
@@ -243,6 +250,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action: str = self._config[CONF_PAYLOAD_ARM_NIGHT]
         await self._publish(code, action)
 
+    @override
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command.
 
@@ -254,6 +262,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action: str = self._config[CONF_PAYLOAD_ARM_VACATION]
         await self._publish(code, action)
 
+    @override
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command.
 
@@ -265,6 +274,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action: str = self._config[CONF_PAYLOAD_ARM_CUSTOM_BYPASS]
         await self._publish(code, action)
 
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send trigger command.
 

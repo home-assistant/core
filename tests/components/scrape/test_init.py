@@ -1,7 +1,5 @@
 """Test Scrape component setup process."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from http import HTTPStatus
 from typing import Any
@@ -212,7 +210,7 @@ async def test_migrate_from_future(
         options=get_resource_config,
         entry_id="01JZN04ZJ9BQXXGXDS05WS7D6P",
         subentries_data=get_sensor_config,
-        version=3,
+        version=4,
     )
 
     config_entry.add_to_hass(hass)
@@ -234,7 +232,7 @@ async def test_migrate_from_version_1_to_2(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test migration from version 1.1 to 2.1 with config subentries."""
+    """Test migration from version 1 to 3 with config subentries."""
 
     @dataclass(frozen=True, kw_only=True)
     class MockConfigSubentry(ConfigSubentry):
@@ -310,7 +308,7 @@ async def test_migrate_from_version_1_to_2(
     assert config_entry.subentries == {
         "01JZQ1G63X2DX66GZ9ZTFY9PEH": MockConfigSubentry(
             data={
-                "advanced": {"value_template": "{{ value }}"},
+                "additional": {"value_template": "{{ value }}"},
                 "index": 0,
                 "select": ".release-date",
             },
@@ -331,3 +329,62 @@ async def test_migrate_from_version_1_to_2(
 
     state = hass.states.get("sensor.current_version")
     assert state.state == "January 17, 2022"
+
+
+async def test_migrate_from_version_2_to_3(
+    hass: HomeAssistant,
+    get_data: MockRestData,
+) -> None:
+    """Test migration renaming the "advanced" section to "additional"."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        options={
+            "method": "GET",
+            "resource": "http://www.home-assistant.io",
+            "auth": {},
+            "advanced": {
+                "encoding": "UTF-8",
+                "timeout": 10.0,
+                "verify_ssl": True,
+            },
+        },
+        entry_id="01JZN04ZJ9BQXXGXDS05WS7D6P",
+        subentries_data=(
+            {
+                "data": {
+                    "advanced": {"value_template": "{{ value }}"},
+                    "index": 0,
+                    "select": ".release-date",
+                },
+                "subentry_id": "01JZQ1G63X2DX66GZ9ZTFY9PEH",
+                "subentry_type": "entity",
+                "title": "Current version",
+                "unique_id": None,
+            },
+        ),
+        version=2,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=get_data,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.version == 3
+
+    assert "advanced" not in config_entry.options
+    assert config_entry.options["additional"] == {
+        "encoding": "UTF-8",
+        "timeout": 10.0,
+        "verify_ssl": True,
+    }
+
+    subentry = config_entry.subentries["01JZQ1G63X2DX66GZ9ZTFY9PEH"]
+    assert "advanced" not in subentry.data
+    assert subentry.data["additional"] == {"value_template": "{{ value }}"}

@@ -1,10 +1,8 @@
 """The MusicCast integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aiomusiccast import MusicCastConnectionException
 from aiomusiccast.musiccast_device import MusicCastData, MusicCastDevice
@@ -48,6 +46,7 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
         )
         self.entities: list[MusicCastDeviceEntity] = []
 
+    @override
     async def _async_update_data(self) -> MusicCastData:
         """Update data via library."""
         try:

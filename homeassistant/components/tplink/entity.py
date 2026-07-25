@@ -1,12 +1,10 @@
 """Common code for tplink."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass, replace
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from kasa import (
     AuthenticationError,
@@ -250,6 +248,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         """Return unique ID for the entity."""
         raise NotImplementedError
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call update attributes after the device is added to the platform."""
         await super().async_added_to_hass()
@@ -283,12 +282,14 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             self._attr_available = available
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_call_update_attrs()
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success and self._attr_available
@@ -318,6 +319,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         # values like unit_of_measurement and suggested_display_precision
         self._async_call_update_attrs()
 
+    @override
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
         return self._get_feature_unique_id(self._device, self.entity_description)
@@ -435,7 +437,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 parent=parent,
             )
             for feat in device.features.values()
-            if feat.type == feature_type
+            if feat.type is feature_type
             and feat.id not in EXCLUDED_FEATURES
             and (
                 feat.category is not Feature.Category.Primary
@@ -477,7 +479,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
     ) -> list[_E]:
         """Create entities for device and its children.
 
-        This is a helper that calls *_entities_for_device* for the device and its children.
+        Calls *_entities_for_device* for the device and its children.
         """
         entities: list[_E] = []
         # Add parent entities before children so via_device id works.
@@ -563,6 +565,7 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
             else:
                 self._attr_name = get_device_name(device)
 
+    @override
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
         desc = self.entity_description
@@ -622,7 +625,7 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
     ) -> list[_E]:
         """Create entities for device and its children.
 
-        This is a helper that calls *_entities_for_device* for the device and its children.
+        Calls *_entities_for_device* for the device and its children.
         """
         entities: list[_E] = []
 

@@ -74,11 +74,13 @@ def create_test_entity(hass: HomeAssistant, config: dict) -> TemplateEntity:
     [
         (
             {"default_entity_id": "test.test"},
-            "Received invalid test state: {} for entity test.test, expected one of mmmm, beer, is, good",
+            "Received invalid test state: {} for entity"
+            " test.test, expected one of mmmm, beer, is, good",
         ),
         (
             {},
-            "Received invalid state: {} for entity Test, expected one of mmmm, beer, is, good",
+            "Received invalid state: {} for entity Test,"
+            " expected one of mmmm, beer, is, good",
         ),
     ],
 )
@@ -152,11 +154,16 @@ async def test_none_on_unknown_and_unavailable(
     [
         (
             {"default_entity_id": "test.test"},
-            "Received invalid test state: {} for entity test.test, expected one of mmmm, beer, is, good, 1, true, yes, on, enable, 0, false, no, off, disable",
+            "Received invalid test state: {} for entity"
+            " test.test, expected one of mmmm, beer, is, good,"
+            " 1, true, yes, on, enable, 0, false, no, off,"
+            " disable",
         ),
         (
             {},
-            "Received invalid state: {} for entity Test, expected one of mmmm, beer, is, good, 1, true, yes, on, enable, 0, false, no, off, disable",
+            "Received invalid state: {} for entity Test,"
+            " expected one of mmmm, beer, is, good, 1, true,"
+            " yes, on, enable, 0, false, no, off, disable",
         ),
     ],
 )
@@ -210,11 +217,15 @@ async def test_enum_with_on_off(
     [
         (
             {"default_entity_id": "test.test"},
-            "Received invalid test state: {} for entity test.test, expected one of mmmm, beer, is, good, 1, true, yes, on, enable",
+            "Received invalid test state: {} for entity"
+            " test.test, expected one of mmmm, beer, is, good,"
+            " 1, true, yes, on, enable",
         ),
         (
             {},
-            "Received invalid state: {} for entity Test, expected one of mmmm, beer, is, good, 1, true, yes, on, enable",
+            "Received invalid state: {} for entity Test,"
+            " expected one of mmmm, beer, is, good, 1, true,"
+            " yes, on, enable",
         ),
     ],
 )
@@ -267,11 +278,15 @@ async def test_enum_with_on(
     [
         (
             {"default_entity_id": "test.test"},
-            "Received invalid test state: {} for entity test.test, expected one of mmmm, beer, is, good, 0, false, no, off, disable",
+            "Received invalid test state: {} for entity"
+            " test.test, expected one of mmmm, beer, is, good,"
+            " 0, false, no, off, disable",
         ),
         (
             {},
-            "Received invalid state: {} for entity Test, expected one of mmmm, beer, is, good, 0, false, no, off, disable",
+            "Received invalid state: {} for entity Test,"
+            " expected one of mmmm, beer, is, good, 0, false,"
+            " no, off, disable",
         ),
     ],
 )
@@ -324,11 +339,15 @@ async def test_enum_with_off(
     [
         (
             {"default_entity_id": "test.test"},
-            "Received invalid test state: {} for entity test.test, expected one of 1, true, yes, on, enable, 0, false, no, off, disable",
+            "Received invalid test state: {} for entity"
+            " test.test, expected one of 1, true, yes, on,"
+            " enable, 0, false, no, off, disable",
         ),
         (
             {},
-            "Received invalid state: {} for entity Test, expected one of 1, true, yes, on, enable, 0, false, no, off, disable",
+            "Received invalid state: {} for entity Test,"
+            " expected one of 1, true, yes, on, enable, 0,"
+            " false, no, off, disable",
         ),
     ],
 )
@@ -372,11 +391,15 @@ async def test_boolean(
     [
         (
             {"default_entity_id": "test.test"},
-            "Received invalid test state: {} for entity test.test, expected one of 1, true, yes, on, enable, 0, false, no, off, disable",
+            "Received invalid test state: {} for entity"
+            " test.test, expected one of 1, true, yes, on,"
+            " enable, 0, false, no, off, disable",
         ),
         (
             {},
-            "Received invalid state: {} for entity Test, expected one of 1, true, yes, on, enable, 0, false, no, off, disable",
+            "Received invalid state: {} for entity Test,"
+            " expected one of 1, true, yes, on, enable, 0,"
+            " false, no, off, disable",
         ),
     ],
 )
@@ -421,11 +444,16 @@ async def test_boolean_as_true(
     [
         (
             {"default_entity_id": "test.test"},
-            "Received invalid test state: {} for entity test.test, expected one of 1, true, yes, on, enable, 0, false, no, off, disable, something_unique",
+            "Received invalid test state: {} for entity"
+            " test.test, expected one of 1, true, yes, on,"
+            " enable, 0, false, no, off, disable,"
+            " something_unique",
         ),
         (
             {},
-            "Received invalid state: {} for entity Test, expected one of 1, true, yes, on, enable, 0, false, no, off, disable, something_unique",
+            "Received invalid state: {} for entity Test,"
+            " expected one of 1, true, yes, on, enable, 0,"
+            " false, no, off, disable, something_unique",
         ),
     ],
 )
@@ -584,11 +612,14 @@ async def test_number_as_int(
     [
         (
             {"default_entity_id": "test.test"},
-            "Received invalid test state: {} for entity test.test, expected a number greater than or equal to 0.0",
+            "Received invalid test state: {} for entity"
+            " test.test, expected a number greater than or"
+            " equal to 0.0",
         ),
         (
             {},
-            "Received invalid state: {} for entity Test, expected a number greater than or equal to 0.0",
+            "Received invalid state: {} for entity Test,"
+            " expected a number greater than or equal to 0.0",
         ),
     ],
 )
@@ -642,11 +673,14 @@ async def test_number_with_minimum(
     [
         (
             {"default_entity_id": "test.test"},
-            "Received invalid test state: {} for entity test.test, expected a number less than or equal to 0.0",
+            "Received invalid test state: {} for entity"
+            " test.test, expected a number less than or equal"
+            " to 0.0",
         ),
         (
             {},
-            "Received invalid state: {} for entity Test, expected a number less than or equal to 0.0",
+            "Received invalid state: {} for entity Test,"
+            " expected a number less than or equal to 0.0",
         ),
     ],
 )
@@ -696,11 +730,14 @@ async def test_number_with_maximum(
     [
         (
             {"default_entity_id": "test.test"},
-            "Received invalid test state: {} for entity test.test, expected a number between 0.0 and 100.0",
+            "Received invalid test state: {} for entity"
+            " test.test, expected a number between 0.0 and"
+            " 100.0",
         ),
         (
             {},
-            "Received invalid state: {} for entity Test, expected a number between 0.0 and 100.0",
+            "Received invalid state: {} for entity Test,"
+            " expected a number between 0.0 and 100.0",
         ),
     ],
 )
@@ -748,7 +785,8 @@ async def test_number_in_range(
     [
         (
             {"default_entity_id": "test.test"},
-            "Received invalid test state: {} for entity test.test, expected a list of strings",
+            "Received invalid test state: {} for entity"
+            " test.test, expected a list of strings",
         ),
         (
             {},
@@ -807,7 +845,8 @@ async def test_list_of_strings_none_on_empty(
     [
         (
             {"default_entity_id": "test.test"},
-            "Received invalid test state: {} for entity test.test, expected beer, is, GOOD",
+            "Received invalid test state: {} for entity"
+            " test.test, expected beer, is, GOOD",
         ),
         (
             {},
@@ -859,11 +898,13 @@ async def test_item_in_list(
     [
         (
             {"default_entity_id": "test.test"},
-            "Received invalid test state: {} for entity test.test, expected one of beer, is, GOOD",
+            "Received invalid test state: {} for entity"
+            " test.test, expected one of beer, is, GOOD",
         ),
         (
             {},
-            "Received invalid state: {} for entity Test, expected one of beer, is, GOOD",
+            "Received invalid state: {} for entity Test,"
+            " expected one of beer, is, GOOD",
         ),
     ],
 )

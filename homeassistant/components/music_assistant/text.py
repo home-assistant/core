@@ -1,8 +1,6 @@
 """Music Assistant text platform."""
 
-from __future__ import annotations
-
-from typing import Final
+from typing import Final, override
 
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.player import PlayerOption, PlayerOptionType
@@ -82,10 +80,12 @@ class MusicAssistantPlayerConfigText(MusicAssistantPlayerOptionEntity, TextEntit
         self.entity_description = entity_description
 
     @catch_musicassistant_error
+    @override
     async def async_set_value(self, value: str) -> None:
         """Set text value."""
         await self.mass.players.set_option(self.player_id, self.mass_option_key, value)
 
+    @override
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""
         self._attr_native_value = (

@@ -24,11 +24,20 @@ VEHICLE_HAS_REMOTE_SERVICE = "has_remote"
 VEHICLE_HAS_SAFETY_SERVICE = "has_safety"
 VEHICLE_LAST_UPDATE = "last_update"
 VEHICLE_STATUS = "vehicle_status"
+VEHICLE_HEALTH = "vehicle_health"
+
+# Synthetic keys for sensors that don't read a single field directly; used
+# as both unique_id suffix and translation_key, so they must stay stable
+# across releases (changing them would orphan existing entity registry
+# entries).
+KEY_RECOMMENDED_TIRE_PRESSURE_FRONT = "recommended_tire_pressure_front"
+KEY_RECOMMENDED_TIRE_PRESSURE_REAR = "recommended_tire_pressure_rear"
 
 
 API_GEN_1 = "g1"
 API_GEN_2 = "g2"
 API_GEN_3 = "g3"
+API_GEN_4 = "g4"
 MANUFACTURER = "Subaru"
 
 PLATFORMS = [
@@ -38,10 +47,8 @@ PLATFORMS = [
     Platform.SENSOR,
 ]
 
-SERVICE_LOCK = "lock"
 SERVICE_REMOTE_START = "remote_start"
 SERVICE_REMOTE_STOP = "remote_stop"
-SERVICE_UNLOCK = "unlock"
 SERVICE_UNLOCK_SPECIFIC_DOOR = "unlock_specific_door"
 
 ATTR_DOOR = "door"

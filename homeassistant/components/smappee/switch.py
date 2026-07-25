@@ -1,6 +1,6 @@
 """Support for interacting with Smappee Comport Plugs, Switches and Output Modules."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -88,6 +88,7 @@ class SmappeeActuator(SwitchEntity):
         )
 
     @property
+    @override
     def name(self):
         """Return the name of the switch."""
         if self._actuator_type == "INFINITY_OUTPUT_MODULE":
@@ -103,6 +104,7 @@ class SmappeeActuator(SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         if self._actuator_type == "INFINITY_OUTPUT_MODULE":
@@ -114,6 +116,7 @@ class SmappeeActuator(SwitchEntity):
         # Switch or comfort plug
         return self._state == "ON_ON"
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on Comport Plug."""
         if self._actuator_type in ("SWITCH", "COMFORT_PLUG"):
@@ -123,6 +126,7 @@ class SmappeeActuator(SwitchEntity):
                 self._actuator_id, state=self._actuator_state_option
             )
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off Comport Plug."""
         if self._actuator_type in ("SWITCH", "COMFORT_PLUG"):
@@ -135,6 +139,7 @@ class SmappeeActuator(SwitchEntity):
             )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available. Unavailable for COMFORT_PLUGS."""
         return (
@@ -143,6 +148,7 @@ class SmappeeActuator(SwitchEntity):
         )
 
     @property
+    @override
     def unique_id(
         self,
     ):

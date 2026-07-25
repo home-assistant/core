@@ -61,6 +61,18 @@
       "upper_threshold": {
         "name": "Maximum charge level"
       }
+    },
+    "select": {
+      "battery_mode": {
+        "name": "Mode",
+        "state": {
+          "connected_solar_panels": "Connected solar panels",
+          "dynamic": "Dynamic",
+          "fast_charge": "Fast charge",
+          "fast_discharge": "Fast discharge",
+          "self_use": "Self-use"
+        }
+      }
     }
   },
   "exceptions": {

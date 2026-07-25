@@ -1,0 +1,77 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "bad_data": "The heater did not provide the required identification information. Verify that the host points to a supported controller and the correct endpoint.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "bad_data": "The heater did not provide the required identification information. Verify that the host points to a supported controller and the correct endpoint.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up this Guntamatic heater?",
+        "title": "Discovered Guntamatic heater"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Guntamatic heater."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "boiler_temperature": {
+        "name": "Boiler temperature"
+      },
+      "buffer_bottom_temperature": {
+        "name": "Buffer bottom temperature"
+      },
+      "buffer_center_temperature": {
+        "name": "Buffer center temperature"
+      },
+      "buffer_load": {
+        "name": "Buffer load"
+      },
+      "buffer_top_temperature": {
+        "name": "Buffer top temperature"
+      },
+      "domestic_hot_water_0_temperature": {
+        "name": "Domestic hot water circuit 0 temperature"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "program": {
+        "name": "Program",
+        "state": {
+          "dhw": "Domestic hot water",
+          "dhw_boost": "Domestic hot water boost",
+          "heat": "Heat",
+          "hibernate": "Setback mode",
+          "hibernate_to": "Away mode",
+          "off": "[%key:common::state::off%]",
+          "timer": "Timer"
+        }
+      },
+      "room_0_temperature": {
+        "name": "Room 0 temperature"
+      },
+      "room_1_temperature": {
+        "name": "Room 1 temperature"
+      },
+      "room_2_temperature": {
+        "name": "Room 2 temperature"
+      },
+      "status": {
+        "name": "Status"
+      }
+    }
+  }
+}

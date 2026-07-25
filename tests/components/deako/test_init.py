@@ -44,7 +44,7 @@ async def test_deako_async_setup_entry_devices_error(
     pydeako_deako_mock: MagicMock,
     pydeako_discoverer_mock: MagicMock,
 ) -> None:
-    """Test async_setup_entry raises ConfigEntryNotReady when pydeako raises DeviceListTimeout."""
+    """Test async_setup_entry raises ConfigEntryNotReady on DeviceListTimeout."""
 
     mock_config_entry.add_to_hass(hass)
 

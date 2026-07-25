@@ -1,8 +1,8 @@
 """The AirVisual Pro integration."""
 
-from __future__ import annotations
+from typing import override
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -23,10 +23,17 @@ class AirVisualProEntity(CoordinatorEntity[AirVisualProCoordinator]):
         self.entity_description = description
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.data["serial_number"])},
+            connections={
+                (
+                    CONNECTION_NETWORK_MAC,
+                    self.coordinator.data["status"]["mac_address"],
+                )
+            },
             manufacturer="AirVisual",
             model=self.coordinator.data["status"]["model"],
             name=self.coordinator.data["settings"]["node_name"],

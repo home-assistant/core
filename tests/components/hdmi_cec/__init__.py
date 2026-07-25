@@ -2,7 +2,11 @@
 
 from unittest.mock import AsyncMock, Mock
 
-from homeassistant.components.hdmi_cec import KeyPressCommand, KeyReleaseCommand
+from homeassistant.components.hdmi_cec import (
+    CecCommand,
+    KeyPressCommand,
+    KeyReleaseCommand,
+)
 
 
 class MockHDMIDevice:
@@ -49,3 +53,12 @@ def assert_key_press_release(fnc, count=0, *, dst, key):
     assert press_arg.dst == dst
     assert isinstance(release_arg, KeyReleaseCommand)
     assert release_arg.dst == dst
+
+
+def assert_cec_command(fnc, *, cmd, dst):
+    """Assert that correct CecCommand was sent."""
+    fnc.assert_called_once()
+    command = fnc.call_args.args[0]
+    assert isinstance(command, CecCommand)
+    assert command.cmd == cmd
+    assert command.dst == dst

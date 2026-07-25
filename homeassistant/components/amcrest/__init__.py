@@ -1,7 +1,5 @@
 """Support for Amcrest IP cameras."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager, suppress
@@ -9,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import threading
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError
@@ -180,6 +178,7 @@ class AmcrestChecker(ApiWrapper):
             self._hass, self._wrap_test_online, RECHECK_INTERVAL
         )
 
+    @override
     def command(self, *args: Any, **kwargs: Any) -> Any:
         """amcrest.ApiWrapper.command wrapper to catch errors."""
         try:
@@ -193,12 +192,14 @@ class AmcrestChecker(ApiWrapper):
         self._set_online()
         return ret
 
+    @override
     async def async_command(self, *args: Any, **kwargs: Any) -> httpx.Response:
         """amcrest.ApiWrapper.command wrapper to catch errors."""
         async with self._async_command_wrapper():
             return await super().async_command(*args, **kwargs)
 
     @asynccontextmanager
+    @override
     async def async_stream_command(
         self, *args: Any, **kwargs: Any
     ) -> AsyncGenerator[httpx.Response]:

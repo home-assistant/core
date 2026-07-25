@@ -1,7 +1,5 @@
 """Common libraries for test setup."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import copy
 import shutil
@@ -257,7 +255,7 @@ def platforms() -> list[str]:
 
 @pytest.fixture
 def subscriber_id() -> str:
-    """Fixture to let tests override subscriber id regardless of configuration type used."""
+    """Fixture to override subscriber id regardless of config type."""
     return SUBSCRIBER_ID
 
 

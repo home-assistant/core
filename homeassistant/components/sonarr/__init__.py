@@ -1,7 +1,5 @@
 """The Sonarr component."""
 
-from __future__ import annotations
-
 from dataclasses import fields
 
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
@@ -44,7 +42,7 @@ from .coordinator import (
 )
 from .services import async_setup_services
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 

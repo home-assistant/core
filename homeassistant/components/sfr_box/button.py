@@ -1,11 +1,9 @@
 """SFR Box button platform."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxError
@@ -106,6 +104,7 @@ class SFRBoxButton(SFREntity, ButtonEntity):
         self._box = box
 
     @with_error_wrapping
+    @override
     async def async_press(self) -> None:
         """Process the button press."""
         await self.entity_description.async_press(self._box)

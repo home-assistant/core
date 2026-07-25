@@ -509,7 +509,7 @@ async def test_dual_roller_shutter_unknown_position(
     unknown_attr: str,
     unknown_entity_id: str,
 ) -> None:
-    """Each part falls back to unknown independently when only its position is unknown."""
+    """Each part falls back to unknown when only its position is unknown."""
 
     all_entity_ids = {
         "cover.test_dual_roller_shutter",

@@ -11,7 +11,6 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
     assert_numerical_condition_unit_conversion,
     parametrize_numerical_condition_above_below_all,
@@ -27,17 +26,6 @@ async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "sensor")
 
 
-@pytest.mark.parametrize(
-    "condition",
-    ["power.is_value"],
-)
-async def test_power_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the power conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
-
-
 _WATT_THRESHOLD = {
     "threshold": {
         "type": "above",
@@ -46,11 +34,10 @@ _WATT_THRESHOLD = {
 }
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("power.is_value", _WATT_THRESHOLD, True, False),
+        ("power.is_value", _WATT_THRESHOLD, True, True),
     ],
 )
 async def test_power_condition_options_validation(
@@ -70,7 +57,6 @@ async def test_power_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -107,7 +93,6 @@ async def test_power_sensor_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -144,7 +129,6 @@ async def test_power_sensor_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_power_condition_unit_conversion_sensor(
     hass: HomeAssistant,
 ) -> None:

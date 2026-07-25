@@ -132,10 +132,10 @@ async def test_zeroconf_flow_abort_errors(
     ],
     ids=["status-connection", "status-missing", "reading-missing"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_iometer_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     method_name: str,
     exception: Exception,
     error_key: str,
@@ -169,10 +169,10 @@ async def test_user_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_abort_duplicate(
     hass: HomeAssistant,
     mock_iometer_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate flow."""

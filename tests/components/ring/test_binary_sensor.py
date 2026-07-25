@@ -129,9 +129,8 @@ async def test_binary_sensor(
     with patch("homeassistant.components.ring.PLATFORMS", [Platform.BINARY_SENSOR]):
         assert await async_setup_component(hass, DOMAIN, {})
 
-    on_event_cb = mock_ring_event_listener_class.return_value.add_notification_callback.call_args.args[
-        0
-    ]
+    listener = mock_ring_event_listener_class.return_value
+    on_event_cb = listener.add_notification_callback.call_args.args[0]
 
     # Default state is set to off
 

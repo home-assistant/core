@@ -344,7 +344,7 @@ async def test_calendar_midnight_crossing_local_start(
     freezer: FrozenDateTimeFactory,
     mock_legacy: AsyncMock,
 ) -> None:
-    """Test async_get_events includes overnight period when query starts at local midnight."""
+    """Test async_get_events includes overnight period at local midnight."""
     tz = dt_util.get_default_time_zone()
     freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
 

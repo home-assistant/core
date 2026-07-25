@@ -1,7 +1,5 @@
 """Tests for the NRGkick switch platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, call
 
 from nrgkick_api import NRGkickCommandRejectedError

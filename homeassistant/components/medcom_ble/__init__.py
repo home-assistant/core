@@ -1,7 +1,5 @@
 """The Medcom BLE integration."""
 
-from __future__ import annotations
-
 from homeassistant.components import bluetooth
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant

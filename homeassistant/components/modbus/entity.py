@@ -1,13 +1,11 @@
 """Base implementation for all modbus platforms."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable
 import copy
 from datetime import datetime, timedelta
 import struct
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -122,6 +120,7 @@ class ModbusBaseEntity(Entity):
                 self.async_local_update,
             )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove entity from hass."""
         self.async_disable()
@@ -316,6 +315,7 @@ class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
         else:
             self._verify_active = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
@@ -352,10 +352,12 @@ class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
             return
         await self.async_local_update(cancel_pending_update=True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Set switch off."""
         await self.async_turn(self._command_off)
 
+    @override
     async def _async_update(self) -> None:
         """Update the entity state."""
         if not self._verify_active:

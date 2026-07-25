@@ -1,7 +1,5 @@
 """The tests for Button device triggers."""
 
-from __future__ import annotations
-
 import pytest
 from pytest_unordered import unordered
 
@@ -149,9 +147,9 @@ async def test_if_fires_on_state_change(
     hass.states.async_set(entry.entity_id, "2021-01-01T23:59:59+00:00")
     await hass.async_block_till_done()
     assert len(service_calls) == 1
-    assert (
-        service_calls[0].data["some"]
-        == f"to - device - {entry.entity_id} - unknown - 2021-01-01T23:59:59+00:00 - None - 0"
+    assert service_calls[0].data["some"] == (
+        f"to - device - {entry.entity_id}"
+        " - unknown - 2021-01-01T23:59:59+00:00 - None - 0"
     )
 
 
@@ -209,7 +207,7 @@ async def test_if_fires_on_state_change_legacy(
     hass.states.async_set(entry.entity_id, "2021-01-01T23:59:59+00:00")
     await hass.async_block_till_done()
     assert len(service_calls) == 1
-    assert (
-        service_calls[0].data["some"]
-        == f"to - device - {entry.entity_id} - unknown - 2021-01-01T23:59:59+00:00 - None - 0"
+    assert service_calls[0].data["some"] == (
+        f"to - device - {entry.entity_id}"
+        " - unknown - 2021-01-01T23:59:59+00:00 - None - 0"
     )

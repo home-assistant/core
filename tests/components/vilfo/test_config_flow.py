@@ -75,11 +75,9 @@ async def test_full_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_invalid_auth(
-    hass: HomeAssistant,
-    mock_vilfo_client: AsyncMock,
-    mock_is_valid_host: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_vilfo_client: AsyncMock, mock_is_valid_host: AsyncMock
 ) -> None:
     """Test we handle invalid auth."""
     mock_vilfo_client.get_board_information.side_effect = AuthenticationException
@@ -117,11 +115,11 @@ async def test_form_invalid_auth(
     ("side_effect", "error"),
     [(VilfoException, "cannot_connect"), (Exception, "unknown")],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_exceptions(
     hass: HomeAssistant,
     mock_vilfo_client: AsyncMock,
     mock_is_valid_host: AsyncMock,
-    mock_setup_entry: AsyncMock,
     side_effect: Exception,
     error: str,
 ) -> None:
@@ -168,10 +166,10 @@ async def test_form_wrong_host(
     assert result["errors"] == {"base": "invalid_host"}
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_already_configured(
     hass: HomeAssistant,
     mock_vilfo_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_is_valid_host: AsyncMock,
 ) -> None:

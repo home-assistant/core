@@ -10,14 +10,14 @@ from aiohasupervisor.models import AddonsStats, AddonState, InstalledAddonComple
 from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant.components.hassio.const import DATA_CONFIG_STORE
+from homeassistant.components.hassio.const import DATA_HASSIO_SUPERVISOR_USER
 from homeassistant.components.hassio.handler import HassIO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import SUPERVISOR_TOKEN
 
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -53,9 +53,7 @@ async def hassio_client_supervisor(
     hassio_stubs: None,
 ) -> TestClient:
     """Return an authenticated HTTP client."""
-    hassio_user_id = hass.data[DATA_CONFIG_STORE].data.hassio_user
-    hassio_user = await hass.auth.async_get_user(hassio_user_id)
-    assert hassio_user
+    hassio_user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
     assert hassio_user.refresh_tokens
     refresh_token = next(iter(hassio_user.refresh_tokens.values()))
     access_token = hass.auth.async_create_access_token(refresh_token)
@@ -63,6 +61,23 @@ async def hassio_client_supervisor(
         hass.http.app,
         headers={"Authorization": f"Bearer {access_token}"},
     )
+
+
+@pytest.fixture
+def hass_supervisor_ws_client(
+    hass_ws_client: WebSocketGenerator,
+    hass: HomeAssistant,
+) -> WebSocketGenerator:
+    """Return a websocket client authenticated as the Supervisor user."""
+
+    async def create_client() -> WebSocketGenerator:
+        hassio_user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
+        assert hassio_user.refresh_tokens
+        refresh_token = next(iter(hassio_user.refresh_tokens.values()))
+        access_token = hass.auth.async_create_access_token(refresh_token)
+        return await hass_ws_client(hass, access_token=access_token)
+
+    return create_client
 
 
 @pytest.fixture

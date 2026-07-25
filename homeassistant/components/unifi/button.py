@@ -3,12 +3,10 @@
 Support for restarting UniFi devices.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import secrets
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
@@ -152,6 +150,7 @@ class UnifiButtonEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
 
     entity_description: UnifiButtonEntityDescription[HandlerT, ApiItemT]
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         try:
@@ -163,5 +162,6 @@ class UnifiButtonEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             ) from err
 
     @callback
+    @override
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state."""

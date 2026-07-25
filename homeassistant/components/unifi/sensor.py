@@ -4,14 +4,12 @@ Support for bandwidth sensors of network clients.
 Support for uptime sensors of network clients.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import partial
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, override
 
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
@@ -52,6 +50,7 @@ from homeassistant.util import dt as dt_util, slugify
 
 from . import UnifiConfigEntry
 from .const import DEVICE_STATES
+from .device_tracker import async_client_allowed_fn
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
@@ -60,6 +59,7 @@ from .entity import (
     async_device_device_info_fn,
     async_wlan_available_fn,
     async_wlan_device_info_fn,
+    is_locally_administered_mac,
 )
 from .hub import UnifiHub
 
@@ -71,6 +71,13 @@ def async_bandwidth_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
     if obj_id in hub.config.option_supported_clients:
         return True
+    client = hub.api.clients[obj_id]
+    if (
+        hub.config.option_ignore_local_mac
+        and not client.is_wired
+        and is_locally_administered_mac(client.mac)
+    ):
+        return False
     return hub.config.option_allow_bandwidth_sensors
 
 
@@ -79,6 +86,13 @@ def async_uptime_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
     if obj_id in hub.config.option_supported_clients:
         return True
+    client = hub.api.clients[obj_id]
+    if (
+        hub.config.option_ignore_local_mac
+        and not client.is_wired
+        and is_locally_administered_mac(client.mac)
+    ):
+        return False
     return hub.config.option_allow_uptime_sensors
 
 
@@ -108,11 +122,16 @@ def async_client_uptime_value_fn(hub: UnifiHub, client: Client) -> datetime:
 
 @callback
 def async_wired_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
-    """Check if client is wired and allowed."""
+    """Check if client is wired, tracked and reports a link speed.
+
+    Gate on the tracking options so the sensor (and its client device) is only
+    created for clients the user actually tracks, instead of every wired client
+    the controller has ever seen.
+    """
     client = hub.api.clients[obj_id]
     if not client.is_wired or client.wired_rate_mbps <= 0:
         return False
-    return True
+    return async_client_allowed_fn(hub, obj_id)
 
 
 @callback
@@ -152,7 +171,7 @@ def async_device_clients_value_fn(hub: UnifiHub, device: Device) -> int:
 
 @callback
 def async_device_uptime_value_fn(hub: UnifiHub, device: Device) -> datetime | None:
-    """Calculate the approximate time the device started (based on uptime returned from API, in seconds)."""
+    """Calculate the approximate time the device started."""
     if device.uptime <= 0:
         # Library defaults to 0 if uptime is not provided, e.g. when offline
         return None
@@ -163,7 +182,7 @@ def async_device_uptime_value_fn(hub: UnifiHub, device: Device) -> datetime | No
 def async_uptime_value_changed_fn(
     old: StateType | date | datetime | Decimal, new: datetime | float | str | None
 ) -> bool:
-    """Reject the new uptime value if it's too similar to the old one. Avoids unwanted fluctuation."""
+    """Reject new uptime if too similar to old. Avoids fluctuation."""
     if isinstance(old, datetime) and isinstance(new, datetime):
         return new != old and abs((new - old).total_seconds()) > 120
     return old is None or (new != old)
@@ -255,7 +274,7 @@ def _device_wan_latency_monitor(
 ) -> TypedDeviceUptimeStatsWanMonitor | None:
     """Return the target of the WAN latency monitor."""
     if device.uptime_stats and (uptime_stats_wan := device.uptime_stats.get(wan)):
-        for monitor in uptime_stats_wan["monitors"]:
+        for monitor in uptime_stats_wan.get("monitors", []):
             if monitor_target in monitor["target"]:
                 return monitor
     return None
@@ -520,8 +539,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     ),
     UnifiSensorEntityDescription[Clients, Client](
         key="Client uptime",
-        translation_key="client_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         allowed_fn=async_uptime_sensor_allowed_fn,
@@ -611,8 +629,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     ),
     UnifiSensorEntityDescription[Devices, Device](
         key="Device uptime",
-        translation_key="device_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
@@ -723,6 +740,7 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             self.async_write_ha_state()
 
     @callback
+    @override
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state.
 
@@ -730,7 +748,8 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         """
         description = self.entity_description
         obj = description.object_fn(self.api, self._obj_id)
-        # Update the value only if value is considered to have changed relative to its previous state
+        # Update the value only if value is considered to
+        # have changed relative to its previous state
         if description.value_changed_fn(
             self.native_value, (value := description.value_fn(self.hub, obj))
         ):
@@ -744,6 +763,7 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                     dt_util.utcnow() + self.hub.config.option_detection_time,
                 )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
@@ -758,6 +778,7 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                 )
             )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
         await super().async_will_remove_from_hass()

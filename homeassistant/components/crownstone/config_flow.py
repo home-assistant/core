@@ -1,9 +1,7 @@
 """Flow handler for Crownstone."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
-from typing import Any
+from typing import Any, override
 
 from crownstone_cloud import CrownstoneCloud
 from crownstone_cloud.exceptions import (
@@ -137,6 +135,7 @@ class CrownstoneConfigFlowHandler(BaseCrownstoneFlowHandler, ConfigFlow, domain=
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: CrownstoneConfigEntry,
     ) -> CrownstoneOptionsFlowHandler:
@@ -148,6 +147,7 @@ class CrownstoneConfigFlowHandler(BaseCrownstoneFlowHandler, ConfigFlow, domain=
         super().__init__(CONFIG_FLOW, self.async_create_new_entry)
         self.login_info: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

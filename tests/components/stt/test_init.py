@@ -113,7 +113,7 @@ async def mock_setup(
         TEST_DOMAIN,
         async_get_engine=AsyncMock(return_value=mock_provider),
     )
-    assert await async_setup_component(hass, "stt", {"stt": {"platform": TEST_DOMAIN}})
+    assert await async_setup_component(hass, DOMAIN, {"stt": {"platform": TEST_DOMAIN}})
     await hass.async_block_till_done()
 
 
@@ -300,11 +300,13 @@ async def test_stream_audio_uses_enum_values(
         ),
         (
             (
-                "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=bad channel;"
+                "format=wav; codec=pcm; sample_rate=16000;"
+                " bit_rate=16; channel=bad channel;"
                 " language=en"
             ),
             400,
-            "Wrong format of X-Speech-Content: invalid literal for int() with base 10: 'bad channel'",
+            "Wrong format of X-Speech-Content: invalid literal"
+            " for int() with base 10: 'bad channel'",
         ),
         (
             "format=wav; codec=pcm; sample_rate=16000",
@@ -458,7 +460,7 @@ async def test_ws_list_engines(
 
 async def test_default_engine_none(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test async_default_engine."""
-    assert await async_setup_component(hass, "stt", {"stt": {}})
+    assert await async_setup_component(hass, DOMAIN, {"stt": {}})
     await hass.async_block_till_done()
 
     assert async_default_engine(hass) is None
@@ -476,7 +478,7 @@ async def test_default_engine(
         TEST_DOMAIN,
         async_get_engine=AsyncMock(return_value=mock_provider),
     )
-    assert await async_setup_component(hass, "stt", {"stt": {"platform": TEST_DOMAIN}})
+    assert await async_setup_component(hass, DOMAIN, {"stt": {"platform": TEST_DOMAIN}})
     await hass.async_block_till_done()
 
     assert async_default_engine(hass) == TEST_DOMAIN
@@ -581,7 +583,7 @@ async def test_get_engine_legacy(
         async_get_engine=AsyncMock(return_value=mock_provider),
     )
     assert await async_setup_component(
-        hass, "stt", {"stt": [{"platform": TEST_DOMAIN}, {"platform": "cloud"}]}
+        hass, DOMAIN, {"stt": [{"platform": TEST_DOMAIN}, {"platform": "cloud"}]}
     )
     await hass.async_block_till_done()
 
@@ -615,7 +617,7 @@ async def test_audio_processing_default(
 async def test_audio_processing_entity_default(
     hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockSTTProviderEntity
 ) -> None:
-    """Test that the default audio_processing property on entity returns correct values."""
+    """Test default audio_processing property returns correct values."""
     await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
 
     engine = async_get_speech_to_text_engine(hass, f"{DOMAIN}.{TEST_DOMAIN}")

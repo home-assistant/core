@@ -5,7 +5,12 @@ from functools import wraps
 from typing import TYPE_CHECKING, Any, Concatenate, Literal
 
 from aiocomelit.api import ComelitSerialBridgeObject
-from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
+from aiocomelit.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+    DeviceStorageFailureError,
+)
 from aiohttp import ClientSession, CookieJar
 
 from homeassistant.config_entries import ConfigEntry
@@ -73,7 +78,9 @@ def _async_remove_state_config_entry_from_devices(
 
     device_registry = dr.async_get(hass)
     for identifier in identifiers:
-        device = device_registry.async_get_device(identifiers={(DOMAIN, identifier)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, identifier), config_entry.entry_id
+        )
         if device:
             _LOGGER.info(
                 "Removing config entry %s from device %s",
@@ -109,6 +116,12 @@ def bridge_api_call[_T: ComelitBridgeBaseEntity, **_P](
                 translation_domain=DOMAIN,
                 translation_key="cannot_retrieve_data",
                 translation_placeholders={"error": repr(err)},
+            ) from err
+        except DeviceStorageFailureError as err:
+            self.coordinator.last_update_success = False
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_storage_failure",
             ) from err
         except CannotAuthenticate:
             self.coordinator.last_update_success = False

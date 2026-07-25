@@ -14,8 +14,8 @@ from kiosker import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.kiosker.const import CONF_API_TOKEN, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.components.kiosker.const import DOMAIN
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -94,12 +94,9 @@ async def test_user_flow_creates_entry(
         (Exception(), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_errors_and_recovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_kiosker_api: MagicMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_kiosker_api: MagicMock, exception: Exception, error: str
 ) -> None:
     """Test user flow handles all validation errors and can recover."""
     result = await hass.config_entries.flow.async_init(
@@ -256,10 +253,9 @@ async def test_zeroconf_abort_if_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_no_device_id(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_kiosker_api: MagicMock,
+    hass: HomeAssistant, mock_kiosker_api: MagicMock
 ) -> None:
     """Test user flow shows cannot_connect error when device reports no device ID."""
     mock_kiosker_api.status.return_value.device_id = None
@@ -279,3 +275,75 @@ async def test_user_flow_no_device_id(
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_flow_success(
+    hass: HomeAssistant,
+    mock_kiosker_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow updates the token and reloads."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_TOKEN: "new-token"},
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_TOKEN] == "new-token"
+
+
+async def test_reauth_flow_wrong_device(
+    hass: HomeAssistant,
+    mock_kiosker_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow aborts when a different device is found at the host."""
+    mock_config_entry.add_to_hass(hass)
+    mock_kiosker_api.status.return_value.device_id = "DIFFERENT-DEVICE-ID"
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_TOKEN: "new-token"},
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "wrong_device"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        pytest.param(ConnectionError, "cannot_connect", id="connection_error"),
+        pytest.param(AuthenticationError, "invalid_auth", id="auth_error"),
+        pytest.param(IPAuthenticationError, "invalid_ip_auth", id="ip_auth_error"),
+        pytest.param(TLSVerificationError, "tls_error", id="tls_error"),
+        pytest.param(BadRequestError, "bad_request", id="bad_request"),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_kiosker_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test reauth flow shows correct error for each API exception."""
+    mock_config_entry.add_to_hass(hass)
+    mock_kiosker_api.status.side_effect = side_effect
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_TOKEN: "bad-token"},
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": expected_error}

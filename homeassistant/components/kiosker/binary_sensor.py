@@ -1,9 +1,8 @@
 """Support for Kiosker binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -25,7 +24,7 @@ PARALLEL_UPDATES = 0
 class KioskerBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Kiosker binary sensor entity."""
 
-    value_fn: Callable[[KioskerData], bool]
+    value_fn: Callable[[KioskerData], bool | None]
 
 
 BINARY_SENSORS: tuple[KioskerBinarySensorEntityDescription, ...] = (
@@ -45,6 +44,12 @@ BINARY_SENSORS: tuple[KioskerBinarySensorEntityDescription, ...] = (
         value_fn=lambda x: (
             (x.status.battery_state or "").casefold() in ("charging", "fully charged")
         ),
+    ),
+    KioskerBinarySensorEntityDescription(
+        key="blackoutDismissible",
+        translation_key="blackout_dismissible",
+        entity_registry_enabled_default=False,
+        value_fn=lambda x: x.blackout.dismissible if x.blackout else None,
     ),
 )
 
@@ -68,6 +73,7 @@ class KioskerBinarySensor(KioskerEntity, BinarySensorEntity):
     entity_description: KioskerBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

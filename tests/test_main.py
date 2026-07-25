@@ -1,67 +1,53 @@
 """Test methods in __main__."""
 
-from unittest.mock import PropertyMock, patch
+from unittest.mock import Mock, call, patch
+
+import pytest
 
 from homeassistant import __main__ as main
 from homeassistant.const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE
 
+_PYTHON_VERSION_ERROR = (
+    "Home Assistant requires at least Python "
+    f"{REQUIRED_PYTHON_VER[0]}.{REQUIRED_PYTHON_VER[1]}.{REQUIRED_PYTHON_VER[2]}\n"
+)
+
 
 @patch("sys.exit")
-def test_validate_python(mock_exit) -> None:
+@pytest.mark.parametrize(
+    ("version_info", "expected_exit_calls", "expected_stderr"),
+    [
+        ((2, 7, 8), [call(1)], _PYTHON_VERSION_ERROR),
+        ((3, 2, 0), [call(1)], _PYTHON_VERSION_ERROR),
+        ((3, 4, 2), [call(1)], _PYTHON_VERSION_ERROR),
+        ((3, 5, 2), [call(1)], _PYTHON_VERSION_ERROR),
+        (
+            # previous major version should fail
+            (REQUIRED_PYTHON_VER[0] - 1, *REQUIRED_PYTHON_VER[1:]),
+            [call(1)],
+            _PYTHON_VERSION_ERROR,
+        ),
+        (REQUIRED_PYTHON_VER, [], ""),
+        (
+            # next patch version should pass
+            (*REQUIRED_PYTHON_VER[:2], REQUIRED_PYTHON_VER[2] + 1),
+            [],
+            "",
+        ),
+    ],
+)
+def test_validate_python(
+    mock_exit: Mock,
+    version_info: tuple[int, int, int],
+    expected_exit_calls: list[call],
+    expected_stderr: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test validate Python version method."""
-    with patch("sys.version_info", new_callable=PropertyMock(return_value=(2, 7, 8))):
+    with patch("sys.version_info", new=version_info):
         main.validate_python()
-        assert mock_exit.called is True
-
-    mock_exit.reset_mock()
-
-    with patch("sys.version_info", new_callable=PropertyMock(return_value=(3, 2, 0))):
-        main.validate_python()
-        assert mock_exit.called is True
-
-    mock_exit.reset_mock()
-
-    with patch("sys.version_info", new_callable=PropertyMock(return_value=(3, 4, 2))):
-        main.validate_python()
-        assert mock_exit.called is True
-
-    mock_exit.reset_mock()
-
-    with patch("sys.version_info", new_callable=PropertyMock(return_value=(3, 5, 2))):
-        main.validate_python()
-        assert mock_exit.called is True
-
-    mock_exit.reset_mock()
-
-    with patch(
-        "sys.version_info",
-        new_callable=PropertyMock(
-            return_value=(REQUIRED_PYTHON_VER[0] - 1, *REQUIRED_PYTHON_VER[1:])
-        ),
-    ):
-        main.validate_python()
-        assert mock_exit.called is True
-
-    mock_exit.reset_mock()
-
-    with patch(
-        "sys.version_info", new_callable=PropertyMock(return_value=REQUIRED_PYTHON_VER)
-    ):
-        main.validate_python()
-        assert mock_exit.called is False
-
-    mock_exit.reset_mock()
-
-    with patch(
-        "sys.version_info",
-        new_callable=PropertyMock(
-            return_value=(*REQUIRED_PYTHON_VER[:2], REQUIRED_PYTHON_VER[2] + 1)
-        ),
-    ):
-        main.validate_python()
-        assert mock_exit.called is False
-
-    mock_exit.reset_mock()
+    assert mock_exit.call_args_list == expected_exit_calls
+    assert capsys.readouterr().err == expected_stderr
 
 
 @patch("sys.exit")

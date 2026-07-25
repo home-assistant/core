@@ -1,8 +1,10 @@
 """Button support for SwitchBot devices."""
 
 import logging
+from typing import override
 
 import switchbot
+from switchbot import SwitchbotModel
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.const import EntityCategory
@@ -10,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .const import CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity, exception_handler
 
@@ -24,11 +27,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot button platform."""
     coordinator = entry.runtime_data
+    entities: list[ButtonEntity] = []
+
     if isinstance(coordinator.device, switchbot.SwitchbotAirPurifier):
-        async_add_entities([LightSensorButton(coordinator)])
+        entities.append(LightSensorButton(coordinator))
 
     if isinstance(coordinator.device, switchbot.SwitchbotArtFrame):
-        async_add_entities(
+        entities.extend(
             [
                 SwitchBotArtFrameNextButton(coordinator, "next_image"),
                 SwitchBotArtFramePrevButton(coordinator, "previous_image"),
@@ -36,7 +41,17 @@ async def async_setup_entry(
         )
 
     if isinstance(coordinator.device, switchbot.SwitchbotMeterProCO2):
-        async_add_entities([SwitchBotMeterProCO2SyncDateTimeButton(coordinator)])
+        entities.append(SwitchBotMeterProCO2SyncDateTimeButton(coordinator))
+
+    if (
+        isinstance(coordinator.device, switchbot.SwitchbotLock)
+        and coordinator.model is SwitchbotModel.LOCK_ULTRA
+        and entry.options.get(CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH)
+    ):
+        entities.append(HalfLockButton(coordinator))
+
+    if entities:
+        async_add_entities(entities)
 
 
 class LightSensorButton(SwitchbotEntity, ButtonEntity):
@@ -51,6 +66,7 @@ class LightSensorButton(SwitchbotEntity, ButtonEntity):
         self._attr_unique_id = f"{coordinator.base_unique_id}_light_sensor"
 
     @exception_handler
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         _LOGGER.debug("Toggling light sensor mode for %s", self._address)
@@ -75,6 +91,7 @@ class SwitchBotArtFrameNextButton(SwitchBotArtFrameButtonBase):
     """Representation of a next image button."""
 
     @exception_handler
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         _LOGGER.debug("Pressing next image button %s", self._address)
@@ -85,6 +102,7 @@ class SwitchBotArtFramePrevButton(SwitchBotArtFrameButtonBase):
     """Representation of a previous image button."""
 
     @exception_handler
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         _LOGGER.debug("Pressing previous image button %s", self._address)
@@ -92,7 +110,7 @@ class SwitchBotArtFramePrevButton(SwitchBotArtFrameButtonBase):
 
 
 class SwitchBotMeterProCO2SyncDateTimeButton(SwitchbotEntity, ButtonEntity):
-    """Button to sync date and time on Meter Pro CO2 to the current HA instance datetime."""
+    """Button to sync date and time on Meter Pro CO2."""
 
     _device: switchbot.SwitchbotMeterProCO2
     _attr_entity_category = EntityCategory.CONFIG
@@ -104,6 +122,7 @@ class SwitchBotMeterProCO2SyncDateTimeButton(SwitchbotEntity, ButtonEntity):
         self._attr_unique_id = f"{coordinator.base_unique_id}_sync_datetime"
 
     @exception_handler
+    @override
     async def async_press(self) -> None:
         """Sync time with Home Assistant."""
         now = dt_util.now()
@@ -119,7 +138,8 @@ class SwitchBotMeterProCO2SyncDateTimeButton(SwitchbotEntity, ButtonEntity):
         timestamp = int(now.timestamp())
 
         _LOGGER.debug(
-            "Syncing time for %s: timestamp=%s, utc_offset_hours=%s, utc_offset_minutes=%s",
+            "Syncing time for %s: timestamp=%s,"
+            " utc_offset_hours=%s, utc_offset_minutes=%s",
             self._address,
             timestamp,
             utc_offset_hours,
@@ -131,3 +151,22 @@ class SwitchBotMeterProCO2SyncDateTimeButton(SwitchbotEntity, ButtonEntity):
             utc_offset_hours=utc_offset_hours,
             utc_offset_minutes=utc_offset_minutes,
         )
+
+
+class HalfLockButton(SwitchbotEntity, ButtonEntity):
+    """Representation of a Half Lock button for Lock Ultra."""
+
+    _attr_translation_key = "half_lock"
+    _device: switchbot.SwitchbotLock
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the Half Lock button."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}_half_lock"
+
+    @exception_handler
+    @override
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        _LOGGER.debug("Sending half lock command for %s", self._address)
+        await self._device.half_lock()

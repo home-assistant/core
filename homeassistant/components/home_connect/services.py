@@ -1,7 +1,5 @@
 """Custom actions (previously known as services) for the Home Connect integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable
 from typing import Any, cast
 
@@ -63,9 +61,9 @@ PROGRAM_OPTIONS = {
         OptionKey.DISHCARE_DISHWASHER_HYGIENE_PLUS: bool,
         OptionKey.DISHCARE_DISHWASHER_ECO_DRY: bool,
         OptionKey.DISHCARE_DISHWASHER_ZEOLITE_DRY: bool,
-        OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE: vol.All(
-            int, vol.Range(min=1, max=100)
-        ),
+        (
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
+        ): vol.All(int, vol.Range(min=1, max=100)),
         OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE: vol.All(int, vol.Range(min=0)),
         OptionKey.COOKING_OVEN_FAST_PRE_HEAT: bool,
         OptionKey.LAUNDRY_CARE_COMMON_SILENT_MODE: bool,

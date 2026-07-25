@@ -1,9 +1,7 @@
 """Config flow for LG webOS TV integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any, Self
+from typing import Any, Self, override
 from urllib.parse import urlparse
 
 from aiowebostv import WebOsClient, WebOsTvPairError
@@ -64,10 +62,12 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: WebOsTvConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -110,6 +110,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="pairing", errors=errors)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -134,6 +135,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self._uuid = uuid
         return await self.async_step_pairing()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow._host == self._host

@@ -1,7 +1,5 @@
 """Test the UniFi Protect setup flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -310,7 +308,7 @@ async def test_setup_failed_error(hass: HomeAssistant, ufp: MockUFPFixture) -> N
 
 
 async def test_setup_failed_auth(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
-    """Test setup of unifiprotect entry with unauthorized error after multiple retries."""
+    """Test setup of unifiprotect entry with unauthorized error after retries."""
 
     ufp.api.update = AsyncMock(side_effect=NotAuthorized)
 
@@ -439,7 +437,7 @@ async def test_async_ufp_instance_for_config_entry_ids(
     mock_entries: list[MockConfigEntry],
     expected_result: str | None,
 ) -> None:
-    """Test async_ufp_instance_for_config_entry_ids with various entry configurations."""
+    """Test async_ufp_instance_for_config_entry_ids with various configs."""
 
     for index, entry in enumerate(mock_entries):
         entry.add_to_hass(hass)
@@ -525,7 +523,8 @@ async def test_setup_handles_api_key_creation_bad_request(
     hass: HomeAssistant, ufp: MockUFPFixture, mock_user_can_write_nvr: Mock
 ) -> None:
     """Test handling of API key creation BadRequest error."""
-    # Setup: API key is not set, user has write permissions, but creation fails with BadRequest
+    # Setup: API key is not set, user has write permissions,
+    # but creation fails with BadRequest
     ufp.api.is_api_key_set.return_value = False
     ufp.api.create_api_key = AsyncMock(
         side_effect=BadRequest("Invalid API key creation request")

@@ -3,10 +3,8 @@
 Used by UI to setup a wiffi integration.
 """
 
-from __future__ import annotations
-
 import errno
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from wiffi import WiffiTcpServer
@@ -30,12 +28,14 @@ class WiffiFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: WiffiConfigEntry,
     ) -> OptionsFlowHandler:
         """Create Wiffi server setup option flow."""
         return OptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

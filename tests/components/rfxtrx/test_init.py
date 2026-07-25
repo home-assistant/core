@@ -1,12 +1,10 @@
 """The tests for the Rfxtrx component."""
 
-from __future__ import annotations
-
 from unittest.mock import ANY, call
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
+from homeassistant.components.rfxtrx.const import DOMAIN, EVENT_RFXTRX_EVENT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -83,7 +81,7 @@ async def test_send(hass: HomeAssistant, rfxtrx) -> None:
     await setup_rfx_test_cfg(hass, device="/dev/null", devices={})
 
     await hass.services.async_call(
-        "rfxtrx", "send", {"event": "0a520802060101ff0f0269"}, blocking=True
+        DOMAIN, "send", {"event": "0a520802060101ff0f0269"}, blocking=True
     )
 
     assert rfxtrx.transport.send.mock_calls == [

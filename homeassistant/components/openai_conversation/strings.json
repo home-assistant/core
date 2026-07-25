@@ -47,18 +47,18 @@
         "user": "Add AI task"
       },
       "step": {
-        "advanced": {
+        "additional": {
           "data": {
             "chat_model": "[%key:common::generic::model%]",
-            "max_tokens": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::max_tokens%]",
-            "store_responses": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::store_responses%]",
-            "temperature": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::temperature%]",
-            "top_p": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::top_p%]"
+            "max_tokens": "[%key:component::openai_conversation::config_subentries::conversation::step::additional::data::max_tokens%]",
+            "store_responses": "[%key:component::openai_conversation::config_subentries::conversation::step::additional::data::store_responses%]",
+            "temperature": "[%key:component::openai_conversation::config_subentries::conversation::step::additional::data::temperature%]",
+            "top_p": "[%key:component::openai_conversation::config_subentries::conversation::step::additional::data::top_p%]"
           },
           "data_description": {
-            "store_responses": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data_description::store_responses%]"
+            "store_responses": "[%key:component::openai_conversation::config_subentries::conversation::step::additional::data_description::store_responses%]"
           },
-          "title": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::title%]"
+          "title": "[%key:component::openai_conversation::config_subentries::conversation::step::additional::title%]"
         },
         "init": {
           "data": {
@@ -71,6 +71,7 @@
             "code_interpreter": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::code_interpreter%]",
             "image_model": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::image_model%]",
             "inline_citations": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::inline_citations%]",
+            "pro_mode": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::pro_mode%]",
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::reasoning_effort%]",
             "reasoning_summary": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::reasoning_summary%]",
             "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::search_context_size%]",
@@ -82,6 +83,7 @@
             "code_interpreter": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::code_interpreter%]",
             "image_model": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::image_model%]",
             "inline_citations": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::inline_citations%]",
+            "pro_mode": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::pro_mode%]",
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::reasoning_effort%]",
             "reasoning_summary": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::reasoning_summary%]",
             "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::search_context_size%]",
@@ -109,7 +111,7 @@
         "user": "Add conversation agent"
       },
       "step": {
-        "advanced": {
+        "additional": {
           "data": {
             "chat_model": "[%key:common::generic::model%]",
             "max_tokens": "Maximum tokens to return in response",
@@ -120,7 +122,7 @@
           "data_description": {
             "store_responses": "If enabled, requests and responses are stored by OpenAI and visible in your OpenAI dashboard logs"
           },
-          "title": "Advanced settings"
+          "title": "Additional settings"
         },
         "init": {
           "data": {
@@ -138,6 +140,7 @@
             "code_interpreter": "Enable code interpreter tool",
             "image_model": "Image generation model",
             "inline_citations": "Include links in web search results",
+            "pro_mode": "Pro mode",
             "reasoning_effort": "Reasoning effort",
             "reasoning_summary": "Reasoning summary",
             "search_context_size": "Search context size",
@@ -149,6 +152,7 @@
             "code_interpreter": "This tool, also known as the python tool to the model, allows it to run code to answer questions",
             "image_model": "The model to use when generating images",
             "inline_citations": "If disabled, additional prompt is added to ask the model to not include source citations",
+            "pro_mode": "Perform more model work to improve reliability on difficult tasks and return a single final answer",
             "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt",
             "reasoning_summary": "Controls the length and detail of reasoning summaries provided by the model",
             "search_context_size": "High level guidance for the amount of context window space to use for the search",
@@ -233,6 +237,7 @@
       "options": {
         "high": "[%key:common::state::high%]",
         "low": "[%key:common::state::low%]",
+        "max": "Max",
         "medium": "[%key:common::state::medium%]",
         "minimal": "Minimal",
         "none": "None",
@@ -242,9 +247,9 @@
     "reasoning_summary": {
       "options": {
         "auto": "[%key:common::state::auto%]",
+        "concise": "Concise",
         "detailed": "Detailed",
-        "off": "[%key:common::state::off%]",
-        "short": "Short"
+        "off": "[%key:common::state::off%]"
       }
     },
     "search_context_size": {

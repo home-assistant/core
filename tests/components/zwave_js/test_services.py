@@ -1582,7 +1582,7 @@ async def test_multicast_set_value_options(
         {
             ATTR_ENTITY_ID: [
                 BULB_6_MULTI_COLOR_LIGHT_ENTITY,
-                "light.repeater",
+                "light.dining_room_repeater",
             ],
             ATTR_COMMAND_CLASS: 51,
             ATTR_PROPERTY: "targetColor",

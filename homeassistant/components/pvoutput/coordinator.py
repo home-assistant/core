@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the PVOutput integration."""
 
-from __future__ import annotations
+from typing import override
 
 from pvo import (
     PVOutput,
@@ -40,6 +40,7 @@ class PVOutputDataUpdateCoordinator(DataUpdateCoordinator[Status]):
             hass, LOGGER, config_entry=entry, name=DOMAIN, update_interval=SCAN_INTERVAL
         )
 
+    @override
     async def _async_update_data(self) -> Status:
         """Fetch system status from PVOutput."""
         try:

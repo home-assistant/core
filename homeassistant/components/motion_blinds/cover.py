@@ -1,9 +1,7 @@
 """Support for Motionblinds using their WLAN API."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from motionblinds import BlindType
 import voluptuous as vol
@@ -180,6 +178,7 @@ class MotionBaseDevice(MotionCoordinatorEntity, CoverEntity):
         self._attr_unique_id = blind.mac
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.coordinator.data is None:
@@ -191,6 +190,7 @@ class MotionBaseDevice(MotionCoordinatorEntity, CoverEntity):
         return self.coordinator.data[self._blind.mac][ATTR_AVAILABLE]
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -201,24 +201,28 @@ class MotionBaseDevice(MotionCoordinatorEntity, CoverEntity):
         return 100 - self._blind.position
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         if self._blind.position is None:
             return None
         return self._blind.position == 100
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Open)
         await self.async_request_position_till_stop()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Close)
         await self.async_request_position_till_stop()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
@@ -247,6 +251,7 @@ class MotionBaseDevice(MotionCoordinatorEntity, CoverEntity):
             )
         await self.async_request_position_till_stop()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         async with self._api_lock:
@@ -267,6 +272,7 @@ class MotionTiltDevice(MotionPositionDevice):
     _restore_tilt = True
 
     @property
+    @override
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         supported_features = (
@@ -287,6 +293,7 @@ class MotionTiltDevice(MotionPositionDevice):
         return supported_features
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current angle of cover.
 
@@ -297,12 +304,14 @@ class MotionTiltDevice(MotionPositionDevice):
         return 100 - (self._blind.angle * 100 / 180)
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         if self._blind.position is None:
             return None
         return self._blind.position >= 95
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         if self.current_cover_tilt_position is not None:
@@ -314,6 +323,7 @@ class MotionTiltDevice(MotionPositionDevice):
             async with self._api_lock:
                 await self.hass.async_add_executor_job(self._blind.Jog_up)
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         if self.current_cover_tilt_position is not None:
@@ -325,6 +335,7 @@ class MotionTiltDevice(MotionPositionDevice):
             async with self._api_lock:
                 await self.hass.async_add_executor_job(self._blind.Jog_down)
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         angle = kwargs[ATTR_TILT_POSITION] * 180 / 100
@@ -333,6 +344,7 @@ class MotionTiltDevice(MotionPositionDevice):
 
         await self.async_request_position_till_stop()
 
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover."""
         async with self._api_lock:
@@ -347,6 +359,7 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
     _restore_tilt = False
 
     @property
+    @override
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         supported_features = (
@@ -361,11 +374,13 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
         return supported_features
 
     @property
+    @override
     def current_cover_position(self) -> None:
         """Return current position of cover."""
         return None
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current angle of cover.
 
@@ -379,6 +394,7 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
         return 100 - self._blind.position
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         if self._blind.position is None:
@@ -388,6 +404,7 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
 
         return self._blind.position == 100
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         async with self._api_lock:
@@ -395,6 +412,7 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
 
         await self.async_request_position_till_stop()
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         async with self._api_lock:
@@ -402,6 +420,7 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
 
         await self.async_request_position_till_stop()
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         angle = kwargs[ATTR_TILT_POSITION]
@@ -419,6 +438,7 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
 
         await self.async_request_position_till_stop()
 
+    @override
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position (see TDBU)."""
         angle = kwargs.get(ATTR_TILT_POSITION)
@@ -455,6 +475,7 @@ class MotionTDBUDevice(MotionBaseDevice):
             _LOGGER.error("Unknown motor '%s'", self._motor)
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -466,6 +487,7 @@ class MotionTDBUDevice(MotionBaseDevice):
         return 100 - self._blind.scaled_position[self._motor_key]
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         if self._blind.position is None:
@@ -477,6 +499,7 @@ class MotionTDBUDevice(MotionBaseDevice):
         return self._blind.position[self._motor_key] == 100
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         attributes = {}
@@ -488,18 +511,21 @@ class MotionTDBUDevice(MotionBaseDevice):
             attributes[ATTR_WIDTH] = self._blind.width
         return attributes
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Open, self._motor_key)
         await self.async_request_position_till_stop()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Close, self._motor_key)
         await self.async_request_position_till_stop()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific scaled position."""
         position = kwargs[ATTR_POSITION]
@@ -509,6 +535,7 @@ class MotionTDBUDevice(MotionBaseDevice):
             )
         await self.async_request_position_till_stop()
 
+    @override
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position."""
         position = kwargs[ATTR_ABSOLUTE_POSITION]
@@ -521,6 +548,7 @@ class MotionTDBUDevice(MotionBaseDevice):
 
         await self.async_request_position_till_stop()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         async with self._api_lock:

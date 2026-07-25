@@ -1,8 +1,6 @@
 """Support for Verisure binary sensors."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -55,6 +53,7 @@ class VerisureDoorWindowSensor(
         self.serial_number = serial_number
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["door_window"][self.serial_number]["area"]
@@ -68,6 +67,7 @@ class VerisureDoorWindowSensor(
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return (
@@ -75,6 +75,7 @@ class VerisureDoorWindowSensor(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -83,6 +84,7 @@ class VerisureDoorWindowSensor(
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         return {
@@ -103,11 +105,13 @@ class VerisureEthernetStatus(
     _attr_translation_key = "ethernet"
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return f"{self.coordinator.config_entry.data[CONF_GIID]}_ethernet"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         return DeviceInfo(
@@ -119,11 +123,13 @@ class VerisureEthernetStatus(
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return self.coordinator.data["broadband"]["isBroadbandConnected"]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.coordinator.data["broadband"] is not None

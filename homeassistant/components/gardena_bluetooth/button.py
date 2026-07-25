@@ -1,8 +1,7 @@
 """Support for button entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
+from typing import override
 
 from gardena_bluetooth.const import Reset
 from gardena_bluetooth.parse import CharacteristicBool
@@ -59,6 +58,7 @@ class GardenaBluetoothButton(GardenaBluetoothDescriptorEntity, ButtonEntity):
 
     entity_description: GardenaBluetoothButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Trigger button action."""
         await self.coordinator.write(self.entity_description.char, True)

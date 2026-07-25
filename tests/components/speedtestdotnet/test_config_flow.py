@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.speedtestdotnet.const import (
     CONF_SERVER_ID,
@@ -14,7 +16,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_flow_works(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_flow_works(hass: HomeAssistant) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

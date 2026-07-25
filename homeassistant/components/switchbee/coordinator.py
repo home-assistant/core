@@ -1,10 +1,9 @@
 """SwitchBee integration Coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import timedelta
 import logging
+from typing import override
 
 from switchbee.api import CentralUnitPolling, CentralUnitWsRPC
 from switchbee.api.central_unit import SwitchBeeError
@@ -61,6 +60,7 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[Mapping[int, SwitchBeeBaseDevic
         _LOGGER.debug("Received update: %s", push_data)
         self.async_set_updated_data(self.api.devices)
 
+    @override
     async def _async_update_data(self) -> Mapping[int, SwitchBeeBaseDevice]:
         """Update data via library."""
 

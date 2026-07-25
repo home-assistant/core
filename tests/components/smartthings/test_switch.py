@@ -71,7 +71,7 @@ async def test_switch_turn_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "switch.2nd_floor_hallway"},
+        {ATTR_ENTITY_ID: "switch.theater_2nd_floor_hallway"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -100,7 +100,7 @@ async def test_command_switch_turn_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "switch.dryer_wrinkle_prevent"},
+        {ATTR_ENTITY_ID: "switch.theater_dryer_wrinkle_prevent"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -172,7 +172,7 @@ async def test_custom_commands(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "switch.refrigerator_power_cool"},
+        {ATTR_ENTITY_ID: "switch.theater_refrigerator_power_cool"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -204,7 +204,7 @@ async def test_ac_purify_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "switch.ac_office_granit_purify"},
+        {ATTR_ENTITY_ID: "switch.theater_ac_office_granit_purify"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -225,7 +225,7 @@ async def test_state_update(
     """Test state update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_ON
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
 
     await trigger_update(
         hass,
@@ -236,7 +236,7 @@ async def test_state_update(
         "off",
     )
 
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_OFF
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_OFF
 
 
 @pytest.mark.parametrize(
@@ -308,7 +308,7 @@ async def test_create_issue_with_items(
     suggested_object_id: str,
     issue_string: str,
 ) -> None:
-    """Test we create an issue when an automation or script is using a deprecated entity."""
+    """Test issue for automation/script using deprecated entity."""
     entity_id = f"switch.{suggested_object_id}"
     issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
 
@@ -368,7 +368,9 @@ async def test_create_issue_with_items(
     assert issue.translation_placeholders == {
         "entity_id": entity_id,
         "entity_name": suggested_object_id,
-        "items": "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)",
+        "items": (
+            "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)"
+        ),
     }
 
     entity_registry.async_update_entity(
@@ -469,7 +471,7 @@ async def test_create_issue(
     issue_string: str,
     version: str,
 ) -> None:
-    """Test we create an issue when an automation or script is using a deprecated entity."""
+    """Test issue for automation/script using deprecated entity."""
     entity_id = f"switch.{suggested_object_id}"
     issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
 
@@ -515,19 +517,21 @@ async def test_availability(
     """Test availability."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_ON
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
 
     await trigger_health_update(
         hass, devices, "10e06a70-ee7d-4832-85e9-a0a06a7a05bd", HealthStatus.OFFLINE
     )
 
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_UNAVAILABLE
+    )
 
     await trigger_health_update(
         hass, devices, "10e06a70-ee7d-4832-85e9-a0a06a7a05bd", HealthStatus.ONLINE
     )
 
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_ON
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
 
 
 @pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
@@ -538,7 +542,9 @@ async def test_availability_at_start(
 ) -> None:
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_UNAVAILABLE
+    )
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])

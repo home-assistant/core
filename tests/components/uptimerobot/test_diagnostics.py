@@ -3,7 +3,8 @@
 import json
 from unittest.mock import patch
 
-from pyuptimerobot import API_PATH_USER_ME, UptimeRobotException
+from pyuptimerobot import UptimeRobotException
+from pyuptimerobot.const import API_PATH_USER_ME
 
 from homeassistant.core import HomeAssistant
 

@@ -1,7 +1,5 @@
 """Provide integration helpers that are aware of the matter integration."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -14,6 +12,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
 
 if TYPE_CHECKING:
+    from matter_ble_proxy import MatterBleProxy
     from matter_server.client.models.node import MatterEndpoint, MatterNode
     from matter_server.common.models import ServerInfoMessage
 
@@ -30,6 +29,7 @@ class MatterEntryData:
 
     adapter: MatterAdapter
     listen_task: asyncio.Task
+    ble_proxy: MatterBleProxy | None = None
 
 
 type MatterConfigEntry = ConfigEntry[MatterEntryData]

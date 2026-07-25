@@ -1,7 +1,5 @@
 """Base entity for OpenDisplay devices."""
 
-from __future__ import annotations
-
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
 )

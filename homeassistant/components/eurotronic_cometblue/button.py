@@ -1,6 +1,6 @@
 """Comet Blue button platform."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -53,6 +53,7 @@ class CometBlueButtonEntity(CometBlueBluetoothEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.address}-{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         if self.entity_description.key == "sync_time":

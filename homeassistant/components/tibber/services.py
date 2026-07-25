@@ -1,7 +1,5 @@
 """Services for Tibber integration."""
 
-from __future__ import annotations
-
 import datetime as dt
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Final

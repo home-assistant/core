@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from actron_neo_api import ActronAirAPIError, ActronAirZone
 
@@ -50,6 +50,7 @@ class ActronAirEntity(CoordinatorEntity[ActronAirSystemCoordinator]):
         self._serial_number = coordinator.serial_number
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return not self.coordinator.is_device_stale()

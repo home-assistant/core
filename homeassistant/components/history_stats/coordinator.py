@@ -1,10 +1,8 @@
 """History stats data coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import (
@@ -100,6 +98,7 @@ class HistoryStatsUpdateCoordinator(DataUpdateCoordinator[HistoryStatsState]):
         """Process an update from an event."""
         self.async_set_updated_data(await self._history_stats.async_update(event))
 
+    @override
     async def _async_update_data(self) -> HistoryStatsState:
         """Fetch update the history stats state."""
         try:
@@ -107,6 +106,7 @@ class HistoryStatsUpdateCoordinator(DataUpdateCoordinator[HistoryStatsState]):
         except (TemplateError, TypeError, ValueError) as ex:
             raise UpdateFailed(ex) from ex
 
+    @override
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""
         log_failures = not self._preview

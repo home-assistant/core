@@ -1,7 +1,5 @@
 """Shelly helpers functions."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Mapping
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import TYPE_CHECKING, Any, cast
@@ -226,7 +224,7 @@ def get_coiot_port(hass: HomeAssistant) -> int:
     """Get CoIoT port from config."""
     if DOMAIN in hass.data:
         # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=hass-use-runtime-data
+        # pylint: disable-next=home-assistant-use-runtime-data
         return cast(int, hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT))
     return DEFAULT_COAP_PORT
 
@@ -524,9 +522,10 @@ def update_device_fw_info(
     assert entry.unique_id
 
     dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id)},
-        connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+    if device := (
+        dev_reg.async_get_device_by_connection(
+            (CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
+        )
     ):
         if device.sw_version == shellydevice.firmware_version:
             return
@@ -665,9 +664,9 @@ def is_view_for_platform(config: dict[str, Any], key: str, platform: str) -> boo
 def get_virtual_component_unit(config: dict[str, Any]) -> str | None:
     """Return the unit of a virtual component.
 
-    If the unit is not set, the device sends an empty string
+    If the unit is not set, the device sends an empty string or the key may be absent.
     """
-    unit = config["meta"]["ui"]["unit"]
+    unit = config["meta"]["ui"].get("unit")
     return DEVICE_UNIT_MAP.get(unit, unit) if unit else None
 
 
@@ -918,7 +917,7 @@ def remove_stale_blu_trv_devices(
             continue
 
         LOGGER.debug("Removing stale BLU TRV device %s", device.name)
-        dev_reg.async_update_device(device.id, remove_config_entry_id=entry.entry_id)
+        dev_reg.async_remove_device(device.id)
 
 
 @callback
@@ -940,9 +939,7 @@ def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
         if any(identifier[0] == DOMAIN for identifier in device.identifiers):
             LOGGER.debug("Removing empty sub-device %s", device.name)
-            dev_reg.async_update_device(
-                device.id, remove_config_entry_id=entry.entry_id
-            )
+            dev_reg.async_remove_device(device.id)
 
 
 def format_ble_addr(ble_addr: str) -> str:

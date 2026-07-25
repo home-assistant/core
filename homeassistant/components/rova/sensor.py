@@ -1,8 +1,7 @@
 """Support for Rova garbage calendar."""
 
-from __future__ import annotations
-
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -77,6 +76,7 @@ class RovaSensor(CoordinatorEntity[RovaCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> datetime | None:
         """Return the state of the sensor."""
         return self.coordinator.data.get(self.entity_description.key)

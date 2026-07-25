@@ -232,7 +232,7 @@ def _create_mocked_hole(
                     incorrect_app_password or password not in ["newkey", "apikey"]
                 ):
                     raise HoleError("Authentication failed: Invalid password")
-                raise HoleConnectionError
+                raise HoleConnectionError("Connection error")
 
         async def get_data_side_effect(*_args, **_kwargs):
             """Return data based on the mocked Hole instance state."""
@@ -257,7 +257,8 @@ def _create_mocked_hole(
         mocked_hole.get_data = AsyncMock(side_effect=get_data_side_effect)
 
         if ftl_error:
-            # two unauthenticated instances are created in `determine_api_version` before aync_try_connect is called
+            # two unauthenticated instances are created in
+            # `determine_api_version` before aync_try_connect is called
             if len(instances) > 1:
                 mocked_hole.get_data = AsyncMock(side_effect=ftl_side_effect)
         mocked_hole.get_versions = AsyncMock(return_value=None)

@@ -1,9 +1,9 @@
 """Number platform for Indevolt integration."""
 
-from __future__ import annotations
+from dataclasses import dataclass
+from typing import Final, override
 
-from dataclasses import dataclass, field
-from typing import Final
+from indevolt_api import IndevoltConfig
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -17,6 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IndevoltConfigEntry
+from .const import DOMAIN
 from .coordinator import IndevoltCoordinator
 from .entity import IndevoltEntity
 
@@ -27,18 +28,18 @@ PARALLEL_UPDATES = 0
 class IndevoltNumberEntityDescription(NumberEntityDescription):
     """Custom entity description class for Indevolt number entities."""
 
-    generation: list[int] = field(default_factory=lambda: [1, 2])
     read_key: str
     write_key: str
+    generation: tuple[int, ...] = (1, 2)
 
 
 NUMBERS: Final = (
     IndevoltNumberEntityDescription(
         key="discharge_limit",
-        generation=[2],
+        generation=(2,),
         translation_key="discharge_limit",
-        read_key="6105",
-        write_key="1142",
+        read_key=IndevoltConfig.READ_DISCHARGE_LIMIT,
+        write_key=IndevoltConfig.WRITE_DISCHARGE_LIMIT,
         native_min_value=0,
         native_max_value=100,
         native_step=1,
@@ -46,10 +47,10 @@ NUMBERS: Final = (
     ),
     IndevoltNumberEntityDescription(
         key="max_ac_output_power",
-        generation=[2],
+        generation=(2,),
         translation_key="max_ac_output_power",
-        read_key="11011",
-        write_key="1147",
+        read_key=IndevoltConfig.READ_MAX_AC_OUTPUT_POWER,
+        write_key=IndevoltConfig.WRITE_MAX_AC_OUTPUT_POWER,
         native_min_value=0,
         native_max_value=2400,
         native_step=100,
@@ -58,10 +59,10 @@ NUMBERS: Final = (
     ),
     IndevoltNumberEntityDescription(
         key="inverter_input_limit",
-        generation=[2],
+        generation=(2,),
         translation_key="inverter_input_limit",
-        read_key="11009",
-        write_key="1138",
+        read_key=IndevoltConfig.READ_INVERTER_INPUT_LIMIT,
+        write_key=IndevoltConfig.WRITE_INVERTER_INPUT_LIMIT,
         native_min_value=100,
         native_max_value=2400,
         native_step=100,
@@ -70,10 +71,10 @@ NUMBERS: Final = (
     ),
     IndevoltNumberEntityDescription(
         key="feedin_power_limit",
-        generation=[2],
+        generation=(2,),
         translation_key="feedin_power_limit",
-        read_key="11010",
-        write_key="1146",
+        read_key=IndevoltConfig.READ_FEEDIN_POWER_LIMIT,
+        write_key=IndevoltConfig.WRITE_FEEDIN_POWER_LIMIT,
         native_min_value=0,
         native_max_value=2400,
         native_step=100,
@@ -118,6 +119,7 @@ class IndevoltNumberEntity(IndevoltEntity, NumberEntity):
         self._attr_unique_id = f"{self.serial_number}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the current value of the entity."""
         raw_value = self.coordinator.data.get(self.entity_description.read_key)
@@ -126,6 +128,7 @@ class IndevoltNumberEntity(IndevoltEntity, NumberEntity):
 
         return int(raw_value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value for the entity."""
 
@@ -135,7 +138,13 @@ class IndevoltNumberEntity(IndevoltEntity, NumberEntity):
         )
 
         if success:
-            await self.coordinator.async_request_refresh()
+            self.coordinator.async_optimistic_update(
+                self.entity_description.read_key, int_value
+            )
 
         else:
-            raise HomeAssistantError(f"Failed to set value {int_value} for {self.name}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_error",
+                translation_placeholders={"name": str(self.name)},
+            )

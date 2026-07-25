@@ -1,5 +1,7 @@
 """Entity representing a Goal Zero Yeti device."""
 
+from typing import override
+
 from goalzero import Yeti
 
 from homeassistant.const import ATTR_MODEL, CONF_NAME
@@ -29,6 +31,7 @@ class GoalZeroEntity(CoordinatorEntity[GoalZeroDataUpdateCoordinator]):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}/{description.key}"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
         return DeviceInfo(

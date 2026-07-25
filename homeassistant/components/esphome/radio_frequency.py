@@ -1,9 +1,8 @@
 """Radio Frequency platform for ESPHome."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
+from typing import override
 
 from aioesphomeapi import (
     EntityState,
@@ -37,11 +36,13 @@ class EsphomeRadioFrequencyEntity(
     """ESPHome radio frequency entity using native API."""
 
     @property
+    @override
     def supported_frequency_ranges(self) -> list[tuple[int, int]]:
         """Return supported frequency ranges from device info."""
         return [(self._static_info.frequency_min, self._static_info.frequency_max)]
 
     @callback
+    @override
     def _on_device_update(self) -> None:
         """Call when device updates or entry data changes."""
         super()._on_device_update()
@@ -49,6 +50,7 @@ class EsphomeRadioFrequencyEntity(
             self.async_write_ha_state()
 
     @convert_api_error_ha_error
+    @override
     async def async_send_command(self, command: RadioFrequencyCommand) -> None:
         """Send an RF command."""
         timings = command.get_raw_timings()
@@ -59,8 +61,10 @@ class EsphomeRadioFrequencyEntity(
             frequency=command.frequency,
             timings=timings,
             modulation=MODULATION_TYPE_TO_ESPHOME[command.modulation],
-            # In ESPHome, repeat_count is total number of times to send the command, while in rf_protocols
-            # it's the number of additional times to send it, so we need to add 1 here.
+            # In ESPHome, repeat_count is total number of
+            # times to send the command, while in rf_protocols
+            # it's the number of additional times to send it,
+            # so we need to add 1 here.
             repeat_count=command.repeat_count + 1,
             device_id=self._static_info.device_id,
         )

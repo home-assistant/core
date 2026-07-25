@@ -1,8 +1,6 @@
 """YoLink Garage Door."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from yolink.client_request import ClientRequest
 from yolink.const import ATTR_DEVICE_FINGER, ATTR_GARAGE_DOOR_CONTROLLER
@@ -54,6 +52,7 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
         )
 
     @callback
+    @override
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
         if (state_val := state.get("state")) is None:
@@ -73,10 +72,12 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
         # it depends on paired device state, such as door sensor or contact sensor
         await self.call_device(ClientRequest("toggle", {}))
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Toggle garage door."""
         await self.toggle_garage_state()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Toggle garage door."""
         await self.toggle_garage_state()

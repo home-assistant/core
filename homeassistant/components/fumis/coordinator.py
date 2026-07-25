@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for Fumis."""
 
-from __future__ import annotations
+from typing import override
 
 from fumis import (
     Fumis,
@@ -43,6 +43,7 @@ class FumisDataUpdateCoordinator(DataUpdateCoordinator[FumisInfo]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> FumisInfo:
         """Fetch data from the Fumis API."""
         try:

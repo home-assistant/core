@@ -1,8 +1,6 @@
 """Provides a binary sensor which gets its values from a TCP socket."""
 
-from __future__ import annotations
-
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -33,6 +31,7 @@ class TcpBinarySensor(TcpEntity, BinarySensorEntity):
     """A binary sensor which is on when its state == CONF_VALUE_ON."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self._state == self._config[CONF_VALUE_ON]

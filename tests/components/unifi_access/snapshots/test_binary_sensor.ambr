@@ -39,8 +39,8 @@
 # name: test_binary_sensor_entities[binary_sensor.back_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Back Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.back_door',
@@ -90,8 +90,8 @@
 # name: test_binary_sensor_entities[binary_sensor.front_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Front Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.front_door',

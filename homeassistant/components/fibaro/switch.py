@@ -1,8 +1,6 @@
 """Support for Fibaro switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pyfibaro.fibaro_device import DeviceModel
 
@@ -36,16 +34,19 @@ class FibaroSwitch(FibaroEntity, SwitchEntity):
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         self.call_turn_on()
         self._attr_is_on = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         self.call_turn_off()
         self._attr_is_on = False
 
+    @override
     def update(self) -> None:
         """Update device state."""
         super().update()

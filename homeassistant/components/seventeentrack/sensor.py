@@ -1,6 +1,6 @@
 """Support for package tracking sensors from 17track.net."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
@@ -61,11 +61,13 @@ class SeventeenTrackSummarySensor(SeventeenTrackSensor):
         self._attr_unique_id = f"summary_{coordinator.account_id}_{status}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the entity is available."""
         return self._status in self.coordinator.data.summary
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.coordinator.data.summary[self._status]["quantity"]

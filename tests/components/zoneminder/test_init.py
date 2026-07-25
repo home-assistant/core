@@ -1,7 +1,5 @@
 """Tests for ZoneMinder __init__.py setup flow internals."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
 import pytest

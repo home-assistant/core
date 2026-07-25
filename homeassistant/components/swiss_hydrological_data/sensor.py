@@ -1,10 +1,8 @@
 """Support for hydrological data from the Fed. Office for the Environment."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from swisshydrodata import SwissHydroData
 import voluptuous as vol
@@ -112,6 +110,7 @@ class SwissHydrologicalDataSensor(SensorEntity):
         self._station = station
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attrs: dict[str, Any] = {}

@@ -1,9 +1,7 @@
 """Support for IQVIA sensors."""
 
-from __future__ import annotations
-
 from statistics import mean
-from typing import Any, NamedTuple, cast
+from typing import Any, NamedTuple, cast, override
 
 import numpy as np
 
@@ -178,6 +176,7 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
     """Define sensor related to forecast data."""
 
     @callback
+    @override
     def update_from_latest_data(self) -> None:
         """Update the sensor."""
         if not self.available:
@@ -223,6 +222,7 @@ class IndexSensor(IQVIAEntity, SensorEntity):
     """Define sensor related to indices."""
 
     @callback
+    @override
     def update_from_latest_data(self) -> None:
         """Update the sensor."""
         if not self.coordinator.last_update_success:

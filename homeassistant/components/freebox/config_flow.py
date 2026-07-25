@@ -1,7 +1,7 @@
 """Config flow to configure the Freebox integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from freebox_api.exceptions import AuthorizationError, HttpRequestError
 import voluptuous as vol
@@ -19,12 +19,13 @@ _LOGGER = logging.getLogger(__name__)
 class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize config flow."""
         self._data: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -45,7 +46,7 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         # Uses the host/IP value from CONF_HOST as unique ID, which is no longer allowed
-        # pylint: disable-next=hass-unique-id-ip-based
+        # pylint: disable-next=home-assistant-unique-id-ip-based
         await self.async_set_unique_id(self._data[CONF_HOST])
         self._abort_if_unique_id_configured()
 
@@ -100,6 +101,7 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="link", errors=errors)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

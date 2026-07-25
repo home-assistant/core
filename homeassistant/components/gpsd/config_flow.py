@@ -1,9 +1,7 @@
 """Config flow for GPSD integration."""
 
-from __future__ import annotations
-
 import socket
-from typing import Any
+from typing import Any, override
 
 from gps3.agps3threaded import GPSD_PORT as DEFAULT_PORT, HOST as DEFAULT_HOST
 import voluptuous as vol
@@ -39,6 +37,7 @@ class GPSDConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             return True
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

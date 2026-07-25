@@ -1,9 +1,7 @@
 """Config flow to configure the Fumis integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from fumis import (
     Fumis,
@@ -33,6 +31,7 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
 
     _discovered_mac: str
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -76,6 +75,7 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

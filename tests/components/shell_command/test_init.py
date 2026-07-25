@@ -1,7 +1,5 @@
 """The tests for the Shell command component."""
 
-from __future__ import annotations
-
 import asyncio
 import os
 import re
@@ -13,6 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 
 from homeassistant.components import shell_command
+from homeassistant.components.shell_command import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
@@ -49,7 +48,7 @@ async def test_executing_service(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        await hass.services.async_call("shell_command", "test_service", blocking=True)
+        await hass.services.async_call(DOMAIN, "test_service", blocking=True)
         await hass.async_block_till_done()
         assert os.path.isfile(path)
 
@@ -84,7 +83,7 @@ async def test_template_render_no_template(mock_call, hass: HomeAssistant) -> No
     )
     await hass.async_block_till_done()
 
-    await hass.services.async_call("shell_command", "test_service", blocking=True)
+    await hass.services.async_call(DOMAIN, "test_service", blocking=True)
     await hass.async_block_till_done()
     cmd = mock_call.mock_calls[0][1][0]
 
@@ -108,7 +107,7 @@ async def test_incorrect_template(mock_call, hass: HomeAssistant) -> None:
 
     with pytest.raises(TemplateError):
         await hass.services.async_call(
-            "shell_command", "test_service", blocking=True, return_response=True
+            DOMAIN, "test_service", blocking=True, return_response=True
         )
 
     await hass.async_block_till_done()
@@ -129,7 +128,7 @@ async def test_template_render(mock_call, hass: HomeAssistant) -> None:
         },
     )
 
-    await hass.services.async_call("shell_command", "test_service", blocking=True)
+    await hass.services.async_call(DOMAIN, "test_service", blocking=True)
 
     await hass.async_block_till_done()
     cmd = mock_call.mock_calls[0][1]
@@ -152,7 +151,7 @@ async def test_subprocess_error(mock_error, mock_call, hass: HomeAssistant) -> N
         )
 
         response = await hass.services.async_call(
-            "shell_command", "test_service", blocking=True, return_response=True
+            DOMAIN, "test_service", blocking=True, return_response=True
         )
         await hass.async_block_till_done()
         assert mock_call.call_count == 1
@@ -172,7 +171,7 @@ async def test_stdout_captured(mock_output, hass: HomeAssistant) -> None:
     )
 
     response = await hass.services.async_call(
-        "shell_command", "test_service", blocking=True, return_response=True
+        DOMAIN, "test_service", blocking=True, return_response=True
     )
 
     await hass.async_block_till_done()
@@ -202,9 +201,7 @@ async def test_non_text_stdout_capture(
     )
 
     # No problem without 'return_response'
-    response = await hass.services.async_call(
-        "shell_command", "output_image", blocking=True
-    )
+    response = await hass.services.async_call(DOMAIN, "output_image", blocking=True)
 
     await hass.async_block_till_done()
     assert not response
@@ -217,7 +214,7 @@ async def test_non_text_stdout_capture(
         ),
     ):
         response = await hass.services.async_call(
-            "shell_command", "output_image", blocking=True, return_response=True
+            DOMAIN, "output_image", blocking=True, return_response=True
         )
 
     await hass.async_block_till_done()
@@ -236,7 +233,7 @@ async def test_stderr_captured(mock_output, hass: HomeAssistant) -> None:
     )
 
     response = await hass.services.async_call(
-        "shell_command", "test_service", blocking=True, return_response=True
+        DOMAIN, "test_service", blocking=True, return_response=True
     )
 
     await hass.async_block_till_done()
@@ -348,7 +345,7 @@ async def test_repair_issue_on_reserved_reload_name(
 async def test_repair_issue_on_reload_service_reload(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry, hass_admin_user: MockUser
 ) -> None:
-    """Test repair issue is created if 'reload' is used in YAML and reload service is called."""
+    """Test repair issue when 'reload' is used in YAML config."""
     config = {shell_command.DOMAIN: {"test": "echo ok"}}
     await async_setup_component(hass, shell_command.DOMAIN, config)
     await hass.async_block_till_done()

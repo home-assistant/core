@@ -53,14 +53,16 @@ def mock_client(mock_agent_backup: AgentBackup) -> Generator[AsyncMock]:
 
         # Mock the paginator for list_objects_v2
         client.get_paginator = MagicMock()
-        client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+        paginate = client.get_paginator.return_value.paginate
+        paginate.return_value.__aiter__.return_value = [
             {"Contents": [{"Key": tar_file}, {"Key": metadata_file}]}
         ]
 
         client.create_multipart_upload.return_value = {"UploadId": "upload_id"}
         client.upload_part.return_value = {"ETag": "etag"}
 
-        # to simplify this mock, we assume that backup is always "iterated" over, while metadata is always "read" as a whole
+        # to simplify this mock, we assume that backup is always
+        # "iterated" over, while metadata is always "read" as a whole
         class MockStream:
             async def iter_chunks(self) -> AsyncIterator[bytes]:
                 yield b"backup data"

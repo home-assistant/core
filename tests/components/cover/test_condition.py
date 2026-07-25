@@ -12,7 +12,6 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
     create_target_condition,
     parametrize_condition_states_all,
@@ -37,34 +36,18 @@ async def target_covers(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 @pytest.mark.parametrize(
-    "condition",
-    [
-        condition
-        for _, is_open, is_closed in DEVICE_CLASS_CONDITIONS
-        for condition in (is_open, is_closed)
-    ],
-)
-async def test_cover_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the cover conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("cover.awning_is_closed", {}, True, False),
-        ("cover.awning_is_open", {}, True, False),
-        ("cover.blind_is_closed", {}, True, False),
-        ("cover.blind_is_open", {}, True, False),
-        ("cover.curtain_is_closed", {}, True, False),
-        ("cover.curtain_is_open", {}, True, False),
-        ("cover.shade_is_closed", {}, True, False),
-        ("cover.shade_is_open", {}, True, False),
-        ("cover.shutter_is_closed", {}, True, False),
-        ("cover.shutter_is_open", {}, True, False),
+        ("cover.awning_is_closed", {}, True, True),
+        ("cover.awning_is_open", {}, True, True),
+        ("cover.blind_is_closed", {}, True, True),
+        ("cover.blind_is_open", {}, True, True),
+        ("cover.curtain_is_closed", {}, True, True),
+        ("cover.curtain_is_open", {}, True, True),
+        ("cover.shade_is_closed", {}, True, True),
+        ("cover.shade_is_open", {}, True, True),
+        ("cover.shutter_is_closed", {}, True, True),
+        ("cover.shutter_is_open", {}, True, True),
     ],
 )
 async def test_cover_condition_options_validation(
@@ -84,7 +67,6 @@ async def test_cover_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("cover"),
@@ -147,7 +129,6 @@ async def test_cover_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("cover"),
@@ -210,7 +191,6 @@ async def test_cover_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     (
         "condition_key",
@@ -285,7 +265,7 @@ async def test_cover_condition_excludes_non_matching_device_class(
     )
 
     # Matching entity in matching state - condition should be True
-    assert condition_any(hass) is True
+    assert condition_any.async_check() is True
 
     # Set matching entity to non-matching state
     hass.states.async_set(
@@ -296,4 +276,4 @@ async def test_cover_condition_excludes_non_matching_device_class(
     await hass.async_block_till_done()
 
     # Wrong device class entity still in matching state, but should be excluded
-    assert condition_any(hass) is False
+    assert condition_any.async_check() is False

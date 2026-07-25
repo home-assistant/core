@@ -1,6 +1,6 @@
 """Camera support for the Skybell HD Doorbell."""
 
-from __future__ import annotations
+from typing import override
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
@@ -55,6 +55,7 @@ class SkybellCamera(SkybellEntity, Camera):
         super().__init__(coordinator, description)
         Camera.__init__(self)
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -65,6 +66,7 @@ class SkybellCamera(SkybellEntity, Camera):
 class SkybellActivityCamera(SkybellCamera):
     """A camera implementation for latest Skybell activity."""
 
+    @override
     async def handle_async_mjpeg_stream(
         self, request: web.Request
     ) -> web.StreamResponse:
