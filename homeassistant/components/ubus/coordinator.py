@@ -9,6 +9,7 @@ from openwrt.ubus import Ubus
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_DHCP_SOFTWARE, DOMAIN
@@ -66,15 +67,24 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
             raise UpdateFailed(f"Access denied by ubus at {self.host}") from err
 
     def _login(self) -> None:
-        """Open a ubus session, raising UpdateFailed on failure."""
+        """Open a ubus session.
+
+        Invalid credentials raise ConfigEntryAuthFailed so the entry starts a
+        reauth flow instead of retrying a failure it can't recover from on its
+        own. A genuine connection problem raises UpdateFailed to retry.
+        """
         try:
             session_id = self.ubus.connect()
-        except (ConnectionError, PermissionError, TypeError) as err:
+        except PermissionError as err:
+            raise ConfigEntryAuthFailed(
+                f"Invalid credentials for ubus at {self.host}"
+            ) from err
+        except (ConnectionError, TypeError) as err:
             # openwrt-ubus-rpc raises TypeError when the HTTP request itself
             # fails, because it subscripts a None response.
             raise UpdateFailed(f"Error connecting to ubus at {self.host}") from err
         if session_id is None:
-            raise UpdateFailed(f"Invalid credentials for ubus at {self.host}")
+            raise ConfigEntryAuthFailed(f"Invalid credentials for ubus at {self.host}")
 
     def _read_clients(self) -> dict[str, str | None]:
         """Return authorized clients mapped to their DHCP hostname.

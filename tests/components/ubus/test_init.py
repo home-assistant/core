@@ -2,7 +2,9 @@
 
 from unittest.mock import MagicMock
 
-from homeassistant.config_entries import ConfigEntryState
+import pytest
+
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -24,18 +26,30 @@ async def test_setup_retry_on_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_retry_on_invalid_credentials(
-    hass: HomeAssistant, mock_ubus: MagicMock, mock_config_entry: MockConfigEntry
+@pytest.mark.parametrize(
+    "connect",
+    [
+        pytest.param({"side_effect": PermissionError}, id="access_denied"),
+        pytest.param({"side_effect": None, "return_value": None}, id="no_session"),
+    ],
+)
+async def test_setup_error_on_invalid_credentials(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    connect: dict,
 ) -> None:
-    """Test the config entry retries setup when login returns no session."""
-    mock_ubus.return_value.connect.side_effect = None
-    mock_ubus.return_value.connect.return_value = None
+    """Test invalid credentials fail setup and start a reauth flow."""
+    mock_ubus.return_value.connect.configure_mock(**connect)
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
 async def test_setup_retry_when_session_stays_denied(

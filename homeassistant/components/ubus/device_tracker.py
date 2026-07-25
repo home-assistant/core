@@ -50,15 +50,18 @@ async def async_setup_scanner(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=import_data
     )
 
-    if result["type"] is FlowResultType.ABORT and result["reason"] == "cannot_connect":
+    if result["type"] is FlowResultType.ABORT and result["reason"] in (
+        "cannot_connect",
+        "invalid_auth",
+    ):
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "yaml_import_cannot_connect",
+            f"yaml_import_{result['reason']}",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.ERROR,
-            translation_key="yaml_import_cannot_connect",
+            translation_key=f"yaml_import_{result['reason']}",
             translation_placeholders={"host": config[CONF_HOST]},
         )
         return False

@@ -1,5 +1,6 @@
 """Config flow for the OpenWrt (ubus) integration."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 from openwrt.ubus import Ubus
@@ -83,10 +84,53 @@ class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self.hass.async_add_executor_job(validate_connection, import_data)
-        except CannotConnect, InvalidAuth:
+        except CannotConnect:
             return self.async_abort(reason="cannot_connect")
+        except InvalidAuth:
+            return self.async_abort(reason="invalid_auth")
 
         return self.async_create_entry(title=import_data[CONF_HOST], data=import_data)
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication when the stored credentials are rejected."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with fresh credentials."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            try:
+                await self.hass.async_add_executor_job(
+                    validate_connection, {**reauth_entry.data, **user_input}
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME, default=reauth_entry.data[CONF_USERNAME]
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
+            errors=errors,
+        )
 
 
 class CannotConnect(Exception):
