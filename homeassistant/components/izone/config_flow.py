@@ -401,6 +401,11 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unpaired_bridge")
         except pizone.ControllerAlreadyClaimedError:
             return self.async_abort(reason="already_configured")
+        except Exception:  # noqa: BLE001 - content-shaped probe errors until pizone 1.3.9
+            # Manual host can hit non-iZone HTTP bodies; pizone._probe still lets
+            # content-shaped errors propagate (harden in 1.3.9).
+            _LOGGER.debug("Unexpected error probing iZone host %s", host, exc_info=True)
+            endpoint = None
 
         if endpoint is None:
             if host_only:

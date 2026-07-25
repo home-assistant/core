@@ -1004,6 +1004,28 @@ async def test_user_manual_host_unreachable(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_user_manual_host_probe_content_error_cannot_connect(
+    hass: HomeAssistant,
+) -> None:
+    """Content-shaped probe failures redisplay cannot_connect instead of 500."""
+    with patch(
+        "homeassistant.components.izone.discovery.async_discover_by_host",
+        new=AsyncMock(
+            side_effect=AttributeError("'NoneType' object has no attribute 'get'")
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _user_manual_host_input("192.0.2.50")
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_user_manual_host_already_configured_aborts(hass: HomeAssistant) -> None:
     """Re-entering a host for an existing controller aborts before probing."""
     MockConfigEntry(
