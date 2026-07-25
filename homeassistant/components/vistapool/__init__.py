@@ -150,9 +150,7 @@ def _async_remove_stale_devices(
     for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
         pool_id = next((i[1] for i in device.identifiers if i[0] == DOMAIN), None)
         if pool_id is not None and pool_id not in valid_pool_ids:
-            device_registry.async_update_device(
-                device.id, remove_config_entry_id=entry.entry_id
-            )
+            device_registry.async_remove_device(device.id)
 
 
 async def _async_initial_refresh(

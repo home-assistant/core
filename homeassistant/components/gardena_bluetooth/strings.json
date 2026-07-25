@@ -151,6 +151,12 @@
       },
       "spray_current_sector": {
         "name": "Current sector"
+      },
+      "tank_pressure": {
+        "name": "Tank pressure"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
       }
     },
     "switch": {

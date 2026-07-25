@@ -6,15 +6,20 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from google_health_api.model import (
+    BODY_FAT,
     DAILY_RESTING_HEART_RATE,
+    SLEEP,
     WEIGHT,
+    ActiveEnergyBurnedRollupValue,
     DailyRollupDataPoint,
     DataPoint,
     DataType,
     DistanceRollupValue,
+    FloorsRollupValue,
     Identity,
     ListDataPointResult,
     StepsRollupValue,
+    TotalCaloriesRollupValue,
     UserInfo,
     _ListDataPointsModel,
 )
@@ -129,6 +134,20 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         client.distance.today.return_value = _rollup_fixture(
             "distance.json", DistanceRollupValue, "distance"
         )
+        client.active_energy_burned = AsyncMock()
+        client.active_energy_burned.today.return_value = _rollup_fixture(
+            "active_energy_burned.json",
+            ActiveEnergyBurnedRollupValue,
+            "activeEnergyBurned",
+        )
+        client.total_calories = AsyncMock()
+        client.total_calories.today.return_value = _rollup_fixture(
+            "total_calories.json", TotalCaloriesRollupValue, "totalCalories"
+        )
+        client.floors = AsyncMock()
+        client.floors.today.return_value = _rollup_fixture(
+            "floors.json", FloorsRollupValue, "floors"
+        )
         client.weight = AsyncMock()
         client.weight.list.return_value = _list_fixture("weight.json", WEIGHT)
         client.weight.required_read_scopes = [
@@ -138,6 +157,13 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         client.daily_resting_heart_rate.list.return_value = _list_fixture(
             "resting_heart_rate.json", DAILY_RESTING_HEART_RATE
         )
+        client.body_fat = AsyncMock()
+        client.body_fat.list.return_value = _list_fixture("body_fat.json", BODY_FAT)
+        client.sleep = AsyncMock()
+        client.sleep.list.return_value = _list_fixture("sleep.json", SLEEP)
+        client.sleep.required_read_scopes = [
+            "https://www.googleapis.com/auth/googlehealth.sleep.readonly"
+        ]
         client.get_identity.return_value = Identity.from_dict(
             load_json_object_fixture("identity.json", DOMAIN)
         )

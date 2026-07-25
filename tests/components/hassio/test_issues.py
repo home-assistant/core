@@ -378,6 +378,7 @@ async def test_reset_issues_supervisor_restart(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(uuid := uuid4()),
+                reference_extra=None,
             )
         ],
         suggestions_by_issue={
@@ -388,6 +389,7 @@ async def test_reset_issues_supervisor_restart(
                     reference=None,
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 )
             ]
         },
@@ -626,18 +628,21 @@ async def test_supervisor_issues(
                 context=ContextType.ADDON,
                 reference="test",
                 uuid=(uuid_issue1 := uuid4()),
+                reference_extra=None,
             ),
             Issue(
                 type=IssueType.MULTIPLE_DATA_DISKS,
                 context=ContextType.SYSTEM,
                 reference="/dev/sda1",
                 uuid=(uuid_issue2 := uuid4()),
+                reference_extra=None,
             ),
             Issue(
                 type="should_not_be_repair",
                 context=ContextType.OS,
                 reference=None,
                 uuid=uuid4(),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -648,6 +653,7 @@ async def test_supervisor_issues(
                     reference="/dev/sda1",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 )
             ]
         },
@@ -699,6 +705,7 @@ async def test_supervisor_issues_initial_failure(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(uuid := uuid4()),
+                reference_extra=None,
             )
         ],
         suggestions_by_issue={
@@ -709,6 +716,7 @@ async def test_supervisor_issues_initial_failure(
                     reference=None,
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 )
             ]
         },
@@ -823,6 +831,7 @@ async def test_supervisor_issues_suggestions_fail(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=uuid4(),
+                reference_extra=None,
             )
         ],
     )
@@ -1258,6 +1267,7 @@ async def test_supervisor_issues_periodic_refresh_backstop(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=uuid4(),
+                reference_extra=None,
             )
         ],
     )
@@ -1300,6 +1310,7 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=issue_uuid,
+                reference_extra=None,
             )
         ],
         suggestions=[
@@ -1309,6 +1320,7 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
                 reference=None,
                 uuid=uuid4(),
                 auto=False,
+                reference_extra=None,
             )
         ],
         checks=[
@@ -1323,6 +1335,7 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
             reference=None,
             uuid=uuid4(),
             auto=False,
+            reference_extra=None,
         )
     ]
 
@@ -1385,6 +1398,7 @@ async def test_supervisor_issues_periodic_refresh_recovers_after_initial_failure
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=issue_uuid,
+                reference_extra=None,
             )
         ],
         suggestions_by_issue={
@@ -1395,6 +1409,7 @@ async def test_supervisor_issues_periodic_refresh_recovers_after_initial_failure
                     reference=None,
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 )
             ]
         },

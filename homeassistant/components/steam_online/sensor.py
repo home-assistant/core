@@ -60,6 +60,8 @@ SENSOR_DESCRIPTIONS: tuple[SteamSensorEntityDescription, ...] = (
         options=list(STEAM_STATUSES.values()),
         entity_picture_fn=lambda x, _: x.avatarfull,
         name=None,
+        # Attributes game, game_id, game_image_header, game_image_main, game_icon,
+        # last_online, and level are deprecated and can be removed in 2027.2
         extra_state_attributes_fn=lambda x, icons: {
             "real_name": x.realname,
             "created": (

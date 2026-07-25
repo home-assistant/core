@@ -173,8 +173,8 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_min=0,
         ufp_max=100,
         ufp_step=1,
-        ufp_value="light_device_settings.pir_sensitivity",
-        ufp_set_method="set_sensitivity",
+        ufp_public_value="light_device_settings.pir_sensitivity",
+        ufp_set_method="set_sensitivity_public",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectNumberEntityDescription[Light](

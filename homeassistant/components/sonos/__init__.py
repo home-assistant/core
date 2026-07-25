@@ -264,8 +264,11 @@ class SonosDiscoveryManager:
             visible_zones = soco.visible_zones
             self._known_invisible = soco.all_zones - visible_zones
             for zone in visible_zones:
-                if zone.uid not in self.data.discovered:
-                    zones_to_add.add(zone)
+                if zone.uid in self.data.discovered or self.is_device_disabled(
+                    zone.uid
+                ):
+                    continue
+                zones_to_add.add(zone)
 
             if not zones_to_add:
                 return
@@ -540,6 +543,16 @@ class SonosDiscoveryManager:
             self.hass, DISCOVERY_INTERVAL.total_seconds(), self.async_poll_manual_hosts
         )
 
+    def is_device_disabled(self, uid: str) -> bool:
+        """Check if the Sonos device is disabled in the device registry."""
+        if not (
+            device := dr.async_get(self.hass).async_get_device(
+                identifiers={(DOMAIN, uid)}
+            )
+        ):
+            return False
+        return device.disabled
+
     async def _async_handle_discovery_message(
         self,
         uid: str,
@@ -548,6 +561,10 @@ class SonosDiscoveryManager:
         boot_seqnum: int | None = None,
     ) -> None:
         """Handle discovered player creation and activity."""
+        if self.is_device_disabled(uid):
+            _LOGGER.debug("Skipping %s for disabled Sonos device: %s", source, uid)
+            return
+
         async with self.discovery_lock:
             if not self.data.discovered:
                 # Initial discovery, attempt to add all visible zones

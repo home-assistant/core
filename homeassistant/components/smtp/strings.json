@@ -67,6 +67,17 @@
           "server": "Hostname or IP address of the SMTP server. For example, `smtp.example.com`.",
           "username": "Username used to authenticate with the SMTP server.",
           "verify_ssl": "Enable certificate verification for secure SSL/TLS connections."
+        },
+        "sections": {
+          "options": {
+            "data": {
+              "timeout": "[%key:component::smtp::options::step::init::data::timeout%]"
+            },
+            "data_description": {
+              "timeout": "[%key:component::smtp::options::step::init::data_description::timeout%]"
+            },
+            "name": "Additional options"
+          }
         }
       }
     }
