@@ -43,6 +43,7 @@ async def test_sensor_snapshot(
     mock_config_entry: MockConfigEntry,
     mock_api: AsyncMock,
     snapshot: SnapshotAssertion,
+    patch_sensor_now: FrozenDateTimeFactory,
 ) -> None:
     """Snapshot test of the sensors."""
     mock_config_entry.add_to_hass(hass)
@@ -130,7 +131,12 @@ def test_get_next_departure_cleanup_time_with_mock_api_edge_cases(
     assert cleanup_time is None
 
 
-def test_get_departure_timestamp_with_mock_api(patch_sensor_now, mock_api) -> None:
+@pytest.mark.parametrize("departure_index", [0, 1])
+def test_get_departure_timestamp_with_mock_api(
+    patch_sensor_now: FrozenDateTimeFactory,
+    mock_api: AsyncMock,
+    departure_index: int,
+) -> None:
     """Test the _get_departure_timestamp helper function using mock_api departures."""
 
     # Test with empty list - should return None
@@ -140,30 +146,24 @@ def test_get_departure_timestamp_with_mock_api(patch_sensor_now, mock_api) -> No
     # Test with index out of bounds - should return None
     departures = mock_api.get_filtered_departures(123456)
 
-    # Test with valid departure at index 0 - should return realtime timestamp (since mock sets rtTime)
-    result = _get_departure_timestamp(departures[0], TZ_CPH)
+    # The fixture provides two departures for this stop_id.
+    departure = departures[departure_index]
+    result = _get_departure_timestamp(departure, TZ_CPH)
     assert result is not None
-    # Should match the mock's rtDate/rtTime
-    expected = datetime.combine(departures[0].rtDate, departures[0].rtTime).replace(
+    expected = datetime.combine(departure.rtDate, departure.rtTime).replace(
         tzinfo=zoneinfo.ZoneInfo("Europe/Copenhagen")
     )
     assert result == expected
 
-    # Test with valid departure at index 1
-    if len(departures) > 1:
-        result = _get_departure_timestamp(departures[1], TZ_CPH)
-        assert result is not None
-        expected = datetime.combine(departures[1].rtDate, departures[1].rtTime).replace(
-            tzinfo=zoneinfo.ZoneInfo("Europe/Copenhagen")
-        )
-        assert result == expected
 
-
-async def test_async_setup_platform_creates_issue(hass: HomeAssistant) -> None:
+async def test_async_setup_platform_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
     """Test that async_setup_platform creates a deprecation issue."""
     await async_setup_platform(hass, {}, lambda *args, **kwargs: None)
 
-    issue = ir.async_get(hass).async_get_issue(DOMAIN, "yaml_deprecated")
+    issue = issue_registry.async_get_issue(DOMAIN, "yaml_deprecated")
     assert issue is not None
     assert issue.translation_key == "yaml_deprecated"
 

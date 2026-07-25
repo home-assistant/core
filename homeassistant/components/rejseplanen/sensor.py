@@ -298,6 +298,7 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
         if self._departure_cleanup_unsubscribe:
             self._departure_cleanup_unsubscribe()
             self._departure_cleanup_unsubscribe = None
+        self._last_cleanup_time = None
 
     @override
     @callback

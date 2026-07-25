@@ -13,14 +13,13 @@ from py_rejseplan.enums import TransportClass
 import pytest
 
 from homeassistant.components.rejseplanen.const import (
-    CONF_API_KEY,
     CONF_DEPARTURE_TYPE,
     CONF_DIRECTION,
-    CONF_NAME,
     CONF_STOP_ID,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigSubentryDataWithId
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

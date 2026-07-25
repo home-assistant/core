@@ -8,12 +8,8 @@ from py_rejseplan import enums
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.rejseplanen.const import (
-    CONF_API_KEY,
-    CONF_NAME,
-    CONF_STOP_ID,
-    DOMAIN,
-)
+from homeassistant.components.rejseplanen.const import CONF_STOP_ID, DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

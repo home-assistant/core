@@ -12,6 +12,7 @@ from py_rejseplan.exceptions import APIError, ConnectionError, HTTPError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -33,7 +34,10 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
     ) -> None:
         """Initialize."""
 
-        self.api = DeparturesAPIClient(auth_key=config_entry.data[CONF_API_KEY])
+        self.api = DeparturesAPIClient(
+            auth_key=config_entry.data[CONF_API_KEY],
+            session=async_get_clientsession(hass),
+        )
         self.last_update_success_time: datetime | None = None
 
         super().__init__(

@@ -19,6 +19,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -96,9 +97,6 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step of the config flow."""
 
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
@@ -108,7 +106,10 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         auth_key = user_input[CONF_API_KEY]
-        api = Rejseplanen(auth_key=auth_key)
+        api = Rejseplanen(
+            auth_key=auth_key,
+            session=async_get_clientsession(self.hass),
+        )
 
         try:
             result = await api.validate_auth_key_async()
