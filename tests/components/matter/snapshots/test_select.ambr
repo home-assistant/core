@@ -2912,7 +2912,7 @@
     'state': 'Dimmer+Single',
   })
 # ---
-# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_41-entry]
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2933,7 +2933,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.kitchen_switch_power_on_behavior_41',
+    'entity_id': 'select.kitchen_switch_power_on_behavior_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2941,12 +2941,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power-on behavior (41)',
+    'object_id_base': 'Power-on behavior (1)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior (41)',
+    'original_name': 'Power-on behavior (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2956,10 +2956,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_41-state]
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Power-on behavior (41)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Power-on behavior (1)',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -2968,14 +2968,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.kitchen_switch_power_on_behavior_41',
+    'entity_id': 'select.kitchen_switch_power_on_behavior_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_42-entry]
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2996,7 +2996,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.kitchen_switch_power_on_behavior_42',
+    'entity_id': 'select.kitchen_switch_power_on_behavior_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3004,12 +3004,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power-on behavior (42)',
+    'object_id_base': 'Power-on behavior (2)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior (42)',
+    'original_name': 'Power-on behavior (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3019,10 +3019,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_42-state]
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Power-on behavior (42)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Power-on behavior (2)',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -3031,14 +3031,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.kitchen_switch_power_on_behavior_42',
+    'entity_id': 'select.kitchen_switch_power_on_behavior_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_43-entry]
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3059,7 +3059,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.kitchen_switch_power_on_behavior_43',
+    'entity_id': 'select.kitchen_switch_power_on_behavior_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3067,12 +3067,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power-on behavior (43)',
+    'object_id_base': 'Power-on behavior (3)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior (43)',
+    'original_name': 'Power-on behavior (3)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3082,10 +3082,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_43-state]
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Power-on behavior (43)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Power-on behavior (3)',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -3094,14 +3094,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.kitchen_switch_power_on_behavior_43',
+    'entity_id': 'select.kitchen_switch_power_on_behavior_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_44-entry]
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3122,7 +3122,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.kitchen_switch_power_on_behavior_44',
+    'entity_id': 'select.kitchen_switch_power_on_behavior_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3130,12 +3130,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power-on behavior (44)',
+    'object_id_base': 'Power-on behavior (4)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior (44)',
+    'original_name': 'Power-on behavior (4)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3145,10 +3145,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_44-state]
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Power-on behavior (44)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Power-on behavior (4)',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -3157,14 +3157,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.kitchen_switch_power_on_behavior_44',
+    'entity_id': 'select.kitchen_switch_power_on_behavior_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_selects[lifx_switch_89][select.kitchen_power_on_behavior-entry]
+# name: test_selects[lifx_switch_89][select.kitchen_power_on_behavior_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3185,7 +3185,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.kitchen_power_on_behavior',
+    'entity_id': 'select.kitchen_power_on_behavior_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3193,12 +3193,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power-on behavior',
+    'object_id_base': 'Power-on behavior (1)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior',
+    'original_name': 'Power-on behavior (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3208,10 +3208,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[lifx_switch_89][select.kitchen_power_on_behavior-state]
+# name: test_selects[lifx_switch_89][select.kitchen_power_on_behavior_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Power-on behavior (1)',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -3220,7 +3220,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.kitchen_power_on_behavior',
+    'entity_id': 'select.kitchen_power_on_behavior_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
