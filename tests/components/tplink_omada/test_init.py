@@ -12,10 +12,7 @@ from tplink_omada_client.exceptions import (
     UnsupportedControllerVersion,
 )
 
-from homeassistant.components.tplink_omada import (
-    async_unload_entry,
-    config_entry_owns_controller_entities,
-)
+from homeassistant.components.tplink_omada import config_entry_owns_controller_entities
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.entity import controller_model
 from homeassistant.config_entries import ConfigEntryState
@@ -290,7 +287,7 @@ async def test_controller_owner_reload_transfers_to_next_active_entry(
             AsyncMock(),
         ) as mock_reload,
     ):
-        assert await async_unload_entry(hass, owner_entry)
+        assert await hass.config_entries.async_unload(owner_entry.entry_id)
         await hass.async_block_till_done()
 
     mock_reload.assert_awaited_once_with(next_entry.entry_id)

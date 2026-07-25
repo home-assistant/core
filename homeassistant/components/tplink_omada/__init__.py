@@ -42,6 +42,7 @@ type OmadaConfigEntry = ConfigEntry[OmadaSiteController]
 _CONTROLLER_OWNER_STATES = {
     ConfigEntryState.LOADED,
     ConfigEntryState.SETUP_IN_PROGRESS,
+    ConfigEntryState.UNLOAD_IN_PROGRESS,
 }
 
 
