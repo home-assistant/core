@@ -1,10 +1,8 @@
 """Config flow for the iNet Radio integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from inet_control import RadioManager
@@ -42,6 +40,7 @@ class INetConfigFlow(ConfigFlow, domain=DOMAIN):
         self._name: str | None = None
         self._model: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -81,6 +80,7 @@ class INetConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_MANUAL_SCHEMA,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

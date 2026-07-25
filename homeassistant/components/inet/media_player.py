@@ -1,11 +1,9 @@
 """Media player platform for iNet Radio."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from functools import wraps
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from inet_control import VOLUME_MAX, Radio, RadioManager
 
@@ -150,27 +148,32 @@ class INetMediaPlayer(MediaPlayerEntity):
             case _:
                 self._attr_source = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to radio state updates."""
         await super().async_added_to_hass()
         unsub = self._radio.register_callback(self._handle_state_update)
         self.async_on_remove(unsub)
 
+    @override
     @_handle_errors
     async def async_turn_on(self) -> None:
         """Turn the radio on."""
         await self._manager.turn_on(self._radio)
 
+    @override
     @_handle_errors
     async def async_turn_off(self) -> None:
         """Turn the radio off."""
         await self._manager.turn_off(self._radio)
 
+    @override
     @_handle_errors
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level (0.0 to 1.0)."""
         await self._manager.set_volume(self._radio, round(volume * VOLUME_MAX))
 
+    @override
     @_handle_errors
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute the radio."""
@@ -179,16 +182,19 @@ class INetMediaPlayer(MediaPlayerEntity):
         else:
             await self._manager.unmute(self._radio)
 
+    @override
     @_handle_errors
     async def async_volume_up(self) -> None:
         """Increase volume by one step."""
         await self._manager.volume_up(self._radio)
 
+    @override
     @_handle_errors
     async def async_volume_down(self) -> None:
         """Decrease volume by one step."""
         await self._manager.volume_down(self._radio)
 
+    @override
     @_handle_errors
     async def async_select_source(self, source: str) -> None:
         """Select input source."""

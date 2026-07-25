@@ -34,6 +34,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to radio at {host}"
+    },
     "communication_error": {
       "message": "An error occurred while communicating with the radio."
     },

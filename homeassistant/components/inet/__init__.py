@@ -1,7 +1,5 @@
 """The iNet Radio integration."""
 
-from __future__ import annotations
-
 import logging
 
 from inet_control import RadioManager
@@ -42,7 +40,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: INetConfigEntry) -> bool
     try:
         await manager.connect(host, timeout=5.0)
     except (TimeoutError, OSError) as err:
-        raise ConfigEntryNotReady(f"Cannot connect to radio at {host}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host},
+        ) from err
 
     entry.runtime_data = manager
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
