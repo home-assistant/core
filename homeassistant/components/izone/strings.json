@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured_host_updated": "This iZone controller is already set up. Its address has been updated to {host}.",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "discovery_failed": "Failed to start iZone discovery. Make sure your network is properly configured.",
       "discovery_started": "iZone discovery has started. Your controllers will appear as discovered devices under Settings \u003e Devices \u0026 services.",

@@ -416,6 +416,18 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         await self.async_set_unique_id(endpoint.uid)
+        # Manual host can be a repair path when UDP cannot update CONF_HOST; abort with
+        # an explicit reason so the side-effect is visible (not a reconfigure flow).
+        if (
+            existing := self.hass.config_entries.async_entry_for_domain_unique_id(
+                self.handler, endpoint.uid
+            )
+        ) is not None and existing.data.get(CONF_HOST) != endpoint.host:
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: endpoint.host},
+                error="already_configured_host_updated",
+                description_placeholders={"host": endpoint.host},
+            )
         self._abort_if_unique_id_configured()
         self._discovered_controller_ip = endpoint.host
         return await self.async_step_confirm()

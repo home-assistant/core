@@ -1028,6 +1028,36 @@ async def test_user_manual_host_already_configured_aborts(hass: HomeAssistant) -
     assert result["reason"] == "already_configured"
 
 
+async def test_user_manual_host_updates_address_when_uid_configured(
+    hass: HomeAssistant,
+) -> None:
+    """Entering a new host for a configured UID updates CONF_HOST and aborts."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000001",
+        data={CONF_HOST: "192.0.2.10"},
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    moved = create_mock_controller("000000001", "192.0.2.77")
+
+    with patch(
+        "homeassistant.components.izone.discovery.async_discover_by_host",
+        new=AsyncMock(return_value=endpoint_from_controller(moved)),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _user_manual_host_input("192.0.2.77")
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured_host_updated"
+    assert result["description_placeholders"] == {"host": "192.0.2.77"}
+    assert entry.data[CONF_HOST] == "192.0.2.77"
+
+
 async def test_user_manual_host_claimed_controller_aborts(hass: HomeAssistant) -> None:
     """Claim-cache collision aborts when HA has no matching host entry yet."""
     with patch(
