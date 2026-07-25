@@ -44,6 +44,14 @@ async def test_full_flow(
             CONF_CODE: TEST_CODE,
         },
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_scan"
+    assert result["description_placeholders"] == {"seconds": "60"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USERNAME
     assert result["data"] == {
@@ -94,8 +102,16 @@ async def test_flow_errors(
             CONF_CODE: TEST_CODE,
         },
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_scan"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
 
     mock_amazon_devices_client.login.login_mode_interactive.side_effect = None
@@ -107,6 +123,13 @@ async def test_flow_errors(
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_CODE: TEST_CODE,
         },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_scan"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -135,6 +158,13 @@ async def test_already_configured(
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_CODE: TEST_CODE,
         },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_scan"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
     )
 
     assert result["type"] is FlowResultType.ABORT

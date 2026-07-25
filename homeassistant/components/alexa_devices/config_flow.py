@@ -4,6 +4,10 @@ from collections.abc import Mapping
 from typing import Any, override
 
 from aioamazondevices.api import AmazonEchoApi
+from aioamazondevices.const.metadata import (
+    CUSTOMER_ACCOUNT_DELAY_BETWEEN_RETRIES,
+    CUSTOMER_ACCOUNT_MAX_RETRIES,
+)
 from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
@@ -52,29 +56,60 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 3
 
+    _login_data: dict[str, Any]
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
-        if user_input:
-            try:
-                data = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except CannotAuthenticate:
-                errors["base"] = "invalid_auth"
-            except CannotRetrieveData:
-                errors["base"] = "cannot_retrieve_data"
-            else:
-                await self.async_set_unique_id(data["customer_info"]["user_id"])
-                self._abort_if_unique_id_configured()
-                user_input.pop(CONF_CODE)
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME],
-                    data=user_input | {CONF_LOGIN_DATA: data},
-                )
+        if user_input is not None:
+            self._login_data = user_input
+            return await self.async_step_confirm_scan()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Required(CONF_CODE): cv.string,
+                }
+            ),
+        )
+
+    async def async_step_confirm_scan(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Warn the user that scanning for devices can take a while."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="confirm_scan",
+                description_placeholders={
+                    "seconds": str(
+                        CUSTOMER_ACCOUNT_MAX_RETRIES
+                        * CUSTOMER_ACCOUNT_DELAY_BETWEEN_RETRIES
+                    )
+                },
+            )
+
+        errors: dict[str, str] = {}
+        try:
+            data = await validate_input(self.hass, self._login_data)
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except CannotAuthenticate:
+            errors["base"] = "invalid_auth"
+        except CannotRetrieveData:
+            errors["base"] = "cannot_retrieve_data"
+        else:
+            await self.async_set_unique_id(data["customer_info"]["user_id"])
+            self._abort_if_unique_id_configured()
+            self._login_data.pop(CONF_CODE)
+            return self.async_create_entry(
+                title=self._login_data[CONF_USERNAME],
+                data=self._login_data | {CONF_LOGIN_DATA: data},
+            )
 
         return self.async_show_form(
             step_id="user",

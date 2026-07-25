@@ -23,6 +23,10 @@
     },
     "flow_title": "{username}",
     "step": {
+      "confirm_scan": {
+        "description": "Setup can take up to {seconds} seconds if you have many devices linked to your Amazon account.",
+        "title": "Scan for Alexa devices"
+      },
       "reauth_confirm": {
         "data": {
           "code": "[%key:component::alexa_devices::common::data_code%]",
