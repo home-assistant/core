@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenAIConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, RECOMMENDED_CONVERSATION_REASONING_EFFORT
 from .entity import OpenAIBaseLLMEntity
 
 # Max number of back and forth with the LLM to generate a response
@@ -39,6 +39,7 @@ class OpenAIConversationEntity(
     """OpenAI conversation agent."""
 
     _attr_supports_streaming = True
+    _recommended_reasoning_effort = RECOMMENDED_CONVERSATION_REASONING_EFFORT
 
     def __init__(self, entry: OpenAIConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the agent."""

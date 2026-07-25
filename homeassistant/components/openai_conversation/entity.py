@@ -480,6 +480,8 @@ class OpenAIBaseLLMEntity(Entity):
 
     _attr_has_entity_name = True
     _attr_name: str | None = None
+    # Effort used in recommended mode, must be supported by RECOMMENDED_CHAT_MODEL
+    _recommended_reasoning_effort = RECOMMENDED_REASONING_EFFORT
 
     def __init__(self, entry: OpenAIConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
@@ -523,10 +525,14 @@ class OpenAIBaseLLMEntity(Entity):
         )
 
         if model_args["model"].startswith(("o", "gpt-5")):
+            # Other models support a different set of efforts
+            recommended_effort = (
+                self._recommended_reasoning_effort
+                if model_args["model"] == RECOMMENDED_CHAT_MODEL
+                else RECOMMENDED_REASONING_EFFORT
+            )
             reasoning: Reasoning = {
-                "effort": options.get(
-                    CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
-                )
+                "effort": options.get(CONF_REASONING_EFFORT, recommended_effort)
                 if not model_args["model"].startswith("gpt-5-pro")
                 else "high",  # GPT-5 pro only supports reasoning.effort: high
             }

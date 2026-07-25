@@ -821,7 +821,13 @@ async def test_flex_tier_retry(
 
 
 @pytest.mark.parametrize(
-    "subentry_options", [{CONF_CHAT_MODEL: "gpt-5.6-sol", CONF_PRO_MODE: True}]
+    "subentry_options",
+    [
+        pytest.param(
+            {CONF_CHAT_MODEL: "gpt-5.6-sol", CONF_PRO_MODE: True}, id="pro_mode"
+        ),
+        pytest.param({}, id="recommended"),
+    ],
 )
 async def test_model_args(
     hass: HomeAssistant,

@@ -16,6 +16,7 @@ from homeassistant.util.json import json_loads
 from .const import (
     CONF_CHAT_MODEL,
     CONF_IMAGE_MODEL,
+    RECOMMENDED_AI_TASK_REASONING_EFFORT,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_IMAGE_MODEL,
     UNSUPPORTED_IMAGE_MODELS,
@@ -51,6 +52,8 @@ class OpenAITaskEntity(
     OpenAIBaseLLMEntity,
 ):
     """OpenAI AI Task entity."""
+
+    _recommended_reasoning_effort = RECOMMENDED_AI_TASK_REASONING_EFFORT
 
     def __init__(self, entry: OpenAIConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""

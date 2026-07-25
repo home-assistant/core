@@ -297,7 +297,7 @@
     }),
   ])
 # ---
-# name: test_model_args[subentry_options0]
+# name: test_model_args[pro_mode]
   dict({
     'include': list([
       'reasoning.encrypted_content',
@@ -308,6 +308,25 @@
     'reasoning': dict({
       'effort': 'low',
       'mode': 'pro',
+      'summary': 'auto',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+  })
+# ---
+# name: test_model_args[recommended]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt-5-nano',
+    'reasoning': dict({
+      'effort': 'minimal',
       'summary': 'auto',
     }),
     'service_tier': 'auto',

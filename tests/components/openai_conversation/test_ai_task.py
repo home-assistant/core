@@ -68,6 +68,26 @@ async def test_generate_data(
     assert mock_create_stream.call_args.kwargs["store"] is expected_store
 
 
+@pytest.mark.usefixtures("mock_init_component", "mock_config_entry")
+async def test_recommended_reasoning_effort(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test AI Task reasons more than conversation with recommended settings."""
+    mock_create_stream.return_value = [
+        create_message_item(id="msg_A", text="The test data", output_index=0)
+    ]
+
+    await ai_task.async_generate_data(
+        hass,
+        task_name="Test Task",
+        entity_id="ai_task.openai_ai_task",
+        instructions="Generate test data",
+    )
+
+    assert mock_create_stream.call_args.kwargs["reasoning"]["effort"] == "medium"
+
+
 @pytest.mark.usefixtures("mock_init_component")
 async def test_generate_structured_data(
     hass: HomeAssistant,

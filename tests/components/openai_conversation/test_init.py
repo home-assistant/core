@@ -429,7 +429,7 @@ async def test_generate_content_service(
     service_data["config_entry"] = mock_config_entry.entry_id
     expected_args["model"] = "gpt-5-nano"
     expected_args["max_output_tokens"] = 3000
-    expected_args["reasoning"] = {"effort": "low"}
+    expected_args["reasoning"] = {"effort": "minimal"}
     expected_args["user"] = None
     expected_args["store"] = store_responses
     expected_args["input"][0]["type"] = "message"

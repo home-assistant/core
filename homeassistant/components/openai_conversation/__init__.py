@@ -55,6 +55,7 @@ from .const import (
     LOGGER,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_CONVERSATION_REASONING_EFFORT,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_REASONING_SUMMARY,
@@ -217,7 +218,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if model.startswith(("o", "gpt-5")):
             model_args["reasoning"] = {
                 "effort": conversation_subentry.data.get(
-                    CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
+                    CONF_REASONING_EFFORT,
+                    RECOMMENDED_CONVERSATION_REASONING_EFFORT
+                    if model == RECOMMENDED_CHAT_MODEL
+                    else RECOMMENDED_REASONING_EFFORT,
                 )
             }
 
