@@ -13,7 +13,7 @@
           "model": "Inverter model"
         },
         "data_description": {
-          "model": "Multiple inverter models responded at this address. Select the one that matches your device."
+          "model": "Auto-discovery matched multiple inverter models at this address. Select the model that matches your device."
         }
       },
       "user": {
