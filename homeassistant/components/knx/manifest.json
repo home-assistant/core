@@ -13,7 +13,7 @@
   "requirements": [
     "xknx==3.16.0",
     "xknxproject==3.9.0",
-    "knx-frontend==2026.6.23.203726",
+    "knx-frontend==2026.7.23.145751",
     "knx-telegram-store[sqlite,postgres]==0.10.2"
   ],
   "single_config_entry": true

@@ -66,7 +66,7 @@ async def test_device_registry_identifiers(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Device registry uses channel-aware identifiers from the default mock devices."""
-    registry = dr.async_get(hass)
+    registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     devices = dr.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
     assert len(devices) == 1
     assert (DOMAIN, "d1") in devices[0].identifiers
