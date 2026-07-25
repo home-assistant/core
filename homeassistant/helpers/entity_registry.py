@@ -926,7 +926,7 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
     Maintains six additional indexes:
     - id -> entry
     - (domain, platform, unique_id) -> entity_id
-        domain: entity platform domain (e.g. light, sensor)
+        domain: entity component domain (e.g. light, sensor)
         platform: integration domain (e.g. hue, zwave)
     - config_entry_id -> dict[key, True]
     - device_id -> dict[key, True]
@@ -998,7 +998,7 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
     def get_entity_id(self, key: tuple[str, str, str]) -> str | None:
         """Get entity_id from (domain, platform, unique_id).
 
-        domain: entity platform domain (e.g. light, sensor)
+        domain: entity component domain (e.g. light, sensor)
         platform: integration domain (e.g. hue, zwave)
         """
         return self._index.get(key)
@@ -1175,7 +1175,7 @@ class EntityRegistry(BaseRegistry):
     ) -> str | None:
         """Check if an entity_id is currently registered.
 
-        domain: entity platform domain (e.g. light, sensor)
+        domain: entity component domain (e.g. light, sensor)
         platform: integration domain (e.g. hue, zwave)
         """
         return self.entities.get_entity_id((domain, platform, unique_id))
@@ -1372,7 +1372,7 @@ class EntityRegistry(BaseRegistry):
     ) -> RegistryEntry:
         """Get entity. Create if it doesn't exist.
 
-        domain: entity platform domain (e.g. light, sensor)
+        domain: entity component domain (e.g. light, sensor)
         platform: integration domain (e.g. hue, zwave)
         """
         config_entry_id: str | None | UndefinedType = UNDEFINED
