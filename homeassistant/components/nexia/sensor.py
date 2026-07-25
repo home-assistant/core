@@ -339,7 +339,6 @@ class NexiaRoomIQSensor(NexiaRoomIQEntity, SensorEntity):
         try:
             room_iq_sensor = self._zone.get_sensor_by_id(self._sensor_id)
         except KeyError:
-            # RoomIQ sensor no longer present
             return False
         return (
             super().available
