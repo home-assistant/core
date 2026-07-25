@@ -77,7 +77,7 @@ class ControllerStatus(NamedTuple):
     """Controller information and update status."""
 
     info: OmadaControllerInfo
-    updates: OmadaControllerUpdateInfo
+    updates: OmadaControllerUpdateInfo | None
 
 
 class OmadaControllerCoordinator(DataUpdateCoordinator[ControllerStatus]):
@@ -107,9 +107,14 @@ class OmadaControllerCoordinator(DataUpdateCoordinator[ControllerStatus]):
         try:
             async with asyncio.timeout(10):
                 info = await self.omada_client.get_controller_info()
-                updates = await self.omada_client.check_firmware_updates()
         except OmadaClientException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+        try:
+            async with asyncio.timeout(10):
+                updates = await self.omada_client.check_firmware_updates()
+        except OmadaClientException:
+            updates = None
 
         return ControllerStatus(info=info, updates=updates)
 

@@ -67,6 +67,8 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
     def _update_info(self) -> OmadaHardwareUpdateInfo | OmadaSoftwareUpdateInfo | None:
         """Return the best controller update data to expose."""
         updates = self.coordinator.data.updates
+        if updates is None:
+            return None
         if updates.hardware and updates.hardware.upgrade:
             return updates.hardware
         if updates.software and updates.software.upgrade:
@@ -77,6 +79,8 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
     def _hardware_update(self) -> OmadaHardwareUpdateInfo | None:
         """Return controller hardware firmware update data."""
         updates = self.coordinator.data.updates
+        if updates is None:
+            return None
         hardware = updates.hardware
         software = updates.software
         if hardware and hardware.upgrade:
@@ -93,6 +97,12 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
         if self._hardware_update:
             features |= UpdateEntityFeature.INSTALL
         return features
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if update information is available."""
+        return super().available and self.coordinator.data.updates is not None
 
     @property
     @override

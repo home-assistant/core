@@ -10,17 +10,21 @@ from tplink_omada_client.definitions import OmadaControllerUpdateInfo
 from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 
-from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
+from homeassistant.components.tplink_omada.coordinator import (
+    POLL_DEVICES,
+    OmadaControllerCoordinator,
+)
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
     UpdateEntityFeature,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import (
     MockConfigEntry,
@@ -108,6 +112,52 @@ async def test_entities(
 ) -> None:
     """Test the creation of the TP-Link Omada update entities."""
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
+
+
+async def test_controller_coordinator_fetches_info_and_updates(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test the controller coordinator fetches controller info and update status."""
+    mock_config_entry.add_to_hass(hass)
+    coordinator = OmadaControllerCoordinator(hass, mock_config_entry, mock_omada_client)
+
+    data = await coordinator._async_update_data()
+
+    assert data.info is mock_omada_client.get_controller_info.return_value
+    assert data.updates is mock_omada_client.check_firmware_updates.return_value
+
+
+async def test_controller_update_unavailable_when_update_check_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test controller update endpoint failure does not block setup."""
+    mock_omada_client.check_firmware_updates.side_effect = OmadaClientException(
+        "No permission"
+    )
+
+    await _async_setup_update_platform(hass, mock_config_entry)
+
+    entity = hass.states.get("update.oc200_firmware")
+    assert entity is not None
+    assert entity.state == STATE_UNAVAILABLE
+
+
+async def test_controller_coordinator_info_failure_raises_update_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test controller info endpoint failure fails the coordinator."""
+    mock_config_entry.add_to_hass(hass)
+    mock_omada_client.get_controller_info.side_effect = OmadaClientException("Boom")
+    coordinator = OmadaControllerCoordinator(hass, mock_config_entry, mock_omada_client)
+
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
 
 
 async def test_firmware_download_in_progress(

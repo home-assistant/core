@@ -12,7 +12,10 @@ from tplink_omada_client.exceptions import (
     UnsupportedControllerVersion,
 )
 
-from homeassistant.components.tplink_omada import config_entry_owns_controller_entities
+from homeassistant.components.tplink_omada import (
+    _register_controller_device,
+    config_entry_owns_controller_entities,
+)
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.entity import controller_model
 from homeassistant.config_entries import ConfigEntryState
@@ -181,6 +184,41 @@ async def test_omada_devices_link_to_controller_device(
     assert controller_device.config_entries == {init_integration.entry_id}
     assert gateway_device.via_device_id == controller_device.id
     assert switch_device.via_device_id == controller_device.id
+
+
+async def test_controller_device_moves_to_new_owner(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the controller device moves to a new controller entity owner."""
+    controller_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "12345")}
+    )
+    assert controller_device is not None
+    assert controller_device.config_entries == {init_integration.entry_id}
+
+    new_owner_entry = MockConfigEntry(
+        title="Test Omada Controller",
+        domain=DOMAIN,
+        data={**MOCK_ENTRY_DATA, "site": "Second"},
+        unique_id="12345_Second",
+        version=2,
+    )
+    new_owner_entry.add_to_hass(hass)
+    object.__setattr__(new_owner_entry, "runtime_data", init_integration.runtime_data)
+
+    _register_controller_device(hass, new_owner_entry)
+
+    moved_device = device_registry.async_get_device(identifiers={(DOMAIN, "12345")})
+    assert moved_device is not None
+    assert moved_device.id == controller_device.id
+    assert moved_device.config_entries == {new_owner_entry.entry_id}
+    assert [
+        device
+        for device in device_registry.devices.values()
+        if (DOMAIN, "12345") in device.identifiers
+    ] == [moved_device]
 
 
 @pytest.mark.parametrize(

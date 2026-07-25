@@ -177,10 +177,19 @@ def _register_controller_device(
     controller = entry.runtime_data
     controller_info = controller.controller_coordinator.data.info
     device_registry = dr.async_get(hass)
+    identifiers = {(DOMAIN, controller.controller_id)}
+
+    if (
+        device := device_registry.async_get_device(identifiers=identifiers)
+    ) is not None and entry.entry_id not in device.config_entries:
+        device_registry.async_update_device(
+            device.id,
+            new_config_entry_id=entry.entry_id,
+        )
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, controller.controller_id)},
+        identifiers=identifiers,
         manufacturer="TP-Link",
         model=controller_model(controller_info),
         name=controller.controller_name,
