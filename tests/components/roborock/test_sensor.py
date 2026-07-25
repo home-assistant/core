@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 from roborock.exceptions import RoborockException
+from roborock.roborock_message import RoborockDyadDataProtocol
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, Platform
@@ -90,3 +91,34 @@ async def test_sensors_coordinator_state(
     state = hass.states.get("sensor.roborock_q10_s5_battery")
     assert state is not None
     assert state.state == expected_state
+
+
+async def test_dyad_push_updates_state(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test an unsolicited device push updates state without waiting for a poll."""
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    assert hass.states.get("sensor.dyad_pro_battery").state == "100"
+
+    push_listener = dyad.add_listener.call_args[0][0]
+    push_listener({RoborockDyadDataProtocol.POWER: 50})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.dyad_pro_battery").state == "50"
+
+
+async def test_dyad_push_unsubscribed_on_unload(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test the push listener is unsubscribed when the config entry unloads."""
+    dyad = next(device.dyad for device in fake_devices if device.dyad is not None)
+    unsub = dyad.add_listener.return_value
+
+    assert await hass.config_entries.async_unload(setup_entry.entry_id)
+    await hass.async_block_till_done()
+
+    unsub.assert_called_once()

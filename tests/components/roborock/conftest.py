@@ -105,6 +105,7 @@ _LOGGER = logging.getLogger(__name__)
 def create_dyad_trait() -> Mock:
     """Create dyad trait for A01 devices."""
     dyad_trait = AsyncMock()
+    dyad_trait.add_listener.return_value = Mock()
     dyad_trait.query_values.return_value = {
         RoborockDyadDataProtocol.STATUS: RoborockDyadStateCode.drying.name,
         RoborockDyadDataProtocol.POWER: 100,
