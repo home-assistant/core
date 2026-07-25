@@ -18,7 +18,7 @@
             "samsungce.connectionState",
             "samsungce.activationState"
           ],
-          "timestamp": "2025-06-20T14:12:57.135Z"
+          "timestamp": "2026-02-27T10:49:03.853Z"
         }
       },
       "samsungce.drainFilter": {
@@ -46,11 +46,11 @@
         },
         "hepaFilterStatus": {
           "value": "normal",
-          "timestamp": "2025-07-02T04:35:14.449Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "hepaFilterResetType": {
           "value": ["replaceable"],
-          "timestamp": "2025-07-02T04:35:14.449Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "hepaFilterUsageStep": {
           "value": null
@@ -65,129 +65,135 @@
       "samsungce.robotCleanerDustBag": {
         "supportedStatus": {
           "value": ["full", "normal"],
-          "timestamp": "2025-07-02T04:35:14.620Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "status": {
           "value": "normal",
-          "timestamp": "2025-07-02T04:35:14.620Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         }
       }
     },
     "main": {
       "mediaPlayback": {
         "supportedPlaybackCommands": {
-          "value": null
+          "value": ["play", "pause", "stop"],
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "playbackStatus": {
+          "value": "stopped",
+          "timestamp": "2026-02-27T10:49:04.301Z"
+        }
+      },
+      "samsungce.notification": {
+        "supportedActionSettings": {
+          "value": null
+        },
+        "actionSetting": {
+          "value": null
+        },
+        "supportedContexts": {
+          "value": null
+        },
+        "supportCustomContent": {
           "value": null
         }
       },
       "robotCleanerTurboMode": {
         "robotCleanerTurboMode": {
-          "value": "extraSilence",
-          "timestamp": "2025-07-10T11:00:38.909Z"
+          "value": "on",
+          "timestamp": "2026-02-27T10:49:04.309Z"
         }
       },
       "ocf": {
         "st": {
-          "value": "2024-01-01T09:00:15Z",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "value": "1970-01-01T00:00:27Z",
+          "timestamp": "2026-02-27T11:01:53.718Z"
         },
         "mndt": {
           "value": "",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "timestamp": "2026-02-27T11:01:53.718Z"
         },
         "mnfv": {
-          "value": "20250123.105306",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "value": "20260120.215157",
+          "timestamp": "2026-02-27T11:02:28.946Z"
         },
         "mnhw": {
           "value": "",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "timestamp": "2026-02-27T11:01:53.718Z"
         },
         "di": {
-          "value": "05accb39-2017-c98b-a5ab-04a81f4d3d9a",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "value": "01b28624-5907-c8bc-0325-8ad23f03a637",
+          "timestamp": "2026-02-27T11:01:53.718Z"
         },
         "mnsl": {
           "value": "",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "timestamp": "2026-02-27T11:01:53.718Z"
         },
         "dmv": {
-          "value": "res.1.1.0,sh.1.1.0",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "value": "1.2.1",
+          "timestamp": "2026-02-27T11:02:28.946Z"
         },
         "n": {
           "value": "[robot vacuum] Samsung",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "timestamp": "2026-02-27T11:01:53.718Z"
         },
         "mnmo": {
-          "value": "JETBOT_COMBO_9X00_24K|50029141|80010b0002d8411f0100000000000000",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "value": "JETBOT_COMBOT_9X00_24K|50029141|80010a0002d8411f0100000000000000",
+          "timestamp": "2026-02-27T11:01:53.718Z"
         },
         "vid": {
           "value": "DA-RVC-MAP-01011",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "timestamp": "2026-02-27T11:01:53.718Z"
         },
         "mnmn": {
           "value": "Samsung Electronics",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "timestamp": "2026-02-27T11:01:53.718Z"
         },
         "mnml": {
           "value": "",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "timestamp": "2026-02-27T11:01:53.718Z"
         },
         "mnpv": {
           "value": "1.0",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "timestamp": "2026-02-27T11:01:53.718Z"
         },
         "mnos": {
           "value": "Tizen",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "timestamp": "2026-02-27T11:01:53.718Z"
         },
         "pi": {
-          "value": "05accb39-2017-c98b-a5ab-04a81f4d3d9a",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "value": "01b28624-5907-c8bc-0325-8ad23f03a637",
+          "timestamp": "2026-02-27T11:01:53.718Z"
         },
         "icv": {
           "value": "core.1.1.0",
-          "timestamp": "2025-06-20T14:12:57.924Z"
+          "timestamp": "2026-02-27T11:01:53.718Z"
         }
       },
       "custom.disabledCapabilities": {
         "disabledCapabilities": {
           "value": [
-            "samsungce.robotCleanerAudioClip",
             "custom.hepaFilter",
             "imageCapture",
-            "mediaPlaybackRepeat",
-            "mediaPlayback",
-            "mediaTrackControl",
-            "samsungce.robotCleanerPatrol",
-            "samsungce.musicPlaylist",
-            "audioVolume",
-            "audioMute",
             "videoCapture",
             "samsungce.robotCleanerWelcome",
-            "samsungce.microphoneSettings",
             "samsungce.robotCleanerGuidedPatrol",
             "samsungce.robotCleanerSafetyPatrol",
-            "soundDetection",
-            "samsungce.soundDetectionSensitivity",
-            "audioTrackAddressing",
-            "samsungce.robotCleanerMonitoringAutomation"
+            "samsungce.objectDetection",
+            "samsungce.notification",
+            "samsungce.sabbathMode"
           ],
-          "timestamp": "2025-06-20T14:12:58.125Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         }
       },
       "logTrigger": {
         "logState": {
           "value": "idle",
-          "timestamp": "2025-07-02T04:35:14.401Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "logRequestState": {
           "value": "idle",
-          "timestamp": "2025-07-02T04:35:14.401Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "logInfo": {
           "value": null
@@ -195,45 +201,45 @@
       },
       "samsungce.driverVersion": {
         "versionNumber": {
-          "value": 25040102,
-          "timestamp": "2025-06-20T14:12:57.135Z"
+          "value": 25110101,
+          "timestamp": "2026-02-27T10:49:03.853Z"
         }
       },
       "sec.diagnosticsInformation": {
         "logType": {
           "value": ["errCode", "dump"],
-          "timestamp": "2025-07-02T04:35:13.556Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "endpoint": {
           "value": "PIPER",
-          "timestamp": "2025-07-02T04:35:13.556Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "minVersion": {
           "value": "3.0",
-          "timestamp": "2025-07-02T04:35:13.556Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "signinPermission": {
           "value": null
         },
         "setupId": {
           "value": "VR0",
-          "timestamp": "2025-07-02T04:35:13.556Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "protocolType": {
           "value": "ble_ocf",
-          "timestamp": "2025-07-02T04:35:13.556Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "tsId": {
           "value": "DA10",
-          "timestamp": "2025-07-02T04:35:13.556Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "mnId": {
           "value": "0AJT",
-          "timestamp": "2025-07-02T04:35:13.556Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "dumpType": {
           "value": "file",
-          "timestamp": "2025-07-02T04:35:13.556Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         }
       },
       "custom.hepaFilter": {
@@ -259,41 +265,43 @@
       "samsungce.robotCleanerMapCleaningInfo": {
         "area": {
           "value": "None",
-          "timestamp": "2025-07-10T09:37:08.648Z"
+          "timestamp": "2026-02-27T13:01:08.027Z"
         },
         "cleanedExtent": {
           "value": -1,
           "unit": "m\u00b2",
-          "timestamp": "2025-07-10T09:37:08.648Z"
+          "timestamp": "2026-02-27T13:01:08.027Z"
         },
         "nearObject": {
           "value": "None",
-          "timestamp": "2025-07-02T04:35:13.567Z"
+          "timestamp": "2026-02-27T13:54:10.218Z"
         },
         "remainingTime": {
           "value": -1,
           "unit": "minute",
-          "timestamp": "2025-07-10T06:42:57.820Z"
+          "timestamp": "2026-02-27T13:01:08.027Z"
         }
       },
       "audioVolume": {
         "volume": {
-          "value": null
+          "value": 20,
+          "unit": "%",
+          "timestamp": "2026-02-27T12:36:35.065Z"
         }
       },
       "powerConsumptionReport": {
         "powerConsumption": {
           "value": {
-            "energy": 981,
-            "deltaEnergy": 21,
+            "energy": 335,
+            "deltaEnergy": 3,
             "power": 0,
             "powerEnergy": 0.0,
             "persistedEnergy": 0,
             "energySaved": 0,
-            "start": "2025-07-10T11:11:22Z",
-            "end": "2025-07-10T11:20:22Z"
+            "start": "2026-02-27T16:52:44Z",
+            "end": "2026-02-27T17:02:44Z"
           },
-          "timestamp": "2025-07-10T11:20:22.600Z"
+          "timestamp": "2026-02-27T17:02:44.423Z"
         }
       },
       "samsungce.robotCleanerMapList": {
@@ -303,34 +311,44 @@
               "id": "1",
               "name": "Map1",
               "userEdited": false,
-              "createdTime": "2025-07-01T08:23:29Z",
-              "updatedTime": "2025-07-01T08:23:29Z",
+              "createdTime": "2026-02-27T14:05:16Z",
+              "updatedTime": "2026-02-27T14:05:16Z",
               "areaInfo": [
                 {
                   "id": "1",
-                  "name": "Room",
-                  "userEdited": false
+                  "name": "Living",
+                  "userEdited": true
                 },
                 {
                   "id": "2",
-                  "name": "Room 2",
+                  "name": "Master bedroom",
                   "userEdited": false
                 },
                 {
                   "id": "3",
-                  "name": "Room 3",
+                  "name": "Kitchen",
                   "userEdited": false
                 },
                 {
                   "id": "4",
-                  "name": "Room 4",
+                  "name": "Kids room",
+                  "userEdited": false
+                },
+                {
+                  "id": "5",
+                  "name": "Bathroom",
+                  "userEdited": false
+                },
+                {
+                  "id": "6",
+                  "name": "Hallway",
                   "userEdited": false
                 }
               ],
               "objectInfo": []
             }
           ],
-          "timestamp": "2025-07-02T04:35:14.204Z"
+          "timestamp": "2026-02-27T14:15:22.888Z"
         }
       },
       "samsungce.robotCleanerPatrol": {
@@ -356,7 +374,8 @@
           "value": null
         },
         "blockingStatus": {
-          "value": null
+          "value": "unblocked",
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "mapId": {
           "value": null
@@ -371,20 +390,24 @@
           "value": null
         },
         "obsoleted": {
-          "value": null
+          "value": true,
+          "timestamp": "2026-02-27T10:49:04.301Z"
         }
       },
       "samsungce.robotCleanerAudioClip": {
         "enabled": {
-          "value": null
+          "value": false,
+          "timestamp": "2026-02-27T10:49:08.277Z"
         }
       },
       "samsungce.musicPlaylist": {
         "currentTrack": {
-          "value": null
+          "value": {},
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "playlist": {
-          "value": null
+          "value": {},
+          "timestamp": "2026-02-27T10:49:04.301Z"
         }
       },
       "audioNotification": {},
@@ -404,26 +427,18 @@
         },
         "plan": {
           "value": "none",
-          "timestamp": "2025-07-02T04:35:14.341Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         }
       },
       "samsungce.robotCleanerFeatureVisibility": {
         "invisibleFeatures": {
-          "value": [
-            "Start",
-            "Dock",
-            "SelectRoom",
-            "DustEmit",
-            "SelectSpot",
-            "CleaningMethod",
-            "MopWash",
-            "MopDry"
-          ],
-          "timestamp": "2025-07-10T09:52:40.298Z"
+          "value": ["Stop", "Dock", "SelectObject"],
+          "timestamp": "2026-02-27T16:17:09.555Z"
         },
         "visibleFeatures": {
           "value": [
-            "Stop",
+            "Start",
+            "SelectRoom",
             "Suction",
             "Repeat",
             "MapMerge",
@@ -434,38 +449,43 @@
             "CleanHistory",
             "DND",
             "Sound",
+            "DustEmit",
             "NoEntryZone",
             "RenameRoom",
             "ResetMap",
             "Accessory",
+            "SelectSpot",
             "CleaningOption",
             "ObjectEdit",
+            "CleaningMethod",
             "WaterLevel",
+            "MopWash",
+            "MopDry",
             "ClimbZone"
           ],
-          "timestamp": "2025-07-10T09:52:40.298Z"
+          "timestamp": "2026-02-27T16:17:09.555Z"
         }
       },
       "sec.wifiConfiguration": {
         "autoReconnection": {
           "value": true,
-          "timestamp": "2025-07-02T04:35:14.461Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "minVersion": {
           "value": "1.0",
-          "timestamp": "2025-07-02T04:35:14.461Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "supportedWiFiFreq": {
           "value": ["2.4G", "5G"],
-          "timestamp": "2025-07-02T04:35:14.461Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "supportedAuthType": {
           "value": ["OPEN", "WEP", "WPA-PSK", "WPA2-PSK", "SAE"],
-          "timestamp": "2025-07-02T04:35:14.461Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "protocolType": {
           "value": ["helper_hotspot", "ble_ocf"],
-          "timestamp": "2025-07-02T04:35:14.461Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         }
       },
       "samsungce.softwareVersion": {
@@ -474,17 +494,17 @@
             {
               "id": "0",
               "swType": "Software",
-              "versionNumber": "25012310"
+              "versionNumber": "26012021"
             },
             {
               "id": "1",
               "swType": "Software",
-              "versionNumber": "25012310"
+              "versionNumber": "26012021"
             },
             {
               "id": "2",
               "swType": "Firmware",
-              "versionNumber": "25012100"
+              "versionNumber": "25122900"
             },
             {
               "id": "3",
@@ -494,15 +514,15 @@
             {
               "id": "4",
               "swType": "Bixby",
-              "versionNumber": "(null)"
+              "versionNumber": "7.3.14"
             },
             {
               "id": "5",
               "swType": "Firmware",
-              "versionNumber": "25012200"
+              "versionNumber": "25103000"
             }
           ],
-          "timestamp": "2025-07-02T04:35:13.556Z"
+          "timestamp": "2026-02-27T11:21:42.334Z"
         }
       },
       "samsungce.softwareUpdate": {
@@ -512,46 +532,38 @@
             "currentVersion": "00000000",
             "moduleType": "mainController"
           },
-          "timestamp": "2025-07-09T23:00:32.385Z"
+          "timestamp": "2026-02-27T13:03:52.260Z"
         },
         "otnDUID": {
-          "value": "JHCDM7UU7UJWQ",
-          "timestamp": "2025-07-02T04:35:13.556Z"
+          "value": "MTCCN6NYXU5OY",
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "lastUpdatedDate": {
-          "value": null
+          "value": "2026-02-27",
+          "timestamp": "2026-02-27T11:02:30.343Z"
         },
         "availableModules": {
           "value": [],
-          "timestamp": "2025-07-02T04:35:13.556Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "newVersionAvailable": {
           "value": false,
-          "timestamp": "2025-07-02T04:35:13.556Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "operatingState": {
           "value": "none",
-          "timestamp": "2025-07-02T04:35:19.823Z"
+          "timestamp": "2026-02-27T11:12:38.767Z"
         },
         "progress": {
           "value": 0,
           "unit": "%",
-          "timestamp": "2025-07-02T04:35:19.823Z"
+          "timestamp": "2026-02-27T10:49:05.794Z"
         }
       },
       "samsungce.robotCleanerReservation": {
         "reservations": {
-          "value": [
-            {
-              "id": "2",
-              "enabled": true,
-              "dayOfWeek": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-              "startTime": "02:32",
-              "repeatMode": "weekly",
-              "cleaningMode": "auto"
-            }
-          ],
-          "timestamp": "2025-07-02T04:35:13.844Z"
+          "value": [],
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "maxNumberOfReservations": {
           "value": null
@@ -559,7 +571,8 @@
       },
       "audioMute": {
         "mute": {
-          "value": null
+          "value": "unmuted",
+          "timestamp": "2026-02-27T10:49:04.301Z"
         }
       },
       "mediaTrackControl": {
@@ -570,32 +583,35 @@
       "samsungce.robotCleanerMotorFilter": {
         "motorFilterResetType": {
           "value": ["washable"],
-          "timestamp": "2025-07-02T04:35:13.496Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "motorFilterStatus": {
           "value": "normal",
-          "timestamp": "2025-07-02T04:35:13.496Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         }
       },
       "samsungce.robotCleanerCleaningType": {
         "cleaningType": {
-          "value": "vacuumAndMopTogether",
-          "timestamp": "2025-07-09T12:44:06.437Z"
+          "value": "vacuum",
+          "timestamp": "2026-02-27T13:17:57.242Z"
         },
         "supportedCleaningTypes": {
           "value": ["vacuum", "mop", "vacuumAndMopTogether", "mopAfterVacuum"],
-          "timestamp": "2025-07-02T04:35:13.646Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         }
       },
       "soundDetection": {
         "soundDetectionState": {
-          "value": null
+          "value": "disabled",
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "supportedSoundTypes": {
-          "value": null
+          "value": ["noSound", "dogBarking"],
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "soundDetected": {
-          "value": null
+          "value": "noSound",
+          "timestamp": "2026-02-27T10:49:04.301Z"
         }
       },
       "samsungce.robotCleanerWelcome": {
@@ -626,7 +642,8 @@
           "value": null
         },
         "blockingStatus": {
-          "value": null
+          "value": "unblocked",
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "mapId": {
           "value": null
@@ -641,7 +658,8 @@
           "value": null
         },
         "obsoleted": {
-          "value": null
+          "value": true,
+          "timestamp": "2026-02-27T10:49:04.301Z"
         }
       },
       "battery": {
@@ -649,9 +667,9 @@
           "value": null
         },
         "battery": {
-          "value": 59,
+          "value": 99,
           "unit": "%",
-          "timestamp": "2025-07-10T11:24:13.441Z"
+          "timestamp": "2026-02-27T16:38:01.719Z"
         },
         "type": {
           "value": null
@@ -660,7 +678,7 @@
       "samsungce.deviceIdentification": {
         "micomAssayCode": {
           "value": "50029141",
-          "timestamp": "2025-07-02T04:35:13.556Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "modelName": {
           "value": null
@@ -671,36 +689,40 @@
         "serialNumberExtra": {
           "value": null
         },
+        "releaseCountry": {
+          "value": null
+        },
         "modelClassificationCode": {
-          "value": "80010b0002d8411f0100000000000000",
-          "timestamp": "2025-07-02T04:35:13.556Z"
+          "value": "80010a0002d8411f0100000000000000",
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "description": {
           "value": "Jet Bot V/C",
-          "timestamp": "2025-07-02T04:35:13.556Z"
+          "timestamp": "2026-02-27T11:12:30.599Z"
         },
         "releaseYear": {
-          "value": null
+          "value": 24,
+          "timestamp": "2026-02-27T10:49:03.853Z"
         },
         "binaryId": {
-          "value": "JETBOT_COMBO_9X00_24K",
-          "timestamp": "2025-07-09T23:00:26.764Z"
+          "value": "JETBOT_COMBOT_9X00_24K",
+          "timestamp": "2026-02-27T16:02:29.485Z"
         }
       },
       "samsungce.robotCleanerSystemSoundMode": {
         "soundMode": {
-          "value": "mute",
-          "timestamp": "2025-07-05T18:17:55.940Z"
+          "value": "beep",
+          "timestamp": "2026-02-27T14:19:51.856Z"
         },
         "supportedSoundModes": {
           "value": ["mute", "beep", "voice"],
-          "timestamp": "2025-07-02T04:35:13.646Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         }
       },
       "switch": {
         "switch": {
           "value": "on",
-          "timestamp": "2025-07-09T23:00:26.829Z"
+          "timestamp": "2026-02-27T16:02:29.485Z"
         }
       },
       "samsungce.robotCleanerPetCleaningSchedule": {
@@ -724,7 +746,7 @@
         },
         "obsoleted": {
           "value": true,
-          "timestamp": "2025-07-02T04:35:14.317Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "enabled": {
           "value": null
@@ -733,12 +755,13 @@
       "samsungce.quickControl": {
         "version": {
           "value": "1.0",
-          "timestamp": "2025-07-02T04:35:14.234Z"
+          "timestamp": "2026-02-27T11:12:32.208Z"
         }
       },
       "samsungce.microphoneSettings": {
         "mute": {
-          "value": null
+          "value": "unmuted",
+          "timestamp": "2026-02-27T10:49:08.277Z"
         }
       },
       "samsungce.robotCleanerMapAreaInfo": {
@@ -746,28 +769,36 @@
           "value": [
             {
               "id": "1",
-              "name": "Room"
+              "name": "Living"
             },
             {
               "id": "2",
-              "name": "Room 2"
+              "name": "Master bedroom"
             },
             {
               "id": "3",
-              "name": "Room 3"
+              "name": "Kitchen"
             },
             {
               "id": "4",
-              "name": "Room 4"
+              "name": "Kids room"
+            },
+            {
+              "id": "5",
+              "name": "Bathroom"
+            },
+            {
+              "id": "6",
+              "name": "Hallway"
             }
           ],
-          "timestamp": "2025-07-03T02:33:15.133Z"
+          "timestamp": "2026-02-27T14:15:22.654Z"
         }
       },
       "samsungce.audioVolumeLevel": {
         "volumeLevel": {
-          "value": 0,
-          "timestamp": "2025-07-05T18:17:55.915Z"
+          "value": 1,
+          "timestamp": "2026-02-27T14:19:51.744Z"
         },
         "volumeLevelRange": {
           "value": {
@@ -775,13 +806,14 @@
             "maximum": 3,
             "step": 1
           },
-          "timestamp": "2025-07-02T04:35:13.837Z"
+          "data": {},
+          "timestamp": "2026-02-27T10:49:04.301Z"
         }
       },
       "robotCleanerMovement": {
         "robotCleanerMovement": {
-          "value": "cleaning",
-          "timestamp": "2025-07-10T09:38:52.938Z"
+          "value": "charging",
+          "timestamp": "2026-02-27T16:17:09.597Z"
         }
       },
       "samsungce.robotCleanerSafetyPatrol": {
@@ -792,20 +824,20 @@
       "sec.calmConnectionCare": {
         "role": {
           "value": ["things"],
-          "timestamp": "2025-07-02T04:35:14.461Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "protocols": {
           "value": null
         },
         "version": {
           "value": "1.0",
-          "timestamp": "2025-07-02T04:35:14.461Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         }
       },
       "custom.disabledComponents": {
         "disabledComponents": {
           "value": ["refill-drainage-kit"],
-          "timestamp": "2025-06-20T14:12:57.135Z"
+          "timestamp": "2026-02-27T10:49:03.853Z"
         }
       },
       "videoCapture": {
@@ -816,27 +848,47 @@
           "value": null
         }
       },
-      "samsungce.robotCleanerWaterSprayLevel": {
-        "availableWaterSprayLevels": {
+      "samsungce.sabbathMode": {
+        "supportedActions": {
           "value": null
         },
+        "status": {
+          "value": null
+        }
+      },
+      "samsungce.robotCleanerWaterSprayLevel": {
+        "availableWaterSprayLevels": {
+          "value": ["high", "mediumHigh", "medium", "mediumLow", "low"],
+          "timestamp": "2026-02-27T10:49:04.309Z"
+        },
         "waterSprayLevel": {
-          "value": "mediumLow",
-          "timestamp": "2025-07-10T11:00:35.545Z"
+          "value": "medium",
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "supportedWaterSprayLevels": {
           "value": ["high", "mediumHigh", "medium", "mediumLow", "low"],
-          "timestamp": "2025-07-02T04:35:13.646Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
+        }
+      },
+      "samsungce.objectDetection": {
+        "detectedObject": {
+          "value": null
+        },
+        "supportedObjectTypes": {
+          "value": null
         }
       },
       "samsungce.robotCleanerMapMetadata": {
         "cellSize": {
-          "value": 20,
+          "value": 40,
           "unit": "mm",
-          "timestamp": "2025-06-20T14:12:57.135Z"
+          "timestamp": "2026-02-27T10:49:03.853Z"
         }
       },
       "samsungce.robotCleanerGuidedPatrol": {
+        "patrolState": {
+          "value": null
+        },
         "mapId": {
           "value": null
         },
@@ -862,8 +914,16 @@
             "factoryReset",
             "relocal",
             "exploring",
+            "patrol",
+            "monitoring",
+            "manual",
             "processing",
+            "messaging",
             "emitDust",
+            "findingPet",
+            "calibrating",
+            "welcoming",
+            "monitoringAutomation",
             "washingMop",
             "sterilizingMop",
             "dryingMop",
@@ -871,41 +931,45 @@
             "preparingWater",
             "spinDrying",
             "flexCharged",
+            "mopWashingPaused",
             "descaling",
             "drainingWater",
             "waitingForDescaling"
           ],
-          "timestamp": "2025-06-20T14:12:58.012Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "operatingState": {
           "value": "charging",
-          "timestamp": "2025-07-10T09:52:40.510Z"
+          "timestamp": "2026-02-27T16:28:24.065Z"
         },
         "cleaningStep": {
           "value": "none",
-          "timestamp": "2025-07-10T09:37:07.214Z"
+          "timestamp": "2026-02-27T13:01:00.587Z"
         },
         "homingReason": {
           "value": "none",
-          "timestamp": "2025-07-10T09:37:45.152Z"
+          "timestamp": "2026-02-27T14:06:12.830Z"
         },
         "isMapBasedOperationAvailable": {
           "value": false,
-          "timestamp": "2025-07-10T09:37:55.690Z"
+          "timestamp": "2026-02-27T13:01:56.432Z"
         }
       },
       "samsungce.soundDetectionSensitivity": {
         "level": {
-          "value": null
+          "value": "medium",
+          "timestamp": "2026-02-27T10:49:04.301Z"
         },
         "supportedLevels": {
-          "value": null
+          "value": ["low", "medium", "high"],
+          "timestamp": "2026-02-27T10:49:04.301Z"
         }
       },
       "samsungce.robotCleanerMonitoringAutomation": {},
       "mediaPlaybackRepeat": {
         "playbackRepeatMode": {
-          "value": null
+          "value": "all",
+          "timestamp": "2026-02-27T10:49:04.301Z"
         }
       },
       "imageCapture": {
@@ -924,69 +988,71 @@
           "value": [
             "auto",
             "area",
+            "object",
             "spot",
-            "stop",
             "uncleanedObject",
+            "stop",
             "patternMap"
           ],
-          "timestamp": "2025-06-20T14:12:58.012Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "repeatModeEnabled": {
           "value": true,
-          "timestamp": "2025-07-02T04:35:13.646Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "supportRepeatMode": {
           "value": true,
-          "timestamp": "2025-07-02T04:35:13.646Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         },
         "cleaningMode": {
           "value": "stop",
-          "timestamp": "2025-07-10T09:37:07.214Z"
+          "timestamp": "2026-02-27T13:49:28.382Z"
         }
       },
       "samsungce.robotCleanerAvpRegistration": {
         "registrationStatus": {
-          "value": null
+          "value": "registered",
+          "timestamp": "2026-02-27T13:03:54.638Z"
         }
       },
       "samsungce.robotCleanerDrivingMode": {
         "drivingMode": {
           "value": "areaThenWalls",
-          "timestamp": "2025-07-02T04:35:13.646Z"
+          "timestamp": "2026-02-27T13:15:28.735Z"
         },
         "supportedDrivingModes": {
           "value": ["areaThenWalls", "wallFirst", "quickCleaningZigzagPattern"],
-          "timestamp": "2025-07-02T04:35:13.646Z"
+          "timestamp": "2026-02-27T10:49:04.309Z"
         }
       },
       "robotCleanerCleaningMode": {
         "robotCleanerCleaningMode": {
           "value": "stop",
-          "timestamp": "2025-07-10T09:37:07.214Z"
+          "timestamp": "2026-02-27T13:49:28.382Z"
         }
       },
       "custom.doNotDisturbMode": {
         "doNotDisturb": {
-          "value": "off",
-          "timestamp": "2025-07-02T04:35:13.622Z"
+          "value": "on",
+          "timestamp": "2026-02-27T14:19:17.909Z"
         },
         "startTime": {
-          "value": "0000",
-          "timestamp": "2025-07-02T04:35:13.622Z"
+          "value": "2200",
+          "timestamp": "2026-02-27T14:19:17.909Z"
         },
         "endTime": {
-          "value": "0000",
-          "timestamp": "2025-07-02T04:35:13.622Z"
+          "value": "0600",
+          "timestamp": "2026-02-27T14:19:17.909Z"
         }
       },
       "samsungce.lamp": {
         "brightnessLevel": {
           "value": "on",
-          "timestamp": "2025-07-10T11:20:40.419Z"
+          "timestamp": "2026-02-27T11:12:30.250Z"
         },
         "supportedBrightnessLevel": {
           "value": ["on", "off"],
-          "timestamp": "2025-06-20T14:12:57.383Z"
+          "timestamp": "2026-02-27T10:49:04.301Z"
         }
       }
     }

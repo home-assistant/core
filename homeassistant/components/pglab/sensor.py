@@ -1,6 +1,6 @@
 """Sensor for PG LAB Electronics."""
 
-from __future__ import annotations
+from typing import override
 
 from pypglab.const import SENSOR_REBOOT_TIME, SENSOR_TEMPERATURE, SENSOR_VOLTAGE
 from pypglab.device import Device as PyPGLabDevice
@@ -95,6 +95,7 @@ class PGLabSensor(PGLabSensorEntity, SensorEntity):
         self.entity_description = description
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
 
@@ -104,6 +105,7 @@ class PGLabSensor(PGLabSensorEntity, SensorEntity):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return PG LAB sensor availability."""
         return super().available and self.native_value is not None

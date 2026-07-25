@@ -1,7 +1,5 @@
 """Collection of useful functions for the HomeKit component."""
 
-from __future__ import annotations
-
 import io
 import ipaddress
 import logging
@@ -108,10 +106,12 @@ from .const import (
     TYPE_AIR_PURIFIER,
     TYPE_FAN,
     TYPE_FAUCET,
+    TYPE_HEATER_COOLER,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_SWITCH,
+    TYPE_THERMOSTAT,
     TYPE_VALVE,
     VIDEO_CODEC_COPY,
     VIDEO_CODEC_H264_OMX,
@@ -224,6 +224,21 @@ COVER_SCHEMA = BASIC_INFO_SCHEMA.extend(
         vol.Optional(CONF_LINKED_OBSTRUCTION_SENSOR): cv.entity_domain(
             binary_sensor.DOMAIN
         )
+    }
+)
+
+# No default so an unset type keeps the automatic Thermostat/HeaterCooler routing.
+CLIMATE_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_TYPE): vol.All(
+            cv.string,
+            vol.In(
+                (
+                    TYPE_HEATER_COOLER,
+                    TYPE_THERMOSTAT,
+                )
+            ),
+        ),
     }
 )
 
@@ -361,6 +376,9 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
 
         elif domain == "humidifier":
             config = HUMIDIFIER_SCHEMA(config)
+
+        elif domain == "climate":
+            config = CLIMATE_SCHEMA(config)
 
         elif domain == "cover":
             config = COVER_SCHEMA(config)
@@ -535,7 +553,8 @@ def density_to_air_quality_nitrogen_dioxide(density: float) -> int:
 def density_to_air_quality_voc(density: float) -> int:
     """Map VOCs μg/m3 to HomeKit AirQuality level.
 
-    The VOC mappings use the IAQ guidelines for Europe released by the WHO (World Health Organization).
+    The VOC mappings use the IAQ guidelines for Europe released
+    by the WHO (World Health Organization).
     Referenced from Sensirion_Gas_Sensors_SGP3x_TVOC_Concept.pdf
     https://github.com/paulvha/svm30/blob/master/extras/Sensirion_Gas_Sensors_SGP3x_TVOC_Concept.pdf
     """
@@ -625,10 +644,13 @@ def _get_test_socket() -> socket.socket:
 @callback
 def async_port_is_available(port: int) -> bool:
     """Check to see if a port is available."""
+    test_socket = _get_test_socket()
     try:
-        _get_test_socket().bind(("", port))
+        test_socket.bind(("", port))
     except OSError:
         return False
+    finally:
+        test_socket.close()
     return True
 
 
@@ -686,14 +708,18 @@ def accessory_friendly_name(hass_name: str, accessory: Accessory) -> str:
 
 
 def state_needs_accessory_mode(state: State) -> bool:
-    """Return if the entity represented by the state must be paired in accessory mode."""
+    """Return if the entity state must be paired in accessory mode."""
     if state.domain in (CAMERA_DOMAIN, LOCK_DOMAIN):
         return True
 
     return (
         state.domain == MEDIA_PLAYER_DOMAIN
         and state.attributes.get(ATTR_DEVICE_CLASS)
-        in (MediaPlayerDeviceClass.TV, MediaPlayerDeviceClass.RECEIVER)
+        in (
+            MediaPlayerDeviceClass.TV,
+            MediaPlayerDeviceClass.RECEIVER,
+            MediaPlayerDeviceClass.PROJECTOR,
+        )
     ) or (
         state.domain == REMOTE_DOMAIN
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)

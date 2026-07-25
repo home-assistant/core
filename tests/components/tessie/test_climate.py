@@ -22,7 +22,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .common import ERROR_UNKNOWN, TEST_RESPONSE, assert_entities, setup_platform
+from .common import (
+    ERROR_CONNECTION,
+    ERROR_UNKNOWN,
+    TEST_RESPONSE,
+    assert_entities,
+    setup_platform,
+)
 
 
 async def test_climate(
@@ -130,6 +136,27 @@ async def test_errors(hass: HomeAssistant) -> None:
         )
     mock_set.assert_called_once()
     assert error.value.__cause__ == ERROR_UNKNOWN
+    assert error.value.translation_domain == "tessie"
+    assert error.value.translation_key == "cannot_connect"
+
+    # Test setting climate on with connection error
+    with (
+        patch(
+            "homeassistant.components.tessie.climate.stop_climate",
+            side_effect=ERROR_CONNECTION,
+        ) as mock_set,
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+    mock_set.assert_called_once()
+    assert error.value.__cause__ == ERROR_CONNECTION
+    assert error.value.translation_domain == "tessie"
+    assert error.value.translation_key == "cannot_connect"
 
     # Test setting climate with child presence detection error
     with (

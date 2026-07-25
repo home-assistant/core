@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_update[Model.F1255-48043-ACTIVE][switch.holiday_activated_48043-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_update[Model.F1255-48043-ACTIVE][switch.holiday_activated_48043-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F1255 Holiday - Activated',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1255 Holiday - Activated',
     }),
     'context': <ANY>,
     'entity_id': 'switch.holiday_activated_48043',
@@ -50,8 +51,9 @@
 # ---
 # name: test_update[Model.F1255-48043-INACTIVE][switch.holiday_activated_48043-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_update[Model.F1255-48043-INACTIVE][switch.holiday_activated_48043-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F1255 Holiday - Activated',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1255 Holiday - Activated',
     }),
     'context': <ANY>,
     'entity_id': 'switch.holiday_activated_48043',
@@ -99,8 +101,9 @@
 # ---
 # name: test_update[Model.F1255-48071-OFF][switch.flm_1_accessory_48071-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -136,7 +139,7 @@
 # name: test_update[Model.F1255-48071-OFF][switch.flm_1_accessory_48071-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F1255 FLM 1 accessory',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1255 FLM 1 accessory',
     }),
     'context': <ANY>,
     'entity_id': 'switch.flm_1_accessory_48071',
@@ -148,8 +151,9 @@
 # ---
 # name: test_update[Model.F1255-48071-ON][switch.flm_1_accessory_48071-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -185,7 +189,7 @@
 # name: test_update[Model.F1255-48071-ON][switch.flm_1_accessory_48071-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F1255 FLM 1 accessory',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1255 FLM 1 accessory',
     }),
     'context': <ANY>,
     'entity_id': 'switch.flm_1_accessory_48071',

@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiostreammagic import StreamMagicClient
 
@@ -33,6 +33,13 @@ def room_correction_enabled(client: StreamMagicClient) -> bool:
     return client.audio.tilt_eq.enabled
 
 
+def equalizer_enabled(client: StreamMagicClient) -> bool:
+    """Check if equalizer is enabled."""
+    if TYPE_CHECKING:
+        assert client.audio.user_eq is not None
+    return client.audio.user_eq.enabled
+
+
 CONTROL_ENTITIES: tuple[CambridgeAudioSwitchEntityDescription, ...] = (
     CambridgeAudioSwitchEntityDescription(
         key="pre_amp",
@@ -55,6 +62,14 @@ CONTROL_ENTITIES: tuple[CambridgeAudioSwitchEntityDescription, ...] = (
         load_fn=lambda client: client.audio.tilt_eq is not None,
         value_fn=room_correction_enabled,
         set_value_fn=lambda client, value: client.set_room_correction_mode(value),
+    ),
+    CambridgeAudioSwitchEntityDescription(
+        key="equalizer",
+        translation_key="equalizer",
+        entity_category=EntityCategory.CONFIG,
+        load_fn=lambda client: client.audio.user_eq is not None,
+        value_fn=equalizer_enabled,
+        set_value_fn=lambda client, value: client.set_equalizer_mode(value),
     ),
 )
 
@@ -89,16 +104,19 @@ class CambridgeAudioSwitch(CambridgeAudioEntity, SwitchEntity):
         self._attr_unique_id = f"{client.info.unit_id}-{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return self.entity_description.value_fn(self.client)
 
     @command
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.set_value_fn(self.client, True)
 
     @command
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.set_value_fn(self.client, False)

@@ -3,6 +3,9 @@
     "number": {
       "room_correction_intensity": {
         "default": "mdi:home-sound-out"
+      },
+      "volume_limit": {
+        "default": "mdi:octagon-outline"
       }
     },
     "select": {
@@ -28,6 +31,12 @@
     "switch": {
       "early_update": {
         "default": "mdi:update"
+      },
+      "equalizer": {
+        "default": "mdi:equalizer",
+        "state": {
+          "off": "mdi:equalizer-outline"
+        }
       },
       "pre_amp": {
         "default": "mdi:volume-high",

@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -14,17 +14,17 @@ from reolink_aio.exceptions import (
     ReolinkError,
 )
 
-from homeassistant.components.reolink import (
-    DEVICE_UPDATE_INTERVAL_MIN,
-    FIRMWARE_UPDATE_INTERVAL,
-    NUM_CRED_ERRORS,
-)
+from homeassistant.components.reolink import FIRMWARE_UPDATE_INTERVAL
 from homeassistant.components.reolink.const import (
     BATTERY_ALL_WAKE_UPDATE_INTERVAL,
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
     CONF_BC_PORT,
     CONF_FIRMWARE_CHECK_TIME,
     DOMAIN,
+)
+from homeassistant.components.reolink.coordinator import (
+    DEVICE_UPDATE_INTERVAL_MIN,
+    NUM_CRED_ERRORS,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -47,12 +47,16 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    CONF_BC_CONNECT,
     CONF_BC_ONLY,
     CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_UID,
     CONF_USE_HTTPS,
     DEFAULT_PROTOCOL,
+    TEST_BC_CON,
     TEST_BC_PORT,
     TEST_CAM_MODEL,
     TEST_CAM_NAME,
@@ -133,7 +137,7 @@ async def test_failures_parametrized(
     )
     await hass.async_block_till_done()
 
-    assert config_entry.state == expected
+    assert config_entry.state is expected
 
 
 async def test_firmware_error_twice(
@@ -529,15 +533,22 @@ async def test_migrate_with_already_existing_device(
     assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
 
 
+@pytest.mark.parametrize(
+    "original_id",
+    [
+        f"{TEST_MAC}_{TEST_UID_CAM}_record_audio",
+        f"{TEST_UID}_0_record_audio",
+    ],
+)
 async def test_migrate_with_already_existing_entity(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_host: MagicMock,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    original_id: str,
 ) -> None:
     """Test entity ids that need to be migrated while the new ids already exist."""
-    original_id = f"{TEST_UID}_0_record_audio"
     new_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
     dev_id = f"{TEST_UID}_{TEST_UID_CAM}"
     domain = Platform.SWITCH
@@ -644,7 +655,7 @@ async def test_cleanup_combined_with_NVR(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test cleanup of the device registry if IPC camera device was combined with the NVR device."""
+    """Test cleanup when IPC camera was combined with NVR device."""
     reolink_host.channels = [0]
     reolink_host.baichuan.mac_address.return_value = None
     entity_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
@@ -702,7 +713,7 @@ async def test_cleanup_hub_and_direct_connection(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test cleanup of the device registry if IPC camera device was connected directly and through the hub/NVR."""
+    """Test cleanup when IPC was connected directly and via NVR."""
     reolink_host.channels = [0]
     entity_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
     dev_id = f"{TEST_UID}_{TEST_UID_CAM}"
@@ -952,7 +963,7 @@ async def test_baichuan_port_changed(
     reolink_host: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test config_entry baichuan port update when it has changed during initial login."""
+    """Test baichuan port update when changed during initial login."""
     assert config_entry.data[CONF_BC_PORT] == TEST_BC_PORT
     reolink_host.baichuan.port = 8901
 
@@ -960,6 +971,54 @@ async def test_baichuan_port_changed(
     await hass.async_block_till_done()
 
     assert config_entry.data[CONF_BC_PORT] == 8901
+
+
+async def test_uid_changed(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+) -> None:
+    """Test the addition of the UID to the config entry when not initially present."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
+            CONF_BC_ONLY: False,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert CONF_UID not in config_entry.data
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_UID] == TEST_UID
+
+
+async def test_uid_changed_error(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a change of the UID is not accepted and results in an error during init."""
+    assert config_entry.data[CONF_UID] == TEST_UID
+    reolink_host.uid = "SOME2OTHER89UID4"
+
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_UID] == TEST_UID
 
 
 async def test_privacy_mode_on(
@@ -1017,7 +1076,7 @@ async def test_privacy_mode_change_callback(
         def register_callback(
             self, callback_id: str, callback: Callable[[], None], *args, **key_args
         ) -> None:
-            if callback_id == "privacy_mode_change":
+            if callback_id == "privacy_mode_change_623":
                 self.callback_func = callback
 
     callback_mock = callback_mock_class()
@@ -1147,7 +1206,7 @@ async def test_firmware_update_delay(
     call_count: int,
 ) -> None:
     """Test delay of firmware update check."""
-    now = datetime.now(UTC)
+    now = dt_util.utcnow()
     check_delay = (
         now
         + timedelta(seconds=seconds)

@@ -28,8 +28,7 @@
           response={
             'data': {
               'failed': [],
-              'success': [],
-              'targets': []
+              'success': []
             },
             'response_type': 'action_done',
             'speech': {

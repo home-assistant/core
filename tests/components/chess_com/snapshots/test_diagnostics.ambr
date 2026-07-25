@@ -1,0 +1,111 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'player': dict({
+      '_country': None,
+      'avatar': 'https://images.chesscomfiles.com/uploads/v1/user/532748851.d5fefa92.200x200o.da2274e46acd.jpg',
+      'country_url': 'https://api.chess.com/pub/country/NL',
+      'fide': None,
+      'followers': 2,
+      'is_streamer': False,
+      'joined': '2026-02-20T10:48:14',
+      'last_online': '2026-03-06T12:32:59',
+      'location': 'Utrecht',
+      'name': 'Joost',
+      'player_id': 532748851,
+      'status': 'basic',
+      'title': None,
+      'twitch_url': None,
+      'username': 'joostlek',
+    }),
+    'stats': dict({
+      'chess960_daily': dict({
+        'last': dict({
+          'date': 1772800350,
+          'rating': 521,
+          'rd': 200,
+        }),
+        'record': dict({
+          'draw': 0,
+          'loss': 2,
+          'time_per_move': 7200,
+          'timeout_percent': 0,
+          'win': 1,
+        }),
+      }),
+      'chess_blitz': dict({
+        'last': dict({
+          'date': 1772800350,
+          'rating': 734,
+          'rd': 95,
+        }),
+        'record': dict({
+          'draw': 2,
+          'loss': 8,
+          'time_per_move': 18,
+          'timeout_percent': 0,
+          'win': 10,
+        }),
+      }),
+      'chess_bullet': dict({
+        'last': dict({
+          'date': 1772800350,
+          'rating': 650,
+          'rd': 120,
+        }),
+        'record': dict({
+          'draw': 0,
+          'loss': 6,
+          'time_per_move': 8,
+          'timeout_percent': 0,
+          'win': 2,
+        }),
+      }),
+      'chess_daily': dict({
+        'last': dict({
+          'date': 1772800350,
+          'rating': 495,
+          'rd': 196,
+        }),
+        'record': dict({
+          'draw': 0,
+          'loss': 4,
+          'time_per_move': 6974,
+          'timeout_percent': 0,
+          'win': 0,
+        }),
+      }),
+      'chess_rapid': dict({
+        'last': dict({
+          'date': 1772800350,
+          'rating': 812,
+          'rd': 74,
+        }),
+        'record': dict({
+          'draw': 1,
+          'loss': 3,
+          'time_per_move': 42,
+          'timeout_percent': 0,
+          'win': 5,
+        }),
+      }),
+      'lessons': None,
+      'puzzle_rush': dict({
+        'best': dict({
+          'score': 8,
+          'total_attempts': 11,
+        }),
+      }),
+      'tactics': dict({
+        'highest': dict({
+          'date': 1772782351,
+          'rating': 764,
+        }),
+        'lowest': dict({
+          'date': 1771584762,
+          'rating': 400,
+        }),
+      }),
+    }),
+  })
+# ---

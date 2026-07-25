@@ -1,5 +1,7 @@
 """Binary sensor platform of the Pterodactyl integration."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -59,6 +61,7 @@ class PterodactylBinarySensorEntity(PterodactylEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self.game_server_data.uuid}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return binary sensor state."""
         return self.game_server_data.state == "running"

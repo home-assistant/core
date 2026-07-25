@@ -1,7 +1,5 @@
 """The Sleep as Android integration."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 
 from aiohttp.web import Request, Response

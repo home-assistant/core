@@ -12,9 +12,15 @@ rules:
   docs-actions:
     status: exempt
     comment: Integration does not provide service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: Integration does not subscribe to entity events.
@@ -38,12 +44,12 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Cloud service integration, not discoverable.
@@ -68,13 +74,11 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No repair scenarios identified for this integration.
-  stale-devices:
-    status: todo
-    comment: Remove newsletter entities when newsletter is removed
+  stale-devices: done
 
   # Platinum
   async-dependency: done

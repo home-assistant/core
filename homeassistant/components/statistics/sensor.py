@@ -1,7 +1,5 @@
 """Support for statistics for sensor values."""
 
-from __future__ import annotations
-
 from collections import deque
 from collections.abc import Callable, Mapping
 import contextlib
@@ -10,7 +8,7 @@ import logging
 import math
 import statistics
 import time
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -26,14 +24,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -527,7 +524,7 @@ ICON = "mdi:calculator"
 
 
 def valid_state_characteristic_configuration(config: dict[str, Any]) -> dict[str, Any]:
-    """Validate that the characteristic selected is valid for the source sensor type, throw if it isn't."""
+    """Validate characteristic is valid for source sensor type."""
     is_binary = split_entity_id(config[CONF_ENTITY_ID])[0] == BINARY_SENSOR_DOMAIN
     characteristic = cast(str, config[CONF_STATE_CHARACTERISTIC])
     if (is_binary and characteristic not in STATS_BINARY_SUPPORT) or (
@@ -558,7 +555,8 @@ def valid_keep_last_sample(config: dict[str, Any]) -> dict[str, Any]:
 
     if config.get(CONF_KEEP_LAST_SAMPLE) is True and config.get(CONF_MAX_AGE) is None:
         raise vol.RequiredFieldInvalid(
-            "The sensor configuration must provide 'max_age' if 'keep_last_sample' is True"
+            "The sensor configuration must provide 'max_age'"
+            " if 'keep_last_sample' is True"
         )
     return config
 
@@ -784,6 +782,7 @@ class StatisticsSensor(SensorEntity):
             )
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await self._async_stats_sensor_startup()
@@ -841,7 +840,9 @@ class StatisticsSensor(SensorEntity):
         state characteristics.
         """
 
-        base_unit: str | None = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        base_unit: str | None = new_state.attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        )
         unit: str | None = None
         stat_type = self._state_characteristic
         if self.is_binary and stat_type in STATS_BINARY_PERCENTAGE:
@@ -880,7 +881,7 @@ class StatisticsSensor(SensorEntity):
         if stat_type in STATS_DATETIME:
             return SensorDeviceClass.TIMESTAMP
         if stat_type in STATS_NUMERIC_RETAIN_UNIT:
-            device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
+            device_class = new_state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
             if device_class is None:
                 return None
             if (
@@ -934,7 +935,8 @@ class StatisticsSensor(SensorEntity):
 
         while self.ages and (now_timestamp - self.ages[0]) > max_age:
             if self.samples_keep_last and len(self.ages) == 1:
-                # Under normal circumstance this will not be executed, as a purge will not
+                # Under normal circumstance this will not be
+                # executed, as a purge will not
                 # be scheduled for the last value if samples_keep_last is enabled.
                 # If this happens to be called outside normal scheduling logic or a
                 # source sensor update, this ensures the last value is preserved.
@@ -1098,7 +1100,8 @@ class StatisticsSensor(SensorEntity):
     def _update_value(self) -> None:
         """Front to call the right statistical characteristics functions.
 
-        One of the _stat_*() functions is represented by self._state_characteristic_fn().
+        One of the _stat_*() functions is represented by
+        self._state_characteristic_fn().
         """
 
         value = self._state_characteristic_fn(self.states, self.ages, self._percentile)

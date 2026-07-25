@@ -1,5 +1,6 @@
 """Test Homee climate entities."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 from pyHomee.const import AttributeType
@@ -34,6 +35,13 @@ from homeassistant.helpers import entity_registry as er
 from . import build_mock_node, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+async def platforms() -> AsyncGenerator[None]:
+    """Return the platforms to be loaded for this test."""
+    with patch("homeassistant.components.homee.PLATFORMS", [Platform.CLIMATE]):
+        yield
 
 
 async def setup_mock_climate(
@@ -349,7 +357,6 @@ async def test_climate_snapshot(
         build_mock_node("thermostat_with_preset.json"),
         build_mock_node("thermostat_with_alternate_preset.json"),
     ]
-    with patch("homeassistant.components.homee.PLATFORMS", [Platform.CLIMATE]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

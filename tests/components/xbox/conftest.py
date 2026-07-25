@@ -163,7 +163,7 @@ def mock_xbox_live_client() -> Generator[AsyncMock]:
         )
 
         client.people = AsyncMock()
-        client.people.get_friends_by_xuid.return_value = PeopleResponse(
+        client.people.get_friend_by_xuid.return_value = PeopleResponse(
             **load_json_object_fixture("people_batch.json", DOMAIN)
         )
         client.people.get_friends_own.return_value = PeopleResponse(

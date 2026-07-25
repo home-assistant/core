@@ -326,3 +326,64 @@ async def test_name(hass: HomeAssistant, config_flow_fixture: None) -> None:
     state = hass.states.get(entity3.entity_id)
     assert state
     assert state.attributes == {"supported_features": NotifyEntityFeature(0)}
+
+
+@pytest.mark.freeze_time("2021-01-01T23:59:59+00:00")
+async def test_async_record_notification(
+    hass: HomeAssistant, config_flow_fixture: None
+) -> None:
+    """Test record notification."""
+
+    entity = MockNotifyEntity(name="test", entity_id="notify.test")
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get("notify.test")
+    assert state.state is STATE_UNKNOWN
+
+    entity._async_record_notification()
+
+    state = hass.states.get("notify.test")
+    assert state.state == "2021-01-01T23:59:59+00:00"
+
+
+@pytest.mark.freeze_time("2021-01-01T23:59:59+00:00")
+async def test_record_notification(
+    hass: HomeAssistant, config_flow_fixture: None
+) -> None:
+    """Test record notification thread-safe."""
+
+    entity = MockNotifyEntity(name="test", entity_id="notify.test")
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get("notify.test")
+    assert state.state is STATE_UNKNOWN
+
+    await hass.async_add_executor_job(entity._record_notification)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("notify.test")
+    assert state.state == "2021-01-01T23:59:59+00:00"

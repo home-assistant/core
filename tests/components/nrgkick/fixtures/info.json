@@ -13,6 +13,12 @@
     "phase_count": 3
   },
   "cellular": { "mode": 3, "rssi": -85, "operator": "Test operator" },
+  "gps": {
+    "latitude": 47.0748,
+    "longitude": 15.4376,
+    "altitude": 353.0,
+    "accuracy": 1.5
+  },
   "grid": {
     "voltage": 230,
     "frequency": 50.0,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_states[button.ingress_open_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_states[button.ingress_open_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Ingress Open door',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ingress Open door',
     }),
     'context': <ANY>,
     'entity_id': 'button.ingress_open_door',

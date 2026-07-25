@@ -1,0 +1,17 @@
+{
+  "id": "dev_light_001",
+  "name": "Bedroom Light",
+  "type": "light",
+  "model": "XT-LT200",
+  "version": "2.0.1",
+  "online": true,
+  "status": {
+    "on": true,
+    "brightness": 75,
+    "color_type": 0,
+    "hue": 150,
+    "saturation": 80,
+    "lightness": 54,
+    "temperature": 4000
+  }
+}

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[switch.mock_title_inverter_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_all_entities[switch.mock_title_inverter_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Title Inverter status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Inverter status',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_inverter_status',

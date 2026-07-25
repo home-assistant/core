@@ -1,7 +1,5 @@
 """Fixtures for Kostal Plenticore tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator, Iterable
 import copy
 from unittest.mock import patch
@@ -9,6 +7,7 @@ from unittest.mock import patch
 from pykoplenti import ExtendedApiClient, MeData, SettingsData, VersionData
 import pytest
 
+from homeassistant.components.kostal_plenticore.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -25,6 +24,7 @@ DEFAULT_SETTING_VALUES = {
         "Properties:VersionMC": "01.46",
         "Battery:MinSoc": "5",
         "Battery:MinHomeComsumption": "50",
+        "Inverter:ActivePowerLimitation": "8000",
     },
     "scb:network": {"Hostname": "scb"},
 }
@@ -49,6 +49,15 @@ DEFAULT_SETTINGS = {
             id="Battery:MinHomeComsumption",
             type="byte",
         ),
+        SettingsData(
+            min="0",
+            max="10000",
+            default=None,
+            access="readwrite",
+            unit="W",
+            id="Inverter:ActivePowerLimitation",
+            type="byte",
+        ),
     ],
     "scb:network": [
         SettingsData(
@@ -70,7 +79,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         entry_id="2ab8dd92a62787ddfe213a67e09406bd",
         title="scb",
-        domain="kostal_plenticore",
+        domain=DOMAIN,
         data={"host": "192.168.1.2", "password": "SecretPassword"},
     )
 
@@ -81,7 +90,7 @@ def mock_installer_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         entry_id="2ab8dd92a62787ddfe213a67e09406bd",
         title="scb",
-        domain="kostal_plenticore",
+        domain=DOMAIN,
         data={
             "host": "192.168.1.2",
             "password": "secret_password",
@@ -105,7 +114,8 @@ def mock_get_setting_values() -> dict[str, dict[str, str]]:
 
     Returns a dictionary with setting values which can be mutated by test cases.
     """
-    # Add default settings values - this values are always retrieved by the integration on startup
+    # Add default settings values - these values are always
+    # retrieved by the integration on startup
     return copy.deepcopy(DEFAULT_SETTING_VALUES)
 
 
@@ -121,7 +131,8 @@ def mock_plenticore_client(
     ) as plenticore_client_class:
 
         def default_settings_data(*args):
-            # the get_setting_values method can be called with different argument types and numbers
+            # the get_setting_values method can be called with
+            # different argument types and numbers
             match args:
                 case (str() as module_id, str() as data_id):
                     request = {module_id: [data_id]}

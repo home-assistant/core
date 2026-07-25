@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor_snapshot[binary_sensor.test_device_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_binary_sensor_snapshot[binary_sensor.test_device_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'Test Device Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_charging',
@@ -51,8 +52,9 @@
 # ---
 # name: test_binary_sensor_snapshot[binary_sensor.test_device_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_binary_sensor_snapshot[binary_sensor.test_device_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Test Device Connectivity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_connectivity',
@@ -101,8 +103,9 @@
 # ---
 # name: test_binary_sensor_snapshot[binary_sensor.test_device_plug-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_binary_sensor_snapshot[binary_sensor.test_device_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'Test Device Plug',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Plug',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_plug',
@@ -151,8 +154,9 @@
 # ---
 # name: test_binary_sensor_snapshot[binary_sensor.test_device_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,8 +192,8 @@
 # name: test_binary_sensor_snapshot[binary_sensor.test_device_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test Device Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Power',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_power',

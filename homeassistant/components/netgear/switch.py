@@ -4,18 +4,16 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pynetgear import ALLOW, BLOCK
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER
+from .coordinator import NetgearConfigEntry, NetgearTrackerCoordinator
 from .entity import NetgearDeviceEntity, NetgearRouterEntity
 from .router import NetgearRouter
 
@@ -100,11 +98,11 @@ ROUTER_SWITCH_TYPES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NetgearConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches for Netgear component."""
-    router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
+    router = entry.runtime_data.router
 
     async_add_entities(
         NetgearRouterSwitchEntity(router, description)
@@ -112,14 +110,14 @@ async def async_setup_entry(
     )
 
     # Entities per network device
-    coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
+    coordinator_tracker = entry.runtime_data.coordinator_tracker
     tracked = set()
 
     @callback
     def new_device_callback() -> None:
         """Add new devices if needed."""
         new_entities = []
-        if not coordinator.data:
+        if not coordinator_tracker.data:
             return
 
         for mac, device in router.devices.items():
@@ -128,7 +126,7 @@ async def async_setup_entry(
 
             new_entities.extend(
                 [
-                    NetgearAllowBlock(coordinator, router, device, entity_description)
+                    NetgearAllowBlock(coordinator_tracker, device, entity_description)
                     for entity_description in SWITCH_TYPES
                 ]
             )
@@ -136,9 +134,9 @@ async def async_setup_entry(
 
         async_add_entities(new_entities)
 
-    entry.async_on_unload(coordinator.async_add_listener(new_device_callback))
+    entry.async_on_unload(coordinator_tracker.async_add_listener(new_device_callback))
 
-    coordinator.data = True
+    coordinator_tracker.data = True
     new_device_callback()
 
 
@@ -149,28 +147,30 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        router: NetgearRouter,
+        coordinator: NetgearTrackerCoordinator,
         device: dict,
         entity_description: SwitchEntityDescription,
     ) -> None:
         """Initialize a Netgear device."""
-        super().__init__(coordinator, router, device)
+        super().__init__(coordinator, device)
         self.entity_description = entity_description
         self._attr_unique_id = f"{self._mac}-{entity_description.key}"
         self.async_update_device()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._router.async_allow_block_device(self._mac, ALLOW)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._router.async_allow_block_device(self._mac, BLOCK)
         await self.coordinator.async_request_refresh()
 
     @callback
+    @override
     def async_update_device(self) -> None:
         """Update the Netgear device."""
         self._device = self._router.devices[self._mac]
@@ -200,6 +200,7 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
         self._attr_is_on = None
         self._attr_available = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Fetch state when entity is added."""
         await self.async_update()
@@ -217,6 +218,7 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
             self._attr_is_on = response
             self._attr_available = True
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         async with self._router.api_lock:
@@ -224,6 +226,7 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
                 self.entity_description.action(self._router), True
             )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         async with self._router.api_lock:

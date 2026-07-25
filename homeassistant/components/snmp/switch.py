@@ -1,9 +1,7 @@
 """Support for SNMP enabled switch."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import pysnmp.hlapi.v3arch.asyncio as hlapi
 from pysnmp.hlapi.v3arch.asyncio import (
@@ -233,17 +231,20 @@ class SnmpSwitch(SwitchEntity):
         self._request_args = request_args
         self._command_args = command_args
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         # The transport creation is done once this entity is registered with HA
         # (rather than in the __init__)
         self._target = await UdpTransportTarget.create((self._host, self._port))  # pylint: disable=attribute-defined-outside-init
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         # If vartype set, use it - https://www.pysnmp.com/pysnmp/docs/api-reference.html#pysnmp.smi.rfc1902.ObjectType
         await self._execute_command(self._command_payload_on)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._execute_command(self._command_payload_off)
@@ -292,6 +293,7 @@ class SnmpSwitch(SwitchEntity):
                     self._state = None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on; False if off. None if unknown."""
         return self._state

@@ -1,7 +1,5 @@
 """Helper to test significant Vacuum state changes."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -10,11 +8,12 @@ from homeassistant.helpers.significant_change import (
     check_valid_float,
 )
 
-from . import ATTR_BATTERY_LEVEL, ATTR_FAN_SPEED
+from . import ATTR_BATTERY_LEVEL
+from .const import VacuumEntityStateAttribute
 
 SIGNIFICANT_ATTRIBUTES: set[str] = {
     ATTR_BATTERY_LEVEL,
-    ATTR_FAN_SPEED,
+    VacuumEntityStateAttribute.FAN_SPEED,
 }
 
 

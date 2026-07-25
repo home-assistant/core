@@ -1,133 +1,40 @@
 """Utility methods for the Tuya integration."""
 
-from __future__ import annotations
-
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
-
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_sharing import CustomerDevice
 
+from homeassistant.const import UnitOfTemperature
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, DPCode, DPType
+from .const import CELSIUS_ALIASES, DOMAIN, FAHRENHEIT_ALIASES, DPCode
 
-if TYPE_CHECKING:
-    from .type_information import IntegerTypeInformation
-
-_DPTYPE_MAPPING: dict[str, DPType] = {
-    "bitmap": DPType.BITMAP,
-    "bool": DPType.BOOLEAN,
-    "enum": DPType.ENUM,
-    "json": DPType.JSON,
-    "raw": DPType.RAW,
-    "string": DPType.STRING,
-    "value": DPType.INTEGER,
+_TEMP_UNIT_CONVERT_MAPPING = {
+    "c": UnitOfTemperature.CELSIUS,
+    "f": UnitOfTemperature.FAHRENHEIT,
 }
 
 
-def get_dpcode(
-    device: CustomerDevice, dpcodes: str | tuple[str, ...] | None
-) -> str | None:
-    """Get the first matching DPCode from the device or return None."""
-    if dpcodes is None:
-        return None
+def get_temperature_unit(
+    device: CustomerDevice, dpcode_uom: str | None
+) -> UnitOfTemperature | None:
+    """Convert the DPCode unit of measurement to a temperature unit."""
+    if not dpcode_uom:
+        return get_device_temp_unit_convert(device)
 
-    if not isinstance(dpcodes, tuple):
-        dpcodes = (dpcodes,)
-
-    for dpcode in dpcodes:
-        if (
-            dpcode in device.function
-            or dpcode in device.status
-            or dpcode in device.status_range
-        ):
-            return dpcode
-
+    dpcode_uom = dpcode_uom.lower()
+    if dpcode_uom in CELSIUS_ALIASES:
+        return UnitOfTemperature.CELSIUS
+    if dpcode_uom in FAHRENHEIT_ALIASES:
+        return UnitOfTemperature.FAHRENHEIT
     return None
 
 
-def parse_dptype(dptype: str) -> DPType | None:
-    """Parse DPType from device DPCode information."""
-    try:
-        return DPType(dptype)
-    except ValueError:
-        # Sometimes, we get ill-formed DPTypes from the cloud,
-        # this fixes them and maps them to the correct DPType.
-        return _DPTYPE_MAPPING.get(dptype)
-
-
-@dataclass(kw_only=True)
-class RemapHelper:
-    """Helper class for remapping values."""
-
-    source_min: int
-    source_max: int
-    target_min: int
-    target_max: int
-
-    @classmethod
-    def from_type_information(
-        cls,
-        type_information: IntegerTypeInformation,
-        target_min: int,
-        target_max: int,
-    ) -> RemapHelper:
-        """Create RemapHelper from IntegerTypeInformation."""
-        return cls(
-            source_min=type_information.min,
-            source_max=type_information.max,
-            target_min=target_min,
-            target_max=target_max,
-        )
-
-    @classmethod
-    def from_function_data(
-        cls, function_data: dict[str, Any], target_min: int, target_max: int
-    ) -> RemapHelper:
-        """Create RemapHelper from function_data."""
-        return cls(
-            source_min=function_data["min"],
-            source_max=function_data["max"],
-            target_min=target_min,
-            target_max=target_max,
-        )
-
-    def remap_value_to(self, value: float, *, reverse: bool = False) -> float:
-        """Remap a value from this range to a new range."""
-        return self.remap_value(
-            value,
-            self.source_min,
-            self.source_max,
-            self.target_min,
-            self.target_max,
-            reverse=reverse,
-        )
-
-    def remap_value_from(self, value: float, *, reverse: bool = False) -> float:
-        """Remap a value from its current range to this range."""
-        return self.remap_value(
-            value,
-            self.target_min,
-            self.target_max,
-            self.source_min,
-            self.source_max,
-            reverse=reverse,
-        )
-
-    @staticmethod
-    def remap_value(
-        value: float,
-        from_min: float,
-        from_max: float,
-        to_min: float,
-        to_max: float,
-        *,
-        reverse: bool = False,
-    ) -> float:
-        """Remap a value from its current range, to a new range."""
-        if reverse:
-            value = from_max - value + from_min
-        return ((value - from_min) / (from_max - from_min)) * (to_max - to_min) + to_min
+def get_device_temp_unit_convert(device: CustomerDevice) -> UnitOfTemperature | None:
+    """Return the temperature unit from TEMP_UNIT_CONVERT, or None if unrecognised."""
+    if temp_unit_convert := device.status.get(DPCode.TEMP_UNIT_CONVERT):
+        return _TEMP_UNIT_CONVERT_MAPPING.get(temp_unit_convert)
+    return None
 
 
 class ActionDPCodeNotFoundError(ServiceValidationError):
@@ -154,3 +61,32 @@ class ActionDPCodeNotFoundError(ServiceValidationError):
                 "available": str(sorted(device.function.keys())),
             },
         )
+
+
+def get_device_info(device: CustomerDevice, *, initial: bool = False) -> DeviceInfo:
+    """Get device info."""
+    manufacturer = "Tuya"
+    model: str | None = device.product_name
+    model_id: str | None = device.product_id
+
+    if initial:
+        # Note: the model is overridden via entity.device_info property
+        # when the entity is created. If no entities are generated, it will
+        # stay as unsupported
+        model = f"{device.product_name} (unsupported)"
+
+    if (
+        quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device)
+    ) and quirk.manufacturer:
+        # If the manufacturer is not set, we cannot trust the model/model_id
+        manufacturer = quirk.manufacturer
+        model = quirk.model
+        model_id = quirk.model_id
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, device.id)},
+        manufacturer=manufacturer,
+        name=device.name,
+        model=model,
+        model_id=model_id,
+    )

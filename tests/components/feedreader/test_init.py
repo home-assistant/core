@@ -19,6 +19,7 @@ from homeassistant.util import dt as dt_util
 from . import async_setup_config_entry, create_mock_entry
 from .const import (
     URL,
+    USER_AGENT,
     VALID_CONFIG_1,
     VALID_CONFIG_5,
     VALID_CONFIG_100,
@@ -85,6 +86,7 @@ async def test_storage_data_writing(
         assert await async_setup_config_entry(
             hass, VALID_CONFIG_DEFAULT, return_value=feed_one_event
         )
+        await hass.async_block_till_done()
 
     # one new event
     assert len(events) == 1
@@ -344,8 +346,9 @@ async def test_feed_errors(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
         assert (
-            "Error fetching feed data from http://some.rss.local/rss_feed.xml : <urlopen error Test>"
-            in caplog.text
+            "Error fetching feed data from"
+            " http://some.rss.local/rss_feed.xml"
+            " : <urlopen error Test>" in caplog.text
         )
 
         # success
@@ -396,3 +399,17 @@ async def test_feed_atom_htmlentities(
             identifiers={(DOMAIN, entry.entry_id)}
         )
         assert device_entry.manufacturer == "Juan Pérez"
+
+
+async def test_feedparser_user_agent(hass: HomeAssistant, feed_one_event) -> None:
+    """Test that the correct user-agent is used for feedparser requests."""
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.feedreader.coordinator.feedparser.http.get"
+    ) as feedparser:
+        feedparser.return_value = feed_one_event
+        await hass.config_entries.async_setup(entry.entry_id)
+
+        # check user-agent
+        assert feedparser.call_args.args[3] == USER_AGENT

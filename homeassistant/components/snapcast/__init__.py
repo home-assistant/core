@@ -1,6 +1,5 @@
 """Snapcast Integration."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -8,7 +7,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
-from .coordinator import SnapcastUpdateCoordinator
+from .coordinator import SnapcastConfigEntry, SnapcastUpdateCoordinator
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -20,7 +19,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SnapcastConfigEntry) -> bool:
     """Set up Snapcast from a config entry."""
     coordinator = SnapcastUpdateCoordinator(hass, entry)
 
@@ -32,16 +31,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
         ) from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SnapcastConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        snapcast_data = hass.data[DOMAIN].pop(entry.entry_id)
         # disconnect from server
-        await snapcast_data.disconnect()
+        await entry.runtime_data.disconnect()
     return unload_ok

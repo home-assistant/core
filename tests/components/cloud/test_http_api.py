@@ -27,14 +27,15 @@ from webrtc_models import RTCIceServer
 from homeassistant.components import system_health
 from homeassistant.components.alexa import errors as alexa_errors
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.alexa.entities import LightCapabilities
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
     STORAGE_KEY,
 )
 from homeassistant.components.cloud.const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
 from homeassistant.components.cloud.http_api import validate_language_voice
-from homeassistant.components.google_assistant.helpers import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.frontend import DATA_THEMES
+from homeassistant.components.google_assistant.helpers import (  # pylint: disable=home-assistant-component-root-import
     GoogleEntity,
 )
 from homeassistant.components.homeassistant import exposed_entities
@@ -455,7 +456,7 @@ async def test_login_view_mfa_required_tokens_missing(
     setup_cloud: None,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test logging in when MFA is required, code is provided, but session tokens are missing."""
+    """Test MFA login when code is given but tokens are missing."""
     cloud_client = await hass_client()
     cloud.login.side_effect = MFARequired(mfa_tokens={})
 
@@ -958,6 +959,8 @@ async def test_websocket_status(
             "alexa_default_expose": DEFAULT_EXPOSED_DOMAINS,
             "alexa_report_state": True,
             "google_report_state": True,
+            "onboarded_items": [],
+            "onboarding_postponed_until": None,
             "remote_allow_remote_enable": True,
             "remote_enabled": False,
             "cloud_ice_servers_enabled": True,
@@ -988,6 +991,8 @@ async def test_websocket_status(
         "remote_certificate": None,
         "http_use_ssl": False,
         "active_subscription": True,
+        "onboarding_completed": False,
+        "onboarding_postponed": False,
     }
 
 
@@ -1234,6 +1239,106 @@ async def test_websocket_update_preferences_no_token(
     assert response["error"]["code"] == "alexa_relink"
 
 
+async def test_websocket_cloud_onboarding_postpone(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test postponing onboarding."""
+    client = await hass_ws_client(hass)
+
+    assert cloud.client.prefs.onboarding_postponed is False
+
+    await client.send_json_auto_id({"type": "cloud/onboarding/postpone"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["onboarding_postponed"] is True
+    assert cloud.client.prefs.onboarding_postponed_until is not None
+
+    freezer.tick(datetime.timedelta(hours=25))
+
+    await client.send_json_auto_id({"type": "cloud/status"})
+    response = await client.receive_json()
+
+    assert response["result"]["onboarding_postponed"] is False
+
+
+async def test_websocket_cloud_onboarding_complete(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+) -> None:
+    """Test completing onboarding items."""
+    client = await hass_ws_client(hass)
+
+    assert cloud.client.prefs.onboarded_items == []
+    assert cloud.client.prefs.onboarding_completed is False
+
+    # Complete a subset of items
+    await client.send_json_auto_id(
+        {"type": "cloud/onboarding/complete", "items": ["remote", "backup"]}
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert cloud.client.prefs.onboarded_items == ["remote", "backup"]
+    assert response["result"]["onboarding_completed"] is False
+
+    # Already-completed items are ignored, only new ones are added
+    await client.send_json_auto_id(
+        {
+            "type": "cloud/onboarding/complete",
+            "items": ["remote", "voice", "streaming"],
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert cloud.client.prefs.onboarding_completed is True
+    assert response["result"]["onboarding_completed"] is True
+    assert cloud.client.prefs.onboarded_items == [
+        "remote",
+        "backup",
+        "voice",
+        "streaming",
+    ]
+
+    # Completing already-completed items is a no-op
+    await client.send_json_auto_id(
+        {"type": "cloud/onboarding/complete", "items": ["remote", "backup"]}
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert cloud.client.prefs.onboarded_items == [
+        "remote",
+        "backup",
+        "voice",
+        "streaming",
+    ]
+
+
+async def test_websocket_cloud_onboarding_complete_invalid_item(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+) -> None:
+    """Test completing an invalid onboarding item."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "cloud/onboarding/complete", "items": ["remote", "invalid"]}
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+
+
 async def test_enabling_webhook(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1418,23 +1523,6 @@ async def test_get_google_entity(
         "message": "light.kitchen unknown",
     }
 
-    # Test getting a blocked entity
-    entity_registry.async_get_or_create(
-        "group", "test", "unique", suggested_object_id="all_locks"
-    )
-    hass.states.async_set("group.all_locks", "bla")
-
-    await client.send_json_auto_id(
-        {"type": "cloud/google_assistant/entities/get", "entity_id": "group.all_locks"}
-    )
-    response = await client.receive_json()
-
-    assert not response["success"]
-    assert response["error"] == {
-        "code": "not_supported",
-        "message": "group.all_locks not supported by Google assistant",
-    }
-
     entity_registry.async_get_or_create(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
@@ -1617,23 +1705,6 @@ async def test_get_alexa_entity(
         "message": "sensor.temperature not supported by Alexa",
     }
 
-    # Test getting a blocked entity
-    entity_registry.async_get_or_create(
-        "group", "test", "unique", suggested_object_id="all_locks"
-    )
-    hass.states.async_set("group.all_locks", "bla")
-
-    await client.send_json_auto_id(
-        {"type": "cloud/alexa/entities/get", "entity_id": "group.all_locks"}
-    )
-    response = await client.receive_json()
-
-    assert not response["success"]
-    assert response["error"] == {
-        "code": "not_supported",
-        "message": "group.all_locks not supported by Alexa",
-    }
-
     entity_registry.async_get_or_create(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
@@ -1803,6 +1874,46 @@ async def test_api_calls_require_admin(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
+async def test_support_package_requires_admin(
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test the support package download is restricted to admins."""
+    client = await hass_client(hass_read_only_access_token)
+    resp = await client.get("/api/cloud/support_package")
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.parametrize(
+    "msg",
+    [
+        {"type": "cloud/subscription"},
+        {"type": "cloud/update_prefs", "alexa_report_state": True},
+        {"type": "cloud/cloudhook/create", "webhook_id": "mock-webhook-id"},
+        {"type": "cloud/cloudhook/delete", "webhook_id": "mock-webhook-id"},
+        {"type": "cloud/onboarding/postpone"},
+        {"type": "cloud/onboarding/complete", "items": ["remote"]},
+    ],
+)
+async def test_ws_commands_require_admin(
+    hass: HomeAssistant,
+    setup_cloud: None,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+    msg: dict[str, Any],
+) -> None:
+    """Test cloud WebSocket commands do not work as a normal user."""
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+
+    await client.send_json({"id": 5, **msg})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
+
+
 async def test_login_view_dispatch_event(
     hass: HomeAssistant,
     cloud: MagicMock,
@@ -1887,6 +1998,12 @@ async def test_download_support_package(
 
     assert await async_setup_component(hass, "system_health", {})
 
+    # Register custom themes so the support package surfaces them
+    hass.data[DATA_THEMES] = {
+        "midnight": {"primary-color": "#000000"},
+        "solarized-dark": {"primary-color": "#002b36"},
+    }
+
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock:
         hexmock.return_value = "12345678901234567890"
         assert await async_setup_component(
@@ -1907,6 +2024,10 @@ async def test_download_support_package(
 
     cloud.remote.snitun_server = "us-west-1"
     cloud.remote.certificate_status = CertificateStatus.READY
+    cloud.remote.latency_by_location = {
+        "Earth": {"avg": 13.37},
+        "Moon": {"avg": None},
+    }
     cloud.expiration_date = dt_util.parse_datetime("2025-01-17T11:19:31.0+00:00")
 
     await cloud.client.async_system_message({"region": "xx-earth-616"})

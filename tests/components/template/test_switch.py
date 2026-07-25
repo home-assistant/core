@@ -24,8 +24,10 @@ from homeassistant.setup import async_setup_component
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_action,
     async_get_flow_preview_state,
     async_trigger,
+    make_test_action,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
@@ -46,29 +48,13 @@ TEST_SENSOR = "sensor.test_sensor"
 
 TEST_SWITCH = TemplatePlatformSetup(
     switch.DOMAIN,
-    "switches",
     "test_template_switch",
     make_test_trigger(TEST_STATE_ENTITY_ID, TEST_SENSOR),
 )
 
-SWITCH_TURN_ON = {
-    "service": "test.automation",
-    "data_template": {
-        "action": "turn_on",
-        "caller": "{{ this.entity_id }}",
-    },
-}
-SWITCH_TURN_OFF = {
-    "service": "test.automation",
-    "data_template": {
-        "action": "turn_off",
-        "caller": "{{ this.entity_id }}",
-    },
-}
-SWITCH_ACTIONS = {
-    "turn_on": SWITCH_TURN_ON,
-    "turn_off": SWITCH_TURN_OFF,
-}
+TURN_ON_ACTION = make_test_action("turn_on")
+TURN_OFF_ACTION = make_test_action("turn_off")
+SWITCH_ACTIONS = {**TURN_ON_ACTION, **TURN_OFF_ACTION}
 
 
 @pytest.fixture
@@ -165,7 +151,7 @@ async def setup_single_attribute_optimistic_switch(
 @pytest.mark.parametrize(("count", "state_template"), [(1, "{{ True }}")])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_switch")
 async def test_setup(hass: HomeAssistant) -> None:
@@ -234,7 +220,7 @@ async def test_flow_preview(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_switch")
 async def test_template_state_text(hass: HomeAssistant) -> None:
@@ -260,7 +246,7 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_switch")
 async def test_template_state_boolean(hass: HomeAssistant, expected: str) -> None:
@@ -277,7 +263,6 @@ async def test_template_state_boolean(hass: HomeAssistant, expected: str) -> Non
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "icon_template"),
         (ConfigurationStyle.MODERN, "icon"),
         (ConfigurationStyle.TRIGGER, "icon"),
     ],
@@ -329,9 +314,7 @@ async def test_trigger_attributes_with_optimistic_state(
     assert state.state == STATE_ON
     assert state.attributes.get(attr) is None
 
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "turn_on"
-    assert calls[-1].data["caller"] == TEST_SWITCH.entity_id
+    assert_action(TEST_SWITCH, calls, 1, "turn_on")
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -344,9 +327,7 @@ async def test_trigger_attributes_with_optimistic_state(
     assert state.state == STATE_OFF
     assert state.attributes.get(attr) is None
 
-    assert len(calls) == 2
-    assert calls[-1].data["action"] == "turn_off"
-    assert calls[-1].data["caller"] == TEST_SWITCH.entity_id
+    assert_action(TEST_SWITCH, calls, 2, "turn_off")
 
     await async_trigger(hass, TEST_SENSOR, expected)
 
@@ -365,9 +346,7 @@ async def test_trigger_attributes_with_optimistic_state(
     assert state.state == STATE_ON
     assert state.attributes.get(attr) == expected
 
-    assert len(calls) == 3
-    assert calls[-1].data["action"] == "turn_on"
-    assert calls[-1].data["caller"] == TEST_SWITCH.entity_id
+    assert_action(TEST_SWITCH, calls, 3, "turn_on")
 
 
 @pytest.mark.parametrize(
@@ -377,7 +356,6 @@ async def test_trigger_attributes_with_optimistic_state(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "entity_picture_template"),
         (ConfigurationStyle.MODERN, "picture"),
         (ConfigurationStyle.TRIGGER, "picture"),
     ],
@@ -399,37 +377,11 @@ async def test_entity_picture_template(
 @pytest.mark.parametrize(("count", "state_template"), [(0, "{% if rubbish %}")])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_switch")
 async def test_template_syntax_error(hass: HomeAssistant) -> None:
     """Test templating syntax error."""
-    assert hass.states.async_all("switch") == []
-
-
-async def test_invalid_legacy_slug_does_not_create(hass: HomeAssistant) -> None:
-    """Test invalid legacy slug."""
-    with assert_setup_component(0, "switch"):
-        assert await async_setup_component(
-            hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "template",
-                    "switches": {
-                        "test INVALID switch": {
-                            **SWITCH_ACTIONS,
-                            "value_template": "{{ rubbish }",
-                        }
-                    },
-                }
-            },
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
     assert hass.states.async_all("switch") == []
 
 
@@ -441,15 +393,6 @@ async def test_invalid_legacy_slug_does_not_create(hass: HomeAssistant) -> None:
                 "template": {"switch": "Invalid"},
             },
             template.DOMAIN,
-        ),
-        (
-            {
-                "switch": {
-                    "platform": "template",
-                    "switches": {TEST_SWITCH.object_id: "Invalid"},
-                }
-            },
-            switch.DOMAIN,
         ),
     ],
 )
@@ -477,15 +420,6 @@ async def test_invalid_switch_does_not_create(
             template.DOMAIN,
             1,
         ),
-        (
-            {
-                "switch": {
-                    "platform": "template",
-                }
-            },
-            switch.DOMAIN,
-            0,
-        ),
     ],
 )
 async def test_no_switches_does_not_create(
@@ -507,18 +441,18 @@ async def test_no_switches_does_not_create(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "not_on": SWITCH_TURN_ON,
-            "turn_off": SWITCH_TURN_OFF,
+            "not_on": [],
+            **TURN_OFF_ACTION,
         },
         {
-            "turn_on": SWITCH_TURN_ON,
-            "not_off": SWITCH_TURN_OFF,
+            **TURN_ON_ACTION,
+            "not_off": [],
         },
     ],
 )
@@ -533,7 +467,7 @@ async def test_missing_action_does_not_create(hass: HomeAssistant) -> None:
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_switch")
 async def test_on_action(
@@ -553,15 +487,13 @@ async def test_on_action(
         blocking=True,
     )
 
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "turn_on"
-    assert calls[-1].data["caller"] == TEST_SWITCH.entity_id
+    assert_action(TEST_SWITCH, calls, 1, "turn_on")
 
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_optimistic_switch")
 async def test_on_action_optimistic(
@@ -584,9 +516,7 @@ async def test_on_action_optimistic(
     state = hass.states.get(TEST_SWITCH.entity_id)
     assert state.state == STATE_ON
 
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "turn_on"
-    assert calls[-1].data["caller"] == TEST_SWITCH.entity_id
+    assert_action(TEST_SWITCH, calls, 1, "turn_on")
 
 
 @pytest.mark.parametrize(
@@ -594,7 +524,7 @@ async def test_on_action_optimistic(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_switch")
 async def test_off_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -611,15 +541,13 @@ async def test_off_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None
         blocking=True,
     )
 
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "turn_off"
-    assert calls[-1].data["caller"] == TEST_SWITCH.entity_id
+    assert_action(TEST_SWITCH, calls, 1, "turn_off")
 
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_optimistic_switch")
 async def test_off_action_optimistic(
@@ -642,14 +570,12 @@ async def test_off_action_optimistic(
     state = hass.states.get(TEST_SWITCH.entity_id)
     assert state.state == STATE_OFF
 
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "turn_off"
-    assert calls[-1].data["caller"] == TEST_SWITCH.entity_id
+    assert_action(TEST_SWITCH, calls, 1, "turn_off")
 
 
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize("test_state", [STATE_ON, STATE_OFF])
 async def test_restore_state(
@@ -678,7 +604,6 @@ async def test_restore_state(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
         (ConfigurationStyle.TRIGGER, "availability"),
     ],
@@ -698,7 +623,6 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("style", "config"),
     [
-        (ConfigurationStyle.LEGACY, {"availability_template": "{{ x - 12 }}"}),
         (ConfigurationStyle.MODERN, {"availability": "{{ x - 12 }}"}),
         (ConfigurationStyle.TRIGGER, {"availability": "{{ x - 12 }}"}),
     ],
@@ -727,7 +651,7 @@ async def test_invalid_availability_template_keeps_component_available(
 @pytest.mark.parametrize("config", [SWITCH_ACTIONS])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_unique_id(
     hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
@@ -797,7 +721,7 @@ async def test_device_id(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_switch")
 async def test_empty_action_config(hass: HomeAssistant) -> None:

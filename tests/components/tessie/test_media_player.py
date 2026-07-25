@@ -23,7 +23,6 @@ async def test_media_player(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_get_state,
-    mock_get_status,
 ) -> None:
     """Tests that the media player entity is correct when idle."""
 

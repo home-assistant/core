@@ -1,7 +1,5 @@
 """The ssdp integration websocket apis."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import Any, Final
 

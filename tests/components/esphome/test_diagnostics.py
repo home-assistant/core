@@ -81,11 +81,16 @@ async def test_diagnostics_with_bluetooth(
             "connections_free": 0,
             "connections_limit": 0,
             "scanner": {
+                "connect_completed_total": 0,
+                "connect_failed_total": 0,
+                "connect_failures": {},
+                "connect_in_progress": {},
                 "connectable": True,
                 "current_mode": None,
                 "requested_mode": None,
                 "discovered_device_timestamps": {},
                 "discovered_devices_and_advertisement_data": [],
+                "last_connect_completed_time": 0.0,
                 "last_detection": ANY,
                 "monotonic_time": ANY,
                 "name": "test (AA:BB:CC:DD:EE:FC)",
@@ -124,6 +129,7 @@ async def test_diagnostics_with_bluetooth(
         "storage_data": {
             "api_version": {"major": 99, "minor": 99},
             "device_info": {
+                "api_encryption_provisionable": False,
                 "api_encryption_supported": False,
                 "area": {"area_id": 0, "name": ""},
                 "areas": [],
@@ -141,6 +147,7 @@ async def test_diagnostics_with_bluetooth(
                 "name": "test",
                 "project_name": "",
                 "project_version": "",
+                "serial_proxies": [],
                 "suggested_area": "",
                 "uses_password": False,
                 "legacy_voice_assistant_version": 0,

@@ -33,5 +33,13 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "no_devices_found": {
+      "message": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "port_in_use": {
+      "message": "Port {port} is already in use"
+    }
   }
 }

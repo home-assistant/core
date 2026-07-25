@@ -1,7 +1,5 @@
 """Support for script and automation tracing and debugging."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -11,7 +9,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
 from .const import DATA_TRACE, DATA_TRACE_STORE, DATA_TRACES_RESTORED
-from .models import ActionTrace, BaseTrace, RestoredTrace, TraceData
+from .models import ActionTrace, BaseTrace, RestoredTrace, TraceBuckets, TraceData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +21,9 @@ async def async_get_trace(
     # Restore saved traces if not done
     await async_restore_traces(hass)
 
-    return hass.data[DATA_TRACE][key][run_id].as_extended_dict()
+    trace_bucket = hass.data[DATA_TRACE][key]
+    trace = trace_bucket.runs.get(run_id) or trace_bucket.not_triggered[run_id]
+    return trace.as_extended_dict()
 
 
 async def async_list_contexts(
@@ -33,7 +33,7 @@ async def async_list_contexts(
     # Restore saved traces if not done
     await async_restore_traces(hass)
 
-    values: Mapping[str, LimitedSizeDict[str, BaseTrace] | None] | TraceData
+    values: Mapping[str, TraceBuckets | None] | TraceData
     if key is not None:
         values = {key: hass.data[DATA_TRACE].get(key)}
     else:
@@ -46,16 +46,16 @@ async def async_list_contexts(
 
     return {
         trace.context.id: _trace_id(trace.run_id, key)
-        for key, traces in values.items()
-        if traces is not None
-        for trace in traces.values()
+        for key, trace_bucket in values.items()
+        if trace_bucket is not None
+        for trace in trace_bucket.all_traces()
     }
 
 
 def _get_debug_traces(hass: HomeAssistant, key: str) -> list[dict[str, Any]]:
     """Return a serializable list of debug traces for a script or automation."""
-    if traces_for_key := hass.data[DATA_TRACE].get(key):
-        return [trace.as_short_dict() for trace in traces_for_key.values()]
+    if trace_bucket := hass.data[DATA_TRACE].get(key):
+        return [trace.as_short_dict() for trace in trace_bucket.all_traces()]
     return []
 
 
@@ -81,14 +81,23 @@ async def async_list_traces(
 def async_store_trace(
     hass: HomeAssistant, trace: ActionTrace, stored_traces: int
 ) -> None:
-    """Store a trace if its key is valid."""
+    """Store a trace if its key is valid.
+
+    Run traces and not-triggered traces are kept in separate, independently
+    size-limited buckets so a flood of not-triggered traces never evicts runs.
+    """
     if key := trace.key:
         traces = hass.data[DATA_TRACE]
         if key not in traces:
-            traces[key] = LimitedSizeDict(size_limit=stored_traces)
-        else:
-            traces[key].size_limit = stored_traces
-        traces[key][trace.run_id] = trace
+            traces[key] = TraceBuckets(
+                runs=LimitedSizeDict(size_limit=stored_traces),
+                not_triggered=LimitedSizeDict(size_limit=stored_traces),
+            )
+        trace_bucket = traces[key]
+        trace_bucket.runs.size_limit = stored_traces
+        trace_bucket.not_triggered.size_limit = stored_traces
+        bucket = trace_bucket.bucket(trace.not_triggered)
+        bucket[trace.run_id] = trace
 
 
 def _async_store_restored_trace(hass: HomeAssistant, trace: RestoredTrace) -> None:
@@ -96,9 +105,12 @@ def _async_store_restored_trace(hass: HomeAssistant, trace: RestoredTrace) -> No
     key = trace.key
     traces = hass.data[DATA_TRACE]
     if key not in traces:
-        traces[key] = LimitedSizeDict()
-    traces[key][trace.run_id] = trace
-    traces[key].move_to_end(trace.run_id, last=False)
+        traces[key] = TraceBuckets(
+            runs=LimitedSizeDict(), not_triggered=LimitedSizeDict()
+        )
+    bucket = traces[key].bucket(trace.not_triggered)
+    bucket[trace.run_id] = trace
+    bucket.move_to_end(trace.run_id, last=False)
 
 
 async def async_restore_traces(hass: HomeAssistant) -> None:
@@ -118,17 +130,18 @@ async def async_restore_traces(hass: HomeAssistant) -> None:
     for key, traces in restored_traces.items():
         # Add stored traces in reversed order to prioritize the newest traces
         for json_trace in reversed(traces):
-            if (
-                (stored_traces := hass.data[DATA_TRACE].get(key))
-                and stored_traces.size_limit is not None
-                and len(stored_traces) >= stored_traces.size_limit
-            ):
-                break
-
             try:
                 trace = RestoredTrace(json_trace)
             # Catch any exception to not blow up if the stored trace is invalid
             except Exception:
                 _LOGGER.exception("Failed to restore trace")
                 continue
+
+            # Runs and not-triggered traces are capped independently, so check
+            # the bucket this trace belongs to rather than breaking the loop.
+            if (trace_bucket := hass.data[DATA_TRACE].get(key)) is not None:
+                bucket = trace_bucket.bucket(trace.not_triggered)
+                if bucket.size_limit is not None and len(bucket) >= bucket.size_limit:
+                    continue
+
             _async_store_restored_trace(hass, trace)

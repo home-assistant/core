@@ -1,20 +1,19 @@
 """Platform for Omnilogic switch integration."""
 
 import time
-from typing import Any
+from typing import Any, override
 
 from omnilogic import OmniLogicException
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import check_guard
-from .const import COORDINATOR, DOMAIN, PUMP_TYPES
-from .coordinator import OmniLogicUpdateCoordinator
+from .const import PUMP_TYPES
+from .coordinator import OmniLogicConfigEntry, OmniLogicUpdateCoordinator
 from .entity import OmniLogicEntity
 
 SERVICE_SET_SPEED = "set_pump_speed"
@@ -23,14 +22,12 @@ OMNILOGIC_SWITCH_OFF = 7
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OmniLogicConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the light platform."""
+    """Set up the switch platform."""
 
-    coordinator: OmniLogicUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
-    ]
+    coordinator = entry.runtime_data
     entities = []
 
     for item_id, item in coordinator.data.items():
@@ -97,6 +94,7 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
         self._state_delay = 30
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the on/off state of the switch."""
         state_int = 0
@@ -119,6 +117,7 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
 class OmniLogicRelayControl(OmniLogicSwitch):
     """Define the OmniLogic Relay entity."""
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the relay."""
         self._state = True
@@ -132,6 +131,7 @@ class OmniLogicRelayControl(OmniLogicSwitch):
             1,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the relay."""
         self._state = False
@@ -178,6 +178,7 @@ class OmniLogicPumpControl(OmniLogicSwitch):
 
         self._last_speed = None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the pump."""
         self._state = True
@@ -196,6 +197,7 @@ class OmniLogicPumpControl(OmniLogicSwitch):
             on_value,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the pump."""
         self._state = False

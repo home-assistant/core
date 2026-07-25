@@ -1,7 +1,5 @@
 """Tests for the Snooz component."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from unittest.mock import patch
 
@@ -90,7 +88,7 @@ class MockSnoozDevice(ParentMockSnoozDevice):
             if self._api is not None:
                 await self._api.async_disconnect()
 
-            if self.connection_status != SnoozConnectionStatus.DISCONNECTED:
+            if self.connection_status is not SnoozConnectionStatus.DISCONNECTED:
                 self._machine.device_disconnected(reason=DisconnectionReason.USER)
 
         finally:

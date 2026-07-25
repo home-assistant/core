@@ -7,12 +7,26 @@
     "progress": {
       "wait_for_device": "Open {url}, and paste the following code to authorize the integration: \n```\n{code}\n```"
     },
-    "step": {
-      "repositories": {
-        "data": {
-          "repositories": "Select repositories to track."
-        },
-        "title": "Configure repositories"
+    "step": {}
+  },
+  "config_subentries": {
+    "repository": {
+      "abort": {
+        "already_configured": "Repository is already configured"
+      },
+      "entry_type": "[%key:component::github::config_subentries::repository::step::user::data::repository%]",
+      "initiate_flow": {
+        "user": "Add repository"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "repository": "Repository"
+          },
+          "data_description": {
+            "repository": "The repository to track"
+          }
+        }
       }
     }
   },
@@ -21,6 +35,14 @@
       "discussions_count": {
         "name": "Discussions",
         "unit_of_measurement": "discussions"
+      },
+      "followers": {
+        "name": "Followers",
+        "unit_of_measurement": "followers"
+      },
+      "following": {
+        "name": "Following",
+        "unit_of_measurement": "users"
       },
       "forks_count": {
         "name": "Forks",
@@ -47,6 +69,18 @@
       },
       "latest_tag": {
         "name": "Latest tag"
+      },
+      "merged_pulls_count": {
+        "name": "Merged pull requests",
+        "unit_of_measurement": "pull requests"
+      },
+      "public_gists": {
+        "name": "Public gists",
+        "unit_of_measurement": "gists"
+      },
+      "public_repos": {
+        "name": "Public repositories",
+        "unit_of_measurement": "repositories"
       },
       "pulls_count": {
         "name": "Pull requests",

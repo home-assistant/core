@@ -1,7 +1,5 @@
 """Diagnostics support for UniFi Network."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from itertools import chain
 from typing import Any

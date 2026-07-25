@@ -112,7 +112,7 @@ async def test_notify(hass: HomeAssistant) -> None:
             call(
                 "telegram_bot",
                 "send_message",
-                {"target": 1, "title": "mock title", "message": "mock message"},
+                {"chat_id": 1, "title": "mock title", "message": "mock message"},
                 False,
                 None,
                 None,
@@ -151,7 +151,7 @@ async def test_notify(hass: HomeAssistant) -> None:
                 "telegram_bot",
                 "send_photo",
                 {
-                    "target": 1,
+                    "chat_id": 1,
                     "url": "https://mock/photo.jpg",
                     "caption": "mock caption",
                 },

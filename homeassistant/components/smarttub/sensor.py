@@ -1,12 +1,13 @@
 """Platform for sensor integration."""
 
 from enum import Enum
-from typing import Any
+from typing import Any, override
 
 import smarttub
 import voluptuous as vol
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -19,7 +20,6 @@ from .entity import SmartTubOnboardSensorBase
 # the desired duration, in hours, of the cycle
 ATTR_DURATION = "duration"
 ATTR_CYCLE_LAST_UPDATED = "cycle_last_updated"
-ATTR_MODE = "mode"
 # the hour of the day at which to start the cycle (0-23)
 ATTR_START_HOUR = "start_hour"
 
@@ -95,7 +95,19 @@ async def async_setup_entry(
 class SmartTubBuiltinSensor(SmartTubOnboardSensorBase, SensorEntity):
     """Generic class for SmartTub status sensors."""
 
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
+        spa: smarttub.Spa,
+        sensor_name: str,
+        state_key: str,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, spa, sensor_name, state_key)
+        self._attr_translation_key = state_key
+
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the current state of the sensor."""
         if self._state is None:
@@ -117,6 +129,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubBuiltinSensor):
         super().__init__(
             coordinator, spa, "Primary Filtration Cycle", "primary_filtration"
         )
+        self._attr_translation_key = "primary_filtration_cycle"
 
     @property
     def cycle(self) -> smarttub.SpaPrimaryFiltrationCycle:
@@ -124,11 +137,13 @@ class SmartTubPrimaryFiltrationCycle(SmartTubBuiltinSensor):
         return self._state
 
     @property
+    @override
     def native_value(self) -> str:
         """Return the current state of the sensor."""
         return self.cycle.status.name.lower()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
@@ -157,6 +172,7 @@ class SmartTubSecondaryFiltrationCycle(SmartTubBuiltinSensor):
         super().__init__(
             coordinator, spa, "Secondary Filtration Cycle", "secondary_filtration"
         )
+        self._attr_translation_key = "secondary_filtration_cycle"
 
     @property
     def cycle(self) -> smarttub.SpaSecondaryFiltrationCycle:
@@ -164,11 +180,13 @@ class SmartTubSecondaryFiltrationCycle(SmartTubBuiltinSensor):
         return self._state
 
     @property
+    @override
     def native_value(self) -> str:
         """Return the current state of the sensor."""
         return self.cycle.status.name.lower()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {

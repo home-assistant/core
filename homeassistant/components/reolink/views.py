@@ -1,7 +1,5 @@
 """Reolink Integration views."""
 
-from __future__ import annotations
-
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 from http import HTTPStatus
 import logging
@@ -41,7 +39,11 @@ class PlaybackProxyView(HomeAssistantView):
     """View to proxy playback video from Reolink."""
 
     requires_auth = True
-    url = "/api/reolink/video/{config_entry_id}/{channel}/{stream_res}/{vod_type}/{filename}"
+    url = (
+        "/api/reolink/video"
+        "/{config_entry_id}/{channel}/{stream_res}"
+        "/{vod_type}/{filename}"
+    )
     name = "api:reolink_playback"
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -74,7 +76,10 @@ class PlaybackProxyView(HomeAssistantView):
         try:
             host = get_host(self.hass, config_entry_id)
         except Unresolvable:
-            err_str = f"Reolink playback proxy could not find config entry id: {config_entry_id}"
+            err_str = (
+                "Reolink playback proxy could not find"
+                f" config entry id: {config_entry_id}"
+            )
             _LOGGER.warning(err_str)
             return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
 
@@ -129,7 +134,10 @@ class PlaybackProxyView(HomeAssistantView):
             "application/octet-stream",
             "apolication/octet-stream",
         ]:
-            err_str = f"Reolink playback expected video/mp4 but got {reolink_response.content_type}"
+            err_str = (
+                "Reolink playback expected video/mp4"
+                f" but got {reolink_response.content_type}"
+            )
             if (
                 reolink_response.content_type == "video/x-flv"
                 and vod_type == VodRequestType.PLAYBACK.value

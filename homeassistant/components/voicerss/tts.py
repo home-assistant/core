@@ -3,7 +3,7 @@
 import asyncio
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
 import voluptuous as vol
@@ -184,15 +184,18 @@ class VoiceRSSProvider(Provider):
         }
 
     @property
+    @override
     def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:

@@ -1,10 +1,8 @@
 """Parent class for every Overkiz device."""
 
-from __future__ import annotations
+from typing import cast, override
 
-from typing import cast
-
-from pyoverkiz.enums import OverkizAttribute, OverkizState
+from pyoverkiz.enums import APIType, OverkizAttribute, OverkizCommandParam, OverkizState
 from pyoverkiz.models import Device
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -28,30 +26,36 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         """Initialize the device."""
         super().__init__(coordinator)
         self.device_url = device_url
-        split_device_url = self.device_url.split("#")
-        self.base_device_url = split_device_url[0]
-        if len(split_device_url) == 2:
-            self.index_device_url = split_device_url[1]
         self.executor = OverkizExecutor(device_url, coordinator)
 
         self._attr_assumed_state = not self.device.states
         self._attr_unique_id = self.device.device_url
 
-        if self.is_sub_device:
+        if self.device.identifier.is_sub_device:
             # In case of sub entity, use the provided label as name
             self._attr_name = self.device.label
 
         self._attr_device_info = self.generate_device_info()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.device.available and super().available
+        if self.device.available:
+            return super().available
 
-    @property
-    def is_sub_device(self) -> bool:
-        """Return True if device is a sub device."""
-        return "#" in self.device_url and not self.device_url.endswith("#1")
+        # Workaround: local API may incorrectly report
+        # available=False (Somfy-TaHoma-Developer-Mode#217)
+        if self.coordinator.client.server_config.api_type != APIType.LOCAL:
+            return False
+
+        if status_state := self.device.states.get(OverkizState.CORE_STATUS):
+            return (
+                status_state.value == OverkizCommandParam.AVAILABLE
+                and super().available
+            )
+
+        return False
 
     @property
     def device(self) -> Device:
@@ -63,24 +67,26 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         # Some devices, such as the Smart Thermostat have several devices
         # in one physical device, with same device url, terminated by '#' and a number.
         # In this case, we use the base device url as the device identifier.
-        if self.is_sub_device:
+        if self.device.identifier.is_sub_device:
             # Only return the url of the base device, to inherit device name
             # and model from parent device.
             return DeviceInfo(
-                identifiers={(DOMAIN, self.executor.base_device_url)},
+                identifiers={(DOMAIN, self.device.identifier.base_device_url)},
             )
 
         manufacturer = (
-            self.executor.select_attribute(OverkizAttribute.CORE_MANUFACTURER)
-            or self.executor.select_state(OverkizState.CORE_MANUFACTURER_NAME)
-            or self.coordinator.client.server.manufacturer
+            self.device.attributes.get_value(OverkizAttribute.CORE_MANUFACTURER)
+            or self.device.states.get_value(OverkizState.CORE_MANUFACTURER_NAME)
+            or self.coordinator.client.server_config.manufacturer
         )
 
         model = (
-            self.executor.select_state(
-                OverkizState.CORE_MODEL,
-                OverkizState.CORE_PRODUCT_MODEL_NAME,
-                OverkizState.IO_MODEL,
+            self.device.states.first_value(
+                [
+                    OverkizState.CORE_MODEL,
+                    OverkizState.CORE_PRODUCT_MODEL_NAME,
+                    OverkizState.IO_MODEL,
+                ]
             )
             or self.device.ui_class.value
         )
@@ -92,19 +98,21 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         )
 
         return DeviceInfo(
-            identifiers={(DOMAIN, self.executor.base_device_url)},
+            identifiers={(DOMAIN, self.device.identifier.base_device_url)},
             name=self.device.label,
             manufacturer=str(manufacturer),
             model=str(model),
             sw_version=cast(
                 str,
-                self.executor.select_attribute(OverkizAttribute.CORE_FIRMWARE_REVISION),
+                self.device.attributes.get_value(
+                    OverkizAttribute.CORE_FIRMWARE_REVISION
+                ),
             ),
             model_id=self.device.widget,
             hw_version=self.device.controllable_name,
             suggested_area=suggested_area,
-            via_device=(DOMAIN, self.executor.get_gateway_id()),
-            configuration_url=self.coordinator.client.server.configuration_url,
+            via_device=(DOMAIN, self.device.identifier.gateway_id),
+            configuration_url=self.coordinator.client.server_config.configuration_url,
         )
 
 
@@ -122,9 +130,10 @@ class OverkizDescriptiveEntity(OverkizEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
 
-        if self.is_sub_device:
-            # In case of sub device, use the provided label
-            # and append the name of the type of entity
-            self._attr_name = f"{self.device.label} {description.name}"
+        if self.device.identifier.is_sub_device:
+            if isinstance(description.name, str):
+                self._attr_name = f"{self.device.label} {description.name}"
+            else:
+                self._attr_name = self.device.label
         elif isinstance(description.name, str):
             self._attr_name = description.name

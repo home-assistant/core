@@ -2,9 +2,10 @@
 # name: test_setup
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Mock Title',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.mock_title',
@@ -17,9 +18,10 @@
 # name: test_setup.1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Mock Title',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.mock_title',

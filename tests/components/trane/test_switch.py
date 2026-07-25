@@ -12,11 +12,18 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Platforms, which should be loaded during the test."""
+    return [Platform.SWITCH]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -42,7 +49,7 @@ async def test_hold_switch_off(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.living_room_hold")
+    state = hass.states.get("switch.living_room_living_room_hold")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -65,7 +72,7 @@ async def test_hold_switch_service(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "switch.living_room_hold"},
+        {ATTR_ENTITY_ID: "switch.living_room_living_room_hold"},
         blocking=True,
     )
 

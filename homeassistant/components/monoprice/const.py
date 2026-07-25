@@ -15,6 +15,3 @@ CONF_NOT_FIRST_RUN = "not_first_run"
 
 SERVICE_SNAPSHOT = "snapshot"
 SERVICE_RESTORE = "restore"
-
-FIRST_RUN = "first_run"
-MONOPRICE_OBJECT = "monoprice_object"

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switches[switch.prana_recuperator_auto-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_switches[switch.prana_recuperator_auto-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Auto',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PRANA RECUPERATOR Auto',
     }),
     'context': <ANY>,
     'entity_id': 'switch.prana_recuperator_auto',
@@ -50,8 +51,9 @@
 # ---
 # name: test_switches[switch.prana_recuperator_auto_plus-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_switches[switch.prana_recuperator_auto_plus-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Auto plus',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PRANA RECUPERATOR Auto plus',
     }),
     'context': <ANY>,
     'entity_id': 'switch.prana_recuperator_auto_plus',
@@ -99,8 +101,9 @@
 # ---
 # name: test_switches[switch.prana_recuperator_bound-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -136,7 +139,7 @@
 # name: test_switches[switch.prana_recuperator_bound-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Bound',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PRANA RECUPERATOR Bound',
     }),
     'context': <ANY>,
     'entity_id': 'switch.prana_recuperator_bound',
@@ -148,8 +151,9 @@
 # ---
 # name: test_switches[switch.prana_recuperator_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -185,7 +189,7 @@
 # name: test_switches[switch.prana_recuperator_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Heater',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PRANA RECUPERATOR Heater',
     }),
     'context': <ANY>,
     'entity_id': 'switch.prana_recuperator_heater',
@@ -197,8 +201,9 @@
 # ---
 # name: test_switches[switch.prana_recuperator_winter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -234,7 +239,7 @@
 # name: test_switches[switch.prana_recuperator_winter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Winter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PRANA RECUPERATOR Winter',
     }),
     'context': <ANY>,
     'entity_id': 'switch.prana_recuperator_winter',

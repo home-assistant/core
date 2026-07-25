@@ -174,13 +174,5 @@
         "on": "mdi:window-open"
       }
     }
-  },
-  "triggers": {
-    "occupancy_cleared": {
-      "trigger": "mdi:home-outline"
-    },
-    "occupancy_detected": {
-      "trigger": "mdi:home"
-    }
   }
 }

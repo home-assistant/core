@@ -528,17 +528,20 @@ async def test_client_key_update_on_connect(
         (
             True,
             WebOsTvCommandError("Some error"),
-            f"Communication error while calling async_media_play for device {TV_NAME}: Some error",
+            "Communication error while calling async_media_play"
+            f" for device {TV_NAME}: Some error",
         ),
         (
             True,
             WebOsTvCommandError("Some other error"),
-            f"Communication error while calling async_media_play for device {TV_NAME}: Some other error",
+            "Communication error while calling async_media_play"
+            f" for device {TV_NAME}: Some other error",
         ),
         (
             False,
             None,
-            f"Error calling async_media_play for device {TV_NAME}: Device is off and cannot be controlled",
+            f"Error calling async_media_play for device {TV_NAME}:"
+            " Device is off and cannot be controlled",
         ),
     ],
 )
@@ -819,7 +822,7 @@ async def test_get_image_http_error(
     resp = await client.get(attrs["entity_picture"])
     content = await resp.read()
 
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.NOT_FOUND
     assert f"Error retrieving proxied image from {url}" in caplog.text
     assert content == b""
 

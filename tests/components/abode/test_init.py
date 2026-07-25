@@ -9,7 +9,6 @@ from jaraco.abode.exceptions import (
 )
 
 from homeassistant.components.abode.const import DOMAIN
-from homeassistant.components.abode.services import SERVICE_SETTINGS
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME
@@ -25,7 +24,7 @@ async def test_change_settings(hass: HomeAssistant) -> None:
     with patch("jaraco.abode.client.Client.set_setting") as mock_set_setting:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SETTINGS,
+            "change_setting",
             {"setting": "confirm_snd", "value": "loud"},
             blocking=True,
         )

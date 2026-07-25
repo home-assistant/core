@@ -1,22 +1,25 @@
 """Home Assistant Hardware base firmware update entity."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import RaspberryPiFirmwareInfo
 from ha_silabs_firmware_client import FirmwareManifest, FirmwareMetadata
+from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 from yarl import URL
 
 from homeassistant.components.update import (
+    UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.restore_state import ExtraStoredData
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -25,9 +28,12 @@ from .helpers import async_register_firmware_info_callback
 from .util import (
     ApplicationType,
     FirmwareInfo,
-    ResetTarget,
     async_firmware_flashing_context,
     async_flash_silabs_firmware,
+    async_get_raspberry_pi_firmware_info,
+    async_update_raspberry_pi_firmware,
+    humanize_rpi_firmware_version,
+    rpi_firmware_release_url,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +60,7 @@ class FirmwareUpdateExtraStoredData(ExtraStoredData):
 
     firmware_manifest: FirmwareManifest | None = None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the extra data."""
         return {
@@ -73,7 +80,8 @@ class FirmwareUpdateExtraStoredData(ExtraStoredData):
         return cls(
             FirmwareManifest.from_json(
                 data["firmware_manifest"],
-                # This data is not technically part of the manifest and is loaded externally
+                # This data is not technically part of the manifest
+                # and is loaded externally
                 url=URL(data["firmware_manifest"]["url"]),
                 html_url=URL(data["firmware_manifest"]["html_url"]),
             )
@@ -87,13 +95,11 @@ class BaseFirmwareUpdateEntity(
 
     # Subclasses provide the mapping between firmware types and entity descriptions
     entity_description: FirmwareUpdateEntityDescription
-    BOOTLOADER_RESET_METHODS: list[ResetTarget]
-    APPLICATION_PROBE_METHODS: list[tuple[ApplicationType, int]]
-
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
     _attr_has_entity_name = True
+    _flasher_cls: type[DeviceSpecificFlasher]
 
     def __init__(
         self,
@@ -127,6 +133,7 @@ class BaseFirmwareUpdateEntity(
 
         return remove_callback
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -158,6 +165,7 @@ class BaseFirmwareUpdateEntity(
             await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def extra_restore_state_data(self) -> FirmwareUpdateExtraStoredData:
         """Return state data to be restored."""
         return FirmwareUpdateExtraStoredData(firmware_manifest=self._latest_manifest)
@@ -238,6 +246,7 @@ class BaseFirmwareUpdateEntity(
             self._attr_release_url = str(self._latest_manifest.html_url)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._latest_manifest = self.coordinator.data
@@ -258,6 +267,7 @@ class BaseFirmwareUpdateEntity(
             self._attr_update_percentage = None
             self.async_write_ha_state()
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -282,9 +292,8 @@ class BaseFirmwareUpdateEntity(
                     hass=self.hass,
                     device=self._current_device,
                     fw_data=fw_data,
+                    flasher_cls=self._flasher_cls,
                     expected_installed_firmware_type=self.entity_description.expected_firmware_type,
-                    bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
-                    application_probe_methods=self.APPLICATION_PROBE_METHODS,
                     progress_callback=self._update_progress,
                 )
         finally:
@@ -292,3 +301,96 @@ class BaseFirmwareUpdateEntity(
             self.async_write_ha_state()
 
         self._firmware_info_callback(firmware_info)
+
+
+class RaspberryPiFirmwareUpdateEntity(UpdateEntity):
+    """Update entity for the Raspberry Pi firmware (bootloader EEPROM and VL805).
+
+    There is no coordinator. The firmware state only changes after a reboot
+    (which restarts Core and re-fetches at setup) or right after the install
+    action (re-fetched in async_install), so polling would never show anything
+    new. The board integration passes in the DeviceInfo so the entity ends up
+    on that board's device.
+    """
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
+    )
+    _attr_translation_key = "rpi_firmware"
+
+    def __init__(
+        self,
+        firmware: RaspberryPiFirmwareInfo,
+        device_info: DeviceInfo,
+        unique_id: str,
+        board: str,
+    ) -> None:
+        """Initialize entity."""
+        self._firmware = firmware
+        self._attr_device_info = device_info
+        self._attr_unique_id = unique_id
+        self._board = board
+
+    @property
+    @override
+    def installed_version(self) -> str | None:
+        """Composite installed firmware version.
+
+        Once an update is applied (update_pending), report the new version as
+        installed so the entity reads "up to date". The running firmware only
+        changes after the reboot, which the Supervisor flags with a
+        REBOOT_REQUIRED repair.
+        """
+        if self._firmware.update_pending:
+            return humanize_rpi_firmware_version(self._firmware.latest_version)
+        return humanize_rpi_firmware_version(self._firmware.current_version)
+
+    @property
+    @override
+    def latest_version(self) -> str | None:
+        """Composite available firmware version."""
+        return humanize_rpi_firmware_version(self._firmware.latest_version)
+
+    @property
+    @override
+    def release_url(self) -> str | None:
+        """Return the EEPROM release notes for this board's SoC."""
+        return rpi_firmware_release_url(self._board)
+
+    @override
+    async def async_release_notes(self) -> str | None:
+        """Return the pre-install warning and reboot notice as ha-alert boxes."""
+        return (
+            "<ha-alert alert-type='warning'>"
+            "Do not interrupt the firmware flash. "
+            "Power loss during the EEPROM update can render your device "
+            "inoperable."
+            "</ha-alert>\n\n"
+            "<ha-alert alert-type='info'>"
+            "A reboot is required after install for the new firmware to "
+            "take effect."
+            "</ha-alert>\n"
+        )
+
+    @override
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install an update."""
+        await async_update_raspberry_pi_firmware(self.hass)
+        # Re-fetch so the entity picks up update_pending and reads "up to date".
+        try:
+            refreshed = await async_get_raspberry_pi_firmware_info(self.hass)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
+        except SupervisorError:
+            # The update succeeded; keep the previous info until the next fetch.
+            _LOGGER.exception(
+                "Failed to refresh Raspberry Pi firmware info after update"
+            )
+            refreshed = None
+        if refreshed is not None:
+            self._firmware = refreshed
+        self.async_write_ha_state()

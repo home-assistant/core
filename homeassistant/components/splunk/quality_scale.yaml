@@ -18,18 +18,15 @@ rules:
     status: exempt
     comment: |
       Integration does not provide custom actions.
-  docs-high-level-description:
-    status: todo
-    comment: |
-      Verify integration docs at https://www.home-assistant.io/integrations/splunk/ include a high-level description of Splunk with a link to https://www.splunk.com/ and explain the integration's purpose for users unfamiliar with Splunk.
-  docs-installation-instructions:
-    status: todo
-    comment: |
-      Verify integration docs include clear prerequisites and step-by-step setup instructions including how to configure Splunk HTTP Event Collector and obtain the required token.
-  docs-removal-instructions:
-    status: todo
-    comment: |
-      Verify integration docs include instructions on how to remove the integration and clarify what happens to data already in Splunk.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: |
@@ -64,10 +61,7 @@ rules:
     status: exempt
     comment: |
       Integration does not have an options flow.
-  docs-installation-parameters:
-    status: todo
-    comment: |
-      Verify docs describe all config flow parameters including host, port, token, SSL settings, and entity filter. The strings.json has good data_description fields that should be reflected in documentation.
+  docs-installation-parameters: done
   entity-unavailable:
     status: exempt
     comment: |
@@ -82,12 +76,48 @@ rules:
       Integration does not create entities.
 
   # Gold
+  devices:
+    status: exempt
+    comment: |
+      Integration does not create devices.
   diagnostics: done
   discovery:
     status: exempt
     comment: |
       Integration does not support automatic discovery.
-  devices:
+  discovery-update-info:
+    status: exempt
+    comment: |
+      Integration does not support discovery.
+  docs-data-update:
+    status: todo
+    comment: |
+      Document how the integration pushes state changes to Splunk via the HTTP Event Collector.
+  docs-examples:
+    status: todo
+    comment: |
+      Add example automations or use of the Splunk data in the documentation.
+  docs-known-limitations:
+    status: todo
+    comment: |
+      Document known limitations, such as the integration only sending data (no entities) and YAML entity filtering being the only filtering mechanism.
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      Integration is a service and does not support physical devices.
+  docs-supported-functions:
+    status: todo
+    comment: |
+      Document what the integration does (forwarding state changes to Splunk) and the entity filtering options.
+  docs-troubleshooting:
+    status: todo
+    comment: |
+      Add a troubleshooting section covering connection and authentication errors.
+  docs-use-cases:
+    status: todo
+    comment: |
+      Document use cases for sending Home Assistant state changes to Splunk.
+  dynamic-devices:
     status: exempt
     comment: |
       Integration does not create devices.
@@ -113,6 +143,11 @@ rules:
     comment: |
       Integration does not create entities.
   reconfiguration-flow: done
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: |
+      Integration does not create devices.
   # Platinum
   async-dependency:
     status: todo

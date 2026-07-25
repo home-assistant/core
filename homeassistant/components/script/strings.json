@@ -51,19 +51,19 @@
   "services": {
     "reload": {
       "description": "Reloads all the available scripts.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload scripts"
     },
     "toggle": {
       "description": "Starts a script if it isn't running, stops it otherwise.",
-      "name": "[%key:common::action::toggle%]"
+      "name": "Toggle script"
     },
     "turn_off": {
       "description": "Stops a running script.",
-      "name": "[%key:common::action::turn_off%]"
+      "name": "Turn off script"
     },
     "turn_on": {
       "description": "Runs the sequence of actions defined in a script.",
-      "name": "[%key:common::action::turn_on%]"
+      "name": "Turn on script"
     }
   },
   "title": "Script"

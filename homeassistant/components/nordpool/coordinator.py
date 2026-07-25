@@ -1,12 +1,11 @@
 """DataUpdateCoordinator for the Nord Pool integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import aiohttp
+from aiozoneinfo import get_time_zone
 from pynordpool import (
     Currency,
     DeliveryPeriodData,
@@ -29,6 +28,13 @@ from .const import CONF_AREAS, DOMAIN, LOGGER
 if TYPE_CHECKING:
     from . import NordPoolConfigEntry
 
+NORDPOOL_TIMEZONE = get_time_zone("Europe/Oslo")
+
+
+def get_nordpool_current_time() -> datetime:
+    """Return the Nord Pool current time."""
+    return dt_util.utcnow().astimezone(NORDPOOL_TIMEZONE)
+
 
 class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
     """A Nord Pool Data Update Coordinator."""
@@ -49,28 +55,23 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
 
     def get_next_data_interval(self, now: datetime) -> datetime:
         """Compute next time an update should occur."""
-        next_hour = dt_util.utcnow() + timedelta(hours=1)
-        next_run = datetime(
-            next_hour.year,
-            next_hour.month,
-            next_hour.day,
-            next_hour.hour,
-            tzinfo=dt_util.UTC,
-        )
-        LOGGER.debug("Next data update at %s", next_run)
+        next_data_run = now + timedelta(hours=1)
+        next_run = next_data_run.replace(minute=0, second=0, microsecond=0)
+        LOGGER.debug("Next data update at %s", next_run.astimezone(NORDPOOL_TIMEZONE))
         return next_run
 
     def get_next_15_interval(self, now: datetime) -> datetime:
         """Compute next time we need to notify listeners."""
-        next_run = dt_util.utcnow() + timedelta(minutes=15)
+        next_run = now + timedelta(minutes=15)
         next_minute = next_run.minute // 15 * 15
-        next_run = next_run.replace(
-            minute=next_minute, second=0, microsecond=0, tzinfo=dt_util.UTC
-        )
+        next_run = next_run.replace(minute=next_minute, second=0, microsecond=0)
 
-        LOGGER.debug("Next listener update at %s", next_run)
+        LOGGER.debug(
+            "Next listener update at %s", next_run.astimezone(NORDPOOL_TIMEZONE)
+        )
         return next_run
 
+    @override
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
         await super().async_shutdown()
@@ -86,14 +87,14 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
         self.listener_unsub = async_track_point_in_utc_time(
             self.hass,
             self.update_listeners,
-            self.get_next_15_interval(dt_util.utcnow()),
+            self.get_next_15_interval(now),
         )
         self.async_update_listeners()
 
     async def fetch_data(self, now: datetime, initial: bool = False) -> None:
         """Fetch data from Nord Pool."""
         self.data_unsub = async_track_point_in_utc_time(
-            self.hass, self.fetch_data, self.get_next_data_interval(dt_util.utcnow())
+            self.hass, self.fetch_data, self.get_next_data_interval(now)
         )
         if self.config_entry.pref_disable_polling and not initial:
             return
@@ -108,17 +109,18 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
         """Fetch data from Nord Pool."""
         data = await self.api_call()
         if data and data.entries:
-            current_day = dt_util.utcnow().strftime("%Y-%m-%d")
-            for entry in data.entries:
-                if entry.requested_date == current_day:
-                    LOGGER.debug("Data for current day found")
-                    return data
+            current_day = get_nordpool_current_time().date()
+            if current_day in data.entries:
+                LOGGER.debug("Data for current day found")
+                return data
+
         if data and not data.entries and not initial:
             # Empty response, use cache
             LOGGER.debug("No data entries received")
             return self.data
         raise UpdateFailed(translation_domain=DOMAIN, translation_key="no_day_data")
 
+    @override
     async def _async_update_data(self) -> DeliveryPeriodsData:
         """Fetch the latest data from the source."""
         return await self.handle_data()
@@ -129,9 +131,9 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
         try:
             data = await self.client.async_get_delivery_periods(
                 [
-                    dt_util.now() - timedelta(days=1),
-                    dt_util.now(),
-                    dt_util.now() + timedelta(days=1),
+                    get_nordpool_current_time() - timedelta(days=1),
+                    get_nordpool_current_time(),
+                    get_nordpool_current_time() + timedelta(days=1),
                 ],
                 Currency(self.config_entry.data[CONF_CURRENCY]),
                 self.config_entry.data[CONF_AREAS],
@@ -158,16 +160,16 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
     def merge_price_entries(self) -> list[DeliveryPeriodEntry]:
         """Return the merged price entries."""
         merged_entries: list[DeliveryPeriodEntry] = []
-        for del_period in self.data.entries:
+        for del_period in self.data.entries.values():
             merged_entries.extend(del_period.entries)
         return merged_entries
 
     def get_data_current_day(self) -> DeliveryPeriodData:
         """Return the current day data."""
-        current_day = dt_util.utcnow().strftime("%Y-%m-%d")
-        delivery_period: DeliveryPeriodData = self.data.entries[0]
-        for del_period in self.data.entries:
-            if del_period.requested_date == current_day:
-                delivery_period = del_period
-                break
-        return delivery_period
+        current_day = get_nordpool_current_time().date()
+        return self.data.entries[current_day]
+
+    def get_data_tomorrow(self) -> DeliveryPeriodData | None:
+        """Return tomorrow's day data if available."""
+        tomorrow = get_nordpool_current_time().date() + timedelta(days=1)
+        return self.data.entries.get(tomorrow)

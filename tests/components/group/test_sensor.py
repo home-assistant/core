@@ -1,7 +1,5 @@
 """The tests for the Group Sensor platform."""
 
-from __future__ import annotations
-
 from math import prod
 import statistics
 from typing import Any
@@ -596,8 +594,8 @@ async def test_sensor_with_uoms_but_no_device_class(
     assert state.state == STATE_UNKNOWN
 
     assert (
-        "Unable to use state. Only entities with correct unit of measurement is supported"
-        in caplog.text
+        "Unable to use state. Only entities with correct unit"
+        " of measurement is supported" in caplog.text
     )
 
     hass.states.async_set(
@@ -620,7 +618,7 @@ async def test_sensor_with_uoms_but_no_device_class(
 async def test_sensor_calculated_properties_not_same(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test the sensor calculating device_class, state_class and unit of measurement not same."""
+    """Test sensor calculating properties when not all the same."""
     config = {
         SENSOR_DOMAIN: {
             "platform": DOMAIN,
@@ -756,7 +754,7 @@ async def test_sensor_calculated_properties_not_convertible_device_class(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the sensor calculating device_class, state_class and unit of measurement when device class not convertible."""
+    """Test sensor with non-convertible device class."""
     config = {
         SENSOR_DOMAIN: {
             "platform": DOMAIN,
@@ -926,7 +924,7 @@ async def test_first_available_sensor(hass: HomeAssistant) -> None:
 async def test_sensors_attributes_added_when_entity_info_available(
     hass: HomeAssistant,
 ) -> None:
-    """Test the sensor calculate attributes once all entities attributes are available."""
+    """Test sensor calculates attributes once all entities are available."""
     config = {
         SENSOR_DOMAIN: {
             "platform": DOMAIN,

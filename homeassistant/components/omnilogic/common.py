@@ -2,7 +2,7 @@
 
 
 def check_guard(state_key, item, entity_setting):
-    """Validate that this entity passes the defined guard conditions defined at setup."""
+    """Validate that this entity passes the guard conditions."""
 
     if state_key not in item:
         return True

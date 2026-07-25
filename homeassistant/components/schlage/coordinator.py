@@ -1,10 +1,9 @@
 """DataUpdateCoordinator for the Schlage integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyschlage import Lock, Schlage
 from pyschlage.exceptions import Error as SchlageError, NotAuthorizedError
@@ -62,6 +61,7 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
         self.new_locks_callbacks: list[Callable[[dict[str, LockData]], None]] = []
         self.async_add_listener(self._add_remove_locks)
 
+    @override
     async def _async_update_data(self) -> SchlageData:
         """Fetch the latest data from the Schlage API."""
         try:
@@ -116,9 +116,8 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
         if removed_locks := previous_locks - current_locks:
             LOGGER.debug("Removed locks: %s", ", ".join(removed_locks))
             for lock_id in removed_locks:
-                device_registry.async_update_device(
-                    device_id=previous_locks_by_lock_id[lock_id].id,
-                    remove_config_entry_id=self.config_entry.entry_id,
+                device_registry.async_remove_device(
+                    previous_locks_by_lock_id[lock_id].id
                 )
 
         if new_lock_ids := current_locks - previous_locks:

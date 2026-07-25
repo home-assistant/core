@@ -4,8 +4,7 @@ rules:
     status: exempt
     comment: |
       The integration does not provide any additional actions.
-  appropriate-polling:
-    status: done
+  appropriate-polling: done
   brands:
     status: exempt
     comment: |
@@ -18,9 +17,15 @@ rules:
     status: exempt
     comment: |
       The integration does not provide any additional actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: |

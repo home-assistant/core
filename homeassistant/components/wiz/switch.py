@@ -1,8 +1,6 @@
 """WiZ integration switch platform."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pywizlight import PilotBuilder
 from pywizlight.bulblibrary import BulbClass
@@ -11,9 +9,8 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WizConfigEntry
+from .coordinator import WizConfigEntry, WizData
 from .entity import WizToggleEntity
-from .models import WizData
 
 
 async def async_setup_entry(
@@ -36,6 +33,7 @@ class WizSocketEntity(WizToggleEntity, SwitchEntity):
         super().__init__(wiz_data, name)
         self._async_update_attrs()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the socket to turn on."""
         await self._device.turn_on(PilotBuilder())

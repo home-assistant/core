@@ -1,7 +1,5 @@
 """The Nord Pool component."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -68,6 +66,4 @@ async def cleanup_device(
                 continue
 
             LOGGER.debug("Removing device %s", entry.name)
-            device_reg.async_update_device(
-                entry.id, remove_config_entry_id=config_entry.entry_id
-            )
+            device_reg.async_remove_device(entry.id)

@@ -1,7 +1,5 @@
 """Provides device automations for Cover."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -26,7 +24,7 @@ from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, CoverEntityFeature, CoverState
+from . import DOMAIN, CoverEntityFeature, CoverEntityStateAttribute, CoverState
 
 POSITION_TRIGGER_TYPES = {"position", "tilt_position"}
 STATE_TRIGGER_TYPES = {"opened", "closed", "opening", "closing"}
@@ -166,9 +164,9 @@ async def async_attach_trigger(
         )
 
     if config[CONF_TYPE] == "position":
-        position = "current_position"
+        position = CoverEntityStateAttribute.CURRENT_POSITION
     if config[CONF_TYPE] == "tilt_position":
-        position = "current_tilt_position"
+        position = CoverEntityStateAttribute.CURRENT_TILT_POSITION
     min_pos = config.get(CONF_ABOVE, -1)
     max_pos = config.get(CONF_BELOW, 101)
     value_template = f"{{{{ state.attributes.{position} }}}}"

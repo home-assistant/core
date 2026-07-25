@@ -149,7 +149,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_locked - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_locked - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -167,7 +170,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_unlocked - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_unlocked - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -185,7 +191,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_unlocking - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_unlocking - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -203,7 +212,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_locking - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_locking - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -221,7 +233,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_jammed - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_jammed - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -239,7 +254,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_opening - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_opening - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -257,7 +275,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_open - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_open - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -346,7 +367,10 @@ async def test_if_state_legacy(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_locked - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_locked - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

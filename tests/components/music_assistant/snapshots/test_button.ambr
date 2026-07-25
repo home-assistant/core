@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_button_entities[button.my_super_test_player_2_favorite_current_song-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_button_entities[button.my_super_test_player_2_favorite_current_song-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Super Test Player 2 Favorite current song',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Super Test Player 2 Favorite current song',
     }),
     'context': <ANY>,
     'entity_id': 'button.my_super_test_player_2_favorite_current_song',
@@ -50,8 +51,9 @@
 # ---
 # name: test_button_entities[button.test_group_player_1_favorite_current_song-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_button_entities[button.test_group_player_1_favorite_current_song-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Group Player 1 Favorite current song',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Group Player 1 Favorite current song',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_group_player_1_favorite_current_song',
@@ -99,8 +101,9 @@
 # ---
 # name: test_button_entities[button.test_player_1_favorite_current_song-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -136,7 +139,7 @@
 # name: test_button_entities[button.test_player_1_favorite_current_song-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Player 1 Favorite current song',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Favorite current song',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_player_1_favorite_current_song',

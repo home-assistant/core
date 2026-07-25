@@ -1,8 +1,9 @@
 """Tests for Saunum services."""
 
+from dataclasses import replace
 from unittest.mock import MagicMock
 
-from pysaunum import SaunumData, SaunumException
+from pysaunum import SaunumException
 import pytest
 
 from homeassistant.components.saunum.const import DOMAIN
@@ -36,9 +37,9 @@ async def test_start_session_success(
         SERVICE_START_SESSION,
         {
             ATTR_ENTITY_ID: "climate.saunum_leil",
-            ATTR_DURATION: 120,
+            ATTR_DURATION: {"hours": 2, "minutes": 0, "seconds": 0},
             ATTR_TARGET_TEMPERATURE: 80,
-            ATTR_FAN_DURATION: 10,
+            ATTR_FAN_DURATION: {"minutes": 10},
         },
         blocking=True,
     )
@@ -73,11 +74,10 @@ async def test_start_session_door_open(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_saunum_client: MagicMock,
-    mock_saunum_data: SaunumData,
 ) -> None:
     """Test start_session service fails when door is open."""
-    mock_saunum_client.async_get_data.return_value = SaunumData(
-        **{**mock_saunum_data.__dict__, "door_open": True}
+    mock_saunum_client.async_get_data.return_value = replace(
+        mock_saunum_client.async_get_data.return_value, door_open=True
     )
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

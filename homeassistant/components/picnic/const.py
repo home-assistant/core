@@ -1,11 +1,8 @@
 """Constants for the Picnic integration."""
 
-from __future__ import annotations
+from datetime import timedelta
 
 DOMAIN = "picnic"
-
-CONF_API = "api"
-CONF_COORDINATOR = "coordinator"
 
 SERVICE_ADD_PRODUCT_TO_CART = "add_product"
 
@@ -15,12 +12,18 @@ ATTR_AMOUNT = "amount"
 ATTR_PRODUCT_IDENTIFIERS = "product_identifiers"
 
 COUNTRY_CODES = ["NL", "DE", "BE", "FR"]
+TWO_FA_CHANNELS = ["sms", "email"]
 ATTRIBUTION = "Data provided by Picnic"
 ADDRESS = "address"
 CART_DATA = "cart_data"
 SLOT_DATA = "slot_data"
 NEXT_DELIVERY_DATA = "next_delivery_data"
 LAST_ORDER_DATA = "last_order_data"
+
+DEFAULT_UPDATE_INTERVAL = timedelta(minutes=30)
+DELIVERY_UPDATE_INTERVAL = timedelta(minutes=1)
+DELIVERY_WINDOW_LEAD_TIME = timedelta(minutes=30)
+DELIVERY_WINDOW_LAG_TIME = timedelta(hours=2)
 
 SENSOR_CART_ITEMS_COUNT = "cart_items_count"
 SENSOR_CART_TOTAL_PRICE = "cart_total_price"
@@ -36,5 +39,6 @@ SENSOR_LAST_ORDER_DELIVERY_TIME = "last_order_delivery_time"
 SENSOR_LAST_ORDER_TOTAL_PRICE = "last_order_total_price"
 SENSOR_NEXT_DELIVERY_ETA_START = "next_delivery_eta_start"
 SENSOR_NEXT_DELIVERY_ETA_END = "next_delivery_eta_end"
+SENSOR_NEXT_DELIVERY_ESTIMATED_ARRIVAL = "next_delivery_estimated_arrival"
 SENSOR_NEXT_DELIVERY_SLOT_START = "next_delivery_slot_start"
 SENSOR_NEXT_DELIVERY_SLOT_END = "next_delivery_slot_end"

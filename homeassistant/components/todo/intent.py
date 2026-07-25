@@ -1,6 +1,6 @@
 """Intents for the todo integration."""
 
-from __future__ import annotations
+from typing import override
 
 import voluptuous as vol
 
@@ -35,6 +35,7 @@ class ListBaseIntentHandler(intent.IntentHandler):
         """Execute action specific to this intent handler."""
         raise NotImplementedError
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -86,12 +87,15 @@ class ListAddItemIntentHandler(ListBaseIntentHandler):
     intent_type = INTENT_LIST_ADD_ITEM
     description = "Add item to a todo list"
 
+    @override
     async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
         """Execute action specific to this intent handler."""
+        # Format item summary with first letter capitalized and rest as-is
+        summary = item[:1].upper() + item[1:] if item else item
 
         # Add to list
         await target_list.async_create_todo_item(
-            TodoItem(summary=item, status=TodoItemStatus.NEEDS_ACTION)
+            TodoItem(summary=summary, status=TodoItemStatus.NEEDS_ACTION)
         )
 
 
@@ -101,6 +105,7 @@ class ListCompleteItemIntentHandler(ListBaseIntentHandler):
     intent_type = INTENT_LIST_COMPLETE_ITEM
     description = "Complete item on a todo list"
 
+    @override
     async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
         """Execute action specific to this intent handler."""
 
@@ -108,9 +113,9 @@ class ListCompleteItemIntentHandler(ListBaseIntentHandler):
         matching_item = None
         for todo_item in target_list.todo_items or ():
             if (
-                item in (todo_item.uid, todo_item.summary)
-                and todo_item.status == TodoItemStatus.NEEDS_ACTION
-            ):
+                item == todo_item.uid
+                or item.casefold() == (todo_item.summary or "").casefold()
+            ) and todo_item.status == TodoItemStatus.NEEDS_ACTION:
                 matching_item = todo_item
                 break
         if not matching_item or not matching_item.uid:
@@ -134,13 +139,17 @@ class ListRemoveItemIntentHandler(ListBaseIntentHandler):
     intent_type = INTENT_LIST_REMOVE_ITEM
     description = "Remove one or more items from a todo list"
 
+    @override
     async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
         """Execute action specific to this intent handler."""
 
         # Find item in list
         matching_item = None
         for todo_item in target_list.todo_items or ():
-            if item in (todo_item.uid, todo_item.summary):
+            if (
+                item == todo_item.uid
+                or item.casefold() == (todo_item.summary or "").casefold()
+            ):
                 matching_item = todo_item
                 break
         if not matching_item or not matching_item.uid:

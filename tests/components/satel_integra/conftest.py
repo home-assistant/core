@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components.satel_integra.config_flow import SatelConfigFlow
 from homeassistant.components.satel_integra.const import DOMAIN
 
 from . import (
@@ -16,6 +17,8 @@ from . import (
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
     MOCK_ZONE_SUBENTRY,
+    MOCK_ZONE_TEMPERATURE_SUBENTRY,
+    get_monitor_callbacks,
 )
 
 from tests.common import MockConfigEntry
@@ -29,6 +32,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def patch_debounce() -> Generator[None]:
+    """Override coordinator debounce time."""
+    with patch(
+        "homeassistant.components.satel_integra.coordinator.PARTITION_UPDATE_DEBOUNCE_DELAY",
+        0,
+    ):
+        yield
 
 
 @pytest.fixture
@@ -51,15 +64,22 @@ def mock_satel() -> Generator[AsyncMock]:
         client.violated_zones = []
 
         client.connect = AsyncMock(return_value=True)
+        client.read_temperature = AsyncMock(return_value=21.5)
+        client.read_temperatures = AsyncMock(return_value={1: 21.5})
         client.set_output = AsyncMock()
 
-        # Immediately push baseline values so entities have stable states for snapshots
-        async def _monitor_status(partitions_cb, zones_cb, outputs_cb):
-            partitions_cb()
-            zones_cb({"zones": {1: 0}})
-            outputs_cb({"outputs": {1: 0}})
+        client.register_callbacks = MagicMock()
 
-        client.monitor_status = AsyncMock(side_effect=_monitor_status)
+        # Immediately push baseline values so entities have stable states for snapshots
+        async def _start(**_: object) -> None:
+            alarm_status_callback, zone_changed_callback, output_changed_callback = (
+                get_monitor_callbacks(client)
+            )
+            alarm_status_callback()
+            zone_changed_callback({1: 0})
+            output_changed_callback({1: 0})
+
+        client.start = AsyncMock(side_effect=_start)
 
         yield client
 
@@ -73,8 +93,8 @@ def mock_config_entry() -> MockConfigEntry:
         data=MOCK_CONFIG_DATA,
         options=MOCK_CONFIG_OPTIONS,
         entry_id=MOCK_ENTRY_ID,
-        version=2,
-        minor_version=1,
+        version=SatelConfigFlow.VERSION,
+        minor_version=SatelConfigFlow.MINOR_VERSION,
     )
 
 
@@ -82,13 +102,28 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_config_entry_with_subentries(
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
-    """Mock satel configuration entry."""
+    """Mock satel configuration entry with the default subentries."""
     mock_config_entry.subentries = deepcopy(
         {
             MOCK_PARTITION_SUBENTRY.subentry_id: MOCK_PARTITION_SUBENTRY,
             MOCK_ZONE_SUBENTRY.subentry_id: MOCK_ZONE_SUBENTRY,
             MOCK_OUTPUT_SUBENTRY.subentry_id: MOCK_OUTPUT_SUBENTRY,
-            MOCK_SWITCHABLE_OUTPUT_SUBENTRY.subentry_id: MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
+            MOCK_SWITCHABLE_OUTPUT_SUBENTRY.subentry_id: (
+                MOCK_SWITCHABLE_OUTPUT_SUBENTRY
+            ),
+        }
+    )
+    return mock_config_entry
+
+
+@pytest.fixture
+def mock_config_entry_with_temperature_zone(
+    mock_config_entry: MockConfigEntry,
+) -> MockConfigEntry:
+    """Mock satel configuration entry with only a temperature-enabled zone."""
+    mock_config_entry.subentries = deepcopy(
+        {
+            MOCK_ZONE_TEMPERATURE_SUBENTRY.subentry_id: MOCK_ZONE_TEMPERATURE_SUBENTRY,
         }
     )
     return mock_config_entry

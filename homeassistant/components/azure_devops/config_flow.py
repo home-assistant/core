@@ -1,9 +1,7 @@
 """Config flow to configure the Azure DevOps integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aioazuredevops.client import DevOpsClient
 import aiohttp
@@ -64,6 +62,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             return errors
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

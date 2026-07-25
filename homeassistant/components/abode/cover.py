@@ -1,25 +1,24 @@
 """Support for Abode Security System covers."""
 
-from typing import Any
+from typing import Any, override
 
 from jaraco.abode.devices.cover import Cover
 
 from homeassistant.components.cover import CoverEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN_DATA
+from . import AbodeConfigEntry
 from .entity import AbodeDevice
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AbodeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode cover devices."""
-    data = hass.data[DOMAIN_DATA]
+    data = entry.runtime_data
 
     async_add_entities(
         AbodeCover(data, device)
@@ -34,14 +33,17 @@ class AbodeCover(AbodeDevice, CoverEntity):
     _attr_name = None
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return true if cover is closed, else False."""
         return not self._device.is_open
 
+    @override
     def close_cover(self, **kwargs: Any) -> None:
         """Issue close command to cover."""
         self._device.close_cover()
 
+    @override
     def open_cover(self, **kwargs: Any) -> None:
         """Issue open command to cover."""
         self._device.open_cover()

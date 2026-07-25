@@ -64,7 +64,7 @@ def get_current_branch():
 def load_json_from_path(path: pathlib.Path) -> Any:
     """Load JSON from path."""
     try:
-        return json.loads(path.read_text())
+        return json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as err:
         raise JSONDecodeErrorWithPath(err.msg, err.doc, err.pos, path) from err
 
@@ -133,7 +133,9 @@ def substitute_references(
             except MissingReference as err:
                 if fail_on_missing:
                     raise ExitApp(
-                        f"Missing reference '{err.reference_key}' in translation for key '{key}'"
+                        f"Missing reference"
+                        f" '{err.reference_key}'"
+                        f" in translation for key '{key}'"
                     ) from err
                 continue
             result[key] = substituted

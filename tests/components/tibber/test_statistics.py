@@ -24,6 +24,10 @@ async def test_async_setup_entry(
     tibber_connection.fetch_production_data_active_homes.return_value = None
     tibber_connection.get_homes = mock_get_homes
 
+    runtime_data = AsyncMock()
+    runtime_data.async_get_client.return_value = tibber_connection
+    config_entry.runtime_data = runtime_data
+
     coordinator = TibberDataCoordinator(hass, config_entry, tibber_connection)
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)

@@ -1,0 +1,115 @@
+{
+  "items": [
+    {
+      "deviceId": "e95e4c85-4f9e-4961-9656-4632821ce8c6",
+      "name": "plug-power-energy-powerConsumption",
+      "label": "Waschkeller Trockner Plug",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "8e18bf57-509c-38b4-af7f-871dd01bbb01",
+      "deviceManufacturerCode": "Meross",
+      "locationId": "a123d440-3337-4e3b-8af2-51427b68052f",
+      "ownerId": "a6f94f18-42d6-28c6-57c8-6c77aaf87439",
+      "roomId": "5dc4bad8-175a-4510-96a9-4b8871581be1",
+      "productId": "bb36645a-c493-411f-b5df-cf49586d8e8d",
+      "brandId": "305129c1-62e6-3208-a460-56d1fab20834",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "powerMeter",
+              "version": 1
+            },
+            {
+              "id": "energyMeter",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "firmwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "SmartPlug",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2026-03-04T14:22:40.328Z",
+      "parentDeviceId": "8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb",
+      "profile": {
+        "id": "6d166eee-a675-3029-a122-db310d109376"
+      },
+      "matter": {
+        "driverId": "7103039b-68d6-442c-afe5-e1bc955924a9",
+        "hubId": "8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb",
+        "provisioningState": "PROVISIONED",
+        "networkId": "F050C5A30C6BE3F6-ABABE7441F8C8235",
+        "executingLocally": true,
+        "uniqueId": "3378B09C94A77649",
+        "vendorId": 4933,
+        "productId": 40962,
+        "serialNumber": "510802250905784",
+        "listeningType": "ALWAYS",
+        "supportedNetworkInterfaces": ["WIFI"],
+        "version": {
+          "hardware": 0,
+          "hardwareLabel": "9.0",
+          "software": 1,
+          "softwareLabel": "9.3.26"
+        },
+        "endpoints": [
+          {
+            "endpointId": 0,
+            "deviceTypes": [
+              {
+                "deviceTypeId": 22
+              }
+            ]
+          },
+          {
+            "endpointId": 1,
+            "deviceTypes": [
+              {
+                "deviceTypeId": 266
+              }
+            ]
+          },
+          {
+            "endpointId": 2,
+            "deviceTypes": [
+              {
+                "deviceTypeId": 1296
+              }
+            ]
+          }
+        ],
+        "syncDrivers": true,
+        "fingerprintType": "MATTER_GENERIC",
+        "fingerprintId": "matter/on-off/plug/electrical-sensor"
+      },
+      "type": "MATTER",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_locks[lock.community_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_locks[lock.community_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Community door',
-      'supported_features': <LockEntityFeature: 1>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Community door',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 1>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.community_door',
@@ -51,8 +52,9 @@
 # ---
 # name: test_locks[lock.home-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_locks[lock.home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Home',
-      'supported_features': <LockEntityFeature: 1>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 1>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.home',

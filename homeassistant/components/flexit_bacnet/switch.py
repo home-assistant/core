@@ -3,7 +3,7 @@
 import asyncio.exceptions
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from flexit_bacnet import FlexitBACnet
 from flexit_bacnet.bacnet import DecodingError
@@ -91,6 +91,7 @@ async def async_setup_entry(
                         hass,
                         DOMAIN,
                         f"deprecated_switch_{fireplace_switch_unique_id}",
+                        breaks_in_ha_version="2026.9.0",
                         is_fixable=False,
                         issue_domain=DOMAIN,
                         severity=IssueSeverity.WARNING,
@@ -102,7 +103,7 @@ async def async_setup_entry(
                     entities.append(FlexitSwitch(coordinator, description))
         else:
             entities.append(FlexitSwitch(coordinator, description))
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 PARALLEL_UPDATES = 1
@@ -129,10 +130,12 @@ class FlexitSwitch(FlexitEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return value of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         try:
@@ -148,6 +151,7 @@ class FlexitSwitch(FlexitEntity, SwitchEntity):
         finally:
             await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         try:

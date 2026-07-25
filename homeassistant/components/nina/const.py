@@ -1,7 +1,5 @@
 """Constants for the Nina integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from logging import Logger, getLogger
 from typing import Final
@@ -14,6 +12,22 @@ DOMAIN: str = "nina"
 
 NO_MATCH_REGEX: str = "/(?!)/"
 ALL_MATCH_REGEX: str = ".*"
+
+SEVERITY_VALUES: list[str] = ["extreme", "severe", "moderate", "minor", "unknown"]
+
+SERVICE_GET_DETAILS: str = "get_details"
+
+SERVICE_DATA_HEADLINE: str = "headline"
+SERVICE_DATA_DESCRIPTION: str = "description"
+SERVICE_DATA_SENDER: str = "sender"
+SERVICE_DATA_SEVERITY: str = "severity"
+SERVICE_DATA_RECOMMENDED_ACTIONS: str = "recommended_actions"
+SERVICE_DATA_AFFECTED_AREAS: str = "affected_areas"
+SERVICE_DATA_WEB: str = "web"
+SERVICE_DATA_ID: str = "id"
+SERVICE_DATA_SENT: str = "sent"
+SERVICE_DATA_START: str = "start"
+SERVICE_DATA_EXPIRES: str = "expires"
 
 CONF_REGIONS: str = "regions"
 CONF_MESSAGE_SLOTS: str = "slots"
@@ -29,10 +43,20 @@ ATTR_SEVERITY: str = "severity"
 ATTR_RECOMMENDED_ACTIONS: str = "recommended_actions"
 ATTR_AFFECTED_AREAS: str = "affected_areas"
 ATTR_WEB: str = "web"
-ATTR_ID: str = "id"
 ATTR_SENT: str = "sent"
 ATTR_START: str = "start"
 ATTR_EXPIRES: str = "expires"
+
+SENSOR_SUFFIXES: list[str] = [
+    "headline",
+    "sender",
+    "severity",
+    "affected_areas",
+    "more_info_url",
+    "sent",
+    "start",
+    "expires",
+]
 
 CONST_LIST_A_TO_D: list[str] = ["A", "Ä", "B", "C", "D"]
 CONST_LIST_E_TO_H: list[str] = ["E", "F", "G", "H"]

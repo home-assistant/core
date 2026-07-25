@@ -1,7 +1,5 @@
 """Provide info to system health."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from accuweather.const import ENDPOINT
@@ -30,6 +28,8 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     )
 
     return {
-        "can_reach_server": system_health.async_check_can_reach_url(hass, ENDPOINT),
+        "can_reach_server": system_health.async_check_can_reach_url(
+            hass, str(ENDPOINT)
+        ),
         "remaining_requests": remaining_requests,
     }

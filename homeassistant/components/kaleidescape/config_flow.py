@@ -1,8 +1,6 @@
 """Config flow for Kaleidescape."""
 
-from __future__ import annotations
-
-from typing import Any, cast
+from typing import Any, cast, override
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -25,6 +23,7 @@ class KaleidescapeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     discovered_device: KaleidescapeDeviceInfo
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -60,6 +59,7 @@ class KaleidescapeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

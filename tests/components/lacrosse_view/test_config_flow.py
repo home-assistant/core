@@ -191,7 +191,8 @@ async def test_already_configured_device(
     )
     mock_config_entry.add_to_hass(hass)
 
-    # Now that we did the config once, let's try to do it again, this should raise the abort for already configured device
+    # Now that we did the config once, let's try to do it again,
+    # this should raise the abort for already configured device
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

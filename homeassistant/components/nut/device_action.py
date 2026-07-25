@@ -1,7 +1,5 @@
 """Provides device actions for Network UPS Tools (NUT)."""
 
-from __future__ import annotations
-
 from typing import cast
 
 import voluptuous as vol
@@ -13,8 +11,8 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import NutConfigEntry, NutRuntimeData
 from .const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS
+from .coordinator import NutConfigEntry, NutRuntimeData
 
 ACTION_TYPES = {cmd.replace(".", "_") for cmd in INTEGRATION_SUPPORTED_COMMANDS}
 

@@ -1,7 +1,5 @@
 """Tests for the Pinecil config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock
 
 from pynecil import CommunicationError

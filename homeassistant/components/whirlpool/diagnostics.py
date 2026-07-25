@@ -1,7 +1,5 @@
 """Diagnostics support for Whirlpool."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from whirlpool.appliance import Appliance
@@ -51,6 +49,10 @@ async def async_get_config_entry_diagnostics(
         "ovens": {
             oven.name: get_appliance_diagnostics(oven)
             for oven in appliances_manager.ovens
+        },
+        "refrigerators": {
+            refrigerator.name: get_appliance_diagnostics(refrigerator)
+            for refrigerator in appliances_manager.refrigerators
         },
     }
 

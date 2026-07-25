@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_sensors[sensor.someone_disk_available-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -46,10 +47,10 @@
 # name: test_sensors[sensor.someone_disk_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Someone Disk available',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Someone Disk available',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.someone_disk_available',
@@ -61,11 +62,12 @@
 # ---
 # name: test_sensors[sensor.someone_disk_size-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -106,10 +108,10 @@
 # name: test_sensors[sensor.someone_disk_size-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Someone Disk size',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Someone Disk size',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.someone_disk_size',
@@ -121,11 +123,12 @@
 # ---
 # name: test_sensors[sensor.someone_disk_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -160,9 +163,9 @@
 # name: test_sensors[sensor.someone_disk_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Someone Disk usage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Someone Disk usage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.someone_disk_usage',
@@ -174,11 +177,12 @@
 # ---
 # name: test_sensors[sensor.someone_disk_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -219,10 +223,10 @@
 # name: test_sensors[sensor.someone_disk_used-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Someone Disk used',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Someone Disk used',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.someone_disk_used',
@@ -234,11 +238,12 @@
 # ---
 # name: test_sensors[sensor.someone_disk_used_by_photos-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -279,10 +284,10 @@
 # name: test_sensors[sensor.someone_disk_used_by_photos-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Someone Disk used by photos',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Someone Disk used by photos',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.someone_disk_used_by_photos',
@@ -294,11 +299,12 @@
 # ---
 # name: test_sensors[sensor.someone_disk_used_by_videos-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -339,10 +345,10 @@
 # name: test_sensors[sensor.someone_disk_used_by_videos-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Someone Disk used by videos',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Someone Disk used by videos',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.someone_disk_used_by_videos',
@@ -354,11 +360,12 @@
 # ---
 # name: test_sensors[sensor.someone_photos_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -393,9 +400,9 @@
 # name: test_sensors[sensor.someone_photos_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Someone Photos count',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'photos',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Someone Photos count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'photos',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.someone_photos_count',
@@ -407,11 +414,12 @@
 # ---
 # name: test_sensors[sensor.someone_videos_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -446,9 +454,9 @@
 # name: test_sensors[sensor.someone_videos_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Someone Videos count',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'videos',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Someone Videos count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'videos',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.someone_videos_count',

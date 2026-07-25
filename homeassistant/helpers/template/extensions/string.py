@@ -1,7 +1,5 @@
 """Jinja2 extension for string processing functions."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode as urllib_urlencode
 

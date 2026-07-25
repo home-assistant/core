@@ -1,7 +1,5 @@
 """Twitter platform for notify component."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from functools import partial
 from http import HTTPStatus
@@ -9,7 +7,7 @@ import json
 import logging
 import mimetypes
 import os
-from typing import Any
+from typing import Any, override
 
 from TwitterAPI import TwitterAPI
 import voluptuous as vol
@@ -80,6 +78,7 @@ class TwitterNotificationService(BaseNotificationService):
             consumer_key, consumer_secret, access_token_key, access_token_secret
         )
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Tweet a message, optionally with media."""
         data = kwargs.get(ATTR_DATA)
@@ -234,7 +233,7 @@ class TwitterNotificationService(BaseNotificationService):
             "media processing waiting %s seconds to check status", str(check_after_secs)
         )
 
-        when = datetime.now() + timedelta(seconds=check_after_secs)
+        when = datetime.now() + timedelta(seconds=check_after_secs)  # pylint: disable=home-assistant-enforce-naive-now
         myself = partial(self.check_status_until_done, media_id, callback)
         async_track_point_in_time(self.hass, myself, when)
 

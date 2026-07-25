@@ -42,11 +42,19 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "description": "Please enter your MySubaru credentials\nNOTE: Initial setup may take up to 30 seconds",
-        "title": "Subaru Starlink configuration"
+        "title": "MySubaru Connected Services configuration"
       }
     }
   },
   "entity": {
+    "button": {
+      "remote_start": {
+        "name": "Remote start"
+      },
+      "remote_stop": {
+        "name": "Remote stop"
+      }
+    },
     "lock": {
       "door_locks": {
         "name": "Door locks"
@@ -74,6 +82,12 @@
       "range": {
         "name": "Range"
       },
+      "recommended_tire_pressure_front": {
+        "name": "Recommended tire pressure front"
+      },
+      "recommended_tire_pressure_rear": {
+        "name": "Recommended tire pressure rear"
+      },
       "tire_pressure_front_left": {
         "name": "Tire pressure front left"
       },
@@ -85,6 +99,15 @@
       },
       "tire_pressure_rear_right": {
         "name": "Tire pressure rear right"
+      },
+      "vehicle_state": {
+        "name": "Vehicle state",
+        "state": {
+          "engine_on_remote_start": "Engine on (remote start)",
+          "ignition_acc": "Accessory power",
+          "ignition_off": "Ignition off",
+          "ignition_on": "Ignition on"
+        }
       }
     }
   },
@@ -95,7 +118,7 @@
           "update_enabled": "Enable vehicle polling"
         },
         "description": "When enabled, vehicle polling will send a remote command to your vehicle every 2 hours to obtain new sensor data. Without vehicle polling, new sensor data is only received when the vehicle automatically pushes data (normally after engine shutdown).",
-        "title": "Subaru Starlink options"
+        "title": "MySubaru Connected Services options"
       }
     }
   },

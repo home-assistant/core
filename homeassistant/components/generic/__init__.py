@@ -1,7 +1,5 @@
 """The generic component."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -60,10 +58,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate entry."""
     _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
-
-    if entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
 
     if entry.version == 1:
         # Migrate to advanced section

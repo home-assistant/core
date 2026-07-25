@@ -349,7 +349,7 @@ async def test_multiple_pending_updates_for_different_sensors(
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
-    """Test that multiple sensors can be updated while disabled and applied when re-enabled."""
+    """Test sensors updated while disabled are applied when re-enabled."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
 

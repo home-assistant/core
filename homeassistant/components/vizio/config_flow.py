@@ -1,20 +1,16 @@
 """Config flow for Vizio."""
 
-from __future__ import annotations
-
 import copy
 import logging
-import socket
-from typing import Any
+from typing import Any, override
 
 from pyvizio import VizioAsync, async_guess_device_type
-from pyvizio.const import APP_HOME
+from pyvizio.const import APP_HOME, APPS
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import (
     SOURCE_ZEROCONF,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -32,8 +28,8 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-from homeassistant.util.network import is_ip_address
 
+from . import DATA_APPS
 from .const import (
     CONF_APPS,
     CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
@@ -45,6 +41,7 @@ from .const import (
     DEVICE_ID,
     DOMAIN,
 )
+from .coordinator import VizioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +57,8 @@ def _get_config_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
 
     return vol.Schema(
         {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Required(
                 CONF_NAME, default=input_dict.get(CONF_NAME, DEFAULT_NAME)
             ): str,
@@ -94,17 +93,16 @@ def _get_pairing_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
     )
 
 
-def _host_is_same(host1: str, host2: str) -> bool:
-    """Check if host1 and host2 are the same."""
-    host1 = host1.split(":", maxsplit=1)[0]
-    host1 = host1 if is_ip_address(host1) else socket.gethostbyname(host1)
-    host2 = host2.split(":", maxsplit=1)[0]
-    host2 = host2 if is_ip_address(host2) else socket.gethostbyname(host2)
-    return host1 == host2
-
-
 class VizioOptionsConfigFlow(OptionsFlow):
     """Handle Vizio options."""
+
+    def _get_app_list(self) -> list[dict[str, Any]]:
+        """Return the current apps list, falling back to defaults."""
+        if (
+            apps_coordinator := self.hass.data.get(DATA_APPS)
+        ) and apps_coordinator.data:
+            return apps_coordinator.data
+        return APPS
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -157,10 +155,7 @@ class VizioOptionsConfigFlow(OptionsFlow):
                     ): cv.multi_select(
                         [
                             APP_HOME["name"],
-                            *(
-                                app["name"]
-                                for app in self.hass.data[DOMAIN][CONF_APPS].data
-                            ),
+                            *(app["name"] for app in self._get_app_list()),
                         ]
                     ),
                 }
@@ -176,7 +171,10 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> VizioOptionsConfigFlow:
+    @override
+    def async_get_options_flow(
+        config_entry: VizioConfigEntry,
+    ) -> VizioOptionsConfigFlow:
         """Get the options flow for this handler."""
         return VizioOptionsConfigFlow()
 
@@ -200,6 +198,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=input_dict[CONF_NAME], data=input_dict)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -256,6 +255,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = self._user_schema or _get_config_schema()
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -283,7 +283,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(unique_id=unique_id, raise_on_progress=True)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         # Form must be shown after discovery so user can confirm/update configuration
         # before ConfigEntry creation.

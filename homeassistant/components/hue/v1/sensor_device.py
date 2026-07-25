@@ -1,12 +1,14 @@
 """Support for the Philips Hue sensor devices."""
 
+from typing import override
+
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from ..const import CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE, DOMAIN
 
 
-class GenericHueDevice(entity.Entity):  # pylint: disable=hass-enforce-class-module
+class GenericHueDevice(entity.Entity):  # pylint: disable=home-assistant-enforce-class-module
     """Representation of a Hue device."""
 
     def __init__(self, sensor, name, bridge, primary_sensor=None):
@@ -30,11 +32,13 @@ class GenericHueDevice(entity.Entity):  # pylint: disable=hass-enforce-class-mod
         return self.unique_id[:23]
 
     @property
+    @override
     def unique_id(self):
         """Return the ID of this Hue sensor."""
         return self.sensor.uniqueid
 
     @property
+    @override
     def name(self):
         """Return a friendly name for the sensor."""
         return self._name
@@ -45,6 +49,7 @@ class GenericHueDevice(entity.Entity):  # pylint: disable=hass-enforce-class-mod
         return self.primary_sensor.raw.get("swupdate", {}).get("state")
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info.
 

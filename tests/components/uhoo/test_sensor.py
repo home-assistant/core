@@ -59,6 +59,7 @@ async def test_async_setup_entry_multiple_devices(
             "ozone": 30.0,
             "virusIndex": 2.0,
             "moldIndex": 1.5,
+            "influenzaIndex": 3.0,
             "userSettings": {"temp": "c"},
         },
         {
@@ -75,6 +76,7 @@ async def test_async_setup_entry_multiple_devices(
             "ozone": 25.0,
             "virusIndex": 1.0,
             "moldIndex": 1.0,
+            "influenzaIndex": 2.0,
             "userSettings": {"temp": "c"},
         },
     ]
@@ -86,7 +88,7 @@ async def test_async_setup_entry_multiple_devices(
     # Setup the integration with the updated mock data
     await setup_integration(hass, mock_config_entry)
 
-    assert len(entity_registry.entities) == 22
+    assert len(entity_registry.entities) == 24
 
 
 async def test_sensor_availability_changes_with_connection_errors(

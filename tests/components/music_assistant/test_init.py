@@ -1,7 +1,5 @@
 """Test the Music Assistant integration init."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock
 
 from music_assistant_models.enums import EventType
@@ -181,7 +179,7 @@ async def test_authentication_required_triggers_reauth(
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
-    issue_reg = ir.async_get(hass)
+    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
     assert issue_reg.async_get_issue("homeassistant", issue_id)
 
@@ -210,6 +208,6 @@ async def test_authentication_required_addon_no_reauth(
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
-    issue_reg = ir.async_get(hass)
+    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
     assert issue_reg.async_get_issue("homeassistant", issue_id) is None

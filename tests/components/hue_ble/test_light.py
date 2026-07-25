@@ -13,7 +13,6 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 async def test_light(
     hass: HomeAssistant,
-    mock_scanner_count: AsyncMock,
     mock_light: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,

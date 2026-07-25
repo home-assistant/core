@@ -1,12 +1,18 @@
 """Coordinator for Powerfox Local integration."""
 
-from __future__ import annotations
+from typing import override
 
-from powerfox import LocalResponse, PowerfoxConnectionError, PowerfoxLocal
+from powerfox import (
+    LocalResponse,
+    PowerfoxAuthenticationError,
+    PowerfoxConnectionError,
+    PowerfoxLocal,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -36,13 +42,20 @@ class PowerfoxLocalDataUpdateCoordinator(DataUpdateCoordinator[LocalResponse]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> LocalResponse:
         """Fetch data from the local poweropti."""
         try:
             return await self.client.value()
+        except PowerfoxAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+                translation_placeholders={"host": self.config_entry.data[CONF_HOST]},
+            ) from err
         except PowerfoxConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="update_failed",
-                translation_placeholders={"error": str(err)},
+                translation_key="connection_error",
+                translation_placeholders={"host": self.config_entry.data[CONF_HOST]},
             ) from err

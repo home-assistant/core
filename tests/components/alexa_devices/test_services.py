@@ -10,9 +10,6 @@ from homeassistant.components.alexa_devices.services import (
     ATTR_INFO_SKILL,
     ATTR_SOUND,
     ATTR_TEXT_COMMAND,
-    SERVICE_INFO_SKILL,
-    SERVICE_SOUND_NOTIFICATION,
-    SERVICE_TEXT_COMMAND,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
@@ -35,9 +32,9 @@ async def test_setup_services(
     await setup_integration(hass, mock_config_entry)
 
     assert (services := hass.services.async_services_for_domain(DOMAIN))
-    assert SERVICE_TEXT_COMMAND in services
-    assert SERVICE_SOUND_NOTIFICATION in services
-    assert SERVICE_INFO_SKILL in services
+    assert "send_text_command" in services
+    assert "send_sound" in services
+    assert "send_info_skill" in services
 
 
 async def test_info_skill_service(
@@ -58,7 +55,7 @@ async def test_info_skill_service(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_INFO_SKILL,
+        "send_info_skill",
         {
             ATTR_INFO_SKILL: "tell_joke",
             ATTR_DEVICE_ID: device_entry.id,
@@ -88,7 +85,7 @@ async def test_send_sound_service(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SOUND_NOTIFICATION,
+        "send_sound",
         {
             ATTR_SOUND: "bell_02",
             ATTR_DEVICE_ID: device_entry.id,
@@ -118,7 +115,7 @@ async def test_send_text_service(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TEXT_COMMAND,
+        "send_text_command",
         {
             ATTR_TEXT_COMMAND: "Play B.B.C. radio on TuneIn",
             ATTR_DEVICE_ID: device_entry.id,
@@ -161,7 +158,9 @@ async def test_invalid_parameters(
     """Test invalid service parameters."""
 
     device_entry = dr.DeviceEntry(
-        id=TEST_DEVICE_1_ID, identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+        config_entry_id=mock_config_entry.entry_id,
+        id=TEST_DEVICE_1_ID,
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)},
     )
     mock_device_registry(
         hass,
@@ -173,7 +172,7 @@ async def test_invalid_parameters(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SOUND_NOTIFICATION,
+            "send_sound",
             {
                 ATTR_SOUND: sound,
                 ATTR_DEVICE_ID: device_id,
@@ -217,7 +216,9 @@ async def test_invalid_info_skillparameters(
     """Test invalid info skill service parameters."""
 
     device_entry = dr.DeviceEntry(
-        id=TEST_DEVICE_1_ID, identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+        config_entry_id=mock_config_entry.entry_id,
+        id=TEST_DEVICE_1_ID,
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)},
     )
     mock_device_registry(
         hass,
@@ -229,7 +230,7 @@ async def test_invalid_info_skillparameters(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_INFO_SKILL,
+            "send_info_skill",
             {
                 ATTR_INFO_SKILL: info_skill,
                 ATTR_DEVICE_ID: device_id,
@@ -266,7 +267,7 @@ async def test_config_entry_not_loaded(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SOUND_NOTIFICATION,
+            "send_sound",
             {
                 ATTR_SOUND: "bell_02",
                 ATTR_DEVICE_ID: device_entry.id,
@@ -281,34 +282,36 @@ async def test_config_entry_not_loaded(
 
 async def test_invalid_config_entry(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test invalid config entry."""
+    """Test that a device pointing to a non-existing config entry ID is skipped."""
 
+    device_entry = dr.DeviceEntry(
+        config_entry_id="non_existing_entry_id",
+        id=TEST_DEVICE_1_ID,
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)},
+    )
+    mock_device_registry(
+        hass,
+        {device_entry.id: device_entry},
+    )
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
-    )
-    assert device_entry
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "send_sound",
+            {
+                ATTR_SOUND: "bell_02",
+                ATTR_DEVICE_ID: TEST_DEVICE_1_ID,
+            },
+            blocking=True,
+        )
 
-    device_entry.config_entries.add("non_existing_entry_id")
-    await hass.async_block_till_done()
-
-    # Call Service
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SOUND_NOTIFICATION,
-        {
-            ATTR_SOUND: "bell_02",
-            ATTR_DEVICE_ID: device_entry.id,
-        },
-        blocking=True,
-    )
-    # No exception should be raised
-    assert mock_amazon_devices_client.call_alexa_sound.call_count == 1
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "config_entry_not_found"
+    assert exc_info.value.translation_placeholders == {"device_id": TEST_DEVICE_1_ID}
 
 
 async def test_missing_config_entry(
@@ -317,7 +320,7 @@ async def test_missing_config_entry(
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test missing config entry."""
+    """Test that a device not owned by an Alexa config entry is rejected."""
 
     await setup_integration(hass, mock_config_entry)
 
@@ -326,13 +329,21 @@ async def test_missing_config_entry(
     )
     assert device_entry
 
-    device_entry.config_entries.clear()
+    # Move the device to a config entry from a different integration
+    other_entry = MockConfigEntry(domain="other_domain", data={})
+    other_entry.add_to_hass(hass)
+    device_registry.async_update_device(
+        device_entry.id, add_config_entry_id=other_entry.entry_id
+    )
+    device_registry.async_update_device(
+        device_entry.id, remove_config_entry_id=mock_config_entry.entry_id
+    )
 
     # Call Service
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SOUND_NOTIFICATION,
+            "send_sound",
             {
                 ATTR_SOUND: "bell_02",
                 ATTR_DEVICE_ID: device_entry.id,

@@ -48,7 +48,7 @@ def pywemo_bridge_light_fixture(pywemo_device):
 async def test_async_update_locked_callback_and_update(
     hass: HomeAssistant, pywemo_bridge_light, wemo_entity, pywemo_device
 ) -> None:
-    """Test that a callback and a state update request can't both happen at the same time."""
+    """Test callback and state update can't both happen at once."""
     await entity_test_helpers.test_async_update_locked_callback_and_update(
         hass,
         pywemo_device,

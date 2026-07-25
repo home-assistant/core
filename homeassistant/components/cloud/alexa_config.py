@@ -1,13 +1,11 @@
 """Alexa configuration for Home Assistant Cloud."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
 from hass_nabucasa import AlexaApiError, Cloud
@@ -34,7 +32,6 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_should_expose,
 )
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, start
@@ -166,11 +163,13 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         )
 
     @property
+    @override
     def supports_auth(self) -> bool:
         """Return if config supports auth."""
         return True
 
     @property
+    @override
     def should_report_state(self) -> bool:
         """Return if states should be proactively reported."""
         return (
@@ -180,6 +179,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         )
 
     @property
+    @override
     def endpoint(self) -> str | URL | None:
         """Endpoint for report state."""
         if self._endpoint is None:
@@ -188,17 +188,20 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         return self._endpoint
 
     @property
+    @override
     def locale(self) -> str:
         """Return config locale."""
         # Not clear how to determine locale atm.
         return "en-US"
 
     @property
+    @override
     def entity_config(self) -> dict[str, Any]:
         """Return entity config."""
         return self._config.get(CONF_ENTITY_CONFIG) or {}
 
     @callback
+    @override
     def user_identifier(self) -> str:
         """Return an identifier for the user that represents this config."""
         return self._cloud_user
@@ -220,6 +223,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                 self._should_expose_legacy(entity_id),
             )
 
+    @override
     async def async_initialize(self) -> None:
         """Initialize the Alexa config."""
         await super().async_initialize()
@@ -232,7 +236,8 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                     ALEXA_SETTINGS_VERSION,
                 )
                 if self._prefs.alexa_settings_version < 2 or (
-                    # Recover from a bug we had in 2023.5.0 where entities didn't get exposed
+                    # Recover from a bug we had in 2023.5.0
+                    # where entities didn't get exposed
                     self._prefs.alexa_settings_version < 3
                     and not any(
                         settings.get("should_expose", False)
@@ -276,9 +281,6 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
     def _should_expose_legacy(self, entity_id: str) -> bool:
         """If an entity should be exposed."""
-        if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            return False
-
         entity_configs = self._prefs.alexa_entity_configs
         entity_config = entity_configs.get(entity_id, {})
         entity_expose: bool | None = entity_config.get(PREF_SHOULD_EXPOSE)
@@ -305,21 +307,22 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         )
 
     @callback
+    @override
     def should_expose(self, entity_id: str) -> bool:
         """If an entity should be exposed."""
         entity_filter: EntityFilter = self._config[CONF_FILTER]
         if not entity_filter.empty_filter:
-            if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-                return False
             return entity_filter(entity_id)
 
         return async_should_expose(self.hass, CLOUD_ALEXA, entity_id)
 
     @callback
+    @override
     def async_invalidate_access_token(self) -> None:
         """Invalidate access token."""
         self._token_valid = None
 
+    @override
     async def async_get_access_token(self) -> str | None:
         """Get an access token."""
         details: AlexaAccessTokenDetails | None

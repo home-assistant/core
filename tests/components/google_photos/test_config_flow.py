@@ -48,7 +48,7 @@ def mock_patch_api(mock_api: Mock) -> Generator[None]:
 
 @pytest.fixture(name="updated_token_entry", autouse=True)
 def mock_updated_token_entry() -> dict[str, Any]:
-    """Fixture to provide any test specific overrides to token data from the oauth token endpoint."""
+    """Fixture to provide test specific overrides to token data."""
     return {}
 
 
@@ -132,7 +132,6 @@ async def test_full_flow(
 
 @pytest.mark.usefixtures(
     "current_request_with_host",
-    "setup_credentials",
     "mock_api",
 )
 @pytest.mark.parametrize(
@@ -179,7 +178,7 @@ async def test_api_not_enabled(
     assert result["description_placeholders"]["message"].endswith("some error")
 
 
-@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_general_exception(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,

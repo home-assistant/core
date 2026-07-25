@@ -18,7 +18,7 @@ def mock_single_broadcast_address() -> Generator[None]:
 
 @pytest.fixture
 def mock_multiple_broadcast_addresses() -> Generator[None]:
-    """Mock network's async_async_get_ipv4_broadcast_addresses to return multiple addresses."""
+    """Mock network's get_ipv4_broadcast_addresses for multiple addresses."""
     with patch(
         "homeassistant.components.network.async_get_ipv4_broadcast_addresses",
         return_value={"10.255.255.255", "192.168.0.255"},

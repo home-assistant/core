@@ -471,13 +471,13 @@
     "lamp": {
       "switch": {
         "switch": {
-          "value": "off",
+          "value": "on",
           "timestamp": "2025-11-12T00:04:46.554Z"
         }
       },
       "samsungce.lamp": {
         "brightnessLevel": {
-          "value": "high",
+          "value": "low",
           "timestamp": "2025-11-12T00:04:44.863Z"
         },
         "supportedBrightnessLevel": {

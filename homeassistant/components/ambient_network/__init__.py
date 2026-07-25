@@ -1,7 +1,5 @@
 """The Ambient Weather Network integration."""
 
-from __future__ import annotations
-
 from aioambient.open_api import OpenAPI
 
 from homeassistant.const import Platform

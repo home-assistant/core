@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_update[update.gs012345_gateway_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,20 +39,20 @@
 # name: test_update[update.gs012345_gateway_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/lamarzocco/icon.png',
-      'friendly_name': 'GS012345 Gateway firmware',
-      'in_progress': False,
-      'installed_version': 'v5.0.9',
-      'latest_version': 'v5.0.10',
-      'release_summary': None,
-      'release_url': 'https://support-iot.lamarzocco.com/firmware-updates/',
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 21>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/lamarzocco/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Gateway firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'v5.0.9',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'v5.0.10',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://support-iot.lamarzocco.com/firmware-updates/',
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 21>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.gs012345_gateway_firmware',
@@ -63,8 +64,9 @@
 # ---
 # name: test_update[update.gs012345_machine_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -100,20 +102,20 @@
 # name: test_update[update.gs012345_machine_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/lamarzocco/icon.png',
-      'friendly_name': 'GS012345 Machine firmware',
-      'in_progress': False,
-      'installed_version': 'v1.17',
-      'latest_version': 'v1.17',
-      'release_summary': None,
-      'release_url': 'https://support-iot.lamarzocco.com/firmware-updates/',
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 21>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/lamarzocco/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Machine firmware',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'v1.17',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'v1.17',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://support-iot.lamarzocco.com/firmware-updates/',
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 21>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.gs012345_machine_firmware',

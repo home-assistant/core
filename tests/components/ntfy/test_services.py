@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from aiontfy import Message
+from aiontfy import BroadcastAction, HttpAction, Message, ViewAction
 from aiontfy.exceptions import (
     NtfyException,
     NtfyHTTPError,
@@ -16,6 +16,7 @@ from homeassistant.components import camera, image, media_source
 from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.components.ntfy.const import DOMAIN
 from homeassistant.components.ntfy.services import (
+    ATTR_ACTIONS,
     ATTR_ATTACH,
     ATTR_ATTACH_FILE,
     ATTR_CALL,
@@ -23,7 +24,6 @@ from homeassistant.components.ntfy.services import (
     ATTR_DELAY,
     ATTR_EMAIL,
     ATTR_FILENAME,
-    ATTR_ICON,
     ATTR_MARKDOWN,
     ATTR_PRIORITY,
     ATTR_SEQUENCE_ID,
@@ -33,7 +33,7 @@ from homeassistant.components.ntfy.services import (
     SERVICE_PUBLISH,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -41,6 +41,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import AsyncMock, MockConfigEntry, patch
 
 
+@pytest.mark.freeze_time("2026-01-01T23:59:59+00:00")
 async def test_ntfy_publish(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -69,6 +70,29 @@ async def test_ntfy_publish(
             ATTR_PRIORITY: "5",
             ATTR_TAGS: ["partying_face", "grin"],
             ATTR_SEQUENCE_ID: "Mc3otamDNcpJ",
+            ATTR_ACTIONS: [
+                {
+                    "action": "broadcast",
+                    "label": "Take picture",
+                    "intent": "com.example.AN_INTENT",
+                    "extras": {"cmd": "pic"},
+                    "clear": True,
+                },
+                {
+                    "action": "view",
+                    "label": "Open website",
+                    "url": "https://example.com",
+                    "clear": False,
+                },
+                {
+                    "action": "http",
+                    "label": "Close door",
+                    "url": "https://api.example.local/",
+                    "method": "PUT",
+                    "headers": {"Authorization": "Bearer ..."},
+                    "clear": False,
+                },
+            ],
         },
         blocking=True,
     )
@@ -86,9 +110,34 @@ async def test_ntfy_publish(
             icon=URL("https://example.org/logo.png"),
             delay="86430.0s",
             sequence_id="Mc3otamDNcpJ",
+            actions=[
+                BroadcastAction(
+                    label="Take picture",
+                    intent="com.example.AN_INTENT",
+                    extras={"cmd": "pic"},
+                    clear=True,
+                ),
+                ViewAction(
+                    label="Open website",
+                    url=URL("https://example.com"),
+                    clear=False,
+                ),
+                HttpAction(
+                    label="Close door",
+                    url=URL("https://api.example.local/"),
+                    method="PUT",
+                    headers={"Authorization": "Bearer ..."},
+                    body=None,
+                    clear=False,
+                ),
+            ],
         ),
         None,
     )
+
+    state = hass.states.get("notify.mytopic")
+    assert state
+    assert state.state == "2026-01-01T23:59:59+00:00"
 
 
 @pytest.mark.parametrize(
@@ -160,7 +209,9 @@ async def test_send_message_exception(
             {
                 ATTR_ATTACH: "https://example.com/Epic Sax Guy 10 Hours.mp4",
                 ATTR_ATTACH_FILE: {
-                    "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+                    "media_content_id": (
+                        "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+                    ),
                     "media_content_type": "video/mp4",
                 },
             },
@@ -173,12 +224,24 @@ async def test_send_message_exception(
             },
             "Filename only allowed when attachment is provided",
         ),
+        (
+            vol.MultipleInvalid,
+            {
+                ATTR_ACTIONS: [
+                    {"action": "broadcast", "label": "1"},
+                    {"action": "broadcast", "label": "2"},
+                    {"action": "broadcast", "label": "3"},
+                    {"action": "broadcast", "label": "4"},
+                ],
+            },
+            "Too many actions defined. A maximum of 3 is supported",
+        ),
     ],
 )
+@pytest.mark.usefixtures("mock_aiontfy")
 async def test_send_message_validation_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_aiontfy: AsyncMock,
     payload: dict[str, Any],
     error_msg: str,
     exception: type[Exception],
@@ -266,7 +329,9 @@ async def test_ntfy_publish_attachment_upload(
         {
             ATTR_ENTITY_ID: "notify.mytopic",
             ATTR_ATTACH_FILE: {
-                "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+                "media_content_id": (
+                    "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+                ),
                 "media_content_type": "video/mp4",
             },
         },
@@ -284,7 +349,7 @@ async def test_ntfy_publish_upload_camera_snapshot(
     config_entry: MockConfigEntry,
     mock_aiontfy: AsyncMock,
 ) -> None:
-    """Test publishing ntfy message via ntfy.publish action with camera snapshot upload."""
+    """Test ntfy.publish action with camera snapshot upload."""
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -322,7 +387,7 @@ async def test_ntfy_publish_upload_media_source_not_supported(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test publishing ntfy message via ntfy.publish action with unsupported media source."""
+    """Test ntfy.publish action with unsupported media source."""
 
     assert await async_setup_component(hass, "tts", {})
     config_entry.add_to_hass(hass)

@@ -12,7 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import Throttle
 
-from .const import ATTR_BOOT_TIME, ATTR_LOAD, DOMAIN, ROUTER_DEFAULT_HOST
+from .const import ATTR_BOOT_TIME, ATTR_LOAD, ROUTER_DEFAULT_HOST
+
+type VilfoConfigEntry = ConfigEntry[VilfoRouterData]
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -21,7 +23,7 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VilfoConfigEntry) -> bool:
     """Set up Vilfo Router from a config entry."""
     host = entry.data[CONF_HOST]
     access_token = entry.data[CONF_ACCESS_TOKEN]
@@ -33,21 +35,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not vilfo_router.available:
         raise ConfigEntryNotReady
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = vilfo_router
+    entry.runtime_data = vilfo_router
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VilfoConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class VilfoRouterData:

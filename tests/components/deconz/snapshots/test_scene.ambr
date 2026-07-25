@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_scenes[group_payload0-expected0][scene.light_group_scene-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_scenes[group_payload0-expected0][scene.light_group_scene-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Light group Scene',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Light group Scene',
     }),
     'context': <ANY>,
     'entity_id': 'scene.light_group_scene',

@@ -1,12 +1,13 @@
 """Constants for the Transmission Bittorrent Client component."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
+from awesomeversion import AwesomeVersion
 from transmission_rpc import Torrent
 
 DOMAIN = "transmission"
+
+MIN_REQUIRED_TRANSMISSION_VERSION = AwesomeVersion("4.0.0")
 
 ORDER_NEWEST_FIRST = "newest_first"
 ORDER_OLDEST_FIRST = "oldest_first"
@@ -54,6 +55,10 @@ SERVICE_STOP_TORRENT = "stop_torrent"
 EVENT_STARTED_TORRENT = "transmission_started_torrent"
 EVENT_REMOVED_TORRENT = "transmission_removed_torrent"
 EVENT_DOWNLOADED_TORRENT = "transmission_downloaded_torrent"
+
+EVENT_TYPE_STARTED = "started"
+EVENT_TYPE_REMOVED = "removed"
+EVENT_TYPE_DOWNLOADED = "downloaded"
 
 STATE_UP_DOWN = "up_down"
 STATE_SEEDING = "seeding"

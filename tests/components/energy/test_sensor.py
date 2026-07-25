@@ -8,7 +8,7 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.energy import async_get_manager, data
+from homeassistant.components.energy import DOMAIN, async_get_manager, data
 from homeassistant.components.energy.sensor import (
     EnergyCostSensor,
     EnergyPowerSensor,
@@ -23,7 +23,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.sensor.recorder import (  # pylint: disable=home-assistant-component-root-import
     compile_statistics,
 )
 from homeassistant.const import (
@@ -55,7 +55,7 @@ async def setup_integration(
     """Set up the integration."""
 
     async def setup_integration(hass: HomeAssistant) -> None:
-        assert await async_setup_component(hass, "energy", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
     return setup_integration
@@ -203,7 +203,7 @@ async def test_cost_sensor_price_entity_total_increasing(
     def _compile_statistics(_):
         with session_scope(hass=hass) as session:
             return compile_statistics(
-                hass, session, now, now + timedelta(seconds=1)
+                hass, session, now, now + timedelta(seconds=1), {}
             ).platform_stats
 
     energy_attributes = {
@@ -423,7 +423,7 @@ async def test_cost_sensor_price_entity_total(
     def _compile_statistics(_):
         with session_scope(hass=hass) as session:
             return compile_statistics(
-                hass, session, now, now + timedelta(seconds=0.17)
+                hass, session, now, now + timedelta(seconds=0.17), {}
             ).platform_stats
 
     energy_attributes = {
@@ -645,7 +645,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     def _compile_statistics(_):
         with session_scope(hass=hass) as session:
             return compile_statistics(
-                hass, session, now, now + timedelta(seconds=1)
+                hass, session, now, now + timedelta(seconds=1), {}
             ).platform_stats
 
     energy_attributes = {
@@ -1394,7 +1394,7 @@ async def test_power_sensor_manager_creation(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test SensorManager creates power sensors correctly."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -1427,13 +1427,99 @@ async def test_power_sensor_manager_creation(
     state = hass.states.get("sensor.battery_power_inverted")
     assert state is not None
     assert float(state.state) == -100.0
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
+
+
+async def test_power_sensor_inverted_propagates_unit(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test inverted power sensor copies unit from the source state."""
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+
+    # Use a non-default unit to prove we copy from the source rather than
+    # hard-coding Watts.
+    hass.states.async_set(
+        "sensor.battery_power",
+        "1.5",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
+    )
+    await hass.async_block_till_done()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_inverted": "sensor.battery_power",
+                    },
+                }
+            ],
+        }
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.battery_power_inverted")
+    assert state is not None
+    assert float(state.state) == -1.5
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.KILO_WATT
+
+    # Source switches to Watts — the inverted sensor should follow.
+    hass.states.async_set(
+        "sensor.battery_power",
+        "200.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.battery_power_inverted")
+    assert state is not None
+    assert float(state.state) == -200.0
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
+
+
+async def test_power_sensor_inverted_source_without_unit(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test inverted sensor reports no unit when source has none."""
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+
+    hass.states.async_set("sensor.battery_power", "100.0")
+    await hass.async_block_till_done()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_inverted": "sensor.battery_power",
+                    },
+                }
+            ],
+        }
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.battery_power_inverted")
+    assert state is not None
+    assert float(state.state) == -100.0
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
 
 
 async def test_power_sensor_manager_cleanup(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test SensorManager removes power sensors when config changes."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -1488,7 +1574,7 @@ async def test_power_sensor_grid_combined(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test power sensor for grid with combined config."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -1529,6 +1615,7 @@ async def test_power_sensor_grid_combined(
     assert state is not None
     # 500 - 200 = 300 (net import)
     assert float(state.state) == 300.0
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
 
 
 async def test_power_sensor_device_assignment(
@@ -1538,7 +1625,7 @@ async def test_power_sensor_device_assignment(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test power sensor is assigned to same device as source sensor."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -1600,7 +1687,7 @@ async def test_power_sensor_device_assignment_combined_second_sensor(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test power sensor checks second sensor if first has no device."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -1675,7 +1762,7 @@ async def test_power_sensor_inverted_availability(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test inverted power sensor availability follows source sensor."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -1728,7 +1815,7 @@ async def test_power_sensor_combined_availability(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test combined power sensor availability requires both sources available."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -1800,7 +1887,7 @@ async def test_power_sensor_battery_combined(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test power sensor for battery with combined config."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -1860,7 +1947,7 @@ async def test_power_sensor_combined_unit_conversion(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test power sensor combined mode with different units."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -1902,13 +1989,14 @@ async def test_power_sensor_combined_unit_conversion(
     assert state is not None
     # 1500 W - 500 W = 1000 W (units are converted to W internally)
     assert float(state.state) == 1000.0
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
 
 
 async def test_power_sensor_inverted_negative_values(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test inverted power sensor with negative source values."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -1986,7 +2074,7 @@ async def test_energy_data_removal(
         },
     )
 
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     await hass.async_block_till_done()
 
     # Verify cost sensor was created
@@ -2243,7 +2331,7 @@ async def test_power_sensor_inverted_invalid_value(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test inverted power sensor with invalid source value."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -2287,7 +2375,7 @@ async def test_power_sensor_combined_invalid_value(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test combined power sensor with invalid source value."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -2359,7 +2447,7 @@ async def test_power_sensor_naming_fallback(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test power sensor naming when source not in registry."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -2397,7 +2485,7 @@ async def test_power_sensor_no_device_assignment(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test power sensor when source sensors have no device."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -2440,7 +2528,7 @@ async def test_power_sensor_keeps_existing_on_update(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test that existing power sensor is kept when config doesn't change."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -2550,7 +2638,7 @@ async def test_power_sensor_naming_with_registry_name(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test power sensor naming uses registry name when available."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
 
@@ -2649,7 +2737,8 @@ async def test_missing_price_entity(
     )
     await hass.async_block_till_done()
 
-    # Cost should be initialized (0.0 because it's the first update after price became available)
+    # Cost should be initialized (0.0 because it's the first
+    # update after price became available)
     state = hass.states.get("sensor.energy_consumption_cost")
     assert state.state == "0.0"
 

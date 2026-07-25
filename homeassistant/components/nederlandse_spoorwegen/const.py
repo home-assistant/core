@@ -12,7 +12,6 @@ AMS_TZ = ZoneInfo("Europe/Amsterdam")
 # Update every 2 minutes
 SCAN_INTERVAL = timedelta(minutes=2)
 
-CONF_ROUTES = "routes"
 CONF_FROM = "from"
 CONF_TO = "to"
 CONF_VIA = "via"

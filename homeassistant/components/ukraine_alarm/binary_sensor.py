@@ -1,13 +1,12 @@
 """binary sensors for Ukraine Alarm integration."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -25,7 +24,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
 )
-from .coordinator import UkraineAlarmDataUpdateCoordinator
+from .coordinator import UkraineAlarmConfigEntry, UkraineAlarmDataUpdateCoordinator
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
@@ -63,12 +62,12 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: UkraineAlarmConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ukraine Alarm binary sensor entities based on a config entry."""
     name = config_entry.data[CONF_NAME]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         UkraineAlarmSensor(
@@ -111,6 +110,7 @@ class UkraineAlarmSensor(
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.coordinator.data.get(self.entity_description.key, None)

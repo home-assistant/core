@@ -1,12 +1,10 @@
 """Provide a way to categorize things within a defined scope."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict, override
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
@@ -69,6 +67,7 @@ class CategoryEntry:
 class CategoryRegistryStore(Store[CategoryRegistryStoreData]):
     """Store category registry data."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,
@@ -77,7 +76,7 @@ class CategoryRegistryStore(Store[CategoryRegistryStoreData]):
     ) -> CategoryRegistryStoreData:
         """Migrate to the new version."""
         if old_major_version > STORAGE_VERSION_MAJOR:
-            raise ValueError("Can't migrate to future version")
+            raise NotImplementedError
 
         if old_major_version == 1:
             if old_minor_version < 2:
@@ -204,7 +203,8 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
 
         return new
 
-    async def async_load(self) -> None:
+    @override
+    async def _async_load(self) -> None:
         """Load the category registry."""
         data = await self._store.async_load()
         category_entries: dict[str, dict[str, CategoryEntry]] = {}
@@ -225,6 +225,7 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         self.categories = category_entries
 
     @callback
+    @override
     def _data_to_save(self) -> CategoryRegistryStoreData:
         """Return data of category registry to store in a file."""
         return {
@@ -265,7 +266,7 @@ def async_get(hass: HomeAssistant) -> CategoryRegistry:
     return CategoryRegistry(hass)
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load category registry."""
     assert DATA_REGISTRY not in hass.data
-    await async_get(hass).async_load()
+    await async_get(hass).async_load(load_empty=load_empty)

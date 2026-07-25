@@ -10,8 +10,6 @@ CONF_TARGET_ID = "target_id"
 
 DEFAULT_PORT = 44100
 
-DATA_SOMFY_MYLINK = "somfy_mylink_data"
-MYLINK_STATUS = "mylink_status"
 DOMAIN = "somfy_mylink"
 
 PLATFORMS = [Platform.COVER]

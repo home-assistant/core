@@ -1,7 +1,5 @@
 """The Dormakaba dKey integration."""
 
-from __future__ import annotations
-
 from py_dormakaba_dkey import DKEYLock
 from py_dormakaba_dkey.models import AssociationData
 

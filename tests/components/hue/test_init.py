@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import hue
+from homeassistant.components.hue import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -62,7 +63,7 @@ async def test_unload_entry(hass: HomeAssistant, mock_bridge_setup) -> None:
         return True
 
     mock_bridge_setup.async_reset = mock_reset
-    assert await hue.async_unload_entry(hass, entry)
+    assert await hass.config_entries.async_unload(entry.entry_id)
     assert not hasattr(entry, "runtime_data")
 
 
@@ -162,7 +163,7 @@ async def test_security_vuln_check(hass: HomeAssistant) -> None:
             ),
         ),
     ):
-        assert await async_setup_component(hass, "hue", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
 

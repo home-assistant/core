@@ -1,9 +1,64 @@
 """Tests for Proxmox VE integration."""
 
+from copy import deepcopy
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
+
+# Example permissions dict with audit permissions granted for nodes and vms
+AUDIT_PERMISSIONS = {
+    "/nodes": {
+        "VM.GuestAgent.Audit": 1,
+        "Sys.Audit": 1,
+        "VM.Audit": 1,
+    },
+    "/vms": {
+        "Sys.Audit": 1,
+        "VM.GuestAgent.Audit": 1,
+        "VM.Audit": 1,
+    },
+    "/": {
+        "VM.Audit": 1,
+        "VM.GuestAgent.Audit": 1,
+        "Sys.Audit": 1,
+    },
+}
+
+POWER_PERMISSIONS = {
+    "/": {
+        "Sys.PowerMgmt": 1,
+        "VM.PowerMgmt": 1,
+    },
+    "/nodes": {
+        "Sys.PowerMgmt": 1,
+        "VM.PowerMgmt": 1,
+    },
+    "/vms": {"VM.PowerMgmt": 1},
+    "/vms/101": {"VM.PowerMgmt": 0},
+}
+
+SNAPSHOT_PERMISSIONS = {
+    "/vms": {"VM.Snapshot": 1},
+    "/vms/101": {"VM.Snapshot": 0},
+}
+
+MERGED_PERMISSIONS = {
+    key: {
+        **AUDIT_PERMISSIONS.get(key, {}),
+        **POWER_PERMISSIONS.get(key, {}),
+        **SNAPSHOT_PERMISSIONS.get(key, {}),
+    }
+    for key in set(AUDIT_PERMISSIONS)
+    | set(POWER_PERMISSIONS)
+    | set(SNAPSHOT_PERMISSIONS)
+}
+
+PVEVMUSER_PERMISSIONS = deepcopy(MERGED_PERMISSIONS)
+# Remove node-level and root-level scopes entirely
+PVEVMUSER_PERMISSIONS.pop("/", None)
+PVEVMUSER_PERMISSIONS.pop("/nodes", None)
 
 
 async def setup_integration(

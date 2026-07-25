@@ -5,7 +5,7 @@ import errno
 from functools import partial
 import logging
 import socket
-from typing import Any
+from typing import Any, override
 
 import broadlink as blk
 from broadlink.exceptions import (
@@ -64,6 +64,7 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
             "host": device.host[0],
         }
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -90,6 +91,7 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_device(device)
         return await self.async_step_auth()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -313,6 +315,8 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 },
             )
 
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
         data_schema = {vol.Required(CONF_NAME, default=device.name): str}
         return self.async_show_form(
             step_id="finish", data_schema=vol.Schema(data_schema), errors=errors

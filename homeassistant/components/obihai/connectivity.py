@@ -1,7 +1,5 @@
 """Support for Obihai Connectivity."""
 
-from __future__ import annotations
-
 from pyobihai import PyObihai
 
 from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, LOGGER

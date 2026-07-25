@@ -1,15 +1,12 @@
 """Sensor to indicate whether the current day is a workday."""
 
-from __future__ import annotations
-
 from datetime import datetime
-from typing import Final
+from typing import Final, override
 
 from holidays import HolidayBase
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -33,7 +30,6 @@ async def async_setup_entry(
     """Set up the Workday sensor."""
     days_offset: int = int(entry.options[CONF_OFFSET])
     excludes: list[str] = entry.options[CONF_EXCLUDES]
-    sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
     obj_holidays = entry.runtime_data
 
@@ -53,7 +49,7 @@ async def async_setup_entry(
                 workdays,
                 excludes,
                 days_offset,
-                sensor_name,
+                entry.title,
                 entry.entry_id,
             )
         ],
@@ -89,6 +85,7 @@ class IsWorkdaySensor(BaseWorkdayEntity, BinarySensorEntity):
             CONF_OFFSET: days_offset,
         }
 
+    @override
     def update_data(self, now: datetime) -> None:
         """Get date and look whether it is a holiday."""
         self._attr_is_on = self.date_is_workday(now)

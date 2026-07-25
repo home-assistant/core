@@ -1,8 +1,6 @@
 """Support for Tasmota fans."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from hatasmota import const as tasmota_const, fan as tasmota_fan
 from hatasmota.entity import TasmotaEntity as HATasmotaEntity
@@ -81,6 +79,7 @@ class TasmotaFan(
             **kwds,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
         self._tasmota_entity.set_on_state_callback(self.fan_state_updated)
@@ -96,11 +95,13 @@ class TasmotaFan(
         self.async_write_ha_state()
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return len(ORDERED_NAMED_FAN_SPEEDS)
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self._state is None:
@@ -109,6 +110,7 @@ class TasmotaFan(
             return 0
         return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, self._state)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""
         if percentage == 0:
@@ -119,6 +121,7 @@ class TasmotaFan(
             )
             await self._tasmota_entity.set_speed(tasmota_speed)
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -134,6 +137,7 @@ class TasmotaFan(
             )
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._tasmota_entity.set_speed(tasmota_const.FAN_SPEED_OFF)

@@ -1,6 +1,6 @@
 """Support for Aurora Forecast sensor."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.const import PERCENTAGE
@@ -35,6 +35,7 @@ class AuroraSensor(AuroraEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
+    @override
     def native_value(self) -> int:
         """Return % chance the aurora is visible."""
         return self.coordinator.data

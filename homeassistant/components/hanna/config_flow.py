@@ -1,9 +1,7 @@
 """Config flow for Hanna Instruments integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from hanna_cloud import AuthenticationError, HannaCloudClient
 from requests.exceptions import ConnectionError as RequestsConnectionError, Timeout
@@ -25,6 +23,7 @@ class HannaConfigFlow(ConfigFlow, domain=DOMAIN):
         {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
     )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

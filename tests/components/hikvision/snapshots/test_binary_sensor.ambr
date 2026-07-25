@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[binary_sensor.front_camera_line_crossing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_all_entities[binary_sensor.front_camera_line_crossing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'Front Camera Line crossing',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera Line crossing',
       'last_tripped_time': '2024-01-01T00:00:00Z',
     }),
     'context': <ANY>,
@@ -52,8 +53,9 @@
 # ---
 # name: test_all_entities[binary_sensor.front_camera_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -89,8 +91,8 @@
 # name: test_all_entities[binary_sensor.front_camera_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'Front Camera Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera Motion',
       'last_tripped_time': '2024-01-01T00:00:00Z',
     }),
     'context': <ANY>,

@@ -567,10 +567,47 @@ async def test_redirect_to_non_loopback_allowed(
 
 
 @pytest.mark.usefixtures("socket_enabled")
+async def test_redirect_to_custom_scheme_not_blocked(
+    hass: HomeAssistant, redirect_server: TestServer
+) -> None:
+    """Test that redirects to custom (non-HTTP/S) URI schemes are not blocked."""
+    session = client.async_create_clientsession(hass)
+    server_port = redirect_server.port
+
+    # weconnect://authenticated is used as an OAuth callback URI.
+    # The host 'authenticated' resolves to 0.0.0.0, which would trigger
+    # the SSRF block for schemes in the connector's allowed set, but
+    # weconnect:// is a custom app scheme that aiohttp cannot connect to.
+    redirect_url = (
+        f"http://external.example.com:{server_port}"
+        "/redirect?to=weconnect://authenticated"
+    )
+
+    async def mock_async_resolve_host(host: str) -> list[dict[str, object]]:
+        """Mock DNS for the SSRF middleware check (not TCP connections)."""
+        if host == "external.example.com":
+            # Origin must be public so middleware doesn't treat this as
+            # loopback→loopback (which is always allowed).
+            return _resolve_result(host, "93.184.216.34")
+        # The scheme check skips DNS for non-HTTP(S), so this branch is
+        # only reached if that check is removed — ensuring the test then
+        # fails with SSRFRedirectError instead of silently passing.
+        return _resolve_result(host, "0.0.0.0")
+
+    connector = session.connector
+    # allow_redirects=False so aiohttp returns the 307 response directly
+    # rather than attempting to connect to the custom-scheme URI.
+    # SSRFRedirectError must NOT be raised despite "authenticated" → 0.0.0.0.
+    with patch.object(connector, "async_resolve_host", mock_async_resolve_host):
+        resp = await session.get(redirect_url, allow_redirects=False)
+    assert resp.status == 307
+
+
+@pytest.mark.usefixtures("socket_enabled")
 @pytest.mark.parametrize(
     ("location", "target_resolved_addr"),
     [
-        # Loopback IPs and hostnames — blocked before DNS resolution
+        # Loopback IPs and hostnames — blocked before DNS resolution (http)
         ("http://127.0.0.1/evil", None),
         ("http://[::1]/evil", None),
         ("http://localhost/evil", None),
@@ -579,12 +616,36 @@ async def test_redirect_to_non_loopback_allowed(
         ("http://example.localhost./evil", None),
         ("http://app.localhost/evil", None),
         ("http://sub.domain.localhost/evil", None),
-        # Benign hostnames resolving to blocked IPs — blocked after DNS
+        # Loopback IPs and hostnames — blocked before DNS resolution (https)
+        ("https://127.0.0.1/evil", None),
+        ("https://[::1]/evil", None),
+        ("https://localhost/evil", None),
+        # Loopback IPs and hostnames — blocked before DNS resolution (ws/wss)
+        ("ws://127.0.0.1/evil", None),
+        ("ws://localhost/evil", None),
+        ("wss://127.0.0.1/evil", None),
+        ("wss://localhost/evil", None),
+        # Benign hostnames resolving to blocked IPs — blocked after DNS (http)
         ("http://evil.example.com:{port}/steal", "127.0.0.1"),
         ("http://evil.example.com:{port}/steal", "127.0.0.2"),
         ("http://evil.example.com:{port}/steal", "::1"),
         ("http://evil.example.com:{port}/steal", "0.0.0.0"),
         ("http://evil.example.com:{port}/steal", "::"),
+        # Benign hostnames resolving to blocked IPs — blocked after DNS (https)
+        ("https://evil.example.com:{port}/steal", "127.0.0.1"),
+        ("https://evil.example.com:{port}/steal", "0.0.0.0"),
+        # Benign hostnames resolving to blocked IPs — blocked after DNS (ws/wss)
+        ("ws://evil.example.com:{port}/steal", "127.0.0.1"),
+        ("wss://evil.example.com:{port}/steal", "127.0.0.1"),
+        # Upper-case schemes — yarl normalizes to lowercase per RFC 3986
+        ("HTTP://localhost/evil", None),
+        ("HTTPS://localhost/evil", None),
+        ("WS://localhost/evil", None),
+        ("WSS://localhost/evil", None),
+        ("HTTP://evil.example.com:{port}/steal", "127.0.0.1"),
+        ("HTTPS://evil.example.com:{port}/steal", "127.0.0.1"),
+        ("WS://evil.example.com:{port}/steal", "127.0.0.1"),
+        ("WSS://evil.example.com:{port}/steal", "127.0.0.1"),
     ],
 )
 async def test_redirect_to_blocked_address(

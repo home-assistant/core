@@ -1,7 +1,5 @@
 """Provides constants for lights."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING
@@ -18,6 +16,29 @@ DATA_COMPONENT: HassKey[EntityComponent[LightEntity]] = HassKey(DOMAIN)
 SCAN_INTERVAL = timedelta(seconds=30)
 
 DATA_PROFILES: HassKey[Profiles] = HassKey(f"{DOMAIN}_profiles")
+
+
+class LightEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for light entities."""
+
+    MIN_COLOR_TEMP_KELVIN = "min_color_temp_kelvin"
+    MAX_COLOR_TEMP_KELVIN = "max_color_temp_kelvin"
+    EFFECT_LIST = "effect_list"
+    SUPPORTED_COLOR_MODES = "supported_color_modes"
+
+
+class LightEntityStateAttribute(StrEnum):
+    """State attributes for light entities."""
+
+    EFFECT = "effect"
+    COLOR_MODE = "color_mode"
+    BRIGHTNESS = "brightness"
+    COLOR_TEMP_KELVIN = "color_temp_kelvin"
+    HS_COLOR = "hs_color"
+    RGB_COLOR = "rgb_color"
+    XY_COLOR = "xy_color"
+    RGBW_COLOR = "rgbw_color"
+    RGBWW_COLOR = "rgbww_color"
 
 
 class LightEntityFeature(IntFlag):

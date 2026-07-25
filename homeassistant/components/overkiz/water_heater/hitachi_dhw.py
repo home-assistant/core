@@ -1,10 +1,9 @@
 """Support for Hitachi DHW."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
+from pyoverkiz.models import Command
 
 from homeassistant.components.water_heater import (
     STATE_HIGH_DEMAND,
@@ -45,9 +44,10 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
     _attr_operation_list = [*OPERATION_MODE_TO_OVERKIZ]
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        current_temperature = self.device.states[OverkizState.CORE_DHW_TEMPERATURE]
+        current_temperature = self.device.states.get(OverkizState.CORE_DHW_TEMPERATURE)
 
         if current_temperature and current_temperature.value_as_int:
             return float(current_temperature.value_as_int)
@@ -55,17 +55,19 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
         return None
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        target_temperature = self.device.states[
+        target_temperature = self.device.states.get(
             OverkizState.MODBUS_CONTROL_DHW_SETTING_TEMPERATURE
-        ]
+        )
 
         if target_temperature and target_temperature.value_as_int:
             return float(target_temperature.value_as_int)
 
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.executor.async_execute_command(
@@ -74,18 +76,20 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
         )
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return current operation ie. eco, electric, performance, ..."""
-        modbus_control = self.device.states[OverkizState.MODBUS_CONTROL_DHW]
+        modbus_control = self.device.states.get(OverkizState.MODBUS_CONTROL_DHW)
         if modbus_control and modbus_control.value_as_str == OverkizCommandParam.STOP:
             return STATE_OFF
 
-        current_mode = self.device.states[OverkizState.MODBUS_DHW_MODE]
+        current_mode = self.device.states.get(OverkizState.MODBUS_DHW_MODE)
         if current_mode and current_mode.value_as_str in OVERKIZ_TO_OPERATION_MODE:
             return OVERKIZ_TO_OPERATION_MODE[current_mode.value_as_str]
 
         return None
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         # Turn water heater off
@@ -95,13 +99,22 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
             )
             return
 
-        # Turn water heater on, when off
+        commands: list[Command] = []
+
+        # Start the water heater ('run') when off
         if self.current_operation == OverkizCommandParam.OFF:
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_CONTROL_DHW, OverkizCommandParam.ON
+            commands.append(
+                Command(
+                    name=OverkizCommand.SET_CONTROL_DHW,
+                    parameters=[OverkizCommandParam.RUN],
+                )
             )
 
-        # Change operation mode
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_DHW_MODE, OPERATION_MODE_TO_OVERKIZ[operation_mode]
+        commands.append(
+            Command(
+                name=OverkizCommand.SET_DHW_MODE,
+                parameters=[OPERATION_MODE_TO_OVERKIZ[operation_mode]],
+            )
         )
+
+        await self.executor.async_execute_commands(commands)

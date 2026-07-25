@@ -1,10 +1,8 @@
 """Support for MQTT sirens."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -143,10 +141,12 @@ class MqttSiren(MqttEntity, SirenEntity):
     _optimistic: bool
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
 
@@ -257,6 +257,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             self._update(process_turn_on_params(self, params))
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         if not self.add_subscription(
@@ -268,11 +269,13 @@ class MqttSiren(MqttEntity, SirenEntity):
             self._optimistic = True
             return
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         extra_attributes = (
@@ -302,6 +305,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         if payload and str(payload) != PAYLOAD_NONE:
             await self.async_publish_with_config(self._config[topic], payload)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on.
 
@@ -320,6 +324,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             self._update(cast(SirenTurnOnServiceParameters, kwargs))
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off.
 

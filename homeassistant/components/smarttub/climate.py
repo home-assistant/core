@@ -1,8 +1,6 @@
 """Platform for climate integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from smarttub import Spa
 
@@ -74,6 +72,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     _attr_min_temp = DEFAULT_MIN_TEMP
     _attr_max_temp = DEFAULT_MAX_TEMP
     _attr_preset_modes = list(PRESET_MODES.values())
+    _attr_translation_key = "thermostat"
 
     def __init__(
         self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
@@ -82,10 +81,12 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         super().__init__(coordinator, spa, "Thermostat")
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
         return HVAC_ACTIONS.get(self.spa_status.heater)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode.
 
@@ -96,26 +97,31 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         raise NotImplementedError(hvac_mode)
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Return the current preset mode."""
         return PRESET_MODES[self.spa_status.heat_mode]
 
     @property
-    def current_temperature(self):
+    @override
+    def current_temperature(self) -> float | None:
         """Return the current water temperature."""
         return self.spa_status.water.temperature
 
     @property
-    def target_temperature(self):
+    @override
+    def target_temperature(self) -> float | None:
         """Return the target water temperature."""
         return self.spa_status.set_temperature
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
         await self.spa.set_temperature(temperature)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Activate the specified preset mode."""
         heat_mode = HEAT_MODES[preset_mode]

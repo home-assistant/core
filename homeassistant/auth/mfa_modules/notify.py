@@ -3,11 +3,9 @@
 Sending HOTP through notify service
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import attr
 import voluptuous as vol
@@ -109,6 +107,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         self._init_lock = asyncio.Lock()
 
     @property
+    @override
     def input_schema(self) -> vol.Schema:
         """Validate login flow input data."""
         return vol.Schema({vol.Required(INPUT_FIELD_CODE): str})
@@ -161,6 +160,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
         return sorted(unordered_services)
 
+    @override
     async def async_setup_flow(self, user_id: str) -> NotifySetupFlow:
         """Return a data entry flow handler for setup module.
 
@@ -170,6 +170,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             self, self.input_schema, user_id, self.aync_get_available_notify_services()
         )
 
+    @override
     async def async_setup_user(self, user_id: str, setup_data: Any) -> Any:
         """Set up auth module for user."""
         if self._user_settings is None:
@@ -183,6 +184,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
         await self._async_save()
 
+    @override
     async def async_depose_user(self, user_id: str) -> None:
         """Depose auth module for user."""
         if self._user_settings is None:
@@ -192,6 +194,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         if self._user_settings.pop(user_id, None):
             await self._async_save()
 
+    @override
     async def async_is_user_setup(self, user_id: str) -> bool:
         """Return whether user is setup."""
         if self._user_settings is None:
@@ -200,6 +203,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
         return user_id in self._user_settings
 
+    @override
     async def async_validate(self, user_id: str, user_input: dict[str, Any]) -> bool:
         """Return True if validation passed."""
         if self._user_settings is None:
@@ -285,6 +289,7 @@ class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
         self._notify_service: str | None = None
         self._target: str | None = None
 
+    @override
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:

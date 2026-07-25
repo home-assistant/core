@@ -1,8 +1,8 @@
 [
   {
-    "lock_name": "Lock-1A2B",
-    "lock_id": 12345,
-    "lock_type": 2,
+    "name": "Lock-1A2B",
+    "id": 12345,
+    "type": 2,
     "state": 2,
     "battery_level": 70,
     "is_connected": true,
@@ -13,9 +13,9 @@
     "door_state": 0
   },
   {
-    "lock_name": "Lock-2C3D",
-    "lock_id": 98765,
-    "lock_type": 4,
+    "name": "Lock-2C3D",
+    "id": 98765,
+    "type": 4,
     "state": 2,
     "battery_level": 70,
     "is_connected": true,

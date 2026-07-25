@@ -1,11 +1,9 @@
 """Component to make instant statistics about your history."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 import datetime
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -42,6 +40,7 @@ from . import HistoryStatsConfigEntry
 from .const import (
     CONF_DURATION,
     CONF_END,
+    CONF_MIN_STATE_DURATION,
     CONF_PERIOD_KEYS,
     CONF_START,
     CONF_TYPE_COUNT,
@@ -62,6 +61,8 @@ UNITS: dict[str, str] = {
     CONF_TYPE_COUNT: "",
 }
 ICON = "mdi:chart-line"
+
+DEFAULT_MIN_STATE_DURATION = datetime.timedelta(0)
 
 
 def exactly_two_period_keys[_T: dict[str, Any]](conf: _T) -> _T:
@@ -91,6 +92,9 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_START): cv.template,
             vol.Optional(CONF_END): cv.template,
             vol.Optional(CONF_DURATION): cv.time_period,
+            vol.Optional(
+                CONF_MIN_STATE_DURATION, default=DEFAULT_MIN_STATE_DURATION
+            ): cv.time_period,
             vol.Optional(CONF_TYPE, default=CONF_TYPE_TIME): vol.In(CONF_TYPE_KEYS),
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -120,6 +124,7 @@ async def async_setup_platform(
     start: Template | None = config.get(CONF_START)
     end: Template | None = config.get(CONF_END)
     duration: datetime.timedelta | None = config.get(CONF_DURATION)
+    min_state_duration: datetime.timedelta = config[CONF_MIN_STATE_DURATION]
     sensor_type: str = config[CONF_TYPE]
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
@@ -127,7 +132,9 @@ async def async_setup_platform(
         CONF_STATE_CLASS, SensorStateClass.MEASUREMENT
     )
 
-    history_stats = HistoryStats(hass, entity_id, entity_states, start, end, duration)
+    history_stats = HistoryStats(
+        hass, entity_id, entity_states, start, end, duration, min_state_duration
+    )
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, None, name)
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
@@ -189,11 +196,13 @@ class HistoryStatsSensorBase(
         super().__init__(coordinator)
         self._attr_name = name
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity has been added to hass."""
         await super().async_added_to_hass()
         self.async_on_remove(self.coordinator.async_setup_state_listener())
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Set attrs from value and count."""
         self._process_update()
@@ -239,6 +248,7 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
             self._attr_suggested_display_precision = 2
 
     @callback
+    @override
     def _process_update(self) -> None:
         """Process an update from the coordinator."""
         state = self.coordinator.data

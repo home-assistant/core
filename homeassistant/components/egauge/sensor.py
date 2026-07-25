@@ -1,9 +1,8 @@
 """Sensor platform for eGauge energy monitors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from egauge_async.json.models import RegisterInfo, RegisterType
 
@@ -13,7 +12,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfElectricPotential, UnitOfEnergy, UnitOfPower
+from homeassistant.const import (
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -57,7 +61,16 @@ SENSORS: tuple[EgaugeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         native_value_fn=lambda data, register: data.measurements[register],
         available_fn=lambda data, register: register in data.measurements,
-        supported_fn=lambda register_info: register_info.type == RegisterType.VOLTAGE,
+        supported_fn=(lambda register_info: register_info.type == RegisterType.VOLTAGE),
+    ),
+    EgaugeSensorEntityDescription(
+        key="current",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        native_value_fn=lambda data, register: data.measurements[register],
+        available_fn=lambda data, register: register in data.measurements,
+        supported_fn=(lambda register_info: register_info.type == RegisterType.CURRENT),
     ),
 )
 
@@ -97,6 +110,7 @@ class EgaugeSensor(EgaugeEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the sensor value using the description's value function."""
         return self.entity_description.native_value_fn(
@@ -104,6 +118,7 @@ class EgaugeSensor(EgaugeEntity, SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if the corresponding register is available."""
         return super().available and self.entity_description.available_fn(
