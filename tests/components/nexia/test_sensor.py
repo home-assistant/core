@@ -1,5 +1,7 @@
 """Tests for the nexia sensor platform."""
 
+from unittest.mock import NonCallableMock
+
 from nexia.home import NexiaHome
 import pytest
 
@@ -155,13 +157,14 @@ async def test_create_sensors(hass: HomeAssistant, patch_nexia_home: NexiaHome) 
 
 
 async def test_room_iq_sensor_disabled_by_default(
-    hass: HomeAssistant, patch_nexia_home: NexiaHome
+    hass: HomeAssistant, patch_nexia_home: NonCallableMock[NexiaHome]
 ) -> None:
     """Test NexiaRoomIQSensor is disabled by default."""
 
     await setup_integration(hass, patch_nexia_home)
 
     assert patch_nexia_home.any_room_iq_monitors() is False
+    assert patch_nexia_home.update.await_count == 1
     state = hass.states.get("sensor.zone3_zone3_roomiq_temperature")
     assert state is None
 
@@ -169,7 +172,7 @@ async def test_room_iq_sensor_disabled_by_default(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_room_iq_sensors(
     hass: HomeAssistant,
-    patch_nexia_home: NexiaHome,
+    patch_nexia_home: NonCallableMock[NexiaHome],
     entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
 ) -> None:
@@ -177,6 +180,8 @@ async def test_room_iq_sensors(
 
     await setup_integration(hass, patch_nexia_home)
 
+    assert patch_nexia_home.any_room_iq_monitors() is True
+    assert patch_nexia_home.update.await_count == 2
     state = hass.states.get("sensor.zone3_zone3_roomiq_temperature")
     assert state is not None
 
