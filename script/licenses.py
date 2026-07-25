@@ -83,6 +83,7 @@ OSI_APPROVED_LICENSES_SPDX = {
     "LGPL-3.0-only",
     "LGPL-3.0-or-later",
     "MIT",
+    "MIT-0",
     "MIT-CMU",
     "MPL-1.1",
     "MPL-2.0",
@@ -204,9 +205,6 @@ EXCEPTIONS = {
 # fmt: off
 TODO = {
     "TravisPy": AwesomeVersion("0.3.5"),  # None -- GPL -- ['GNU General Public License v3 (GPLv3)']
-    "aiocache": AwesomeVersion(
-        "0.12.3"
-    ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
 }
 # fmt: on
 

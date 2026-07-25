@@ -44,7 +44,7 @@ from .const import (
     CONF_TYPE_TIME,
     DEFAULT_NAME,
     DOMAIN,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
 )
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
@@ -149,7 +149,7 @@ def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
                     mode=SelectSelectorMode.DROPDOWN,
                 ),
             ),
-            vol.Optional(SECTION_ADVANCED_SETTINGS): section(
+            vol.Optional(SECTION_ADDITIONAL_SETTINGS): section(
                 vol.Schema(
                     {
                         vol.Optional(CONF_MIN_STATE_DURATION): DurationSelector(
@@ -189,7 +189,7 @@ OPTIONS_FLOW = {
 class HistoryStatsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for History stats."""
 
-    MINOR_VERSION = 3
+    VERSION = 2
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
@@ -290,8 +290,8 @@ async def ws_start_preview(
     start = validated_data.get(CONF_START)
     end = validated_data.get(CONF_END)
     duration = validated_data.get(CONF_DURATION)
-    advanced_settings = validated_data.get(SECTION_ADVANCED_SETTINGS, {})
-    min_state_duration = advanced_settings.get(CONF_MIN_STATE_DURATION)
+    additional_settings = validated_data.get(SECTION_ADDITIONAL_SETTINGS, {})
+    min_state_duration = additional_settings.get(CONF_MIN_STATE_DURATION)
     state_class = validated_data.get(CONF_STATE_CLASS)
 
     history_stats = HistoryStats(

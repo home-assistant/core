@@ -10,9 +10,9 @@ from elkm1_lib.keypads import Keypad
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    ATTR_CHANGED_BY,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityStateAttribute,
     AlarmControlPanelState,
     CodeFormat,
 )
@@ -136,8 +136,10 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
             self._changed_by_time = last_state.attributes[ATTR_CHANGED_BY_TIME]
         if ATTR_CHANGED_BY_ID in last_state.attributes:
             self._changed_by_id = last_state.attributes[ATTR_CHANGED_BY_ID]
-        if ATTR_CHANGED_BY in last_state.attributes:
-            self._changed_by = last_state.attributes[ATTR_CHANGED_BY]
+        if AlarmControlPanelEntityStateAttribute.CHANGED_BY in last_state.attributes:
+            self._changed_by = last_state.attributes[
+                AlarmControlPanelEntityStateAttribute.CHANGED_BY
+            ]
 
     def _watch_keypad(self, keypad: Element, changeset: dict[str, Any]) -> None:
         assert isinstance(keypad, Keypad)

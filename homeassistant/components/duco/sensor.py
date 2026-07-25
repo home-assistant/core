@@ -18,6 +18,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfRatio,
+    UnitOfTemperature,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -25,7 +26,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import BOX_NODE_ID, DOMAIN
+from .const import BOX_NODE_ID, DOMAIN, VENTILATION_CAPABLE_NODE_TYPES
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
 
@@ -65,7 +66,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
             if node.ventilation and node.ventilation.state != VentilationState.UNKNOWN
             else None
         ),
-        node_types=(NodeType.BOX,),
+        node_types=VENTILATION_CAPABLE_NODE_TYPES,
     ),
     DucoSensorEntityDescription(
         key="target_flow_level",
@@ -76,20 +77,18 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         value_fn=lambda node: (
             node.ventilation.flow_lvl_tgt if node.ventilation else None
         ),
-        node_types=(NodeType.BOX,),
+        node_types=VENTILATION_CAPABLE_NODE_TYPES,
     ),
     DucoSensorEntityDescription(
         key="time_state_end",
         translation_key="time_state_end",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda node: (
-            dt_util.utc_from_timestamp(node.ventilation.time_state_end).replace(
-                second=0, microsecond=0
-            )
+            dt_util.utc_from_timestamp(node.ventilation.time_state_end)
             if node.ventilation and node.ventilation.time_state_end != 0
             else None
         ),
-        node_types=(NodeType.BOX,),
+        node_types=VENTILATION_CAPABLE_NODE_TYPES,
     ),
     DucoSensorEntityDescription(
         key="co2",
@@ -158,6 +157,70 @@ BOX_SENSOR_DESCRIPTIONS: tuple[DucoBoxSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=lambda coordinator: coordinator.data.rssi_wifi,
     ),
+    DucoBoxSensorEntityDescription(
+        key="outdoor_air_temperature",
+        translation_key="outdoor_air_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        supported_fn=lambda coordinator: (
+            coordinator.data.ventilation_temperatures is not None
+            and coordinator.data.ventilation_temperatures.temp_oda is not None
+        ),
+        value_fn=lambda coordinator: (
+            coordinator.data.ventilation_temperatures.temp_oda
+            if coordinator.data.ventilation_temperatures
+            else None
+        ),
+    ),
+    DucoBoxSensorEntityDescription(
+        key="supply_air_temperature",
+        translation_key="supply_air_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        supported_fn=lambda coordinator: (
+            coordinator.data.ventilation_temperatures is not None
+            and coordinator.data.ventilation_temperatures.temp_sup is not None
+        ),
+        value_fn=lambda coordinator: (
+            coordinator.data.ventilation_temperatures.temp_sup
+            if coordinator.data.ventilation_temperatures
+            else None
+        ),
+    ),
+    DucoBoxSensorEntityDescription(
+        key="extract_air_temperature",
+        translation_key="extract_air_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        supported_fn=lambda coordinator: (
+            coordinator.data.ventilation_temperatures is not None
+            and coordinator.data.ventilation_temperatures.temp_eta is not None
+        ),
+        value_fn=lambda coordinator: (
+            coordinator.data.ventilation_temperatures.temp_eta
+            if coordinator.data.ventilation_temperatures
+            else None
+        ),
+    ),
+    DucoBoxSensorEntityDescription(
+        key="exhaust_air_temperature",
+        translation_key="exhaust_air_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        supported_fn=lambda coordinator: (
+            coordinator.data.ventilation_temperatures is not None
+            and coordinator.data.ventilation_temperatures.temp_eha is not None
+        ),
+        value_fn=lambda coordinator: (
+            coordinator.data.ventilation_temperatures.temp_eha
+            if coordinator.data.ventilation_temperatures
+            else None
+        ),
+    ),
 )
 
 
@@ -195,8 +258,8 @@ async def async_setup_entry(
             device_reg = dr.async_get(hass)
             mac = entry.unique_id
             for node_id in stale_node_ids:
-                device = device_reg.async_get_device(
-                    identifiers={(DOMAIN, f"{mac}_{node_id}")}
+                device = device_reg.async_get_device_by_identifier(
+                    (DOMAIN, f"{mac}_{node_id}"), entry.entry_id
                 )
                 if device:
                     device_reg.async_update_device(

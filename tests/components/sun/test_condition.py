@@ -1,6 +1,6 @@
 """The tests for sun conditions."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from freezegun import freeze_time
 import pytest
@@ -11,13 +11,17 @@ from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import trace
 from homeassistant.helpers.condition import async_validate_condition_config
+from homeassistant.helpers.sun import get_astral_event_next
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.typing import WebSocketGenerator
 
-# San Diego (default test location) and Longyearbyen, Svalbard (deep polar).
+# San Diego (default test location), Kotzebue, Alaska (just inside the Arctic
+# Circle - brief midnight sun in June) and Longyearbyen, Svalbard (deep polar -
+# long polar night in December).
 _SAN_DIEGO = (32.87336, -117.22743, "US/Pacific")
+_KOTZEBUE = (66.8983, -162.5966, "America/Anchorage")
 _SVALBARD = (78.22, 15.65, "Europe/Oslo")
 
 _TWILIGHT_TYPES = ("any", "civil", "nautical", "astronomical")
@@ -38,8 +42,8 @@ def _find_run_id(traces, trace_type, item_id):
     return None
 
 
-async def assert_automation_condition_trace(hass_ws_client, automation_id, expected):
-    """Test the result of automation condition."""
+async def _get_automation_condition_trace(hass_ws_client, automation_id):
+    """Return the condition trace for a given automation."""
     msg_id = 1
 
     def next_id():
@@ -71,8 +75,15 @@ async def assert_automation_condition_trace(hass_ws_client, automation_id, expec
     assert response["success"]
     trace = response["result"]
     assert len(trace["trace"]["condition/0"]) == 1
-    condition_trace = trace["trace"]["condition/0"][0]["result"]
-    assert condition_trace == expected
+    return trace["trace"]["condition/0"][0]
+
+
+async def assert_automation_condition_trace(hass_ws_client, automation_id, expected):
+    """Test the result of automation condition."""
+    condition_trace = await _get_automation_condition_trace(
+        hass_ws_client, automation_id
+    )
+    assert condition_trace["result"] == expected
 
 
 async def test_if_action_before_sunrise_no_offset(
@@ -937,14 +948,14 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
 ) -> None:
     """Test if action was before sunrise.
 
-    Local timezone: Alaska time
-    Location: Kotzebue, which has a very skewed local timezone with sunrise
-    at 7 AM and sunset at 3AM during summer
-    After sunrise is true from sunrise until midnight, local time.
+    Local timezone: Alaska time (America/Anchorage)
+    Location: Kotzebue, Alaska, whose far-west longitude skews local time by
+    ~3 hours, so in late July sunrise is ~04:48 local. Before sunrise is true
+    from local midnight until sunrise.
     """
     await hass.config.async_set_time_zone("America/Anchorage")
-    hass.config.latitude = 66.5
-    hass.config.longitude = 162.4
+    hass.config.latitude = 66.8983
+    hass.config.longitude = -162.5966
     await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -961,10 +972,9 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
         },
     )
 
-    # sunrise: 2015-07-24 07:21:12 local, sunset: 2015-07-25 03:13:33 local
-    # sunrise: 2015-07-24 15:21:12 UTC,   sunset: 2015-07-25 11:13:33 UTC
+    # sunrise: 2015-07-24 04:48:24 local = 2015-07-24 12:48:24 UTC
     # now = sunrise + 1s -> 'before sunrise' not true
-    now = datetime(2015, 7, 24, 15, 21, 13, tzinfo=dt_util.UTC)
+    now = datetime(2015, 7, 24, 12, 48, 25, tzinfo=dt_util.UTC)
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -972,11 +982,11 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        {"result": False, "wanted_time_before": "2015-07-24T15:16:46.975735+00:00"},
+        {"result": False, "wanted_time_before": "2015-07-24T12:48:24.249497+00:00"},
     )
 
     # now = sunrise - 1h -> 'before sunrise' true
-    now = datetime(2015, 7, 24, 14, 21, 12, tzinfo=dt_util.UTC)
+    now = datetime(2015, 7, 24, 11, 48, 24, tzinfo=dt_util.UTC)
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -984,7 +994,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        {"result": True, "wanted_time_before": "2015-07-24T15:16:46.975735+00:00"},
+        {"result": True, "wanted_time_before": "2015-07-24T12:48:24.249497+00:00"},
     )
 
     # now = local midnight -> 'before sunrise' true
@@ -996,7 +1006,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        {"result": True, "wanted_time_before": "2015-07-24T15:16:46.975735+00:00"},
+        {"result": True, "wanted_time_before": "2015-07-24T12:48:24.249497+00:00"},
     )
 
     # now = local midnight - 1s -> 'before sunrise' not true
@@ -1008,7 +1018,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        {"result": False, "wanted_time_before": "2015-07-23T15:12:19.155123+00:00"},
+        {"result": False, "wanted_time_before": "2015-07-23T12:43:32.413351+00:00"},
     )
 
 
@@ -1019,14 +1029,14 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
 ) -> None:
     """Test if action was after sunrise.
 
-    Local timezone: Alaska time
-    Location: Kotzebue, which has a very skewed local timezone with sunrise
-    at 7 AM and sunset at 3AM during summer
-    Before sunrise is true from midnight until sunrise, local time.
+    Local timezone: Alaska time (America/Anchorage)
+    Location: Kotzebue, Alaska, whose far-west longitude skews local time by
+    ~3 hours, so in late July sunrise is ~04:48 local. After sunrise is true
+    from sunrise until local midnight.
     """
     await hass.config.async_set_time_zone("America/Anchorage")
-    hass.config.latitude = 66.5
-    hass.config.longitude = 162.4
+    hass.config.latitude = 66.8983
+    hass.config.longitude = -162.5966
     await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1043,10 +1053,9 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
         },
     )
 
-    # sunrise: 2015-07-24 07:21:12 local, sunset: 2015-07-25 03:13:33 local
-    # sunrise: 2015-07-24 15:21:12 UTC,   sunset: 2015-07-25 11:13:33 UTC
-    # now = sunrise -> 'after sunrise' true
-    now = datetime(2015, 7, 24, 15, 21, 12, tzinfo=dt_util.UTC)
+    # sunrise: 2015-07-24 04:48:24 local = 2015-07-24 12:48:24 UTC
+    # now = sunrise + 1s -> 'after sunrise' true
+    now = datetime(2015, 7, 24, 12, 48, 25, tzinfo=dt_util.UTC)
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -1054,11 +1063,11 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        {"result": True, "wanted_time_after": "2015-07-24T15:16:46.975735+00:00"},
+        {"result": True, "wanted_time_after": "2015-07-24T12:48:24.249497+00:00"},
     )
 
     # now = sunrise - 1h -> 'after sunrise' not true
-    now = datetime(2015, 7, 24, 14, 21, 12, tzinfo=dt_util.UTC)
+    now = datetime(2015, 7, 24, 11, 48, 24, tzinfo=dt_util.UTC)
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -1066,7 +1075,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        {"result": False, "wanted_time_after": "2015-07-24T15:16:46.975735+00:00"},
+        {"result": False, "wanted_time_after": "2015-07-24T12:48:24.249497+00:00"},
     )
 
     # now = local midnight -> 'after sunrise' not true
@@ -1078,7 +1087,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        {"result": False, "wanted_time_after": "2015-07-24T15:16:46.975735+00:00"},
+        {"result": False, "wanted_time_after": "2015-07-24T12:48:24.249497+00:00"},
     )
 
     # now = local midnight - 1s -> 'after sunrise' true
@@ -1090,7 +1099,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        {"result": True, "wanted_time_after": "2015-07-23T15:12:19.155123+00:00"},
+        {"result": True, "wanted_time_after": "2015-07-23T12:43:32.413351+00:00"},
     )
 
 
@@ -1099,16 +1108,17 @@ async def test_if_action_before_sunset_no_offset_kotzebue(
     hass_ws_client: WebSocketGenerator,
     service_calls: list[ServiceCall],
 ) -> None:
-    """Test if action was before sunrise.
+    """Test if action was before sunset on a day with two sunsets.
 
-    Local timezone: Alaska time
-    Location: Kotzebue, which has a very skewed local timezone with sunrise
-    at 7 AM and sunset at 3AM during summer
-    Before sunset is true from midnight until sunset, local time.
+    Local timezone: Alaska time (America/Anchorage)
+    Location: Kotzebue, Alaska. On 2015-08-07 (local) the sun sets twice - at
+    00:03 and again at 23:59 - because solar midnight falls near local midnight.
+    The condition tracks the day's (late) sunset, so 'before sunset' stays true
+    across the early sunset and only turns false after the late one.
     """
     await hass.config.async_set_time_zone("America/Anchorage")
-    hass.config.latitude = 66.5
-    hass.config.longitude = 162.4
+    hass.config.latitude = 66.8983
+    hass.config.longitude = -162.5966
     await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1125,22 +1135,9 @@ async def test_if_action_before_sunset_no_offset_kotzebue(
         },
     )
 
-    # sunrise: 2015-07-24 07:21:12 local, sunset: 2015-07-25 03:13:33 local
-    # sunrise: 2015-07-24 15:21:12 UTC,   sunset: 2015-07-25 11:13:33 UTC
-    # now = sunset + 1s -> 'before sunset' not true
-    now = datetime(2015, 7, 25, 11, 13, 34, tzinfo=dt_util.UTC)
-    with freeze_time(now):
-        hass.bus.async_fire("test_event")
-        await hass.async_block_till_done()
-        assert len(service_calls) == 0
-    await assert_automation_condition_trace(
-        hass_ws_client,
-        "sun",
-        {"result": False, "wanted_time_before": "2015-07-25T11:13:32.501837+00:00"},
-    )
-
-    # now = sunset - 1h-> 'before sunset' true
-    now = datetime(2015, 7, 25, 10, 13, 33, tzinfo=dt_util.UTC)
+    # 2015-08-07 local has two sunsets: 00:03 (08:03 UTC) and 23:59 (08-08 07:59 UTC)
+    # now = local midnight -> 'before sunset' true
+    now = datetime(2015, 8, 7, 8, 0, 0, tzinfo=dt_util.UTC)
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -1148,11 +1145,11 @@ async def test_if_action_before_sunset_no_offset_kotzebue(
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        {"result": True, "wanted_time_before": "2015-07-25T11:13:32.501837+00:00"},
+        {"result": True, "wanted_time_before": "2015-08-08T07:59:25.982224+00:00"},
     )
 
-    # now = local midnight -> 'before sunrise' true
-    now = datetime(2015, 7, 24, 8, 0, 0, tzinfo=dt_util.UTC)
+    # now = first (early) sunset + 1s -> still 'before sunset' (tracks the late one)
+    now = datetime(2015, 8, 7, 8, 3, 43, tzinfo=dt_util.UTC)
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -1160,19 +1157,31 @@ async def test_if_action_before_sunset_no_offset_kotzebue(
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        {"result": True, "wanted_time_before": "2015-07-24T11:17:54.446913+00:00"},
+        {"result": True, "wanted_time_before": "2015-08-08T07:59:25.982224+00:00"},
     )
 
-    # now = local midnight - 1s -> 'before sunrise' not true
-    now = datetime(2015, 7, 24, 7, 59, 59, tzinfo=dt_util.UTC)
+    # now = late sunset - 1h -> 'before sunset' true
+    now = datetime(2015, 8, 8, 6, 59, 25, tzinfo=dt_util.UTC)
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(service_calls) == 2
+        assert len(service_calls) == 3
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        {"result": False, "wanted_time_before": "2015-07-23T11:22:18.467277+00:00"},
+        {"result": True, "wanted_time_before": "2015-08-08T07:59:25.982224+00:00"},
+    )
+
+    # now = late sunset + 1s -> 'before sunset' not true
+    now = datetime(2015, 8, 8, 7, 59, 26, tzinfo=dt_util.UTC)
+    with freeze_time(now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(service_calls) == 3
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_before": "2015-08-08T07:59:25.982224+00:00"},
     )
 
 
@@ -1181,16 +1190,17 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
     hass_ws_client: WebSocketGenerator,
     service_calls: list[ServiceCall],
 ) -> None:
-    """Test if action was after sunrise.
+    """Test if action was after sunset on a day with two sunsets.
 
-    Local timezone: Alaska time
-    Location: Kotzebue, which has a very skewed local timezone with sunrise
-    at 7 AM and sunset at 3AM during summer
-    After sunset is true from sunset until midnight, local time.
+    Local timezone: Alaska time (America/Anchorage)
+    Location: Kotzebue, Alaska. On 2015-08-07 (local) the sun sets twice - at
+    00:03 and again at 23:59. The condition tracks the day's (late) sunset, so
+    'after sunset' is false right after the early sunset and only true in the
+    short window after the late sunset before local midnight.
     """
     await hass.config.async_set_time_zone("America/Anchorage")
-    hass.config.latitude = 66.5
-    hass.config.longitude = 162.4
+    hass.config.latitude = 66.8983
+    hass.config.longitude = -162.5966
     await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1207,10 +1217,33 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
         },
     )
 
-    # sunrise: 2015-07-24 07:21:12 local, sunset: 2015-07-25 03:13:33 local
-    # sunrise: 2015-07-24 15:21:12 UTC,   sunset: 2015-07-25 11:13:33 UTC
-    # now = sunset -> 'after sunset' true
-    now = datetime(2015, 7, 25, 11, 13, 33, tzinfo=dt_util.UTC)
+    # 2015-08-07 local has two sunsets: 00:03 (08:03 UTC) and 23:59 (08-08 07:59 UTC)
+    # now = first (early) sunset + 1s -> 'after sunset' not true (tracks the late one)
+    now = datetime(2015, 8, 7, 8, 4, 0, tzinfo=dt_util.UTC)
+    with freeze_time(now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(service_calls) == 0
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_after": "2015-08-08T07:59:25.982224+00:00"},
+    )
+
+    # now = late sunset - 1s -> 'after sunset' not true
+    now = datetime(2015, 8, 8, 7, 59, 25, tzinfo=dt_util.UTC)
+    with freeze_time(now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(service_calls) == 0
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {"result": False, "wanted_time_after": "2015-08-08T07:59:25.982224+00:00"},
+    )
+
+    # now = late sunset + 1s -> 'after sunset' true
+    now = datetime(2015, 8, 8, 7, 59, 27, tzinfo=dt_util.UTC)
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -1218,11 +1251,11 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        {"result": True, "wanted_time_after": "2015-07-25T11:13:32.501837+00:00"},
+        {"result": True, "wanted_time_after": "2015-08-08T07:59:25.982224+00:00"},
     )
 
-    # now = sunset - 1s -> 'after sunset' not true
-    now = datetime(2015, 7, 25, 11, 13, 32, tzinfo=dt_util.UTC)
+    # now = local midnight (next day) -> 'after sunset' not true
+    now = datetime(2015, 8, 8, 8, 0, 1, tzinfo=dt_util.UTC)
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -1230,31 +1263,65 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        {"result": False, "wanted_time_after": "2015-07-25T11:13:32.501837+00:00"},
+        {"result": False, "wanted_time_after": "2015-08-09T07:55:10.646523+00:00"},
     )
 
-    # now = local midnight -> 'after sunset' not true
-    now = datetime(2015, 7, 24, 8, 0, 1, tzinfo=dt_util.UTC)
+
+@pytest.mark.parametrize(
+    ("location", "now", "event"),
+    [
+        # Midnight sun at Kotzebue (early June to early July): the sun neither
+        # rises nor sets, so neither a sunrise nor a sunset condition can be met.
+        (_KOTZEBUE, datetime(2015, 6, 15, 12, tzinfo=dt_util.UTC), SUN_EVENT_SUNSET),
+        (_KOTZEBUE, datetime(2015, 6, 15, 12, tzinfo=dt_util.UTC), SUN_EVENT_SUNRISE),
+        # Polar night at Svalbard: the sun neither rises nor sets here either.
+        (_SVALBARD, datetime(2015, 12, 15, 12, tzinfo=dt_util.UTC), SUN_EVENT_SUNSET),
+        (_SVALBARD, datetime(2015, 12, 15, 12, tzinfo=dt_util.UTC), SUN_EVENT_SUNRISE),
+    ],
+)
+async def test_if_action_no_sun_event_in_polar_regions(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    service_calls: list[ServiceCall],
+    location: tuple[float, float, str],
+    now: datetime,
+    event: str,
+) -> None:
+    """Test a sun condition where the requested event never occurs.
+
+    During midnight sun and polar night the sun neither rises nor sets, so
+    ``get_astral_event_date`` returns None for the requested event. The
+    condition cannot be satisfied and reports "no sunrise today" / "no sunset
+    today" instead of raising.
+    """
+    latitude, longitude, time_zone = location
+    await hass.config.async_set_time_zone(time_zone)
+    hass.config.latitude = latitude
+    hass.config.longitude = longitude
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "sun",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": "sun",
+                    "options": {"after": event},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
     with freeze_time(now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(service_calls) == 1
+        assert len(service_calls) == 0
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        {"result": False, "wanted_time_after": "2015-07-24T11:17:54.446913+00:00"},
-    )
-
-    # now = local midnight - 1s -> 'after sunset' true
-    now = datetime(2015, 7, 24, 7, 59, 59, tzinfo=dt_util.UTC)
-    with freeze_time(now):
-        hass.bus.async_fire("test_event")
-        await hass.async_block_till_done()
-        assert len(service_calls) == 2
-    await assert_automation_condition_trace(
-        hass_ws_client,
-        "sun",
-        {"result": True, "wanted_time_after": "2015-07-23T11:22:18.467277+00:00"},
+        {"result": False, "message": f"no {event} today"},
     )
 
 
@@ -1391,6 +1458,45 @@ async def test_sun_state_condition_takes_no_options(
         await async_validate_condition_config(
             hass, {"condition": condition_key, "options": {"unknown": True}}
         )
+
+
+async def test_is_set_agrees_with_sunset_trigger_time(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test is_set flips at the exact calculated sunset time."""
+    latitude, longitude, time_zone = _SAN_DIEGO
+    await hass.config.async_set_time_zone(time_zone)
+    hass.config.latitude = latitude
+    hass.config.longitude = longitude
+
+    ref = datetime(2015, 9, 15, 12, tzinfo=dt_util.UTC)
+    with freeze_time(ref):
+        sunset = get_astral_event_next(hass, SUN_EVENT_SUNSET, ref)
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {"condition": "sun.is_set"},
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # One second before sunset: is_set should be false
+    with freeze_time(sunset - timedelta(seconds=1)):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # One second after sunset: is_set should be true
+    with freeze_time(sunset + timedelta(seconds=1)):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+    assert len(service_calls) == 1
 
 
 @pytest.mark.parametrize(

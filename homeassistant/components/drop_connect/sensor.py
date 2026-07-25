@@ -12,11 +12,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     TEMPERATURE,
     EntityCategory,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
@@ -141,7 +140,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=BATTERY,
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=0,
         value_fn=lambda device: device.drop_api.battery(),
         state_class=SensorStateClass.MEASUREMENT,
@@ -158,7 +157,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=INLET_TDS,
         translation_key=INLET_TDS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda device: device.drop_api.inlet_tds(),
@@ -166,7 +165,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=OUTLET_TDS,
         translation_key=OUTLET_TDS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda device: device.drop_api.outlet_tds(),
@@ -174,7 +173,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=CARTRIDGE_1_LIFE,
         translation_key=CARTRIDGE_1_LIFE,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,
@@ -183,7 +182,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=CARTRIDGE_2_LIFE,
         translation_key=CARTRIDGE_2_LIFE,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,
@@ -192,7 +191,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=CARTRIDGE_3_LIFE,
         translation_key=CARTRIDGE_3_LIFE,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,

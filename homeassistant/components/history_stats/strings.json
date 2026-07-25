@@ -28,7 +28,7 @@
         },
         "description": "Read the documentation for further details on how to configure the history stats sensor using these options.",
         "sections": {
-          "advanced_settings": {
+          "additional_settings": {
             "data": { "min_state_duration": "Minimum state duration" },
             "data_description": {
               "min_state_duration": "The minimum state duration to account for the statistics. Default is 0 seconds."
@@ -93,14 +93,14 @@
         },
         "description": "[%key:component::history_stats::config::step::options::description%]",
         "sections": {
-          "advanced_settings": {
+          "additional_settings": {
             "data": {
-              "min_state_duration": "[%key:component::history_stats::config::step::options::sections::advanced_settings::data::min_state_duration%]"
+              "min_state_duration": "[%key:component::history_stats::config::step::options::sections::additional_settings::data::min_state_duration%]"
             },
             "data_description": {
-              "min_state_duration": "[%key:component::history_stats::config::step::options::sections::advanced_settings::data_description::min_state_duration%]"
+              "min_state_duration": "[%key:component::history_stats::config::step::options::sections::additional_settings::data_description::min_state_duration%]"
             },
-            "name": "[%key:component::history_stats::config::step::options::sections::advanced_settings::name%]"
+            "name": "[%key:component::history_stats::config::step::options::sections::additional_settings::name%]"
           }
         }
       }

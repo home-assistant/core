@@ -7,6 +7,7 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'low_power',
         'quiet',
         'cool',
         'full_speed',
@@ -48,7 +49,68 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Synology',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'nas.meontheinternet.com Fan speed mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'low_power',
         'quiet',
+        'cool',
+        'full_speed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.nas_meontheinternet_com_fan_speed_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
+# name: test_fan_speed_supported_option[select.nas_meontheinternet_com_fan_speed_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'cool',
+        'full_speed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.nas_meontheinternet_com_fan_speed_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fan speed mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fan speed mode',
+    'platform': 'synology_dsm',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fan_speed_mode',
+    'unique_id': 'mySerial_SYNO.Core.Hardware:fan_speed_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_speed_supported_option[select.nas_meontheinternet_com_fan_speed_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Synology',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'nas.meontheinternet.com Fan speed mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'cool',
         'full_speed',
       ]),

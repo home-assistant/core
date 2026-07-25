@@ -21,7 +21,9 @@ from homeassistant.util.hass_dict import HassKey
 from .const import (
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPES,
+    ATTR_MULTI_PRESS_COUNT,
     DOMAIN,
+    ButtonEventType,
     DoorbellEventType,
     EventEntityCapabilityAttribute,
     EventEntityStateAttribute,
@@ -46,13 +48,17 @@ class EventDeviceClass(StrEnum):
 __all__ = [
     "ATTR_EVENT_TYPE",
     "ATTR_EVENT_TYPES",
+    "ATTR_MULTI_PRESS_COUNT",
     "DOMAIN",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "ButtonEventType",
     "DoorbellEventType",
     "EventDeviceClass",
     "EventEntity",
+    "EventEntityCapabilityAttribute",
     "EventEntityDescription",
+    "EventEntityStateAttribute",
 ]
 
 # mypy: disallow-any-generics

@@ -1018,7 +1018,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '-3',
   })
 # ---
 # name: test_number_snapshot[number.test_number_temperature_report_interval-entry]

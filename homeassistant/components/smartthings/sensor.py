@@ -15,16 +15,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     EntityCategory,
     UnitOfArea,
+    UnitOfDensity,
     UnitOfEnergy,
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
@@ -240,7 +239,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.VOLUME,
                 translation_key="audio_volume",
-                native_unit_of_measurement=PERCENTAGE,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                 deprecated=(
                     lambda status: (
                         ("2025.10.0", "media_player")
@@ -255,7 +254,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.BATTERY: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.BATTERY,
-                native_unit_of_measurement=PERCENTAGE,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                 device_class=SensorDeviceClass.BATTERY,
                 entity_category=EntityCategory.DIAGNOSTIC,
             )
@@ -288,7 +287,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.CARBON_DIOXIDE: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.CARBON_DIOXIDE,
-                native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+                native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
                 device_class=SensorDeviceClass.CO2,
                 state_class=SensorStateClass.MEASUREMENT,
             )
@@ -310,7 +309,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.CARBON_MONOXIDE_LEVEL: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.CARBON_MONOXIDE_LEVEL,
-                native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+                native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
                 device_class=SensorDeviceClass.CO,
                 state_class=SensorStateClass.MEASUREMENT,
             )
@@ -356,7 +355,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.WATER_FILTER_USAGE,
                 translation_key="water_filter_usage",
-                native_unit_of_measurement=PERCENTAGE,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ]
@@ -468,7 +467,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.DUST_LEVEL,
                 device_class=SensorDeviceClass.PM10,
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ],
@@ -476,7 +475,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.FINE_DUST_LEVEL,
                 device_class=SensorDeviceClass.PM25,
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ],
@@ -507,7 +506,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.EQUIVALENT_CARBON_DIOXIDE_MEASUREMENT,
                 translation_key="equivalent_carbon_dioxide",
-                native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+                native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
                 device_class=SensorDeviceClass.CO2,
                 state_class=SensorStateClass.MEASUREMENT,
             )
@@ -528,7 +527,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.FINE_DUST_LEVEL: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.FINE_DUST_LEVEL,
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 state_class=SensorStateClass.MEASUREMENT,
                 device_class=SensorDeviceClass.PM25,
             )
@@ -540,7 +539,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.FORMALDEHYDE_LEVEL,
                 translation_key="formaldehyde",
-                native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+                native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ]
@@ -594,7 +593,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.INFRARED_LEVEL,
                 translation_key="infrared_level",
-                native_unit_of_measurement=PERCENTAGE,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ]
@@ -869,7 +868,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.HUMIDITY: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.HUMIDITY,
-                native_unit_of_measurement=PERCENTAGE,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                 device_class=SensorDeviceClass.HUMIDITY,
                 state_class=SensorStateClass.MEASUREMENT,
             )
@@ -1095,7 +1094,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.TVOC_LEVEL,
                 device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
-                native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+                native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ]
@@ -1124,7 +1123,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.VERY_FINE_DUST_LEVEL: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.VERY_FINE_DUST_LEVEL,
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM1,
                 state_class=SensorStateClass.MEASUREMENT,
             )
@@ -1223,7 +1222,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.HOOD_FILTER_USAGE,
                 translation_key="hood_filter_usage",
                 state_class=SensorStateClass.MEASUREMENT,
-                native_unit_of_measurement=PERCENTAGE,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                 entity_category=EntityCategory.DIAGNOSTIC,
             )
         ]
@@ -1319,7 +1318,7 @@ UNITS = {
     "ccf": UnitOfVolume.CENTUM_CUBIC_FEET,
     "lux": LIGHT_LUX,
     "mG": None,
-    "μg/m^3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "μg/m^3": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     "kPa": UnitOfPressure.KPA,
 }
 

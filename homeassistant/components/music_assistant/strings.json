@@ -374,7 +374,7 @@
     },
     "get_queue": {
       "description": "Retrieves the details of the currently active queue of a Music Assistant player.",
-      "name": "Get playerQueue details (advanced)"
+      "name": "Get playerQueue details"
     },
     "play_announcement": {
       "description": "Plays an announcement on a Music Assistant player with more fine-grained control options.",
@@ -426,7 +426,7 @@
           "name": "Enable radio mode"
         },
         "username": {
-          "description": "Music Assistant username used for the play media request. This affects the playlog entry and will also take provider filters of a media item into account, if they are configured.",
+          "description": "Music Assistant username used for the play media request. This affects the playlog entry and will also take provider filters of a media item into account, if they are configured. Defaults to the Home Assistant user that made the request, when the username matches a Music Assistant user.",
           "name": "Username"
         }
       },

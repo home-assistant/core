@@ -2807,6 +2807,7 @@ async def test_compile_hourly_statistics_partially_unavailable(
         ("weight", "oz", 30),
     ],
 )
+@pytest.mark.timeout(25)
 async def test_compile_hourly_statistics_unavailable(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -6743,7 +6744,7 @@ async def test_clean_up_repairs(
 ) -> None:
     """Test cleaning up repairs."""
     await async_setup_component(hass, DOMAIN, {})
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     client = await hass_ws_client()
 
     # Create some issues
