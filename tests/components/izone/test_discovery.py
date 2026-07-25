@@ -532,3 +532,18 @@ async def test_discover_endpoint_by_uid(
 
     assert result == endpoint
     mock_service.discover_by_uid.assert_awaited_once_with("000000001")
+
+
+async def test_discover_by_host(
+    hass: HomeAssistant,
+    mock_pizone_create_discovery: tuple[AsyncMock, Mock],
+) -> None:
+    """Manual-host probe returns a single endpoint from discover_by_host."""
+    _, mock_service = mock_pizone_create_discovery
+    endpoint = create_mock_endpoint("000000001", "192.0.2.55")
+    mock_service.discover_by_host = AsyncMock(return_value=endpoint)
+
+    result = await izone_discovery.async_discover_by_host(hass, "192.0.2.55")
+
+    assert result == endpoint
+    mock_service.discover_by_host.assert_awaited_once_with("192.0.2.55")

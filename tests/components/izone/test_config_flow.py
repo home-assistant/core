@@ -49,6 +49,11 @@ async def _configure_user_search(hass: HomeAssistant, flow_id: str) -> dict[str,
     return await hass.config_entries.flow.async_configure(flow_id, _user_search_input())
 
 
+def _schema_defaults(schema: Any) -> dict[str, Any]:
+    """Return default values from a voluptuous form schema keyed by field name."""
+    return {str(k): k.default() for k in schema.schema}
+
+
 @pytest.fixture(autouse=True)
 def mock_izone_timeouts() -> Generator[None]:
     """Mock iZone idle-stop delay to speed up tests."""
@@ -940,7 +945,45 @@ async def test_user_flow_returns_to_form_when_no_controllers_found(
     assert result["errors"] == {"base": "no_devices_found"}
     # Search must remain available after an empty scan (not host-only).
     assert config_flow.CONF_SETUP_METHOD in result["data_schema"].schema
+    defaults = _schema_defaults(result["data_schema"])
+    assert (
+        defaults[config_flow.CONF_SETUP_METHOD] == config_flow.SETUP_METHOD_MANUAL_HOST
+    )
     mock_stop.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_empty_discover_keeps_discovery_when_entry_loaded(
+    hass: HomeAssistant,
+) -> None:
+    """Empty discover does not stop the listener while a loaded entry needs it."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000001",
+        data={CONF_HOST: "192.0.2.1"},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch_discovered_controllers([]),
+        patch(
+            "homeassistant.components.izone.discovery.async_stop_discovery",
+            new=AsyncMock(),
+        ) as mock_stop,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        # Host-only UI has no Search; call discover directly to hit the loaded-entry
+        # empty-scan branch (skip stop).
+        flow = hass.config_entries.flow._progress[result["flow_id"]]
+        result = await flow.async_step_discover()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_devices_found"}
+    mock_stop.assert_not_called()
 
 
 async def test_user_flow_can_search_again_after_empty_discovery(
@@ -1040,6 +1083,11 @@ async def test_user_manual_host_unreachable(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+    defaults = _schema_defaults(result["data_schema"])
+    assert (
+        defaults[config_flow.CONF_SETUP_METHOD] == config_flow.SETUP_METHOD_MANUAL_HOST
+    )
+    assert defaults[CONF_HOST] == "192.0.2.99"
 
 
 async def test_user_manual_host_probe_content_error_cannot_connect(
@@ -1240,6 +1288,8 @@ async def test_user_host_only_unreachable_keeps_host_defaults(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
     assert config_flow.CONF_SETUP_METHOD not in result["data_schema"].schema
+    defaults = _schema_defaults(result["data_schema"])
+    assert defaults[CONF_HOST] == "192.0.2.99"
 
 
 async def test_user_manual_host_aborts_when_discovery_bind_fails(
