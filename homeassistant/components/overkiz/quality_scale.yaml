@@ -52,7 +52,7 @@ rules:
   docs-supported-devices: done
   icon-translations: todo
   docs-known-limitations: done
-  stale-devices: todo
+  stale-devices: done
   docs-supported-functions: todo
   repair-issues: todo
   reconfiguration-flow: done

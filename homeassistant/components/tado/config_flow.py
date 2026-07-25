@@ -167,7 +167,8 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="timeout",
             )
-        del self.login_task
+        self.login_task = None
+        self.tado = None
         return await self.async_step_user()
 
     @override

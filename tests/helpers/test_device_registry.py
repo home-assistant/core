@@ -2386,6 +2386,85 @@ async def test_async_get_device_by_connection_normalizes(
     )
 
 
+@pytest.mark.parametrize(
+    ("create_kwargs", "lookup_kwargs", "miss_kwargs"),
+    [
+        pytest.param(
+            {"identifiers": {("test", "shared")}},
+            {"identifiers": {("test", "shared")}},
+            {"identifiers": {("test", "other")}},
+            id="identifier",
+        ),
+        pytest.param(
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")}},
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, "12-34-56-AB-CD-EF")}},
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ff")}},
+            id="connection",
+        ),
+    ],
+)
+async def test_async_get_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_kwargs: dict[str, set[tuple[str, str]]],
+    lookup_kwargs: dict[str, set[tuple[str, str]]],
+    miss_kwargs: dict[str, set[tuple[str, str]]],
+) -> None:
+    """A plural lookup returns all devices sharing the key across config entries."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, **create_kwargs
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, **create_kwargs
+    )
+    assert device_1.id != device_2.id
+
+    assert {
+        device.id for device in device_registry.async_get_devices(**lookup_kwargs)
+    } == {
+        device_1.id,
+        device_2.id,
+    }
+    assert device_registry.async_get_devices(**miss_kwargs) == []
+    assert [
+        device.id
+        for device in device_registry.async_get_devices(
+            **lookup_kwargs, config_entry_id=entry_1.entry_id
+        )
+    ] == [device_1.id]
+    assert (
+        device_registry.async_get_devices(**lookup_kwargs, config_entry_id="unknown")
+        == []
+    )
+
+
+async def test_async_get_devices_multiple_keys(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """A plural lookup with several keys returns the union of matches, deduplicated."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    mac = (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "1")},
+        connections={mac},
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "2")}
+    )
+
+    devices = device_registry.async_get_devices(
+        identifiers={("test", "1"), ("test", "2")}, connections={mac}
+    )
+    assert {device.id for device in devices} == {device_1.id, device_2.id}
+    assert len(devices) == 2
+
+
 async def test_async_remove_device_fans_out_to_migration_composite(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -2944,6 +3023,35 @@ async def test_clear_config_subentry_clears_pending_move_targeting_it(
     )
     assert result is None
     assert device.id not in device_registry.devices
+
+
+async def test_async_is_composite_device_id(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test asking the registry if a device id is a pre-migration composite id."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry.devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+
+    assert device_registry.async_is_composite_device_id(old_id) is True
+    assert device_registry.async_is_composite_device_id(device_1.id) is False
+    assert device_registry.async_is_composite_device_id(device_2.id) is False
+    assert device_registry.async_is_composite_device_id("unknown_id") is False
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -5619,6 +5727,110 @@ async def test_restore_device(
         "action": "create",
         "device_id": entry3.id,
     }
+
+
+@pytest.mark.parametrize(
+    ("stored_connections", "stored_identifiers", "new_connections", "new_identifiers"),
+    [
+        pytest.param(
+            {(dr.CONNECTION_NETWORK_MAC, "aa:aa:aa:aa:aa:aa")},
+            {("bridgeid", "0123")},
+            {
+                (dr.CONNECTION_NETWORK_MAC, "aa:aa:aa:aa:aa:aa"),
+                (dr.CONNECTION_NETWORK_MAC, "bb:bb:bb:bb:bb:bb"),
+            },
+            {("bridgeid", "0123"), ("bridgeid", "4567")},
+            id="broader_reregistration",
+        ),
+        pytest.param(
+            {(dr.CONNECTION_NETWORK_MAC, "aa:aa:aa:aa:aa:aa")},
+            {("bridgeid", "0123")},
+            {(dr.CONNECTION_NETWORK_MAC, "bb:bb:bb:bb:bb:bb")},
+            {("bridgeid", "0123")},
+            id="disjoint_connection_matched_on_identifier",
+        ),
+    ],
+)
+async def test_restore_device_reflects_reregistered_identity(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    stored_connections: set[tuple[str, str]],
+    stored_identifiers: set[tuple[str, str]],
+    new_connections: set[tuple[str, str]],
+    new_identifiers: set[tuple[str, str]],
+) -> None:
+    """A restored device keeps the connections and identifiers it is re-registered with.
+
+    The restored device must reflect the identity the integration reports on
+    re-registration, not its intersection with the stored (deleted) identity, so a
+    device that now reports a broader (or shifted) set is restored with all of it.
+    """
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections=stored_connections,
+        identifiers=stored_identifiers,
+    )
+    device_registry.async_remove_device(entry.id)
+    assert len(device_registry.deleted_devices) == 1
+
+    restored = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections=new_connections,
+        identifiers=new_identifiers,
+    )
+
+    assert restored.id == entry.id
+    assert restored.connections == new_connections
+    assert restored.identifiers == new_identifiers
+
+
+@pytest.mark.parametrize(
+    ("new_connections", "new_identifiers"),
+    [
+        pytest.param(
+            {
+                (dr.CONNECTION_NETWORK_MAC, "aa:aa:aa:aa:aa:aa"),
+                (dr.CONNECTION_NETWORK_MAC, "bb:bb:bb:bb:bb:bb"),
+            },
+            {("bridgeid", "0123"), ("bridgeid", "4567")},
+            id="broader_reregistration",
+        ),
+        pytest.param(
+            {(dr.CONNECTION_NETWORK_MAC, "cc:cc:cc:cc:cc:cc")},
+            {("bridgeid", "9999")},
+            id="disjoint_reregistration",
+        ),
+    ],
+)
+async def test_deleted_device_to_device_entry_uses_reregistered_identity(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    new_connections: set[tuple[str, str]],
+    new_identifiers: set[tuple[str, str]],
+) -> None:
+    """DeletedDeviceEntry.to_device_entry keeps the passed connections and identifiers.
+
+    Regression guard: it must not intersect them with the stored ones, which would drop
+    (or, for a disjoint re-registration, entirely empty) the device's identity.
+    """
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "aa:aa:aa:aa:aa:aa")},
+        identifiers={("bridgeid", "0123")},
+    )
+    device_registry.async_remove_device(entry.id)
+    deleted_device = device_registry.deleted_devices[entry.id]
+
+    restored = deleted_device.to_device_entry(
+        mock_config_entry,
+        None,
+        new_connections,
+        new_identifiers,
+        None,
+    )
+
+    assert restored.connections == new_connections
+    assert restored.identifiers == new_identifiers
 
 
 @pytest.mark.parametrize(
