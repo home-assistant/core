@@ -47,6 +47,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _user_discovered_endpoints: list[pizone.ControllerEndpoint] | None = None
     _discovered_controller_ip: str | None = None
+    _host_only: bool | None = None
 
     @override
     def is_matching(self, other_flow: Self) -> bool:
@@ -112,10 +113,12 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         defaults: Mapping[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Show the user setup form (search/manual or host-only)."""
+        # Latch so submit matches the schema the user saw (loaded-entry can change).
+        self._host_only = self._async_user_setup_host_only()
         return self.async_show_form(
             step_id="user",
             data_schema=self._user_setup_schema(
-                host_only=self._async_user_setup_host_only(),
+                host_only=self._host_only,
                 defaults=defaults or {},
             ),
             errors=errors or None,
@@ -134,7 +137,11 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            host_only = self._async_user_setup_host_only()
+            host_only = (
+                self._host_only
+                if self._host_only is not None
+                else self._async_user_setup_host_only()
+            )
             if host_only:
                 host = str(user_input.get(CONF_HOST, "")).strip()
                 if not host:
@@ -170,8 +177,8 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if not endpoints:
             _LOGGER.debug("No controllers found")
-            # Search started discovery; drop it when nothing is using it so the
-            # follow-up form (and a later Add integration) can offer Search again.
+            # Empty search started discovery solely for this scan; stop it when no
+            # loaded entry needs the shared listener.
             if not self._async_user_setup_host_only():
                 await izone_discovery.async_stop_discovery(self.hass)
             return self._async_show_user_form(
@@ -227,15 +234,12 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             if (primary := by_uid.get(selected_uid)) is None:
                 return self.async_abort(reason="no_devices_found")
 
-            for endpoint in self._user_discovered_endpoints:
-                if endpoint.uid == primary.uid:
-                    continue
-                # Using integration_discovery lets HA's deduplication guard prevent stacking
-                # flows for UIDs already in progress or already configured.
-                self._async_schedule_integration_discovery_flow(
-                    endpoint.uid,
-                    endpoint.host,
-                )
+            # Skip ignored UIDs (include_ignore=True); integration_discovery cannot
+            # re-offer them — only SOURCE_USER can replace SOURCE_IGNORE.
+            self._async_fan_out_discovered_endpoints(
+                self._user_discovered_endpoints,
+                selected_uid=primary.uid,
+            )
             return await self._async_create_controller_entry(primary)
 
         controllers_lines = "\n".join(
@@ -391,7 +395,11 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_probe_host_and_confirm(self, host: str) -> ConfigFlowResult:
         """Validate *host* and continue to confirm when a controller responds."""
         self._async_abort_entries_match({CONF_HOST: host})
-        host_only = self._async_user_setup_host_only()
+        host_only = (
+            self._host_only
+            if self._host_only is not None
+            else self._async_user_setup_host_only()
+        )
         try:
             endpoint = await izone_discovery.async_discover_by_host(self.hass, host)
         except OSError:

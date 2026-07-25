@@ -314,6 +314,44 @@ async def test_select_controller_creates_selected_uid_and_queues_others(
     assert skipped_flows[0]["context"]["unique_id"] == "000000001"
 
 
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_select_controller_skips_fan_out_for_ignored_uid(
+    hass: HomeAssistant,
+) -> None:
+    """Unselected ignored controllers stay ignored; no doomed discovery flow."""
+    new_controller = create_mock_controller("000000001", "192.0.2.1")
+    ignored_controller = create_mock_controller("000000002", "192.0.2.2")
+    ignored_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ignored_controller.device_uid,
+        source=config_entries.SOURCE_IGNORE,
+        data={},
+    )
+    ignored_entry.add_to_hass(hass)
+
+    with patch_discovered_controllers([new_controller, ignored_controller]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await _configure_user_search(hass, result["flow_id"])
+        assert result["step_id"] == "select_controller"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {config_flow.SELECTED_CONTROLLER_UID: new_controller.device_uid},
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == new_controller.device_uid
+    assert ignored_entry.source == config_entries.SOURCE_IGNORE
+    assert not [
+        p
+        for p in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        if p["context"].get("unique_id") == ignored_controller.device_uid
+    ]
+
+
 async def test_broadcast_aborts_when_all_discovered_are_configured(
     hass: HomeAssistant,
 ) -> None:

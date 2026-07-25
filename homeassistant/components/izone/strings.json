@@ -26,14 +26,14 @@
         "data": {
           "selected_controller_uid": "Controller"
         },
-        "description": "Multiple unconfigured iZone controllers were found:\n{controllers}\n\nChoose the controller you want to set up now. Any controller you do not select will remain available as a discovered device you can set up later under **Settings** > **Devices & services**."
+        "description": "Multiple unconfigured iZone controllers were found:\n{controllers}\n\nChoose the controller you want to set up now. Any other controller not previously ignored will remain available as a discovered device you can set up later under **Settings** > **Devices & services**."
       },
       "user": {
         "data": {
           "host": "Controller IP address or hostname",
           "setup_method": "Setup method"
         },
-        "description": "Choose how to find your iZone controller."
+        "description": "Add an iZone controller."
       }
     }
   },
