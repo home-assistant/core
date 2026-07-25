@@ -14,6 +14,7 @@ from homeassistant.components.tplink_omada.coordinator import (
     POLL_DEVICES,
     OmadaControllerCoordinator,
 )
+from homeassistant.components.tplink_omada.update import OmadaControllerUpdate
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     DOMAIN as UPDATE_DOMAIN,
@@ -403,3 +404,69 @@ async def test_controller_software_update_does_not_support_install(
     result = await client.receive_json()
 
     assert result["result"] == "Controller software update"
+
+
+async def test_controller_update_without_available_upgrade(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test controller update entity without an available upgrade."""
+    mock_omada_client.check_firmware_updates.return_value = _controller_update_info()
+
+    await _async_setup_update_platform(hass, mock_config_entry)
+
+    entity_id = "update.oc200_firmware"
+    entity = hass.states.get(entity_id)
+    assert entity is not None
+    assert entity.attributes["installed_version"] == "6.2.10.17"
+    assert entity.attributes["latest_version"] == "6.2.10.17"
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.supported_features == (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
+    )
+
+
+async def test_controller_update_without_update_info(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test controller update entity properties without update information."""
+    mock_omada_client.check_firmware_updates.side_effect = OmadaClientException(
+        "No permission"
+    )
+
+    await _async_setup_update_platform(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data.controller_coordinator
+
+    entity = OmadaControllerUpdate(coordinator)
+
+    assert not entity.available
+    assert entity.installed_version == "6.2.10.17"
+    assert entity.latest_version == "6.2.10.17"
+    assert entity.release_notes() is None
+
+
+async def test_controller_software_update_install_raises(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test controller software update install raises without firmware update."""
+    mock_omada_client.check_firmware_updates.return_value = _controller_update_info(
+        software_upgrade=True
+    )
+
+    await _async_setup_update_platform(hass, mock_config_entry)
+
+    entity = OmadaControllerUpdate(mock_config_entry.runtime_data.controller_coordinator)
+
+    with pytest.raises(
+        HomeAssistantError, match="No controller firmware update is available"
+    ):
+        await entity.async_install(None, False)
