@@ -19,6 +19,7 @@ from homeassistant.components.tplink_omada import (
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.entity import controller_model
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -184,6 +185,39 @@ async def test_omada_devices_link_to_controller_device(
     assert controller_device.config_entries == {init_integration.entry_id}
     assert gateway_device.via_device_id == controller_device.id
     assert switch_device.via_device_id == controller_device.id
+
+
+async def test_controller_device_exists_before_non_owner_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test a non-owner setup still creates the controller device for children."""
+    _mock_controller_entry(
+        hass,
+        entry_id="01",
+        site_id="Second",
+        created_at=datetime(2026, 7, 8, tzinfo=UTC),
+        state=ConfigEntryState.LOADED,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.tplink_omada.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    controller_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "12345")}
+    )
+    gateway_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "AA-BB-CC-DD-EE-FF")}
+    )
+
+    assert controller_device is not None
+    assert gateway_device is not None
+    assert controller_device.config_entries == {mock_config_entry.entry_id}
+    assert gateway_device.via_device_id == controller_device.id
 
 
 async def test_controller_device_moves_to_new_owner(

@@ -130,15 +130,21 @@ async def test_controller_coordinator_fetches_info_and_updates(
     assert data.updates is mock_omada_client.check_firmware_updates.return_value
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(OmadaClientException("No permission"), id="client-error"),
+        pytest.param(TimeoutError, id="timeout"),
+    ],
+)
 async def test_controller_update_unavailable_when_update_check_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_omada_client: MagicMock,
+    side_effect: type[Exception] | Exception,
 ) -> None:
     """Test controller update endpoint failure does not block setup."""
-    mock_omada_client.check_firmware_updates.side_effect = OmadaClientException(
-        "No permission"
-    )
+    mock_omada_client.check_firmware_updates.side_effect = side_effect
 
     await _async_setup_update_platform(hass, mock_config_entry)
 

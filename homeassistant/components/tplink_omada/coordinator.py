@@ -113,7 +113,7 @@ class OmadaControllerCoordinator(DataUpdateCoordinator[ControllerStatus]):
         try:
             async with asyncio.timeout(10):
                 updates = await self.omada_client.check_firmware_updates()
-        except OmadaClientException:
+        except TimeoutError, OmadaClientException:
             updates = None
 
         return ControllerStatus(info=info, updates=updates)

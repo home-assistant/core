@@ -83,7 +83,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     entry.runtime_data = controller
 
-    if config_entry_owns_controller_entities(hass, entry):
+    if config_entry_owns_controller_entities(
+        hass, entry
+    ) or not _controller_device_exists(hass, controller_id):
         _register_controller_device(hass, entry)
 
     _remove_old_devices(hass, entry, controller.devices_coordinator.data)
@@ -194,6 +196,14 @@ def _register_controller_device(
         model=controller_model(controller_info),
         name=controller.controller_name,
         sw_version=controller_info.controller_version,
+    )
+
+
+def _controller_device_exists(hass: HomeAssistant, controller_id: str) -> bool:
+    """Return if the controller device is already registered."""
+    return (
+        dr.async_get(hass).async_get_device(identifiers={(DOMAIN, controller_id)})
+        is not None
     )
 
 
