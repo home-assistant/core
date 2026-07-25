@@ -325,6 +325,46 @@ async def test_generate_data_content_type(
     assert media_attachment.path == Path("/media/test.png")
 
 
+async def test_generate_data_url_attachment(
+    hass: HomeAssistant,
+    init_components: None,
+    mock_ai_task_entity: MockAITaskEntity,
+) -> None:
+    """Test that a media source returning only a URL (no local path) is resolved."""
+    with patch(
+        "homeassistant.components.media_source.async_resolve_media",
+        return_value=media_source.PlayMedia(
+            url="http://example.com/clip.mp4",
+            mime_type="video/mp4",
+            path=None,
+        ),
+    ) as mock_resolve_media:
+        await async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id=TEST_ENTITY_ID,
+            instructions="Describe this video",
+            attachments=[
+                {"media_content_id": "media-source://unifiprotect/clip.mp4"},
+            ],
+        )
+
+    mock_resolve_media.assert_called_once_with(
+        hass, "media-source://unifiprotect/clip.mp4", None
+    )
+
+    assert len(mock_ai_task_entity.mock_generate_data_tasks) == 1
+    task = mock_ai_task_entity.mock_generate_data_tasks[0]
+    assert task.attachments is not None
+    assert len(task.attachments) == 1
+
+    media_attachment = task.attachments[0]
+    assert media_attachment.media_content_id == "media-source://unifiprotect/clip.mp4"
+    assert media_attachment.mime_type == "video/mp4"
+    assert media_attachment.path is None
+    assert media_attachment.url == "http://example.com/clip.mp4"
+
+
 @pytest.mark.freeze_time("2025-06-14 22:59:00")
 async def test_generate_image(
     hass: HomeAssistant,

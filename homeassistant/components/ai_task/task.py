@@ -80,15 +80,12 @@ async def _resolve_attachments(
         else:
             # Handle regular media sources
             media = await media_source.async_resolve_media(hass, media_content_id, None)
-            if media.path is None:
-                raise HomeAssistantError(
-                    "Only local attachments are currently supported"
-                )
             resolved_attachments.append(
                 conversation.Attachment(
                     media_content_id=media_content_id,
                     mime_type=attachment.get("media_content_type") or media.mime_type,
                     path=media.path,
+                    url=media.url,
                 )
             )
 

@@ -60,7 +60,7 @@ async def async_prepare_image_generation_attachments(
                 raise HomeAssistantError(
                     "Only image attachments are supported for image generation"
                 )
-            path = attachment.path
+            path = attachment.require_local_path()
             if not path.exists():
                 raise HomeAssistantError(f"`{path}` does not exist")
 

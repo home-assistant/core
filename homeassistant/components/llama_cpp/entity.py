@@ -335,7 +335,7 @@ class LlamaCppBaseLLMEntity(Entity):
         ):
             files = await async_prepare_files_for_prompt(
                 self.hass,
-                [a.path for a in last_content.attachments],
+                [a.require_local_path() for a in last_content.attachments],
             )
             for i in range(len(messages) - 1, -1, -1):
                 if messages[i]["role"] == "user":

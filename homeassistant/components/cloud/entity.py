@@ -521,7 +521,7 @@ class BaseCloudLLMEntity(Entity):
             content: list[dict[str, Any]] = []
             for attachment in attachments:
                 mime_type = attachment.mime_type
-                path = attachment.path
+                path = attachment.require_local_path()
                 if not path.exists():
                     raise HomeAssistantError(f"`{path}` does not exist")
 

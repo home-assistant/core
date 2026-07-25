@@ -1093,7 +1093,10 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 await async_prepare_files_for_prompt(
                     self.hass,
                     self.model_info,
-                    [(a.path, a.mime_type) for a in last_content.attachments],
+                    [
+                        (a.require_local_path(), a.mime_type)
+                        for a in last_content.attachments
+                    ],
                 )
             )
 

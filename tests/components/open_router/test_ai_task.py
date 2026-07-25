@@ -445,22 +445,14 @@ async def test_generate_data_with_video_attachment_remote(
     with (
         patch(
             "homeassistant.components.media_source.async_resolve_media",
-            side_effect=[
-                # First call: from ai_task._resolve_attachments
-                media_source.PlayMedia(
-                    url="/local/clip.mp4",
-                    mime_type="video/mp4",
-                    path=Path(tempfile.gettempdir()) / "clip.mp4",
-                ),
-                # Second call: from entity.py non-local video handler
-                media_source.PlayMedia(
-                    url="/local/clip.mp4",
-                    mime_type="video/mp4",
-                    path=Path(tempfile.gettempdir()) / "clip.mp4",
-                ),
-            ],
+            # A URL-backed media source (e.g. UniFi Protect, Reolink) resolves to
+            # a PlayMedia with no local path.
+            return_value=media_source.PlayMedia(
+                url="/local/clip.mp4",
+                mime_type="video/mp4",
+                path=None,
+            ),
         ),
-        patch("pathlib.Path.exists", return_value=False),
         patch(
             "homeassistant.components.open_router.entity.async_sign_path",
             return_value="/local/clip.mp4?authSig=xxx",
@@ -507,10 +499,9 @@ async def test_generate_data_with_video_attachment_remote_no_external_url(
             return_value=media_source.PlayMedia(
                 url="/local/clip.mp4",
                 mime_type="video/mp4",
-                path=Path(tempfile.gettempdir()) / "clip.mp4",
+                path=None,
             ),
         ),
-        patch("pathlib.Path.exists", return_value=False),
         patch(
             "homeassistant.components.open_router.entity.get_url",
             side_effect=NoURLAvailableError,

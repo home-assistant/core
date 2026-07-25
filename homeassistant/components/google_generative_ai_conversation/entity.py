@@ -618,7 +618,10 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 await async_prepare_files_for_prompt(
                     self.hass,
                     self._genai_client,
-                    [(a.path, a.mime_type) for a in user_message.attachments],
+                    [
+                        (a.require_local_path(), a.mime_type)
+                        for a in user_message.attachments
+                    ],
                 )
             )
 

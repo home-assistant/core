@@ -28,7 +28,7 @@ from openai.types.shared_params.response_format_json_schema import JSONSchema
 import voluptuous as vol
 from voluptuous_openapi import convert
 
-from homeassistant.components import conversation, media_source
+from homeassistant.components import conversation
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_MODEL
@@ -183,6 +183,32 @@ async def _transform_response(
     yield data
 
 
+def _encode_video(file_path: Path, mime_type: str) -> VideoUrlParam:
+    """Read and base64-encode a local video file for use in a prompt."""
+    if not file_path.exists():
+        raise HomeAssistantError(
+            f"`{file_path}` does not exist, file may have been deleted/moved during encoding"
+        )
+    base64_file = base64.b64encode(file_path.read_bytes()).decode("utf-8")
+    return VideoUrlParam(
+        type="video_url",
+        video_url={"url": f"data:{mime_type};base64,{base64_file}"},
+    )
+
+
+def _encode_image(
+    file_path: Path, mime_type: str
+) -> ChatCompletionContentPartImageParam:
+    """Read and base64-encode a local image or PDF file for use in a prompt."""
+    if not file_path.exists():
+        raise HomeAssistantError(f"`{file_path}` does not exist")
+    encoded = base64.b64encode(file_path.read_bytes()).decode("utf-8")
+    return ChatCompletionContentPartImageParam(
+        type="image_url",
+        image_url={"url": f"data:{mime_type};base64,{encoded}"},
+    )
+
+
 async def async_prepare_files_for_prompt(
     hass: HomeAssistant,
     attachments: list[conversation.Attachment],
@@ -195,26 +221,18 @@ async def async_prepare_files_for_prompt(
 
     for attachment in attachments:
         file_path = attachment.path
-        mime_type = attachment.mime_type or guess_file_type(file_path)[0] or ""
+        mime_type = attachment.mime_type or ""
+        if not mime_type and file_path is not None:
+            mime_type = guess_file_type(file_path)[0] or ""
 
         if mime_type.startswith("video/"):
-            if file_path.exists():
-
-                def encode_video(
-                    path: Path = file_path, mime: str = mime_type
-                ) -> VideoUrlParam:
-                    if not path.exists():
-                        raise HomeAssistantError(
-                            f"`{path}` does not exist, file may have been deleted/moved during encoding"
-                        )
-                    base64_file = base64.b64encode(path.read_bytes()).decode("utf-8")
-                    return VideoUrlParam(
-                        type="video_url",
-                        video_url={"url": f"data:{mime};base64,{base64_file}"},
+            if file_path is not None:
+                content.append(
+                    await hass.async_add_executor_job(
+                        _encode_video, file_path, mime_type
                     )
-
-                content.append(await hass.async_add_executor_job(encode_video))
-            else:
+                )
+            elif attachment.url is not None:
                 try:
                     external_url = get_url(
                         hass, prefer_external=True, allow_internal=False
@@ -223,11 +241,8 @@ async def async_prepare_files_for_prompt(
                     raise HomeAssistantError(
                         "An external URL must be configured to serve non-local video files to OpenRouter"
                     ) from err
-                media = await media_source.async_resolve_media(
-                    hass, attachment.media_content_id, None
-                )
                 signed_path = async_sign_path(
-                    hass, media.url, timedelta(hours=1), use_content_user=True
+                    hass, attachment.url, timedelta(hours=1), use_content_user=True
                 )
                 content.append(
                     VideoUrlParam(
@@ -235,24 +250,24 @@ async def async_prepare_files_for_prompt(
                         video_url={"url": urljoin(external_url, signed_path)},
                     )
                 )
-        elif mime_type.startswith(("image/", "application/pdf")):
-
-            def encode_image(
-                path: Path = file_path, mime: str = mime_type
-            ) -> ChatCompletionContentPartImageParam:
-                if not path.exists():
-                    raise HomeAssistantError(f"`{path}` does not exist")
-                encoded = base64.b64encode(path.read_bytes()).decode("utf-8")
-                return ChatCompletionContentPartImageParam(
-                    type="image_url",
-                    image_url={"url": f"data:{mime};base64,{encoded}"},
+            else:
+                raise HomeAssistantError(
+                    f"Video attachment `{attachment.media_content_id}` has "
+                    "neither a local path nor a URL"
                 )
-
-            content.append(await hass.async_add_executor_job(encode_image))
+        elif mime_type.startswith(("image/", "application/pdf")):
+            if file_path is None:
+                raise HomeAssistantError(
+                    "Only local images and PDFs are supported by the OpenRouter API, "
+                    f"`{attachment.media_content_id}` is not available locally"
+                )
+            content.append(
+                await hass.async_add_executor_job(_encode_image, file_path, mime_type)
+            )
         else:
             raise HomeAssistantError(
                 "Only images, PDF, and video are supported by the OpenRouter API, "
-                f"`{file_path}` has unsupported type: {mime_type}"
+                f"`{attachment.media_content_id}` has unsupported type: {mime_type}"
             )
 
     return cast(list[ChatCompletionContentPartParam], content)

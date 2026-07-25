@@ -643,7 +643,10 @@ class OpenAIBaseLLMEntity(Entity):
         if last_content.role == "user" and last_content.attachments:
             files = await async_prepare_files_for_prompt(
                 self.hass,
-                [(a.path, a.mime_type) for a in last_content.attachments],
+                [
+                    (a.require_local_path(), a.mime_type)
+                    for a in last_content.attachments
+                ],
             )
             last_message = messages[-1]
             assert (

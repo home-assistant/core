@@ -119,7 +119,7 @@ def _convert_content(
                     translation_domain=DOMAIN,
                     translation_key="unsupported_attachment_type",
                 )
-            images.append(ollama.Image(value=attachment.path))
+            images.append(ollama.Image(value=attachment.require_local_path()))
         return ollama.Message(
             role=MessageRole.USER.value,
             content=chat_content.content,

@@ -245,15 +245,27 @@ class Attachment:
     mime_type: str
     """MIME type of the attachment."""
 
-    path: Path
-    """Path to the attachment on disk."""
+    path: Path | None = None
+    """Path to the attachment on disk, if it is available locally."""
+
+    url: str | None = None
+    """URL to the attachment, if it is only available remotely."""
+
+    def require_local_path(self) -> Path:
+        """Return the local path, raising if the attachment is remote-only."""
+        if self.path is None:
+            raise HomeAssistantError(
+                f"Attachment {self.media_content_id} is not available locally"
+            )
+        return self.path
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the attachment."""
         return {
             "media_content_id": self.media_content_id,
             "mime_type": self.mime_type,
-            "path": str(self.path),
+            "path": str(self.path) if self.path is not None else None,
+            "url": self.url,
         }
 
 
