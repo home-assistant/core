@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import AutoSeat, Scope
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
@@ -162,7 +163,9 @@ async def async_setup_entry(
 
     for vehicle in entry.runtime_data.vehicles:
         for description in VEHICLE_DESCRIPTIONS:
-            if vehicle.poll or vehicle.firmware < description.streaming_firmware:
+            if vehicle.poll or not firmware_at_least(
+                vehicle.firmware, description.streaming_firmware
+            ):
                 if description.polling:
                     entities.append(
                         TeslemetryVehiclePollingVehicleSwitchEntity(
