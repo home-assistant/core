@@ -86,9 +86,6 @@ class _KnxCover(CoverEntity, RestoreEntity):
 
     def init_base(self) -> None:
         """Initialize common attributes - may be based on xknx device instance."""
-        # When the position can't be read from the bus it is only calculated
-        # from the configured travel time, so the state has to be assumed.
-        self._attr_assumed_state = not self._device.position_current.readable
         self._attr_supported_features = (
             CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN
         )
@@ -132,6 +129,19 @@ class _KnxCover(CoverEntity, RestoreEntity):
             tilt_position := last_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
         ) is not None:
             self._device.angle.value = 100 - tilt_position
+
+    @property
+    @override
+    def assumed_state(self) -> bool:
+        """Return True if unable to access real state of the entity."""
+        # Without a known position or movement value, the position is only
+        # calculated from the configured travel time, so the state is assumed.
+        # This avoids presenting a restored position as if it were confirmed.
+        return (
+            self._device.position_current.value is None
+            and self._device.position_target.value is None
+            and self._device.updown.value is None
+        )
 
     @property
     @override

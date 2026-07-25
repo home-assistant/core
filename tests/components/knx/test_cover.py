@@ -256,14 +256,16 @@ async def test_cover_restore_readable(hass: HomeAssistant, knx: KNXTestKit) -> N
             }
         }
     )
-    # restored value bridges the gap until the bus read completes - not assumed
+    # restored value bridges the gap until the bus read completes - it is
+    # assumed as long as it hasn't been confirmed by the bus
     knx.assert_state(
         "cover.test",
         CoverState.CLOSED,
         current_position=0,
-        assumed_state=None,
+        assumed_state=True,
     )
-    # bus reports a different position - the real value overwrites the restored one
+    # bus reports a different position - the confirmed value overwrites the
+    # restored one and the state is no longer assumed
     await knx.assert_read("1/0/2", response=(0x00,))
     knx.assert_state(
         "cover.test",
