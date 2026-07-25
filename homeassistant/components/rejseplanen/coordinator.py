@@ -1,9 +1,8 @@
 """Data update coordinator for Rejseplanen."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from py_rejseplan.api.departures import DeparturesAPIClient
 from py_rejseplan.dataclasses.departure import Departure
@@ -11,11 +10,12 @@ from py_rejseplan.dataclasses.departure_board import DepartureBoard
 from py_rejseplan.exceptions import APIError, ConnectionError, HTTPError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_API_KEY, CONF_STOP_ID, DOMAIN, SCAN_INTERVAL_MINUTES
+from .const import CONF_STOP_ID, DOMAIN, SCAN_INTERVAL_MINUTES
 from .helpers import cph_to_tz
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,6 +44,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
             config_entry=config_entry,
         )
 
+    @override
     async def _async_update_data(self) -> DepartureBoard:
         """Update data via library."""
         assert self.config_entry is not None

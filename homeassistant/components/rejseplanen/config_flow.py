@@ -1,6 +1,6 @@
 """Config flow for Rejseplanen integration."""
 
-from typing import Any
+from typing import Any, override
 
 from py_rejseplan.api.departures import DeparturesAPIClient as Rejseplanen
 from py_rejseplan.dataclasses.transport_mappings import DEPARTURE_TYPE_TO_CLASS
@@ -17,6 +17,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -31,10 +32,8 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_API_KEY,
     CONF_DEPARTURE_TYPE,
     CONF_DIRECTION,
-    CONF_NAME,
     CONF_STOP_ID,
     DEFAULT_STOP_NAME,
     DOMAIN,
@@ -53,7 +52,7 @@ CONFIG_STOP_SCHEMA = vol.Schema(
                 mode=NumberSelectorMode.BOX, min=1, max=999999999, step=1
             ),
         ),
-        vol.Optional(CONF_NAME, default=DEFAULT_STOP_NAME): str,
+        vol.Optional(CONF_NAME, default=DEFAULT_STOP_NAME): str,  # pylint: disable=home-assistant-config-flow-name-field
         vol.Optional(CONF_DIRECTION, default=[]): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
@@ -81,6 +80,7 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    @override
     @classmethod
     @callback
     def async_get_supported_subentry_types(
@@ -89,6 +89,7 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return subentries supported by this integration."""
         return {"stop": RejseplanenSubentryStopFlow}
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
