@@ -2196,15 +2196,41 @@ async def test_stream_override_with_conversion(
         )  # 1 second @ 22.5Khz/stereo
 
 
-async def test_result_stream_uses_entity_file_cache_setting(
+async def test_result_stream_uses_manager_file_cache_setting(
     hass: HomeAssistant,
     mock_tts_entity: MockTTSEntity,
 ) -> None:
     """Test result stream inherits entity file cache preference."""
 
     await mock_config_entry_setup(hass, mock_tts_entity)
+    manager = hass.data[tts.DATA_TTS_MANAGER]
+
+    manager.use_file_cache = True
+    assert mock_tts_entity._attr_use_file_cache is None
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
     assert stream.use_file_cache is True
+
+    manager.use_file_cache = False
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    assert stream.use_file_cache is False
+
+
+async def test_result_stream_entity_overrides_file_cache_setting(
+    hass: HomeAssistant,
+    mock_tts_entity: MockTTSEntity,
+) -> None:
+    """Test entity overrides manager file cache setting."""
+
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    manager = hass.data[tts.DATA_TTS_MANAGER]
+
+    manager.use_file_cache = False
+    mock_tts_entity._attr_use_file_cache = True
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    assert stream.use_file_cache is True
+
+    manager.use_file_cache = True
     mock_tts_entity._attr_use_file_cache = False
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
     assert stream.use_file_cache is False
@@ -2221,6 +2247,9 @@ async def test_entity_disables_file_cache(
     mock_tts_entity._attr_use_file_cache = False
     await mock_config_entry_setup(hass, mock_tts_entity)
 
+    # Ensure the manager would normally cache.
+    hass.data[tts.DATA_TTS_MANAGER].use_file_cache = True
+
     media_source_id = tts.generate_media_source_id(
         hass,
         "test message",
@@ -2232,5 +2261,6 @@ async def test_entity_disables_file_cache(
     client = await hass_client()
     resp = await client.get(url)
     assert resp.status == HTTPStatus.OK
+
     await hass.async_block_till_done()
     assert list(mock_tts_cache_dir.iterdir()) == []
