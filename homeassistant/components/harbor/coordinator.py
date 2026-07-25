@@ -149,6 +149,13 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
         self.device.shutdown()
 
     @property
+    def _client(self) -> HarborMQTTClient:
+        """Return the active MQTT client."""
+        if self._mqtt_client is None:
+            raise RuntimeError("MQTT client is not connected")
+        return self._mqtt_client
+
+    @property
     def device_info(self) -> DeviceInfo:
         """Return device info for the Harbor camera."""
         state = self.data
@@ -160,6 +167,14 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
             serial_number=state.serial,
             sw_version=state.os_version,
         )
+
+    async def async_set_camera_on(self, camera_on: bool) -> None:
+        """Turn the camera stream on or off."""
+        await self._client.set_camera_on(camera_on)
+
+    async def async_set_night_mode(self, night_mode: bool) -> None:
+        """Turn the camera's night mode on or off."""
+        await self._client.set_night_mode(night_mode)
 
     def _handle_device_update(self, state: HarborDeviceState) -> None:
         """Mirror a library device update into Home Assistant."""

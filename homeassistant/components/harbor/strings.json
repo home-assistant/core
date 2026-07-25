@@ -49,11 +49,25 @@
         "name": "Wi-Fi strength",
         "unit_of_measurement": "bars"
       }
+    },
+    "switch": {
+      "camera_on": {
+        "name": "Camera"
+      },
+      "night_mode": {
+        "name": "Night mode"
+      }
     }
   },
   "exceptions": {
     "cannot_connect": {
       "message": "Could not connect to the Harbor camera. It may be offline or unreachable."
+    },
+    "switch_turn_off_failed": {
+      "message": "Failed to turn off {switch}."
+    },
+    "switch_turn_on_failed": {
+      "message": "Failed to turn on {switch}."
     }
   }
 }

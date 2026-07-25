@@ -23,7 +23,12 @@ KEY_PEM = "-----BEGIN PRIVATE KEY-----\nMIIBdummy\n-----END PRIVATE KEY-----"
 
 HEARTBEAT_TOPIC = f"cameras/{SERIAL}/events/heartbeat"
 LIVEKIT_TOPIC = f"cameras/{SERIAL}/events/local_livekit_heartbeat"
+SETTINGS_TOPIC = f"cameras/{SERIAL}/responses/get-settings"
 
+SETTINGS_PAYLOAD: dict[str, Any] = {
+    "settings": {"preference_stream_paused": False},
+    "state": {"video_night_mode": True},
+}
 HEARTBEAT_PAYLOAD: dict[str, Any] = {
     "temperature": 98.6,
     "os_version": "1.2.3",

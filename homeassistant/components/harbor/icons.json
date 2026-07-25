@@ -10,6 +10,14 @@
       "wifi_strength": {
         "default": "mdi:wifi"
       }
+    },
+    "switch": {
+      "camera_on": {
+        "default": "mdi:cctv"
+      },
+      "night_mode": {
+        "default": "mdi:weather-night"
+      }
     }
   }
 }
