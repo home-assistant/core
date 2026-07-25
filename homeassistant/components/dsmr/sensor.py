@@ -608,7 +608,9 @@ def rename_old_gas_to_mbus(
     """Rename old gas sensor to mbus variant."""
     dev_reg = dr.async_get(hass)
     for dev_id in (mbus_device_id, entry.entry_id):
-        device_entry_v1 = dev_reg.async_get_device(identifiers={(DOMAIN, dev_id)})
+        device_entry_v1 = dev_reg.async_get_device_by_identifier(
+            (DOMAIN, dev_id), entry.entry_id
+        )
         if device_entry_v1 is not None:
             device_id = device_entry_v1.id
 
