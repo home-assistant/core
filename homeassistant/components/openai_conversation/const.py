@@ -72,6 +72,25 @@ UNSUPPORTED_MODELS: list[str] = [
     "gpt-4o-mini-realtime-preview-2024-12-17",
 ]
 
+# Models whose ID contains one of these are not usable for conversation
+UNSUPPORTED_MODEL_PATTERNS: tuple[str, ...] = (
+    "audio",
+    "babbage",
+    "computer-use",
+    "dall-e",
+    "davinci",
+    "embedding",
+    "image",
+    "instruct",
+    "moderation",
+    "realtime",
+    "search-preview",
+    "sora",
+    "transcribe",
+    "tts",
+    "whisper",
+)
+
 UNSUPPORTED_WEB_SEARCH_MODELS: list[str] = [
     "gpt-3.5",
     "gpt-4-turbo",

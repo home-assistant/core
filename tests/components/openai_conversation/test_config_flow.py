@@ -1,9 +1,12 @@
 """Test the OpenAI Conversation config flow."""
 
-from unittest.mock import AsyncMock, patch
+from collections.abc import AsyncGenerator, Generator
+from typing import Any
+from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
 from openai import APIConnectionError, AuthenticationError, BadRequestError
+from openai.types import Model
 from openai.types.responses import Response, ResponseOutputMessage, ResponseOutputText
 import pytest
 
@@ -52,6 +55,46 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+API_MODEL_IDS = [
+    "gpt-4o-mini",
+    "chatgpt-4o-latest",
+    "gpt-5",
+    "o3",
+    "o1-mini",
+    "gpt-3.5-turbo-instruct",
+    "gpt-4o-audio-preview",
+    "gpt-4o-realtime-preview",
+    "gpt-4o-search-preview",
+    "gpt-4o-transcribe",
+    "gpt-image-1",
+    "dall-e-3",
+    "tts-1",
+    "whisper-1",
+    "text-embedding-3-small",
+    "omni-moderation-latest",
+    "computer-use-preview",
+    "sora-2",
+    "davinci-002",
+    "babbage-002",
+]
+
+
+@pytest.fixture(autouse=True)
+def mock_models_list() -> Generator[Mock]:
+    """Mock the models the API key has access to."""
+
+    def list_models(*args: Any, **kwargs: Any) -> AsyncGenerator[Model]:
+        async def models() -> AsyncGenerator[Model]:
+            for model_id in API_MODEL_IDS:
+                yield Model(id=model_id, created=0, object="model", owned_by="openai")
+
+        return models()
+
+    with patch(
+        "openai.resources.models.AsyncModels.list", side_effect=list_models
+    ) as mock_list:
+        yield mock_list
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -223,6 +266,33 @@ async def test_subentry_recommended(
     assert options["type"] is FlowResultType.ABORT
     assert options["reason"] == "reconfigure_successful"
     assert subentry.data["prompt"] == "Speak like a pirate"
+
+
+async def test_subentry_chat_model_list(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Test the chat model options are fetched from the API."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "additional"
+
+    chat_model = subentry_flow["data_schema"].schema[CONF_CHAT_MODEL].config
+    assert chat_model["options"] == ["chatgpt-4o-latest", "gpt-4o-mini", "gpt-5", "o3"]
+    assert chat_model["custom_value"] is True
 
 
 async def test_subentry_unsupported_model(

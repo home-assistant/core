@@ -97,6 +97,7 @@ from .const import (
     UNSUPPORTED_CODE_INTERPRETER_MODELS,
     UNSUPPORTED_FLEX_SERVICE_TIERS_MODELS,
     UNSUPPORTED_IMAGE_MODELS,
+    UNSUPPORTED_MODEL_PATTERNS,
     UNSUPPORTED_MODELS,
     UNSUPPORTED_PRIORITY_SERVICE_TIERS_MODELS,
     UNSUPPORTED_WEB_SEARCH_MODELS,
@@ -347,7 +348,13 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             vol.Optional(
                 CONF_CHAT_MODEL,
                 default=RECOMMENDED_CHAT_MODEL,
-            ): str,
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=await self._get_chat_models(),
+                    mode=SelectSelectorMode.DROPDOWN,
+                    custom_value=True,
+                )
+            ),
             vol.Optional(
                 CONF_MAX_TOKENS,
                 default=RECOMMENDED_MAX_TOKENS,
@@ -598,6 +605,20 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 vol.Schema(step_schema), options
             ),
             errors=errors,
+        )
+
+    async def _get_chat_models(self) -> list[str]:
+        """Get the text generation models available to the API key."""
+        client: openai.AsyncClient = self._get_entry().runtime_data
+        return sorted(
+            [
+                model.id
+                async for model in client.with_options(timeout=10.0).models.list()
+                if model.id not in UNSUPPORTED_MODELS
+                and not any(
+                    pattern in model.id for pattern in UNSUPPORTED_MODEL_PATTERNS
+                )
+            ]
         )
 
     def _get_reasoning_options(self, model: str) -> list[str]:
