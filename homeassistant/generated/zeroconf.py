@@ -544,6 +544,11 @@ ZEROCONF = {
             "domain": "homekit_controller",
         },
     ],
+    "_haven._tcp.local.": [
+        {
+            "domain": "haven",
+        },
+    ],
     "_heos-audio._tcp.local.": [
         {
             "domain": "heos",

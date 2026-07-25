@@ -1,0 +1,197 @@
+"""Test the HAVEN IAQ config flow."""
+
+from unittest.mock import AsyncMock, patch
+
+from haveniaq import (
+    DeviceInfo,
+    HavenApiError,
+    HavenUnsupportedApiVersionError,
+    HavenUnsupportedProductError,
+)
+import pytest
+
+from homeassistant.components.haven.config_flow import HavenConfigFlow
+from homeassistant.components.haven.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+
+from . import TEST_CAC_INFO, TEST_HOST, TEST_INFO, TEST_SERIAL, ZEROCONF_DISCOVERY
+
+from tests.common import MockConfigEntry
+
+
+def _mock_client(info: dict = TEST_INFO) -> AsyncMock:
+    client = AsyncMock()
+    client.get_info.return_value = DeviceInfo.from_dict(info)
+    return client
+
+
+async def test_discovery_confirm_without_discovery() -> None:
+    """Test an invalid discovery confirmation is aborted."""
+    result = await HavenConfigFlow().async_step_discovery_confirm()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_success(hass: HomeAssistant) -> None:
+    """Test manual setup."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.haven.config_flow.HavenClient",
+        return_value=_mock_client(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"Room Air Monitor {TEST_SERIAL}"
+    assert result["data"] == {CONF_HOST: TEST_HOST}
+    assert result["result"].unique_id == TEST_SERIAL
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_cannot_connect_then_recovers(hass: HomeAssistant) -> None:
+    """Test manual setup recovers from a connection failure."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    client = _mock_client()
+    client.get_info.side_effect = [
+        HavenApiError,
+        DeviceInfo.from_dict(TEST_INFO),
+    ]
+
+    with patch(
+        "homeassistant.components.haven.config_flow.HavenClient",
+        return_value=client,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_flow_rejects_unsupported_device(hass: HomeAssistant) -> None:
+    """Test unsupported API and product errors remain actionable."""
+    for error, expected in (
+        (HavenUnsupportedApiVersionError, "unsupported_api_version"),
+        (HavenUnsupportedProductError, "unsupported_product"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        client = _mock_client()
+        client.get_info.side_effect = error
+        with patch(
+            "homeassistant.components.haven.config_flow.HavenClient",
+            return_value=client,
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_HOST: TEST_HOST}
+            )
+        assert result["errors"] == {"base": expected}
+
+
+async def test_user_flow_rejects_controller(hass: HomeAssistant) -> None:
+    """Test the initial integration rejects products without air-quality data."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.haven.config_flow.HavenClient",
+        return_value=_mock_client(TEST_CAC_INFO),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unsupported_product"}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery."""
+    with patch(
+        "homeassistant.components.haven.config_flow.HavenClient",
+        return_value=_mock_client(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=ZEROCONF_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: TEST_HOST}
+    assert result["result"].unique_id == TEST_SERIAL
+
+
+async def test_zeroconf_updates_existing_entry(hass: HomeAssistant) -> None:
+    """Test rediscovery updates the host on an existing entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SERIAL,
+        data={CONF_HOST: "192.0.2.2"},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.haven.config_flow.HavenClient",
+        return_value=_mock_client(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=ZEROCONF_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {CONF_HOST: TEST_HOST}
+
+
+async def test_zeroconf_aborts_on_device_errors(hass: HomeAssistant) -> None:
+    """Test discovery failures abort with specific reasons."""
+    for error, expected in (
+        (HavenApiError, "cannot_connect"),
+        (HavenUnsupportedApiVersionError, "unsupported_api_version"),
+        (HavenUnsupportedProductError, "unsupported_product"),
+    ):
+        client = _mock_client()
+        client.get_info.side_effect = error
+        with patch(
+            "homeassistant.components.haven.config_flow.HavenClient",
+            return_value=client,
+        ):
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_ZEROCONF},
+                data=ZEROCONF_DISCOVERY,
+            )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == expected
