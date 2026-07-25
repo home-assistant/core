@@ -46,13 +46,7 @@ async def test_device_pairing_enabled_created(
     mock_lyric_api: None,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Device Pairing Enabled is created via a real config entry setup.
-
-    Exercises the full boundary: real aiolyric parsing of the actual live
-    payload shape -> real coordinator -> real entity setup -> registered
-    state. devicePairingEnabled has no known aiolyric field-name mismatch,
-    so this passes against the currently-pinned release.
-    """
+    """Device Pairing Enabled is created via a real config entry setup."""
     await async_setup_lyric_entry(hass, mock_config_entry)
 
     entity_id = entity_registry.async_get_entity_id(
@@ -81,13 +75,7 @@ async def test_vacation_hold_created(
     mock_lyric_api: None,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Vacation Hold should read "on" via a real config entry setup.
-
-    The fixture location has vacationHold.Enabled = True (the real live
-    shape), so this documents the currently-pinned aiolyric bug rather
-    than hiding it - it fails today for the same reason the real entity
-    does, and will start passing once the dependency is fixed.
-    """
+    """Vacation Hold should read "on" via a real config entry setup."""
     await async_setup_lyric_entry(hass, mock_config_entry)
 
     entity_id = entity_registry.async_get_entity_id(
@@ -117,12 +105,7 @@ async def test_room_motion_created(
     mock_lyric_api: None,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Room Motion should be created via a real config entry setup.
-
-    The fixture priority data uses the real live shape ("priority",
-    "sensorType"), so under the currently-pinned aiolyric this entity
-    doesn't get created at all - documents the gap instead of hiding it.
-    """
+    """Room Motion should be created via a real config entry setup."""
     await async_setup_lyric_entry(hass, mock_config_entry)
 
     entity_id = entity_registry.async_get_entity_id(
