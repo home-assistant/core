@@ -17,9 +17,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
-pytestmark = pytest.mark.freeze_time("2026-07-22 00:00:00+00:00")
 
-
+@pytest.mark.freeze_time("2026-07-22 00:00:00+00:00")
 @pytest.mark.usefixtures("mock_google_health_client")
 async def test_diagnostics_full_data(
     hass: HomeAssistant,
@@ -38,6 +37,7 @@ async def test_diagnostics_full_data(
     assert diagnostics == snapshot
 
 
+@pytest.mark.freeze_time("2026-07-22 00:00:00+00:00")
 async def test_diagnostics_empty_data(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -77,6 +77,7 @@ async def test_diagnostics_empty_data(
     assert diagnostics == snapshot
 
 
+@pytest.mark.freeze_time("2026-07-22 00:00:00+00:00")
 async def test_diagnostics_update_failed(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -106,6 +107,7 @@ async def test_diagnostics_update_failed(
     assert diagnostics == snapshot
 
 
+@pytest.mark.freeze_time("2026-07-22 00:00:00+00:00")
 @pytest.mark.usefixtures("mock_google_health_client")
 @pytest.mark.parametrize(
     "scopes",
