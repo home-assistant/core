@@ -34,7 +34,7 @@ class SonosCancelAnnouncementButton(SonosEntity, ButtonEntity):
     """Button to cancel the current Sonos announcement."""
 
     _attr_translation_key = "cancel_announcement"
-    _attr_entity_registry_visible_default = False
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, speaker: SonosSpeaker, config_entry: SonosConfigEntry) -> None:
         """Initialize the cancel announcement button."""
