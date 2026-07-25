@@ -61,7 +61,6 @@ IMAGE_DESCRIPTIONS: tuple[SteamImageEntityDescription, ...] = (
         image_url_fn=lambda x, _: (
             f"{STEAM_API_URL}{x.gameid}/header.jpg" if x.gameid else None
         ),
-        entity_registry_enabled_default=False,
     ),
     SteamImageEntityDescription(
         key=SteamImage.APP_ICON,
@@ -87,7 +86,6 @@ IMAGE_DESCRIPTIONS: tuple[SteamImageEntityDescription, ...] = (
         image_url_fn=lambda x, _: (
             f"{STEAM_API_URL}{x.gameid}/library_600x900_2x.jpg" if x.gameid else None
         ),
-        entity_registry_enabled_default=False,
     ),
     SteamImageEntityDescription(
         key=SteamImage.LIBRARY_HERO,
@@ -95,7 +93,6 @@ IMAGE_DESCRIPTIONS: tuple[SteamImageEntityDescription, ...] = (
         image_url_fn=lambda x, _: (
             f"{STEAM_API_URL}{x.gameid}/library_hero.jpg" if x.gameid else None
         ),
-        entity_registry_enabled_default=False,
     ),
     SteamImageEntityDescription(
         key=SteamImage.LIBRARY_LOGO,
@@ -103,7 +100,6 @@ IMAGE_DESCRIPTIONS: tuple[SteamImageEntityDescription, ...] = (
         image_url_fn=lambda x, _: (
             f"{STEAM_API_URL}{x.gameid}/logo.png" if x.gameid else None
         ),
-        entity_registry_enabled_default=False,
     ),
     SteamImageEntityDescription(
         key=SteamImage.PAGE_BACKGROUND,
@@ -111,7 +107,6 @@ IMAGE_DESCRIPTIONS: tuple[SteamImageEntityDescription, ...] = (
         image_url_fn=lambda x, _: (
             f"{STEAM_API_URL}{x.gameid}/page_bg_generated_v6b.jpg" if x.gameid else None
         ),
-        entity_registry_enabled_default=False,
     ),
     SteamImageEntityDescription(
         key=SteamImage.VERTICAL_CAPSULE,
@@ -119,7 +114,6 @@ IMAGE_DESCRIPTIONS: tuple[SteamImageEntityDescription, ...] = (
         image_url_fn=lambda x, _: (
             f"{STEAM_API_URL}{x.gameid}/hero_capsule.jpg" if x.gameid else None
         ),
-        entity_registry_enabled_default=False,
     ),
 )
 
