@@ -3,10 +3,12 @@
 from nexia.home import NexiaHome
 import pytest
 
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.nexia import DOMAIN
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -261,6 +263,17 @@ async def test_room_iq_sensor_no_longer_present(
     state = hass.states.get("sensor.upstairs_upstairs_roomiq_humidity")
     assert state is not None
     assert state.state == "unavailable"
+
+    platforms = entity_platform.async_get_platforms(hass, DOMAIN)
+    entity: SensorEntity | None = None
+    for platform in platforms:
+        if state.entity_id in platform.entities:
+            entity = platform.entities[state.entity_id]
+            break
+
+    assert isinstance(entity, SensorEntity) is True
+    # call entity directly since state machine seems to guard against this case
+    assert entity.native_value is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

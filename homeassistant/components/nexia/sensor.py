@@ -30,7 +30,7 @@ class NexiaRoomIQSensorEntityDescription(SensorEntityDescription):
     """Describes the sensor entity for a Nexia RoomIQ sensor."""
 
     available_fn: Callable[[NexiaSensor], bool]
-    value_fn: Callable[[NexiaSensor], int | float]
+    value_fn: Callable[[NexiaSensor], int | float | None]
     include_fn: Callable[[NexiaSensor], bool] = lambda s: True
     state_class = SensorStateClass.MEASUREMENT
     entity_registry_enabled_default = False
@@ -219,7 +219,7 @@ async def async_setup_entry(
                     NexiaRoomIQSensorEntityDescription(
                         key="room_iq_battery",
                         available_fn=lambda s: bool(s.battery_valid),
-                        value_fn=lambda s: s.battery_level or 0,
+                        value_fn=lambda s: s.battery_level,
                         include_fn=lambda s: s.has_battery,
                         device_class=SensorDeviceClass.BATTERY,
                         native_unit_of_measurement=PERCENTAGE,
@@ -349,9 +349,12 @@ class NexiaRoomIQSensor(NexiaRoomIQEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> int | float:
+    def native_value(self) -> int | float | None:
         """Return the state of the RoomIQ sensor."""
-        room_iq_sensor = self._zone.get_sensor_by_id(self._sensor_id)
+        try:
+            room_iq_sensor = self._zone.get_sensor_by_id(self._sensor_id)
+        except KeyError:
+            return None
         return self.entity_description.value_fn(room_iq_sensor)
 
     @override
