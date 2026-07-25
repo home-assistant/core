@@ -147,6 +147,7 @@ class ImmichMediaSource(MediaSource):
             can_play=False,
             can_expand=True,
             can_search=can_search,
+            search_media_classes=[MediaClass.IMAGE, MediaClass.VIDEO],
             children_media_class=MediaClass.DIRECTORY,
             children=[
                 *await self._async_build_immich(item, entries),
