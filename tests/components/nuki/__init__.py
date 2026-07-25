@@ -15,7 +15,9 @@ from tests.common import (
 
 
 async def init_integration(
-    hass: HomeAssistant, mock_nuki_requests: requests_mock.Mocker
+    hass: HomeAssistant,
+    mock_nuki_requests: requests_mock.Mocker,
+    entry: MockConfigEntry | None = None,
 ) -> MockConfigEntry:
     """Mock integration setup."""
     # Mocking authentication endpoint
@@ -40,7 +42,7 @@ async def init_integration(
         requests_mock.ANY,
         json={"success": True},
     )
-    entry = await setup_nuki_integration(hass)
+    entry = entry or await setup_nuki_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     return entry
