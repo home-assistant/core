@@ -752,7 +752,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.vm_web_hibernate-entry]
+# name: test_all_button_entities[button.vm_web_suspend-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -766,7 +766,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_web_hibernate',
+    'entity_id': 'button.vm_web_suspend',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -774,28 +774,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Hibernate',
+    'object_id_base': 'Suspend',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Hibernate',
+    'original_name': 'Suspend',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'hibernate',
-    'unique_id': '1234_100_hibernate',
+    'translation_key': 'suspend',
+    'unique_id': '1234_100_suspend',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.vm_web_hibernate-state]
+# name: test_all_button_entities[button.vm_web_suspend-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-web Hibernate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-web Suspend',
     }),
     'context': <ANY>,
-    'entity_id': 'button.vm_web_hibernate',
+    'entity_id': 'button.vm_web_suspend',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

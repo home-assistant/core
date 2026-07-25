@@ -136,9 +136,6 @@
       }
     },
     "button": {
-      "hibernate": {
-        "name": "Hibernate"
-      },
       "reset": {
         "name": "Reset"
       },
@@ -162,6 +159,9 @@
       },
       "stop_all": {
         "name": "Stop all"
+      },
+      "suspend": {
+        "name": "Suspend"
       },
       "suspend_all": {
         "name": "Suspend all"
