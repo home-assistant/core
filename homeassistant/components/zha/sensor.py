@@ -141,11 +141,8 @@ class Sensor(ZHAEntity, SensorEntity):
                 self._zha_state.suggested_display_precision
             )
 
-        if (
-            self.device_class is SensorDeviceClass.ENUM
-            and (options := getattr(entity, "_attr_options", None)) is not None
-        ):
-            self._attr_options = options
+        if hasattr(self._zha_state, "options"):
+            self._attr_options = self._zha_state.options
 
     @property
     @override
