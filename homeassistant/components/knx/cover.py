@@ -135,8 +135,8 @@ class _KnxCover(CoverEntity, RestoreEntity):
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         # Without a known position or movement value, the position is only
-        # calculated from the configured travel time, so the state is assumed.
-        # This avoids presenting a restored position as if it were confirmed.
+        # read from the restored state in the travelcalculator. This prevents
+        # out-of-sync positions from disabling controls in the UI.
         return (
             self._device.position_current.value is None
             and self._device.position_target.value is None
