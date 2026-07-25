@@ -2200,7 +2200,7 @@ async def test_result_stream_uses_manager_file_cache_setting(
     hass: HomeAssistant,
     mock_tts_entity: MockTTSEntity,
 ) -> None:
-    """Test result stream inherits entity file cache preference."""
+    """Test result stream inherits the manager's file cache setting."""
 
     await mock_config_entry_setup(hass, mock_tts_entity)
     manager = hass.data[tts.DATA_TTS_MANAGER]
