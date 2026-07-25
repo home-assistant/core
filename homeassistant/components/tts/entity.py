@@ -140,7 +140,7 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
         self,
         media_player_entity_id: list[str],
         message: str,
-        cache: bool,
+        cache: bool | None = None,
         language: str | None = None,
         options: dict | None = None,
     ) -> None:

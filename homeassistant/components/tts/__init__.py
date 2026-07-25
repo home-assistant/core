@@ -437,7 +437,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {
             vol.Required(ATTR_MEDIA_PLAYER_ENTITY_ID): cv.comp_entity_ids,
             vol.Required(ATTR_MESSAGE): cv.string,
-            vol.Optional(ATTR_CACHE, default=DEFAULT_CACHE): cv.boolean,
+            vol.Optional(ATTR_CACHE): cv.boolean,
             vol.Optional(ATTR_LANGUAGE): cv.string,
             vol.Optional(ATTR_OPTIONS): dict,
         },
