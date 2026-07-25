@@ -743,9 +743,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         ):
             if not any(con in device.connections for con in valid_connections):
                 _LOGGER.debug("Removing obsolete device entry %s", device.name)
-                device_reg.async_update_device(
-                    device.id, remove_config_entry_id=config_entry.entry_id
-                )
+                device_reg.async_remove_device(device.id)
 
         fritz_data = self.hass.data[FRITZ_DATA_KEY]
 

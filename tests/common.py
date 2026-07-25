@@ -292,6 +292,7 @@ async def async_test_home_assistant(
             )
         },
     )
+    hass.config_entries._initialized.set()
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,
         hass.config_entries._async_shutdown,
@@ -677,7 +678,7 @@ def mock_registry(
     if mock_entries is None:
         mock_entries = {}
     registry.deleted_entities = {}
-    registry.entities = er.EntityRegistryItems()
+    registry.entities = er.EntityRegistryItems(hass)
     registry._entities_data = registry.entities.data
     for key, entry in mock_entries.items():
         registry.entities[key] = entry
@@ -763,7 +764,7 @@ def mock_device_registry(
         mock_entries = {}
     for key, entry in mock_entries.items():
         registry.devices[key] = entry
-    registry.deleted_devices = dr.DeviceRegistryItems()
+    registry.deleted_devices = dr.DeletedDeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry
     return registry

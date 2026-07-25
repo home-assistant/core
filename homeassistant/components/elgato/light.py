@@ -35,7 +35,7 @@ class ElgatoLight(ElgatoEntity, LightEntity):
 
     _attr_name = None
     _attr_min_color_temp_kelvin = 2900  # 344 Mireds
-    _attr_max_color_temp_kelvin = 7000  # 143 Mireds
+    _attr_max_color_temp_kelvin = 6993  # 143 Mireds
 
     def __init__(self, coordinator: ElgatoDataUpdateCoordinator) -> None:
         """Initialize Elgato Light."""
@@ -100,7 +100,7 @@ class ElgatoLight(ElgatoEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self.coordinator.client.light(on=False)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     @elgato_exception_handler
     @override
@@ -143,7 +143,7 @@ class ElgatoLight(ElgatoEntity, LightEntity):
             saturation=saturation,
             temperature=temperature,
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     @elgato_exception_handler
     async def async_identify(self) -> None:

@@ -1,6 +1,6 @@
 """Base entity for the Duco integration."""
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from duco_connectivity.models import Node, NodeType
 
@@ -22,7 +22,8 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         super().__init__(coordinator)
         self._node_id = node.node_id
         mac = coordinator.config_entry.unique_id
-        assert mac is not None
+        if TYPE_CHECKING:
+            assert mac is not None
         device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{mac}_{node.node_id}")},
             manufacturer="Duco",

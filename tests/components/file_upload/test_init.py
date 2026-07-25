@@ -17,8 +17,8 @@ from tests.components.image_upload import TEST_IMAGE
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.fixture
-async def uploaded_file_dir(
+@pytest.fixture(name="uploaded_file_dir")
+async def upload_file_dir(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> Path:
     """Test uploading and using a file."""
@@ -51,7 +51,6 @@ async def test_using_file(hass: HomeAssistant, uploaded_file_dir) -> None:
         assert file_path.parent == uploaded_file_dir
         assert file_path.read_bytes() == TEST_IMAGE.read_bytes()
 
-    # Test it's removed
     assert not uploaded_file_dir.exists()
 
 
