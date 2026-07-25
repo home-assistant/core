@@ -60,7 +60,7 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
     _attr_default_options: Mapping[str, Any] | None = None
     _attr_supported_languages: list[str]
     _attr_supported_options: list[str] | None = None
-    _attr_use_file_cache: bool = True
+    _attr_use_file_cache: bool | None = None
 
     @property
     @final
@@ -92,7 +92,7 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
         return self._attr_default_options
 
     @property
-    def use_file_cache(self) -> bool:
+    def use_file_cache(self) -> bool | None:
         """Whether generated audio should be stored on disk."""
         return self._attr_use_file_cache
 
