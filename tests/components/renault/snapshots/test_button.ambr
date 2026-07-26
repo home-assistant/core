@@ -49,6 +49,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_set_immediate_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_zoe_40_set_immediate_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Set immediate charging',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Set immediate charging',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'set_immediate_charging',
+    'unique_id': 'vf1zoe40vin_set_immediate_charging',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_set_immediate_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Set immediate charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_40_set_immediate_charging',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button_access_denied[zoe_40][button.reg_zoe_40_sound_horn-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -293,6 +343,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.reg_zoe_40_flash_lights',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_empty[zoe_40][button.reg_zoe_40_set_immediate_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_zoe_40_set_immediate_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Set immediate charging',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Set immediate charging',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'set_immediate_charging',
+    'unique_id': 'vf1zoe40vin_set_immediate_charging',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_empty[zoe_40][button.reg_zoe_40_set_immediate_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Set immediate charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_40_set_immediate_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -549,6 +649,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_button_errors[zoe_40][button.reg_zoe_40_set_immediate_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_zoe_40_set_immediate_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Set immediate charging',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Set immediate charging',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'set_immediate_charging',
+    'unique_id': 'vf1zoe40vin_set_immediate_charging',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_errors[zoe_40][button.reg_zoe_40_set_immediate_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Set immediate charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_40_set_immediate_charging',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button_errors[zoe_40][button.reg_zoe_40_sound_horn-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -793,6 +943,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.reg_zoe_40_flash_lights',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_set_immediate_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_zoe_40_set_immediate_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Set immediate charging',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Set immediate charging',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'set_immediate_charging',
+    'unique_id': 'vf1zoe40vin_set_immediate_charging',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_set_immediate_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Set immediate charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_40_set_immediate_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1049,6 +1249,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[captur_phev][button.reg_captur_phev_set_immediate_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_captur_phev_set_immediate_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Set immediate charging',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Set immediate charging',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'set_immediate_charging',
+    'unique_id': 'vf1capturphevvin_set_immediate_charging',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[captur_phev][button.reg_captur_phev_set_immediate_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-CAPTUR_PHEV Set immediate charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_captur_phev_set_immediate_charging',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[captur_phev][button.reg_captur_phev_start_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1143,6 +1393,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.reg_meg_0_flash_lights',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[megane_e_tech][button.reg_meg_0_set_immediate_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_meg_0_set_immediate_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Set immediate charging',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Set immediate charging',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'set_immediate_charging',
+    'unique_id': 'vf1meganeetechvin_set_immediate_charging',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[megane_e_tech][button.reg_meg_0_set_immediate_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-MEG-0 Set immediate charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_meg_0_set_immediate_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1343,6 +1643,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.reg_twingo_iii_flash_lights',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_set_immediate_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_twingo_iii_set_immediate_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Set immediate charging',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Set immediate charging',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'set_immediate_charging',
+    'unique_id': 'vf1twingoiiivin_set_immediate_charging',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_set_immediate_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-TWINGO-III Set immediate charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_twingo_iii_set_immediate_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1599,6 +1949,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[zoe_40][button.reg_zoe_40_set_immediate_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_zoe_40_set_immediate_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Set immediate charging',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Set immediate charging',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'set_immediate_charging',
+    'unique_id': 'vf1zoe40vin_set_immediate_charging',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[zoe_40][button.reg_zoe_40_set_immediate_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Set immediate charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_40_set_immediate_charging',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[zoe_40][button.reg_zoe_40_sound_horn-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1793,6 +2193,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.reg_zoe_40_stop_charge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[zoe_50][button.reg_zoe_50_set_immediate_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_zoe_50_set_immediate_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Set immediate charging',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Set immediate charging',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'set_immediate_charging',
+    'unique_id': 'vf1zoe50vin_set_immediate_charging',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[zoe_50][button.reg_zoe_50_set_immediate_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-50 Set immediate charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_50_set_immediate_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

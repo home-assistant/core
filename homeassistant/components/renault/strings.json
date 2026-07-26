@@ -76,6 +76,9 @@
       "flash_lights": {
         "name": "Flash lights"
       },
+      "set_immediate_charging": {
+        "name": "Set immediate charging"
+      },
       "sound_horn": {
         "name": "Sound horn"
       },
@@ -267,16 +270,6 @@
         }
       },
       "name": "Start A/C"
-    },
-    "charge_set_immediate": {
-      "description": "Sets the vehicle to immediate charging mode.",
-      "fields": {
-        "vehicle": {
-          "description": "[%key:component::renault::services::ac_start::fields::vehicle::description%]",
-          "name": "Vehicle"
-        }
-      },
-      "name": "Set immediate charging"
     },
     "charge_set_schedules": {
       "description": "Updates charge schedule on vehicle.",
