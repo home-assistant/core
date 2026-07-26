@@ -1,0 +1,104 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not provide additional actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide additional actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide additional conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide additional triggers.
+  entity-event-setup:
+    status: exempt
+    comment: |
+      The entities of this integration do not subscribe to events; they read
+      from the coordinator.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide additional actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not provide an options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: |
+      The HortOS API is a cloud service reached with an API key; there is
+      nothing to discover on the network.
+  discovery-update-info:
+    status: exempt
+    comment: |
+      The HortOS API is a cloud service reached with an API key; there is
+      nothing to discover on the network.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: todo
+    comment: |
+      Sources that appear on a known controller do become devices during
+      normal updates, but the controller list itself is only read once
+      during setup, so a newly added controller needs a reload.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations:
+    status: exempt
+    comment: |
+      Entity names are derived at runtime from the readout identifiers a
+      controller reports; a controller exposes hundreds of them and the set
+      differs per installation, so there is no fixed set of translation keys.
+      Ridder is the right place for translated readout names.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: |
+      Icons are chosen per readout at runtime, for the same reason entity
+      translations are exempt: there are no fixed translation keys to hang
+      them on.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: No known use cases for repair issues or flows yet.
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
