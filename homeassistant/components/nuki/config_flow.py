@@ -66,6 +66,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Nuki config flow."""
 
+    MINOR_VERSION = 2
+
     def __init__(self) -> None:
         """Initialize the Nuki config flow."""
         self.discovery_schema: vol.Schema | None = None
