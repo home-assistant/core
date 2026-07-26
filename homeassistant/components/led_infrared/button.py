@@ -3,6 +3,7 @@
 from typing import override
 
 from homeassistant.components.button import ButtonEntity
+from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -37,7 +38,7 @@ async def async_setup_entry(
     )
 
 
-class LEDIrButtonEntity(LEDIrBaseEntity, ButtonEntity):
+class LEDIrButtonEntity(LEDIrBaseEntity, InfraredEmitterConsumerEntity, ButtonEntity):
     """Represents a LED Infrared button entity."""
 
     def __init__(
@@ -48,7 +49,8 @@ class LEDIrButtonEntity(LEDIrBaseEntity, ButtonEntity):
         key: str,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(entry, device_type, infrared_entity_id)
+        super().__init__(entry, device_type)
+        self._infrared_emitter_entity_id = infrared_entity_id
         self._attr_unique_id = f"{entry.entry_id}_{key}"
         self._key = key
         self._attr_translation_key = key
