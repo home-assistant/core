@@ -162,13 +162,16 @@ async def test_disappearing_readout_becomes_unavailable(
         # would report 8771.6 as due north.
         (8771.6, "unknown"),
         (8787.4, "unknown"),
+        # The API sends doubles as strings for some readouts, which every
+        # other sensor accepts.
+        ("8783", "247.5"),
     ],
 )
 async def test_wind_direction_codes(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hortos_client: AsyncMock,
-    code: int,
+    code: float | str,
     expected: str,
 ) -> None:
     """Test only the documented enum block becomes a bearing."""

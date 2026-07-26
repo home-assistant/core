@@ -178,5 +178,5 @@ class HortimaxReadoutSensor(HortimaxEntity, SensorEntity):
             return dt_util.start_of_local_day() + timedelta(seconds=number)
         if subject == WIND_DIRECTION_SUBJECT:
             # Returns None for ids outside the known enumeration block.
-            return decode_cardinal_wind_direction(readout.value)
+            return decode_cardinal_wind_direction(number)
         return number
