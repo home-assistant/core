@@ -62,10 +62,3 @@ class NuHeatCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
             and thermostat is not None
             and thermostat.online
         )
-
-    def async_update_thermostat(self, thermostat: Thermostat) -> None:
-        """Apply state returned by a successful write."""
-        data = dict(self.data or {})
-        data[thermostat.serial_number] = thermostat
-        self._present_serials.add(thermostat.serial_number)
-        self.async_set_updated_data(data)

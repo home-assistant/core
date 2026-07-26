@@ -13,7 +13,7 @@ STATE_TO_PRESET = {
 }
 PRESET_TO_MODE = {
     PRESET_RUN: ScheduleMode.AUTO,
-    PRESET_TEMPORARY_HOLD: ScheduleMode.HOLD,
+    PRESET_TEMPORARY_HOLD: ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE,
 }
 
 
@@ -26,7 +26,8 @@ def api_mode_for_preset(preset: str) -> ScheduleMode:
     """Map presets with validated command behavior to v2 commands.
 
     Permanent Hold is reported as a preset, but selecting it remains blocked
-    until Hold-without-expiration write semantics are validated.
+    until its documented request contract is known. Hold without an expiration
+    is verified to mean hold until the next scheduled event.
     """
     try:
         return PRESET_TO_MODE[preset]
@@ -50,7 +51,10 @@ def hvac_mode_for_thermostat(thermostat: Thermostat) -> HVACMode | None:
 
 
 def api_mode_for_hvac_mode(hvac_mode: HVACMode) -> ScheduleMode:
-    """Map the existing public HVAC command contract to documented commands."""
+    """Map the existing public HVAC command contract to documented commands.
+
+    Auto is verified to resume the schedule and exit Hold, Manual, or Standby.
+    """
     if hvac_mode is HVACMode.AUTO:
         return ScheduleMode.AUTO
     if hvac_mode is HVACMode.HEAT:
@@ -64,15 +68,17 @@ def setpoint_command_mode(
     """Choose a command without deriving it from the numeric mode alone.
 
     An explicit HEAT request retains the existing documented Manual command.
-    Auto-family states use Hold for a setpoint change. Ambiguous and unknown
-    read states require an explicit command so Standby is never guessed.
+    Scheduled operation uses Hold-until-next-schedule for a setpoint change.
+    An existing timed hold keeps its explicit end in the entity write path.
+    Permanent Hold remains readable but is not writable because its documented
+    creation request is unknown. Ambiguous and unknown read states require an
+    explicit command so Standby is never guessed.
     """
     if requested_hvac_mode is HVACMode.HEAT:
         return ScheduleMode.MANUAL
     if thermostat.state in (
         ThermostatState.SCHEDULED,
         ThermostatState.TIMED_HOLD,
-        ThermostatState.PERMANENT_HOLD,
     ):
-        return ScheduleMode.HOLD
+        return ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE
     raise ValueError(f"Unsupported thermostat state: {thermostat.state}")

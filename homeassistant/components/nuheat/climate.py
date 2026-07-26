@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from chemelex_nuheat import ScheduleMode, Thermostat
+from chemelex_nuheat import ScheduleMode, Thermostat, ThermostatState
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -29,7 +29,7 @@ from .behavior import (
     preset_for_thermostat,
     setpoint_command_mode,
 )
-from .const import DOMAIN, PRESET_MODES
+from .const import DOMAIN, PRESET_MODES, PRESET_PERMANENT_HOLD
 from .coordinator import NuHeatCoordinator
 
 
@@ -154,26 +154,46 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
                 translation_key="unsupported_state",
                 translation_placeholders={"state": self.thermostat.state},
             ) from err
-        thermostat = await self.coordinator.api.set_target_temperature(
-            self._serial_number,
-            self._to_celsius(float(temperature)),
-            mode=mode,
-        )
-        self.coordinator.async_update_thermostat(thermostat)
+        temperature_celsius = self._to_celsius(float(temperature))
+        if (
+            mode is ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE
+            and self.thermostat.state is ThermostatState.TIMED_HOLD
+            and self.thermostat.hold_until is not None
+        ):
+            await self.coordinator.api.set_target_temperature(
+                self._serial_number,
+                temperature_celsius,
+                mode=mode,
+                hold_until=self.thermostat.hold_until,
+            )
+        else:
+            await self.coordinator.api.set_target_temperature(
+                self._serial_number,
+                temperature_celsius,
+                mode=mode,
+            )
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         mode = api_mode_for_hvac_mode(hvac_mode)
-        temperature = (
-            None if mode is ScheduleMode.AUTO else self.thermostat.target_temperature
-        )
-        thermostat = await self.coordinator.api.set_schedule_mode(
-            self._serial_number, mode, temperature=temperature
-        )
-        self.coordinator.async_update_thermostat(thermostat)
+        if mode is ScheduleMode.AUTO:
+            await self.coordinator.api.set_schedule_mode(self._serial_number, mode)
+        else:
+            await self.coordinator.api.set_schedule_mode(
+                self._serial_number,
+                mode,
+                temperature=self.thermostat.target_temperature,
+            )
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
+        if preset_mode == PRESET_PERMANENT_HOLD:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="indefinite_hold_unsupported",
+            )
         try:
             mode = api_mode_for_preset(preset_mode)
         except ValueError as err:
@@ -182,13 +202,17 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
                 translation_key="unsupported_preset",
                 translation_placeholders={"preset": preset_mode},
             ) from err
-        temperature = (
-            None if mode is ScheduleMode.AUTO else self.thermostat.target_temperature
-        )
-        thermostat = await self.coordinator.api.set_schedule_mode(
-            self._serial_number, mode, temperature=temperature
-        )
-        self.coordinator.async_update_thermostat(thermostat)
+        if mode is ScheduleMode.AUTO:
+            await self.coordinator.api.set_schedule_mode(self._serial_number, mode)
+        else:
+            # A Hold command without an end is verified to last until the next
+            # scheduled event; it does not create an indefinite hold.
+            await self.coordinator.api.set_schedule_mode(
+                self._serial_number,
+                mode,
+                temperature=self.thermostat.target_temperature,
+            )
+        await self.coordinator.async_request_refresh()
 
     @property
     @override
