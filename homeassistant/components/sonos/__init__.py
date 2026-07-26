@@ -73,6 +73,12 @@ DISCOVERY_IGNORED_MODELS = ["Sonos Boost"]
 ZGS_SUBSCRIPTION_TIMEOUT = 2
 SHUTDOWN_TIMEOUT = 10
 
+
+def _get_soco_uid(soco: SoCo) -> str:
+    """Get SoCo uid as a typed helper for executor jobs."""
+    return soco.uid
+
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -535,7 +541,7 @@ class SonosDiscoveryManager:
                 uid = known_speaker.uid
             else:
                 try:
-                    uid = await self.hass.async_add_executor_job(getattr, soco, "uid")
+                    uid = await self.hass.async_add_executor_job(_get_soco_uid, soco)
                 except HTTPError as err:
                     await self._process_http_connection_error(err, ip_addr)
                     continue
@@ -546,12 +552,6 @@ class SonosDiscoveryManager:
                     TimeoutError,
                 ) as ex:
                     _LOGGER.warning("Could not get Sonos uid from %s: %s", ip_addr, ex)
-                    continue
-
-                if not isinstance(uid, str) or not uid:
-                    _LOGGER.warning(
-                        "Could not get Sonos uid from %s: invalid uid", ip_addr
-                    )
                     continue
 
             if self.is_device_disabled(uid):
