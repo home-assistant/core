@@ -180,14 +180,16 @@ async def async_migrate_entry(
                     )
                     return False
 
-                if not plant_info or "data" not in plant_info or not plant_info["data"]:  # type: ignore[comparison-overlap,call-overload]
+                # plant_list() is annotated as list by the library, but the classic
+                # API returns a dict {"data": [...]}; guard the runtime shape.
+                if not isinstance(plant_info, dict) or not plant_info.get("data"):
                     _LOGGER.error(
                         "No plants found for this account. "
                         "Migration will retry on next restart"
                     )
                     return False
 
-                first_plant_id = plant_info["data"][0]["plantId"]  # type: ignore[call-overload]
+                first_plant_id = plant_info["data"][0]["plantId"]
 
                 # Update config entry with resolved plant_id
                 new_data = dict(config_entry.data)
@@ -332,6 +334,8 @@ async def async_setup_entry(
 
     # Determine API version and get devices
     # Note: auth_type field is guaranteed to exist after migration
+    # api is one of two unrelated library classes (OpenApiV1 or GrowattApi) with
+    # disjoint methods, chosen by auth_type; a union type cannot describe both.
     api: Any
     if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
         # V1 API (token-based, no login needed)
