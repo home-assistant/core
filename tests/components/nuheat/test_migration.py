@@ -9,10 +9,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from chemelex_nuheat import (
     Account,
+    HoldUntilStatus,
     NuHeatApiError,
     NuHeatAuthError,
     Thermostat,
-    ThermostatMode,
 )
 import pytest
 
@@ -76,8 +76,11 @@ def thermostat(serial_number: str, name: str = "Bathroom") -> Thermostat:
         target_temperature=23.0,
         heating=False,
         online=True,
-        mode=ThermostatMode.AUTO,
+        mode=2,
+        raw_target_temperature=2300,
         hold_until=datetime(2026, 7, 8, 1, tzinfo=UTC),
+        raw_hold_until="2026-07-08T01:00:00Z",
+        hold_until_status=HoldUntilStatus.VALUE,
     )
 
 
