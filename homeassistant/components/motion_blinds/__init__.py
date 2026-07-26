@@ -9,6 +9,7 @@ from motionblinds import AsyncMotionMulticast
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     CONF_BLIND_TYPE_LIST,
