@@ -3,33 +3,31 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.select import ATTR_OPTIONS
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.parametrize(
+    "device_fixture",
+    ["air_conditioner", "dehumidifier", "washer", "washtower_dryer"],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize("device_fixture", ["washtower_dryer"])
-async def test_washtower_dryer_operation_select(
+async def test_select_entities(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that a WashTower dryer gets an operation select entity."""
+    """Test all entities."""
     with patch("homeassistant.components.lg_thinq.PLATFORMS", [Platform.SELECT]):
         await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("select.test_washtower_dryer_operation")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_OPTIONS] == [
-        "start",
-        "stop",
-        "power_off",
-        "power_on",
-    ]
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
