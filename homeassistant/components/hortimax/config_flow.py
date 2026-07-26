@@ -13,13 +13,22 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import CONF_BASE_URL, DOMAIN, LOGGER
 
 USER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_BASE_URL, default=DEFAULT_BASE_URL): str,
+        vol.Required(CONF_API_KEY): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD, autocomplete="api_key")
+        ),
+        vol.Required(CONF_BASE_URL, default=DEFAULT_BASE_URL): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.URL)
+        ),
     }
 )
 
