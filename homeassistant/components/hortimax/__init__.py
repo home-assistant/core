@@ -24,8 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HortimaxConfigEntry) -> 
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
-    # Register the controllers up front so the source devices created by the
-    # sensor platform can reference them through via_device.
+    # Registered up front so the sensor platform's source devices can point at
+    # them through via_device.
     device_registry = dr.async_get(hass)
     for device in coordinator.devices:
         device_registry.async_get_or_create(

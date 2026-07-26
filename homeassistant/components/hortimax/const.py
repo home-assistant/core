@@ -28,47 +28,35 @@ MANUFACTURER: Final = "Ridder"
 
 CONF_BASE_URL: Final = "base_url"
 
-#: Changed readouts reach the cloud within about a minute; unchanged ones are
-#: refreshed at most every five. Each poll costs one request per controller,
-#: so an organisation would need more than a hundred controllers before this
-#: approached the documented limit of 100 requests per 15 seconds.
+#: Unchanged readouts are refreshed at most every five minutes, and each poll
+#: costs one request per controller against a limit of 100 per 15 seconds.
 SCAN_INTERVAL: Final = 60  # seconds
 
-# Unit identifiers that mean "dimensionless"; such readouts get no unit and
-# no statistics (they are mostly status/override codes).
+# Dimensionless readouts are mostly status/override codes, so they get neither
+# a unit nor statistics.
 DIMENSIONLESS_UNITS: Final = {"Scalar", "None"}
 
-# Readouts that report a time of day as seconds since (local) midnight, e.g.
-# SunriseToday = 19145 -> 05:19. Home Assistant renders these far better as a
-# timestamp than as a raw second count. Keyed by the lowercased identifier
-# subject (the part before the '-kind' suffix, see naming.py).
+# Seconds since local midnight (SunriseToday = 19145 -> 05:19), rendered as a
+# timestamp. Keyed by lowercased identifier subject, see naming.py.
 TIME_OF_DAY_READOUTS: Final[frozenset[str]] = frozenset({"sunrisetoday", "sunsettoday"})
 
-# Per-readout icon overrides, for readouts that have no device class (and thus
-# no automatic icon) but read better with a hint. Keyed by the lowercased
-# identifier subject (see naming.py). Absolute humidity is a g/kg mixing
-# ratio, so it gets no humidity device class - just a friendlier icon.
+# Icons for readouts that have no device class, and so no automatic icon.
 READOUT_ICONS: Final[dict[str, str]] = {
+    # A g/kg mixing ratio, not a relative humidity.
     "absolutehumidity": "mdi:water-opacity",
-    # Radiation sum (J/cm2) has no matching Home Assistant device class.
     "radiationsum": "mdi:sun-wireless",
-    # Humidity deficit (g/kg moisture shortfall) has no matching device class
-    # either - it is not a pressure, so the VPD/pressure classes do not apply.
+    # A g/kg moisture shortfall, not a pressure, so VPD does not apply.
     "humiditydeficit": "mdi:water-minus",
 }
 
-# CardinalWindDirection is an enumeration-coded Scalar readout: the value is
-# a member id, not a bearing. aiohortos owns that table and turns an id into
-# degrees; this constant only decides which readout gets the wind direction
-# device class.
+# An enumeration member id rather than a bearing; aiohortos owns the table.
+# This only decides which readout gets the wind direction device class.
 WIND_DIRECTION_SUBJECT: Final = "cardinalwinddirection"
 
-# Maps HortOS unit identifiers to Home Assistant units of measurement.
-# The first block is the complete set observed on a live HortOS Multima
-# installation; the rest are plausible variants kept as aliases. Unknown
-# identifiers fall back to the raw identifier string (without device class).
+# HortOS unit identifiers to Home Assistant units. Unknown identifiers fall
+# back to the raw string, without a device class.
 UNIT_MAP: Final[dict[str, str]] = {
-    # Observed on a live system
+    # Observed on a live installation
     "Percent": PERCENTAGE,
     "DegreeCelsius": UnitOfTemperature.CELSIUS,
     "Second": UnitOfTime.SECONDS,
@@ -81,7 +69,7 @@ UNIT_MAP: Final[dict[str, str]] = {
     "Watt/SquareMeter": UnitOfIrradiance.WATTS_PER_SQUARE_METER,
     "Meter/Second": UnitOfSpeed.METERS_PER_SECOND,
     "CubicMeter": UnitOfVolume.CUBIC_METERS,
-    # Aliases / not yet observed
+    # Plausible variants, not yet observed
     "DegreesCelsius": UnitOfTemperature.CELSIUS,
     "DegreeFahrenheit": UnitOfTemperature.FAHRENHEIT,
     "DegreesFahrenheit": UnitOfTemperature.FAHRENHEIT,
@@ -115,10 +103,8 @@ UNIT_MAP: Final[dict[str, str]] = {
     "Kilowatt": UnitOfPower.KILO_WATT,
 }
 
-# Suggested display precision per mapped Home Assistant unit. Display-layer
-# only: recorded states and statistics keep full precision. The API emits
-# float32-converted doubles (e.g. 90.15303039550781 %), so every numeric
-# sensor needs a sane default.
+# Display only; recorded states keep full precision. The API emits
+# float32-converted doubles (90.15303039550781 %), so a default is needed.
 UNIT_PRECISION: Final[dict[str, int]] = {
     UnitOfTemperature.CELSIUS: 1,
     UnitOfTemperature.FAHRENHEIT: 1,
@@ -160,9 +146,8 @@ UNIT_PRECISION: Final[dict[str, int]] = {
     UnitOfMass.GRAMS: 0,
 }
 
-# Device classes that follow directly from the (mapped) unit. Cases that need
-# the readout identifier as well (humidity, wind, gas, energy) are handled in
-# sensor.py.
+# Device classes that follow from the unit alone. Those that also need the
+# readout identifier (humidity, wind, gas) are handled in sensor.py.
 UNIT_DEVICE_CLASS: Final[dict[str, SensorDeviceClass]] = {
     UnitOfTemperature.CELSIUS: SensorDeviceClass.TEMPERATURE,
     UnitOfTemperature.FAHRENHEIT: SensorDeviceClass.TEMPERATURE,
@@ -188,6 +173,5 @@ UNIT_DEVICE_CLASS: Final[dict[str, SensorDeviceClass]] = {
     UnitOfPressure.PA: SensorDeviceClass.PRESSURE,
 }
 
-# pH deliberately has no device class: SensorDeviceClass.PH accepts no unit
-# of measurement, and dropping the "pH" unit would be a worse trade than
-# leaving the class off.
+# pH has no device class on purpose: SensorDeviceClass.PH accepts no unit, and
+# keeping the "pH" unit is worth more than the class.

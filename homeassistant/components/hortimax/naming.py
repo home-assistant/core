@@ -1,19 +1,17 @@
 """Human-friendly names from HortOS identifiers.
 
-HortOS readout identifiers look like ``MaximumPipeTemperature-ActualSetting``
-or ``VentPositionLeewardSide-Measured``: a CamelCase subject plus a kind
-suffix. ``Measured`` is the default kind and is omitted from the name; other
-kinds (``Calculated``, ``ActualSetting``) are appended in parentheses so
-readouts of the same subject stay distinguishable.
+Identifiers are a CamelCase subject plus a kind suffix, as in
+``VentPositionLeewardSide-Measured``. ``Measured`` is the default kind and is
+dropped; others are appended in parentheses to keep subjects distinguishable.
 """
 
 import re
 
-# Splits CamelCase into words: before an uppercase following a lowercase or
-# digit, and before the last uppercase of an acronym run (e.g. CO2Level).
+# Splits before an uppercase following a lowercase or digit, and before the
+# last uppercase of an acronym run (CO2Level).
 _CAMEL_RE = re.compile(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
 
-# Kind suffixes that mean "the measured value" (incl. a known Ridder typo).
+# "measuered" is a Ridder typo, not a distinct kind.
 _DEFAULT_KINDS = {"measured", "measuered"}
 
 
@@ -25,7 +23,7 @@ def split_camel(value: str) -> str:
             words.extend(_CAMEL_RE.split(part))
     if not words:
         return value
-    # Keep acronyms (CO2, EC, ...) intact, lowercase everything else.
+    # Acronyms (CO2, EC) stay intact.
     lowered = [word if word.isupper() else word.lower() for word in words]
     first = lowered[0]
     return " ".join([first[:1].upper() + first[1:], *lowered[1:]])
@@ -50,12 +48,9 @@ def disambiguate_source_names(
 ) -> dict[str, str]:
     """Resolve display names for sources, de-duplicating clashes.
 
-    Input maps a source key to (preferred display name, source type,
-    technical source name). When several sources share a display name, the
-    prettified source type is appended (e.g. 'OV1 Tropen screen', 'OV1 Tropen
-    ventilation group'); if that still clashes (same name and type, e.g.
-    several lighting groups named 'Reserve'), the number from the technical
-    source name ('Supplementary lighting group 005') is appended as well.
+    Input maps a source key to (preferred display name, source type, technical
+    source name). Clashing names get the source type appended ('OV1 Tropen
+    screen'), and if that still clashes, the number from the technical name.
     """
     counts: dict[str, int] = {}
     for display, _, _ in names.values():

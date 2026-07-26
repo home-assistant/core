@@ -14,9 +14,8 @@ from .coordinator import HortimaxCoordinator, source_key
 class HortimaxEntity(CoordinatorEntity[HortimaxCoordinator]):
     """An entity backed by one readout of a HortOS source.
 
-    HortOS data is two levels deep: controllers, and *sources* inside them
-    (a weather station, a ventilation group, a valve group, ...). Each source
-    becomes its own device, linked to its controller through ``via_device``.
+    Sources (a weather station, a ventilation group, ...) each become their own
+    device, linked to their controller through ``via_device``.
     """
 
     _attr_has_entity_name = True
@@ -46,12 +45,7 @@ class HortimaxEntity(CoordinatorEntity[HortimaxCoordinator]):
 
     @property
     def readout(self) -> Readout | None:
-        """Return the current readout, or None once the controller drops it.
-
-        Every known controller always has an entry in the coordinator data,
-        but the readouts inside it come and go with what the controller
-        reports.
-        """
+        """Return the current readout, or None once the controller drops it."""
         return self.coordinator.data[self._device_id].readouts.get(self._key)
 
     @property
