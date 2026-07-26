@@ -1,13 +1,14 @@
 # serializer version: 1
-# name: test_water_heater_states[dhw_state.json][water_heater.bsb_lan-entry]
+# name: test_water_heater_states[dhw_state.json][water_heater.water_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max_temp': 65.0,
-      'min_temp': 35.0,
-      'operation_list': list([
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 35.0,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
         'off',
         'performance',
         'eco',
@@ -20,7 +21,7 @@
     'disabled_by': None,
     'domain': 'water_heater',
     'entity_category': None,
-    'entity_id': 'water_heater.bsb_lan',
+    'entity_id': 'water_heater.water_heater',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -43,26 +44,26 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_water_heater_states[dhw_state.json][water_heater.bsb_lan-state]
+# name: test_water_heater_states[dhw_state.json][water_heater.water_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 48.5,
-      'friendly_name': 'BSB-LAN',
-      'max_temp': 65.0,
-      'min_temp': 35.0,
-      'operation_list': list([
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 48.5,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water heater',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 35.0,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
         'off',
         'performance',
         'eco',
       ]),
-      'operation_mode': 'performance',
-      'supported_features': <WaterHeaterEntityFeature: 11>,
-      'target_temp_high': None,
-      'target_temp_low': None,
-      'temperature': 50.0,
+      <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'performance',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 11>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 50.0,
     }),
     'context': <ANY>,
-    'entity_id': 'water_heater.bsb_lan',
+    'entity_id': 'water_heater.water_heater',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

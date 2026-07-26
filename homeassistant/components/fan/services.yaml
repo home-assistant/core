@@ -10,7 +10,8 @@ set_preset_mode:
       required: true
       example: "auto"
       selector:
-        text:
+        state:
+          attribute: preset_mode
 
 set_percentage:
   target:
@@ -49,7 +50,8 @@ turn_on:
         supported_features:
           - fan.FanEntityFeature.PRESET_MODE
       selector:
-        text:
+        state:
+          attribute: preset_mode
 
 turn_off:
   target:
@@ -97,14 +99,16 @@ increase_speed:
       supported_features:
         - fan.FanEntityFeature.SET_SPEED
   fields:
-    percentage_step:
-      advanced: true
-      required: false
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
+    additional_fields:
+      collapsed: true
+      fields:
+        percentage_step:
+          required: false
+          selector:
+            number:
+              min: 0
+              max: 100
+              unit_of_measurement: "%"
 
 decrease_speed:
   target:
@@ -113,11 +117,13 @@ decrease_speed:
       supported_features:
         - fan.FanEntityFeature.SET_SPEED
   fields:
-    percentage_step:
-      advanced: true
-      required: false
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
+    additional_fields:
+      collapsed: true
+      fields:
+        percentage_step:
+          required: false
+          selector:
+            number:
+              min: 0
+              max: 100
+              unit_of_measurement: "%"

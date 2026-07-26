@@ -5,17 +5,22 @@ rules:
     comment: The integration registers no actions.
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: done
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
     comment: The integration registers no actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: The integration registers no events.
@@ -47,8 +52,7 @@ rules:
   test-coverage: done
 
   # Gold
-  devices:
-    status: done
+  devices: done
   diagnostics: todo
   discovery-update-info:
     status: exempt

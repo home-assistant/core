@@ -1,10 +1,8 @@
 """Fully Kiosk Browser sensor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,7 +10,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfInformation
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfInformation,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -53,6 +56,14 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
         key="batteryLevel",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    FullySensorEntityDescription(
+        key="batteryTemperature",
+        translation_key="battery_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -143,6 +154,7 @@ class FullySensor(FullyKioskEntity, SensorEntity):
         super().__init__(coordinator)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         extra_state_attributes: dict[str, Any] = {}
         value = self.coordinator.data.get(self.entity_description.key)

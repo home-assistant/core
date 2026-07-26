@@ -1,9 +1,7 @@
 """Provides the DataUpdateCoordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from automower_ble.mower import Mower
 from automower_ble.protocol import ResponseResult
@@ -47,6 +45,7 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, str | int]]):
         self.model = model
         self.mower = mower
 
+    @override
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and any connection."""
         LOGGER.debug("Shutdown")
@@ -65,9 +64,11 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, str | int]]):
         try:
             if await self.mower.connect(device) is not ResponseResult.OK:
                 raise UpdateFailed("Failed to connect")
-        except BleakError as err:
+        except (BleakError, TimeoutError) as err:
+            await close_stale_connections_by_address(self.address)
             raise UpdateFailed("Failed to connect") from err
 
+    @override
     async def _async_update_data(self) -> dict[str, str | int]:
         """Poll the device."""
         LOGGER.debug("Polling device")
@@ -99,7 +100,7 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, str | int]]):
                 await self._async_find_device()
                 raise UpdateFailed("Error getting data from device")
 
-        except BleakError as err:
+        except (BleakError, TimeoutError) as err:
             LOGGER.error("Error getting data from device")
             await self._async_find_device()
             raise UpdateFailed("Error getting data from device") from err

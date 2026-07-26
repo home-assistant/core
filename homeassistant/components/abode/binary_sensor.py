@@ -1,8 +1,6 @@
 """Support for Abode Security System binary sensors."""
 
-from __future__ import annotations
-
-from typing import cast
+from typing import cast, override
 
 from jaraco.abode.devices.binary_sensor import BinarySensor
 
@@ -10,22 +8,21 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from .const import DOMAIN_DATA
+from . import AbodeConfigEntry
 from .entity import AbodeDevice
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AbodeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode binary sensor devices."""
-    data = hass.data[DOMAIN_DATA]
+    data = entry.runtime_data
 
     device_types = [
         "connectivity",
@@ -48,11 +45,13 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
     _device: BinarySensor
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
         return cast(bool, self._device.is_on)
 
     @property
+    @override
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of the binary sensor."""
         if self._device.get_value("is_window") == "1":

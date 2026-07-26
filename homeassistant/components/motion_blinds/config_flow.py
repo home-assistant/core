@@ -1,15 +1,12 @@
 """Config flow to configure Motionblinds using their WLAN API."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from motionblinds import MotionDiscovery, MotionGateway
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -27,6 +24,7 @@ from .const import (
     DEFAULT_WAIT_FOR_PUSH,
     DOMAIN,
 )
+from .coordinator import MotionBlindsConfigEntry
 from .gateway import ConnectMotionGateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,12 +76,14 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: MotionBlindsConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -112,6 +112,7 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host = discovery_info.ip
         return await self.async_step_connect()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

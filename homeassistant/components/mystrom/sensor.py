@@ -1,11 +1,9 @@
 """Support for myStrom sensors of switches/plugs."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 from pymystrom.pir import MyStromPir
 from pymystrom.switch import MyStromSwitch
@@ -177,6 +175,7 @@ class MyStromSensor[_DeviceT](MyStromSensorBase):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(self.device)
@@ -204,6 +203,7 @@ class MyStromSwitchUptimeSensor(MyStromSensorBase):
         self._last_attributes: dict[str, Any] = {}
 
     @property
+    @override
     def native_value(self) -> datetime | None:
         """Return the uptime of the device as a datetime."""
 
@@ -222,6 +222,7 @@ class MyStromSwitchUptimeSensor(MyStromSensorBase):
         return self._last_value
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
 

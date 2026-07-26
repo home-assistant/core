@@ -1,14 +1,15 @@
 """Repairs platform for the Workday integration."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from holidays import list_supported_countries
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowResult,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
@@ -33,7 +34,7 @@ class CountryFixFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         if self.country:
             return await self.async_step_province()
@@ -41,7 +42,7 @@ class CountryFixFlow(RepairsFlow):
 
     async def async_step_country(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the country step of a fix flow."""
         if user_input is not None:
             all_countries = list_supported_countries(include_aliases=False)
@@ -75,7 +76,7 @@ class CountryFixFlow(RepairsFlow):
 
     async def async_step_province(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the province step of a fix flow."""
         if user_input is not None:
             user_input.setdefault(CONF_PROVINCE, None)
@@ -123,13 +124,13 @@ class HolidayFixFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_fix_remove_holiday()
 
     async def async_step_fix_remove_holiday(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the options step of a fix flow."""
         errors: dict[str, str] = {}
         if user_input:

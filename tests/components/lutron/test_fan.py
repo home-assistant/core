@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
@@ -18,6 +19,13 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.fixture(autouse=True)
+def setup_platforms():
+    """Patch PLATFORMS for all tests in this file."""
+    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.FAN]):
+        yield
+
+
 async def test_fan_setup(
     hass: HomeAssistant,
     mock_lutron: MagicMock,
@@ -32,9 +40,8 @@ async def test_fan_setup(
     fan.level = 0
     fan.last_level.return_value = 0
 
-    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.FAN]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -52,7 +59,7 @@ async def test_fan_services(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "fan.test_fan"
+    entity_id = "fan.test_area_test_fan"
 
     # Turn on (defaults to medium - 67%)
     await hass.services.async_call(
@@ -95,7 +102,7 @@ async def test_fan_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "fan.test_fan"
+    entity_id = "fan.test_area_test_fan"
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # Simulate update

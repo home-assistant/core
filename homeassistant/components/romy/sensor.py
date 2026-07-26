@@ -1,12 +1,13 @@
 """Sensor checking adc and status values from your ROMY."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -18,8 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import RomyVacuumCoordinator
+from .coordinator import RomyConfigEntry, RomyVacuumCoordinator
 from .entity import RomyEntity
 
 SENSORS: list[SensorEntityDescription] = [
@@ -76,12 +76,12 @@ SENSORS: list[SensorEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RomyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ROMY vacuum cleaner."""
 
-    coordinator: RomyVacuumCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         RomySensor(coordinator, entity_description)
@@ -106,6 +106,7 @@ class RomySensor(RomyEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the value of the sensor."""
         value: int = self.romy.sensors[self.entity_description.key]

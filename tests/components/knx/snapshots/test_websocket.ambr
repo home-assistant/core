@@ -1,4 +1,44 @@
 # serializer version: 1
+# name: test_knx_get_expose_config
+  dict({
+    'id': 1,
+    'result': dict({
+      'notes': 'Invert cover position for KNX uses 0: open',
+      'options': list([
+        dict({
+          'ga': dict({
+            'dpt': '1.001',
+            'write': '1/1/1',
+          }),
+        }),
+        dict({
+          'attribute': 'current_position',
+          'cooldown': 5.0,
+          'ga': dict({
+            'dpt': '5.001',
+            'write': '2/2/2',
+          }),
+          'value_template': '{{ 100 - value }}',
+        }),
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_expose_groups
+  dict({
+    'id': 1,
+    'result': dict({
+      'cover.test': list([
+        '1/1/1',
+        '2/2/2',
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_knx_get_schema[binary_sensor]
   dict({
     'id': 1,
@@ -83,6 +123,39 @@
         'name': 'sync_state',
         'required': True,
         'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_schema[button]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_send',
+        'options': dict({
+          'dptClasses': list([
+            'numeric',
+            'enum',
+            'complex',
+            'string',
+          ]),
+          'passive': False,
+          'state': False,
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'ga_path': 'ga_send',
+        'name': 'data',
+        'required': True,
+        'type': 'knx_payload',
       }),
     ]),
     'success': True,
@@ -1686,6 +1759,7 @@
               'B/s',
               'BTU/(h⋅ft²)',
               'Beaufort',
+              'Bq/m³',
               'CCF',
               'EB',
               'EiB',
@@ -1801,6 +1875,7 @@
               'm/min',
               'm/s',
               'mA',
+              'mHz',
               'mL',
               'mL/s',
               'mPa',
@@ -1834,6 +1909,7 @@
               'm³/s',
               'nmi',
               'oz',
+              'pCi/L',
               'ppb',
               'ppm',
               'psi',
@@ -1846,6 +1922,7 @@
               '°',
               '°C',
               '°F',
+              'μA',
               'μS/cm',
               'μV',
               'μg',
@@ -1905,6 +1982,7 @@
               'precipitation',
               'precipitation_intensity',
               'pressure',
+              'radon',
               'reactive_energy',
               'reactive_power',
               'signal_strength',
@@ -2029,6 +2107,7 @@
               'B/s',
               'BTU/(h⋅ft²)',
               'Beaufort',
+              'Bq/m³',
               'CCF',
               'EB',
               'EiB',
@@ -2144,6 +2223,7 @@
               'm/min',
               'm/s',
               'mA',
+              'mHz',
               'mL',
               'mL/s',
               'mPa',
@@ -2177,6 +2257,7 @@
               'm³/s',
               'nmi',
               'oz',
+              'pCi/L',
               'ppb',
               'ppm',
               'psi',
@@ -2189,6 +2270,7 @@
               '°',
               '°C',
               '°F',
+              'μA',
               'μS/cm',
               'μV',
               'μg',
@@ -2212,6 +2294,7 @@
             'options': list([
               'date',
               'timestamp',
+              'uptime',
               'absolute_humidity',
               'apparent_power',
               'aqi',
@@ -2251,6 +2334,7 @@
               'precipitation',
               'precipitation_intensity',
               'pressure',
+              'radon',
               'reactive_energy',
               'reactive_power',
               'signal_strength',

@@ -1,8 +1,6 @@
 """Support for LaMetric notifications."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from demetriek import (
     AlarmSound,
@@ -51,6 +49,7 @@ class LaMetricNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.lametric = lametric
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a LaMetric device."""
         if not (data := kwargs.get(ATTR_DATA)):

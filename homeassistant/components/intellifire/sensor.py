@@ -1,10 +1,9 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
+from .const import API_MODE_CLOUD, API_MODE_LOCAL
 from .coordinator import IntellifireConfigEntry, IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
@@ -67,6 +67,22 @@ def _uptime_to_timestamp(
 
 INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
+        key="read_mode",
+        translation_key="read_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=[API_MODE_LOCAL, API_MODE_CLOUD],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.fireplace.read_mode.value,
+    ),
+    IntellifireSensorEntityDescription(
+        key="control_mode",
+        translation_key="control_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=[API_MODE_LOCAL, API_MODE_CLOUD],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.fireplace.control_mode.value,
+    ),
+    IntellifireSensorEntityDescription(
         key="flame_height",
         translation_key="flame_height",
         state_class=SensorStateClass.MEASUREMENT,
@@ -97,7 +113,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
         key="timer_end_timestamp",
         translation_key="timer_end_timestamp",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=_time_remaining_to_timestamp,
     ),
@@ -158,6 +173,7 @@ class IntelliFireSensor(IntellifireEntity, SensorEntity):
     entity_description: IntellifireSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | str | datetime | float | None:
         """Return the state."""
         return self.entity_description.value_fn(self.coordinator)

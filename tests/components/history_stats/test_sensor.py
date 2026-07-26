@@ -647,9 +647,9 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Start     t0        t1        t2       Startup                                       End
-    # |--20min--|--20min--|--10min--|--10min--|---------30min---------|---15min--|---15min--|
-    # |---on----|---on----|---on----|---on----|----------on-----------|---off----|----on----|
+    # Start     t0        t1        t2       Startup                                       End  # noqa: E501, RUF100
+    # |--20min--|--20min--|--10min--|--10min--|---------30min---------|---15min--|---15min--|  # noqa: E501, RUF100
+    # |---on----|---on----|---on----|---on----|----------on-----------|---off----|----on----|  # noqa: E501, RUF100
 
     def _fake_states(*args, **kwargs):
         return {
@@ -739,18 +739,21 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
     assert hass.states.get("sensor.sensor1").state == "1.75"
 
 
-async def test_async_start_from_history_and_switch_to_watching_state_changes_single_expanding_window(
+async def test_async_start_from_history_and_switch_to_watching_state_changes_single_expanding_window(  # noqa: E501, RUF100
     recorder_mock: Recorder,
     hass: HomeAssistant,
 ) -> None:
-    """Test we startup from history and switch to watching state changes with an expanding end time."""
+    """Test startup from history, switch to watching state changes.
+
+    Uses an expanding end time.
+    """
     await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Start     t0        t1        t2       Startup                                       End
-    # |--20min--|--20min--|--10min--|--10min--|---------30min---------|---15min--|---15min--|
-    # |---on----|---on----|---on----|---on----|----------on-----------|---off----|----on----|
+    # Start     t0        t1        t2       Startup                                       End  # noqa: E501, RUF100
+    # |--20min--|--20min--|--10min--|--10min--|---------30min---------|---15min--|---15min--|  # noqa: E501, RUF100
+    # |---on----|---on----|---on----|---on----|----------on-----------|---off----|----on----|  # noqa: E501, RUF100
 
     def _fake_states(*args, **kwargs):
         return {
@@ -865,9 +868,9 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Start     t0        t1        t2       Startup                                       End
-    # |--20min--|--20min--|--10min--|--10min--|---------30min---------|---15min--|---15min--|
-    # |---on----|---on----|---on----|---on----|----------on-----------|---off----|----on----|
+    # Start     t0        t1        t2       Startup                                       End  # noqa: E501, RUF100
+    # |--20min--|--20min--|--10min--|--10min--|---------30min---------|---15min--|---15min--|  # noqa: E501, RUF100
+    # |---on----|---on----|---on----|---on----|----------on-----------|---off----|----on----|  # noqa: E501, RUF100
 
     def _fake_states(*args, **kwargs):
         return {
@@ -1155,7 +1158,8 @@ async def test_start_from_history_then_watch_state_changes_sliding(
         async_fire_time_changed(hass, time)
         await hass.async_block_till_done()
 
-    # Sliding window will have started to erase the initial on period, so now it will only be on for 10 minutes
+    # Sliding window will have started to erase the initial on
+    # period, so now it will only be on for 10 minutes
     assert hass.states.get("sensor.sensor0").state == "0.17"
     assert hass.states.get("sensor.sensor1").state == "16.7"
     assert hass.states.get("sensor.sensor2").state == "1"
@@ -1169,7 +1173,8 @@ async def test_start_from_history_then_watch_state_changes_sliding(
         async_fire_time_changed(hass, time)
         await hass.async_block_till_done()
 
-    # Sliding window will continue to erase the initial on period, so now it will only be on for 5 minutes
+    # Sliding window will continue to erase the initial on period,
+    # so now it will only be on for 5 minutes
     assert hass.states.get("sensor.sensor0").state == "0.08"
     assert hass.states.get("sensor.sensor1").state == "8.3"
     assert hass.states.get("sensor.sensor2").state == "1"
@@ -1202,9 +1207,9 @@ async def test_does_not_work_into_the_future(
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Start     t0        t1        t2       Startup                                       End
-    # |--20min--|--20min--|--10min--|--10min--|---------30min---------|---15min--|---15min--|
-    # |---on----|---on----|---on----|---on----|----------on-----------|---off----|----on----|
+    # Start     t0        t1        t2       Startup                                       End  # noqa: E501, RUF100
+    # |--20min--|--20min--|--10min--|--10min--|---------30min---------|---15min--|---15min--|  # noqa: E501, RUF100
+    # |---on----|---on----|---on----|---on----|----------on-----------|---off----|----on----|  # noqa: E501, RUF100
 
     def _fake_states(*args, **kwargs):
         return {
@@ -1233,7 +1238,9 @@ async def test_does_not_work_into_the_future(
                             "entity_id": "binary_sensor.state",
                             "name": "sensor1",
                             "state": "on",
-                            "start": "{{ utcnow().replace(hour=23, minute=0, second=0) }}",
+                            "start": (
+                                "{{ utcnow().replace(hour=23, minute=0, second=0) }}"
+                            ),
                             "duration": {"hours": 1},
                             "type": "time",
                         },
@@ -1242,7 +1249,9 @@ async def test_does_not_work_into_the_future(
                             "entity_id": "binary_sensor.state",
                             "name": "sensor2",
                             "state": "on",
-                            "start": "{{ utcnow().replace(hour=23, minute=0, second=0) }}",
+                            "start": (
+                                "{{ utcnow().replace(hour=23, minute=0, second=0) }}"
+                            ),
                             "duration": {"hours": 1},
                             "type": "time",
                             "unique_id": "6b1f54e3-4065-43ca-8492-d0d4506a573a",
@@ -1505,7 +1514,7 @@ async def test_measure_sliding_window(
 async def test_measure_from_end_going_backwards(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test the history statistics sensor with a moving end and a duration to find the start."""
+    """Test history stats sensor with moving end and duration."""
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
     t1 = t0 + timedelta(minutes=10)
@@ -1687,7 +1696,7 @@ async def test_state_change_during_window_rollover(
     recorder_mock: Recorder,
     hass: HomeAssistant,
 ) -> None:
-    """Test when the tracked sensor and the start/end window change during the same update."""
+    """Test tracked sensor and start/end window change in same update."""
     await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=23, minute=0, second=0, microsecond=0)
@@ -1704,7 +1713,8 @@ async def test_state_change_during_window_rollover(
             ]
         }
 
-    # The test begins at 23:00, and queries from the database that the sensor has been on since 12:00.
+    # The test begins at 23:00, and queries from the database that
+    # the sensor has been on since 12:00.
     with (
         patch(
             "homeassistant.components.recorder.history.state_changes_during_period",
@@ -1722,7 +1732,9 @@ async def test_state_change_during_window_rollover(
                         "entity_id": "binary_sensor.state",
                         "name": "sensor1",
                         "state": "on",
-                        "start": "{{ today_at('12:00') if now().hour == 1 else today_at() }}",
+                        "start": (
+                            "{{ today_at('12:00') if now().hour == 1 else today_at() }}"
+                        ),
                         "end": "{{ now() }}",
                         "type": "time",
                     }
@@ -1736,7 +1748,8 @@ async def test_state_change_during_window_rollover(
 
     assert hass.states.get("sensor.sensor1").state == "11.0"
 
-    # Advance 59 minutes, to record the last minute update just before midnight, just like a real system would do.
+    # Advance 59 minutes, to record the last minute update just
+    # before midnight, just like a real system would do.
     t2 = start_time + timedelta(minutes=59, microseconds=300)  # 23:59
     with freeze_time(t2):
         async_fire_time_changed(hass, t2)
@@ -1744,17 +1757,21 @@ async def test_state_change_during_window_rollover(
 
     assert hass.states.get("sensor.sensor1").state == "11.98"
 
-    # One minute has passed and the time has now rolled over into a new day, resetting the recorder window.
+    # One minute has passed and the time has now rolled over into a
+    # new day, resetting the recorder window.
     # The sensor will be ON since midnight.
     t3 = t2 + timedelta(minutes=1)  # 00:01
     with freeze_time(t3):
-        # The sensor turns off around this time, before the sensor does its normal polled update.
+        # The sensor turns off around this time, before the sensor
+        # does its normal polled update.
         hass.states.async_set("binary_sensor.state", "off")
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get("sensor.sensor1").state == "0.0"
 
-    # More time passes, and the history stats does a polled update again. It should be 0 since the sensor has been off since midnight.
+    # More time passes, and the history stats does a polled update
+    # again. It should be 0 since the sensor has been off since
+    # midnight.
     # Turn the sensor back on.
     t4 = t3 + timedelta(minutes=10)  # 00:10
     with freeze_time(t4):
@@ -1773,7 +1790,8 @@ async def test_state_change_during_window_rollover(
 
     assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
 
-    # Start time has moved back to start of today. Turn the sensor on at the same time it is recomputed
+    # Start time has moved back to start of today. Turn the sensor
+    # on at the same time it is recomputed
     # Should query the recorder this time due to start time moving backwards in time.
     t6 = t5 + timedelta(hours=1)  # 02:10
 
@@ -1810,7 +1828,8 @@ async def test_state_change_during_window_rollover(
 
     assert hass.states.get("sensor.sensor1").state == "1.0"
 
-    # Another hour passes since the re-query. Total 'On' time should be 2 hours (00:10-1:10, 2:10-now (3:10))
+    # Another hour passes since the re-query. Total 'On' time should
+    # be 2 hours (00:10-1:10, 2:10-now (3:10))
     t7 = t6 + timedelta(hours=1)  # 03:10
     with freeze_time(t7):
         async_fire_time_changed(hass, t7)
@@ -1825,7 +1844,7 @@ async def test_end_time_with_microseconds_zeroed(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
 ) -> None:
-    """Test the history statistics sensor that has the end time microseconds zeroed out."""
+    """Test history stats sensor with end time microseconds zeroed."""
     await hass.config.async_set_time_zone(time_zone)
     start_of_today = dt_util.now().replace(
         day=9, month=7, year=1986, hour=0, minute=0, second=0, microsecond=0
@@ -1875,7 +1894,10 @@ async def test_end_time_with_microseconds_zeroed(
                         "entity_id": "binary_sensor.heatpump_compressor_state",
                         "name": "heatpump_compressor_today",
                         "state": "on",
-                        "start": "{{ now().replace(hour=0, minute=0, second=0, microsecond=0) }}",
+                        "start": (
+                            "{{ now().replace(hour=0, minute=0,"
+                            " second=0, microsecond=0) }}"
+                        ),
                         "end": "{{ now().replace(microsecond=0) }}",
                         "type": "time",
                     },
@@ -1884,7 +1906,10 @@ async def test_end_time_with_microseconds_zeroed(
                         "entity_id": "binary_sensor.heatpump_compressor_state",
                         "name": "heatpump_compressor_today2",
                         "state": "on",
-                        "start": "{{ now().replace(hour=0, minute=0, second=0, microsecond=0) }}",
+                        "start": (
+                            "{{ now().replace(hour=0, minute=0,"
+                            " second=0, microsecond=0) }}"
+                        ),
                         "end": "{{ now().replace(microsecond=0) }}",
                         "type": "time",
                         "unique_id": "6b1f54e3-4065-43ca-8492-d0d4506a573a",
@@ -2072,7 +2097,10 @@ async def test_history_stats_handles_floored_timestamps(
                         "entity_id": "binary_sensor.state",
                         "name": "sensor1",
                         "state": "on",
-                        "start": "{{ utcnow().replace(hour=0, minute=0, second=0, microsecond=100) }}",
+                        "start": (
+                            "{{ utcnow().replace(hour=0, minute=0,"
+                            " second=0, microsecond=100) }}"
+                        ),
                         "duration": {"hours": 2},
                         "type": "time",
                     }
@@ -2271,7 +2299,10 @@ async def test_async_around_min_state_duration_sliding_window(
     recorder_mock: Recorder,
     hass: HomeAssistant,
 ) -> None:
-    """Test min_state_duration with sliding window where block duration crosses threshold."""
+    """Test min_state_duration with sliding window.
+
+    Block duration crosses threshold.
+    """
     await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=1, minute=0, second=0, microsecond=0)

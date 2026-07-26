@@ -2,17 +2,16 @@
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, PLATFORMS, TTN_API_HOST
-from .coordinator import TTNCoordinator
+from .const import PLATFORMS, TTN_API_HOST
+from .coordinator import TTNConfigEntry, TTNCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TTNConfigEntry) -> bool:
     """Establish connection with The Things Network."""
 
     _LOGGER.debug(
@@ -25,14 +24,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TTNConfigEntry) -> bool:
     """Unload a config entry."""
 
     _LOGGER.debug(
@@ -41,8 +40,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data.get(CONF_HOST, TTN_API_HOST),
     )
 
-    # Unload entities created for each supported platform
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        del hass.data[DOMAIN][entry.entry_id]
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

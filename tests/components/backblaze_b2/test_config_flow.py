@@ -178,6 +178,16 @@ async def test_already_configured(
             "base",
         ),
         (
+            "bad_request",
+            {
+                "patch": "b2sdk.v2.RawSimulator.authorize_account",
+                "exception": exception.BadRequest,
+                "args": ["test", "bad_request"],
+            },
+            "bad_request",
+            "base",
+        ),
+        (
             "unknown_error",
             {
                 "patch": "b2sdk.v2.RawSimulator.authorize_account",
@@ -251,6 +261,11 @@ async def test_config_flow_errors(
         assert result.get("description_placeholders") == {
             "brand_name": "Backblaze B2",
             "allowed_prefix": "test/",
+        }
+    elif error_type == "bad_request":
+        assert result.get("description_placeholders") == {
+            "brand_name": "Backblaze B2",
+            "error_message": "test (bad_request)",
         }
 
 

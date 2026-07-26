@@ -111,5 +111,9 @@
         }),
       }),
     }),
+    'rate_limit': dict({
+      'per-day': 1000,
+      'remaining': 100,
+    }),
   })
 # ---

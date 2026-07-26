@@ -1,7 +1,5 @@
 """Tests for the Fish Audio integration setup."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from fishaudio import FishAudioError, ServerError

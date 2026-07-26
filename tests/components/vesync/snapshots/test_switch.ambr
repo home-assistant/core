@@ -3,8 +3,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -25,7 +25,6 @@
       'model_id': None,
       'name': 'Air Purifier 131s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -35,8 +34,9 @@
 # name: test_switch_state[Air Purifier 131s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -73,7 +73,7 @@
 # name: test_switch_state[Air Purifier 131s][switch.air_purifier_131s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 131s Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 131s Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_purifier_131s_display',
@@ -87,8 +87,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -109,7 +109,6 @@
       'model_id': None,
       'name': 'Air Purifier 200s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -119,8 +118,9 @@
 # name: test_switch_state[Air Purifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -153,8 +153,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -191,7 +192,7 @@
 # name: test_switch_state[Air Purifier 200s][switch.air_purifier_200s_child_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 200s Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 200s Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_purifier_200s_child_lock',
@@ -204,7 +205,7 @@
 # name: test_switch_state[Air Purifier 200s][switch.air_purifier_200s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 200s Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 200s Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_purifier_200s_display',
@@ -218,8 +219,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -240,7 +241,6 @@
       'model_id': None,
       'name': 'Air Purifier 400s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -250,8 +250,9 @@
 # name: test_switch_state[Air Purifier 400s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -284,8 +285,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -322,7 +324,7 @@
 # name: test_switch_state[Air Purifier 400s][switch.air_purifier_400s_child_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 400s Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 400s Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_purifier_400s_child_lock',
@@ -335,7 +337,7 @@
 # name: test_switch_state[Air Purifier 400s][switch.air_purifier_400s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 400s Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 400s Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_purifier_400s_display',
@@ -349,8 +351,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -371,7 +373,6 @@
       'model_id': None,
       'name': 'Air Purifier 600s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -381,8 +382,9 @@
 # name: test_switch_state[Air Purifier 600s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -415,8 +417,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -453,7 +456,7 @@
 # name: test_switch_state[Air Purifier 600s][switch.air_purifier_600s_child_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 600s Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 600s Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_purifier_600s_child_lock',
@@ -466,7 +469,7 @@
 # name: test_switch_state[Air Purifier 600s][switch.air_purifier_600s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 600s Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 600s Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_purifier_600s_display',
@@ -480,8 +483,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -502,7 +505,6 @@
       'model_id': None,
       'name': 'CS158-AF Air Fryer Cooking',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': None,
       'via_device_id': None,
@@ -517,8 +519,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -539,7 +541,6 @@
       'model_id': None,
       'name': 'CS158-AF Air Fryer Standby',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': None,
       'via_device_id': None,
@@ -554,8 +555,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -576,7 +577,6 @@
       'model_id': None,
       'name': 'Dimmable Light',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -591,8 +591,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -613,7 +613,6 @@
       'model_id': None,
       'name': 'Dimmer Switch',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -628,8 +627,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -650,7 +649,6 @@
       'model_id': None,
       'name': 'Humidifier 200s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -660,8 +658,9 @@
 # name: test_switch_state[Humidifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -694,8 +693,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -732,7 +732,7 @@
 # name: test_switch_state[Humidifier 200s][switch.humidifier_200s_auto_off]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 200s Auto Off',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 200s Auto Off',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_200s_auto_off',
@@ -745,7 +745,7 @@
 # name: test_switch_state[Humidifier 200s][switch.humidifier_200s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 200s Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 200s Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_200s_display',
@@ -759,8 +759,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -781,7 +781,6 @@
       'model_id': None,
       'name': 'Humidifier 6000s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': None,
       'via_device_id': None,
@@ -791,8 +790,9 @@
 # name: test_switch_state[Humidifier 6000s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -825,8 +825,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -859,8 +860,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -893,8 +895,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -931,7 +934,7 @@
 # name: test_switch_state[Humidifier 6000s][switch.humidifier_6000s_auto_off]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 6000s Auto Off',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s Auto Off',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_6000s_auto_off',
@@ -944,7 +947,7 @@
 # name: test_switch_state[Humidifier 6000s][switch.humidifier_6000s_child_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 6000s Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_6000s_child_lock',
@@ -957,7 +960,7 @@
 # name: test_switch_state[Humidifier 6000s][switch.humidifier_6000s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 6000s Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_6000s_display',
@@ -970,7 +973,7 @@
 # name: test_switch_state[Humidifier 6000s][switch.humidifier_6000s_enable_drying_mode_while_power_is_off]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 6000s Enable drying mode while power is off',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s Enable drying mode while power is off',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_6000s_enable_drying_mode_while_power_is_off',
@@ -984,8 +987,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1006,7 +1009,6 @@
       'model_id': None,
       'name': 'Humidifier 600S',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -1016,8 +1018,9 @@
 # name: test_switch_state[Humidifier 600S][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1050,8 +1053,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1088,7 +1092,7 @@
 # name: test_switch_state[Humidifier 600S][switch.humidifier_600s_auto_off]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 600S Auto Off',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 600S Auto Off',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_600s_auto_off',
@@ -1101,7 +1105,7 @@
 # name: test_switch_state[Humidifier 600S][switch.humidifier_600s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 600S Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 600S Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.humidifier_600s_display',
@@ -1115,8 +1119,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1137,7 +1141,6 @@
       'model_id': None,
       'name': 'Outlet',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -1147,8 +1150,9 @@
 # name: test_switch_state[Outlet][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1185,8 +1189,8 @@
 # name: test_switch_state[Outlet][switch.outlet]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Outlet',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet',
     }),
     'context': <ANY>,
     'entity_id': 'switch.outlet',
@@ -1200,8 +1204,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1222,7 +1226,6 @@
       'model_id': None,
       'name': 'SmartTowerFan',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -1232,8 +1235,9 @@
 # name: test_switch_state[SmartTowerFan][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1270,7 +1274,7 @@
 # name: test_switch_state[SmartTowerFan][switch.smarttowerfan_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SmartTowerFan Display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartTowerFan Display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.smarttowerfan_display',
@@ -1284,8 +1288,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1306,7 +1310,6 @@
       'model_id': None,
       'name': 'Temperature Light',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -1321,8 +1324,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1343,7 +1346,6 @@
       'model_id': None,
       'name': 'Wall Switch',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -1353,8 +1355,9 @@
 # name: test_switch_state[Wall Switch][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1391,8 +1394,8 @@
 # name: test_switch_state[Wall Switch][switch.wall_switch]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Wall Switch',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Switch',
     }),
     'context': <ANY>,
     'entity_id': 'switch.wall_switch',
@@ -1400,5 +1403,137 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_switch_state[CoreBreeze 432S][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'corebreeze432s',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LPF-R432S-AEU',
+      'model_id': None,
+      'name': 'CoreBreeze 432S',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[CoreBreeze 432S][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.corebreeze_432s_display',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Display',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Display',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'display',
+      'unique_id': 'corebreeze432s-display',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.corebreeze_432s_child_lock',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Child lock',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Child lock',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'child_lock',
+      'unique_id': 'corebreeze432s-child_lock',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[CoreBreeze 432S][switch.corebreeze_432s_display]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoreBreeze 432S Display',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.corebreeze_432s_display',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_state[CoreBreeze 432S][switch.corebreeze_432s_child_lock]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoreBreeze 432S Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.corebreeze_432s_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---

@@ -1,7 +1,7 @@
 """Config flow for Environment Canada integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 import xml.etree.ElementTree as ET
 
 import aiohttp
@@ -9,17 +9,46 @@ from env_canada import ECWeather, ec_exc
 from env_canada.ec_weather import get_ec_sites_list
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    BooleanSelector,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
-from .const import CONF_STATION, CONF_TITLE, DOMAIN
+from .const import (
+    CONF_RADAR_DURATION,
+    CONF_RADAR_FPS,
+    CONF_RADAR_LAYER,
+    CONF_RADAR_LEGEND,
+    CONF_RADAR_OPACITY,
+    CONF_RADAR_RADIUS,
+    CONF_RADAR_TIMESTAMP,
+    CONF_STATION,
+    CONF_TITLE,
+    DEFAULT_RADAR_DURATION,
+    DEFAULT_RADAR_FPS,
+    DEFAULT_RADAR_LAYER,
+    DEFAULT_RADAR_LEGEND,
+    DEFAULT_RADAR_OPACITY,
+    DEFAULT_RADAR_RADIUS,
+    DEFAULT_RADAR_TIMESTAMP,
+    DOMAIN,
+    RADAR_LAYERS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,12 +86,22 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     _station_codes: list[dict[str, str]] | None = None
 
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Return the options flow handler."""
+        return OptionsFlowHandler()
+
     async def _get_station_codes(self) -> list[dict[str, str]]:
         """Get station codes, cached after first call."""
         if self._station_codes is None:
             self._station_codes = await get_ec_sites_list()
         return self._station_codes
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -89,7 +128,8 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_LATITUDE] = info[CONF_LATITUDE]
                 user_input[CONF_LONGITUDE] = info[CONF_LONGITUDE]
 
-                # The combination of station and language are unique for all EC weather reporting
+                # The combination of station and language are
+                # unique for all EC weather reporting
                 await self.async_set_unique_id(
                     f"{user_input[CONF_STATION]}-{user_input[CONF_LANGUAGE].lower()}"
                 )
@@ -126,3 +166,71 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
+
+
+class OptionsFlowHandler(OptionsFlowWithReload):
+    """Handle Environment Canada radar camera options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the radar camera options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        options = self.config_entry.options
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_RADAR_LAYER,
+                    default=options.get(CONF_RADAR_LAYER, DEFAULT_RADAR_LAYER),
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=RADAR_LAYERS,
+                        translation_key="radar_layer",
+                    )
+                ),
+                vol.Required(
+                    CONF_RADAR_LEGEND,
+                    default=options.get(CONF_RADAR_LEGEND, DEFAULT_RADAR_LEGEND),
+                ): BooleanSelector(),
+                vol.Required(
+                    CONF_RADAR_TIMESTAMP,
+                    default=options.get(CONF_RADAR_TIMESTAMP, DEFAULT_RADAR_TIMESTAMP),
+                ): BooleanSelector(),
+                vol.Required(
+                    CONF_RADAR_OPACITY,
+                    default=options.get(CONF_RADAR_OPACITY, DEFAULT_RADAR_OPACITY),
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=0, max=100, step=1, mode=NumberSelectorMode.SLIDER
+                    )
+                ),
+                vol.Required(
+                    CONF_RADAR_RADIUS,
+                    default=options.get(CONF_RADAR_RADIUS, DEFAULT_RADAR_RADIUS),
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=10, max=2000, step=10, unit_of_measurement="km"
+                    )
+                ),
+                vol.Required(
+                    CONF_RADAR_DURATION,
+                    default=options.get(CONF_RADAR_DURATION, DEFAULT_RADAR_DURATION),
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=0, max=180, step=5, unit_of_measurement="min"
+                    )
+                ),
+                vol.Required(
+                    CONF_RADAR_FPS,
+                    default=options.get(CONF_RADAR_FPS, DEFAULT_RADAR_FPS),
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=1, max=30, step=1, unit_of_measurement="fps"
+                    )
+                ),
+            }
+        )
+
+        return self.async_show_form(step_id="init", data_schema=data_schema)

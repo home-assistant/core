@@ -1,7 +1,9 @@
 {
-  "services": {
-    "reload": {
-      "service": "mdi:reload"
+  "entity": {
+    "notify": {
+      "mailto": {
+        "default": "mdi:email-outline"
+      }
     }
   }
 }

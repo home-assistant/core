@@ -1,12 +1,11 @@
 """Common constants and functions for UptimeRobot tests."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import Any
 from unittest.mock import patch
 
-from pyuptimerobot import API_PATH_MONITORS, UptimeRobotApiResponse
+from pyuptimerobot import UptimeRobotApiResponse
+from pyuptimerobot.const import API_PATH_MONITORS
 
 from homeassistant import config_entries
 from homeassistant.components.uptimerobot.const import DOMAIN

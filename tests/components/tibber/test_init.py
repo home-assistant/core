@@ -5,7 +5,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.tibber import DOMAIN, TibberRuntimeData, async_setup_entry
+from homeassistant.components.tibber import DOMAIN, TibberRuntimeData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
@@ -40,26 +40,34 @@ async def test_data_api_runtime_creates_client(hass: HomeAssistant) -> None:
 
     with patch("homeassistant.components.tibber.tibber.Tibber") as mock_client_cls:
         mock_client = MagicMock()
-        mock_client.set_access_token = MagicMock()
+        mock_client.set_access_token = AsyncMock()
         mock_client_cls.return_value = mock_client
 
         client = await runtime.async_get_client(hass)
 
         mock_client_cls.assert_called_once_with(
-            access_token="access-token", websession=ANY, time_zone=ANY, ssl=ANY
+            access_token="access-token",
+            websession=ANY,
+            time_zone=ANY,
+            ssl=ANY,
+            refresh_access_token=ANY,
         )
         session.async_ensure_token_valid.assert_awaited_once()
-        mock_client.set_access_token.assert_called_once_with("access-token")
+        mock_client.set_access_token.assert_not_awaited()
         assert client is mock_client
 
-        mock_client.set_access_token.reset_mock()
+        refresh_access_token = mock_client_cls.call_args.kwargs["refresh_access_token"]
+        session.async_ensure_token_valid.reset_mock()
+        assert await refresh_access_token() == "access-token"
+        session.async_ensure_token_valid.assert_awaited_once()
+
         session.async_ensure_token_valid.reset_mock()
 
         cached_client = await runtime.async_get_client(hass)
 
         mock_client_cls.assert_called_once()
         session.async_ensure_token_valid.assert_awaited_once()
-        mock_client.set_access_token.assert_called_once_with("access-token")
+        mock_client.set_access_token.assert_awaited_once_with("access-token")
         assert cached_client is client
 
 
@@ -81,11 +89,13 @@ async def test_data_api_runtime_missing_token_raises(hass: HomeAssistant) -> Non
 
 async def test_setup_requires_data_api_reauth(hass: HomeAssistant) -> None:
     """Ensure legacy entries trigger reauth to configure Data API."""
+    hass.config.components.add("recorder")
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_ACCESS_TOKEN: "legacy-token"},
         unique_id="legacy",
     )
+    entry.add_to_hass(hass)
 
-    with pytest.raises(ConfigEntryAuthFailed):
-        await async_setup_entry(hass, entry)
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_ERROR

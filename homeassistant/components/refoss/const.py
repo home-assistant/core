@@ -1,7 +1,5 @@
 """const."""
 
-from __future__ import annotations
-
 from logging import Logger, getLogger
 
 _LOGGER: Logger = getLogger(__package__)

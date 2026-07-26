@@ -1,9 +1,8 @@
 """Support for Iskra."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, replace
+from typing import override
 
 from pyiskra.devices import Device
 from pyiskra.helper import Counter, CounterType
@@ -171,7 +170,10 @@ def get_counter_entity_description(
     index: int,
     entity_name: str,
 ) -> IskraSensorEntityDescription:
-    """Dynamically create IskraSensor object as energy meter's counters are customizable."""
+    """Dynamically create IskraSensor object.
+
+    Energy meter's counters are customizable.
+    """
 
     key = entity_name.format(index + 1)
 
@@ -278,6 +280,7 @@ class IskraSensor(IskraEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.device.serial}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_func(self.device)

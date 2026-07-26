@@ -42,7 +42,9 @@
           "60": "1 minute",
           "120": "2 minutes",
           "240": "4 minutes",
-          "300": "5 minutes"
+          "300": "5 minutes",
+          "360": "6 minutes",
+          "600": "10 minutes"
         }
       }
     },
@@ -83,6 +85,10 @@
         "name": {
           "description": "Name for PIN code. Must be case insensitively unique to the lock.",
           "name": "PIN name"
+        },
+        "notify_on_use": {
+          "description": "Whether the native Schlage notification should be sent when this PIN is used.",
+          "name": "Notify when PIN is used"
         }
       },
       "name": "Add PIN code"

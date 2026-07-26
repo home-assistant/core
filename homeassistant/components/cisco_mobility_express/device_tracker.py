@@ -1,8 +1,7 @@
 """Support for Cisco Mobility Express."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from ciscomobilityexpress.ciscome import CiscoMobilityExpress
 import voluptuous as vol
@@ -64,12 +63,14 @@ class CiscoMEDeviceScanner(DeviceScanner):
         self.controller = controller
         self.last_results = {}
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
         return [device.macaddr for device in self.last_results]
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         return next(
@@ -77,6 +78,7 @@ class CiscoMEDeviceScanner(DeviceScanner):
             None,
         )
 
+    @override
     def get_extra_attributes(self, device):
         """Get extra attributes of a device.
 

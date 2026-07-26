@@ -15,8 +15,14 @@ from homeassistant.components.schlage.const import (
     SERVICE_ADD_CODE,
     SERVICE_DELETE_CODE,
     SERVICE_GET_CODES,
+    UPDATE_INTERVAL,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -47,6 +53,22 @@ async def test_lock_attributes(
     lock = hass.states.get("lock.vault_door")
     assert lock is not None
     assert lock.state == LockState.JAMMED
+
+
+async def test_lock_disconnected(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test lock unavailable when disconnected."""
+    mock_lock.connected = False
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    lock = hass.states.get("lock.vault_door")
+    assert lock is not None
+    assert lock.state == STATE_UNAVAILABLE
 
 
 async def test_lock_services(
@@ -97,7 +119,78 @@ async def test_changed_by(
     assert lock_device.attributes.get("changed_by") == "access code - foo"
 
 
+@pytest.mark.parametrize(
+    "notify_on_use",
+    [
+        True,
+        False,
+    ],
+    ids=["notify-true", "notify-false"],
+)
 async def test_add_code_service(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+    notify_on_use: bool,
+) -> None:
+    """Test add_code service."""
+    # Mock access_codes as empty initially
+    mock_lock.access_codes = {}
+    mock_lock.add_access_code = Mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD_CODE,
+        service_data={
+            "entity_id": "lock.vault_door",
+            "name": "test_user",
+            "code": "1234",
+            "notify_on_use": notify_on_use,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Verify add_access_code was called with correct AccessCode
+    mock_lock.refresh_access_codes.assert_called_once()
+    mock_lock.add_access_code.assert_called_once()
+    call_args = mock_lock.add_access_code.call_args[0][0]
+    assert isinstance(call_args, AccessCode)
+    assert call_args.name == "test_user"
+    assert call_args.code == "1234"
+    assert call_args.notify_on_use == notify_on_use
+
+
+async def test_add_code_service_integer_code(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test add_code service with an integer code."""
+    mock_lock.access_codes = {}
+    mock_lock.add_access_code = Mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD_CODE,
+        service_data={
+            "entity_id": "lock.vault_door",
+            "name": "test_user",
+            "code": 1234,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_lock.refresh_access_codes.assert_called_once()
+    mock_lock.add_access_code.assert_called_once()
+    call_args = mock_lock.add_access_code.call_args[0][0]
+    assert isinstance(call_args, AccessCode)
+    assert call_args.name == "test_user"
+    assert call_args.code == "1234"
+
+
+async def test_add_code_service_default_notify_on_use_value(
     hass: HomeAssistant,
     mock_lock: Mock,
     mock_added_config_entry: MockSchlageConfigEntry,
@@ -126,6 +219,7 @@ async def test_add_code_service(
     assert isinstance(call_args, AccessCode)
     assert call_args.name == "test_user"
     assert call_args.code == "1234"
+    assert call_args.notify_on_use
 
 
 @pytest.mark.parametrize(
@@ -155,6 +249,7 @@ async def test_add_code_service_invalid_code(
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
                 "code": code,
+                "notify_on_use": False,
             },
             blocking=True,
         )
@@ -184,6 +279,7 @@ async def test_add_code_service_duplicate_name(
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
                 "code": "1234",
+                "notify_on_use": False,
             },
             blocking=True,
         )
@@ -215,6 +311,7 @@ async def test_add_code_service_duplicate_code(
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
                 "code": "1234",
+                "notify_on_use": False,
             },
             blocking=True,
         )
@@ -438,6 +535,7 @@ async def test_add_code_service_refresh_error(
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
                 "code": "1234",
+                "notify_on_use": False,
             },
             blocking=True,
         )
@@ -461,6 +559,7 @@ async def test_add_code_service_api_error(
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
                 "code": "1234",
+                "notify_on_use": False,
             },
             blocking=True,
         )

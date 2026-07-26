@@ -1,10 +1,8 @@
 """Cover for Shelly."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
@@ -126,6 +124,7 @@ class BlockShellyCover(ShellyBlockAttributeEntity, CoverEntity):
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
     @property
+    @override
     def is_closed(self) -> bool:
         """If cover is closed."""
         if self.control_result:
@@ -134,6 +133,7 @@ class BlockShellyCover(ShellyBlockAttributeEntity, CoverEntity):
         return cast(int, self.block.rollerPos) == 0
 
     @property
+    @override
     def current_cover_position(self) -> int:
         """Position of the cover."""
         if self.control_result:
@@ -142,6 +142,7 @@ class BlockShellyCover(ShellyBlockAttributeEntity, CoverEntity):
         return cast(int, self.block.rollerPos)
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing."""
         if self.control_result:
@@ -150,6 +151,7 @@ class BlockShellyCover(ShellyBlockAttributeEntity, CoverEntity):
         return self.block.roller == "close"
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
         if self.control_result:
@@ -157,16 +159,19 @@ class BlockShellyCover(ShellyBlockAttributeEntity, CoverEntity):
 
         return self.block.roller == "open"
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         self.control_result = await self.set_state(go="close")
         self.async_write_ha_state()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         self.control_result = await self.set_state(go="open")
         self.async_write_ha_state()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         self.control_result = await self.set_state(
@@ -174,12 +179,14 @@ class BlockShellyCover(ShellyBlockAttributeEntity, CoverEntity):
         )
         self.async_write_ha_state()
 
+    @override
     async def async_stop_cover(self, **_kwargs: Any) -> None:
         """Stop the cover."""
         self.control_result = await self.set_state(go="stop")
         self.async_write_ha_state()
 
     @callback
+    @override
     def _update_callback(self) -> None:
         """When device updates, clear control result that overrides state."""
         self.control_result = None
@@ -219,11 +226,13 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
             )
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """If cover is closed."""
         return cast(bool, self.status["state"] == "closed")
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Position of the cover."""
         if not self.status["pos_control"]:
@@ -232,6 +241,7 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
         return cast(int, self.status["current_pos"])
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt."""
         if "slat_pos" not in self.status:
@@ -240,11 +250,13 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
         return cast(int, self.status["slat_pos"])
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing."""
         return cast(bool, self.status["state"] == "closing")
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
         return cast(bool, self.status["state"] == "opening")
@@ -270,6 +282,7 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
         finally:
             self._update_task = None
 
+    @override
     def _update_callback(self) -> None:
         """Handle device update. Use a task when opening/closing is in progress."""
         super()._update_callback()
@@ -279,16 +292,19 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
             self.launch_update_task()
 
     @rpc_call
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self.coordinator.device.cover_close(self._id)
 
     @rpc_call
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         await self.coordinator.device.cover_open(self._id)
 
     @rpc_call
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.coordinator.device.cover_set_position(
@@ -296,21 +312,25 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
         )
 
     @rpc_call
+    @override
     async def async_stop_cover(self, **_kwargs: Any) -> None:
         """Stop the cover."""
         await self.coordinator.device.cover_stop(self._id)
 
     @rpc_call
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         await self.coordinator.device.cover_set_position(self._id, slat_pos=100)
 
     @rpc_call
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         await self.coordinator.device.cover_set_position(self._id, slat_pos=0)
 
     @rpc_call
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         await self.coordinator.device.cover_set_position(
@@ -318,6 +338,7 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
         )
 
     @rpc_call
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.coordinator.device.cover_stop(self._id)

@@ -1,1 +1,1 @@
-"""The ebox component."""
+"""The EBox integration."""

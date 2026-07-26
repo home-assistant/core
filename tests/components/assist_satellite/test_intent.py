@@ -65,7 +65,6 @@ async def test_broadcast_intent(
                     "type": intent.IntentResponseTargetType.ENTITY,
                 },
             ],
-            "targets": [],
         },
         "language": "en",
         "response_type": "action_done",
@@ -98,7 +97,6 @@ async def test_broadcast_intent(
                     "type": intent.IntentResponseTargetType.ENTITY,
                 },
             ],
-            "targets": [],
         },
         "language": "en",
         "response_type": "action_done",
@@ -130,7 +128,6 @@ async def test_broadcast_intent_excluded_domains(
             "data": {
                 "failed": [],
                 "success": [],  # no satellites
-                "targets": [],
             },
             "language": "en",
             "response_type": "action_done",

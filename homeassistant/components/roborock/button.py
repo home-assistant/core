@@ -1,12 +1,9 @@
 """Support for Roborock button."""
 
-from __future__ import annotations
-
-import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
-import itertools
 import logging
-from typing import Any
+from typing import Any, override
 
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
 from roborock.exceptions import RoborockException
@@ -14,18 +11,26 @@ from roborock.roborock_message import RoborockZeoProtocol
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import (
+    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
+    RoborockCoordinatorType,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
     RoborockWashingMachineUpdateCoordinator,
 )
-from .entity import RoborockCoordinatedEntityA01, RoborockEntity, RoborockEntityV1
+from .entity import (
+    RoborockCoordinatedEntityA01,
+    RoborockCoordinatedEntityB01Q10,
+    RoborockEntity,
+    RoborockEntityV1,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +42,8 @@ class RoborockButtonDescription(ButtonEntityDescription):
     """Describes a Roborock button entity."""
 
     attribute: ConsumableAttribute
+    is_dock_entity: bool = False
+    is_supported: Callable[[RoborockDataUpdateCoordinator], bool] = lambda _: True
 
 
 CONSUMABLE_BUTTON_DESCRIPTIONS = [
@@ -68,6 +75,28 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
+    RoborockButtonDescription(
+        key="reset_dock_strainer_consumable",
+        translation_key="reset_dock_strainer_consumable",
+        attribute=ConsumableAttribute.STRAINER_WORK_TIME,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        is_dock_entity=True,
+        is_supported=lambda coordinator: (
+            coordinator.properties_api.wash_towel_mode is not None
+        ),
+    ),
+    RoborockButtonDescription(
+        key="reset_dock_cleaning_brush_consumable",
+        translation_key="reset_dock_cleaning_brush_consumable",
+        attribute=ConsumableAttribute.CLEANING_BRUSH_WORK_TIME,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        is_dock_entity=True,
+        is_supported=lambda coordinator: (
+            coordinator.properties_api.wash_towel_mode is not None
+        ),
+    ),
 ]
 
 
@@ -97,48 +126,82 @@ ZEO_BUTTON_DESCRIPTIONS = [
 ]
 
 
+Q10_BUTTON_DESCRIPTIONS = [
+    ButtonEntityDescription(
+        key="empty_dustbin",
+        translation_key="empty_dustbin",
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock button platform."""
-    routines_lists = await asyncio.gather(
-        *[coordinator.get_routines() for coordinator in config_entry.runtime_data.v1],
-    )
-    async_add_entities(
-        itertools.chain(
-            (
-                RoborockButtonEntity(
-                    coordinator,
-                    description,
-                )
-                for coordinator in config_entry.runtime_data.v1
+    coordinators = config_entry.runtime_data
+
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        entities: list[ButtonEntity] = []
+        if isinstance(coordinator, RoborockDataUpdateCoordinator):
+            entities.extend(
+                RoborockButtonEntity(coordinator, description)
                 for description in CONSUMABLE_BUTTON_DESCRIPTIONS
-                if isinstance(coordinator, RoborockDataUpdateCoordinator)
-            ),
-            (
-                RoborockRoutineButtonEntity(
-                    coordinator,
-                    ButtonEntityDescription(
-                        key=str(routine.id),
-                        name=routine.name,
-                    ),
-                )
-                for coordinator, routines in zip(
-                    config_entry.runtime_data.v1, routines_lists, strict=True
-                )
-                for routine in routines
-            ),
-            (
-                RoborockButtonEntityA01(
-                    coordinator,
-                    description,
-                )
-                for coordinator in config_entry.runtime_data.a01
-                if isinstance(coordinator, RoborockWashingMachineUpdateCoordinator)
+                if description.is_supported(coordinator)
+            )
+
+            async def async_add_routine_buttons() -> None:
+                try:
+                    routines = await coordinator.get_routines()
+                except HomeAssistantError as err:
+                    _LOGGER.error(
+                        "Failed to get routines for %s: %s",
+                        coordinator.device.name,
+                        err,
+                    )
+                    return
+                routine_entities = [
+                    RoborockRoutineButtonEntity(
+                        coordinator,
+                        ButtonEntityDescription(
+                            key=str(routine.id),
+                            name=routine.name,
+                        ),
+                    )
+                    for routine in routines
+                ]
+                async_add_entities(routine_entities)
+
+            config_entry.async_create_background_task(
+                hass,
+                async_add_routine_buttons(),
+                f"roborock_setup_routines_{coordinator.duid}",
+            )
+        elif isinstance(coordinator, RoborockWashingMachineUpdateCoordinator):
+            entities.extend(
+                RoborockButtonEntityA01(coordinator, description)
                 for description in ZEO_BUTTON_DESCRIPTIONS
-            ),
+            )
+        elif isinstance(coordinator, RoborockB01Q10UpdateCoordinator):
+            entities.extend(
+                RoborockQ10EmptyDustbinButtonEntity(coordinator, description)
+                for description in Q10_BUTTON_DESCRIPTIONS
+            )
+        async_add_entities(entities)
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
         )
     )
 
@@ -154,14 +217,20 @@ class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
         entity_description: RoborockButtonDescription,
     ) -> None:
         """Create a button entity."""
+        device_info = (
+            coordinator.dock_device_info
+            if entity_description.is_dock_entity
+            else coordinator.device_info
+        )
         super().__init__(
             f"{entity_description.key}_{coordinator.duid_slug}",
-            coordinator.device_info,
+            device_info,
             api=coordinator.properties_api.command,
         )
         self.entity_description = entity_description
         self._consumable = coordinator.properties_api.consumables
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         try:
@@ -198,6 +267,7 @@ class RoborockRoutineButtonEntity(RoborockEntity, ButtonEntity):
         self._coordinator = coordinator
         self.entity_description = entity_description
 
+    @override
     async def async_press(self, **kwargs: Any) -> None:
         """Press the button."""
         await self._coordinator.execute_routines(self._routine_id)
@@ -219,6 +289,7 @@ class RoborockButtonEntityA01(RoborockCoordinatedEntityA01, ButtonEntity):
             f"{entity_description.key}_{coordinator.duid_slug}", coordinator
         )
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         try:
@@ -233,3 +304,38 @@ class RoborockButtonEntityA01(RoborockCoordinatedEntityA01, ButtonEntity):
             ) from err
         finally:
             await self.coordinator.async_request_refresh()
+
+
+class RoborockQ10EmptyDustbinButtonEntity(
+    RoborockCoordinatedEntityB01Q10, ButtonEntity
+):
+    """A class to define Q10 empty dustbin button entity."""
+
+    entity_description: ButtonEntityDescription
+    coordinator: RoborockB01Q10UpdateCoordinator
+
+    def __init__(
+        self,
+        coordinator: RoborockB01Q10UpdateCoordinator,
+        entity_description: ButtonEntityDescription,
+    ) -> None:
+        """Create a Q10 empty dustbin button entity."""
+        self.entity_description = entity_description
+        super().__init__(
+            f"{entity_description.key}_{coordinator.duid_slug}",
+            coordinator,
+        )
+
+    @override
+    async def async_press(self, **kwargs: Any) -> None:
+        """Press the button to empty dustbin."""
+        try:
+            await self.coordinator.api.vacuum.empty_dustbin()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "empty_dustbin",
+                },
+            ) from err

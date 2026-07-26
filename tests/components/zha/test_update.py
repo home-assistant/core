@@ -375,10 +375,17 @@ async def test_firmware_update_success(
         attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.firmware.header.file_version:08x}"
     )
 
+    ota_completed = False
+
     async def endpoint_reply(cluster, sequence, data, **kwargs):
+        nonlocal ota_completed
         if cluster == general.Ota.cluster_id:
             _hdr, cmd = ota_cluster.deserialize(data)
             if isinstance(cmd, general.Ota.ImageNotifyCommand):
+                if ota_completed:
+                    # Post-OTA image_notify: ignore or don't respond
+                    return
+
                 zha_device.device.device.packet_received(
                     make_packet(
                         zha_device.device.device,
@@ -394,6 +401,12 @@ async def test_firmware_update_success(
             elif isinstance(
                 cmd, general.Ota.ClientCommandDefs.query_next_image_response.schema
             ):
+                # After a successful OTA, zigpy sends a post-OTA image_notify
+                # which triggers a query_next_image -> NO_IMAGE_AVAILABLE exchange
+                if cmd.status == foundation.Status.NO_IMAGE_AVAILABLE:
+                    assert ota_completed
+                    return
+
                 assert cmd.status == foundation.Status.SUCCESS
                 assert cmd.manufacturer_code == fw_image.firmware.header.manufacturer_id
                 assert cmd.image_type == fw_image.firmware.header.image_type
@@ -485,6 +498,8 @@ async def test_firmware_update_success(
                 assert cmd.file_version == fw_image.firmware.header.file_version
                 assert cmd.current_time == 0
                 assert cmd.upgrade_time == 0
+
+                ota_completed = True
 
                 def read_new_fw_version(*args, **kwargs):
                     ota_cluster.update_attribute(
@@ -590,6 +605,9 @@ async def test_firmware_update_raises(
             elif isinstance(
                 cmd, general.Ota.ClientCommandDefs.query_next_image_response.schema
             ):
+                if cmd.status == foundation.Status.NO_IMAGE_AVAILABLE:
+                    return
+
                 assert cmd.status == foundation.Status.SUCCESS
                 assert cmd.manufacturer_code == fw_image.firmware.header.manufacturer_id
                 assert cmd.image_type == fw_image.firmware.header.image_type

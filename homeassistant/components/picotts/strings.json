@@ -1,0 +1,38 @@
+{
+  "common": {
+    "binary_not_found": "pico2wave binary could not be found"
+  },
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "binary_not_found": "[%key:component::picotts::common::binary_not_found%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "language": "[%key:common::config_flow::data::language%]"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "binary_not_found": {
+      "message": "[%key:component::picotts::common::binary_not_found%]"
+    },
+    "file_read_error": {
+      "message": "Error trying to read {filename}"
+    },
+    "returncode_error": {
+      "message": "Error running pico2wave, return code: {returncode}"
+    },
+    "timeout_error": {
+      "message": "Timeout running pico2wave"
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nThe actions `tts.{domain}_*_say` will be removed and automations should be updated to use the `tts.speak` action with the new tts entities. Then remove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "[%key:component::homeassistant::issues::deprecated_yaml::title%]"
+    }
+  }
+}

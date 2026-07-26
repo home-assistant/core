@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_valves[valve.zone_one-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,10 +39,11 @@
 # name: test_all_valves[valve.zone_one-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'water',
-      'friendly_name': 'Zone One',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by hydrawise.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone One',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.zone_one',
@@ -53,8 +55,9 @@
 # ---
 # name: test_all_valves[valve.zone_two-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -90,10 +93,11 @@
 # name: test_all_valves[valve.zone_two-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'water',
-      'friendly_name': 'Zone Two',
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by hydrawise.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone Two',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.zone_two',

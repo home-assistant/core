@@ -10,5 +10,17 @@
     "CreatedBy": "admin",
     "CreationDate": 1739700000,
     "FromAppTemplate": false
+  },
+  {
+    "Id": 2,
+    "Name": "dashy",
+    "Type": 1,
+    "EndpointId": 1,
+    "Status": 1,
+    "EntryPoint": "docker-stack.yml",
+    "ProjectPath": "/data/compose/dashy",
+    "CreatedBy": "admin",
+    "CreationDate": 1739710000,
+    "FromAppTemplate": false
   }
 ]

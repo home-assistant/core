@@ -1,13 +1,13 @@
 """Diagnostics support for Powerview Hunter Douglas."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import Any
 
-import attr
-
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import (
+    async_redact_data,
+    device_entry_as_dict,
+    entity_entry_as_dict,
+)
 from homeassistant.const import ATTR_CONFIGURATION_URL, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -77,7 +77,7 @@ def _async_device_as_dict(hass: HomeAssistant, device: DeviceEntry) -> dict[str,
     # Gather information how this device is represented in Home Assistant
     entity_registry = er.async_get(hass)
 
-    data = async_redact_data(attr.asdict(device), REDACT_CONFIG)
+    data = async_redact_data(device_entry_as_dict(device), REDACT_CONFIG)
     data["entities"] = []
     entities: list[dict[str, Any]] = data["entities"]
 
@@ -94,7 +94,7 @@ def _async_device_as_dict(hass: HomeAssistant, device: DeviceEntry) -> dict[str,
             state_dict = dict(state.as_dict())
             state_dict.pop("context", None)
 
-        entity = attr.asdict(entity_entry)
+        entity = entity_entry_as_dict(entity_entry)
         entity["state"] = state_dict
         entities.append(entity)
 

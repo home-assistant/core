@@ -1,9 +1,7 @@
 """Config flow for the Niko home control integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from nhc.controller import NHCController
 import voluptuous as vol
@@ -62,6 +60,7 @@ class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,7 +1,5 @@
 """Test base template extension."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.exceptions import TemplateError

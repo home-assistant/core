@@ -1,7 +1,5 @@
 """The trafikverket_train component."""
 
-from __future__ import annotations
-
 import logging
 
 from pytrafikverket import (
@@ -55,10 +53,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) -> 
 async def async_migrate_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) -> bool:
     """Migrate config entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
-
-    if entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
 
     if entry.version == 1:
         if entry.minor_version == 1:

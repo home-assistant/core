@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_all_entities[LPH31][select.garden_light_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -43,8 +44,8 @@
 # name: test_all_entities[LPH31][select.garden_light_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Light brightness',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Light brightness',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -59,11 +60,12 @@
 # ---
 # name: test_all_entities[LPH31][select.garden_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'flower',
         'vegetable',
       ]),
@@ -101,8 +103,8 @@
 # name: test_all_entities[LPH31][select.garden_light_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Light mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Light mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'flower',
         'vegetable',
       ]),
@@ -117,11 +119,12 @@
 # ---
 # name: test_all_entities[LPH62][select.garden_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'flower',
         'vegetable',
       ]),
@@ -159,8 +162,8 @@
 # name: test_all_entities[LPH62][select.garden_light_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Light mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Light mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'flower',
         'vegetable',
       ]),
@@ -175,11 +178,12 @@
 # ---
 # name: test_all_entities[LPH62][select.garden_temperature_unit_on_display-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'fahrenheit',
         'celsius',
       ]),
@@ -217,8 +221,8 @@
 # name: test_all_entities[LPH62][select.garden_temperature_unit_on_display-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Temperature unit on display',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Temperature unit on display',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'fahrenheit',
         'celsius',
       ]),

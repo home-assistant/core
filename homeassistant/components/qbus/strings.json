@@ -41,6 +41,9 @@
     }
   },
   "exceptions": {
+    "invalid_option": {
+      "message": "Option \"{option}\" is not valid. Valid options are: {options}."
+    },
     "invalid_preset": {
       "message": "Preset mode \"{preset}\" is not valid. Valid preset modes are: {options}."
     }

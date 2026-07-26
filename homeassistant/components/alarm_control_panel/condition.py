@@ -1,7 +1,10 @@
 """Provides conditions for alarm control panels."""
 
+from typing import override
+
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     Condition,
     EntityStateConditionBase,
@@ -25,6 +28,7 @@ class EntityStateRequiredFeaturesCondition(EntityStateConditionBase):
 
     _required_features: int
 
+    @override
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities of this domain with the required features."""
         entities = super().entity_filter(entities)
@@ -43,7 +47,7 @@ def make_entity_state_required_features_condition(
     class CustomCondition(EntityStateRequiredFeaturesCondition):
         """Condition for entity state changes."""
 
-        _domain = domain
+        _domain_specs = {domain: DomainSpec()}
         _states = {to_state}
         _required_features = required_features
 

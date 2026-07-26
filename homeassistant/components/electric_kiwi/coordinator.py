@@ -1,12 +1,11 @@
 """Electric Kiwi coordinators."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from electrickiwi_api import ElectricKiwiApi
 from electrickiwi_api.exceptions import ApiException, AuthException
@@ -53,6 +52,7 @@ class ElectricKiwiAccountDataCoordinator(DataUpdateCoordinator[AccountSummary]):
         )
         self.ek_api = ek_api
 
+    @override
     async def _async_update_data(self) -> AccountSummary:
         """Fetch data from Account balance API endpoint."""
         try:
@@ -110,6 +110,7 @@ class ElectricKiwiHOPDataCoordinator(DataUpdateCoordinator[Hop]):
 
         return self.data
 
+    @override
     async def _async_update_data(self) -> Hop:
         """Fetch data from API endpoint.
 

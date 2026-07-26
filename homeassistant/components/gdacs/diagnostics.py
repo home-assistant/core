@@ -1,7 +1,5 @@
 """Diagnostics support for GDACS integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aio_georss_client.status_update import StatusUpdate

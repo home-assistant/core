@@ -1,6 +1,6 @@
 """Demo platform that offers a fake text entity."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.text import TextEntity, TextMode
 from homeassistant.config_entries import ConfigEntry
@@ -79,6 +79,7 @@ class DemoText(TextEntity):
             name=device_name,
         )
 
+    @override
     async def async_set_value(self, value: str) -> None:
         """Update the value."""
         self._attr_native_value = value

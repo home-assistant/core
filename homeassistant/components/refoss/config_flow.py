@@ -1,7 +1,5 @@
 """Config Flow for Refoss integration."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 

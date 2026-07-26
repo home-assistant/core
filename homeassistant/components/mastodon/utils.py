@@ -1,7 +1,5 @@
 """Mastodon util functions."""
 
-from __future__ import annotations
-
 import mimetypes
 from typing import Any
 

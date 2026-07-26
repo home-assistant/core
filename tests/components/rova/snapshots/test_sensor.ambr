@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.8381be_13_bio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_all_entities[sensor.8381be_13_bio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': '8381BE 13 Bio',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '8381BE 13 Bio',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.8381be_13_bio',
@@ -51,8 +52,9 @@
 # ---
 # name: test_all_entities[sensor.8381be_13_paper-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_all_entities[sensor.8381be_13_paper-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': '8381BE 13 Paper',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '8381BE 13 Paper',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.8381be_13_paper',
@@ -101,8 +103,9 @@
 # ---
 # name: test_all_entities[sensor.8381be_13_plastic-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_all_entities[sensor.8381be_13_plastic-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': '8381BE 13 Plastic',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '8381BE 13 Plastic',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.8381be_13_plastic',
@@ -151,8 +154,9 @@
 # ---
 # name: test_all_entities[sensor.8381be_13_residual-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,8 +192,8 @@
 # name: test_all_entities[sensor.8381be_13_residual-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': '8381BE 13 Residual',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '8381BE 13 Residual',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.8381be_13_residual',

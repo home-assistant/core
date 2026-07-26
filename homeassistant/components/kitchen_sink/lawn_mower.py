@@ -1,6 +1,6 @@
 """Demo platform that has a couple fake lawn mowers."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
@@ -96,16 +96,19 @@ class DemoLawnMower(LawnMowerEntity):
         self._attr_supported_features = features
         self._attr_activity = activity
 
+    @override
     async def async_start_mowing(self) -> None:
         """Start mowing."""
         self._attr_activity = LawnMowerActivity.MOWING
         self.async_write_ha_state()
 
+    @override
     async def async_dock(self) -> None:
         """Start docking."""
         self._attr_activity = LawnMowerActivity.DOCKED
         self.async_write_ha_state()
 
+    @override
     async def async_pause(self) -> None:
         """Pause mower."""
         self._attr_activity = LawnMowerActivity.PAUSED

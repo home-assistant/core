@@ -82,7 +82,8 @@ async def test_significant_change_extra(
 
     checker.extra_significant_check = extra_significant_check
 
-    # This is normally a significant change (100 -> 200), but the extra arg check marks it
+    # This is normally a significant change (100 -> 200), but the
+    # extra arg check marks it
     # as insignificant.
     assert not checker.async_is_significant_change(
         State(ent_id, "200", attrs), extra_arg=1

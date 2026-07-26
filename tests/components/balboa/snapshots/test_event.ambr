@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_events[event.fakespa_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'clock_failed',
         'flow_failed',
         'gfci_test_failed',
@@ -59,8 +60,8 @@
 # name: test_events[event.fakespa_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'clock_failed',
         'flow_failed',
         'gfci_test_failed',
@@ -80,7 +81,7 @@
         'standby_mode',
         'water_too_hot',
       ]),
-      'friendly_name': 'FakeSpa Fault',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FakeSpa Fault',
     }),
     'context': <ANY>,
     'entity_id': 'event.fakespa_fault',

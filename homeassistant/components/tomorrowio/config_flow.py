@@ -1,10 +1,8 @@
 """Config flow for Tomorrow.io integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pytomorrowio.exceptions import (
     CantConnectException,
@@ -23,11 +21,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_FRIENDLY_NAME,
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -117,12 +115,14 @@ class TomorrowioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> TomorrowioOptionsConfigFlow:
         """Get the options flow for this handler."""
         return TomorrowioOptionsConfigFlow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -141,7 +141,9 @@ class TomorrowioConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_NAME] = DEFAULT_NAME
                 # Append zone name if it exists and we are using the default name
                 if zone_state := async_active_zone(self.hass, latitude, longitude):
-                    zone_name = zone_state.attributes[CONF_FRIENDLY_NAME]
+                    zone_name = zone_state.attributes[
+                        EntityStateAttribute.FRIENDLY_NAME
+                    ]
                     user_input[CONF_NAME] += f" - {zone_name}"
             try:
                 await TomorrowioV4(

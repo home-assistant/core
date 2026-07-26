@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_times[time.fakespa_filter_cycle_1_end-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_times[time.fakespa_filter_cycle_1_end-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'FakeSpa Filter cycle 1 end',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FakeSpa Filter cycle 1 end',
     }),
     'context': <ANY>,
     'entity_id': 'time.fakespa_filter_cycle_1_end',
@@ -50,8 +51,9 @@
 # ---
 # name: test_times[time.fakespa_filter_cycle_1_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_times[time.fakespa_filter_cycle_1_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'FakeSpa Filter cycle 1 start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FakeSpa Filter cycle 1 start',
     }),
     'context': <ANY>,
     'entity_id': 'time.fakespa_filter_cycle_1_start',
@@ -99,8 +101,9 @@
 # ---
 # name: test_times[time.fakespa_filter_cycle_2_end-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -136,7 +139,7 @@
 # name: test_times[time.fakespa_filter_cycle_2_end-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'FakeSpa Filter cycle 2 end',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FakeSpa Filter cycle 2 end',
     }),
     'context': <ANY>,
     'entity_id': 'time.fakespa_filter_cycle_2_end',
@@ -148,8 +151,9 @@
 # ---
 # name: test_times[time.fakespa_filter_cycle_2_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -185,7 +189,7 @@
 # name: test_times[time.fakespa_filter_cycle_2_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'FakeSpa Filter cycle 2 start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FakeSpa Filter cycle 2 start',
     }),
     'context': <ANY>,
     'entity_id': 'time.fakespa_filter_cycle_2_start',

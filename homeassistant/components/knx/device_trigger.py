@@ -1,7 +1,5 @@
 """Provide device triggers for KNX."""
 
-from __future__ import annotations
-
 from typing import Any, Final
 
 import voluptuous as vol
@@ -117,6 +115,7 @@ async def async_attach_trigger(
     try:
         trigger_config = TRIGGER_TRIGGER_SCHEMA(trigger_config)
     except vol.Invalid as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise InvalidDeviceAutomationConfig(f"{err}") from err
 
     return await trigger.async_attach_trigger(

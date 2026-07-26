@@ -13,7 +13,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -176,7 +175,7 @@ async def test_deprecated_sensor_removal(
     )
 
     entity = entity_registry.async_get_or_create(
-        BINARY_SENSOR_DOMAIN,
+        Platform.BINARY_SENSOR,
         DOMAIN,
         unique_id=f"{TEST_DEVICE_1_SN}-{key}",
         device_id=device.id,

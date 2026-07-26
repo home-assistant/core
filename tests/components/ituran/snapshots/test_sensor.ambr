@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_ev_sensor[True][sensor.mock_model_address-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_ev_sensor[True][sensor.mock_model_address-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mock model Address',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model Address',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_model_address',
@@ -50,8 +51,9 @@
 # ---
 # name: test_ev_sensor[True][sensor.mock_model_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,9 +89,9 @@
 # name: test_ev_sensor[True][sensor.mock_model_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'mock model Battery',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model Battery',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_model_battery',
@@ -101,8 +103,9 @@
 # ---
 # name: test_ev_sensor[True][sensor.mock_model_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -141,9 +144,9 @@
 # name: test_ev_sensor[True][sensor.mock_model_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'mock model Battery voltage',
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model Battery voltage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_model_battery_voltage',
@@ -155,8 +158,9 @@
 # ---
 # name: test_ev_sensor[True][sensor.mock_model_heading-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -195,8 +199,8 @@
 # name: test_ev_sensor[True][sensor.mock_model_heading-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mock model Heading',
-      'unit_of_measurement': '°',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model Heading',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_model_heading',
@@ -208,8 +212,9 @@
 # ---
 # name: test_ev_sensor[True][sensor.mock_model_last_update_from_vehicle-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -245,8 +250,8 @@
 # name: test_ev_sensor[True][sensor.mock_model_last_update_from_vehicle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'mock model Last update from vehicle',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model Last update from vehicle',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_model_last_update_from_vehicle',
@@ -258,8 +263,9 @@
 # ---
 # name: test_ev_sensor[True][sensor.mock_model_mileage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -298,9 +304,9 @@
 # name: test_ev_sensor[True][sensor.mock_model_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'distance',
-      'friendly_name': 'mock model Mileage',
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model Mileage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_model_mileage',
@@ -312,8 +318,9 @@
 # ---
 # name: test_ev_sensor[True][sensor.mock_model_remaining_range-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -352,9 +359,9 @@
 # name: test_ev_sensor[True][sensor.mock_model_remaining_range-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'distance',
-      'friendly_name': 'mock model Remaining range',
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model Remaining range',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_model_remaining_range',
@@ -366,8 +373,9 @@
 # ---
 # name: test_ev_sensor[True][sensor.mock_model_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -406,9 +414,9 @@
 # name: test_ev_sensor[True][sensor.mock_model_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speed',
-      'friendly_name': 'mock model Speed',
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model Speed',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_model_speed',
@@ -420,8 +428,9 @@
 # ---
 # name: test_sensor[sensor.mock_model_address-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -457,7 +466,7 @@
 # name: test_sensor[sensor.mock_model_address-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mock model Address',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model Address',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_model_address',
@@ -469,8 +478,9 @@
 # ---
 # name: test_sensor[sensor.mock_model_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -509,9 +519,9 @@
 # name: test_sensor[sensor.mock_model_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'mock model Battery voltage',
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model Battery voltage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_model_battery_voltage',
@@ -523,8 +533,9 @@
 # ---
 # name: test_sensor[sensor.mock_model_heading-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -563,8 +574,8 @@
 # name: test_sensor[sensor.mock_model_heading-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mock model Heading',
-      'unit_of_measurement': '°',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model Heading',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_model_heading',
@@ -576,8 +587,9 @@
 # ---
 # name: test_sensor[sensor.mock_model_last_update_from_vehicle-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -613,8 +625,8 @@
 # name: test_sensor[sensor.mock_model_last_update_from_vehicle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'mock model Last update from vehicle',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model Last update from vehicle',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_model_last_update_from_vehicle',
@@ -626,8 +638,9 @@
 # ---
 # name: test_sensor[sensor.mock_model_mileage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -666,9 +679,9 @@
 # name: test_sensor[sensor.mock_model_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'distance',
-      'friendly_name': 'mock model Mileage',
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model Mileage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_model_mileage',
@@ -680,8 +693,9 @@
 # ---
 # name: test_sensor[sensor.mock_model_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -720,9 +734,9 @@
 # name: test_sensor[sensor.mock_model_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speed',
-      'friendly_name': 'mock model Speed',
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model Speed',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_model_speed',

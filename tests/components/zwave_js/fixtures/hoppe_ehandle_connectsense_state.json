@@ -109,6 +109,33 @@
       "commandClass": 113,
       "commandClassName": "Notification",
       "property": "Access Control",
+      "propertyKey": "Opening state",
+      "propertyName": "Access Control",
+      "propertyKeyName": "Opening state",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Opening state",
+        "ccSpecific": {
+          "notificationType": 6
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Closed",
+          "1": "Open"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Access Control",
       "propertyKey": "Door state",
       "propertyName": "Access Control",
       "propertyKeyName": "Door state",

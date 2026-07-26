@@ -1,7 +1,5 @@
 """Test template render information tracking for Home Assistant."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.core import HomeAssistant

@@ -11,8 +11,6 @@
         ]),
         'success': list([
         ]),
-        'targets': list([
-        ]),
       }),
       'language': 'test-language',
       'response_type': 'action_done',
@@ -63,8 +61,6 @@
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
-        'targets': list([
-        ]),
       }),
       'language': 'en',
       'response_type': 'action_done',
@@ -93,8 +89,6 @@
             'name': 'kitchen',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
-        ]),
-        'targets': list([
         ]),
       }),
       'language': 'en',
@@ -125,8 +119,6 @@
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
-        'targets': list([
-        ]),
       }),
       'language': 'en',
       'response_type': 'action_done',
@@ -155,8 +147,6 @@
             'name': 'kitchen',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
-        ]),
-        'targets': list([
         ]),
       }),
       'language': 'en',
@@ -187,8 +177,6 @@
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
-        'targets': list([
-        ]),
       }),
       'language': 'en',
       'response_type': 'action_done',
@@ -217,8 +205,6 @@
             'name': 'kitchen',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
-        ]),
-        'targets': list([
         ]),
       }),
       'language': 'en',
@@ -249,8 +235,6 @@
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
-        'targets': list([
-        ]),
       }),
       'language': 'en',
       'response_type': 'action_done',
@@ -279,8 +263,6 @@
             'name': 'kitchen',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
-        ]),
-        'targets': list([
         ]),
       }),
       'language': 'en',

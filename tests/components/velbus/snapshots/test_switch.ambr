@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[switch.living_room_relayname-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_entities[switch.living_room_relayname-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living room RelayName',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room RelayName',
     }),
     'context': <ANY>,
     'entity_id': 'switch.living_room_relayname',
@@ -50,8 +51,9 @@
 # ---
 # name: test_switch_disabled[switch.living_room_relayname-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_switch_disabled[switch.living_room_relayname-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living room RelayName',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room RelayName',
     }),
     'context': <ANY>,
     'entity_id': 'switch.living_room_relayname',

@@ -104,14 +104,18 @@ async def snapshot_platform(
     unique_device_classes = []
     for entity_entry in entity_entries:
         if entity_entry.translation_key:
-            key = f"component.{DOMAIN}.entity.{entity_entry.domain}.{entity_entry.translation_key}.name"
+            key = (
+                f"component.{DOMAIN}.entity.{entity_entry.domain}"
+                f".{entity_entry.translation_key}.name"
+            )
             single_device_class_translation = False
             if key not in translations:  # No name translation
                 if entity_entry.original_device_class not in unique_device_classes:
                     single_device_class_translation = True
                     unique_device_classes.append(entity_entry.original_device_class)
             assert (key in translations) or single_device_class_translation, (
-                f"No translation or non unique device_class for entity {entity_entry.unique_id}, expected {key}"
+                f"No translation or non unique device_class for"
+                f" entity {entity_entry.unique_id}, expected {key}"
             )
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry"), (
             f"entity entry snapshot failed for {entity_entry.entity_id}"
@@ -266,7 +270,8 @@ def _mocked_feature(
 ) -> Feature:
     """Get a mocked feature.
 
-    If kwargs are provided they will override the attributes for any features defined in fixtures.json
+    If kwargs are provided they will override the attributes for any
+    features defined in fixtures.json
     """
     feature = MagicMock(spec=Feature, name=f"Mocked {id} feature")
     feature.id = id

@@ -1,9 +1,7 @@
 """Config flow to configure the Lutron integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.error import HTTPError
 
 from pylutron import Lutron
@@ -29,6 +27,7 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -37,11 +36,12 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             ip_address = user_input[CONF_HOST]
+            guid: str | None = None
 
             main_repeater = Lutron(
                 ip_address,
-                user_input.get(CONF_USERNAME),
-                user_input.get(CONF_PASSWORD),
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
             )
 
             try:
@@ -55,10 +55,11 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 guid = main_repeater.guid
 
-                if len(guid) <= 10:
+                if guid is None or len(guid) <= 10:
                     errors["base"] = "cannot_connect"
 
             if not errors:
+                assert guid is not None
                 await self.async_set_unique_id(guid)
                 self._abort_if_unique_id_configured()
 
@@ -78,6 +79,7 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: LutronConfigEntry,
     ) -> OptionsFlowHandler:

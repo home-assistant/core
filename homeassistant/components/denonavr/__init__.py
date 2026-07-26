@@ -1,4 +1,4 @@
-"""The denonavr component."""
+"""The Denon AVR Network Receivers integration."""
 
 import logging
 

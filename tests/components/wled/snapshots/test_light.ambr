@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_snapshots[cct][light.wled_cct_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -59,7 +60,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -148,7 +148,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -157,7 +156,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -167,7 +165,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -175,9 +172,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -194,9 +188,9 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'max_color_temp_kelvin': 6535,
-      'min_color_temp_kelvin': 2000,
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGBW: 'rgbw'>,
       ]),
@@ -234,11 +228,11 @@
 # name: test_snapshots[cct][light.wled_cct_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 255,
-      'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp_kelvin': 2942,
-      'effect': 'Solid',
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 2942,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'Solid',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -292,7 +286,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -381,7 +374,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -390,7 +382,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -400,7 +391,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -408,9 +398,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -427,25 +414,25 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'friendly_name': 'WLED CCT light',
-      'hs_color': tuple(
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED CCT light',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         27.924,
         58.494,
       ),
-      'max_color_temp_kelvin': 6535,
-      'min_color_temp_kelvin': 2000,
-      'rgb_color': tuple(
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         175,
         106,
       ),
-      'rgbw_color': None,
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.RGBW_COLOR: 'rgbw_color'>: None,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGBW: 'rgbw'>,
       ]),
-      'supported_features': <LightEntityFeature: 36>,
-      'xy_color': tuple(
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 36>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.501,
         0.384,
       ),
@@ -460,11 +447,12 @@
 # ---
 # name: test_snapshots[rgb][light.wled_rgb_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -518,7 +506,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -579,7 +566,6 @@
         'Chunchun',
         'Dancing Shadows',
         'Washing Machine',
-        'RSVD',
         'Blends',
         'TV Simulator',
         'Dynamic Smooth',
@@ -607,7 +593,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -616,7 +601,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -626,7 +610,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -634,9 +617,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -653,7 +633,7 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
     }),
@@ -690,10 +670,10 @@
 # name: test_snapshots[rgb][light.wled_rgb_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 255,
-      'color_mode': <ColorMode.RGB: 'rgb'>,
-      'effect': 'Solid',
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'Solid',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -747,7 +727,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -808,7 +787,6 @@
         'Chunchun',
         'Dancing Shadows',
         'Washing Machine',
-        'RSVD',
         'Blends',
         'TV Simulator',
         'Dynamic Smooth',
@@ -836,7 +814,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -845,7 +822,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -855,7 +831,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -863,9 +838,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -882,21 +854,21 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'friendly_name': 'WLED RGB Light',
-      'hs_color': tuple(
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         218.906,
         50.196,
       ),
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         127,
         172,
         255,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
-      'supported_features': <LightEntityFeature: 36>,
-      'xy_color': tuple(
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 36>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.208,
         0.217,
       ),
@@ -911,11 +883,16 @@
 # ---
 # name: test_snapshots[rgb][light.wled_rgb_light_main-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <EntityCapabilityAttribute.GROUP_ENTITIES: 'group_entities'>: list([
+        'light.wled_rgb_light',
+        'light.wled_rgb_light_segment_1',
+      ]),
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -952,13 +929,17 @@
 # name: test_snapshots[rgb][light.wled_rgb_light_main-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 128,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'friendly_name': 'WLED RGB Light Main',
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Main',
+      <EntityCapabilityAttribute.GROUP_ENTITIES: 'group_entities'>: list([
+        'light.wled_rgb_light',
+        'light.wled_rgb_light_segment_1',
+      ]),
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 32>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
     }),
     'context': <ANY>,
     'entity_id': 'light.wled_rgb_light_main',
@@ -970,11 +951,12 @@
 # ---
 # name: test_snapshots[rgb][light.wled_rgb_light_segment_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -1028,7 +1010,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -1089,7 +1070,6 @@
         'Chunchun',
         'Dancing Shadows',
         'Washing Machine',
-        'RSVD',
         'Blends',
         'TV Simulator',
         'Dynamic Smooth',
@@ -1117,7 +1097,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -1126,7 +1105,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -1136,7 +1114,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -1144,9 +1121,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -1163,7 +1137,7 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
     }),
@@ -1200,10 +1174,10 @@
 # name: test_snapshots[rgb][light.wled_rgb_light_segment_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 255,
-      'color_mode': <ColorMode.RGB: 'rgb'>,
-      'effect': 'Wipe',
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'Wipe',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -1257,7 +1231,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -1318,7 +1291,6 @@
         'Chunchun',
         'Dancing Shadows',
         'Washing Machine',
-        'RSVD',
         'Blends',
         'TV Simulator',
         'Dynamic Smooth',
@@ -1346,7 +1318,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -1355,7 +1326,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -1365,7 +1335,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -1373,9 +1342,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -1392,21 +1358,21 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'friendly_name': 'WLED RGB Light Segment 1',
-      'hs_color': tuple(
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Segment 1',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         40.0,
         100.0,
       ),
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         170,
         0,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
-      'supported_features': <LightEntityFeature: 36>,
-      'xy_color': tuple(
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 36>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.555,
         0.422,
       ),
@@ -1421,11 +1387,12 @@
 # ---
 # name: test_snapshots[rgb_single_segment][light.wled_rgb_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -1479,7 +1446,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -1540,7 +1506,6 @@
         'Chunchun',
         'Dancing Shadows',
         'Washing Machine',
-        'RSVD',
         'Blends',
         'TV Simulator',
         'Dynamic Smooth',
@@ -1568,7 +1533,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -1577,7 +1541,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -1587,7 +1550,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -1595,9 +1557,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -1614,7 +1573,7 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
     }),
@@ -1651,10 +1610,10 @@
 # name: test_snapshots[rgb_single_segment][light.wled_rgb_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 128,
-      'color_mode': <ColorMode.RGB: 'rgb'>,
-      'effect': 'Solid',
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'Solid',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -1708,7 +1667,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -1769,7 +1727,6 @@
         'Chunchun',
         'Dancing Shadows',
         'Washing Machine',
-        'RSVD',
         'Blends',
         'TV Simulator',
         'Dynamic Smooth',
@@ -1797,7 +1754,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -1806,7 +1762,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -1816,7 +1771,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -1824,9 +1778,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -1843,21 +1794,21 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'friendly_name': 'WLED RGB Light',
-      'hs_color': tuple(
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         218.906,
         50.196,
       ),
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         127,
         172,
         255,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
-      'supported_features': <LightEntityFeature: 36>,
-      'xy_color': tuple(
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 36>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.208,
         0.217,
       ),
@@ -1872,11 +1823,12 @@
 # ---
 # name: test_snapshots[rgb_websocket][light.wled_websocket-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -1930,7 +1882,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -1991,7 +1942,6 @@
         'Chunchun',
         'Dancing Shadows',
         'Washing Machine',
-        'RSVD',
         'Blends',
         'TV Simulator',
         'Dynamic Smooth',
@@ -2019,7 +1969,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -2028,7 +1977,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -2038,7 +1986,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -2046,9 +1993,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -2065,7 +2009,7 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
     }),
@@ -2102,10 +2046,10 @@
 # name: test_snapshots[rgb_websocket][light.wled_websocket-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 128,
-      'color_mode': <ColorMode.RGB: 'rgb'>,
-      'effect': 'Solid',
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'Solid',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -2159,7 +2103,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -2220,7 +2163,6 @@
         'Chunchun',
         'Dancing Shadows',
         'Washing Machine',
-        'RSVD',
         'Blends',
         'TV Simulator',
         'Dynamic Smooth',
@@ -2248,7 +2190,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -2257,7 +2198,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -2267,7 +2207,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -2275,9 +2214,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -2294,21 +2230,21 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'friendly_name': 'WLED WebSocket',
-      'hs_color': tuple(
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED WebSocket',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         218.906,
         50.196,
       ),
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         127,
         172,
         255,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
-      'supported_features': <LightEntityFeature: 36>,
-      'xy_color': tuple(
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 36>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.208,
         0.217,
       ),
@@ -2323,11 +2259,12 @@
 # ---
 # name: test_snapshots[rgbw][light.wled_rgbw_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -2381,7 +2318,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -2442,7 +2378,6 @@
         'Chunchun',
         'Dancing Shadows',
         'Washing Machine',
-        'RSVD',
         'Blends',
         'TV Simulator',
         'Dynamic Smooth',
@@ -2470,7 +2405,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -2479,7 +2413,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -2489,7 +2422,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -2497,9 +2429,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -2516,7 +2445,7 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGBW: 'rgbw'>,
       ]),
     }),
@@ -2553,10 +2482,10 @@
 # name: test_snapshots[rgbw][light.wled_rgbw_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 128,
-      'color_mode': <ColorMode.RGBW: 'rgbw'>,
-      'effect': 'Solid',
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGBW: 'rgbw'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'Solid',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -2610,7 +2539,6 @@
         'Two Dots',
         'Fairytwinkle',
         'Running Dual',
-        'RSVD',
         'Chase 3',
         'Tri Wipe',
         'Tri Fade',
@@ -2671,7 +2599,6 @@
         'Chunchun',
         'Dancing Shadows',
         'Washing Machine',
-        'RSVD',
         'Blends',
         'TV Simulator',
         'Dynamic Smooth',
@@ -2699,7 +2626,6 @@
         'GEQ',
         'Waterfall',
         'Freqpixels',
-        'RSVD',
         'Noisefire',
         'Puddlepeak',
         'Noisemove',
@@ -2708,7 +2634,6 @@
         'Ripple Peak',
         'Firenoise',
         'Squared Swirl',
-        'RSVD',
         'DNA',
         'Matrix',
         'Metaballs',
@@ -2718,7 +2643,6 @@
         'Gravfreq',
         'DJ Light',
         'Funky Plank',
-        'RSVD',
         'Pulser',
         'Blurz',
         'Drift',
@@ -2726,9 +2650,6 @@
         'Sun Radiation',
         'Colored Bursts',
         'Julia',
-        'RSVD',
-        'RSVD',
-        'RSVD',
         'Game Of Life',
         'Tartan',
         'Polar Lights',
@@ -2745,27 +2666,27 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'friendly_name': 'WLED RGBW Light',
-      'hs_color': tuple(
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGBW Light',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         0.0,
         64.706,
       ),
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         90,
         90,
       ),
-      'rgbw_color': tuple(
+      <LightEntityStateAttribute.RGBW_COLOR: 'rgbw_color'>: tuple(
         255,
         0,
         0,
         139,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGBW: 'rgbw'>,
       ]),
-      'supported_features': <LightEntityFeature: 36>,
-      'xy_color': tuple(
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 36>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.6,
         0.307,
       ),

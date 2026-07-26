@@ -6,7 +6,7 @@ import pytest
 import pywilight
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.wilight import DOMAIN
+from homeassistant.components.wilight.const import DOMAIN
 from homeassistant.components.wilight.switch import (
     ATTR_PAUSE_TIME,
     ATTR_TRIGGER,

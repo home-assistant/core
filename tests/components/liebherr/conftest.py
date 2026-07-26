@@ -6,15 +6,18 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyliebherrhomeapi import (
+    AutoDoorControl,
     BioFreshPlusControl,
     BioFreshPlusMode,
     Device,
     DeviceState,
     DeviceType,
+    DoorState,
     HydroBreezeControl,
     HydroBreezeMode,
     IceMakerControl,
     IceMakerMode,
+    PresentationLightControl,
     TemperatureControl,
     TemperatureUnit,
     ToggleControl,
@@ -115,6 +118,19 @@ MOCK_DEVICE_STATE = DeviceState(
                 BioFreshPlusMode.MINUS_TWO_ZERO,
             ],
         ),
+        PresentationLightControl(
+            name="presentationlight",
+            type="PresentationLightControl",
+            value=3,
+            max=5,
+        ),
+        AutoDoorControl(
+            name="autodoor",
+            type="AutoDoorControl",
+            zone_id=1,
+            zone_position=ZonePosition.TOP,
+            value=DoorState.CLOSED,
+        ),
     ],
 )
 
@@ -175,6 +191,8 @@ def mock_liebherr_client() -> Generator[MagicMock]:
         client.set_ice_maker = AsyncMock()
         client.set_hydro_breeze = AsyncMock()
         client.set_bio_fresh_plus = AsyncMock()
+        client.set_presentation_light = AsyncMock()
+        client.trigger_auto_door = AsyncMock()
         yield client
 
 

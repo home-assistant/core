@@ -1,13 +1,15 @@
 """Test VoIP switch devices."""
 
 from homeassistant.components.voip.devices import VoIPDevice
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 async def test_allow_call(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    setup_voip: None,
+    config_entry: MockConfigEntry,
     voip_device: VoIPDevice,
 ) -> None:
     """Test allow call."""

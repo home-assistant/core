@@ -8,6 +8,7 @@ from matter_server.common.helpers.util import create_attribute_path_from_attribu
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.matter import DOMAIN
 from homeassistant.components.matter.services import (
     ATTR_DURATION,
     ATTR_EMERGENCY_BOOST,
@@ -226,6 +227,21 @@ async def test_update_from_water_heater(
     assert state
     assert state.state == STATE_ECO
 
+    # confirm water heater state is 'off' when SystemMode is set to 0 (kOff)
+    set_node_attribute(matter_node, 2, 513, 28, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+    # confirm water heater state returns to 'eco' when SystemMode is
+    # set back to 4 (kHeat)
+    set_node_attribute(matter_node, 2, 513, 28, 4)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ECO
+
 
 @pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
 async def test_water_heater_turn_on_off(
@@ -290,7 +306,7 @@ async def test_async_boost_actions(
 
     # Set boost with duration, emergency_boost, and temporary_setpoint
     await hass.services.async_call(
-        "matter",
+        DOMAIN,
         SERVICE_WATER_HEATER_BOOST,
         {
             ATTR_ENTITY_ID: "water_heater.water_heater",

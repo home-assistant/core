@@ -1,7 +1,5 @@
 """Tests for the AVM Fritz!Box integration."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import Mock
 
@@ -114,6 +112,7 @@ class FritzDeviceClimateMock(FritzEntityBaseMock):
     has_thermostat = True
     has_blind = False
     holiday_active = False
+    boost_active = False
     lock = "fake_locked"
     present = True
     summer_active = False

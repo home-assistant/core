@@ -1,8 +1,6 @@
 """Hue event entities from Button resources."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -102,6 +100,7 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
         }
 
     @callback
+    @override
     def _handle_event(
         self, event_type: EventType, resource: Button | BellButton
     ) -> None:
@@ -142,6 +141,7 @@ class HueRotaryEventEntity(HueBaseEntity, EventEntity):
     )
 
     @callback
+    @override
     def _handle_event(self, event_type: EventType, resource: RelativeRotary) -> None:
         """Handle status event for this resource (or it's parent)."""
         if event_type == EventType.RESOURCE_UPDATED and resource.id == self.resource.id:

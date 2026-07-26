@@ -15,8 +15,14 @@
       "period": {
         "default": "mdi:sine-wave"
       },
+      "spring_status": {
+        "default": "mdi:feather"
+      },
       "swing_count": {
         "default": "mdi:counter"
+      },
+      "total_swing_time": {
+        "default": "mdi:history"
       }
     },
     "switch": {

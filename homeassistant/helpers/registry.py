@@ -1,11 +1,9 @@
 """Provide a base implementation for registries."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections import UserDict, defaultdict
 from collections.abc import Mapping, Sequence, ValuesView
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, override
 
 from homeassistant.core import CoreState, HomeAssistant, callback
 
@@ -23,6 +21,7 @@ class BaseRegistryItems[_DataT](UserDict[str, _DataT], ABC):
 
     data: dict[str, _DataT]
 
+    @override
     def values(self) -> ValuesView[_DataT]:
         """Return the underlying values to avoid __iter__ overhead."""
         return self.data.values()
@@ -35,6 +34,7 @@ class BaseRegistryItems[_DataT](UserDict[str, _DataT], ABC):
     def _unindex_entry(self, key: str, replacement_entry: _DataT | None = None) -> None:
         """Unindex an entry."""
 
+    @override
     def __setitem__(self, key: str, entry: _DataT) -> None:
         """Add an item."""
         data = self.data
@@ -57,6 +57,7 @@ class BaseRegistryItems[_DataT](UserDict[str, _DataT], ABC):
         if not entries:
             del index[value]
 
+    @override
     def __delitem__(self, key: str) -> None:
         """Remove an item."""
         self._unindex_entry(key)

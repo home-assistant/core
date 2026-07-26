@@ -1,9 +1,7 @@
 """The lookin integration climate platform."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 from aiolookin import Climate, MeteoSensor, Remote
 from aiolookin.models import UDPCommandType, UDPEvent
@@ -122,6 +120,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     def _climate(self) -> Climate:
         return cast(Climate, self.coordinator.data)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode of the device."""
         if (mode := HASS_TO_LOOKIN_HVAC_MODE.get(hvac_mode)) is None:
@@ -129,6 +128,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         self._climate.hvac_mode = mode
         await self._async_update_conditioner()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature of the device."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -162,6 +162,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
 
         await self._async_update_conditioner()
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode of the device."""
         if (mode := HASS_TO_LOOKIN_FAN_MODE.get(fan_mode)) is None:
@@ -169,6 +170,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         self._climate.fan_mode = mode
         await self._async_update_conditioner()
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the swing mode of the device."""
         if (mode := HASS_TO_LOOKIN_SWING_MODE.get(swing_mode)) is None:
@@ -205,6 +207,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         self._attr_current_humidity = float(int(event.value[-4:], 16)) / 10
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_from_data()
@@ -217,6 +220,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         self._climate.update_from_status(event.value)
         self.coordinator.async_set_updated_data(self._climate)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         self.async_on_remove(

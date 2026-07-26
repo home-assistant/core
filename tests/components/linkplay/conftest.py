@@ -19,7 +19,7 @@ from tests.conftest import AiohttpClientMocker
 
 HOST = "10.0.0.150"
 HOST_REENTRY = "10.0.0.66"
-UUID = "FF31F09E-5001-FBDE-0546-2DBFFF31F09E"
+UUID = "FF31F09E5001FBDE05462DBFFF31F09E"
 NAME = "Smart Zone 1_54B9"
 
 
@@ -41,6 +41,7 @@ def mock_linkplay_factory_bridge() -> Generator[AsyncMock]:
         bridge.device = AsyncMock(spec=LinkPlayDevice)
         bridge.device.uuid = UUID
         bridge.device.name = NAME
+        bridge.device.manufacturer = "Linkplay"
         conf_factory.return_value = bridge
         yield conf_factory
 

@@ -1,8 +1,7 @@
 """Sensor platform to display the current fuel prices at a NSW fuel station."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 import voluptuous as vol
 
@@ -65,10 +64,6 @@ def setup_platform(
 
     coordinator: NSWFuelStationCoordinator = hass.data[DATA_NSW_FUEL_STATION]
 
-    if coordinator.data is None:
-        _LOGGER.error("Initial fuel station price data not available")
-        return
-
     entities = []
     for fuel_type in fuel_types:
         if coordinator.data.prices.get((station_id, fuel_type)) is None:
@@ -102,21 +97,21 @@ class StationPriceSensor(CoordinatorEntity[NSWFuelStationCoordinator], SensorEnt
         self._fuel_type = fuel_type
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         station_name = self._get_station_name()
         return f"{station_name} {self._fuel_type}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if self.coordinator.data is None:
-            return None
-
         prices = self.coordinator.data.prices
         return prices.get((self._station_id, self._fuel_type))
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, int | str]:
         """Return the state attributes of the device."""
         return {
@@ -125,22 +120,21 @@ class StationPriceSensor(CoordinatorEntity[NSWFuelStationCoordinator], SensorEnt
         }
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str:
         """Return the units of measurement."""
         return f"{CURRENCY_CENT}/{UnitOfVolume.LITERS}"
 
-    def _get_station_name(self):
-        default_name = f"station {self._station_id}"
-        if self.coordinator.data is None:
-            return default_name
+    def _get_station_name(self) -> str:
+        if (
+            station := self.coordinator.data.stations.get(self._station_id)
+        ) is not None:
+            return station.name
 
-        station = self.coordinator.data.stations.get(self._station_id)
-        if station is None:
-            return default_name
-
-        return station.name
+        return f"station {self._station_id}"
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return f"{self._station_id}_{self._fuel_type}"

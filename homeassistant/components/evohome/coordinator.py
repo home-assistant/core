@@ -1,12 +1,10 @@
 """Support for (EMEA/EU-based) Honeywell TCC systems."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import evohomeasync as ec1
 import evohomeasync2 as ec2
@@ -22,7 +20,7 @@ from evohomeasync2.const import (
     SZ_USE_DAYLIGHT_SAVE_SWITCHING,
     SZ_ZONES,
 )
-from evohomeasync2.schemas.typedefs import EvoLocStatusResponseT, EvoTcsConfigResponseT
+from evohomeasync2.typedefs import EvoLocStatusResponseT, EvoTcsConfigResponseT
 
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -83,6 +81,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator.
 
@@ -138,6 +137,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             result = await client_api
+
+        except ec2.InvalidSystemModeError:
+            raise
 
         except ec2.ApiRequestFailedError as err:
             self.logger.error(err)
@@ -220,6 +222,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             except ec2.InvalidScheduleError as err:
                 self.logger.warning("DHW has an invalid/missing schedule: %r", err)
 
+    @override
     async def _async_update_data(self) -> EvoLocStatusResponseT:  # type: ignore[override]
         """Fetch the latest state of an entire TCC Location.
 

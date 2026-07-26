@@ -1,18 +1,15 @@
 """Definition of Picnic sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Literal, cast
+from typing import Any, Literal, cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_EURO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -23,7 +20,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTRIBUTION,
-    CONF_COORDINATOR,
     DOMAIN,
     SENSOR_CART_ITEMS_COUNT,
     SENSOR_CART_TOTAL_PRICE,
@@ -33,6 +29,7 @@ from .const import (
     SENSOR_LAST_ORDER_SLOT_START,
     SENSOR_LAST_ORDER_STATUS,
     SENSOR_LAST_ORDER_TOTAL_PRICE,
+    SENSOR_NEXT_DELIVERY_ESTIMATED_ARRIVAL,
     SENSOR_NEXT_DELIVERY_ETA_END,
     SENSOR_NEXT_DELIVERY_ETA_START,
     SENSOR_NEXT_DELIVERY_SLOT_END,
@@ -42,7 +39,7 @@ from .const import (
     SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
     SENSOR_SELECTED_SLOT_START,
 )
-from .coordinator import PicnicUpdateCoordinator
+from .coordinator import PicnicConfigEntry, PicnicUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -68,7 +65,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_CART_TOTAL_PRICE,
         translation_key=SENSOR_CART_TOTAL_PRICE,
         native_unit_of_measurement=CURRENCY_EURO,
-        entity_registry_enabled_default=True,
         data_type="cart_data",
         value_fn=lambda cart: cart.get("total_price", 0) / 100,
     ),
@@ -76,7 +72,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_SELECTED_SLOT_START,
         translation_key=SENSOR_SELECTED_SLOT_START,
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
         data_type="slot_data",
         value_fn=lambda slot: dt_util.parse_datetime(str(slot.get("window_start"))),
     ),
@@ -84,7 +79,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_SELECTED_SLOT_END,
         translation_key=SENSOR_SELECTED_SLOT_END,
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
         data_type="slot_data",
         value_fn=lambda slot: dt_util.parse_datetime(str(slot.get("window_end"))),
     ),
@@ -92,7 +86,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_SELECTED_SLOT_MAX_ORDER_TIME,
         translation_key=SENSOR_SELECTED_SLOT_MAX_ORDER_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
         data_type="slot_data",
         value_fn=lambda slot: dt_util.parse_datetime(str(slot.get("cut_off_time"))),
     ),
@@ -100,7 +93,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
         translation_key=SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
         native_unit_of_measurement=CURRENCY_EURO,
-        entity_registry_enabled_default=True,
         data_type="slot_data",
         value_fn=lambda slot: (
             slot["minimum_order_value"] / 100
@@ -136,7 +128,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_LAST_ORDER_MAX_ORDER_TIME,
         translation_key=SENSOR_LAST_ORDER_MAX_ORDER_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
         data_type="last_order_data",
         value_fn=lambda last_order: dt_util.parse_datetime(
             str(last_order.get("slot", {}).get("cut_off_time"))
@@ -146,7 +137,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_LAST_ORDER_DELIVERY_TIME,
         translation_key=SENSOR_LAST_ORDER_DELIVERY_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
         data_type="last_order_data",
         value_fn=lambda last_order: dt_util.parse_datetime(
             str(last_order.get("delivery_time", {}).get("start"))
@@ -163,7 +153,6 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_NEXT_DELIVERY_ETA_START,
         translation_key=SENSOR_NEXT_DELIVERY_ETA_START,
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
         data_type="next_delivery_data",
         value_fn=lambda next_delivery: dt_util.parse_datetime(
             str(next_delivery.get("eta", {}).get("start"))
@@ -173,10 +162,20 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         key=SENSOR_NEXT_DELIVERY_ETA_END,
         translation_key=SENSOR_NEXT_DELIVERY_ETA_END,
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=True,
         data_type="next_delivery_data",
         value_fn=lambda next_delivery: dt_util.parse_datetime(
             str(next_delivery.get("eta", {}).get("end"))
+        ),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_NEXT_DELIVERY_ESTIMATED_ARRIVAL,
+        translation_key=SENSOR_NEXT_DELIVERY_ESTIMATED_ARRIVAL,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        data_type="next_delivery_data",
+        value_fn=lambda next_delivery: (
+            dt_util.utc_from_timestamp(next_delivery["estimated_arrival"] / 1000)
+            if next_delivery.get("estimated_arrival")
+            else None
         ),
     ),
     PicnicSensorEntityDescription(
@@ -202,11 +201,11 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PicnicConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Picnic sensor entries."""
-    picnic_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+    picnic_coordinator = config_entry.runtime_data
 
     # Add an entity for each sensor type
     async_add_entities(
@@ -225,7 +224,7 @@ class PicnicSensor(SensorEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
     def __init__(
         self,
         coordinator: PicnicUpdateCoordinator,
-        config_entry: ConfigEntry,
+        config_entry: PicnicConfigEntry,
         description: PicnicSensorEntityDescription,
     ) -> None:
         """Init a Picnic sensor."""
@@ -241,6 +240,7 @@ class PicnicSensor(SensorEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
         )
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
         data_set = (

@@ -8,6 +8,8 @@ DOMAIN = "mobile_app"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+STORAGE_VERSION_MINOR = 2
+STORAGE_SAVE_DELAY_SECONDS = 10
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_REMOTE_UI_URL = "remote_ui_url"
@@ -17,6 +19,9 @@ CONF_USER_ID = "user_id"
 DATA_CONFIG_ENTRIES = "config_entries"
 DATA_DELETED_IDS = "deleted_ids"
 DATA_DEVICES = "devices"
+
+DATA_LIVE_ACTIVITY_TOKENS = "live_activity_tokens"
+DATA_LIVE_ACTIVITY_CLEANUP_CANCEL = "live_activity_cleanup_cancel"
 DATA_STORE = "store"
 DATA_NOTIFY = "notify"
 DATA_PUSH_CHANNEL = "push_channel"
@@ -27,8 +32,6 @@ ATTR_APP_ID = "app_id"
 ATTR_APP_NAME = "app_name"
 ATTR_APP_VERSION = "app_version"
 ATTR_DEVICE_NAME = "device_name"
-ATTR_MANUFACTURER = "manufacturer"
-ATTR_MODEL = "model"
 ATTR_NO_LEGACY_ENCRYPTION = "no_legacy_encryption"
 ATTR_OS_NAME = "os_name"
 ATTR_OS_VERSION = "os_version"
@@ -41,6 +44,19 @@ ATTR_PUSH_RATE_LIMITS_MAXIMUM = "maximum"
 ATTR_PUSH_RATE_LIMITS_RESETS_AT = "resetsAt"
 ATTR_PUSH_RATE_LIMITS_SUCCESSFUL = "successful"
 ATTR_SUPPORTS_ENCRYPTION = "supports_encryption"
+
+ATTR_LIVE_UPDATE = "live_update"
+ATTR_START_LIVE_ACTIVITY_TOKEN = "start_live_activity_token"
+ATTR_LIVE_ACTIVITY_TOKEN = "live_activity_token"
+ATTR_LIVE_ACTIVITY_EVENT = "event"
+ATTR_LIVE_ACTIVITY_EXPIRES_AT = "expires_at"
+ATTR_TAG = "tag"
+
+ATTR_TOKEN = "token"
+
+MANUFACTURER_APPLE = "Apple"
+
+CLEAR_NOTIFICATION = "clear_notification"
 
 ATTR_EVENT_DATA = "event_data"
 ATTR_EVENT_TYPE = "event_type"
@@ -82,6 +98,7 @@ ATTR_SENSOR_UOM = "unit_of_measurement"
 
 SIGNAL_SENSOR_UPDATE = f"{DOMAIN}_sensor_update"
 SIGNAL_LOCATION_UPDATE = DOMAIN + "_location_update_{}"
+SIGNAL_RECORD_NOTIFICATION = f"{DOMAIN}_record_notification"
 
 ATTR_CAMERA_ENTITY_ID = "camera_entity_id"
 
@@ -89,9 +106,11 @@ SCHEMA_APP_DATA = vol.Schema(
     {
         vol.Inclusive(ATTR_PUSH_TOKEN, "push_cloud"): cv.string,
         vol.Inclusive(ATTR_PUSH_URL, "push_cloud"): cv.url,
-        # Set to True to indicate that this registration will connect via websocket channel
-        # to receive push notifications.
+        # Set to True to indicate that this registration
+        # will connect via websocket channel to receive
+        # push notifications.
         vol.Optional(ATTR_PUSH_WEBSOCKET_CHANNEL): cv.boolean,
+        vol.Optional(ATTR_START_LIVE_ACTIVITY_TOKEN): cv.string,
     },
     extra=vol.ALLOW_EXTRA,
 )

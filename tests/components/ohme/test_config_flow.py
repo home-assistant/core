@@ -1,6 +1,6 @@
 """Tests for the config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from ohme import ApiException, AuthException
 import pytest
@@ -14,9 +14,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_config_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_client: MagicMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_config_flow_success(hass: HomeAssistant, mock_client: MagicMock) -> None:
     """Test config flow."""
 
     # Initial form load
@@ -44,9 +43,9 @@ async def test_config_flow_success(
     ("test_exception", "expected_error"),
     [(AuthException, "invalid_auth"), (ApiException, "unknown")],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_fail(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     test_exception: Exception,
     expected_error: str,

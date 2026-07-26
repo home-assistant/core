@@ -1,6 +1,6 @@
 """Base for all turan entities."""
 
-from __future__ import annotations
+from typing import override
 
 from pyituran import Vehicle
 
@@ -37,6 +37,7 @@ class IturanBaseEntity(CoordinatorEntity[IturanDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if vehicle is still included in the account."""
         return super().available and self._license_plate in self.coordinator.data

@@ -1,33 +1,42 @@
 """Configure pytest for Litter-Robot tests."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylitterbot import Account, FeederRobot, LitterRobot3, LitterRobot4, Pet, Robot
+from pylitterbot import (
+    Account,
+    FeederRobot,
+    LitterRobot3,
+    LitterRobot4,
+    LitterRobot5,
+    Pet,
+    Robot,
+)
 from pylitterbot.exceptions import InvalidCommandException
 from pylitterbot.robot.litterrobot4 import HopperStatus
 import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    CONFIG,
-    DOMAIN,
-    FEEDER_ROBOT_DATA,
-    PET_DATA,
-    ROBOT_4_DATA,
-    ROBOT_DATA,
-)
+from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
+
+ROBOT_DATA = load_json_object_fixture("litter_robot_3_data.json", DOMAIN)
+ROBOT_4_DATA = load_json_object_fixture("litter_robot_4_data.json", DOMAIN)
+ROBOT_5_DATA = load_json_object_fixture("litter_robot_5_data.json", DOMAIN)
+ROBOT_5_PRO_DATA = load_json_object_fixture("litter_robot_5_pro_data.json", DOMAIN)
+FEEDER_ROBOT_DATA = load_json_object_fixture("feeder_robot_data.json", DOMAIN)
+PET_DATA = load_json_object_fixture("pet_data.json", DOMAIN)
 
 
 def create_mock_robot(
     robot_data: dict | None,
     account: Account,
+    *,
     v4: bool,
+    v5: bool,
+    v5_pro: bool,
     feeder: bool,
     side_effect: Any | None = None,
 ) -> Robot:
@@ -35,7 +44,15 @@ def create_mock_robot(
     if not robot_data:
         robot_data = {}
 
-    if v4:
+    if v5 or v5_pro:
+        data = ROBOT_5_PRO_DATA if v5_pro else ROBOT_5_DATA
+        robot = LitterRobot5(data={**data, **robot_data}, account=account)
+        robot.reset = AsyncMock(side_effect=side_effect)
+        robot.change_filter = AsyncMock(side_effect=side_effect)
+        robot.set_night_light_brightness = AsyncMock(side_effect=side_effect)
+        robot.set_night_light_mode = AsyncMock(side_effect=side_effect)
+        robot.set_panel_brightness = AsyncMock(side_effect=side_effect)
+    elif v4:
         robot = LitterRobot4(data={**ROBOT_4_DATA, **robot_data}, account=account)
     elif feeder:
         robot = FeederRobot(data={**FEEDER_ROBOT_DATA, **robot_data}, account=account)
@@ -72,17 +89,30 @@ def create_mock_account(
     side_effect: Any | None = None,
     skip_robots: bool = False,
     v4: bool = False,
+    v5: bool = False,
+    v5_pro: bool = False,
     feeder: bool = False,
     pet: bool = False,
 ) -> MagicMock:
     """Create a mock Litter-Robot account."""
     account = MagicMock(spec=Account)
     account.connect = AsyncMock()
-    account.refresh_robots = AsyncMock()
+    account.load_robots = AsyncMock()
+    account.user_id = ACCOUNT_USER_ID
     account.robots = (
         []
         if skip_robots
-        else [create_mock_robot(robot_data, account, v4, feeder, side_effect)]
+        else [
+            create_mock_robot(
+                robot_data,
+                account,
+                v4=v4,
+                v5=v5,
+                v5_pro=v5_pro,
+                feeder=feeder,
+                side_effect=side_effect,
+            )
+        ]
     )
     account.get_robots = lambda robot_class: [
         robot for robot in account.robots if isinstance(robot, robot_class)
@@ -101,6 +131,18 @@ def mock_account() -> MagicMock:
 def mock_account_with_litterrobot_4() -> MagicMock:
     """Mock account with Litter-Robot 4."""
     return create_mock_account(v4=True)
+
+
+@pytest.fixture
+def mock_account_with_litterrobot_5() -> MagicMock:
+    """Mock account with Litter-Robot 5."""
+    return create_mock_account(v5=True)
+
+
+@pytest.fixture
+def mock_account_with_litterrobot_5_pro() -> MagicMock:
+    """Mock account with Litter-Robot 5 Pro."""
+    return create_mock_account(v5_pro=True)
 
 
 @pytest.fixture
@@ -163,6 +205,9 @@ async def setup_integration(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG[DOMAIN],
+        unique_id=ACCOUNT_USER_ID,
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 

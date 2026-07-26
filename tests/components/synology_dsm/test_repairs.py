@@ -1,7 +1,5 @@
 """Test repairs for synology dsm."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -25,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .common import mock_dsm_information
+from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
 from tests.common import ANY, MockConfigEntry
@@ -44,6 +42,7 @@ def mock_dsm_with_filestation():
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
         dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
             volumes_ids=["volume_1"],
@@ -172,7 +171,7 @@ async def test_missing_backup_success(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test the missing backup location setup repair flow is fully processed by the user."""
+    """Test missing backup location repair flow is fully processed."""
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
     entries = hass.config_entries.async_entries(DOMAIN)

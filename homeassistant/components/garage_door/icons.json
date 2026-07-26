@@ -1,0 +1,18 @@
+{
+  "conditions": {
+    "is_closed": {
+      "condition": "mdi:garage"
+    },
+    "is_open": {
+      "condition": "mdi:garage-open"
+    }
+  },
+  "triggers": {
+    "closed": {
+      "trigger": "mdi:garage"
+    },
+    "opened": {
+      "trigger": "mdi:garage-open"
+    }
+  }
+}

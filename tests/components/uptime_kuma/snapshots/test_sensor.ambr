@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[sensor.monitor_1_certificate_expiry-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -41,9 +42,9 @@
 # name: test_setup[sensor.monitor_1_certificate_expiry-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Monitor 1 Certificate expiry',
-      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 1 Certificate expiry',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_1_certificate_expiry',
@@ -55,42 +56,44 @@
 # ---
 # name: test_setup[sensor.monitor_1_monitor_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'http',
+        'keyword',
         'port',
         'ping',
-        'keyword',
         'dns',
-        'push',
-        'steam',
-        'mqtt',
-        'sqlserver',
-        'json_query',
-        'group',
         'docker',
-        'grpc_keyword',
+        'system_service',
         'real_browser',
-        'gamedig',
+        'group',
+        'push',
+        'manual',
+        'globalping',
+        'grpc_keyword',
+        'json_query',
         'kafka_producer',
-        'postgres',
-        'mysql',
-        'mongodb',
-        'radius',
-        'redis',
-        'tailscale_ping',
+        'mqtt',
+        'rabbit_mq',
+        'sip_options',
         'smtp',
         'snmp',
-        'rabbit_mq',
-        'manual',
-        'unknown',
+        'tailscale_ping',
         'websocket_upgrade',
-        'system_service',
-        'globalping',
-        'sip_options',
+        'sqlserver',
+        'mongodb',
+        'mysql',
+        'oracledb',
+        'postgres',
+        'redis',
+        'radius',
+        'gamedig',
+        'steam',
+        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -126,40 +129,41 @@
 # name: test_setup[sensor.monitor_1_monitor_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Monitor 1 Monitor type',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 1 Monitor type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'http',
+        'keyword',
         'port',
         'ping',
-        'keyword',
         'dns',
-        'push',
-        'steam',
-        'mqtt',
-        'sqlserver',
-        'json_query',
-        'group',
         'docker',
-        'grpc_keyword',
+        'system_service',
         'real_browser',
-        'gamedig',
+        'group',
+        'push',
+        'manual',
+        'globalping',
+        'grpc_keyword',
+        'json_query',
         'kafka_producer',
-        'postgres',
-        'mysql',
-        'mongodb',
-        'radius',
-        'redis',
-        'tailscale_ping',
+        'mqtt',
+        'rabbit_mq',
+        'sip_options',
         'smtp',
         'snmp',
-        'rabbit_mq',
-        'manual',
-        'unknown',
+        'tailscale_ping',
         'websocket_upgrade',
-        'system_service',
-        'globalping',
-        'sip_options',
+        'sqlserver',
+        'mongodb',
+        'mysql',
+        'oracledb',
+        'postgres',
+        'redis',
+        'radius',
+        'gamedig',
+        'steam',
+        'unknown',
       ]),
     }),
     'context': <ANY>,
@@ -172,8 +176,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_monitored_url-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -209,7 +214,7 @@
 # name: test_setup[sensor.monitor_1_monitored_url-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 1 Monitored URL',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 1 Monitored URL',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_1_monitored_url',
@@ -221,11 +226,12 @@
 # ---
 # name: test_setup[sensor.monitor_1_response_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -263,10 +269,10 @@
 # name: test_setup[sensor.monitor_1_response_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Monitor 1 Response time',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 1 Response time',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_1_response_time',
@@ -278,11 +284,12 @@
 # ---
 # name: test_setup[sensor.monitor_1_response_time_o_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -323,10 +330,10 @@
 # name: test_setup[sensor.monitor_1_response_time_o_1_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Monitor 1 Response time Ø (1 day)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 1 Response time Ø (1 day)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_1_response_time_o_1_day',
@@ -338,11 +345,12 @@
 # ---
 # name: test_setup[sensor.monitor_1_response_time_o_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -383,10 +391,10 @@
 # name: test_setup[sensor.monitor_1_response_time_o_30_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Monitor 1 Response time Ø (30 days)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 1 Response time Ø (30 days)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_1_response_time_o_30_days',
@@ -398,11 +406,12 @@
 # ---
 # name: test_setup[sensor.monitor_1_response_time_o_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -443,10 +452,10 @@
 # name: test_setup[sensor.monitor_1_response_time_o_365_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Monitor 1 Response time Ø (365 days)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 1 Response time Ø (365 days)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_1_response_time_o_365_days',
@@ -458,11 +467,12 @@
 # ---
 # name: test_setup[sensor.monitor_1_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'down',
         'up',
         'pending',
@@ -502,9 +512,9 @@
 # name: test_setup[sensor.monitor_1_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Monitor 1 Status',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 1 Status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'down',
         'up',
         'pending',
@@ -521,8 +531,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_tags-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -558,12 +569,12 @@
 # name: test_setup[sensor.monitor_1_tags-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 1 Tags',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 1 Tags',
       'tags': list([
         'tag1',
         'tag2:value',
       ]),
-      'unit_of_measurement': 'tags',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'tags',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_1_tags',
@@ -575,11 +586,12 @@
 # ---
 # name: test_setup[sensor.monitor_1_uptime_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -617,9 +629,9 @@
 # name: test_setup[sensor.monitor_1_uptime_1_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 1 Uptime (1 day)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 1 Uptime (1 day)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_1_uptime_1_day',
@@ -631,11 +643,12 @@
 # ---
 # name: test_setup[sensor.monitor_1_uptime_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -673,9 +686,9 @@
 # name: test_setup[sensor.monitor_1_uptime_30_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 1 Uptime (30 days)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 1 Uptime (30 days)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_1_uptime_30_days',
@@ -687,11 +700,12 @@
 # ---
 # name: test_setup[sensor.monitor_1_uptime_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -729,9 +743,9 @@
 # name: test_setup[sensor.monitor_1_uptime_365_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 1 Uptime (365 days)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 1 Uptime (365 days)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_1_uptime_365_days',
@@ -743,42 +757,44 @@
 # ---
 # name: test_setup[sensor.monitor_2_monitor_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'http',
+        'keyword',
         'port',
         'ping',
-        'keyword',
         'dns',
-        'push',
-        'steam',
-        'mqtt',
-        'sqlserver',
-        'json_query',
-        'group',
         'docker',
-        'grpc_keyword',
+        'system_service',
         'real_browser',
-        'gamedig',
+        'group',
+        'push',
+        'manual',
+        'globalping',
+        'grpc_keyword',
+        'json_query',
         'kafka_producer',
-        'postgres',
-        'mysql',
-        'mongodb',
-        'radius',
-        'redis',
-        'tailscale_ping',
+        'mqtt',
+        'rabbit_mq',
+        'sip_options',
         'smtp',
         'snmp',
-        'rabbit_mq',
-        'manual',
-        'unknown',
+        'tailscale_ping',
         'websocket_upgrade',
-        'system_service',
-        'globalping',
-        'sip_options',
+        'sqlserver',
+        'mongodb',
+        'mysql',
+        'oracledb',
+        'postgres',
+        'redis',
+        'radius',
+        'gamedig',
+        'steam',
+        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -814,40 +830,41 @@
 # name: test_setup[sensor.monitor_2_monitor_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Monitor 2 Monitor type',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 2 Monitor type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'http',
+        'keyword',
         'port',
         'ping',
-        'keyword',
         'dns',
-        'push',
-        'steam',
-        'mqtt',
-        'sqlserver',
-        'json_query',
-        'group',
         'docker',
-        'grpc_keyword',
+        'system_service',
         'real_browser',
-        'gamedig',
+        'group',
+        'push',
+        'manual',
+        'globalping',
+        'grpc_keyword',
+        'json_query',
         'kafka_producer',
-        'postgres',
-        'mysql',
-        'mongodb',
-        'radius',
-        'redis',
-        'tailscale_ping',
+        'mqtt',
+        'rabbit_mq',
+        'sip_options',
         'smtp',
         'snmp',
-        'rabbit_mq',
-        'manual',
-        'unknown',
+        'tailscale_ping',
         'websocket_upgrade',
-        'system_service',
-        'globalping',
-        'sip_options',
+        'sqlserver',
+        'mongodb',
+        'mysql',
+        'oracledb',
+        'postgres',
+        'redis',
+        'radius',
+        'gamedig',
+        'steam',
+        'unknown',
       ]),
     }),
     'context': <ANY>,
@@ -860,8 +877,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_monitored_hostname-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -897,7 +915,7 @@
 # name: test_setup[sensor.monitor_2_monitored_hostname-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 2 Monitored hostname',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 2 Monitored hostname',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_2_monitored_hostname',
@@ -909,8 +927,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_monitored_port-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -946,7 +965,7 @@
 # name: test_setup[sensor.monitor_2_monitored_port-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 2 Monitored port',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 2 Monitored port',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_2_monitored_port',
@@ -958,11 +977,12 @@
 # ---
 # name: test_setup[sensor.monitor_2_response_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1000,10 +1020,10 @@
 # name: test_setup[sensor.monitor_2_response_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Monitor 2 Response time',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 2 Response time',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_2_response_time',
@@ -1015,11 +1035,12 @@
 # ---
 # name: test_setup[sensor.monitor_2_response_time_o_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1060,10 +1081,10 @@
 # name: test_setup[sensor.monitor_2_response_time_o_1_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Monitor 2 Response time Ø (1 day)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 2 Response time Ø (1 day)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_2_response_time_o_1_day',
@@ -1075,11 +1096,12 @@
 # ---
 # name: test_setup[sensor.monitor_2_response_time_o_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1120,10 +1142,10 @@
 # name: test_setup[sensor.monitor_2_response_time_o_30_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Monitor 2 Response time Ø (30 days)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 2 Response time Ø (30 days)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_2_response_time_o_30_days',
@@ -1135,11 +1157,12 @@
 # ---
 # name: test_setup[sensor.monitor_2_response_time_o_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1180,10 +1203,10 @@
 # name: test_setup[sensor.monitor_2_response_time_o_365_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Monitor 2 Response time Ø (365 days)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 2 Response time Ø (365 days)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_2_response_time_o_365_days',
@@ -1195,11 +1218,12 @@
 # ---
 # name: test_setup[sensor.monitor_2_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'down',
         'up',
         'pending',
@@ -1239,9 +1263,9 @@
 # name: test_setup[sensor.monitor_2_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Monitor 2 Status',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 2 Status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'down',
         'up',
         'pending',
@@ -1258,8 +1282,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_tags-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1295,12 +1320,12 @@
 # name: test_setup[sensor.monitor_2_tags-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 2 Tags',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 2 Tags',
       'tags': list([
         'tag1',
         'tag2:value',
       ]),
-      'unit_of_measurement': 'tags',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'tags',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_2_tags',
@@ -1312,11 +1337,12 @@
 # ---
 # name: test_setup[sensor.monitor_2_uptime_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1354,9 +1380,9 @@
 # name: test_setup[sensor.monitor_2_uptime_1_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 2 Uptime (1 day)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 2 Uptime (1 day)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_2_uptime_1_day',
@@ -1368,11 +1394,12 @@
 # ---
 # name: test_setup[sensor.monitor_2_uptime_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1410,9 +1437,9 @@
 # name: test_setup[sensor.monitor_2_uptime_30_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 2 Uptime (30 days)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 2 Uptime (30 days)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_2_uptime_30_days',
@@ -1424,11 +1451,12 @@
 # ---
 # name: test_setup[sensor.monitor_2_uptime_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1466,9 +1494,9 @@
 # name: test_setup[sensor.monitor_2_uptime_365_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 2 Uptime (365 days)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 2 Uptime (365 days)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_2_uptime_365_days',
@@ -1480,8 +1508,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_certificate_expiry-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1520,9 +1549,9 @@
 # name: test_setup[sensor.monitor_3_certificate_expiry-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Monitor 3 Certificate expiry',
-      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 3 Certificate expiry',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_3_certificate_expiry',
@@ -1534,42 +1563,44 @@
 # ---
 # name: test_setup[sensor.monitor_3_monitor_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'http',
+        'keyword',
         'port',
         'ping',
-        'keyword',
         'dns',
-        'push',
-        'steam',
-        'mqtt',
-        'sqlserver',
-        'json_query',
-        'group',
         'docker',
-        'grpc_keyword',
+        'system_service',
         'real_browser',
-        'gamedig',
+        'group',
+        'push',
+        'manual',
+        'globalping',
+        'grpc_keyword',
+        'json_query',
         'kafka_producer',
-        'postgres',
-        'mysql',
-        'mongodb',
-        'radius',
-        'redis',
-        'tailscale_ping',
+        'mqtt',
+        'rabbit_mq',
+        'sip_options',
         'smtp',
         'snmp',
-        'rabbit_mq',
-        'manual',
-        'unknown',
+        'tailscale_ping',
         'websocket_upgrade',
-        'system_service',
-        'globalping',
-        'sip_options',
+        'sqlserver',
+        'mongodb',
+        'mysql',
+        'oracledb',
+        'postgres',
+        'redis',
+        'radius',
+        'gamedig',
+        'steam',
+        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1605,40 +1636,41 @@
 # name: test_setup[sensor.monitor_3_monitor_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Monitor 3 Monitor type',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 3 Monitor type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'http',
+        'keyword',
         'port',
         'ping',
-        'keyword',
         'dns',
-        'push',
-        'steam',
-        'mqtt',
-        'sqlserver',
-        'json_query',
-        'group',
         'docker',
-        'grpc_keyword',
+        'system_service',
         'real_browser',
-        'gamedig',
+        'group',
+        'push',
+        'manual',
+        'globalping',
+        'grpc_keyword',
+        'json_query',
         'kafka_producer',
-        'postgres',
-        'mysql',
-        'mongodb',
-        'radius',
-        'redis',
-        'tailscale_ping',
+        'mqtt',
+        'rabbit_mq',
+        'sip_options',
         'smtp',
         'snmp',
-        'rabbit_mq',
-        'manual',
-        'unknown',
+        'tailscale_ping',
         'websocket_upgrade',
-        'system_service',
-        'globalping',
-        'sip_options',
+        'sqlserver',
+        'mongodb',
+        'mysql',
+        'oracledb',
+        'postgres',
+        'redis',
+        'radius',
+        'gamedig',
+        'steam',
+        'unknown',
       ]),
     }),
     'context': <ANY>,
@@ -1651,8 +1683,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_monitored_url-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1688,7 +1721,7 @@
 # name: test_setup[sensor.monitor_3_monitored_url-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 3 Monitored URL',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 3 Monitored URL',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_3_monitored_url',
@@ -1700,11 +1733,12 @@
 # ---
 # name: test_setup[sensor.monitor_3_response_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1742,10 +1776,10 @@
 # name: test_setup[sensor.monitor_3_response_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Monitor 3 Response time',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 3 Response time',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_3_response_time',
@@ -1757,11 +1791,12 @@
 # ---
 # name: test_setup[sensor.monitor_3_response_time_o_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1802,10 +1837,10 @@
 # name: test_setup[sensor.monitor_3_response_time_o_1_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Monitor 3 Response time Ø (1 day)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 3 Response time Ø (1 day)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_3_response_time_o_1_day',
@@ -1817,11 +1852,12 @@
 # ---
 # name: test_setup[sensor.monitor_3_response_time_o_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1862,10 +1898,10 @@
 # name: test_setup[sensor.monitor_3_response_time_o_30_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Monitor 3 Response time Ø (30 days)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 3 Response time Ø (30 days)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_3_response_time_o_30_days',
@@ -1877,11 +1913,12 @@
 # ---
 # name: test_setup[sensor.monitor_3_response_time_o_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1922,10 +1959,10 @@
 # name: test_setup[sensor.monitor_3_response_time_o_365_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Monitor 3 Response time Ø (365 days)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 3 Response time Ø (365 days)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_3_response_time_o_365_days',
@@ -1937,11 +1974,12 @@
 # ---
 # name: test_setup[sensor.monitor_3_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'down',
         'up',
         'pending',
@@ -1981,9 +2019,9 @@
 # name: test_setup[sensor.monitor_3_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Monitor 3 Status',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 3 Status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'down',
         'up',
         'pending',
@@ -2000,8 +2038,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_tags-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2037,9 +2076,9 @@
 # name: test_setup[sensor.monitor_3_tags-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 3 Tags',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 3 Tags',
       'tags': None,
-      'unit_of_measurement': 'tags',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'tags',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_3_tags',
@@ -2051,11 +2090,12 @@
 # ---
 # name: test_setup[sensor.monitor_3_uptime_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2093,9 +2133,9 @@
 # name: test_setup[sensor.monitor_3_uptime_1_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 3 Uptime (1 day)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 3 Uptime (1 day)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_3_uptime_1_day',
@@ -2107,11 +2147,12 @@
 # ---
 # name: test_setup[sensor.monitor_3_uptime_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2149,9 +2190,9 @@
 # name: test_setup[sensor.monitor_3_uptime_30_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 3 Uptime (30 days)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 3 Uptime (30 days)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_3_uptime_30_days',
@@ -2163,11 +2204,12 @@
 # ---
 # name: test_setup[sensor.monitor_3_uptime_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2205,9 +2247,9 @@
 # name: test_setup[sensor.monitor_3_uptime_365_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Monitor 3 Uptime (365 days)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Monitor 3 Uptime (365 days)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.monitor_3_uptime_365_days',

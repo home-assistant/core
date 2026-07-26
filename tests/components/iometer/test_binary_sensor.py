@@ -51,7 +51,8 @@ async def test_connection_status_sensors(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    mock_iometer_client.get_current_status.return_value.device.core.connection_status = "disconnected"
+    status = mock_iometer_client.get_current_status.return_value
+    status.device.core.connection_status = "disconnected"
 
     freezer.tick(delta=timedelta(minutes=1))
     async_fire_time_changed(hass)
@@ -86,7 +87,8 @@ async def test_attachment_status_sensors(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    mock_iometer_client.get_current_status.return_value.device.core.attachment_status = "detached"
+    status = mock_iometer_client.get_current_status.return_value
+    status.device.core.attachment_status = "detached"
 
     freezer.tick(delta=timedelta(minutes=1))
     async_fire_time_changed(hass)
@@ -121,7 +123,8 @@ async def test_attachment_status_sensors_unkown(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    mock_iometer_client.get_current_status.return_value.device.core.attachment_status = None
+    status = mock_iometer_client.get_current_status.return_value
+    status.device.core.attachment_status = None
 
     freezer.tick(delta=timedelta(minutes=1))
     async_fire_time_changed(hass)

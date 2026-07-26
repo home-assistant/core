@@ -68,6 +68,23 @@ DATASET_1_WITH_WAKEUP_CHANNEL = (
     "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F84A0300000B"
 )
 
+# Same as DATASET_1 but with the legacy Beacons bit set in the security policy
+# (02A0F7F8 -> 02A0FFF8), same timestamp. Newer OpenThread versions clear this
+# bit by default without bumping the active timestamp.
+DATASET_1_WITH_BEACONS_FLAG = (
+    "0E080000000000010000000300000F35060004001FFFE0020811111111222222220708FDAD70BF"
+    "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
+    "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0FFF8"
+)
+
+# Same as DATASET_1 but with a different security policy rotation time (672h ->
+# 673h, 02A0F7F8 -> 02A1F7F8), same timestamp. A genuine security policy change.
+DATASET_1_OTHER_SECURITY_POLICY = (
+    "0E080000000000010000000300000F35060004001FFFE0020811111111222222220708FDAD70BF"
+    "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
+    "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A1F7F8"
+)
+
 
 async def test_add_invalid_dataset(hass: HomeAssistant) -> None:
     """Test adding an invalid dataset."""
@@ -262,25 +279,60 @@ async def test_update_dataset_older(
     )
 
 
-async def test_update_dataset_wakeup_channel(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    ("stored", "updated"),
+    [
+        # WAKEUP_CHANNEL was added to OpenThread but the wake-up protocol isn't
+        # defined yet, so a dataset that only adds this field is equivalent.
+        pytest.param(DATASET_1, DATASET_1_WITH_WAKEUP_CHANNEL, id="wakeup_channel"),
+        # Newer OpenThread versions clear the legacy Beacons bit in the security
+        # policy without bumping the active timestamp.
+        pytest.param(DATASET_1_WITH_BEACONS_FLAG, DATASET_1, id="beacons_flag"),
+    ],
+)
+async def test_update_dataset_equivalent(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    stored: str,
+    updated: str,
 ) -> None:
-    """Test that adding WAKEUP_CHANNEL with the same timestamp is silently accepted.
+    """Test that an equivalent dataset with the same timestamp is silently accepted.
 
-    WAKEUP_CHANNEL was added to OpenThread but the wake-up protocol isn't
-    defined yet. We treat a dataset that only adds this key as equivalent,
-    updating the stored TLV without logging a warning.
+    Some OpenThread Border Router versions report functionally equivalent
+    datasets without incrementing the active timestamp. We update the stored
+    TLV without logging a warning.
     """
-    await dataset_store.async_add_dataset(hass, "test", DATASET_1)
-    await dataset_store.async_add_dataset(hass, "test", DATASET_1_WITH_WAKEUP_CHANNEL)
+    await dataset_store.async_add_dataset(hass, "test", stored)
+    await dataset_store.async_add_dataset(hass, "test", updated)
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
-    assert list(store.datasets.values())[0].tlv == DATASET_1_WITH_WAKEUP_CHANNEL
+    assert list(store.datasets.values())[0].tlv == updated
 
     assert (
         "Got dataset with same extended PAN ID and same or older active timestamp"
         not in caplog.text
+    )
+
+
+async def test_update_dataset_changed_security_policy(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a genuine security policy change with the same timestamp warns.
+
+    Only the ignored Beacons bit and WAKEUP_CHANNEL are treated as equivalent;
+    any other change (here the rotation time) is still reported.
+    """
+    await dataset_store.async_add_dataset(hass, "test", DATASET_1)
+    await dataset_store.async_add_dataset(hass, "test", DATASET_1_OTHER_SECURITY_POLICY)
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    assert list(store.datasets.values())[0].tlv == DATASET_1
+
+    assert (
+        "Got dataset with same extended PAN ID and same or older active timestamp"
+        in caplog.text
     )
 
 
@@ -728,6 +780,64 @@ async def test_set_preferred_extended_address(hass: HomeAssistant) -> None:
         hass, "source", DATASET_1_LARGER_TIMESTAMP, preferred_extended_address="blah"
     )
     assert list(store.datasets.values())[2].preferred_extended_address == "blah"
+
+
+async def test_refresh_preferred_extended_address(hass: HomeAssistant) -> None:
+    """Test the preferred extended address is refreshed when the border agent ID matches.
+
+    An OTBR upgrade can regenerate the extended address while keeping the same
+    border agent ID. In that case the stored extended address should be updated
+    so the preferred border agent keeps being recognized.
+    """
+    await dataset_store.async_add_dataset(
+        hass,
+        "source",
+        DATASET_1,
+        preferred_border_agent_id="baid",
+        preferred_extended_address="old_address",
+    )
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    entry = list(store.datasets.values())[0]
+    assert entry.preferred_border_agent_id == "baid"
+    assert entry.preferred_extended_address == "old_address"
+
+    # Same dataset and border agent ID, new extended address: refresh the address
+    await dataset_store.async_add_dataset(
+        hass,
+        "source",
+        DATASET_1,
+        preferred_border_agent_id="baid",
+        preferred_extended_address="new_address",
+    )
+    entry = list(store.datasets.values())[0]
+    assert entry.preferred_border_agent_id == "baid"
+    assert entry.preferred_extended_address == "new_address"
+
+    # Different border agent ID: leave the preferred border agent untouched
+    await dataset_store.async_add_dataset(
+        hass,
+        "source",
+        DATASET_1,
+        preferred_border_agent_id="other_baid",
+        preferred_extended_address="other_address",
+    )
+    entry = list(store.datasets.values())[0]
+    assert entry.preferred_border_agent_id == "baid"
+    assert entry.preferred_extended_address == "new_address"
+
+    # Newer dataset (same extended PAN ID) with matching border agent ID: refresh
+    await dataset_store.async_add_dataset(
+        hass,
+        "source",
+        DATASET_1_LARGER_TIMESTAMP,
+        preferred_border_agent_id="baid",
+        preferred_extended_address="newest_address",
+    )
+    entry = list(store.datasets.values())[0]
+    assert entry.preferred_border_agent_id == "baid"
+    assert entry.preferred_extended_address == "newest_address"
 
 
 async def test_automatically_set_preferred_dataset(

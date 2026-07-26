@@ -1,9 +1,8 @@
 """Sensor for monitoring the size of a file."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -91,6 +90,7 @@ class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | int | datetime:
         """Return the value of the sensor."""
         value: float | int | datetime = self.coordinator.data[

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[binary_sensor.model0_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_all_entities[binary_sensor.model0_burner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'model0 Burner',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Burner',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_burner',
@@ -51,8 +52,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_circulation_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_all_entities[binary_sensor.model0_circulation_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'model0 Circulation pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Circulation pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_circulation_pump',
@@ -101,8 +103,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_circulation_pump_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_all_entities[binary_sensor.model0_circulation_pump_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'model0 Circulation pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Circulation pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_circulation_pump_2',
@@ -151,8 +154,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_dhw_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,8 +192,8 @@
 # name: test_all_entities[binary_sensor.model0_dhw_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'model0 DHW charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 DHW charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_dhw_charging',
@@ -201,8 +205,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_dhw_circulation_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -238,8 +243,8 @@
 # name: test_all_entities[binary_sensor.model0_dhw_circulation_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'model0 DHW circulation pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 DHW circulation pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_dhw_circulation_pump',
@@ -251,8 +256,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_dhw_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -288,8 +294,8 @@
 # name: test_all_entities[binary_sensor.model0_dhw_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'model0 DHW pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 DHW pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_dhw_pump',
@@ -301,8 +307,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_frost_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -338,7 +345,7 @@
 # name: test_all_entities[binary_sensor.model0_frost_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 Frost protection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Frost protection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_frost_protection',
@@ -350,8 +357,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_frost_protection_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -387,7 +395,7 @@
 # name: test_all_entities[binary_sensor.model0_frost_protection_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 Frost protection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Frost protection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_frost_protection_2',
@@ -399,8 +407,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_one_time_charge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -436,8 +445,8 @@
 # name: test_all_entities[binary_sensor.model0_one_time_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'model0 One-time charge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 One-time charge',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_one_time_charge',
@@ -449,8 +458,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model1_child_safety_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -486,7 +496,7 @@
 # name: test_all_entities[binary_sensor.model1_child_safety_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model1 Child safety lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model1 Child safety lock',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model1_child_safety_lock',
@@ -498,8 +508,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model1_identification_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -535,7 +546,7 @@
 # name: test_all_entities[binary_sensor.model1_identification_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model1 Identification mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model1 Identification mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model1_identification_mode',
@@ -547,8 +558,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model1_mounting_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -584,7 +596,7 @@
 # name: test_all_entities[binary_sensor.model1_mounting_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model1 Mounting mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model1 Mounting mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model1_mounting_mode',
@@ -596,8 +608,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model1_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -633,8 +646,8 @@
 # name: test_all_entities[binary_sensor.model1_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'model1 Valve',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model1 Valve',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model1_valve',
@@ -646,8 +659,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model2_identification_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -683,7 +697,7 @@
 # name: test_all_entities[binary_sensor.model2_identification_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model2 Identification mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model2 Identification mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model2_identification_mode',
@@ -695,8 +709,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model3_identification_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -732,7 +747,7 @@
 # name: test_all_entities[binary_sensor.model3_identification_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model3 Identification mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model3 Identification mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model3_identification_mode',
@@ -744,8 +759,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model4_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -781,8 +797,8 @@
 # name: test_all_entities[binary_sensor.model4_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'model4 Valve',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model4 Valve',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model4_valve',
@@ -795,8 +811,8 @@
 # name: test_binary_sensors[burner]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'model0 Burner',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Burner',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_burner',
@@ -809,8 +825,8 @@
 # name: test_binary_sensors[circulation_pump]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'model0 Circulation pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Circulation pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_circulation_pump',
@@ -823,7 +839,7 @@
 # name: test_binary_sensors[frost_protection]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 Frost protection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Frost protection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_frost_protection',

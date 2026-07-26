@@ -215,7 +215,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_mode - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_mode - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -293,7 +296,10 @@ async def test_if_state_legacy(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_mode - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_mode - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

@@ -48,7 +48,8 @@ async def test_services(
     await call_service(hass, SERVICE_TOGGLE, ent5)
     await call_service(hass, SERVICE_TOGGLE, ent6)
 
-    # entities should be either closed or closing, depending on if they report transitional states
+    # entities should be either closed or closing,
+    # depending on if they report transitional states
     assert is_closed(hass, ent1)
     assert is_closing(hass, ent2, 50)
     assert is_closed(hass, ent3)
@@ -66,7 +67,8 @@ async def test_services(
     await call_service(hass, SERVICE_TOGGLE, ent5)
     await call_service(hass, SERVICE_TOGGLE, ent6)
 
-    # entities should be in correct state depending on the SUPPORT_STOP feature and cover position
+    # entities should be in correct state depending on
+    # the SUPPORT_STOP feature and cover position
     assert is_open(hass, ent1)
     assert is_closed(hass, ent2, 0)
     assert is_open(hass, ent3)
@@ -82,7 +84,8 @@ async def test_services(
     await call_service(hass, SERVICE_TOGGLE, ent5)
     await call_service(hass, SERVICE_TOGGLE, ent6)
 
-    # entities should be in correct state depending on the SUPPORT_STOP feature and cover position
+    # entities should be in correct state depending on
+    # the SUPPORT_STOP feature and cover position
     assert is_closed(hass, ent1)
     assert is_opening(hass, ent2, 0, closed=True)
     assert is_closed(hass, ent3)

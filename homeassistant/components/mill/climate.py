@@ -1,10 +1,9 @@
 """Support for mill wifi-enabled home heaters."""
 
-from typing import Any
+from typing import Any, override
 
 import mill
 from mill_local import OperationMode
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -13,59 +12,28 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_IP_ADDRESS,
-    CONF_USERNAME,
-    PRECISION_TENTHS,
-    UnitOfTemperature,
-)
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_AWAY_TEMP,
-    ATTR_COMFORT_TEMP,
-    ATTR_ROOM_NAME,
-    ATTR_SLEEP_TEMP,
-    CLOUD,
-    CONNECTION_TYPE,
-    DOMAIN,
-    LOCAL,
-    MANUFACTURER,
-    MAX_TEMP,
-    MIN_TEMP,
-    SERVICE_SET_ROOM_TEMP,
-)
-from .coordinator import MillDataUpdateCoordinator
+from .const import CONNECTION_TYPE, LOCAL, MANUFACTURER, MAX_TEMP, MIN_TEMP
+from .coordinator import MillConfigEntry, MillDataUpdateCoordinator
 from .entity import MillBaseEntity
-
-SET_ROOM_TEMP_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ROOM_NAME): cv.string,
-        vol.Optional(ATTR_AWAY_TEMP): cv.positive_int,
-        vol.Optional(ATTR_COMFORT_TEMP): cv.positive_int,
-        vol.Optional(ATTR_SLEEP_TEMP): cv.positive_int,
-    }
-)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MillConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Mill climate."""
+    mill_data_coordinator = entry.runtime_data
+
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
-        mill_data_coordinator = hass.data[DOMAIN][LOCAL][entry.data[CONF_IP_ADDRESS]]
         async_add_entities([LocalMillHeater(mill_data_coordinator)])
         return
-
-    mill_data_coordinator = hass.data[DOMAIN][CLOUD][entry.data[CONF_USERNAME]]
 
     entities = [
         MillHeater(mill_data_coordinator, mill_device)
@@ -73,20 +41,6 @@ async def async_setup_entry(
         if isinstance(mill_device, mill.Heater)
     ]
     async_add_entities(entities)
-
-    async def set_room_temp(service: ServiceCall) -> None:
-        """Set room temp."""
-        room_name = service.data.get(ATTR_ROOM_NAME)
-        sleep_temp = service.data.get(ATTR_SLEEP_TEMP)
-        comfort_temp = service.data.get(ATTR_COMFORT_TEMP)
-        away_temp = service.data.get(ATTR_AWAY_TEMP)
-        await mill_data_coordinator.mill_data_connection.set_room_temperatures_by_name(
-            room_name, sleep_temp, comfort_temp, away_temp
-        )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_ROOM_TEMP, set_room_temp, schema=SET_ROOM_TEMP_SCHEMA
-    )
 
 
 class MillHeater(MillBaseEntity, ClimateEntity):
@@ -111,6 +65,7 @@ class MillHeater(MillBaseEntity, ClimateEntity):
         self._attr_unique_id = device.device_id
         super().__init__(coordinator, device)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature and optionally HVAC mode."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -123,6 +78,7 @@ class MillHeater(MillBaseEntity, ClimateEntity):
         else:
             await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.HEAT:
@@ -136,6 +92,7 @@ class MillHeater(MillBaseEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     @callback
+    @override
     def _update_attr(self, device: mill.Heater) -> None:
         self._available = device.available
         self._attr_extra_state_attributes = {
@@ -191,6 +148,7 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
 
         self._update_attr()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature and optionally HVAC mode."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -203,17 +161,20 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
         else:
             await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
+        conn = self.coordinator.mill_data_connection
         if hvac_mode == HVACMode.HEAT:
-            await self.coordinator.mill_data_connection.set_operation_mode_control_individually()
+            await conn.set_operation_mode_control_individually()
         elif hvac_mode == HVACMode.OFF:
-            await self.coordinator.mill_data_connection.set_operation_mode_off()
+            await conn.set_operation_mode_off()
         elif hvac_mode == HVACMode.AUTO:
-            await self.coordinator.mill_data_connection.set_operation_mode_weekly_program()
+            await conn.set_operation_mode_weekly_program()
         await self.coordinator.async_request_refresh()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attr()

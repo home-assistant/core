@@ -1,6 +1,6 @@
 """Intents for the humidifier integration."""
 
-from __future__ import annotations
+from typing import override
 
 import voluptuous as vol
 
@@ -9,7 +9,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
 
 from . import (
-    ATTR_AVAILABLE_MODES,
     ATTR_HUMIDITY,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
@@ -17,6 +16,7 @@ from . import (
     SERVICE_TURN_ON,
     HumidifierEntityFeature,
 )
+from .const import HumidifierEntityCapabilityAttribute
 
 INTENT_HUMIDITY = "HassHumidifierSetpoint"
 INTENT_MODE = "HassHumidifierMode"
@@ -39,6 +39,7 @@ class HumidityHandler(intent.IntentHandler):
     }
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
@@ -94,6 +95,7 @@ class SetModeHandler(intent.IntentHandler):
     }
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
@@ -115,7 +117,10 @@ class SetModeHandler(intent.IntentHandler):
         intent.async_test_feature(state, HumidifierEntityFeature.MODES, "modes")
         mode = slots["mode"]["value"]
 
-        if mode not in (state.attributes.get(ATTR_AVAILABLE_MODES) or []):
+        if mode not in (
+            state.attributes.get(HumidifierEntityCapabilityAttribute.AVAILABLE_MODES)
+            or []
+        ):
             raise intent.IntentHandleError(
                 f"Entity {state.name} does not support {mode} mode"
             )

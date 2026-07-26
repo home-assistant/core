@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant.components.apsystems.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
@@ -11,8 +13,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_create_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_apsystems: AsyncMock
+    hass: HomeAssistant, mock_apsystems: AsyncMock
 ) -> None:
     """Test we handle creatinw with success."""
     result = await hass.config_entries.flow.async_init(
@@ -27,8 +30,9 @@ async def test_form_create_success(
     assert result["data"].get(CONF_IP_ADDRESS) == "127.0.0.1"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_create_success_custom_port(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_apsystems: AsyncMock
+    hass: HomeAssistant, mock_apsystems: AsyncMock
 ) -> None:
     """Test we handle creating with custom port with success."""
     result = await hass.config_entries.flow.async_init(
@@ -45,8 +49,9 @@ async def test_form_create_success_custom_port(
     assert result["data"].get(CONF_PORT) == 8042
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_cannot_connect_and_recover(
-    hass: HomeAssistant, mock_apsystems: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_apsystems: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
 
@@ -75,8 +80,9 @@ async def test_form_cannot_connect_and_recover(
     assert result2["data"].get(CONF_IP_ADDRESS) == "127.0.0.1"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_cannot_connect_and_recover_custom_port(
-    hass: HomeAssistant, mock_apsystems: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_apsystems: AsyncMock
 ) -> None:
     """Test we handle cannot connect error but recovering with custom port."""
 
@@ -102,11 +108,9 @@ async def test_form_cannot_connect_and_recover_custom_port(
     assert result2["data"].get(CONF_PORT) == 8042
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_unique_id_already_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_apsystems: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_apsystems: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test we handle cannot connect error."""
     mock_config_entry.add_to_hass(hass)

@@ -1,7 +1,5 @@
 """Helpers for LCN component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable
 from copy import deepcopy
@@ -161,7 +159,9 @@ def purge_device_registry(
 
     # Find device that references the host.
     references_host = set()
-    host_device = device_registry.async_get_device(identifiers={(DOMAIN, entry_id)})
+    host_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry_id), entry_id
+    )
     if host_device is not None:
         references_host.add(host_device.id)
 
@@ -169,8 +169,8 @@ def purge_device_registry(
     references_entry_data = set()
     for device_data in imported_entry_data[CONF_DEVICES]:
         device_unique_id = generate_unique_id(entry_id, device_data[CONF_ADDRESS])
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_unique_id)}
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_unique_id), entry_id
         )
         if device is not None:
             references_entry_data.add(device.id)
@@ -204,7 +204,7 @@ def register_lcn_host_device(hass: HomeAssistant, config_entry: LcnConfigEntry) 
 def register_lcn_address_devices(
     hass: HomeAssistant, config_entry: LcnConfigEntry
 ) -> None:
-    """Register LCN modules and groups defined in config_entry as devices in device registry.
+    """Register LCN modules and groups as devices.
 
     The name of all given device_connections is collected and the devices
     are updated.

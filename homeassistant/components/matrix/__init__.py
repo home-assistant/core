@@ -1,7 +1,5 @@
 """The Matrix bot component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Sequence
 import logging
@@ -127,6 +125,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def _read_image_size(image_path: str) -> tuple[int, int]:
+    """Open image to determine image size."""
+    with Image.open(image_path) as image:
+        return image.size
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Matrix bot component."""
     config = config[DOMAIN]
@@ -227,7 +231,8 @@ class MatrixBot:
             else:
                 command[CONF_ROOMS] = list(self._listening_rooms.values())
 
-            # COMMAND_SCHEMA guarantees that exactly one of CONF_WORD, CONF_EXPRESSION, or CONF_REACTION are set.
+            # COMMAND_SCHEMA guarantees that exactly one of
+            # CONF_WORD, CONF_EXPRESSION, or CONF_REACTION are set.
             if (word_command := command.get(CONF_WORD)) is not None:
                 for room_id in command[CONF_ROOMS]:
                     self._word_commands.setdefault(room_id, {})
@@ -243,7 +248,8 @@ class MatrixBot:
 
     async def _handle_room_message(self, room: MatrixRoom, message: Event) -> None:
         """Handle a message sent to a Matrix room."""
-        # Corresponds to message type 'm.text' and NOT other RoomMessage subtypes, like 'm.notice' and 'm.emote'.
+        # Corresponds to message type 'm.text' and NOT other
+        # RoomMessage subtypes, like 'm.notice' and 'm.emote'.
         if not isinstance(message, (RoomMessageText, ReactionEvent)):
             return
         # Don't respond to our own messages.
@@ -344,11 +350,12 @@ class MatrixBot:
                     resolve_response,
                 )
                 return {}
-        # The config schema guarantees it's a valid room alias or id, so room_id is always set.
+        # The config schema guarantees it's a valid room alias
+        # or id, so room_id is always set.
         return {room_alias_or_id: room_id}
 
     async def _resolve_room_aliases(self, listening_rooms: list[RoomAnyID]) -> None:
-        """Resolve any RoomAliases into RoomIDs for the purpose of client interactions."""
+        """Resolve RoomAliases into RoomIDs for client interactions."""
         resolved_rooms = [
             self.hass.async_create_task(
                 self._resolve_room_alias(room_alias_or_id), eager_start=False
@@ -434,7 +441,8 @@ class MatrixBot:
                 )
             elif isinstance(response, WhoamiResponse):
                 _LOGGER.debug(
-                    "Successfully restored login from access token: user_id '%s', device_id '%s'",
+                    "Successfully restored login from access token:"
+                    " user_id '%s', device_id '%s'",
                     response.user_id,
                     response.device_id,
                 )
@@ -504,8 +512,9 @@ class MatrixBot:
             return
 
         # Get required image metadata.
-        image = await self.hass.async_add_executor_job(Image.open, image_path)
-        (width, height) = image.size
+        (width, height) = await self.hass.async_add_executor_job(
+            _read_image_size, image_path
+        )
         mime_type = mimetypes.guess_type(image_path)[0]
         file_stat = await aiofiles.os.stat(image_path)
 

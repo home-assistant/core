@@ -7,6 +7,9 @@ import pytest
 from pyvizio.api.apps import AppConfig
 from pyvizio.const import DEVICE_CLASS_SPEAKER, MAX_VOLUME
 
+from homeassistant.components.vizio.const import DOMAIN
+from homeassistant.core import HomeAssistant
+
 from .const import (
     ACCESS_TOKEN,
     APP_LIST,
@@ -17,14 +20,17 @@ from .const import (
     EQ_LIST,
     INPUT_LIST,
     INPUT_LIST_WITH_APPS,
+    MOCK_SPEAKER_CONFIG,
+    MOCK_USER_VALID_TV_CONFIG,
     MODEL,
     RESPONSE_TOKEN,
     UNIQUE_ID,
     VERSION,
-    ZEROCONF_HOST,
     MockCompletePairingResponse,
     MockStartPairingResponse,
 )
+
+from tests.common import MockConfigEntry
 
 
 class MockInput:
@@ -39,6 +45,33 @@ class MockInput:
 def get_mock_inputs(input_list) -> list[MockInput]:
     """Return list of MockInput."""
     return [MockInput(device_input) for device_input in input_list]
+
+
+@pytest.fixture
+def mock_tv_config_entry() -> MockConfigEntry:
+    """Return a mock TV config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_VALID_TV_CONFIG,
+        unique_id=UNIQUE_ID,
+    )
+
+
+@pytest.fixture
+def mock_speaker_config_entry() -> MockConfigEntry:
+    """Return a mock speaker config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_SPEAKER_CONFIG,
+        unique_id=UNIQUE_ID,
+    )
+
+
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Add config entry to hass and set up the integration."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture(name="vizio_get_unique_id", autouse=True)
@@ -57,6 +90,16 @@ def vizio_data_coordinator_update_fixture() -> Generator[None]:
     with patch(
         "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
         return_value=APP_LIST,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def no_delay_secs() -> Generator[None]:
+    """Patch default delay between remote command repeats to 0."""
+    with patch(
+        "homeassistant.components.vizio.remote.DEFAULT_DELAY_SECS",
+        0,
     ):
         yield
 
@@ -142,13 +185,36 @@ def vizio_bypass_setup_fixture() -> Generator[None]:
 
 @pytest.fixture(name="vizio_bypass_update")
 def vizio_bypass_update_fixture() -> Generator[None]:
-    """Mock component update."""
+    """Mock component update with minimal data."""
     with (
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.can_connect_with_auth_check",
+            "homeassistant.components.vizio.VizioAsync.get_power_state",
             return_value=True,
         ),
-        patch("homeassistant.components.vizio.media_player.VizioDevice.async_update"),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_all_settings",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_current_input",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_inputs_list",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_current_app_config",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_model_name",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_version",
+            return_value=None,
+        ),
     ):
         yield
 
@@ -172,7 +238,15 @@ def vizio_cant_connect_fixture() -> Generator[None]:
             AsyncMock(return_value=False),
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
+            "homeassistant.components.vizio.VizioAsync.get_power_state",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_model_name",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_version",
             return_value=None,
         ),
     ):
@@ -184,11 +258,7 @@ def vizio_update_fixture() -> Generator[None]:
     """Mock valid updates to vizio device."""
     with (
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.can_connect_with_auth_check",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_all_settings",
+            "homeassistant.components.vizio.VizioAsync.get_all_settings",
             return_value={
                 "volume": int(MAX_VOLUME[DEVICE_CLASS_SPEAKER] / 2),
                 "eq": CURRENT_EQ,
@@ -196,28 +266,32 @@ def vizio_update_fixture() -> Generator[None]:
             },
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_setting_options",
+            "homeassistant.components.vizio.VizioAsync.get_setting_options",
             return_value=EQ_LIST,
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_current_input",
+            "homeassistant.components.vizio.VizioAsync.get_current_input",
             return_value=CURRENT_INPUT,
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_inputs_list",
+            "homeassistant.components.vizio.VizioAsync.get_inputs_list",
             return_value=get_mock_inputs(INPUT_LIST),
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
+            "homeassistant.components.vizio.VizioAsync.get_power_state",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_model_name",
+            "homeassistant.components.vizio.VizioAsync.get_model_name",
             return_value=MODEL,
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_version",
+            "homeassistant.components.vizio.VizioAsync.get_version",
             return_value=VERSION,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_current_app_config",
+            return_value=None,
         ),
     ):
         yield
@@ -228,15 +302,15 @@ def vizio_update_with_apps_fixture(vizio_update: None) -> Generator[None]:
     """Mock valid updates to vizio device that supports apps."""
     with (
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_inputs_list",
+            "homeassistant.components.vizio.VizioAsync.get_inputs_list",
             return_value=get_mock_inputs(INPUT_LIST_WITH_APPS),
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_current_input",
+            "homeassistant.components.vizio.VizioAsync.get_current_input",
             return_value="CAST",
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
+            "homeassistant.components.vizio.VizioAsync.get_current_app_config",
             return_value=AppConfig(**CURRENT_APP_CONFIG),
         ),
     ):
@@ -248,26 +322,16 @@ def vizio_update_with_apps_on_input_fixture(vizio_update: None) -> Generator[Non
     """Mock valid updates to vizio device that supports apps but is on a TV input."""
     with (
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_inputs_list",
+            "homeassistant.components.vizio.VizioAsync.get_inputs_list",
             return_value=get_mock_inputs(INPUT_LIST_WITH_APPS),
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_current_input",
+            "homeassistant.components.vizio.VizioAsync.get_current_input",
             return_value=CURRENT_INPUT,
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
+            "homeassistant.components.vizio.VizioAsync.get_current_app_config",
             return_value=AppConfig("unknown", 1, "app"),
         ),
-    ):
-        yield
-
-
-@pytest.fixture(name="vizio_hostname_check")
-def vizio_hostname_check() -> Generator[None]:
-    """Mock vizio hostname resolution."""
-    with patch(
-        "homeassistant.components.vizio.config_flow.socket.gethostbyname",
-        return_value=ZEROCONF_HOST,
     ):
         yield

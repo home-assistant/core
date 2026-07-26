@@ -1,7 +1,7 @@
 """Config flow for Imeon integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from imeon_inverter_api.inverter import Inverter
@@ -26,6 +26,7 @@ class ImeonInverterConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _host: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -90,6 +91,7 @@ class ImeonInverterConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

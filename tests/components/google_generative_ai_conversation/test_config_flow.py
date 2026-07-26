@@ -13,7 +13,6 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_HARASSMENT_BLOCK_THRESHOLD,
     CONF_HATE_BLOCK_THRESHOLD,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
@@ -38,7 +37,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     RECOMMENDED_TTS_OPTIONS,
     RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -52,7 +51,7 @@ def get_models_pager():
     model_25_flash = Mock(
         supported_actions=["generateContent"],
     )
-    model_25_flash.name = "models/gemini-2.5-flash"
+    model_25_flash.name = "models/gemini-3.1-flash-lite"
 
     model_20_flash = Mock(
         supported_actions=["generateContent"],
@@ -69,17 +68,17 @@ def get_models_pager():
     )
     model_15_pro.name = "models/gemini-1.5-pro-latest"
 
-    model_25_flash_tts = Mock(
+    model_31_flash_tts = Mock(
         supported_actions=["generateContent"],
     )
-    model_25_flash_tts.name = "models/gemini-2.5-flash-preview-tts"
+    model_31_flash_tts.name = "models/gemini-3.1-flash-tts-preview"
 
     async def models_pager():
         yield model_25_flash
         yield model_20_flash
         yield model_15_flash
         yield model_15_pro
-        yield model_25_flash_tts
+        yield model_31_flash_tts
 
     return models_pager()
 
@@ -279,13 +278,6 @@ async def test_creating_subentry(
                 CONF_RECOMMENDED: False,
                 CONF_CHAT_MODEL: RECOMMENDED_TTS_MODEL,
                 CONF_TEMPERATURE: 1.0,
-                CONF_TOP_P: 1.0,
-                CONF_TOP_K: 1,
-                CONF_MAX_TOKENS: 1024,
-                CONF_HARASSMENT_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
-                CONF_HATE_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
-                CONF_SEXUAL_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
-                CONF_DANGEROUS_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
             },
         ),
         (

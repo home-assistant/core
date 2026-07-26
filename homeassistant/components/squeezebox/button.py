@@ -1,9 +1,8 @@
 """Platform for button integration for squeezebox."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -156,6 +155,7 @@ class SqueezeboxButtonEntity(SqueezeboxEntity, ButtonEntity):
             f"{format_mac(self._player.player_id)}_{entity_description.key}"
         )
 
+    @override
     async def async_press(self) -> None:
         """Execute the button action."""
         await safe_library_call(

@@ -1,7 +1,5 @@
 """Test the builtin backup platform."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from io import StringIO
 import json

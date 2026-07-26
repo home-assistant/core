@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switches[switch.technove_station_auto_charge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_switches[switch.technove_station_auto_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TechnoVE Station Auto-charge',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Auto-charge',
     }),
     'context': <ANY>,
     'entity_id': 'switch.technove_station_auto_charge',
@@ -50,8 +51,9 @@
 # ---
 # name: test_switches[switch.technove_station_charging_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_switches[switch.technove_station_charging_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TechnoVE Station Charging enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Charging enabled',
     }),
     'context': <ANY>,
     'entity_id': 'switch.technove_station_charging_enabled',
