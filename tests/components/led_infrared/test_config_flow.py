@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components.led_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
     LEDIrDeviceType,
 )
@@ -15,10 +16,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
-from tests.components.infrared import EMITTER_ENTITY_ID
+from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
 
 
-@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+@pytest.mark.usefixtures(
+    "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
+)
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -32,6 +35,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         {
             CONF_DEVICE_TYPE: LEDIrDeviceType.GENERIC_24_KEY,
             CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+            CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
         },
     )
     await hass.async_block_till_done()
@@ -41,13 +45,29 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["data"] == {
         CONF_DEVICE_TYPE: LEDIrDeviceType.GENERIC_24_KEY,
         CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+        CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        {
+            CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+        },
+        {
+            CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
+        },
+    ],
+)
+@pytest.mark.usefixtures(
+    "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
+)
 async def test_form_already_configured(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    user_input: dict[str, str],
 ) -> None:
     """Test we abort when already configured."""
     config_entry.add_to_hass(hass)
@@ -61,7 +81,7 @@ async def test_form_already_configured(
         result["flow_id"],
         {
             CONF_DEVICE_TYPE: LEDIrDeviceType.GENERIC_24_KEY,
-            CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+            **user_input,
         },
     )
     await hass.async_block_till_done()
@@ -71,10 +91,10 @@ async def test_form_already_configured(
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
-async def test_user_flow_requires_emitter(
+async def test_user_flow_requires_emitter_or_receiver(
     hass: HomeAssistant,
 ) -> None:
-    """Test user flow requires an infrared emitter."""
+    """Test user flow requires an infrared emitter or receiver."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -89,8 +109,8 @@ async def test_user_flow_requires_emitter(
 
 
 @pytest.mark.usefixtures("init_infrared")
-async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
-    """Test user flow aborts when no infrared emitters exist."""
+async def test_user_flow_no_emitters_receivers(hass: HomeAssistant) -> None:
+    """Test user flow aborts when no infrared emitters or receivers exist."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -150,19 +170,27 @@ async def test_reconfigure_flow_requires_emitter(
     assert result["errors"] == {"base": "missing_infrared_entity"}
 
 
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        {
+            CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+        },
+        {
+            CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
+        },
+    ],
+)
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_flow_reconfigure_already_configured(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, user_input: dict[str, str]
 ) -> None:
     """Test reconfigure flow."""
     config_entry_2 = MockConfigEntry(
         domain=DOMAIN,
         title="LED Infrared via Test IR emitter",
         entry_id="0987654321",
-        data={
-            CONF_DEVICE_TYPE: LEDIrDeviceType.GENERIC_24_KEY,
-            CONF_INFRARED_ENTITY_ID: None,
-        },
+        data={CONF_DEVICE_TYPE: LEDIrDeviceType.GENERIC_24_KEY},
     )
     config_entry.add_to_hass(hass)
     config_entry_2.add_to_hass(hass)
@@ -172,8 +200,7 @@ async def test_flow_reconfigure_already_configured(
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID},
+        result["flow_id"], user_input
     )
     await hass.async_block_till_done()
 
