@@ -16,7 +16,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import DEGREE, EntityCategory, UnitOfSpeed, UnitOfVolume
+from homeassistant.const import (
+    DEGREE,
+    EntityCategory,
+    UnitOfRatio,
+    UnitOfSpeed,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -103,6 +109,12 @@ def _describe(
         if device_class is None:
             if unit == "%" and "relativehumidity" in identifier:
                 device_class = SensorDeviceClass.HUMIDITY
+            elif unit == UnitOfRatio.PARTS_PER_MILLION and (
+                "co2" in identifier or "carbondioxide" in identifier
+            ):
+                # ppm is a generic concentration; only claim CO2 when the
+                # readout says so, since growers define their own.
+                device_class = SensorDeviceClass.CO2
             elif unit == UnitOfSpeed.METERS_PER_SECOND:
                 device_class = (
                     SensorDeviceClass.WIND_SPEED

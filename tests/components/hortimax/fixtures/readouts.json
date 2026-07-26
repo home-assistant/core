@@ -306,5 +306,43 @@
         "value": 2.4
       }
     ]
+  },
+  {
+    "name": "CO2 level",
+    "readoutIdentifier": "CO2Level-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "PartsPerMillion",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Block 001",
+      "sourceType": "Block",
+      "userDefinedName": "Kas 1",
+      "sourceGroups": ["Block 001"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 812.0
+      }
+    ]
+  },
+  {
+    "name": "Nutrient concentration",
+    "readoutIdentifier": "NutrientConcentration-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "PartsPerMillion",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Block 001",
+      "sourceType": "Block",
+      "userDefinedName": "Kas 1",
+      "sourceGroups": ["Block 001"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 145.0
+      }
+    ]
   }
 ]

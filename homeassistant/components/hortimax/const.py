@@ -153,7 +153,6 @@ UNIT_DEVICE_CLASS: Final[dict[str, SensorDeviceClass]] = {
     UnitOfTemperature.FAHRENHEIT: SensorDeviceClass.TEMPERATURE,
     UnitOfTemperature.KELVIN: SensorDeviceClass.TEMPERATURE,
     UnitOfIrradiance.WATTS_PER_SQUARE_METER: SensorDeviceClass.IRRADIANCE,
-    UnitOfRatio.PARTS_PER_MILLION: SensorDeviceClass.CO2,
     LIGHT_LUX: SensorDeviceClass.ILLUMINANCE,
     UnitOfTime.SECONDS: SensorDeviceClass.DURATION,
     UnitOfTime.MINUTES: SensorDeviceClass.DURATION,
