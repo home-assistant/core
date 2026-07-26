@@ -68,7 +68,7 @@
         <TessieClimateKeeper.CAMP: 'camp'>,
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.5,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 22.5,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_climate',

@@ -399,7 +399,7 @@ async def test_hub_device_info_mac_connections(
     setup_dsm_with_usb: MagicMock,
 ) -> None:
     """Test that the hub DeviceInfo includes MAC address connections."""
-    dev_reg = dr.async_get(hass)
+    dev_reg = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     device = dev_reg.async_get_device(identifiers={(DOMAIN, SERIAL)})
     assert device is not None
     assert device.connections == {

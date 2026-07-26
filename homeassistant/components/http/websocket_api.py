@@ -12,9 +12,9 @@ from homeassistant.components.homeassistant import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from . import async_verify_can_bind
 from .config import HTTP_STORAGE_SCHEMA, ConfData, async_get_and_load_store
 from .const import ATTR_CONFIG, CONF_SERVER_PORT
+from .server import async_verify_can_bind
 
 ERR_BIND_FAILED: Final = "bind_failed"
 
@@ -39,8 +39,12 @@ async def websocket_get_config(
 
     ``stable`` is the confirmed-working config
     ``pending`` is an unconfirmed config awaiting promotion, or ``None``.
+    A pending config that failed its trial is kept with its ``error``
+    (and ``error_message``) recorded, but is never applied again.
     ``revert_at`` is when an unconfirmed pending config auto-reverts to
     stable, or ``None`` when no revert is scheduled.
+    ``active_config_type`` is the slot the running server was started with.
+    ``default`` is the built-in default config.
     """
     store = await async_get_and_load_store(hass)
     connection.send_result(
@@ -49,6 +53,8 @@ async def websocket_get_config(
             "stable": store.stable,
             "pending": store.pending,
             "revert_at": store.revert_deadline,
+            "active_config_type": store.active_config_type,
+            "default": store.default,
         },
     )
 
