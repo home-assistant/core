@@ -89,7 +89,6 @@ async def test_system_info_error_is_best_effort(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Meter sensors must stay available despite the best-effort system-info error.
     meter_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_1.8.0"
     )
