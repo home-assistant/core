@@ -358,28 +358,63 @@ async def test_user_flow_v3_vacm_denied_sysdescr(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_timeout_generic(
-    hass: HomeAssistant, mock_setup_entry: Mock
+@pytest.mark.parametrize(
+    ("version", "errindication", "step2_data", "expected_error", "retry_data"),
+    [
+        pytest.param(
+            "1",
+            errind.requestTimedOut,
+            {"community": "public"},
+            "snmp_timeout",
+            {"community": "public"},
+            id="timeout",
+        ),
+        pytest.param(
+            "3",
+            errind.wrongDigest,
+            {"username": "user", "auth_key": "pass"},
+            "usm_wrong_digests",
+            {"username": "user", "auth_key": "correct_pass"},
+            id="wrong_digest",
+        ),
+        pytest.param(
+            "3",
+            errind.unknownUserName,
+            {"username": "nouser", "auth_key": "pass"},
+            "invalid_auth",
+            {"username": "validuser", "auth_key": "pass"},
+            id="unknown_user",
+        ),
+    ],
+)
+async def test_user_flow_err_indication(
+    hass: HomeAssistant,
+    mock_setup_entry: Mock,
+    version: str,
+    errindication: object,
+    step2_data: dict[str, str],
+    expected_error: str,
+    retry_data: dict[str, str],
 ) -> None:
-    """Test user setup flow failure - timeout on sysDescr, then recovery."""
+    """Test user setup flow failure - various errindications, then recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "1"},
+        {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": version},
     )
 
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
-        return_value=(errind.requestTimedOut, None, None, None),
+        return_value=(errindication, None, None, None),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"community": "public"}
+            result["flow_id"], step2_data
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "snmp_timeout"}
+    assert result["errors"] == {"base": expected_error}
 
     # Retry succeeds
     with patch(
@@ -387,79 +422,7 @@ async def test_user_flow_timeout_generic(
         return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"community": "public"}
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_user_flow_err_indication_wrong_digest(
-    hass: HomeAssistant, mock_setup_entry: Mock
-) -> None:
-    """Test user setup flow failure - v3 wrong digest indication, then recovery."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "3"},
-    )
-
-    with patch(
-        "homeassistant.components.snmp.config_flow.get_cmd",
-        return_value=(errind.wrongDigest, None, None, None),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "user", "auth_key": "pass"}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "usm_wrong_digests"}
-
-    # Retry succeeds
-    with patch(
-        "homeassistant.components.snmp.config_flow.get_cmd",
-        return_value=(None, None, None, [[OctetString("98F")]]),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "user", "auth_key": "correct_pass"}
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_user_flow_err_indication_unknown_user(
-    hass: HomeAssistant, mock_setup_entry: Mock
-) -> None:
-    """Test user setup flow failure - unknown USM user, then recovery."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "3"},
-    )
-
-    with patch(
-        "homeassistant.components.snmp.config_flow.get_cmd",
-        return_value=(errind.unknownUserName, None, None, None),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "nouser", "auth_key": "pass"}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    # Retry succeeds
-    with patch(
-        "homeassistant.components.snmp.config_flow.get_cmd",
-        return_value=(None, None, None, [[OctetString("98F")]]),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "validuser", "auth_key": "pass"}
+            result["flow_id"], retry_data
         )
         await hass.async_block_till_done()
 
