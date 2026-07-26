@@ -72,9 +72,12 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # executor thread (_sync_update_data). Bool assignment is atomic under CPython's GIL.
         self._fetch_device_list: bool = False
 
-        # api is one of two unrelated library classes (OpenApiV1 or GrowattApi)
-        # selected at runtime by api_version; they expose disjoint method sets, so
-        # a union type cannot describe the class-specific calls made below.
+        # api is an OpenApiV1 (v1) or its base class GrowattApi (classic), chosen
+        # by api_version. The two expose different method sets, and mypy cannot
+        # narrow self.api by api_version at each call site, so it is typed as Any.
+        # Statically typing it would need per-branch isinstance narrowing or split
+        # clients across ~25 call sites — an intrusive refactor out of scope for a
+        # dependency bump, better done as a separate follow-up.
         self.api: Any
         if self.api_version == "v1":
             self.username = None

@@ -29,7 +29,6 @@ from collections.abc import Mapping
 import datetime
 from json import JSONDecodeError
 import logging
-from typing import Any
 
 import growattServer
 from growattServer import GrowattV1ApiErrorCode
@@ -334,9 +333,10 @@ async def async_setup_entry(
 
     # Determine API version and get devices
     # Note: auth_type field is guaranteed to exist after migration
-    # api is one of two unrelated library classes (OpenApiV1 or GrowattApi) with
-    # disjoint methods, chosen by auth_type; a union type cannot describe both.
-    api: Any
+    # api is an OpenApiV1 (token auth) or its base class GrowattApi (password
+    # auth), selected by auth_type. Typed as the common base; each branch narrows
+    # to the concrete type it uses.
+    api: growattServer.GrowattApi
     if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
         # V1 API (token-based, no login needed)
         token = config[CONF_TOKEN]
