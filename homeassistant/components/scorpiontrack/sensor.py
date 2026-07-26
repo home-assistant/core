@@ -37,7 +37,6 @@ class ScorpionTrackSpeedSensor(ScorpionTrackEntity, SensorEntity):
     _attr_native_unit_of_measurement = UnitOfSpeed.KILOMETERS_PER_HOUR
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_suggested_display_precision = 1
-    _attr_translation_key = "speed"
 
     def __init__(self, coordinator: ScorpionTrackCoordinator, vehicle_id: int) -> None:
         """Initialize the speed sensor."""

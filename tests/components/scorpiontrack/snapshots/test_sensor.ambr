@@ -39,7 +39,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'speed',
+    'translation_key': None,
     'unique_id': '101_1_speed',
     'unit_of_measurement': <UnitOfSpeed.MILES_PER_HOUR: 'mph'>,
   })

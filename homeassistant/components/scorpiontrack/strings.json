@@ -22,13 +22,6 @@
       }
     }
   },
-  "entity": {
-    "sensor": {
-      "speed": {
-        "name": "Speed"
-      }
-    }
-  },
   "exceptions": {
     "cannot_connect": {
       "message": "The ScorpionTrack share could not be reached right now."
