@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HortimaxConfigEntry) -> 
             identifiers={(DOMAIN, device.name)},
             manufacturer=MANUFACTURER,
             name=device.label or device.name,
-            model="Greenhouse controller",
+            model="HortiMaX Pro",
             serial_number=device.name,
         )
 
