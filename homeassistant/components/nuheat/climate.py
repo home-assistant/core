@@ -62,16 +62,24 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = "thermostat"
-    _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT]
+    _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
     _attr_preset_modes = PRESET_MODES
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     def __init__(self, coordinator: NuHeatCoordinator, serial_number: str) -> None:
         """Initialize a NuHeat thermostat entity."""
         super().__init__(coordinator)
         self._serial_number = serial_number
+        # Standby is verified as Manual at 5°C, but documented GET fields cannot
+        # distinguish it. This memory is authoritative only for commands sent by
+        # this running entity; external changes may remain invisible until HA
+        # sends another command or restarts.
+        self._optimistic_standby = False
         self._attr_unique_id = serial_number
         self._attr_temperature_unit = coordinator.hass.config.units.temperature_unit
         self._attr_target_temperature_step = (
@@ -110,6 +118,8 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
     @property
     @override
     def target_temperature(self) -> float | None:
+        if self._optimistic_standby:
+            return None
         if (temperature := self.thermostat.target_temperature) is None:
             return None
         return self._from_celsius(temperature)
@@ -129,12 +139,22 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
     @property
     @override
     def hvac_mode(self) -> HVACMode | None:
+        if self._optimistic_standby:
+            return HVACMode.OFF
         return hvac_mode_for_thermostat(self.thermostat)
 
     @property
     @override
     def hvac_action(self) -> HVACAction:
+        if self._optimistic_standby:
+            return HVACAction.OFF
         return HVACAction.HEATING if self.thermostat.heating else HVACAction.IDLE
+
+    @property
+    @override
+    def assumed_state(self) -> bool:
+        """Return whether OFF is remembered from an unobservable command."""
+        return self._optimistic_standby
 
     @property
     @override
@@ -146,8 +166,12 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
+        requested_hvac_mode = kwargs.get(ATTR_HVAC_MODE)
+        if self._optimistic_standby and requested_hvac_mode is None:
+            # A setpoint from optimistic OFF exits Standby using Manual.
+            requested_hvac_mode = HVACMode.HEAT
         try:
-            mode = setpoint_command_mode(self.thermostat, kwargs.get(ATTR_HVAC_MODE))
+            mode = setpoint_command_mode(self.thermostat, requested_hvac_mode)
         except ValueError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -172,10 +196,14 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
                 temperature_celsius,
                 mode=mode,
             )
+        self._optimistic_standby = False
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        if hvac_mode is HVACMode.OFF:
+            await self.async_turn_off()
+            return
         mode = api_mode_for_hvac_mode(hvac_mode)
         if mode is ScheduleMode.AUTO:
             await self.coordinator.api.set_schedule_mode(self._serial_number, mode)
@@ -185,7 +213,20 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
                 mode,
                 temperature=self.thermostat.target_temperature,
             )
+        self._optimistic_standby = False
         await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_turn_off(self) -> None:
+        """Enter NuHeat's frost-protected Standby state."""
+        await self.coordinator.api.set_standby(self._serial_number)
+        self._optimistic_standby = True
+        await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Resume the schedule and exit Standby."""
+        await self.async_set_hvac_mode(HVACMode.AUTO)
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -212,6 +253,7 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
                 mode,
                 temperature=self.thermostat.target_temperature,
             )
+        self._optimistic_standby = False
         await self.coordinator.async_request_refresh()
 
     @property
