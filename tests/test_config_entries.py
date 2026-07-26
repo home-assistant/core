@@ -504,17 +504,17 @@ async def test_migrate_from_higher_version_not_supported(
         (
             ConfigEntryError,
             config_entries.ConfigEntryState.SETUP_ERROR,
-            "Error setting up entry Mock Title for comp",
+            "Error setting up entry Mock Title for comp during config entry migration",
         ),
         (
             ConfigEntryAuthFailed,
             config_entries.ConfigEntryState.MIGRATION_ERROR,
-            "",
+            "Error migrating entry Mock Title for comp",
         ),
         (
             ConfigEntryNotReady,
             config_entries.ConfigEntryState.SETUP_RETRY,
-            "Config entry 'Mock Title' for comp integration not ready yet",
+            "Config entry migration 'Mock Title' for comp integration not ready yet",
         ),
         (
             HomeAssistantError,

@@ -709,12 +709,14 @@ class ConfigEntry[_DataT = Any]:
         finally:
             current_entry.set(None)
 
-    async def __async_handle_config_entry_setup_error(
+    @callback
+    def __async_handle_config_entry_setup_error(
         self,
         hass: HomeAssistant,
         integration: loader.Integration,
         exc: BaseException,
-    ) -> tuple[str | None, str | None, dict[str, Any] | None]:
+        migration: bool = False,
+    ) -> tuple[str | None, str | None, dict[str, str] | None]:
         """Handle config entry setup error."""
         logger = self.logger
 
@@ -727,7 +729,9 @@ class ConfigEntry[_DataT = Any]:
             error_reason_translation_key = exc.translation_key
             error_reason_translation_placeholders = exc.translation_placeholders
             logger.exception(
-                "Error setting up entry %s for %s: %s",
+                "Error setting up entry %s for %s during config entry migration: %s"
+                if migration is True
+                else "Error setting up entry %s for %s: %s",
                 self.title,
                 self.domain,
                 error_reason,
@@ -768,7 +772,9 @@ class ConfigEntry[_DataT = Any]:
             self._tries += 1
             ready_message = f"ready yet: {message}" if message else "ready yet"
             logger.info(
-                "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
+                "Config entry migration '%s' for %s integration not %s; Retrying in %d seconds"
+                if migration is True
+                else "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
                 self.title,
                 self.domain,
                 ready_message,
@@ -796,7 +802,9 @@ class ConfigEntry[_DataT = Any]:
             # We want to propagate CancelledError if we are being cancelled.
             if (task := asyncio.current_task()) and task.cancelling() > 0:
                 logger.exception(
-                    "Setup of config entry '%s' for %s integration cancelled",
+                    "Migration of config entry '%s' for %s integration cancelled"
+                    if migration is True
+                    else "Setup of config entry '%s' for %s integration cancelled",
                     self.title,
                     self.domain,
                 )
@@ -810,12 +818,20 @@ class ConfigEntry[_DataT = Any]:
             else:
                 # This was not a "real" cancellation, log it and treat as a normal error.
                 logger.exception(
-                    "Error setting up entry %s for %s", self.title, integration.domain
+                    "Error migrating entry %s for %s"
+                    if migration is True
+                    else "Error setting up entry %s for %s",
+                    self.title,
+                    integration.domain,
                 )
 
         else:
             logger.exception(
-                "Error setting up entry %s for %s", self.title, integration.domain
+                "Error migrating entry %s for %s"
+                if migration is True
+                else "Error setting up entry %s for %s",
+                self.title,
+                integration.domain,
             )
 
         return (
@@ -904,28 +920,18 @@ class ConfigEntry[_DataT = Any]:
 
             # Perform migration
             try:
-                if not await self.async_migrate(hass):
-                    self._async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
-                    return
+                migration_result = await self.async_migrate(hass)
             except (
-                ConfigEntryError,
-                ConfigEntryAuthFailed,
-                ConfigEntryNotReady,
                 asyncio.CancelledError,
                 SystemExit,
                 Exception,
             ) as exc:
-                if isinstance(exc, ConfigEntryAuthFailed):
-                    # Auth issues during migration should result in migration error
-                    # directly to not start any reauth flow
-                    self._async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
-                    return
                 (
                     error_reason,
                     error_reason_translation_key,
                     error_reason_translation_placeholders,
-                ) = await self.__async_handle_config_entry_setup_error(
-                    hass, integration, exc
+                ) = self.__async_handle_config_entry_setup_error(
+                    hass, integration, exc, True
                 )
                 if isinstance(exc, asyncio.CancelledError):
                     if (task := asyncio.current_task()) and task.cancelling() > 0:
@@ -939,6 +945,10 @@ class ConfigEntry[_DataT = Any]:
                     error_reason_translation_key,
                     error_reason_translation_placeholders,
                 )
+                return
+
+            if not migration_result:
+                self._async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
                 return
 
             setup_phase = SetupPhases.CONFIG_ENTRY_SETUP
@@ -963,9 +973,6 @@ class ConfigEntry[_DataT = Any]:
                 )
                 result = False
         except (
-            ConfigEntryError,
-            ConfigEntryAuthFailed,
-            ConfigEntryNotReady,
             asyncio.CancelledError,
             SystemExit,
             Exception,
@@ -974,9 +981,7 @@ class ConfigEntry[_DataT = Any]:
                 error_reason,
                 error_reason_translation_key,
                 error_reason_translation_placeholders,
-            ) = await self.__async_handle_config_entry_setup_error(
-                hass, integration, exc
-            )
+            ) = self.__async_handle_config_entry_setup_error(hass, integration, exc)
             if isinstance(exc, asyncio.CancelledError):
                 if (task := asyncio.current_task()) and task.cancelling() > 0:
                     raise
@@ -1275,7 +1280,7 @@ class ConfigEntry[_DataT = Any]:
                 return False
             if result:
                 hass.config_entries._async_schedule_save()  # noqa: SLF001
-        except ConfigEntryError, ConfigEntryAuthFailed, ConfigEntryNotReady:
+        except ConfigEntryError, ConfigEntryNotReady:
             raise
         except Exception:
             self.logger.exception(
