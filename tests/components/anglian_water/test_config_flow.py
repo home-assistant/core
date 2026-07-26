@@ -144,7 +144,7 @@ async def test_already_configured(
     [
         (SelfAssertedError, "invalid_auth"),
         (ValueError, "unknown"),
-        (ConsentRequiredError, "invalid_auth"),
+        (ConsentRequiredError, "consent_required"),
     ],
 )
 async def test_auth_recover_exception(

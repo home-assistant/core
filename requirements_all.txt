@@ -227,7 +227,7 @@ aiobafi6==0.9.0
 # homeassistant.components.aws_s3
 # homeassistant.components.cloudflare_r2
 # homeassistant.components.idrive_e2
-aiobotocore==2.21.1
+aiobotocore==3.7.0
 
 # homeassistant.components.centriconnect
 aiocentriconnect==0.2.3
@@ -572,7 +572,7 @@ asusrouter==1.21.3
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.47.0
+async-upnp-client==0.47.1
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -703,10 +703,7 @@ boschshcpy==0.3.5
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
-boto3==1.37.1
-
-# homeassistant.components.aws
-botocore==1.37.1
+boto3==1.42.97
 
 # homeassistant.components.bring
 bring-api==1.1.2
@@ -1571,7 +1568,7 @@ melnor-bluetooth==0.0.25
 messagebird==1.2.1
 
 # homeassistant.components.meteo_lt
-meteo-lt-pkg==0.2.4
+meteo-lt-pkg==0.7.3
 
 # homeassistant.components.meteoalarm
 meteoalertapi==0.3.1
@@ -1694,7 +1691,7 @@ nhc==0.8.0
 nibe==2.22.0
 
 # homeassistant.components.nice_go
-nice-go==1.0.1
+nice-go==1.0.2
 
 # homeassistant.components.nilu
 niluclient==0.1.2
@@ -2273,7 +2270,7 @@ pyinsteon==1.6.4
 pyintelliclima==0.3.1
 
 # homeassistant.components.intesishome
-pyintesishome==1.8.8
+pyintesishome==2.0.3
 
 # homeassistant.components.ipma
 pyipma==3.0.10
