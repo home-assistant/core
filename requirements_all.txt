@@ -181,7 +181,7 @@ aio-ownet==0.0.5
 aio-wattwaechter==1.0.0
 
 # homeassistant.components.acaia
-aioacaia==0.2.0
+aioacaia==0.2.1
 
 # homeassistant.components.airq
 aioairq==0.4.8
@@ -2695,7 +2695,7 @@ python-homewizard-energy==10.1.0
 python-hpilo==4.4.3
 
 # homeassistant.components.izone
-python-izone==1.3.8
+python-izone==1.3.9
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.1.1
@@ -3342,7 +3342,7 @@ volkszaehler==0.4.0
 volvocarsapi==0.4.3
 
 # homeassistant.components.verisure
-vsure==2.8.0
+vsure==2.10.0
 
 # homeassistant.components.vasttrafik
 vtjp==0.2.1
