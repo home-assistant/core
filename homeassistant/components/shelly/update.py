@@ -105,7 +105,11 @@ class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        new_version = self.entity_description.latest_version(self.status)
+        status = self.entity_description.latest_version(self.status)
+        # After firmware update, available_updates can be None, for a brief moment.
+        new_version = (status.get("available_updates") or {}).get(
+            "stable", {"version": ""}
+        )["version"]
         if new_version:
             return cast(str, new_version)
 
@@ -190,10 +194,7 @@ RPC_UPDATES: Final = {
         translation_key="lora_firmware",
         latest_version=lambda status: (
             # Right after firmware update, lora status can be None
-            # and even available_updates can be None, for a brief moment.
-            ((status or {}).get("available_updates") or {}).get(
-                "stable", {"version": ""}
-            )["version"]
+            status or {}
         ),
         beta=False,
         device_class=UpdateDeviceClass.FIRMWARE,
