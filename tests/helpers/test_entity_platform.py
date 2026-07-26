@@ -1042,6 +1042,29 @@ async def test_entity_limit_not_applied_without_config_entry(
     assert hass.states.get("test_domain.ent2") is not None
 
 
+@pytest.mark.parametrize("domain", sorted(entity_platform.ENTITY_LIMIT_EXEMPT_DOMAINS))
+async def test_entity_limit_not_applied_to_exempt_domains(
+    hass: HomeAssistant,
+    domain: str,
+) -> None:
+    """Test protocol integrations are exempt from the entity limit."""
+    config_entry = MockConfigEntry(domain=domain)
+    config_entry.add_to_hass(hass)
+    platform = MockEntityPlatform(hass)
+    platform.config_entry = config_entry
+
+    with patch.object(entity_platform, "MAX_ENABLED_ENTITIES_PER_CONFIG_ENTRY", 1):
+        await platform.async_add_entities(
+            [
+                MockEntity(unique_id="1", name="ent1"),
+                MockEntity(unique_id="2", name="ent2"),
+            ]
+        )
+
+    assert hass.states.get("test_domain.ent1") is not None
+    assert hass.states.get("test_domain.ent2") is not None
+
+
 async def test_unique_id_conflict_has_priority_over_disabled_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

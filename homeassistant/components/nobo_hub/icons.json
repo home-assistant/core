@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "select": {
+      "global_override": {
+        "default": "mdi:calendar-clock",
+        "state": {
+          "away": "mdi:account-arrow-right",
+          "comfort": "mdi:sofa",
+          "eco": "mdi:leaf"
+        }
+      },
+      "week_profile": {
+        "default": "mdi:calendar-clock"
+      }
+    }
+  }
+}
