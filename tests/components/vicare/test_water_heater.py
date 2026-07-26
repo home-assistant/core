@@ -122,22 +122,35 @@ async def test_set_temperature(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("current_mode", "ha_mode", "vicare_mode"),
+    ("current_mode", "circuit_modes", "ha_mode", "vicare_mode"),
     [
-        pytest.param("standby", "on", "dhw", id="on-from-standby"),
-        pytest.param("dhw", "off", "standby", id="off-from-dhw"),
-        pytest.param("dhwAndHeating", "off", "heating", id="off-preserves-heating"),
-        pytest.param("heating", "on", "dhwAndHeating", id="on-preserves-heating"),
+        pytest.param("standby", ["standby", "dhw"], "on", "dhw", id="on-from-standby"),
+        pytest.param("dhw", ["standby", "dhw"], "off", "standby", id="off-from-dhw"),
+        pytest.param(
+            "dhwAndHeating",
+            ["standby", "heating", "dhwAndHeating"],
+            "off",
+            "heating",
+            id="off-preserves-heating",
+        ),
+        pytest.param(
+            "heating",
+            ["standby", "heating", "dhwAndHeating"],
+            "on",
+            "dhwAndHeating",
+            id="on-preserves-heating",
+        ),
     ],
 )
 async def test_set_operation_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     current_mode: str,
+    circuit_modes: list[str],
     ha_mode: str,
     vicare_mode: str,
 ) -> None:
-    """Test set_operation_mode maps HA modes to ViCare circuit modes."""
+    """Test set_operation_mode maps HA modes to ViCare circuit modes reported by the device."""
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
@@ -151,38 +164,72 @@ async def test_set_operation_mode(
         await setup_integration(hass, mock_config_entry)
 
     entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
-    entity._current_mode = current_mode
-    with patch.object(entity._circuit, "setMode") as mock_set_mode:
+    with (
+        patch.object(entity._circuit, "getActiveMode", return_value=current_mode),
+        patch.object(entity._circuit, "getModes", return_value=circuit_modes),
+    ):
+        await entity.async_update_ha_state(force_refresh=True)
+
         await hass.services.async_call(
             "water_heater",
             SERVICE_SET_OPERATION_MODE,
             {ATTR_ENTITY_ID: ENTITY_WATER_HEATER, ATTR_OPERATION_MODE: ha_mode},
             blocking=True,
         )
-        mock_set_mode.assert_called_once_with(vicare_mode)
+
+    entity._api.service.setProperty.assert_called_once_with(
+        entity._api.service.accessor,
+        "heating.circuits.0.operating.modes.active",
+        "setMode",
+        {"mode": vicare_mode},
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_set_operation_mode_invalid(
+@pytest.mark.parametrize(
+    ("fixture_file", "ha_mode"),
+    [
+        pytest.param(
+            "vicare/Vitocal250A.json", "on", id="vitocal250a-dhw-not-supported"
+        ),
+        pytest.param(
+            "vicare/Vitocal222G_Vitovent300W.json",
+            "off",
+            id="vitocal222g-heating-not-supported",
+        ),
+    ],
+)
+async def test_set_operation_mode_not_supported_by_circuit(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    fixture_file: str,
+    ha_mode: str,
 ) -> None:
-    """Test set_operation_mode raises ServiceValidationError for unknown modes."""
+    """Test set_operation_mode rejects modes the device's circuit does not support."""
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
         patch(
             f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(_FIXTURES).as_vicare_data(),
+            return_value=MockPyViCare([Fixture(set(), fixture_file)]).as_vicare_data(),
         ),
         patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
     ):
         await setup_integration(hass, mock_config_entry)
 
     entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
+    await entity.async_update_ha_state(force_refresh=True)
+
     with pytest.raises(ServiceValidationError):
-        entity.set_operation_mode("invalid_mode")
+        await hass.services.async_call(
+            "water_heater",
+            SERVICE_SET_OPERATION_MODE,
+            {ATTR_ENTITY_ID: ENTITY_WATER_HEATER, ATTR_OPERATION_MODE: ha_mode},
+            blocking=True,
+        )
+
+    entity._api.service.setProperty.assert_not_called()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

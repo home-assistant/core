@@ -682,8 +682,8 @@
     }
   },
   "exceptions": {
-    "operation_mode_unknown": {
-      "message": "Unknown operation mode: {mode}"
+    "operation_mode_not_supported": {
+      "message": "The device does not support the ViCare circuit mode required for operation mode: {mode}"
     },
     "program_not_activated": {
       "message": "Unable to activate ViCare program {program}"

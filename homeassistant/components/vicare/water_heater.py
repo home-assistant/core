@@ -162,6 +162,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
     _attr_translation_key = "domestic_hot_water"
     _current_mode: str | None = None
+    _circuit_modes: list[str] | None = None
     _dhw_active: bool | None = None
     _circulation_schedule: dict[str, Any] | None = None
 
@@ -194,6 +195,9 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
                 self._current_mode = self._circuit.getActiveMode()
 
             with suppress(PyViCareNotSupportedFeatureError):
+                self._circuit_modes = self._circuit.getModes()
+
+            with suppress(PyViCareNotSupportedFeatureError):
                 self._dhw_active = self._api.getDomesticHotWaterActive()
 
             with suppress(PyViCareNotSupportedFeatureError):
@@ -222,10 +226,11 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             if self._current_mode in VICARE_HEATING_ACTIVE_MODES
             else HA_TO_VICARE_HVAC_DHW
         )
-        if (vicare_mode := mode_map.get(operation_mode)) is None:
+        vicare_mode = mode_map[operation_mode]
+        if self._circuit_modes is not None and vicare_mode not in self._circuit_modes:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="operation_mode_unknown",
+                translation_key="operation_mode_not_supported",
                 translation_placeholders={"mode": operation_mode},
             )
         self._circuit.setMode(vicare_mode)
