@@ -26,7 +26,11 @@ LIVEKIT_TOPIC = f"cameras/{SERIAL}/events/local_livekit_heartbeat"
 SETTINGS_TOPIC = f"cameras/{SERIAL}/responses/get-settings"
 
 SETTINGS_PAYLOAD: dict[str, Any] = {
-    "settings": {"preference_stream_paused": False},
+    "settings": {
+        "preference_stream_paused": False,
+        "preference_video_flip": True,
+        "preference_video_has_clock_display": False,
+    },
 }
 HEARTBEAT_PAYLOAD: dict[str, Any] = {
     "temperature": 98.6,

@@ -172,6 +172,14 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
         """Turn the camera stream on or off."""
         await self._client.set_camera_on(camera_on)
 
+    async def async_set_video_flip(self, video_flip: bool) -> None:
+        """Rotate the camera image 180 degrees, or restore it upright."""
+        await self._client.set_video_flip(video_flip)
+
+    async def async_set_clock_display(self, clock_display: bool) -> None:
+        """Show or hide the clock overlay burned into the video."""
+        await self._client.set_clock_display(clock_display)
+
     def _handle_device_update(self, state: HarborDeviceState) -> None:
         """Mirror a library device update into Home Assistant."""
         self._data_event.set()

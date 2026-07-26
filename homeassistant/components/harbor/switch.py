@@ -7,6 +7,7 @@ from typing import Any, override
 from harbor import HarborCommandError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -32,6 +33,20 @@ CAMERA_SWITCHES: tuple[HarborSwitchEntityDescription, ...] = (
         translation_key="camera_on",
         turn_on_fn=lambda coordinator: coordinator.async_set_camera_on(True),
         turn_off_fn=lambda coordinator: coordinator.async_set_camera_on(False),
+    ),
+    HarborSwitchEntityDescription(
+        key="video_flip",
+        translation_key="video_flip",
+        entity_category=EntityCategory.CONFIG,
+        turn_on_fn=lambda coordinator: coordinator.async_set_video_flip(True),
+        turn_off_fn=lambda coordinator: coordinator.async_set_video_flip(False),
+    ),
+    HarborSwitchEntityDescription(
+        key="clock_display",
+        translation_key="clock_display",
+        entity_category=EntityCategory.CONFIG,
+        turn_on_fn=lambda coordinator: coordinator.async_set_clock_display(True),
+        turn_off_fn=lambda coordinator: coordinator.async_set_clock_display(False),
     ),
 )
 
