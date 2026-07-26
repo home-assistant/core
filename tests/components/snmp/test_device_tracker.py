@@ -218,6 +218,7 @@ async def test_device_tracker_update(
 @pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_device_registry_linking(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that entities and devices are correctly linked in the registry."""
@@ -231,19 +232,19 @@ async def test_device_tracker_device_registry_linking(
     )
     entry.add_to_hass(hass)
 
-    dr_reg = dr.async_get(hass)
-
     mac = "00:11:22:33:44:55"
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     # Verify Host Device
-    host_device = dr_reg.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    host_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, entry.entry_id)}
+    )
     assert host_device is not None
 
     # Verify Client Device Linking (it should not exist because device_info was removed)
-    client_device = dr_reg.async_get_device(
+    client_device = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert client_device is None
@@ -291,6 +292,7 @@ async def test_device_tracker_name_resolves_to_mac_address(
 @pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_enabled_if_device_exists(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that an entity is enabled if its device already exists in the registry.
@@ -310,8 +312,7 @@ async def test_device_tracker_enabled_if_device_exists(
     # Pre-register the device in the registry with a valid config entry
     other_entry = MockConfigEntry(domain="other_integration")
     other_entry.add_to_hass(hass)
-    dr_reg = dr.async_get(hass)
-    dr_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=other_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "00:11:22:33:44:55")},
     )

@@ -324,6 +324,7 @@ async def test_walk_errstatus(
 
 async def test_host_info_populates_device_registry(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_coordinator_entry: MockConfigEntry,
 ) -> None:
     """Test that host info is fetched and populates the device registry."""
@@ -350,8 +351,7 @@ async def test_host_info_populates_device_registry(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    dr_reg = dr.async_get(hass)
-    device = dr_reg.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_coordinator_entry.entry_id)}
     )
     assert device is not None
@@ -362,6 +362,7 @@ async def test_host_info_populates_device_registry(
 
 async def test_host_info_no_space_in_descr(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_coordinator_entry: MockConfigEntry,
 ) -> None:
     """Test host info when sysDescr has no spaces."""
@@ -388,8 +389,7 @@ async def test_host_info_no_space_in_descr(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    dr_reg = dr.async_get(hass)
-    device = dr_reg.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_coordinator_entry.entry_id)}
     )
     assert device is not None
@@ -399,6 +399,7 @@ async def test_host_info_no_space_in_descr(
 
 async def test_host_info_pysnmp_error_sets_empty_model(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_coordinator_entry: MockConfigEntry,
 ) -> None:
     """Test that a PySnmpError during host info fetch prevents re-fetching."""
@@ -420,8 +421,7 @@ async def test_host_info_pysnmp_error_sets_empty_model(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    dr_reg = dr.async_get(hass)
-    device = dr_reg.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_coordinator_entry.entry_id)}
     )
     assert device is not None
@@ -430,6 +430,7 @@ async def test_host_info_pysnmp_error_sets_empty_model(
 
 async def test_host_info_errstatus_sets_generic_name(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_coordinator_entry: MockConfigEntry,
 ) -> None:
     """Test that get_cmd with errindication/errstatus sets a generic model name."""
@@ -451,8 +452,7 @@ async def test_host_info_errstatus_sets_generic_name(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    dr_reg = dr.async_get(hass)
-    device = dr_reg.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_coordinator_entry.entry_id)}
     )
     assert device is not None
