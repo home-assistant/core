@@ -384,7 +384,7 @@ async def test_async_poll_manual_hosts_uid_oserror(
     uid = soco_1.uid
 
     with (
-        caplog.at_level(logging.DEBUG),
+        caplog.at_level(logging.WARNING),
         patch.object(
             type(soco_1),
             "uid",
