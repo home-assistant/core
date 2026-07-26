@@ -103,6 +103,40 @@ async def test_unavailable_entity(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_deleted_pot_does_not_change_another_pot(
+    hass: HomeAssistant,
+    basic_monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test deleting a pot does not shift another pot's data."""
+    holiday_pot = {
+        "id": "pot_holiday",
+        "name": "Holiday",
+        "balance": 12345,
+    }
+    basic_monzo.user_account.pots.return_value = [TEST_POTS[0], holiday_pot]
+    await setup_integration(hass, polling_config_entry)
+
+    deleted_entity_id = await async_get_entity_id(
+        hass, TEST_POTS[0]["id"], POT_SENSORS[0]
+    )
+    holiday_entity_id = await async_get_entity_id(
+        hass, holiday_pot["id"], POT_SENSORS[0]
+    )
+    assert deleted_entity_id
+    assert holiday_entity_id
+
+    basic_monzo.user_account.pots.return_value = [{**holiday_pot, "balance": 54321}]
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(deleted_entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(holiday_entity_id).state == "543.21"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
