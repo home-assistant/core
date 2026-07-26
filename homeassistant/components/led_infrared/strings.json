@@ -73,6 +73,7 @@
               "lavender_blush": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::lavender_blush%]",
               "light_cyan": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::light_cyan%]",
               "light_green": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::light_green%]",
+              "magenta": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::magenta%]",
               "mode_1": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_1%]",
               "mode_2": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_2%]",
               "mode_3": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_3%]",

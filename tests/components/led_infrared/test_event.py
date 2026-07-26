@@ -370,7 +370,10 @@ async def test_event(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
     device_type: LEDIrDeviceType,
-    command_code: Generic13KeyCode | Generic24KeyCode,
+    command_code: Generic13KeyCode
+    | Generic24KeyCode
+    | Generic40KeyCode
+    | Generic44KeyCode,
     expected_light_state: str,
     expected_light_effect: str | None,
 ) -> None:
