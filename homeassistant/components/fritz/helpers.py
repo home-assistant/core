@@ -2,7 +2,7 @@
 
 from collections.abc import ValuesView
 
-from .const import _LOGGER
+from .const import LOGGER
 from .models import FritzDevice
 
 
@@ -24,7 +24,7 @@ def device_filter_out_from_trackers(
         reason = "Already tracked"
 
     if reason:
-        _LOGGER.debug(
+        LOGGER.debug(
             "Skip adding device %s [%s], reason: %s", device.hostname, mac, reason
         )
     return bool(reason)
@@ -32,4 +32,4 @@ def device_filter_out_from_trackers(
 
 def ha_is_stopping(activity: str) -> None:
     """Inform that HA is stopping."""
-    _LOGGER.warning("Cannot execute %s: HomeAssistant is shutting down", activity)
+    LOGGER.warning("Cannot execute %s: HomeAssistant is shutting down", activity)

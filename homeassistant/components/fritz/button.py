@@ -16,7 +16,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import _LOGGER, BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, DOMAIN, MeshRoles
+from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, DOMAIN, LOGGER, MeshRoles
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzDeviceBase
 from .helpers import _is_tracked
@@ -125,7 +125,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set buttons for device."""
-    _LOGGER.debug("Setting up buttons")
+    LOGGER.debug("Setting up buttons")
     avm_wrapper = entry.runtime_data
 
     entities_list: list[ButtonEntity] = [
@@ -185,7 +185,7 @@ class FritzButton(ButtonEntity):
     async def async_press(self) -> None:
         """Triggers Fritz!Box service."""
         if self.entity_description.key == "cleanup":
-            _LOGGER.warning(
+            LOGGER.warning(
                 "The 'cleanup' button is deprecated and will"
                 " be removed in Home Assistant Core"
                 " 2026.11.0. Please update your automations"
@@ -194,7 +194,7 @@ class FritzButton(ButtonEntity):
                 " automatically at each data refresh",
             )
         elif self.entity_description.key == "firmware_update":
-            _LOGGER.warning(
+            LOGGER.warning(
                 "The 'firmware update' button is deprecated"
                 " and will be removed in Home Assistant"
                 " Core 2026.11.0. It has been superseded"
@@ -211,17 +211,17 @@ def _async_wol_buttons_list(
     data_fritz: FritzData,
 ) -> list[FritzBoxWOLButton]:
     """Add new WOL button entities from the AVM device."""
-    _LOGGER.debug("Setting up %s buttons", BUTTON_TYPE_WOL)
+    LOGGER.debug("Setting up %s buttons", BUTTON_TYPE_WOL)
 
     new_wols: list[FritzBoxWOLButton] = []
 
     for mac, device in avm_wrapper.devices.items():
         if _is_tracked(mac, data_fritz.wol_buttons.values()):
-            _LOGGER.debug("Skipping wol button creation for device %s", device.hostname)
+            LOGGER.debug("Skipping wol button creation for device %s", device.hostname)
             continue
 
         if device.connection_type != CONNECTION_TYPE_LAN:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Skipping wol button creation for device %s, not connected via LAN",
                 device.hostname,
             )
@@ -230,7 +230,7 @@ def _async_wol_buttons_list(
         new_wols.append(FritzBoxWOLButton(avm_wrapper, device))
         data_fritz.wol_buttons[avm_wrapper.unique_id].add(mac)
 
-    _LOGGER.debug("Creating %s wol buttons", len(new_wols))
+    LOGGER.debug("Creating %s wol buttons", len(new_wols))
     return new_wols
 
 

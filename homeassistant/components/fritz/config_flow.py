@@ -35,7 +35,6 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 
 from .const import (
-    _LOGGER,
     CONF_FEATURE_DEVICE_TRACKING,
     CONF_OLD_DISCOVERY,
     DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
@@ -50,6 +49,7 @@ from .const import (
     ERROR_UNKNOWN,
     ERROR_UPNP_NOT_CONFIGURED,
     FRITZ_AUTH_EXCEPTIONS,
+    LOGGER,
 )
 from .coordinator import FritzConfigEntry
 
@@ -103,7 +103,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         except FritzConnectionException:
             return ERROR_CANNOT_CONNECT
         except Exception:  # noqa: BLE001
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             return ERROR_UNKNOWN
 
         self._model = connection.call_action("DeviceInfo:1", "GetInfo")["NewModelName"]

@@ -18,7 +18,7 @@ from requests.exceptions import ConnectionError
 
 from homeassistant.const import Platform
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 
 class MeshRoles(StrEnum):

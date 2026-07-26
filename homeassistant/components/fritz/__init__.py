@@ -13,13 +13,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    _LOGGER,
     CONF_FEATURE_DEVICE_TRACKING,
     DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
     DEFAULT_SSL,
     DOMAIN,
     FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
+    LOGGER,
     PLATFORMS,
 )
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
@@ -36,7 +36,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bool:
     """Set up fritzboxtools from config entry."""
-    _LOGGER.debug("Setting up FRITZ!Box Tools component")
+    LOGGER.debug("Setting up FRITZ!Box Tools component")
 
     avm_wrapper = AvmWrapper(
         hass=hass,

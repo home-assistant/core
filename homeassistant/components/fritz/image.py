@@ -12,7 +12,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import AvmWrapper, FritzConfigEntry
 from .entity import FritzBoxBaseEntity
 
@@ -39,7 +39,7 @@ async def _migrate_to_new_unique_id(
         return
 
     entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
-    _LOGGER.debug(
+    LOGGER.debug(
         "Migrating guest Wi-Fi image unique_id from [%s] to [%s]",
         old_unique_id,
         new_unique_id,
@@ -96,7 +96,7 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
             "png", border=2
         )
         qr_bytes = qr_stream.getvalue()
-        _LOGGER.debug("fetched %s bytes", len(qr_bytes))
+        LOGGER.debug("fetched %s bytes", len(qr_bytes))
 
         return qr_bytes
 
@@ -120,7 +120,7 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
 
         if self._current_qr_bytes != qr_bytes:
             dt_now = dt_util.utcnow()
-            _LOGGER.debug("qr code has changed, reset image last updated property")
+            LOGGER.debug("qr code has changed, reset image last updated property")
             self._attr_image_last_updated = dt_now
             self._current_qr_bytes = qr_bytes
             self.async_write_ha_state()

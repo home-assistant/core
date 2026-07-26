@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import _LOGGER, DEFAULT_DEVICE_NAME
+from .const import DEFAULT_DEVICE_NAME, LOGGER
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzDeviceBase
 from .helpers import device_filter_out_from_trackers
@@ -24,7 +24,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for FRITZ!Box component."""
-    _LOGGER.debug("Starting FRITZ!Box device tracker")
+    LOGGER.debug("Starting FRITZ!Box device tracker")
     avm_wrapper = entry.runtime_data
     data_fritz = hass.data[FRITZ_DATA_KEY]
 
