@@ -682,6 +682,9 @@
     }
   },
   "exceptions": {
+    "circulation_schedule_too_many_slots": {
+      "message": "The device supports at most {max_entries} circulation schedule slots per day, but {day} has more"
+    },
     "operation_mode_not_supported": {
       "message": "The device does not support the ViCare circuit mode required for operation mode: {mode}"
     },
@@ -706,7 +709,7 @@
       "description": "Sets the DHW circulation pump weekly schedule.",
       "fields": {
         "schedule": {
-          "description": "Dict with weekday keys (mon–sun). Each value is a list of slot objects with start (HH:MM), end (HH:MM, or 24:00 for midnight), mode ('on'), and position (int). Max 4 slots/day, 10-minute resolution.",
+          "description": "Dict with weekday keys (mon–sun). Each value is a list of slot objects with start (HH:MM), end (HH:MM, or 24:00 for midnight), mode ('on'), and position (int). The number of slots per day is limited by the device, 10-minute resolution.",
           "name": "Schedule"
         }
       },

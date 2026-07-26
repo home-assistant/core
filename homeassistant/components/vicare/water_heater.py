@@ -44,7 +44,6 @@ OPERATION_MODE_OFF = "off"
 SERVICE_SET_CIRCULATION_SCHEDULE = "set_circulation_schedule"
 
 CIRCULATION_SCHEDULE_WEEKDAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
-CIRCULATION_SCHEDULE_MAX_SLOTS_PER_DAY = 4
 CIRCULATION_SCHEDULE_TIME_PATTERN = r"^([01]\d|2[0-3]):[0-5]\d$"
 # ViCare represents midnight as the end of a slot using "24:00" rather than "00:00".
 CIRCULATION_SCHEDULE_END_TIME_PATTERN = r"^([01]\d|2[0-3]):[0-5]\d$|^24:00$"
@@ -77,7 +76,6 @@ CIRCULATION_SCHEDULE_SCHEMA = vol.Schema(
         vol.Optional(day, default=list): vol.All(
             cv.ensure_list,
             [CIRCULATION_SCHEDULE_SLOT_SCHEMA],
-            vol.Length(max=CIRCULATION_SCHEDULE_MAX_SLOTS_PER_DAY),
         )
         for day in CIRCULATION_SCHEDULE_WEEKDAYS
     }
@@ -152,19 +150,16 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     """Representation of the ViCare domestic hot water device."""
 
     _attr_precision = PRECISION_TENTHS
-    _attr_supported_features = (
-        WaterHeaterEntityFeature.TARGET_TEMPERATURE
-        | WaterHeaterEntityFeature.OPERATION_MODE
-    )
+    _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = VICARE_TEMP_WATER_MIN
     _attr_max_temp = VICARE_TEMP_WATER_MAX
-    _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
     _attr_translation_key = "domestic_hot_water"
     _current_mode: str | None = None
     _circuit_modes: list[str] | None = None
     _dhw_active: bool | None = None
     _circulation_schedule: dict[str, Any] | None = None
+    _circulation_schedule_max_entries: int | None = None
 
     def __init__(
         self,
@@ -211,6 +206,13 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
                     self._api.getDomesticHotWaterCirculationSchedule()
                 )
 
+            with suppress(PyViCareNotSupportedFeatureError, KeyError):
+                self._circulation_schedule_max_entries = self._api.getProperty(
+                    "heating.dhw.pumps.circulation.schedule"
+                )["commands"]["setSchedule"]["params"]["newSchedule"]["constraints"][
+                    "maxEntries"
+                ]
+
     @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
@@ -221,12 +223,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     @override
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
-        mode_map = (
-            HA_TO_VICARE_HVAC_DHW_WITH_HEATING
-            if self._current_mode in VICARE_HEATING_ACTIVE_MODES
-            else HA_TO_VICARE_HVAC_DHW
-        )
-        vicare_mode = mode_map[operation_mode]
+        vicare_mode = self._operation_mode_map[operation_mode]
         if self._circuit_modes is not None and vicare_mode not in self._circuit_modes:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -237,7 +234,55 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
 
     def set_circulation_schedule(self, schedule: dict[str, Any]) -> None:
         """Set the DHW circulation pump schedule."""
+        max_entries = self._circulation_schedule_max_entries
+        if max_entries is not None:
+            for day, slots in schedule.items():
+                if len(slots) > max_entries:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="circulation_schedule_too_many_slots",
+                        translation_placeholders={
+                            "day": day,
+                            "max_entries": str(max_entries),
+                        },
+                    )
         self._api.setDomesticHotWaterCirculationSchedule(schedule)
+
+    @property
+    def _operation_mode_map(self) -> dict[str, str]:
+        """Return the HA-to-ViCare mode mapping for the current circuit state."""
+        return (
+            HA_TO_VICARE_HVAC_DHW_WITH_HEATING
+            if self._current_mode in VICARE_HEATING_ACTIVE_MODES
+            else HA_TO_VICARE_HVAC_DHW
+        )
+
+    @property
+    def _supported_operation_modes(self) -> list[str]:
+        """Return the HA operation modes this circuit can actually reach."""
+        mode_map = self._operation_mode_map
+        if self._circuit_modes is None:
+            return list(mode_map)
+        return [
+            ha_mode
+            for ha_mode, vicare_mode in mode_map.items()
+            if vicare_mode in self._circuit_modes
+        ]
+
+    @property
+    @override
+    def supported_features(self) -> WaterHeaterEntityFeature:
+        """Return the supported features."""
+        features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        if self._supported_operation_modes:
+            features |= WaterHeaterEntityFeature.OPERATION_MODE
+        return features
+
+    @property
+    @override
+    def operation_list(self) -> list[str] | None:
+        """Return the list of operation modes supported by this circuit."""
+        return self._supported_operation_modes or None
 
     @property
     @override
