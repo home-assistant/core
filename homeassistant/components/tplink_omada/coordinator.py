@@ -174,6 +174,7 @@ class OmadaKnownClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
             hass, config_entry, omada_client, "KnownClientsList", poll_delay=None
         )
 
+    @override
     async def poll_update(self) -> dict[str, OmadaWirelessClient]:
         """Poll the site's all-time known wireless clients."""
         return {
