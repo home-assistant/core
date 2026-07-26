@@ -2202,6 +2202,19 @@ async def test_update_entity_entity_id_entity_id(
     assert entity_registry.async_get(state_entity_id) is None
 
 
+async def test_update_entity_invalid_entity_id_message(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that updating to an invalid entity ID raises a descriptive error."""
+    entry = entity_registry.async_get_or_create("light", "hue", "5678")
+
+    for invalid_id in ("light.Uppercase", "light.has space", "light.has-hyphen"):
+        with pytest.raises(ValueError, match="Entity IDs must use the format"):
+            entity_registry.async_update_entity(
+                entry.entity_id, new_entity_id=invalid_id
+            )
+
+
 async def test_update_entity(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
