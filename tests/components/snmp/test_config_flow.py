@@ -1,6 +1,6 @@
 """Tests for the SNMP config flow."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from pysnmp.error import PySnmpError
 from pysnmp.proto import errind
@@ -21,7 +21,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_user_flow_success(hass: HomeAssistant) -> None:
+async def test_user_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) -> None:
     """Test successful user setup flow (v1/v2c)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -42,15 +42,9 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "v1_v2c"
 
     # Step 2: V1/V2c Auth
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -72,7 +66,9 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_flow_v3_success(hass: HomeAssistant) -> None:
+async def test_user_flow_v3_success(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test successful user setup flow (v3)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -91,15 +87,9 @@ async def test_user_flow_v3_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "v3"
 
     # Step 2: V3 Auth
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -119,7 +109,9 @@ async def test_user_flow_v3_success(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
+async def test_user_flow_cannot_connect(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test user setup flow failure - cannot connect, then recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -151,15 +143,9 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Step 2: retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -170,27 +156,24 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_import_flow_success(hass: HomeAssistant) -> None:
+async def test_import_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) -> None:
     """Test successful YAML import flow."""
-    with patch(
-        "homeassistant.components.snmp.async_setup_entry", return_value=True
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "host": "192.168.1.1",
-                "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            "host": "192.168.1.1",
+            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "host": "192.168.1.1",
         "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
     }
-    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_flow_already_configured(
@@ -239,7 +222,9 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_user_flow_invalid_oid_short(hass: HomeAssistant) -> None:
+async def test_user_flow_invalid_oid_short(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test user setup flow failure - OID too short, then recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -276,15 +261,9 @@ async def test_user_flow_invalid_oid_short(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "invalid_oid"}
 
     # Retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -295,7 +274,9 @@ async def test_user_flow_invalid_oid_short(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_v3_invalid_auth(hass: HomeAssistant) -> None:
+async def test_user_flow_v3_invalid_auth(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test user setup flow failure - v3 invalid auth, then recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -327,15 +308,9 @@ async def test_user_flow_v3_invalid_auth(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "usm_wrong_digests"}
 
     # Retry with correct credentials succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -346,7 +321,9 @@ async def test_user_flow_v3_invalid_auth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_v3_vacm_denied_sysdescr(hass: HomeAssistant) -> None:
+async def test_user_flow_v3_vacm_denied_sysdescr(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test v3 flow succeeds when sysDescr is denied by VACM but base OID works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -365,18 +342,12 @@ async def test_user_flow_v3_vacm_denied_sysdescr(hass: HomeAssistant) -> None:
     # Step 2: sysDescr.0 returns err_status (VACM denial) but base OID succeeds
     mock_err_status = MagicMock()
     mock_err_status.prettyPrint.return_value = "authorizationError"
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            side_effect=[
-                (None, mock_err_status, None, None),  # sysDescr.0 denied
-                (None, None, None, [[OctetString("98F")]]),  # base OID succeeds
-            ],
-        ),
-        patch(
-            "homeassistant.components.snmp.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        side_effect=[
+            (None, mock_err_status, None, None),  # sysDescr.0 denied
+            (None, None, None, [[OctetString("98F")]]),  # base OID succeeds
+        ],
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -387,7 +358,9 @@ async def test_user_flow_v3_vacm_denied_sysdescr(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_timeout_generic(hass: HomeAssistant) -> None:
+async def test_user_flow_timeout_generic(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test user setup flow failure - timeout on sysDescr, then recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -409,15 +382,9 @@ async def test_user_flow_timeout_generic(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "snmp_timeout"}
 
     # Retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"community": "public"}
@@ -427,7 +394,9 @@ async def test_user_flow_timeout_generic(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_err_indication_wrong_digest(hass: HomeAssistant) -> None:
+async def test_user_flow_err_indication_wrong_digest(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test user setup flow failure - v3 wrong digest indication, then recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -449,15 +418,9 @@ async def test_user_flow_err_indication_wrong_digest(hass: HomeAssistant) -> Non
     assert result["errors"] == {"base": "usm_wrong_digests"}
 
     # Retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": "user", "auth_key": "correct_pass"}
@@ -467,7 +430,9 @@ async def test_user_flow_err_indication_wrong_digest(hass: HomeAssistant) -> Non
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_err_indication_unknown_user(hass: HomeAssistant) -> None:
+async def test_user_flow_err_indication_unknown_user(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test user setup flow failure - unknown USM user, then recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -489,15 +454,9 @@ async def test_user_flow_err_indication_unknown_user(hass: HomeAssistant) -> Non
     assert result["errors"] == {"base": "invalid_auth"}
 
     # Retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": "validuser", "auth_key": "pass"}
@@ -507,7 +466,9 @@ async def test_user_flow_err_indication_unknown_user(hass: HomeAssistant) -> Non
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_invalid_oid_exception(hass: HomeAssistant) -> None:
+async def test_user_flow_invalid_oid_exception(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test user setup flow failure - OID exception, then recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -541,15 +502,9 @@ async def test_user_flow_invalid_oid_exception(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v1_v2c"
 
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -560,7 +515,9 @@ async def test_user_flow_invalid_oid_exception(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_v1_v2c_invalid_auth(hass: HomeAssistant) -> None:
+async def test_user_flow_v1_v2c_invalid_auth(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test user setup flow failure - v1/v2c invalid auth, then recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -582,15 +539,9 @@ async def test_user_flow_v1_v2c_invalid_auth(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "invalid_auth"}
 
     # Retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"community": "correct_community"}
@@ -600,7 +551,9 @@ async def test_user_flow_v1_v2c_invalid_auth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_v1_v2c_unknown_error(hass: HomeAssistant) -> None:
+async def test_user_flow_v1_v2c_unknown_error(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test user setup flow failure - v1/v2c unknown error, then recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -622,15 +575,9 @@ async def test_user_flow_v1_v2c_unknown_error(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"community": "public"}
@@ -640,7 +587,9 @@ async def test_user_flow_v1_v2c_unknown_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_v3_auth_key_required_for_priv(hass: HomeAssistant) -> None:
+async def test_user_flow_v3_auth_key_required_for_priv(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test user setup flow failure - v3 auth key required for priv, then recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -658,15 +607,9 @@ async def test_user_flow_v3_auth_key_required_for_priv(hass: HomeAssistant) -> N
     assert result["errors"] == {"base": "auth_key_required_for_priv"}
 
     # Retry with auth_key provided succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -683,7 +626,9 @@ async def test_user_flow_v3_auth_key_required_for_priv(hass: HomeAssistant) -> N
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_v3_unknown_error(hass: HomeAssistant) -> None:
+async def test_user_flow_v3_unknown_error(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test user setup flow failure - v3 unknown error, then recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -705,15 +650,9 @@ async def test_user_flow_v3_unknown_error(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": "user", "auth_key": "pass"}
@@ -872,7 +811,9 @@ async def test_validate_input_pysnmp_error_get(hass: HomeAssistant) -> None:
         )
 
 
-async def test_user_flow_v3_cannot_connect(hass: HomeAssistant) -> None:
+async def test_user_flow_v3_cannot_connect(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test user setup flow failure - v3 cannot connect, then recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -894,15 +835,9 @@ async def test_user_flow_v3_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": "user", "auth_key": "pass"}
@@ -912,21 +847,22 @@ async def test_user_flow_v3_cannot_connect(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_import_flow_with_port_and_context_name(hass: HomeAssistant) -> None:
+async def test_import_flow_with_port_and_context_name(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test import flow with port and context_name."""
-    with patch("homeassistant.components.snmp.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "host": "192.168.1.1",
-                "port": 1161,
-                "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
-                "community": "public",
-                "context_name": "vlan100",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            "host": "192.168.1.1",
+            "port": 1161,
+            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
+            "community": "public",
+            "context_name": "vlan100",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     entry = result["result"]

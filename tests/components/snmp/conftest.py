@@ -40,3 +40,13 @@ def mock_udp_transport():
         return_value=Mock(),
     ) as mock_create:
         yield mock_create
+
+
+@pytest.fixture
+def mock_setup_entry():
+    """Patch async_setup_entry to avoid setting up the integration."""
+    with patch(
+        "homeassistant.components.snmp.async_setup_entry",
+        return_value=True,
+    ) as mock:
+        yield mock
