@@ -315,7 +315,7 @@ async def test_setup(
         (LEDIrDeviceType.GENERIC_44_KEY, Generic44KeyCode.JUMP7, "on", "jump7"),
         (LEDIrDeviceType.GENERIC_44_KEY, Generic44KeyCode.FADE3, "on", "fade3"),
         (LEDIrDeviceType.GENERIC_44_KEY, Generic44KeyCode.FADE7, "on", "fade7"),
-        (LEDIrDeviceType.GENERIC_40_KEY, Generic44KeyCode.RED, "on", "red"),
+        (LEDIrDeviceType.GENERIC_44_KEY, Generic44KeyCode.RED, "on", "red"),
         (LEDIrDeviceType.GENERIC_44_KEY, Generic44KeyCode.GREEN, "on", "green"),
         (LEDIrDeviceType.GENERIC_44_KEY, Generic44KeyCode.BLUE, "on", "blue"),
         (LEDIrDeviceType.GENERIC_44_KEY, Generic44KeyCode.WHITE, "on", "white"),
