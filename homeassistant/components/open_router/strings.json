@@ -69,6 +69,67 @@
           "description": "Configure the conversation agent"
         }
       }
+    },
+    "stt": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "[%key:component::open_router::config_subentries::ai_task_data::abort::entry_not_loaded%]",
+        "no_models": "No speech-to-text models are available for this account.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "entry_type": "Speech-to-text",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure speech-to-text service",
+        "user": "Add speech-to-text service"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "model": "[%key:common::generic::model%]"
+          },
+          "data_description": {
+            "model": "The model to use to transcribe speech."
+          },
+          "description": "Configure the speech-to-text service. Every language Home Assistant supports is offered, but the actual set depends on the model you pick; check the upstream provider's documentation for the languages it supports."
+        }
+      }
+    },
+    "tts": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "[%key:component::open_router::config_subentries::ai_task_data::abort::entry_not_loaded%]",
+        "no_models": "No text-to-speech models are available for this account.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "entry_type": "Text-to-speech",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure text-to-speech service",
+        "user": "Add text-to-speech service"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "model": "[%key:common::generic::model%]"
+          },
+          "data_description": {
+            "model": "The model to use to synthesize speech."
+          },
+          "description": "Configure the text-to-speech service. Every language Home Assistant supports is offered, but the actual set depends on the model you pick; check the upstream provider's documentation for the languages it supports."
+        },
+        "voice": {
+          "data": {
+            "tts_speed": "Speed",
+            "tts_voice": "Voice"
+          },
+          "data_description": {
+            "tts_speed": "Speed of the generated speech. Not all models support this setting.",
+            "tts_voice": "The voice to use for speech synthesis. Available voices depend on the model."
+          },
+          "description": "Configure voice and speech options"
+        }
+      }
     }
   }
 }
