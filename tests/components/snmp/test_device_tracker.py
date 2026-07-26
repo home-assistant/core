@@ -61,7 +61,7 @@ def mock_get_cmd():
         yield mock
 
 
-@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_setup_with_legacy_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -105,7 +105,7 @@ async def test_device_tracker_setup_with_legacy_state(
     assert state.attributes["ip"] == "192.168.1.1"
 
 
-@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_new_entity_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -143,7 +143,7 @@ async def test_device_tracker_new_entity_disabled_by_default(
     assert hass.states.get(entity_id) is None
 
 
-@pytest.mark.usefixtures("mock_udp_transport", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_get_cmd")
 async def test_device_tracker_update(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -214,7 +214,7 @@ async def test_device_tracker_update(
     assert hass.states.get(entity_id_2) is None
 
 
-@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_device_registry_linking(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -255,7 +255,7 @@ async def test_device_tracker_device_registry_linking(
     assert reg_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
-@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_name_resolves_to_mac_address(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -287,7 +287,7 @@ async def test_device_tracker_name_resolves_to_mac_address(
     assert state.name == "00_11_22_33_44_55"
 
 
-@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_enabled_if_device_exists(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -340,7 +340,7 @@ async def test_async_setup_scanner_import(hass: HomeAssistant) -> None:
         assert kwargs["context"]["source"] == "import"
 
 
-@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_initial_macs(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -369,7 +369,7 @@ async def test_device_tracker_initial_macs(
     assert hass.states.get(entity_id) is not None
 
 
-@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_properties_empty_coordinator(
     hass: HomeAssistant,
 ) -> None:
@@ -385,7 +385,7 @@ async def test_device_tracker_properties_empty_coordinator(
     assert entity.ip_address is None
 
 
-@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_state_cleanup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -427,7 +427,7 @@ async def test_device_tracker_state_cleanup(
     mock_remove.assert_called_with(hass.states, reg_entry.entity_id)
 
 
-@pytest.mark.usefixtures("mock_udp_transport", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_get_cmd")
 async def test_device_tracker_update_empty_data(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

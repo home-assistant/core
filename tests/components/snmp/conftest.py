@@ -32,7 +32,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_udp_transport():
     """Patch UdpTransportTarget.create to avoid real network calls."""
     with patch(

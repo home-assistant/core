@@ -47,7 +47,6 @@ def mock_coordinator_entry(hass: HomeAssistant) -> MockConfigEntry:
         pytest.param(b"ABCDEFABCDEF", "ab:cd:ef:ab:cd:ef", id="raw_hex_string"),
     ],
 )
-@pytest.mark.usefixtures("mock_udp_transport")
 async def test_mac_normalization(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -105,7 +104,6 @@ async def test_mac_normalization(
         pytest.param((1, 1, 1, 1, 10, 20, 30, 40), "10.20.30.40", id="short_oid"),
     ],
 )
-@pytest.mark.usefixtures("mock_udp_transport")
 async def test_ip_extraction(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -154,7 +152,6 @@ async def test_ip_extraction(
     assert state.attributes["ip"] == expected_ip
 
 
-@pytest.mark.usefixtures("mock_udp_transport")
 async def test_ip_extraction_oid_too_short(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -200,7 +197,6 @@ async def test_ip_extraction_oid_too_short(
     assert state.attributes.get("ip") is None
 
 
-@pytest.mark.usefixtures("mock_udp_transport")
 async def test_walk_error_makes_entry_unavailable(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
@@ -239,7 +235,6 @@ async def test_walk_error_makes_entry_unavailable(
         pytest.param(PySnmpError("Some error"), id="exception_errindication"),
     ],
 )
-@pytest.mark.usefixtures("mock_udp_transport")
 async def test_walk_errindication(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -311,7 +306,6 @@ async def test_walk_errindication(
     assert state.state == "unavailable"
 
 
-@pytest.mark.usefixtures("mock_udp_transport")
 async def test_walk_errstatus(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
@@ -344,7 +338,6 @@ async def test_walk_errstatus(
         await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("mock_udp_transport")
 async def test_invalid_mac_length_ignored(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -383,7 +376,6 @@ async def test_invalid_mac_length_ignored(
     assert len(entries) == 0
 
 
-@pytest.mark.usefixtures("mock_udp_transport")
 async def test_mac_processing_exception_ignored(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -422,7 +414,6 @@ async def test_mac_processing_exception_ignored(
     assert len(entries) == 0
 
 
-@pytest.mark.usefixtures("mock_udp_transport")
 async def test_host_info_populates_device_registry(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
@@ -461,7 +452,6 @@ async def test_host_info_populates_device_registry(
     assert device.name == "router01"
 
 
-@pytest.mark.usefixtures("mock_udp_transport")
 async def test_host_info_no_space_in_descr(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
@@ -499,7 +489,6 @@ async def test_host_info_no_space_in_descr(
     assert device.model == "SingleWordDescr"
 
 
-@pytest.mark.usefixtures("mock_udp_transport")
 async def test_host_info_pysnmp_error_sets_empty_model(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
@@ -531,7 +520,6 @@ async def test_host_info_pysnmp_error_sets_empty_model(
     assert device.model == ""
 
 
-@pytest.mark.usefixtures("mock_udp_transport")
 async def test_host_info_errstatus_sets_generic_name(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
@@ -563,7 +551,6 @@ async def test_host_info_errstatus_sets_generic_name(
     assert device.model == "SNMP Server"
 
 
-@pytest.mark.usefixtures("mock_udp_transport")
 async def test_host_info_auth_error(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
@@ -672,7 +659,6 @@ async def test_update_data_request_args_pysnmp_error(
         await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("mock_udp_transport")
 async def test_walk_auth_error(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
@@ -699,7 +685,6 @@ async def test_walk_auth_error(
         await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("mock_udp_transport")
 async def test_walk_end_of_mib(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

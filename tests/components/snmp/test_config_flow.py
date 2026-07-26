@@ -48,10 +48,6 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
             return_value=(None, None, None, [[OctetString("98F")]]),
         ),
         patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
-        patch(
             "homeassistant.components.snmp.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
@@ -101,10 +97,6 @@ async def test_user_flow_v3_success(hass: HomeAssistant) -> None:
             return_value=(None, None, None, [[OctetString("98F")]]),
         ),
         patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
-        patch(
             "homeassistant.components.snmp.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
@@ -144,15 +136,9 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     # Step 2: fails
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=("Timeout", None, None, None),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=("Timeout", None, None, None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -169,10 +155,6 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
             return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
         ),
         patch(
             "homeassistant.components.snmp.async_setup_entry",
@@ -276,18 +258,12 @@ async def test_user_flow_invalid_oid_short(hass: HomeAssistant) -> None:
     assert result["step_id"] == "v1_v2c"
 
     # Step 2: V1 Auth fails during validation of baseoid "1"
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            side_effect=[
-                (None, None, None, [[OctetString("98F")]]),  # sysDescr.0 succeeds
-                PySnmpError("Short OID 1"),  # baseoid "1" fails
-            ],
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        side_effect=[
+            (None, None, None, [[OctetString("98F")]]),  # sysDescr.0 succeeds
+            PySnmpError("Short OID 1"),  # baseoid "1" fails
+        ],
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -304,10 +280,6 @@ async def test_user_flow_invalid_oid_short(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
             return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
         ),
         patch(
             "homeassistant.components.snmp.async_setup_entry",
@@ -342,15 +314,9 @@ async def test_user_flow_v3_invalid_auth(hass: HomeAssistant) -> None:
     # Step 2: V3 Auth fails (err_status returned by get_cmd)
     mock_err_status = MagicMock()
     mock_err_status.prettyPrint.return_value = "usmStatsWrongDigests"
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, mock_err_status, None, None),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, mock_err_status, None, None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -365,10 +331,6 @@ async def test_user_flow_v3_invalid_auth(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
             return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
         ),
         patch(
             "homeassistant.components.snmp.async_setup_entry",
@@ -412,10 +374,6 @@ async def test_user_flow_v3_vacm_denied_sysdescr(hass: HomeAssistant) -> None:
             ],
         ),
         patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
-        patch(
             "homeassistant.components.snmp.async_setup_entry",
             return_value=True,
         ),
@@ -439,15 +397,9 @@ async def test_user_flow_timeout_generic(hass: HomeAssistant) -> None:
         {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "1"},
     )
 
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(errind.requestTimedOut, None, None, None),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(errind.requestTimedOut, None, None, None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"community": "public"}
@@ -461,10 +413,6 @@ async def test_user_flow_timeout_generic(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
             return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
         ),
         patch(
             "homeassistant.components.snmp.async_setup_entry",
@@ -489,15 +437,9 @@ async def test_user_flow_err_indication_wrong_digest(hass: HomeAssistant) -> Non
         {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "3"},
     )
 
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(errind.wrongDigest, None, None, None),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(errind.wrongDigest, None, None, None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": "user", "auth_key": "pass"}
@@ -511,10 +453,6 @@ async def test_user_flow_err_indication_wrong_digest(hass: HomeAssistant) -> Non
         patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
             return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
         ),
         patch(
             "homeassistant.components.snmp.async_setup_entry",
@@ -539,15 +477,9 @@ async def test_user_flow_err_indication_unknown_user(hass: HomeAssistant) -> Non
         {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "3"},
     )
 
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(errind.unknownUserName, None, None, None),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(errind.unknownUserName, None, None, None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": "nouser", "auth_key": "pass"}
@@ -561,10 +493,6 @@ async def test_user_flow_err_indication_unknown_user(hass: HomeAssistant) -> Non
         patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
             return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
         ),
         patch(
             "homeassistant.components.snmp.async_setup_entry",
@@ -619,10 +547,6 @@ async def test_user_flow_invalid_oid_exception(hass: HomeAssistant) -> None:
             return_value=(None, None, None, [[OctetString("98F")]]),
         ),
         patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
-        patch(
             "homeassistant.components.snmp.async_setup_entry",
             return_value=True,
         ),
@@ -664,10 +588,6 @@ async def test_user_flow_v1_v2c_invalid_auth(hass: HomeAssistant) -> None:
             return_value=(None, None, None, [[OctetString("98F")]]),
         ),
         patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
-        patch(
             "homeassistant.components.snmp.async_setup_entry",
             return_value=True,
         ),
@@ -690,15 +610,9 @@ async def test_user_flow_v1_v2c_unknown_error(hass: HomeAssistant) -> None:
         {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "1"},
     )
 
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            side_effect=PySnmpError("Unknown error"),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        side_effect=PySnmpError("Unknown error"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"community": "public"}
@@ -712,10 +626,6 @@ async def test_user_flow_v1_v2c_unknown_error(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
             return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
         ),
         patch(
             "homeassistant.components.snmp.async_setup_entry",
@@ -754,10 +664,6 @@ async def test_user_flow_v3_auth_key_required_for_priv(hass: HomeAssistant) -> N
             return_value=(None, None, None, [[OctetString("98F")]]),
         ),
         patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
-        patch(
             "homeassistant.components.snmp.async_setup_entry",
             return_value=True,
         ),
@@ -787,15 +693,9 @@ async def test_user_flow_v3_unknown_error(hass: HomeAssistant) -> None:
         {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "3"},
     )
 
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            side_effect=PySnmpError("Unknown error"),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        side_effect=PySnmpError("Unknown error"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": "user", "auth_key": "pass"}
@@ -809,10 +709,6 @@ async def test_user_flow_v3_unknown_error(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
             return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
         ),
         patch(
             "homeassistant.components.snmp.async_setup_entry",
@@ -901,15 +797,9 @@ async def test_validate_input_unexpected_error(hass: HomeAssistant) -> None:
 
 async def test_validate_input_v3_no_keys(hass: HomeAssistant) -> None:
     """Test validate_input with SNMP v3 and no auth/priv keys."""
-    with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         await validate_input(
             hass,
@@ -925,10 +815,6 @@ async def test_validate_input_v3_no_keys(hass: HomeAssistant) -> None:
 async def test_validate_input_pysnmp_error_auth(hass: HomeAssistant) -> None:
     """Test validate_input with PySnmpError during auth creation."""
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
         patch(
             "homeassistant.components.snmp.util.UsmUserData",
             side_effect=PySnmpError,
@@ -950,10 +836,6 @@ async def test_validate_input_wrong_value_error(hass: HomeAssistant) -> None:
     """Test validate_input with WrongValueError during get_cmd."""
     with (
         patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
-        patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
             side_effect=WrongValueError,
         ),
@@ -973,10 +855,6 @@ async def test_validate_input_wrong_value_error(hass: HomeAssistant) -> None:
 async def test_validate_input_pysnmp_error_get(hass: HomeAssistant) -> None:
     """Test validate_input with PySnmpError during get_cmd."""
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
         patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
             side_effect=PySnmpError,
@@ -1020,10 +898,6 @@ async def test_user_flow_v3_cannot_connect(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
             return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
         ),
         patch(
             "homeassistant.components.snmp.async_setup_entry",
