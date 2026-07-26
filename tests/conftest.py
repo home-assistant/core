@@ -2254,8 +2254,11 @@ DhcpServiceInfo.__init__ = _dhcp_service_info_init
 def disable_http_server() -> Generator[None]:
     """Disable automatic start of HTTP server during tests.
 
-    This prevents the HTTP server from starting in tests that setup
-    integrations which depend on the HTTP component.
+    This prevents the HTTP server from binding sockets and starting in tests
+    that setup integrations which depend on the HTTP component.
     """
-    with patch("homeassistant.components.http.HomeAssistantHTTP.start"):
+    with (
+        patch("homeassistant.components.http.HomeAssistantHTTP.async_bind"),
+        patch("homeassistant.components.http.HomeAssistantHTTP.start"),
+    ):
         yield

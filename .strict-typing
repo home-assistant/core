@@ -350,6 +350,7 @@ homeassistant.components.lifx.*
 homeassistant.components.light.*
 homeassistant.components.linkplay.*
 homeassistant.components.litejet.*
+homeassistant.components.litellm.*
 homeassistant.components.litterrobot.*
 homeassistant.components.llama_cpp.*
 homeassistant.components.local_ip.*
@@ -383,7 +384,6 @@ homeassistant.components.min_max.*
 homeassistant.components.minecraft_server.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
-homeassistant.components.modbus_connection.*
 homeassistant.components.modem_callerid.*
 homeassistant.components.mold_indicator.*
 homeassistant.components.monzo.*
