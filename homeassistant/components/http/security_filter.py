@@ -53,7 +53,12 @@ def setup_security_filter(app: Application) -> None:
 
     def _remote_info(request: Request) -> str:
         """Retrieves the request remote source information."""
-        return f"{request.remote} ({ip_address(request.remote)})"  # type: ignore[arg-type]
+        if (remote := request.remote) is None:
+            return "[unknown remote]"
+        try:
+            return f"{remote} ({ip_address(remote)})"  # type: ignore[arg-type]
+        except ValueError:
+            return remote
 
     @middleware
     async def security_filter_middleware(
