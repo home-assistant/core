@@ -1,6 +1,7 @@
 """Config flow for izone."""
 
-from collections.abc import Iterable, Mapping
+import asyncio
+from collections.abc import Iterable
 import logging
 from typing import Any, Self, override
 
@@ -27,9 +28,12 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SELECTED_CONTROLLER_UID = "selected_controller_uid"
-CONF_SETUP_METHOD = "setup_method"
-SETUP_METHOD_SEARCH = "search"
-SETUP_METHOD_MANUAL_HOST = "manual_host"
+
+STEP_MANUAL_HOST_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): vol.All(str, vol.Length(min=1)),
+    }
+)
 
 
 def _flow_uid_for_matching(flow: ConfigFlow) -> str | None:
@@ -47,7 +51,11 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _user_discovered_endpoints: list[pizone.ControllerEndpoint] | None = None
     _discovered_controller_ip: str | None = None
-    _host_only: bool | None = None
+    _discovery_task: asyncio.Task[None] | None = None
+    _broadcast_endpoints: dict[str, pizone.ControllerEndpoint] | None = None
+    _discovery_failed: bool = False
+    # True when Add integration skipped Search because an entry already owns discovery.
+    _manual_host_additional: bool = False
 
     @override
     def is_matching(self, other_flow: Self) -> bool:
@@ -105,25 +113,6 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         return bool(self.hass.config_entries.async_loaded_entries(DOMAIN))
 
-    @callback
-    def _async_show_user_form(
-        self,
-        *,
-        errors: dict[str, str] | None = None,
-        defaults: Mapping[str, Any] | None = None,
-    ) -> ConfigFlowResult:
-        """Show the user setup form (search/manual or host-only)."""
-        # Latch so submit matches the schema the user saw (loaded-entry can change).
-        self._host_only = self._async_user_setup_host_only()
-        return self.async_show_form(
-            step_id="user",
-            data_schema=self._user_setup_schema(
-                host_only=self._host_only,
-                defaults=defaults or {},
-            ),
-            errors=errors or None,
-        )
-
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -135,69 +124,141 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         self._async_abort_other_user_flows()
 
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            host_only = (
-                self._host_only
-                if self._host_only is not None
-                else self._async_user_setup_host_only()
-            )
-            if host_only:
-                host = str(user_input.get(CONF_HOST, "")).strip()
-                if not host:
-                    errors[CONF_HOST] = "required"
-                else:
-                    return await self._async_probe_host_and_confirm(host)
-            else:
-                setup_method = user_input.get(CONF_SETUP_METHOD, SETUP_METHOD_SEARCH)
-                host = str(user_input.get(CONF_HOST, "")).strip()
+        if self._async_user_setup_host_only():
+            self._manual_host_additional = True
+            return await self.async_step_manual_host()
 
-                if setup_method == SETUP_METHOD_MANUAL_HOST:
-                    if not host:
-                        errors[CONF_HOST] = "required"
-                    else:
-                        return await self._async_probe_host_and_confirm(host)
-                else:
-                    return await self.async_step_discover()
-
-        return self._async_show_user_form(
-            errors=errors or None,
-            defaults=user_input,
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["discover", "manual_host"],
         )
+
+    async def _async_run_broadcast_discovery(self) -> None:
+        """Run LAN broadcast discovery for the progress step."""
+        self._discovery_failed = False
+        try:
+            self._broadcast_endpoints = (
+                await izone_discovery.async_discover_all_endpoints(self.hass)
+            )
+        except OSError:
+            _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
+            self._discovery_failed = True
+            self._broadcast_endpoints = None
 
     async def async_step_discover(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Broadcast discovery and offer unconfigured controllers."""
-        try:
-            endpoints = await izone_discovery.async_discover_all_endpoints(self.hass)
-        except OSError:
-            _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
-            return self.async_abort(reason="discovery_failed")
+        """Broadcast discovery with a progress UI, then offer controllers."""
+        if self._discovery_task is None:
+            self._discovery_task = self.hass.async_create_task(
+                self._async_run_broadcast_discovery()
+            )
+            return self.async_show_progress(
+                step_id="discover",
+                progress_action="discover",
+                progress_task=self._discovery_task,
+            )
 
+        if not self._discovery_task.done():
+            return self.async_show_progress(
+                step_id="discover",
+                progress_action="discover",
+                progress_task=self._discovery_task,
+            )
+
+        self._discovery_task = None
+        if self._discovery_failed:
+            return self.async_show_progress_done(next_step_id="discovery_failed")
+
+        endpoints = self._broadcast_endpoints or {}
         if not endpoints:
             _LOGGER.debug("No controllers found")
             # Empty search started discovery solely for this scan; stop it when no
             # loaded entry needs the shared listener.
             if not self._async_user_setup_host_only():
                 await izone_discovery.async_stop_discovery(self.hass)
-            return self._async_show_user_form(
-                errors={"base": "no_devices_found"},
-                defaults={CONF_SETUP_METHOD: SETUP_METHOD_MANUAL_HOST},
-            )
+            return self.async_show_progress_done(next_step_id="no_devices")
 
         self._user_discovered_endpoints = self._async_get_unconfigured_endpoints(
             endpoints
         )
         if not self._user_discovered_endpoints:
-            return self.async_abort(reason="already_configured")
+            return self.async_show_progress_done(next_step_id="already_configured")
         if len(self._user_discovered_endpoints) > 1:
-            return await self.async_step_select_controller()
+            return self.async_show_progress_done(next_step_id="select_controller")
 
         sole = self._user_discovered_endpoints[0]
         await self.async_set_unique_id(sole.uid)
         self._discovered_controller_ip = sole.host
-        return await self.async_step_confirm()
+        return self.async_show_progress_done(next_step_id="confirm")
+
+    async def async_step_discovery_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort after broadcast discovery failed to start."""
+        return self.async_abort(reason="discovery_failed")
+
+    async def async_step_already_configured(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort when broadcast discovery only found configured controllers."""
+        return self.async_abort(reason="already_configured")
+
+    async def async_step_no_devices(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Nudge manual host entry when broadcast discovery finds nothing."""
+        # Error string covers this path; keep the default host-entry description.
+        self._manual_host_additional = False
+        return self._async_show_manual_host_form(errors={"base": "no_devices_found"})
+
+    async def async_step_manual_host(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Enter a controller IP address or hostname."""
+        return await self._async_manual_host(user_input)
+
+    async def async_step_manual_host_additional(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Enter another controller's address when one is already set up."""
+        self._manual_host_additional = True
+        return await self._async_manual_host(user_input)
+
+    async def _async_manual_host(
+        self, user_input: dict[str, Any] | None
+    ) -> ConfigFlowResult:
+        """Shared manual-host submit / show logic."""
+        if user_input is not None:
+            host = user_input[CONF_HOST].strip()
+            if not host:
+                return self._async_show_manual_host_form(
+                    errors={CONF_HOST: "required"},
+                    suggested_values=user_input,
+                )
+            return await self._async_probe_host_and_confirm(host)
+
+        return self._async_show_manual_host_form()
+
+    @callback
+    def _async_show_manual_host_form(
+        self,
+        *,
+        errors: dict[str, str] | None = None,
+        suggested_values: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Show the manual host entry form."""
+        # Separate step_id so both descriptions stay fully translatable.
+        step_id = (
+            "manual_host_additional" if self._manual_host_additional else "manual_host"
+        )
+        return self.async_show_form(
+            step_id=step_id,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_MANUAL_HOST_SCHEMA, suggested_values
+            ),
+            errors=errors,
+        )
 
     async def async_step_select_controller(
         self, user_input: dict[str, Any] | None = None
@@ -359,47 +420,9 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
     # -- Private helpers
 
-    def _user_setup_schema(
-        self,
-        *,
-        host_only: bool,
-        defaults: Mapping[str, Any],
-    ) -> vol.Schema:
-        """Build the user step schema for host-only vs search/manual paths."""
-        if host_only:
-            host_default: Any = defaults.get(CONF_HOST, vol.UNDEFINED)
-            return vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=host_default): str,
-                }
-            )
-
-        method_default = defaults.get(CONF_SETUP_METHOD, SETUP_METHOD_SEARCH)
-        host_default = defaults.get(CONF_HOST, "")
-        return vol.Schema(
-            {
-                vol.Required(CONF_SETUP_METHOD, default=method_default): SelectSelector(
-                    SelectSelectorConfig(
-                        translation_key="setup_method",
-                        mode=SelectSelectorMode.LIST,
-                        options=[
-                            SETUP_METHOD_SEARCH,
-                            SETUP_METHOD_MANUAL_HOST,
-                        ],
-                    )
-                ),
-                vol.Optional(CONF_HOST, default=host_default): str,
-            }
-        )
-
     async def _async_probe_host_and_confirm(self, host: str) -> ConfigFlowResult:
         """Validate *host* and continue to confirm when a controller responds."""
         self._async_abort_entries_match({CONF_HOST: host})
-        host_only = (
-            self._host_only
-            if self._host_only is not None
-            else self._async_user_setup_host_only()
-        )
         try:
             endpoint = await izone_discovery.async_discover_by_host(self.hass, host)
         except OSError:
@@ -416,16 +439,9 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             endpoint = None
 
         if endpoint is None:
-            if host_only:
-                defaults: dict[str, Any] = {CONF_HOST: host}
-            else:
-                defaults = {
-                    CONF_SETUP_METHOD: SETUP_METHOD_MANUAL_HOST,
-                    CONF_HOST: host,
-                }
-            return self._async_show_user_form(
+            return self._async_show_manual_host_form(
                 errors={"base": "cannot_connect"},
-                defaults=defaults,
+                suggested_values={CONF_HOST: host},
             )
 
         await self.async_set_unique_id(endpoint.uid)

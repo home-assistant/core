@@ -15,12 +15,27 @@
       "required": "Enter the controller IP address or hostname."
     },
     "flow_title": "{name}",
+    "progress": {
+      "discover": "Searching for devices on the local network..."
+    },
     "step": {
       "confirm": {
         "description": "Do you want to set up iZone?\n\nController UID: {controller_uid}\nController IP: {host}"
       },
       "confirm_ignored": {
         "description": "This iZone controller was previously ignored. Do you want to set it up?\n\nController UID: {controller_uid}\nController IP: {host}"
+      },
+      "manual_host": {
+        "data": {
+          "host": "Controller IP address or hostname"
+        },
+        "description": "Enter the IP address or hostname of your iZone controller."
+      },
+      "manual_host_additional": {
+        "data": {
+          "host": "[%key:component::izone::config::step::manual_host::data::host%]"
+        },
+        "description": "Another iZone controller is already set up. Controllers on the same network are usually found automatically. If yours does not appear, enter its IP address or hostname below."
       },
       "select_controller": {
         "data": {
@@ -29,11 +44,10 @@
         "description": "Multiple unconfigured iZone controllers were found:\n{controllers}\n\nChoose the controller you want to set up now. Any other controller not previously ignored will remain available as a discovered device you can set up later under **Settings** > **Devices & services**."
       },
       "user": {
-        "data": {
-          "host": "Controller IP address or hostname",
-          "setup_method": "Setup method"
-        },
-        "description": "Add an iZone controller."
+        "menu_options": {
+          "discover": "Search for devices",
+          "manual_host": "Enter host"
+        }
       }
     }
   },
@@ -43,14 +57,6 @@
     },
     "unable_to_connect": {
       "message": "Unable to connect to controller {uid}"
-    }
-  },
-  "selector": {
-    "setup_method": {
-      "options": {
-        "manual_host": "Enter host",
-        "search": "Search for devices"
-      }
     }
   },
   "services": {
