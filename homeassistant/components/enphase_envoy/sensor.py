@@ -57,7 +57,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .entity import EnvoyBaseEntity
+from .entity import EnvoyACBAggregateEntity, EnvoyACBBatteryEntity, EnvoyBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -904,8 +904,14 @@ ACB_INVENTORY_SENSORS = (
         key="acb_battery_charge_status",
         translation_key="acb_battery_charge_status",
         device_class=SensorDeviceClass.ENUM,
-        options=[status.value for status in ACBChargeStatus],
-        value_fn=attrgetter("charge_status"),
+        options=[
+            status.value
+            for status in ACBChargeStatus
+            if status is not ACBChargeStatus.UNKNOWN
+        ],
+        value_fn=lambda acb: (
+            None if acb.charge_status is ACBChargeStatus.UNKNOWN else acb.charge_status
+        ),
     ),
     EnvoyACBInventorySensorEntityDescription(
         key="acb_battery_last_reported",
@@ -1467,28 +1473,10 @@ class EnvoyEnpowerEntity(EnvoySensorBaseEntity):
         return self.entity_description.value_fn(enpower)
 
 
-class EnvoyAcbBatteryPowerEntity(EnvoySensorBaseEntity):
+class EnvoyAcbBatteryPowerEntity(EnvoyACBAggregateEntity, SensorEntity):
     """Envoy ACB Battery power sensor entity."""
 
     entity_description: EnvoyAcbBatterySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: EnphaseUpdateCoordinator,
-        description: EnvoyAcbBatterySensorEntityDescription,
-    ) -> None:
-        """Initialize ACB Battery entity."""
-        super().__init__(coordinator, description)
-        acb_data = self.data.acb_power
-        assert acb_data is not None
-        self._attr_unique_id = f"{self.envoy_serial_num}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self.envoy_serial_num}_acb")},
-            manufacturer="Enphase",
-            model="ACB",
-            name=f"ACB {self.envoy_serial_num}",
-            via_device=(DOMAIN, self.envoy_serial_num),
-        )
 
     @property
     @override
@@ -1527,29 +1515,10 @@ class AggregateBatteryEntity(EnvoySystemSensorEntity):
         return self.entity_description.value_fn(battery_aggregate)
 
 
-class EnvoyACBInventoryEntity(EnvoySensorBaseEntity):
+class EnvoyACBInventoryEntity(EnvoyACBBatteryEntity, SensorEntity):
     """Envoy per-device ACB Battery sensor entity."""
 
     entity_description: EnvoyACBInventorySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: EnphaseUpdateCoordinator,
-        description: EnvoyACBInventorySensorEntityDescription,
-        serial_number: str,
-    ) -> None:
-        """Initialize ACB battery inventory entity."""
-        super().__init__(coordinator, description)
-        self._serial_number = serial_number
-        self._attr_unique_id = f"{serial_number}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, serial_number)},
-            manufacturer="Enphase",
-            model="AC Battery",
-            name=f"AC Battery {serial_number}",
-            via_device=(DOMAIN, f"{self.envoy_serial_num}_acb"),
-            serial_number=serial_number,
-        )
 
     @property
     @override
@@ -1561,24 +1530,8 @@ class EnvoyACBInventoryEntity(EnvoySensorBaseEntity):
         return self.entity_description.value_fn(acb_inventory[self._serial_number])
 
 
-class EnvoyACBAggregateSleepStateEntity(EnvoySensorBaseEntity):
+class EnvoyACBAggregateSleepStateEntity(EnvoyACBAggregateEntity, SensorEntity):
     """Envoy aggregate sleep state across all ACB batteries."""
-
-    def __init__(
-        self,
-        coordinator: EnphaseUpdateCoordinator,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize the aggregate ACB sleep state entity."""
-        super().__init__(coordinator, description)
-        self._attr_unique_id = f"{self.envoy_serial_num}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self.envoy_serial_num}_acb")},
-            manufacturer="Enphase",
-            model="ACB",
-            name=f"ACB {self.envoy_serial_num}",
-            via_device=(DOMAIN, self.envoy_serial_num),
-        )
 
     @property
     @override

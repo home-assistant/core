@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ACB_SLEEP_SOC_BANDS, DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .entity import EnvoyBaseEntity, exception_handler
+from .entity import EnvoyACBAggregateControlEntity, EnvoyBaseEntity, exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -264,30 +264,8 @@ class EnvoyStorageSettingsSelectEntity(EnvoyBaseEntity, SelectEntity):
         await self.coordinator.async_request_refresh()
 
 
-class EnvoyACBSleepSocSelectEntity(EnvoyBaseEntity, SelectEntity):
+class EnvoyACBSleepSocSelectEntity(EnvoyACBAggregateControlEntity, SelectEntity):
     """Select for the SOC band applied when putting ACB batteries to sleep."""
-
-    def __init__(
-        self,
-        coordinator: EnphaseUpdateCoordinator,
-        description: SelectEntityDescription,
-    ) -> None:
-        """Initialize the ACB sleep SOC select entity."""
-        super().__init__(coordinator, description)
-        self._attr_unique_id = f"{self.envoy_serial_num}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self.envoy_serial_num}_acb")},
-            manufacturer="Enphase",
-            model="ACB",
-            name=f"ACB {self.envoy_serial_num}",
-            via_device=(DOMAIN, self.envoy_serial_num),
-        )
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if the ACB sleep SOC select is available."""
-        return super().available and bool(self.data.acb_inventory)
 
     @property
     @override

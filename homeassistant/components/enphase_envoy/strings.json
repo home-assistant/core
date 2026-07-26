@@ -195,8 +195,7 @@
         "state": {
           "charging": "[%key:common::state::charging%]",
           "discharging": "[%key:common::state::discharging%]",
-          "idle": "[%key:common::state::idle%]",
-          "unknown": "Unknown"
+          "idle": "[%key:common::state::idle%]"
         }
       },
       "acb_battery_sleep_soc_target": {

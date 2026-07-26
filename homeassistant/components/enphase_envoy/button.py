@@ -9,12 +9,11 @@ from pyenphase import Envoy
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .entity import EnvoyBaseEntity, exception_handler
+from .coordinator import EnphaseConfigEntry
+from .entity import EnvoyACBAggregateControlEntity, exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -65,33 +64,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class EnvoyACBButtonEntity(EnvoyBaseEntity, ButtonEntity):
+class EnvoyACBButtonEntity(EnvoyACBAggregateControlEntity, ButtonEntity):
     """Envoy button that puts all ACB batteries to sleep or wakes them."""
 
     entity_description: EnvoyACBButtonEntityDescription
-
-    def __init__(
-        self,
-        coordinator: EnphaseUpdateCoordinator,
-        description: EnvoyACBButtonEntityDescription,
-    ) -> None:
-        """Initialize the ACB battery button entity."""
-        super().__init__(coordinator, description)
-        self.envoy = coordinator.envoy
-        self._attr_unique_id = f"{self.envoy_serial_num}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self.envoy_serial_num}_acb")},
-            manufacturer="Enphase",
-            model="ACB",
-            name=f"ACB {self.envoy_serial_num}",
-            via_device=(DOMAIN, self.envoy_serial_num),
-        )
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if the ACB sleep/wake controls are available."""
-        return super().available and bool(self.data.acb_inventory)
 
     @exception_handler
     @override
@@ -102,7 +78,7 @@ class EnvoyACBButtonEntity(EnvoyBaseEntity, ButtonEntity):
         low, high = self.coordinator.acb_sleep_soc()
         try:
             await self.entity_description.press_fn(
-                self.envoy, list(acb_inventory), low, high
+                self.coordinator.envoy, list(acb_inventory), low, high
             )
         except ValueError as err:
             # pyenphase raises ValueError for validation failures and Envoy

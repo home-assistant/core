@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .entity import EnvoyBaseEntity
+from .entity import EnvoyACBBatteryEntity, EnvoyBaseEntity
 
 PARALLEL_UPDATES = 0
 
@@ -324,29 +324,10 @@ class EnvoyC6CCBinarySensorEntity(EnvoyBaseBinarySensorEntity):
         return self.entity_description.value_fn(c6cc_data)
 
 
-class EnvoyACBBinarySensorEntity(EnvoyBaseBinarySensorEntity):
+class EnvoyACBBinarySensorEntity(EnvoyACBBatteryEntity, BinarySensorEntity):
     """Defines a per-device ACB Battery binary_sensor entity."""
 
     entity_description: EnvoyACBBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: EnphaseUpdateCoordinator,
-        description: EnvoyACBBinarySensorEntityDescription,
-        serial_number: str,
-    ) -> None:
-        """Init the ACB battery base entity."""
-        super().__init__(coordinator, description)
-        self._serial_number = serial_number
-        self._attr_unique_id = f"{serial_number}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, serial_number)},
-            manufacturer="Enphase",
-            model="AC Battery",
-            name=f"AC Battery {serial_number}",
-            via_device=(DOMAIN, f"{self.envoy_serial_num}_acb"),
-            serial_number=serial_number,
-        )
 
     @property
     @override
