@@ -2457,6 +2457,23 @@
         }
       }
     },
+    "geosphere_austria": {
+      "name": "GeoSphere Austria",
+      "integrations": {
+        "zamg": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "GeoSphere Austria"
+        },
+        "geosphere_austria_warnings": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "GeoSphere Austria Warnings"
+        }
+      }
+    },
     "ghost": {
       "name": "Ghost",
       "integration_type": "service",
@@ -8293,12 +8310,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "zamg": {
-      "name": "GeoSphere Austria",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "zbox_hub": {
       "name": "Z-Box Hub",
