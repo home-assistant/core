@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pajgps_api.models.device import Device
@@ -13,13 +14,23 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.paj_gps.const import UPDATE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def device_tracker_only() -> Generator[None]:
+    """Enable only the device tracker platform."""
+    with patch(
+        "homeassistant.components.paj_gps.PLATFORMS",
+        [Platform.DEVICE_TRACKER],
+    ):
+        yield
 
 
 async def test_all_entities(

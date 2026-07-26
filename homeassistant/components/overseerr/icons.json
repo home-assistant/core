@@ -32,6 +32,12 @@
   "services": {
     "get_requests": {
       "service": "mdi:multimedia"
+    },
+    "request_media": {
+      "service": "mdi:download"
+    },
+    "search_media": {
+      "service": "mdi:magnify"
     }
   }
 }

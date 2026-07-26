@@ -2,7 +2,7 @@
 
 from collections.abc import Coroutine
 import logging
-from typing import Any
+from typing import Any, override
 
 from pescea import Controller
 
@@ -108,6 +108,7 @@ class ControllerEntity(ClimateEntity):
 
         self._attr_available = True
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call on adding to hass.
 
@@ -172,21 +173,25 @@ class ControllerEntity(ClimateEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         return HVACMode.HEAT if self._controller.is_on else HVACMode.OFF
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._controller.current_temp
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._controller.desired_temp
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return _ESCEA_FAN_TO_HA[self._controller.fan]
@@ -200,24 +205,29 @@ class ControllerEntity(ClimateEntity):
         else:
             self.set_available(True)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
             await self.wrap_and_catch(self._controller.set_desired_temp(temp))
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         await self.wrap_and_catch(self._controller.set_fan(_HA_FAN_TO_ESCEA[fan_mode]))
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         await self.wrap_and_catch(self._controller.set_on(hvac_mode == HVACMode.HEAT))
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         await self.wrap_and_catch(self._controller.set_on(True))
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         await self.wrap_and_catch(self._controller.set_on(False))

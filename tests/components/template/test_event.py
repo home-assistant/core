@@ -6,39 +6,51 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import event, template
+from homeassistant.components.template.const import CONF_ATTRIBUTES, CONF_PICTURE
+from homeassistant.components.template.coordinator import TriggerUpdateCoordinator
+from homeassistant.components.template.event import (
+    CONF_EVENT_TYPE,
+    CONF_EVENT_TYPES,
+    TriggerEventEntity,
+)
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    CONF_ICON,
+    CONF_NAME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers.template import Template
 
 from .conftest import (
+    RESTORE_STATE_SAVED_ATTRIBUTES,
+    RESTORE_STATE_UPDATED_ATTRIBUTES,
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    mock_restore_cache_with_extra_data,
-)
+from tests.common import MockConfigEntry, MockEntityPlatform, mock_restore_cache
 from tests.conftest import WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "sensor.test_state"
+TEST_ATTRIBUTE_ENTITY_ID = "sensor.test_attribute"
 TEST_EVENT = TemplatePlatformSetup(
     event.DOMAIN,
     "template_event",
-    make_test_trigger(TEST_STATE_ENTITY_ID),
+    make_test_trigger(TEST_STATE_ENTITY_ID, TEST_ATTRIBUTE_ENTITY_ID),
 )
 
 TEST_EVENT_TYPES_TEMPLATE = "{{ ['single', 'double', 'hold'] }}"
@@ -454,133 +466,154 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     assert "event_type" not in state.attributes
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "template": {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "event": {
-                    "name": TEST_EVENT.object_id,
-                    "event_type": "{{ trigger.event.data.action }}",
-                    "event_types": TEST_EVENT_TYPES_TEMPLATE,
-                    "picture": "{{ '/local/dogs.png' }}",
-                    "icon": "{{ 'mdi:pirate' }}",
-                    "attributes": {
-                        "plus_one": "{{ trigger.event.data.beer + 1 }}",
-                        "plus_two": "{{ trigger.event.data.beer + 2 }}",
-                    },
-                },
+            "event_type": "{{ states('sensor.test_state') }}",
+            "event_types": TEST_EVENT_TYPES_TEMPLATE,
+            "attributes": {
+                "plus_one": "{{ states('sensor.test_attribute') | int(0) + 1 }}",
+                "plus_two": "{{ states('sensor.test_attribute') | int(0) + 2 }}",
             },
         },
     ],
 )
-async def test_trigger_entity_restore_state(
+async def test_restore_state(
     hass: HomeAssistant,
-    count: int,
-    domain: str,
+    style: ConfigurationStyle,
     config: dict,
 ) -> None:
-    """Test restoring trigger event entities."""
+    """Test restoring template event entities."""
+
+    # Ensure the initial state is None so that restore data is honored
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, None)
+
     restored_attributes = {
-        "entity_picture": "/local/cats.png",
-        "event_type": "hold",
-        "icon": "mdi:ship",
         "plus_one": 55,
     }
-    fake_state = State(
-        TEST_EVENT.entity_id,
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_EVENT,
         "2021-01-01T23:59:59.123+00:00",
-        restored_attributes,
+        saved_extra_data={
+            "last_event_type": "hold",
+            "last_event_attributes": restored_attributes,
+        },
+        saved_attributes=restored_attributes,
     )
-    fake_extra_data = {
-        "last_event_type": "hold",
-        "last_event_attributes": restored_attributes,
-    }
-    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
-    with assert_setup_component(count, domain):
-        assert await async_setup_component(
-            hass,
-            domain,
-            config,
-        )
-
-        await hass.async_block_till_done()
-        await hass.async_start()
-        await hass.async_block_till_done()
+    await setup_restore_template_entity(
+        hass, TEST_EVENT, style, config, "is_state('sensor.test_attribute', '2')"
+    )
 
     test_state = "2021-01-01T23:59:59.123+00:00"
-    state = hass.states.get(TEST_EVENT.entity_id)
-    assert state.state == test_state
-    for attr, value in restored_attributes.items():
-        assert state.attributes[attr] == value
+    state = assert_state_and_attributes(
+        hass,
+        TEST_EVENT,
+        test_state,
+        {**restored_attributes, **RESTORE_STATE_SAVED_ATTRIBUTES},
+    )
     assert "plus_two" not in state.attributes
 
-    hass.bus.async_fire("test_event", {"action": "double", "beer": 2})
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "double")
+    await async_trigger(hass, TEST_ATTRIBUTE_ENTITY_ID, 2)
+
+    state = assert_state_and_attributes(
+        hass,
+        TEST_EVENT,
+        expected_attributes={
+            "plus_one": 3,
+            "plus_two": 4,
+            "event_type": "double",
+            "event_types": ["single", "double", "hold"],
+            **RESTORE_STATE_UPDATED_ATTRIBUTES,
+        },
+    )
+    assert state.state != test_state
+
+
+def _make_trigger_event_entity(hass: HomeAssistant) -> TriggerEventEntity:
+    """Create a trigger event entity that renders fresh, static attributes."""
+    config = {
+        CONF_NAME: Template("fresh_name", hass),
+        CONF_ICON: Template("mdi:fresh", hass),
+        CONF_PICTURE: Template("/local/fresh.png", hass),
+        CONF_EVENT_TYPE: Template("fresh", hass),
+        CONF_EVENT_TYPES: Template("{{ ['fresh'] }}", hass),
+        CONF_ATTRIBUTES: {"attr": Template("fresh_attr", hass)},
+    }
+    coordinator = TriggerUpdateCoordinator(hass, {})
+    entity = TriggerEventEntity(hass, coordinator, config)
+    entity.entity_id = "event.test"
+    entity.platform = MockEntityPlatform(hass)
+    return entity
+
+
+def _mock_stale_restore_cache(hass: HomeAssistant) -> None:
+    """Prime the restore cache with stale attributes for the test entity."""
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                "event.test",
+                "2021-01-01T00:00:00+00:00",
+                {
+                    ATTR_FRIENDLY_NAME: "stale_name",
+                    ATTR_ICON: "mdi:stale",
+                    ATTR_ENTITY_PICTURE: "/local/stale.png",
+                    "attr": "stale_attr",
+                },
+            ),
+        ),
+    )
+
+
+async def test_trigger_restore_does_not_clobber_rendered_attributes(
+    hass: HomeAssistant,
+) -> None:
+    """A trigger that already fired must win over restored state.
+
+    Regression test for the race where the trigger fires (populating the
+    coordinator) before the entity is added to hass. ``_process_data`` renders
+    fresh attributes which restore would otherwise overwrite with stale values.
+    """
+    entity = _make_trigger_event_entity(hass)
+    # Simulate the trigger having already fired before the entity is added.
+    entity.coordinator._execute_update({})
+    assert entity.coordinator.data is not None
+
+    _mock_stale_restore_cache(hass)
+
+    await entity.async_added_to_hass()
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_EVENT.entity_id)
-    assert state.state != test_state
-    assert state.attributes["icon"] == "mdi:pirate"
-    assert state.attributes["entity_picture"] == "/local/dogs.png"
-    assert state.attributes["event_type"] == "double"
-    assert state.attributes["event_types"] == ["single", "double", "hold"]
-    assert state.attributes["plus_one"] == 3
-    assert state.attributes["plus_two"] == 4
+    # The freshly rendered values must win over the stale restored ones.
+    assert entity.name == "fresh_name"
+    assert entity.icon == "mdi:fresh"
+    assert entity.entity_picture == "/local/fresh.png"
+    assert entity.extra_state_attributes == {"attr": "fresh_attr"}
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            "template": {
-                "event": {
-                    "name": TEST_EVENT.object_id,
-                    "event_type": "{{ states('sensor.test_state') }}",
-                    "event_types": TEST_EVENT_TYPES_TEMPLATE,
-                },
-            },
-        },
-    ],
-)
-async def test_event_entity_restore_state(
+async def test_trigger_restores_when_not_yet_triggered(
     hass: HomeAssistant,
-    count: int,
-    domain: str,
-    config: dict,
 ) -> None:
-    """Test restoring trigger event entities."""
-    fake_state = State(
-        TEST_EVENT.entity_id,
-        "2021-01-01T23:59:59.123+00:00",
-        {},
-    )
-    fake_extra_data = {
-        "last_event_type": "hold",
-        "last_event_attributes": {},
-    }
-    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
-    with assert_setup_component(count, domain):
-        assert await async_setup_component(
-            hass,
-            domain,
-            config,
-        )
-        await hass.async_block_till_done()
-        await hass.async_start()
-        await hass.async_block_till_done()
+    """When the trigger has not fired, restored attributes are applied."""
+    entity = _make_trigger_event_entity(hass)
+    assert entity.coordinator.data is None
 
-    test_state = "2021-01-01T23:59:59.123+00:00"
-    state = hass.states.get(TEST_EVENT.entity_id)
-    assert state.state == test_state
+    _mock_stale_restore_cache(hass)
 
-    await async_trigger(hass, TEST_STATE_ENTITY_ID, "double")
+    await entity.async_added_to_hass()
+    await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_EVENT.entity_id)
-    assert state.state != test_state
-    assert state.attributes["event_type"] == "double"
+    # No fresh data yet, so the restored values are surfaced.
+    assert entity.name == "stale_name"
+    assert entity.icon == "mdi:stale"
+    assert entity.entity_picture == "/local/stale.png"
+    assert entity.extra_state_attributes == {"attr": "stale_attr"}
 
 
 @pytest.mark.parametrize(

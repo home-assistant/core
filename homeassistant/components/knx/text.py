@@ -1,5 +1,7 @@
 """Support for KNX text entities."""
 
+from typing import override
+
 from propcache.api import cached_property
 from xknx.devices import Notification as XknxNotification
 from xknx.dpt import DPTLatin1
@@ -73,18 +75,17 @@ class _KnxText(TextEntity, RestoreEntity):
     """Representation of a KNX text."""
 
     _device: XknxNotification
-    _attr_native_max = 14
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
-        if not self._device.remote_value.readable and (
-            last_state := await self.async_get_last_state()
-        ):
+        if last_state := await self.async_get_last_state():
             if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                 self._device.remote_value.value = last_state.state
 
     @cached_property
+    @override
     def pattern(self) -> str | None:
         """Return the regex pattern that the value must match."""
         return (
@@ -94,10 +95,12 @@ class _KnxText(TextEntity, RestoreEntity):
         )
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the value reported by the text."""
         return self._device.message
 
+    @override
     async def async_set_value(self, value: str) -> None:
         """Change the value."""
         await self._device.set(value)
@@ -125,6 +128,9 @@ class KnxYamlText(_KnxText, KnxYamlEntity):
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         self._attr_mode = config[CONF_MODE]
+        self._attr_native_max_length = (
+            self._device.remote_value.dpt_class.payload_length
+        )
 
 
 class KnxUiText(_KnxText, KnxUiEntity):
@@ -155,3 +161,6 @@ class KnxUiText(_KnxText, KnxUiEntity):
             value_type=knx_conf.get_dpt(CONF_GA_TEXT),
         )
         self._attr_mode = TextMode(knx_conf.get(CONF_MODE))
+        self._attr_native_max_length = (
+            self._device.remote_value.dpt_class.payload_length
+        )

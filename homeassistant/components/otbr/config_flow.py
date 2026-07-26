@@ -2,7 +2,7 @@
 
 from contextlib import suppress
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 import aiohttp
 import python_otbr_api
@@ -154,6 +154,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return border_agent_id
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -185,6 +186,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:

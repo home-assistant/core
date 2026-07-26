@@ -1,4 +1,5 @@
 """Test Home Assistant date util methods."""
+# pylint: disable=home-assistant-enforce-utcnow
 
 from datetime import UTC, datetime, timedelta
 
@@ -62,6 +63,14 @@ def test_now() -> None:
         dt_util.as_utc(dt_util.now()).replace(tzinfo=None)
         - datetime.now(UTC).replace(tzinfo=None)
     ) < timedelta(seconds=1)
+
+
+def test_naive_now() -> None:
+    """Test the naive now method."""
+    naive_now = dt_util.naive_now()
+
+    assert naive_now.tzinfo is None
+    assert abs(naive_now - datetime.now()) < timedelta(seconds=1)  # pylint: disable=home-assistant-enforce-naive-now
 
 
 def test_as_utc_with_naive_object() -> None:
@@ -187,7 +196,8 @@ def test_get_age() -> None:
     assert dt_util.get_age(diff, precision=2) == "1 second"
 
     diff = dt_util.now() + timedelta(seconds=1)
-    pytest.raises(ValueError, dt_util.get_age, diff)
+    with pytest.raises(ValueError):
+        dt_util.get_age(diff)
 
     diff = dt_util.now() - timedelta(seconds=30)
     assert dt_util.get_age(diff) == "30 seconds"
@@ -212,7 +222,8 @@ def test_get_age() -> None:
     assert dt_util.get_age(diff, precision=2) == "1 day 14 hours"
     assert dt_util.get_age(diff, precision=3) == "1 day 14 hours 24 minutes"
     diff = dt_util.now() + timedelta(minutes=1.6 * 60 * 24)
-    pytest.raises(ValueError, dt_util.get_age, diff)
+    with pytest.raises(ValueError):
+        dt_util.get_age(diff)
 
     diff = dt_util.now() - timedelta(minutes=2 * 60 * 24)
     assert dt_util.get_age(diff) == "2 days"
@@ -239,7 +250,8 @@ def test_time_remaining() -> None:
     assert dt_util.get_time_remaining(diff) == "1 second"
 
     diff = dt_util.now() - timedelta(seconds=1)
-    pytest.raises(ValueError, dt_util.get_time_remaining, diff)
+    with pytest.raises(ValueError):
+        dt_util.get_time_remaining(diff)
 
     diff = dt_util.now() + timedelta(seconds=30)
     assert dt_util.get_time_remaining(diff) == "30 seconds"
@@ -263,7 +275,8 @@ def test_time_remaining() -> None:
     assert dt_util.get_time_remaining(diff, precision=2) == "1 day 14 hours"
     assert dt_util.get_time_remaining(diff, precision=3) == "1 day 14 hours 24 minutes"
     diff = dt_util.now() - timedelta(minutes=1.6 * 60 * 24)
-    pytest.raises(ValueError, dt_util.get_time_remaining, diff)
+    with pytest.raises(ValueError):
+        dt_util.get_time_remaining(diff)
 
     diff = dt_util.now() + timedelta(minutes=2 * 60 * 24)
     assert dt_util.get_time_remaining(diff) == "2 days"

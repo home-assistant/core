@@ -39,7 +39,7 @@
 # name: test_entities[scene.room_scene-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'scene',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'scene',
     }),
     'context': <ANY>,
     'entity_id': 'scene.room_scene',

@@ -1,7 +1,7 @@
 """Component to integrate ambilight for TVs exposing the Joint Space API."""
 
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from haphilipsjs import PhilipsTV
 from haphilipsjs.typing import AmbilightCurrentConfiguration
@@ -89,6 +89,7 @@ class AmbilightEffect:
             return AmbilightEffect(mode=EFFECT_EXPERT, style=style, algorithm=algorithm)
         return AmbilightEffect(mode=EFFECT_AUTO, style=style, algorithm=algorithm)
 
+    @override
     def __str__(self) -> str:
         """Get a string representation of the effect."""
         if self.mode == EFFECT_MODE:
@@ -201,6 +202,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         return AmbilightEffect(EFFECT_MODE, self._tv.ambilight_mode, None)
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the current color mode."""
         current = self._tv.ambilight_current_configuration
@@ -213,6 +215,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         return ColorMode.ONOFF
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if the light is turned on."""
         if self._tv.on:
@@ -255,6 +258,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
             self._attr_brightness = None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_from_coordinator()
@@ -324,6 +328,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         if await self._tv.setAmbilightCurrentConfiguration(config) is False:
             raise HomeAssistantError("Failed to set ambilight mode")
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the bulb on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
@@ -365,6 +370,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         self._update_from_coordinator()
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn of ambilight."""
 
@@ -380,6 +386,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if entity is available."""
         if not super().available:

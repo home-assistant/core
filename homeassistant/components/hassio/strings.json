@@ -55,6 +55,9 @@
     },
     "supervisor_not_connected": {
       "message": "Not connected with the supervisor / system too busy"
+    },
+    "supervisor_update_pending": {
+      "message": "Supervisor was out-of-date during onboarding. Update triggered, will retry when complete"
     }
   },
   "issues": {
@@ -221,6 +224,10 @@
       "description": "System is currently unhealthy due to {reason}. For troubleshooting information, select Learn more.",
       "title": "Unhealthy system - {reason}"
     },
+    "unhealthy_data_filesystem_check_error": {
+      "description": "System is currently unhealthy because a filesystem integrity check failed on the data partition. This can be caused by unexpected power loss or failing storage and may affect configuration, apps, or backups. For troubleshooting information, select Learn more.",
+      "title": "Unhealthy system - Data partition filesystem check failed"
+    },
     "unhealthy_docker": {
       "description": "System is currently unhealthy because Docker is configured incorrectly. For troubleshooting information, select Learn more.",
       "title": "Unhealthy system - Docker misconfigured"
@@ -232,6 +239,10 @@
     "unhealthy_duplicate_os_installation": {
       "description": "System is currently unhealthy because it has detected multiple Home Assistant OS installations. For troubleshooting information, select Learn more.",
       "title": "Unhealthy system - Duplicate Home Assistant OS installation"
+    },
+    "unhealthy_os_filesystem_check_error": {
+      "description": "System is currently unhealthy because a filesystem integrity check failed on an operating system partition. This can be caused by unexpected power loss or failing storage. For troubleshooting information, select Learn more.",
+      "title": "Unhealthy system - OS partition filesystem check failed"
     },
     "unhealthy_oserror_bad_message": {
       "description": "System is currently unhealthy because the operating system has reported an OS error: Bad message. For troubleshooting information, select Learn more.",
@@ -562,6 +573,7 @@
     "info": {
       "agent_version": "Agent version",
       "board": "Board",
+      "disk_life_time": "Disk lifetime",
       "disk_total": "Disk total",
       "disk_used": "Disk used",
       "docker_version": "Docker version",

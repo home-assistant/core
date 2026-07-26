@@ -2,7 +2,7 @@
 # name: test_sensor[connected_plc_devices-async_get_network_overview-interval2-1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Connected PLC devices',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Connected PLC devices',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_connected_plc_devices',
@@ -52,8 +52,8 @@
 # name: test_sensor[connected_wi_fi_clients-async_get_wifi_connected_station-interval0-1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Connected Wi-Fi clients',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Connected Wi-Fi clients',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_connected_wi_fi_clients',
@@ -70,7 +70,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -105,7 +105,7 @@
 # name: test_sensor[neighboring_wi_fi_networks-async_get_wifi_neighbor_access_points-interval1-1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Neighboring Wi-Fi networks',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Neighboring Wi-Fi networks',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_neighboring_wi_fi_networks',
@@ -155,8 +155,8 @@
 # name: test_sensor[uptime-async_uptime-interval3-2023-01-13T11:58:20+00:00]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'uptime',
-      'friendly_name': 'Mock Title Uptime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Uptime',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_uptime',
@@ -206,9 +206,9 @@
 # name: test_update_plc_phyrates
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'Mock Title PLC downlink PHY rate (test2)',
-      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title PLC downlink PHY rate (test2)',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_plc_downlink_phy_rate_test2',
@@ -261,9 +261,9 @@
 # name: test_update_plc_phyrates.2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'Mock Title PLC downlink PHY rate (test2)',
-      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title PLC downlink PHY rate (test2)',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_plc_downlink_phy_rate_test2',

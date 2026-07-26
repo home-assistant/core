@@ -110,7 +110,7 @@ EVENT_PROG_END = {
 
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.SENSOR]
 

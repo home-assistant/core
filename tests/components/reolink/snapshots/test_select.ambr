@@ -1,0 +1,1383 @@
+# serializer version: 1
+# name: test_all_entities[select.test_reolink_cam_auto_quick_reply_message-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_auto_quick_reply_message',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auto quick reply message',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto quick reply message',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_quick_reply_message',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_auto_quick_reply_message',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_auto_quick_reply_message-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Auto quick reply message',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_auto_quick_reply_message',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_auto_track_method-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'digital',
+        'digitalfirst',
+        'pantiltfirst',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_auto_track_method',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auto track method',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto track method',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_track_method',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_auto_track_method',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_auto_track_method-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Auto track method',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'digital',
+        'digitalfirst',
+        'pantiltfirst',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_auto_track_method',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'digitalfirst',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_binning_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'on',
+        'auto',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_binning_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Binning mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Binning mode',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'binning_mode',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_binning_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_binning_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Binning mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'on',
+        'auto',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_binning_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_clear_bit_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_clear_bit_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Clear bit rate',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clear bit rate',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'main_bit_rate',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_main_bit_rate',
+    'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_clear_bit_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Clear bit rate',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_clear_bit_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_clear_encoding-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'h264',
+        'h265',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_clear_encoding',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Clear encoding',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clear encoding',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'main_encoding',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_main_encoding',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_clear_encoding-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Clear encoding',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'h264',
+        'h265',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_clear_encoding',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_clear_frame_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_clear_frame_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Clear frame rate',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clear frame rate',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'main_frame_rate',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_main_frame_rate',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_clear_frame_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Clear frame rate',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_clear_frame_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_day_night_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'auto',
+        'color',
+        'blackwhite',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_day_night_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Day night mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Day night mode',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'day_night_mode',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_day_night_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_day_night_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Day night mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'auto',
+        'color',
+        'blackwhite',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_day_night_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'blackwhite',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_doorbell_led-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'stayoff',
+        'auto',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_doorbell_led',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Doorbell LED',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Doorbell LED',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'doorbell_led',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_status_led',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_doorbell_led-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Doorbell LED',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'stayoff',
+        'auto',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_doorbell_led',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_floodlight_event_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'on',
+        'flash',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_floodlight_event_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Floodlight event mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Floodlight event mode',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'floodlight_event_mode',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_floodlight_event_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_floodlight_event_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Floodlight event mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'on',
+        'flash',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_floodlight_event_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_floodlight_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'auto',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_floodlight_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Floodlight mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Floodlight mode',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'floodlight_mode',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_floodlight_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_floodlight_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Floodlight mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'auto',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_floodlight_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_fluent_bit_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_fluent_bit_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fluent bit rate',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fluent bit rate',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sub_bit_rate',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_sub_bit_rate',
+    'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_fluent_bit_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Fluent bit rate',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_fluent_bit_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_fluent_encoding-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'h264',
+        'h265',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_fluent_encoding',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fluent encoding',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fluent encoding',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sub_encoding',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_sub_encoding',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_fluent_encoding-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Fluent encoding',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'h264',
+        'h265',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_fluent_encoding',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_fluent_frame_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_fluent_frame_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fluent frame rate',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fluent frame rate',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sub_frame_rate',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_sub_frame_rate',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_fluent_frame_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Fluent frame rate',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_fluent_frame_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_hdr-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'on',
+        'auto',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_hdr',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'HDR',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'HDR',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hdr',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_hdr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_hdr-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam HDR',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'on',
+        'auto',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_hdr',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_hub_alarm_ringtone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm',
+        'citybird',
+        'originaltune',
+        'pianokey',
+        'loop',
+        'attraction',
+        'hophop',
+        'goodday',
+        'operetta',
+        'moonlight',
+        'waybackhome',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_hub_alarm_ringtone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hub alarm ringtone',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hub alarm ringtone',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hub_alarm_ringtone',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_hub_alarm_ringtone',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_hub_alarm_ringtone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Hub alarm ringtone',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm',
+        'citybird',
+        'originaltune',
+        'pianokey',
+        'loop',
+        'attraction',
+        'hophop',
+        'goodday',
+        'operetta',
+        'moonlight',
+        'waybackhome',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_hub_alarm_ringtone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'originaltune',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_hub_visitor_ringtone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm',
+        'citybird',
+        'originaltune',
+        'pianokey',
+        'loop',
+        'attraction',
+        'hophop',
+        'goodday',
+        'operetta',
+        'moonlight',
+        'waybackhome',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_hub_visitor_ringtone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hub visitor ringtone',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hub visitor ringtone',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hub_visitor_ringtone',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_hub_visitor_ringtone',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_hub_visitor_ringtone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Hub visitor ringtone',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm',
+        'citybird',
+        'originaltune',
+        'pianokey',
+        'loop',
+        'attraction',
+        'hophop',
+        'goodday',
+        'operetta',
+        'moonlight',
+        'waybackhome',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_hub_visitor_ringtone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'originaltune',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_image_exposure_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'auto',
+        'lownoise',
+        'antismearing',
+        'manual',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_image_exposure_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Image exposure mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Image exposure mode',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exposure',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_exposure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_image_exposure_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Image exposure mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'auto',
+        'lownoise',
+        'antismearing',
+        'manual',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_image_exposure_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_play_quick_reply_message-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_reolink_cam_play_quick_reply_message',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Play quick reply message',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Play quick reply message',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'play_quick_reply_message',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_play_quick_reply_message',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_play_quick_reply_message-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Play quick reply message',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_play_quick_reply_message',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_post_recording_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_post_recording_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Post-recording time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Post-recording time',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'post_rec_time',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_post_rec_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_post_recording_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Post-recording time',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_post_recording_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_pre_recording_frame_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '1',
+        '2',
+        '5',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_cam_pre_recording_frame_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pre-recording frame rate',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pre-recording frame rate',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pre_record_fps',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_pre_record_fps',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_pre_recording_frame_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Pre-recording frame rate',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '1',
+        '2',
+        '5',
+      ]),
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_pre_recording_frame_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_ptz_preset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_reolink_cam_ptz_preset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PTZ preset',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PTZ preset',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ptz_preset',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_preset',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_cam_ptz_preset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam PTZ preset',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_cam_ptz_preset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_name_recording_packing_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '30 Minutes',
+        '60 Minutes',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_name_recording_packing_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Recording packing time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Recording packing time',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'packing_time',
+    'unique_id': 'ABC1234567D89EFG_packing_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_name_recording_packing_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_name Recording packing time',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '30 Minutes',
+        '60 Minutes',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_name_recording_packing_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60 Minutes',
+  })
+# ---
+# name: test_all_entities[select.test_reolink_name_scene_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'home',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_reolink_name_scene_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Scene mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scene mode',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'scene_mode',
+    'unique_id': 'ABC1234567D89EFG_scene_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.test_reolink_name_scene_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_name Scene mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'home',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_reolink_name_scene_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

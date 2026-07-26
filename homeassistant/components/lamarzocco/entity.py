@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pylamarzocco.const import FirmwareType, MachineState, WidgetType
 from pylamarzocco.models import MachineStatus
@@ -76,6 +76,7 @@ class LaMarzoccoBaseEntity(
             self._attr_device_info.update(DeviceInfo(connections=connections))
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         machine_state = (
@@ -101,6 +102,7 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
     entity_description: LaMarzoccoEntityDescription
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if (
@@ -123,6 +125,7 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
         self.entity_description = entity_description
         self.bluetooth_coordinator = bluetooth_coordinator
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added to hass."""
         await super().async_added_to_hass()

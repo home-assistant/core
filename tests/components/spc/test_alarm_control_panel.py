@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from pyspcwebgw.const import AreaMode
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.components.spc import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -13,7 +14,7 @@ async def test_update_alarm_device(hass: HomeAssistant, mock_client: AsyncMock) 
     """Test that alarm panel state changes on incoming websocket data."""
 
     config = {"spc": {"api_url": "http://localhost/", "ws_url": "ws://localhost/"}}
-    assert await async_setup_component(hass, "spc", config) is True
+    assert await async_setup_component(hass, DOMAIN, config) is True
 
     await hass.async_block_till_done()
 

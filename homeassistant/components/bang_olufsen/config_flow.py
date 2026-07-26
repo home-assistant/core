@@ -1,7 +1,7 @@
 """Config flow for the Bang & Olufsen integration."""
 
 from ipaddress import AddressValueError, IPv4Address
-from typing import Any, TypedDict
+from typing import Any, TypedDict, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 from mozart_api.exceptions import ApiException
@@ -61,6 +61,7 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -123,6 +124,7 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
