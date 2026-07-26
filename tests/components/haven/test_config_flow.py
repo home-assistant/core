@@ -17,7 +17,13 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import TEST_CAC_INFO, TEST_HOST, TEST_INFO, TEST_SERIAL, ZEROCONF_DISCOVERY
+from . import (
+    TEST_HOST,
+    TEST_INFO,
+    TEST_SERIAL,
+    TEST_UNSUPPORTED_CONTROLLER_INFO,
+    ZEROCONF_DISCOVERY,
+)
 
 from tests.common import MockConfigEntry
 
@@ -116,7 +122,7 @@ async def test_user_flow_rejects_controller(hass: HomeAssistant) -> None:
     )
     with patch(
         "homeassistant.components.haven.config_flow.HavenClient",
-        return_value=_mock_client(TEST_CAC_INFO),
+        return_value=_mock_client(TEST_UNSUPPORTED_CONTROLLER_INFO),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: TEST_HOST}
@@ -124,6 +130,31 @@ async def test_user_flow_rejects_controller(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unsupported_product"}
+
+
+async def test_user_flow_aborts_duplicate(hass: HomeAssistant) -> None:
+    """Test manual setup rejects an already configured device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SERIAL,
+        data={CONF_HOST: "192.0.2.2"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.haven.config_flow.HavenClient",
+        return_value=_mock_client(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

@@ -30,7 +30,7 @@ TEST_CAM_INFO = {
     "capabilities": ["air_quality", "airflow"],
 }
 
-TEST_CAC_INFO = {
+TEST_UNSUPPORTED_CONTROLLER_INFO = {
     **TEST_INFO,
     "serial_number": "TEST-CAC-0001",
     "device_id": "TEST-DEVICE-CAC",

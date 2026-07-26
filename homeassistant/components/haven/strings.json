@@ -52,6 +52,12 @@
     }
   },
   "exceptions": {
+    "unsupported_api_version": {
+      "message": "The HAVEN device uses an unsupported local API version"
+    },
+    "unsupported_product": {
+      "message": "The HAVEN device reported an unsupported product type"
+    },
     "update_error": {
       "message": "An error occurred while communicating with the HAVEN device: {error}"
     }

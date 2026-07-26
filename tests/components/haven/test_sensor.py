@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_HOST,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -106,4 +107,24 @@ async def test_measurement_sensors_unavailable_when_not_ready(
         "sensor", DOMAIN, "TEST-RAM-0001_temperature_c"
     )
     assert temp_entity is not None
-    assert hass.states.get(temp_entity).state == STATE_UNAVAILABLE
+    temp_state = hass.states.get(temp_entity)
+    assert temp_state is not None
+    assert temp_state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_missing_measurement_is_unknown(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a missing measurement is unknown while the sensor remains ready."""
+    sensors = {**TEST_SENSORS, "temperature_c": None}
+    await _setup_entry(hass, sensors=sensors)
+
+    temp_entity = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "TEST-RAM-0001_temperature_c"
+    )
+    assert temp_entity is not None
+    temp_state = hass.states.get(temp_entity)
+    assert temp_state is not None
+    assert temp_state.state == STATE_UNKNOWN

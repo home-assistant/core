@@ -275,7 +275,7 @@ class HavenSensor(HavenEntity, SensorEntity):
     @override
     def available(self) -> bool:
         """Return whether the entity has current data."""
-        if not super().available or self.native_value is None:
+        if not super().available:
             return False
         if not self.entity_description.requires_sensor_ready:
             return True

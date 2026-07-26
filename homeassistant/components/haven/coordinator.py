@@ -8,12 +8,14 @@ from haveniaq import (
     DeviceInfo,
     HavenApiError,
     HavenClient,
+    HavenUnsupportedApiVersionError,
     HavenUnsupportedProductError,
     SensorData,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
@@ -50,12 +52,24 @@ class HavenDataUpdateCoordinator(DataUpdateCoordinator[HavenCoordinatorData]):
         """Fetch stable device metadata before the first poll."""
         try:
             self.info = await self.client.get_info()
-            if not self.info.supports(Capability.AIR_QUALITY):
-                raise HavenUnsupportedProductError(
-                    "The HAVEN device does not provide air-quality data"
-                )
+        except HavenUnsupportedApiVersionError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_api_version",
+            ) from err
+        except HavenUnsupportedProductError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_product",
+            ) from err
         except HavenApiError as err:
             raise _update_failed(err) from err
+
+        if not self.info.supports(Capability.AIR_QUALITY):
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_product",
+            )
 
     @override
     async def _async_update_data(self) -> HavenCoordinatorData:
