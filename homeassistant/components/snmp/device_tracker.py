@@ -54,12 +54,10 @@ async def async_setup_scanner(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Trigger an import flow to migrate YAML config to a config entry."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
     )
 
     ir.async_create_issue(
