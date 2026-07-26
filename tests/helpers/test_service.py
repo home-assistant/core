@@ -1895,7 +1895,7 @@ async def test_register_admin_service(
     hass: HomeAssistant, hass_read_only_user: MockUser, hass_admin_user: MockUser
 ) -> None:
     """Test the register admin service."""
-    calls = []
+    calls: list[MockEntity] = []
 
     async def mock_service(call):
         calls.append(call)
@@ -2855,6 +2855,54 @@ async def test_register_platform_entity_service_response_data(
     assert response_data == {
         "mock_integration.entity": {"response-key": "response-value"}
     }
+
+
+async def test_register_platform_entity_service_admin_only(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test an admin-only platform entity service."""
+    calls: list[MockEntity] = []
+
+    @callback
+    def handle_service(entity: MockEntity, *_: Any) -> None:
+        calls.append(entity)
+
+    service.async_register_platform_entity_service(
+        hass,
+        "mock_platform",
+        "hello",
+        admin_only=True,
+        entity_domain="mock_integration",
+        schema={},
+        func=handle_service,
+    )
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity = MockEntity(entity_id="mock_integration.entity")
+    await entity_platform.async_add_entities([entity])
+
+    with pytest.raises(exceptions.Unauthorized):
+        await hass.services.async_call(
+            "mock_platform",
+            "hello",
+            {"entity_id": entity.entity_id},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+    assert calls == []
+
+    await hass.services.async_call(
+        "mock_platform",
+        "hello",
+        {"entity_id": entity.entity_id},
+        blocking=True,
+        context=Context(user_id=hass_admin_user.id),
+    )
+    assert calls == [entity]
 
 
 async def test_register_platform_entity_service_response_data_multiple_matches(
