@@ -1,5 +1,7 @@
 """Base for all turan entities."""
 
+from typing import override
+
 from pyituran import Vehicle
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -35,6 +37,7 @@ class IturanBaseEntity(CoordinatorEntity[IturanDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if vehicle is still included in the account."""
         return super().available and self._license_plate in self.coordinator.data

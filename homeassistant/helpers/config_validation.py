@@ -857,7 +857,7 @@ def url(
     value: Any,
     _schema_list: frozenset[UrlProtocolSchema] = EXTERNAL_URL_PROTOCOL_SCHEMA_LIST,
 ) -> str:
-    """Validate an URL."""
+    """Validate a URL."""
     url_in = str(value)
     parsed = urlparse(url_in)
 
@@ -872,7 +872,7 @@ def url(
 
 
 def configuration_url(value: Any) -> str:
-    """Validate an URL that allows the homeassistant schema."""
+    """Validate a URL that allows the homeassistant schema."""
     return url(value, CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST)
 
 
@@ -1414,7 +1414,10 @@ def _make_entity_service_schema(schema: dict, extra: int) -> VolSchemaType:
         _HAS_ENTITY_SERVICE_FIELD,
     )
     setattr(validator, "_entity_service_schema", True)  # noqa: B010
-    return validator
+    # Wrap in a vol.Schema so the vol.All compiles its sub-validators once,
+    # instead of re-wrapping them in a new vol.Schema on every validation as a
+    # top-level vol.All does.
+    return vol.Schema(validator)
 
 
 BASE_ENTITY_SCHEMA = _make_entity_service_schema({}, vol.PREVENT_EXTRA)

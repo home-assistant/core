@@ -9,6 +9,9 @@
     },
     {
       "hostname": "1232100-*"
+    },
+    {
+      "hostname": "teslapw_*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/powerwall",

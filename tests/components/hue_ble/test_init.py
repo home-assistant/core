@@ -20,7 +20,7 @@ from tests.components.bluetooth import generate_ble_device
 @pytest.mark.parametrize(
     (
         "ble_device",
-        "scanner_count",
+        "reachability_reason",
         "connect_result",
         "poll_state_result",
         "message",
@@ -28,47 +28,42 @@ from tests.components.bluetooth import generate_ble_device
     [
         (
             None,
-            2,
+            "Bad vibes",
             True,
             None,
-            "The light was not found.",
-        ),
-        (
-            None,
-            0,
-            True,
-            None,
-            "No Bluetooth scanners are available to search for the light.",
+            f"The light {TEST_DEVICE_NAME} ({TEST_DEVICE_MAC}) was not found: Bad vibes",
         ),
         (
             generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
-            2,
+            None,
             False,
             ConnectionError,
             "Device found but unable to connect.",
         ),
         (
             generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
-            2,
+            None,
             True,
             HueBleError,
             "Device found and connected but unable to poll values from it.",
         ),
     ],
-    ids=["no_device", "no_scanners", "error_connect", "error_poll"],
+    ids=["no_device", "error_connect", "error_poll"],
 )
 async def test_setup_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    reachability_reason: str,
     ble_device: BLEDevice | None,
-    scanner_count: int,
     connect_result: Exception | None,
     poll_state_result: Exception | None,
     message: str,
 ) -> None:
     """Test that ConfigEntryNotReady is raised if there is an error condition."""
 
-    entry = MockConfigEntry(domain=DOMAIN, unique_id="abcd", data={})
+    entry = MockConfigEntry(
+        domain=DOMAIN, title=TEST_DEVICE_NAME, unique_id=TEST_DEVICE_MAC, data={}
+    )
     entry.add_to_hass(hass)
     with (
         patch(
@@ -76,8 +71,8 @@ async def test_setup_error(
             return_value=ble_device,
         ),
         patch(
-            "homeassistant.components.hue_ble.async_scanner_count",
-            return_value=scanner_count,
+            "homeassistant.components.hue_ble.bluetooth.async_address_reachability_diagnostics",
+            return_value=reachability_reason,
         ),
         patch(
             "homeassistant.components.hue_ble.HueBleLight.connect",
@@ -105,10 +100,6 @@ async def test_setup(
         patch(
             "homeassistant.components.hue_ble.async_ble_device_from_address",
             return_value=generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
-        ),
-        patch(
-            "homeassistant.components.hue_ble.async_scanner_count",
-            return_value=1,
         ),
         patch(
             "homeassistant.components.hue_ble.HueBleLight.connect",

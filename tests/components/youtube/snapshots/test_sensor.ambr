@@ -2,8 +2,8 @@
 # name: test_sensor
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://i.ytimg.com/vi/wysukDrMdqU/maxresdefault.jpg',
-      'friendly_name': 'Google for Developers Latest upload',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://i.ytimg.com/vi/wysukDrMdqU/maxresdefault.jpg',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google for Developers Latest upload',
       'published_at': datetime.datetime(2023, 5, 11, 0, 20, 46, tzinfo=TzInfo(0)),
       'video_id': 'wysukDrMdqU',
     }),
@@ -18,10 +18,10 @@
 # name: test_sensor.1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
-      'friendly_name': 'Google for Developers Subscribers',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'subscribers',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google for Developers Subscribers',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'subscribers',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.google_for_developers_subscribers',
@@ -34,10 +34,10 @@
 # name: test_sensor.2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Google for Developers Videos',
-      'icon': 'mdi:filmstrip-box-multiple',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'videos',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google for Developers Videos',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:filmstrip-box-multiple',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'videos',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.google_for_developers_videos',
@@ -50,10 +50,10 @@
 # name: test_sensor.3
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
-      'friendly_name': 'Google for Developers Views',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'views',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google for Developers Views',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'views',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.google_for_developers_views',
@@ -66,7 +66,7 @@
 # name: test_sensor_without_uploaded_video
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Google for Developers Latest upload',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google for Developers Latest upload',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.google_for_developers_latest_upload',
@@ -79,10 +79,10 @@
 # name: test_sensor_without_uploaded_video.1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
-      'friendly_name': 'Google for Developers Subscribers',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'subscribers',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google for Developers Subscribers',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'subscribers',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.google_for_developers_subscribers',
@@ -95,10 +95,10 @@
 # name: test_sensor_without_uploaded_video.2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Google for Developers Videos',
-      'icon': 'mdi:filmstrip-box-multiple',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'videos',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google for Developers Videos',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:filmstrip-box-multiple',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'videos',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.google_for_developers_videos',
@@ -111,10 +111,10 @@
 # name: test_sensor_without_uploaded_video.3
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
-      'friendly_name': 'Google for Developers Views',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'views',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google for Developers Views',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'views',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.google_for_developers_views',

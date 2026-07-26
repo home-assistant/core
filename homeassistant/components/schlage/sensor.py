@@ -1,5 +1,7 @@
 """Platform for Schlage sensor integration."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -63,6 +65,7 @@ class SchlageBatterySensor(SchlageEntity, SensorEntity):
         self._attr_native_value = getattr(self._lock, self.entity_description.key)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.device_id in self.coordinator.data.locks:

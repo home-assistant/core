@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from wiim.consts import PlayingStatus
+from wiim.exceptions import WiimRequestException
 from wiim.models import (
     WiimGroupRole,
     WiimGroupSnapshot,
@@ -18,6 +19,7 @@ from wiim.models import (
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.media_player import (
+    ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_CONTENT_ID,
@@ -31,6 +33,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_BROWSE_MEDIA,
+    SERVICE_JOIN,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_SEEK,
@@ -38,8 +41,10 @@ from homeassistant.components.media_player import (
     SERVICE_REPEAT_SET,
     SERVICE_SELECT_SOURCE,
     SERVICE_SHUFFLE_SET,
+    SERVICE_UNJOIN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
+    BrowseError,
     BrowseMedia,
     MediaClass,
     MediaPlayerEntityFeature,
@@ -47,14 +52,63 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+import homeassistant.components.wiim as wiim_component
+from homeassistant.components.wiim.const import DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import fire_general_update, fire_transport_update, setup_integration
 
 from tests.common import MockConfigEntry
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.test_wiim_device"
+
+
+def _build_mock_wiim_device(
+    *,
+    udn: str,
+    name: str,
+    ip_address: str,
+    base_device: MagicMock,
+) -> AsyncMock:
+    """Build a mocked WiiM device for a second integration entry."""
+    device = AsyncMock(spec=WiimDevice)
+    device.udn = udn
+    device.name = name
+    device.model_name = "WiiM Pro"
+    device.manufacturer = "Linkplay Tech"
+    device.firmware_version = "4.8.523456"
+    device.ip_address = ip_address
+    device.http_api_url = f"http://{ip_address}:8080"
+    device.presentation_url = f"http://{ip_address}:8080/web_interface"
+    device.available = True
+    device.volume = 40
+    device.is_muted = False
+    device.supports_http_api = False
+    device.playing_status = PlayingStatus.STOPPED
+    device.play_mode = "Network"
+    device.loop_state = WiimLoopState(
+        repeat=WiimRepeatMode.OFF,
+        shuffle=False,
+    )
+    device.output_mode = "speaker"
+    device.current_media = None
+    device.supported_input_modes = base_device.supported_input_modes
+    device.supported_output_modes = base_device.supported_output_modes
+    device.async_get_transport_capabilities = AsyncMock(
+        return_value=WiimTransportCapabilities(
+            can_next=False,
+            can_previous=False,
+            can_repeat=False,
+            can_shuffle=False,
+        )
+    )
+    device.general_event_callback = None
+    device.av_transport_event_callback = None
+    device.rendering_control_event_callback = None
+    device.play_queue_event_callback = None
+    return device
 
 
 async def test_state_machine_updates_from_device_callbacks(
@@ -79,6 +133,7 @@ async def test_state_machine_updates_from_device_callbacks(
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.GROUPING
     )
 
     mock_wiim_device.volume = 60
@@ -131,6 +186,7 @@ async def test_state_machine_updates_from_device_callbacks(
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.REPEAT_SET
         | MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.GROUPING
     )
 
 
@@ -234,6 +290,37 @@ async def test_control_services_update_state_machine(
 
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.attributes[state_attr] == state_value
+
+
+@pytest.mark.parametrize(
+    "device_error",
+    [WiimRequestException("request failed"), RuntimeError("command failed")],
+)
+async def test_command_error_uses_translation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+    device_error: Exception,
+) -> None:
+    """Test command errors raise a translated Home Assistant error."""
+    await setup_integration(hass, mock_config_entry)
+    mock_wiim_device.async_play.side_effect = device_error
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_MEDIA_PLAY,
+            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "command_failed"
+    assert exc_info.value.translation_placeholders == {
+        "command": "async_media_play",
+        "entity_id": MEDIA_PLAYER_ENTITY_ID,
+    }
 
 
 async def test_repeat_and_shuffle_services_update_state_machine(
@@ -429,6 +516,87 @@ async def test_follower_routes_commands_and_reads_leader_metadata(
     assert state.attributes[ATTR_MEDIA_POSITION] == 90
 
 
+async def test_group_refresh_dispatcher_sends_to_followers_and_refreshes_member(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+) -> None:
+    """Test leader group refresh signal makes a real follower entity refresh."""
+    follower_device = _build_mock_wiim_device(
+        udn="uuid:follower-1234",
+        name="Follower WiiM Device",
+        ip_address="192.168.1.101",
+        base_device=mock_wiim_device,
+    )
+
+    wiim_component.async_create_wiim_device.side_effect = [
+        mock_wiim_device,
+        follower_device,
+    ]
+    follower_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.101"},
+        title="Follower WiiM Device",
+        unique_id=follower_device.udn,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, follower_config_entry)
+
+    def group_snapshot_for(udn: str) -> WiimGroupSnapshot:
+        if udn == mock_wiim_device.udn:
+            return WiimGroupSnapshot(
+                role=WiimGroupRole.LEADER,
+                leader_udn=mock_wiim_device.udn,
+                member_udns=(mock_wiim_device.udn, follower_device.udn),
+            )
+        return WiimGroupSnapshot(
+            role=WiimGroupRole.FOLLOWER,
+            leader_udn=mock_wiim_device.udn,
+            member_udns=(mock_wiim_device.udn, follower_device.udn),
+        )
+
+    mock_wiim_controller.get_group_snapshot.side_effect = group_snapshot_for
+    mock_wiim_controller.get_device.side_effect = lambda udn: (
+        mock_wiim_device if udn == mock_wiim_device.udn else follower_device
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            ATTR_GROUP_MEMBERS: ["media_player.follower_wiim_device"],
+        },
+        blocking=True,
+    )
+
+    mock_wiim_controller.async_join_group.assert_awaited_once_with(
+        mock_wiim_device.udn,
+        [follower_device.udn],
+    )
+
+    mock_wiim_device.playing_status = PlayingStatus.PLAYING
+    mock_wiim_device.play_mode = "Spotify"
+    mock_wiim_device.current_media = WiimMediaMetadata(
+        title="Leader Signal Song",
+        album="Leader Signal Album",
+        duration=240,
+        position=33,
+    )
+
+    await fire_general_update(hass, mock_wiim_device)
+
+    follower_state = hass.states.get("media_player.follower_wiim_device")
+    assert follower_state is not None
+    assert follower_state.state == MediaPlayerState.PLAYING
+    assert follower_state.attributes[ATTR_MEDIA_TITLE] == "Leader Signal Song"
+    assert follower_state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Leader Signal Album"
+    assert follower_state.attributes[ATTR_INPUT_SOURCE] == "Spotify"
+    assert follower_state.attributes[ATTR_MEDIA_POSITION] == 33
+
+
 async def test_follower_routes_repeat_shuffle_and_source_commands_to_leader(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -540,6 +708,65 @@ async def test_play_media_services_call_device_commands(
         blocking=True,
     )
     mock_wiim_device.async_play_queue_with_index.assert_awaited_once_with(2)
+
+
+@pytest.mark.parametrize(
+    ("media_type", "media_id", "translation_key", "translation_placeholders"),
+    [
+        (
+            "wiim_library",
+            "not-a-preset",
+            "invalid_preset_id",
+            {"media_id": "not-a-preset"},
+        ),
+        (
+            MediaType.TRACK,
+            "not-a-track",
+            "invalid_track_id",
+            {"media_id": "not-a-track"},
+        ),
+        (
+            "unsupported",
+            "1",
+            "unsupported_media_type",
+            {"media_type": "unsupported"},
+        ),
+        (
+            MediaType.URL,
+            "http://example.com/song.mp3",
+            "direct_url_playback_unsupported",
+            None,
+        ),
+    ],
+)
+async def test_play_media_validation_error_uses_translation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+    media_type: MediaType | str,
+    media_id: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
+) -> None:
+    """Test play media validation errors are translated."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: media_type,
+                ATTR_MEDIA_CONTENT_ID: media_id,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == translation_placeholders
 
 
 @pytest.mark.parametrize("media_type", [MediaType.MUSIC, MediaType.URL])
@@ -717,3 +944,196 @@ async def test_browse_media_service_includes_media_sources_when_supported(
         "Queue",
         "song.mp3",
     ]
+
+
+@pytest.mark.parametrize(
+    (
+        "media_content_type",
+        "media_content_id",
+        "translation_key",
+        "translation_placeholders",
+    ),
+    [
+        pytest.param(
+            MediaType.MUSIC,
+            "media-source://media_source/local/song.mp3",
+            "media_sources_unsupported",
+            None,
+            id="media-source-unsupported",
+        ),
+        pytest.param(
+            MediaType.PLAYLIST,
+            "wiim_library/invalid",
+            "invalid_browse_path",
+            {"media_content_id": "wiim_library/invalid"},
+            id="invalid-path",
+        ),
+    ],
+)
+async def test_browse_media_error_uses_translation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+    media_content_type: MediaType,
+    media_content_id: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
+) -> None:
+    """Test browse media errors are translated."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(BrowseError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_BROWSE_MEDIA,
+            {
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: media_content_type,
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == translation_placeholders
+
+
+async def test_join_and_unjoin_services_use_resolved_member_udns(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+) -> None:
+    """Test grouping services call the controller with resolved UDNs."""
+    follower_device = _build_mock_wiim_device(
+        udn="uuid:follower-1234",
+        name="Follower WiiM Device",
+        ip_address="192.168.1.101",
+        base_device=mock_wiim_device,
+    )
+    second_follower_device = _build_mock_wiim_device(
+        udn="uuid:follower-5678",
+        name="Second Follower WiiM Device",
+        ip_address="192.168.1.102",
+        base_device=mock_wiim_device,
+    )
+    wiim_component.async_create_wiim_device.side_effect = [
+        mock_wiim_device,
+        follower_device,
+        second_follower_device,
+    ]
+    follower_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.101"},
+        title=follower_device.name,
+        unique_id=follower_device.udn,
+    )
+    second_follower_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.102"},
+        title=second_follower_device.name,
+        unique_id=second_follower_device.udn,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, follower_config_entry)
+    await setup_integration(hass, second_follower_config_entry)
+
+    follower_entity_id = "media_player.follower_wiim_device"
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            ATTR_GROUP_MEMBERS: [
+                MEDIA_PLAYER_ENTITY_ID,
+                follower_entity_id,
+            ],
+        },
+        blocking=True,
+    )
+
+    mock_wiim_controller.async_join_group.assert_awaited_once_with(
+        mock_wiim_device.udn, [follower_device.udn]
+    )
+    mock_wiim_controller.async_join_group.reset_mock()
+
+    leader_device = AsyncMock(spec=WiimDevice)
+    leader_device.udn = "uuid:leader-1234"
+    leader_device.name = "Leader WiiM Device"
+    leader_device.playing_status = PlayingStatus.STOPPED
+    leader_device.play_mode = "Network"
+    leader_device.loop_state = WiimLoopState(
+        repeat=WiimRepeatMode.OFF,
+        shuffle=False,
+    )
+    leader_device.current_media = None
+    second_follower_entity_id = "media_player.second_follower_wiim_device"
+    mock_wiim_controller.get_group_snapshot.return_value = WiimGroupSnapshot(
+        role=WiimGroupRole.FOLLOWER,
+        leader_udn=leader_device.udn,
+        member_udns=(leader_device.udn, mock_wiim_device.udn),
+    )
+    mock_wiim_controller.get_device.side_effect = lambda udn: (
+        leader_device if udn == leader_device.udn else mock_wiim_device
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            ATTR_GROUP_MEMBERS: [
+                MEDIA_PLAYER_ENTITY_ID,
+                second_follower_entity_id,
+            ],
+        },
+        blocking=True,
+    )
+
+    mock_wiim_controller.async_join_group.assert_awaited_once_with(
+        leader_device.udn, [second_follower_device.udn]
+    )
+    mock_wiim_controller.async_join_group.reset_mock()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_UNJOIN,
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_wiim_controller.async_ungroup_device.assert_awaited_once_with(
+        mock_wiim_device.udn
+    )
+
+
+async def test_join_service_invalid_member_uses_translation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+) -> None:
+    """Test joining an invalid member raises a translated validation error."""
+    await setup_integration(hass, mock_config_entry)
+    invalid_entity_id = "media_player.unknown_wiim_device"
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                ATTR_GROUP_MEMBERS: [invalid_entity_id],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_grouping_entity"
+    assert exc_info.value.translation_placeholders == {"entity_id": invalid_entity_id}
+    mock_wiim_controller.async_join_group.assert_not_awaited()

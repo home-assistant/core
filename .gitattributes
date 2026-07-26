@@ -22,4 +22,4 @@ requirements.txt linguist-generated=true
 requirements_all.txt linguist-generated=true
 requirements_test_pre_commit.txt linguist-generated=true
 script/hassfest/docker/Dockerfile linguist-generated=true
-.github/workflows/*.lock.yml linguist-generated=true
+.github/workflows/*.lock.yml linguist-generated=true merge=ours

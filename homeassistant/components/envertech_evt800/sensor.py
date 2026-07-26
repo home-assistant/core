@@ -1,5 +1,7 @@
 """Envertech EVT800 sensor."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -175,11 +177,13 @@ class EnvertechEVT800Sensor(EnvertechEVT800Entity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
         return self.coordinator.client.data.get(self.entity_description.key)
 
     @property
+    @override
     def available(self) -> bool:
         """Unavailable if evt800 isn't connected."""
         return super().available and self.native_value is not None

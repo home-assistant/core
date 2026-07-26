@@ -386,6 +386,64 @@ async def test_combined_state_variables(
 
 
 @pytest.mark.parametrize(
+    ("config", "expected_error"),
+    [
+        pytest.param(
+            {
+                "triggers": [
+                    {"trigger": "event", "event_type": "valid"},
+                    {"trigger": "not_a_platform"},
+                ],
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Invalid trigger 'not_a_platform' specified '', got"
+            " {'triggers': [{'trigger': 'event', 'event_type': 'valid'},"
+            " {'trigger': 'not_a_platform'}],"
+            " 'binary_sensor': {'name': 'test', 'state': '{{ true }}'}}",
+            id="trigger",
+        ),
+        pytest.param(
+            {
+                "triggers": {"trigger": "event", "event_type": "valid"},
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "sensor.foo",
+                        "state": "on",
+                    },
+                    {
+                        "condition": "state",
+                        "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                        "state": "on",
+                    },
+                ],
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            " '', got"
+            " {'triggers': {'trigger': 'event', 'event_type': 'valid'},"
+            " 'conditions': [{'condition': 'state', 'entity_id': 'sensor.foo',"
+            " 'state': 'on'}, {'condition': 'state',"
+            " 'entity_id': 'abcdabcdabcdabcdabcdabcdabcdabcd', 'state': 'on'}],"
+            " 'binary_sensor': {'name': 'test', 'state': '{{ true }}'}}",
+            id="condition",
+        ),
+    ],
+)
+async def test_setup_component_bad_config_logs_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config: dict,
+    expected_error: str,
+) -> None:
+    """Test setting up template with a bad config logs a useful error message."""
+    await async_setup_component(hass, "template", {"template": [config]})
+    assert expected_error in caplog.text
+
+
+@pytest.mark.parametrize(
     ("config", "expected_root", "expected_entity"),
     [
         (

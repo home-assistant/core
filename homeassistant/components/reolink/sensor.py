@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
+from typing import override
 
 from reolink_aio.api import Host
 from reolink_aio.const import YOLO_DETECT_TYPES
@@ -258,6 +259,7 @@ class ReolinkSensorEntity(ReolinkChannelCoordinatorEntity, SensorEntity):
         super().__init__(reolink_data, channel)
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         return self.entity_description.value(self._host.api, self._channel)
@@ -278,6 +280,7 @@ class ReolinkHostSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
         super().__init__(reolink_data)
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         return self.entity_description.value(self._host.api)
@@ -308,11 +311,13 @@ class ReolinkHddSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
             self._attr_translation_key = "sd_storage"
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         return self.entity_description.value(self._host.api, self._hdd_index)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._host.api.hdd_available(self._hdd_index) and super().available

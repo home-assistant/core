@@ -1,6 +1,7 @@
 """Config entry functions for Home Assistant templates."""
 
 from collections.abc import Iterable
+from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.exceptions import TemplateError
@@ -104,4 +105,6 @@ class ConfigEntryExtension(BaseTemplateExtension):
         if config_entry is None:
             return None
 
-        return getattr(config_entry, attr_name)
+        if isinstance(result := getattr(config_entry, attr_name), Enum):
+            return result.value
+        return result

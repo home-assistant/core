@@ -29,12 +29,6 @@
     "system_production_phases": null,
     "ctmeters": {},
     "ctmeters_phases": {},
-    "ctmeter_production": null,
-    "ctmeter_consumption": null,
-    "ctmeter_storage": null,
-    "ctmeter_production_phases": null,
-    "ctmeter_consumption_phases": null,
-    "ctmeter_storage_phases": null,
     "dry_contact_status": {},
     "dry_contact_settings": {},
     "inverters": {

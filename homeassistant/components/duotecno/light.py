@@ -1,6 +1,6 @@
 """Support for Duotecno lights."""
 
-from typing import Any
+from typing import Any, override
 
 from duotecno.unit import DimUnit
 
@@ -31,16 +31,19 @@ class DuotecnoLight(DuotecnoEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the light is on."""
         return self._unit.is_on()
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of the light."""
         return int((self._unit.get_dimmer_state() * 255) / 100)
 
     @api_call
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if (val := kwargs.get(ATTR_BRIGHTNESS)) is not None:
@@ -52,6 +55,7 @@ class DuotecnoLight(DuotecnoEntity, LightEntity):
         await self._unit.set_dimmer_state(val)
 
     @api_call
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._unit.set_dimmer_state(0)

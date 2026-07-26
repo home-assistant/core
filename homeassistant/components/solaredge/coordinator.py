@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiosolaredge import SolarEdge
 from solaredge_web import EnergyData, SolarEdgeWeb, TimeUnit
@@ -91,10 +91,12 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
     """Get and update the latest overview data."""
 
     @property
+    @override
     def update_interval(self) -> timedelta:
         """Update interval."""
         return OVERVIEW_UPDATE_DELAY
 
+    @override
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
@@ -135,10 +137,12 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
     """Get and update the latest details data."""
 
     @property
+    @override
     def update_interval(self) -> timedelta:
         """Update interval."""
         return DETAILS_UPDATE_DELAY
 
+    @override
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
 
@@ -179,10 +183,12 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
     """Get and update the latest inventory data."""
 
     @property
+    @override
     def update_interval(self) -> timedelta:
         """Update interval."""
         return INVENTORY_UPDATE_DELAY
 
+    @override
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
@@ -217,10 +223,12 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
         self.unit = None
 
     @property
+    @override
     def update_interval(self) -> timedelta:
         """Update interval."""
         return ENERGY_DETAILS_DELAY
 
+    @override
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
@@ -282,10 +290,12 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         self.unit = None
 
     @property
+    @override
     def update_interval(self) -> timedelta:
         """Update interval."""
         return POWER_FLOW_UPDATE_DELAY
 
+    @override
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
@@ -339,10 +349,12 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
     """Get and update the latest storage data."""
 
     @property
+    @override
     def update_interval(self) -> timedelta:
         """Update interval."""
         return STORAGE_DATA_UPDATE_DELAY
 
+    @override
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         now = dt_util.now()
@@ -452,6 +464,7 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
         # Needed because there are no sensors added.
         self.async_add_listener(_dummy_listener)
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint and update statistics."""
         equipment: dict[int, dict[str, Any]] = await self.api.async_get_equipment()

@@ -1,5 +1,7 @@
 """Support for binary sensors using Tellstick Net."""
 
+from typing import override
+
 from homeassistant.components import binary_sensor
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -38,6 +40,7 @@ class TelldusLiveSensor(TelldusLiveEntity, BinarySensorEntity):
     _attr_name = None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.device.is_on

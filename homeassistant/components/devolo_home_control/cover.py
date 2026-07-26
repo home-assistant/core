@@ -1,6 +1,6 @@
 """Platform for cover integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -45,23 +45,28 @@ class DevoloCoverDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.BLIND
 
     @property
+    @override
     def current_cover_position(self) -> int:
         """Return the current position. 0 is closed. 100 is open."""
         return int(self._value)
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the blind is closed or not."""
         return not bool(self._value)
 
+    @override
     def open_cover(self, **kwargs: Any) -> None:
         """Open the blind."""
         self._multi_level_switch_property.set(100)
 
+    @override
     def close_cover(self, **kwargs: Any) -> None:
         """Close the blind."""
         self._multi_level_switch_property.set(0)
 
+    @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Set the blind to the given position."""
         self._multi_level_switch_property.set(kwargs["position"])

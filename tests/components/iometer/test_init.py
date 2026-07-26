@@ -5,13 +5,11 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from iometer import IOmeterConnectionError
-import pytest
 
-from homeassistant.components.iometer import async_setup_entry
 from homeassistant.components.iometer.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_platform
@@ -61,8 +59,7 @@ async def test_async_setup_entry_connection_error(
         "cannot connect"
     )
 
-    with pytest.raises(ConfigEntryNotReady):
-        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
-        await async_setup_entry(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert mock_iometer_client.get_current_status.await_count == 1

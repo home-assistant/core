@@ -2,7 +2,7 @@
 
 import functools
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -54,17 +54,20 @@ class ZHAEnumSelectEntity(ZHAEntity, SelectEntity):
         self._attr_options = self.entity_data.entity.info_object.options
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return self.entity_data.entity.current_option
 
     @convert_zha_error_to_ha_error()
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_data.entity.async_select_option(option=option)
         self.async_write_ha_state()
 
     @callback
+    @override
     def restore_external_state_attributes(self, state: State) -> None:
         """Restore entity state."""
         if state.state and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):

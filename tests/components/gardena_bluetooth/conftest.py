@@ -14,7 +14,7 @@ from gardena_bluetooth.parse import Characteristic, Service
 import pytest
 
 from homeassistant.components import bluetooth
-from homeassistant.components.gardena_bluetooth import async_get_product_type
+from homeassistant.components.gardena_bluetooth import async_get_product
 from homeassistant.components.gardena_bluetooth.const import DOMAIN
 from homeassistant.components.gardena_bluetooth.coordinator import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -177,24 +177,18 @@ def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
 
 
 @pytest.fixture
-def get_product_type_event() -> Generator[asyncio.Event]:
-    """Track product type data requests with an event."""
+def get_product_event() -> Generator[asyncio.Event]:
+    """Track product data requests with an event."""
 
     event = asyncio.Event()
 
     async def _get(*args, **kwargs):
         event.set()
-        return await async_get_product_type(*args, **kwargs)
+        return await async_get_product(*args, **kwargs)
 
-    with (
-        patch(
-            "homeassistant.components.gardena_bluetooth.async_get_product_type",
-            wraps=_get,
-        ),
-        patch(
-            "homeassistant.components.gardena_bluetooth.config_flow.async_get_product_type",
-            wraps=_get,
-        ),
+    with patch(
+        "homeassistant.components.gardena_bluetooth.async_get_product",
+        wraps=_get,
     ):
         yield event
 

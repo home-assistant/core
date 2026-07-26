@@ -27,6 +27,7 @@ from .const import (  # noqa: F401
     DOMAIN,
     ValveDeviceClass,
     ValveEntityFeature,
+    ValveEntityStateAttribute,
     ValveState,
 )
 from .entity import (  # noqa: F401

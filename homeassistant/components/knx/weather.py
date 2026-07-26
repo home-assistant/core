@@ -1,12 +1,13 @@
 """Support for KNX weather entities."""
 
+from typing import override
+
 from xknx import XKNX
 from xknx.devices import Weather as XknxWeather
 
 from homeassistant import config_entries
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.const import (
-    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     Platform,
     UnitOfPressure,
@@ -87,36 +88,41 @@ class KNXWeather(KnxYamlEntity, WeatherEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device._temperature.group_address_state),  # noqa: SLF001
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return current temperature in C."""
         return self._device.temperature
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return current air pressure in Pa."""
         return self._device.air_pressure
 
     @property
+    @override
     def condition(self) -> str:
         """Return current weather condition."""
         return self._device.ha_current_state().value
 
     @property
+    @override
     def humidity(self) -> float | None:
         """Return current humidity."""
         return self._device.humidity
 
     @property
+    @override
     def wind_bearing(self) -> int | None:
         """Return current wind bearing in degrees."""
         return self._device.wind_bearing
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return current wind speed in m/s."""
         return self._device.wind_speed
