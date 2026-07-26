@@ -16,7 +16,7 @@
           "base_url": "API base URL"
         },
         "data_description": {
-          "api_key": "The API key that gives access to the controllers of your organisation.",
+          "api_key": "The API key that gives access to the controllers of your organization.",
           "base_url": "Use the default for the HortOS cloud API, or the address of the on-premise API on your local network."
         },
         "description": "Enter the API key for the Ridder HortOS Automation API. You can request one from your Ridder account manager.",
