@@ -434,6 +434,9 @@ aioskybell==22.7.0
 # homeassistant.components.slimproto
 aioslimproto==3.0.0
 
+# homeassistant.components.smtp
+aiosmtplib==5.1.2
+
 # homeassistant.components.solaredge
 aiosolaredge==1.0.2
 

@@ -49,12 +49,23 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_smtp() -> Generator[MagicMock]:
     """Mock smtplib.SMTP."""
 
+    with patch(
+        "homeassistant.components.smtp.helpers.smtplib.SMTP", autospec=True
+    ) as mock_client:
+        client = mock_client.return_value
+        client.cls = mock_client
+        yield client
+
+
+@pytest.fixture(name="aiosmtplib")
+def mock_aiosmtplib() -> Generator[AsyncMock]:
+    """Mock aiosmtplib."""
+
     with (
         patch(
-            "homeassistant.components.smtp.config_flow.SMTP_SSL", autospec=True
+            "homeassistant.components.smtp.config_flow.SMTP", autospec=True
         ) as mock_client,
-        patch("homeassistant.components.smtp.helpers.smtplib.SMTP", new=mock_client),
-        patch("homeassistant.components.smtp.config_flow.SMTP", new=mock_client),
+        patch("homeassistant.components.smtp.SMTP", new=mock_client),
     ):
         client = mock_client.return_value
         client.cls = mock_client

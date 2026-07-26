@@ -1,9 +1,9 @@
 """Tests for the SMTP integration."""
 
 from smtplib import SMTPAuthenticationError
-from socket import gaierror
 from unittest.mock import AsyncMock, MagicMock
 
+from aiosmtplib import SMTPException
 import pytest
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
@@ -33,7 +33,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("smtp")
+@pytest.mark.usefixtures("smtp", "aiosmtplib")
 async def test_entry_setup_unload(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -57,21 +57,21 @@ async def test_entry_setup_unload(
 @pytest.mark.parametrize(
     ("exception", "state"),
     [
-        (ConnectionRefusedError, ConfigEntryState.SETUP_RETRY),
-        (gaierror, ConfigEntryState.SETUP_RETRY),
+        (SMTPException(""), ConfigEntryState.SETUP_RETRY),
         (SMTPAuthenticationError(0, ""), ConfigEntryState.SETUP_ERROR),
     ],
 )
+@pytest.mark.usefixtures("smtp")
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    smtp: MagicMock,
+    aiosmtplib: AsyncMock,
     exception: Exception,
     state: ConfigEntryState,
 ) -> None:
     """Test config entry not ready."""
 
-    smtp.login.side_effect = exception
+    aiosmtplib.__aenter__.side_effect = exception
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -80,7 +80,7 @@ async def test_config_entry_not_ready(
     assert config_entry.state is state
 
 
-@pytest.mark.usefixtures("smtp")
+@pytest.mark.usefixtures("smtp", "aiosmtplib")
 async def test_import(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
