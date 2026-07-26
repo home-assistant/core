@@ -50,15 +50,13 @@ class ScorpionTrackSpeedSensor(ScorpionTrackEntity, SensorEntity):
 
     def _available_speed(self) -> float | None:
         """Return the speed if the sensor is available."""
-        if not super().available:
-            return None
         return self.get_vehicle().position.speed_kmh
 
     @property
     @override
     def available(self) -> bool:
         """Return if the speed sensor is available."""
-        return self._available_speed() is not None
+        return super().available and self._available_speed() is not None
 
     @property
     @override
