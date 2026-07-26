@@ -1,7 +1,7 @@
 {
   "domain": "anova",
   "name": "Anova",
-  "codeowners": ["@Lash-L", "@rhys-saldanha"],
+  "codeowners": ["@Lash-L"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/anova",
   "integration_type": "hub",
