@@ -84,16 +84,16 @@ rules:
     status: exempt
     comment: |
       Entity names are derived at runtime from the readout identifiers a
-      controller reports; a controller exposes hundreds of them and the set
-      differs per installation, so there is no fixed set of translation keys.
+      controller reports. Growers define their own readouts, so the vocabulary
+      is installation-specific and there is no fixed set of keys to translate.
       Ridder is the right place for translated readout names.
   exception-translations: done
   icon-translations:
     status: exempt
     comment: |
       Icons are chosen per readout at runtime, for the same reason entity
-      translations are exempt: there are no fixed translation keys to hang
-      them on.
+      translations are exempt: the readout vocabulary is installation-specific,
+      so there are no fixed translation keys to hang them on.
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
