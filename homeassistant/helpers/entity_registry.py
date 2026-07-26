@@ -926,6 +926,8 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
     Maintains six additional indexes:
     - id -> entry
     - (domain, platform, unique_id) -> entity_id
+        domain: entity component domain (e.g. light, sensor)
+        platform: integration domain (e.g. hue, zwave)
     - config_entry_id -> dict[key, True]
     - device_id -> dict[key, True]
     - area_id -> dict[key, True]
@@ -999,7 +1001,11 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         return self._device_id_index.keys()
 
     def get_entity_id(self, key: tuple[str, str, str]) -> str | None:
-        """Get entity_id from (domain, platform, unique_id)."""
+        """Get entity_id from (domain, platform, unique_id).
+
+        domain: entity component domain (e.g. light, sensor)
+        platform: integration domain (e.g. hue, zwave)
+        """
         return self._index.get(key)
 
     def get_entry(self, key: str) -> RegistryEntry | None:
@@ -1197,7 +1203,7 @@ class EntityRegistry(BaseRegistry):
     ) -> str | None:
         """Check if an entity_id is currently registered.
 
-        domain: entity platform domain (e.g. light, sensor)
+        domain: entity component domain (e.g. light, sensor)
         platform: integration domain (e.g. hue, zwave)
         """
         return self.entities.get_entity_id((domain, platform, unique_id))
@@ -1392,7 +1398,11 @@ class EntityRegistry(BaseRegistry):
         translation_key: str | None | UndefinedType = UNDEFINED,
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
-        """Get entity. Create if it doesn't exist."""
+        """Get entity. Create if it doesn't exist.
+
+        domain: entity component domain (e.g. light, sensor)
+        platform: integration domain (e.g. hue, zwave)
+        """
         config_entry_id: str | None | UndefinedType = UNDEFINED
         if not config_entry:
             config_entry_id = None
@@ -1760,10 +1770,8 @@ class EntityRegistry(BaseRegistry):
         if not device_id or device_id is UNDEFINED:
             return device_id
         device_registry = dr.async_get(self.hass)
-        if device_id in device_registry.devices:
-            return device_id
-        if not device_registry.async_get_devices_for_composite_device_id(device_id):
-            # Not a composite id, let _validate_item reject it
+        if not device_registry.async_is_composite_device_id(device_id):
+            # A real device or an unknown id; let _validate_item handle it
             return device_id
         report_issue = async_suggest_report_issue(
             self.hass, integration_domain=platform

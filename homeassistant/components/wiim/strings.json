@@ -26,11 +26,38 @@
     }
   },
   "exceptions": {
+    "command_failed": {
+      "message": "{command} failed for {entity_id}"
+    },
+    "device_setup_failed": {
+      "message": "Device setup failed for {host}"
+    },
+    "direct_url_playback_unsupported": {
+      "message": "Direct URL playback is not supported on this device."
+    },
+    "http_api_request_failed": {
+      "message": "HTTP API request failed for {host}"
+    },
+    "invalid_browse_path": {
+      "message": "Invalid browse path: {media_content_id}"
+    },
     "invalid_grouping_entity": {
       "message": "Entity with ID {entity_id} can't be added to the WiiM multiroom. Is the entity a WiiM media player?"
     },
+    "invalid_preset_id": {
+      "message": "Invalid preset ID: {media_id}"
+    },
+    "invalid_track_id": {
+      "message": "Invalid media ID: {media_id}. Expected a valid track index."
+    },
+    "media_sources_unsupported": {
+      "message": "Media sources are not supported on this device."
+    },
     "missing_homeassistant_url": {
-      "message": "Failed to determine Home Assistant URL"
+      "message": "Failed to determine Home Assistant URL. Please make sure you have an internal URL set."
+    },
+    "unsupported_media_type": {
+      "message": "Unsupported media type: {media_type}"
     }
   }
 }
