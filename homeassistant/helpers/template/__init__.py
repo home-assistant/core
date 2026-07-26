@@ -249,7 +249,7 @@ def _parse_result(render_result: str) -> Any:
     path, which handles the edge cases ("", ".", "+") identically.
     """
     if _IS_NUMERIC.match(render_result):
-        if "." in render_result or "e" in render_result.lower():
+        if "." in render_result or "e" in render_result or "E" in render_result:
             try:
                 return float(render_result)
             except ValueError:
@@ -281,7 +281,7 @@ def _cached_parse_result(render_result: str) -> Any:
     # render, by not returning right here. The evaluation of strings
     # resulting in strings impacts quotes, to avoid unexpected
     # output; use the original render instead of the evaluated one.
-    # Complex and scientific values are also unexpected. Filter them out.
+    # Complex values are unexpected. Filter them out.
     if (
         # Filter out string and complex numbers
         not isinstance(result, (str, complex))
