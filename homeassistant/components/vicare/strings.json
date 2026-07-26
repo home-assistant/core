@@ -669,11 +669,22 @@
     },
     "water_heater": {
       "domestic_hot_water": {
-        "name": "Domestic hot water"
+        "name": "Domestic hot water",
+        "state_attributes": {
+          "operation_mode": {
+            "state": {
+              "off": "[%key:common::state::off%]",
+              "on": "[%key:common::state::on%]"
+            }
+          }
+        }
       }
     }
   },
   "exceptions": {
+    "operation_mode_unknown": {
+      "message": "Unknown operation mode: {mode}"
+    },
     "program_not_activated": {
       "message": "Unable to activate ViCare program {program}"
     },
@@ -691,6 +702,16 @@
     }
   },
   "services": {
+    "set_circulation_schedule": {
+      "description": "Sets the DHW circulation pump weekly schedule.",
+      "fields": {
+        "schedule": {
+          "description": "Dict with weekday keys (mon–sun). Each value is a list of slot objects with start (HH:MM), end (HH:MM), mode ('on'), and position (int). Max 4 slots/day, 10-minute resolution.",
+          "name": "Schedule"
+        }
+      },
+      "name": "Set circulation schedule"
+    },
     "set_vicare_mode": {
       "description": "Sets the mode of the climate device as defined by Viessmann.",
       "fields": {

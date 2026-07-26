@@ -1,3 +1,14 @@
+set_circulation_schedule:
+  target:
+    entity:
+      integration: vicare
+      domain: water_heater
+  fields:
+    schedule:
+      required: true
+      example: '{ "mon": [{ "start": "06:00", "end": "22:00", "mode": "on", "position": 0 }], "tue": [], "wed": [], "thu": [], "fri": [], "sat": [], "sun": [] }'
+      selector:
+        object:
 set_vicare_mode:
   target:
     entity:

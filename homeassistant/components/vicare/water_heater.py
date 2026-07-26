@@ -8,6 +8,7 @@ from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
+import voluptuous as vol
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -15,8 +16,11 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice
 from .utils import get_circuits, get_device_serial
@@ -36,6 +40,44 @@ VICARE_TEMP_WATER_MAX = 60
 
 OPERATION_MODE_ON = "on"
 OPERATION_MODE_OFF = "off"
+
+SERVICE_SET_CIRCULATION_SCHEDULE = "set_circulation_schedule"
+
+CIRCULATION_SCHEDULE_WEEKDAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
+CIRCULATION_SCHEDULE_MAX_SLOTS_PER_DAY = 4
+CIRCULATION_SCHEDULE_TIME_PATTERN = r"^([01]\d|2[0-3]):[0-5]\d$"
+
+
+def _validate_slot_resolution(slot: dict[str, Any]) -> dict[str, Any]:
+    """Validate that start/end times fall on a 10-minute resolution."""
+    for key in ("start", "end"):
+        if int(slot[key].split(":")[1]) % 10 != 0:
+            raise vol.Invalid(f"{key} must be at a 10-minute resolution: {slot[key]}")
+    return slot
+
+
+CIRCULATION_SCHEDULE_SLOT_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required("start"): cv.matches_regex(CIRCULATION_SCHEDULE_TIME_PATTERN),
+            vol.Required("end"): cv.matches_regex(CIRCULATION_SCHEDULE_TIME_PATTERN),
+            vol.Required("mode"): vol.In(["on"]),
+            vol.Required("position"): vol.All(int, vol.Range(min=0)),
+        }
+    ),
+    _validate_slot_resolution,
+)
+
+CIRCULATION_SCHEDULE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(day, default=list): vol.All(
+            cv.ensure_list,
+            [CIRCULATION_SCHEDULE_SLOT_SCHEMA],
+            vol.Length(max=CIRCULATION_SCHEDULE_MAX_SLOTS_PER_DAY),
+        )
+        for day in CIRCULATION_SCHEDULE_WEEKDAYS
+    }
+)
 
 VICARE_TO_HA_HVAC_DHW = {
     VICARE_MODE_DHW: OPERATION_MODE_ON,
@@ -76,6 +118,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ViCare water heater platform."""
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_CIRCULATION_SCHEDULE,
+        {vol.Required("schedule"): CIRCULATION_SCHEDULE_SCHEMA},
+        "set_circulation_schedule",
+    )
+
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
@@ -88,7 +137,10 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     """Representation of the ViCare domestic hot water device."""
 
     _attr_precision = PRECISION_TENTHS
-    _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        | WaterHeaterEntityFeature.OPERATION_MODE
+    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = VICARE_TEMP_WATER_MIN
     _attr_max_temp = VICARE_TEMP_WATER_MAX
@@ -96,6 +148,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     _attr_translation_key = "domestic_hot_water"
     _current_mode: str | None = None
     _dhw_active: bool | None = None
+    _circulation_schedule: dict[str, Any] | None = None
 
     def __init__(
         self,
@@ -128,12 +181,38 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             with suppress(PyViCareNotSupportedFeatureError):
                 self._dhw_active = self._api.getDomesticHotWaterActive()
 
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._attr_min_temp = self._api.getDomesticHotWaterMinTemperature()
+
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._attr_max_temp = self._api.getDomesticHotWaterMaxTemperature()
+
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._circulation_schedule = (
+                    self._api.getDomesticHotWaterCirculationSchedule()
+                )
+
     @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._api.setDomesticHotWaterTemperature(temp)
             self._attr_target_temperature = temp
+
+    @override
+    def set_operation_mode(self, operation_mode: str) -> None:
+        """Set new operation mode."""
+        if (vicare_mode := HA_TO_VICARE_HVAC_DHW.get(operation_mode)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="operation_mode_unknown",
+                translation_placeholders={"mode": operation_mode},
+            )
+        self._circuit.setMode(vicare_mode)
+
+    def set_circulation_schedule(self, schedule: dict[str, Any]) -> None:
+        """Set the DHW circulation pump schedule."""
+        self._api.setDomesticHotWaterCirculationSchedule(schedule)
 
     @property
     @override
@@ -144,3 +223,15 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         if self._current_mode is None:
             return None
         return VICARE_TO_HA_HVAC_DHW.get(self._current_mode)
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return entity specific state attributes."""
+        return {
+            k: v
+            for k, v in {
+                "circulation_schedule": self._circulation_schedule,
+            }.items()
+            if v is not None
+        }
