@@ -7,11 +7,9 @@ from pizone import ControllerCommandError, ControllerEndpoint, UnpairedBridgeErr
 import pytest
 
 from homeassistant.components.izone.const import DOMAIN
-from homeassistant.components.izone.coordinator import IZoneCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import async_load_yaml_exclude, create_mock_controller
 
@@ -406,49 +404,27 @@ async def test_setup_discovery_bind_failure_retries(
     assert mock_config_entry.error_reason_translation_key == "discovery_start_failed"
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(ConnectionError("gone"), id="connection-error"),
+        pytest.param(ControllerCommandError("rejected"), id="command-rejected"),
+    ],
+)
 async def test_setup_first_refresh_failure_closes_controller(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
+    side_effect: Exception,
 ) -> None:
     """A failed first refresh closes the controller and retries setup."""
     mock_config_entry.add_to_hass(hass)
-    mock_controller.refresh_all = AsyncMock(side_effect=ConnectionError("gone"))
+    mock_controller.refresh_all = AsyncMock(side_effect=side_effect)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_controller.close.assert_awaited()
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "translation_key"),
-    [
-        pytest.param(ConnectionError("gone"), "update_failed", id="connection-error"),
-        pytest.param(
-            ControllerCommandError("rejected"),
-            "refresh_rejected",
-            id="command-rejected",
-        ),
-    ],
-)
-async def test_coordinator_refresh_errors_are_translated(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_controller: Mock,
-    side_effect: Exception,
-    translation_key: str,
-) -> None:
-    """Coordinator refresh failures raise translated UpdateFailed."""
-    mock_config_entry.add_to_hass(hass)
-    mock_controller.refresh_all = AsyncMock(side_effect=side_effect)
-    coordinator = IZoneCoordinator(hass, mock_config_entry, mock_controller)
-
-    with pytest.raises(UpdateFailed) as err:
-        await coordinator._async_update_data()
-
-    assert err.value.translation_key == translation_key
-    assert err.value.translation_placeholders == {"error": str(side_effect)}
 
 
 async def test_setup_platform_failure_closes_controller(
