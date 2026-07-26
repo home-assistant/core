@@ -172,10 +172,6 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
         """Turn the camera stream on or off."""
         await self._client.set_camera_on(camera_on)
 
-    async def async_set_night_mode(self, night_mode: bool) -> None:
-        """Turn the camera's night mode on or off."""
-        await self._client.set_night_mode(night_mode)
-
     def _handle_device_update(self, state: HarborDeviceState) -> None:
         """Mirror a library device update into Home Assistant."""
         self._data_event.set()

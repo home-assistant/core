@@ -14,9 +14,6 @@
     "switch": {
       "camera_on": {
         "default": "mdi:cctv"
-      },
-      "night_mode": {
-        "default": "mdi:weather-night"
       }
     }
   }

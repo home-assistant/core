@@ -27,7 +27,6 @@ SETTINGS_TOPIC = f"cameras/{SERIAL}/responses/get-settings"
 
 SETTINGS_PAYLOAD: dict[str, Any] = {
     "settings": {"preference_stream_paused": False},
-    "state": {"video_night_mode": True},
 }
 HEARTBEAT_PAYLOAD: dict[str, Any] = {
     "temperature": 98.6,

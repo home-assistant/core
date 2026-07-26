@@ -53,9 +53,6 @@
     "switch": {
       "camera_on": {
         "name": "Camera"
-      },
-      "night_mode": {
-        "name": "Night mode"
       }
     }
   },

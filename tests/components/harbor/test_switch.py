@@ -24,7 +24,6 @@ from .conftest import SETTINGS_PAYLOAD, SETTINGS_TOPIC, emit_message
 from tests.common import MockConfigEntry, snapshot_platform
 
 CAMERA_ON_ENTITY = "switch.harbor_camera_1234567890_camera"
-NIGHT_MODE_ENTITY = "switch.harbor_camera_1234567890_night_mode"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -69,31 +68,6 @@ async def test_turn_camera_on_and_off(
         blocking=True,
     )
     mock_mqtt_client.return_value.set_camera_on.assert_awaited_with(False)
-
-
-async def test_turn_night_mode_on_and_off(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_mqtt_client: AsyncMock,
-) -> None:
-    """Test turning the night mode switch on and off calls the library."""
-    await setup_integration(hass, mock_config_entry)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: NIGHT_MODE_ENTITY},
-        blocking=True,
-    )
-    mock_mqtt_client.return_value.set_night_mode.assert_awaited_once_with(True)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: NIGHT_MODE_ENTITY},
-        blocking=True,
-    )
-    mock_mqtt_client.return_value.set_night_mode.assert_awaited_with(False)
 
 
 async def test_turn_on_failure_raises(
