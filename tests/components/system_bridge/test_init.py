@@ -1,13 +1,8 @@
 """Test the System Bridge integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
-from systembridgeconnector.exceptions import (
-    AuthenticationException,
-    ConnectionClosedException,
-    ConnectionErrorException,
-)
 
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN
@@ -38,7 +33,6 @@ async def test_entry_setup_unload(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("mock_http_client")
 async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
     """Test migration."""
     config_entry = MockConfigEntry(
@@ -75,7 +69,7 @@ async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.usefixtures("mock_version", "mock_websocket_client", "mock_http_client")
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
 async def test_migration_minor_2_to_3(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -86,7 +80,7 @@ async def test_migration_minor_2_to_3(
         unique_id=FIXTURE_UUID,
         data={
             CONF_TOKEN: FIXTURE_USER_INPUT[CONF_TOKEN],
-            CONF_HOST: FIXTURE_USER_INPUT[CONF_HOST],
+            CONF_HOST: "hostname",
             CONF_PORT: FIXTURE_USER_INPUT[CONF_PORT],
         },
         version=1,
@@ -126,43 +120,6 @@ async def test_migration_minor_2_to_3(
     assert entity_registry.async_get(notifier.entity_id).unique_id == FIXTURE_UUID
 
     assert config_entry.state is ConfigEntryState.LOADED
-
-
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        ConnectionClosedException,
-        ConnectionErrorException,
-        TimeoutError,
-        AuthenticationException,
-    ],
-)
-@pytest.mark.usefixtures("mock_version", "mock_websocket_client", "mock_http_client")
-async def test_migration_minor_2_to_3_error(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_http_client: AsyncMock,
-    side_effect: Exception,
-) -> None:
-    """Test exception in migration from minor 2 to 3."""
-    mock_http_client.get.side_effect = side_effect
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FIXTURE_UUID,
-        data={
-            CONF_TOKEN: FIXTURE_USER_INPUT[CONF_TOKEN],
-            CONF_HOST: FIXTURE_USER_INPUT[CONF_HOST],
-            CONF_PORT: FIXTURE_USER_INPUT[CONF_PORT],
-        },
-        version=1,
-        minor_version=2,
-    )
-
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_migration_minor_future_version(hass: HomeAssistant) -> None:
