@@ -15,6 +15,7 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import VehicleFleet
 
+from homeassistant.components.recorder import get_instance as get_recorder_instance
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -33,7 +34,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, LOGGER, MODELS
+from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, MODELS, build_statistic_id
 from .coordinator import (
     TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
@@ -230,10 +231,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 hass, entry, api_energy
             )
             history_coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-                hass, entry, api_energy
+                hass, entry, api_energy, product.get("site_name", "Energy Site")
             )
 
             await live_coordinator.async_config_entry_first_refresh()
+            entry.async_on_unload(history_coordinator.async_add_listener(lambda: None))
 
             # Create energy site model
             model = None
@@ -282,3 +284,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> bool:
     """Unload TeslaFleet Config."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> None:
+    """Handle removal of a config entry."""
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    # Only energy sites have all-numeric identifiers (the energy_site_id).
+    # Do not match on serial_number: a wall connector's serial is derived
+    # from its DIN and can also be all-numeric.
+    statistic_ids = [
+        build_statistic_id(site_id, key)
+        for device in devices
+        if device.config_entries == {entry.entry_id}
+        for domain, site_id in device.identifiers
+        if domain == DOMAIN and site_id.isdigit()
+        for key in ENERGY_HISTORY_FIELDS
+    ]
+
+    if statistic_ids:
+        get_recorder_instance(hass).async_clear_statistics(statistic_ids)
