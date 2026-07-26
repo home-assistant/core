@@ -62,6 +62,9 @@
     }
   },
   "exceptions": {
+    "indefinite_hold_unsupported": {
+      "message": "Creating an indefinite hold is not supported by the documented NuHeat API."
+    },
     "legacy_migration_required": {
       "message": "This NuHeat entry must be reconnected through OAuth."
     },
