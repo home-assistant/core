@@ -96,8 +96,8 @@ _ENVIRONMENT_STRICT: HassKey[TemplateEnvironment] = HassKey(
 )
 _HASS_LOADER = "template.hass_loader"
 
-# Match "simple" ints and floats. -1.0, 1, +5, 5.0
-_IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
+# Match ints and floats, including scientific notation. -1.0, 1, +5, 5.0, 1e3
+_IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?(?:[eE][+-]?\d+)?$")
 
 EVAL_CACHE_SIZE = 512
 
