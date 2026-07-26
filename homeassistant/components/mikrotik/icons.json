@@ -1,6 +1,9 @@
 {
   "entity": {
     "button": {
+      "backup": {
+        "default": "mdi:backup-restore"
+      },
       "shutdown": {
         "default": "mdi:power"
       }

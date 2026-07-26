@@ -1,23 +1,23 @@
-"""Tests for the Midea LAN config flow."""
+"""Tests for the Midea config flow."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from midealocal.const import DeviceType, ProtocolVersion
 import pytest
 
-from homeassistant.components.midea_lan.config_flow import (
+from homeassistant.components.midea.config_flow import (
     DEFAULT_CLOUD,
     LOGIN_MODE_ACCOUNT,
     LOGIN_MODE_PRESET,
 )
-from homeassistant.components.midea_lan.const import (
+from homeassistant.components.midea.const import (
     CONF_ACCOUNT,
     CONF_KEY,
     CONF_SERVER,
     CONF_SUBTYPE,
     DOMAIN,
 )
-from homeassistant.components.midea_lan.device_catalog import MIDEA_DEVICE_NAMES
+from homeassistant.components.midea.device_catalog import MIDEA_DEVICE_NAMES
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_DEVICE,
@@ -65,11 +65,11 @@ async def test_manual_flow_success(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.discover",
+            "homeassistant.components.midea.config_flow.discover",
             return_value=DISCOVERY_RESULT,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            "homeassistant.components.midea.config_flow.MideaDevice",
         ) as mock_midea_device,
     ):
         mock_device = MagicMock()
@@ -124,11 +124,11 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.discover",
+            "homeassistant.components.midea.config_flow.discover",
             return_value=DISCOVERY_RESULT,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            "homeassistant.components.midea.config_flow.MideaDevice",
         ) as mock_midea_device,
     ):
         mock_device = MagicMock()
@@ -313,23 +313,23 @@ async def test_manual_step_errors(
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.discover",
+            "homeassistant.components.midea.config_flow.discover",
             return_value=discover_result,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            "homeassistant.components.midea.config_flow.MideaDevice",
             return_value=dm,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
             return_value=object(),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
             return_value=cloud,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
             AsyncMock(return_value=default_keys_return),
         ),
     ):
@@ -409,14 +409,14 @@ async def test_manual_step_retries_discovery_after_mismatch(
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.discover",
+            "homeassistant.components.midea.config_flow.discover",
             side_effect=[
                 {TEST_DEVICE_ID + 1: {**BASE_DATA, CONF_TYPE: TEST_TYPE}},
                 DISCOVERY_RESULT,
             ],
         ) as mock_discover,
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            "homeassistant.components.midea.config_flow.MideaDevice",
             return_value=dm,
         ),
     ):
@@ -461,7 +461,7 @@ async def test_search_flow_no_new_devices_found(hass: HomeAssistant) -> None:
     assert result["step_id"] == "search"
 
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=DISCOVERY_RESULT,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -491,7 +491,7 @@ async def test_auto_flow_cloud_device_info_overrides_name_and_subtype(
         user_input={"next_step_id": "search"},
     )
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=mock_devices,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -520,19 +520,19 @@ async def test_auto_flow_cloud_device_info_overrides_name_and_subtype(
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
             return_value=object(),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
             return_value=cloud,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
             AsyncMock(return_value={}),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            "homeassistant.components.midea.config_flow.MideaDevice",
             return_value=dm,
         ),
     ):
@@ -565,7 +565,7 @@ async def test_auto_flow_v3_preset_phase1_cloud_keys_success(
         user_input={"next_step_id": "search"},
     )
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=mock_devices,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -592,19 +592,19 @@ async def test_auto_flow_v3_preset_phase1_cloud_keys_success(
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
             return_value=object(),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
             return_value=cloud,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
             AsyncMock(return_value={}),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            "homeassistant.components.midea.config_flow.MideaDevice",
             return_value=dm,
         ),
     ):
@@ -636,7 +636,7 @@ async def test_auto_flow_v3_preset_phase1_default_key_success(
         user_input={"next_step_id": "search"},
     )
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=mock_devices,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -661,19 +661,19 @@ async def test_auto_flow_v3_preset_phase1_default_key_success(
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
             return_value=object(),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
             return_value=cloud,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
             AsyncMock(return_value={"builtin": {"token": TEST_TOKEN, "key": TEST_KEY}}),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            "homeassistant.components.midea.config_flow.MideaDevice",
             return_value=dm,
         ),
     ):
@@ -703,7 +703,7 @@ async def test_auto_flow_v3_token_retrieval_exhausted(hass: HomeAssistant) -> No
         user_input={"next_step_id": "search"},
     )
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=mock_devices,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -736,19 +736,19 @@ async def test_auto_flow_v3_token_retrieval_exhausted(hass: HomeAssistant) -> No
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
             return_value=object(),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
             return_value=cloud,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
             AsyncMock(return_value={"builtin": {"token": TEST_TOKEN, "key": TEST_KEY}}),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            "homeassistant.components.midea.config_flow.MideaDevice",
             return_value=dm,
         ),
     ):
@@ -778,7 +778,7 @@ async def test_auto_flow_v3_phase2_login_failed(hass: HomeAssistant) -> None:
         user_input={"next_step_id": "search"},
     )
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=mock_devices,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -800,15 +800,15 @@ async def test_auto_flow_v3_phase2_login_failed(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
             return_value=object(),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
             return_value=cloud,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
             AsyncMock(return_value={}),
         ),
     ):
@@ -838,7 +838,7 @@ async def test_auto_flow_v3_phase2_no_keys_available(hass: HomeAssistant) -> Non
         user_input={"next_step_id": "search"},
     )
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=mock_devices,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -860,15 +860,15 @@ async def test_auto_flow_v3_phase2_no_keys_available(hass: HomeAssistant) -> Non
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
             return_value=object(),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
             return_value=cloud,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
             AsyncMock(return_value={}),
         ),
     ):
@@ -907,7 +907,7 @@ async def test_auto_flow_v3_phase2_success_after_phase1_failure(
         user_input={"next_step_id": "search"},
     )
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=mock_devices,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -937,19 +937,19 @@ async def test_auto_flow_v3_phase2_success_after_phase1_failure(
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
             return_value=object(),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
             return_value=cloud,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
             AsyncMock(return_value={}),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            "homeassistant.components.midea.config_flow.MideaDevice",
             return_value=dm,
         ),
     ):
@@ -989,7 +989,7 @@ async def test_auto_flow_recovers_after_preset_login_error(
         user_input={"next_step_id": "search"},
     )
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=mock_devices,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -1011,15 +1011,15 @@ async def test_auto_flow_recovers_after_preset_login_error(
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
             return_value=object(),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
             return_value=cloud,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
             AsyncMock(return_value={}),
         ),
     ):
@@ -1075,15 +1075,15 @@ async def test_auto_flow_v1_v2_success_when_cloud_down(
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.discover",
+            "homeassistant.components.midea.config_flow.discover",
             return_value=mock_devices,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            "homeassistant.components.midea.config_flow.MideaDevice",
             return_value=dm,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
             side_effect=AssertionError("cloud must not be used"),
         ),
     ):
@@ -1123,7 +1123,7 @@ async def test_login_credentials_step_renders_with_cloud_servers(
     assert result["step_id"] == "search"
 
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=DISCOVERY_RESULT,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -1141,7 +1141,7 @@ async def test_login_credentials_step_renders_with_cloud_servers(
     assert result["step_id"] == "auth_method"
 
     with patch(
-        "homeassistant.components.midea_lan.config_flow.MideaCloud.get_cloud_servers",
+        "homeassistant.components.midea.config_flow.MideaCloud.get_cloud_servers",
         AsyncMock(return_value={1: "CN", 2: DEFAULT_CLOUD}),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -1172,7 +1172,7 @@ async def test_login_credentials_step_login_failed_sets_error(
     assert result["step_id"] == "search"
 
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=DISCOVERY_RESULT,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -1201,15 +1201,15 @@ async def test_login_credentials_step_login_failed_sets_error(
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_cloud_servers",
+            "homeassistant.components.midea.config_flow.MideaCloud.get_cloud_servers",
             AsyncMock(return_value={1: DEFAULT_CLOUD}),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
             return_value=object(),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
             return_value=cloud,
         ),
     ):
@@ -1259,7 +1259,7 @@ async def test_login_credentials_step_recovers_after_failed_login(
     assert result["step_id"] == "search"
 
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=discovered_device,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -1295,19 +1295,19 @@ async def test_login_credentials_step_recovers_after_failed_login(
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
             return_value=object(),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
             return_value=cloud,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
             AsyncMock(return_value={}),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            "homeassistant.components.midea.config_flow.MideaDevice",
             return_value=dm,
         ),
     ):
@@ -1371,7 +1371,7 @@ async def test_list_step_shows_discovery_table(
     flow_id = result["flow_id"]
 
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=all_devices,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -1394,7 +1394,7 @@ async def test_list_step_submit_returns_to_user_menu(hass: HomeAssistant) -> Non
     flow_id = result["flow_id"]
 
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value={},
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -1458,23 +1458,23 @@ async def test_manual_step_v3_missing_token_key_sets_retrieved_values(
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.discover",
+            "homeassistant.components.midea.config_flow.discover",
             return_value={TEST_DEVICE_ID: device},
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
             return_value=object(),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
             return_value=cloud,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
             AsyncMock(return_value={}),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            "homeassistant.components.midea.config_flow.MideaDevice",
         ) as mock_midea_device,
     ):
         mock_midea_device.return_value = dm
@@ -1510,11 +1510,11 @@ async def test_manually_flow_success(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.discover",
+            "homeassistant.components.midea.config_flow.discover",
             return_value=DISCOVERY_RESULT,
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            "homeassistant.components.midea.config_flow.MideaDevice",
         ) as mock_midea_device,
     ):
         mock_device = MagicMock()
@@ -1563,7 +1563,7 @@ async def test_login_credentials_step_falls_back_to_default_cloud(
     assert result["step_id"] == "search"
 
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=DISCOVERY_RESULT,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -1581,7 +1581,7 @@ async def test_login_credentials_step_falls_back_to_default_cloud(
     assert result["step_id"] == "auth_method"
 
     with patch(
-        "homeassistant.components.midea_lan.config_flow.MideaCloud.get_cloud_servers",
+        "homeassistant.components.midea.config_flow.MideaCloud.get_cloud_servers",
         AsyncMock(return_value={}),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -1615,7 +1615,7 @@ async def test_login_credentials_step_success_resumes_auto_flow(
         TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE},
     }
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=discovered_device,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -1651,19 +1651,19 @@ async def test_login_credentials_step_success_resumes_auto_flow(
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
             return_value=object(),
         ) as mock_session,
         patch(
-            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
             return_value=cloud,
         ) as mock_get_midea_cloud,
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
             AsyncMock(return_value={}),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            "homeassistant.components.midea.config_flow.MideaDevice",
             return_value=dm,
         ),
     ):
@@ -1702,7 +1702,7 @@ async def test_auth_method_account_mode_redirects_to_login_credentials(
     assert result["step_id"] == "search"
 
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=DISCOVERY_RESULT,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -1745,7 +1745,7 @@ async def test_auth_method_preset_login_failed(hass: HomeAssistant) -> None:
     assert result["step_id"] == "search"
 
     with patch(
-        "homeassistant.components.midea_lan.config_flow.discover",
+        "homeassistant.components.midea.config_flow.discover",
         return_value=DISCOVERY_RESULT,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -1767,11 +1767,11 @@ async def test_auth_method_preset_login_failed(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
             return_value=object(),
         ),
         patch(
-            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
             return_value=cloud,
         ),
     ):
