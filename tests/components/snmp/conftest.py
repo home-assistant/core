@@ -3,29 +3,12 @@
 import socket
 from unittest.mock import Mock, patch
 
-from pysnmp.hlapi.v3arch.asyncio import ObjectType
-from pysnmp.proto.rfc1902 import ObjectName, OctetString
 import pytest
 
 from homeassistant.components.snmp.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-
-def _mock_next_cmd_side_effect(*args: object, **kwargs: object) -> tuple:
-    """Return success for next_cmd with a child OID of the queried prefix.
-
-    Extracts the base OID from the ObjectType argument and returns a child
-    OID so that the prefix check in validate_input passes.
-    """
-    if args:
-        obj_type = args[-1]
-        if isinstance(obj_type, ObjectType):
-            base_oid = obj_type._ObjectType__args[0]._ObjectIdentity__args[0]
-            child_oid = f"{base_oid}.1"
-            return (None, None, None, [[ObjectName(child_oid), OctetString("98F")]])
-    return (None, None, None, [[ObjectName("1.1"), OctetString("98F")]])
 
 
 @pytest.fixture(autouse=True)
@@ -57,16 +40,6 @@ def mock_udp_transport():
         return_value=Mock(),
     ) as mock_create:
         yield mock_create
-
-
-@pytest.fixture(autouse=True)
-def mock_next_cmd():
-    """Patch next_cmd to return success with a child OID for any base OID."""
-    with patch(
-        "homeassistant.components.snmp.config_flow.next_cmd",
-        side_effect=_mock_next_cmd_side_effect,
-    ) as mock:
-        yield mock
 
 
 @pytest.fixture
