@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.components.light import (
     ATTR_EFFECT,
     ColorMode,
@@ -9,7 +10,8 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, LEDIrDeviceType
@@ -69,7 +71,7 @@ async def async_setup_entry(
     )
 
 
-class LEDIrLightEntity(LEDIrBaseEntity, LightEntity):
+class LEDIrLightEntity(LEDIrBaseEntity, InfraredEmitterConsumerEntity, LightEntity):
     """Represents a LED Infrared light entity."""
 
     _attr_assumed_state = True
@@ -88,7 +90,8 @@ class LEDIrLightEntity(LEDIrBaseEntity, LightEntity):
         infrared_entity_id: str,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(entry, device_type, infrared_entity_id)
+        super().__init__(entry, device_type)
+        self._infrared_emitter_entity_id = infrared_entity_id
         self._attr_unique_id = entry.entry_id
         self._attr_effect_list = SUPPORTED_EFFECTS.get(
             device_type, []
@@ -112,3 +115,27 @@ class LEDIrLightEntity(LEDIrBaseEntity, LightEntity):
         await self._send_command(self._codes.OFF.to_command())
         self._attr_is_on = False
         self.async_write_ha_state()
+
+    @callback
+    def _async_handle_event(self, event_type: str) -> None:
+        """Handle event."""
+
+        if event_type in ("on", "off"):
+            self._attr_is_on = event_type == "on"
+        elif event_type in self._attr_effect_list:
+            self._attr_is_on = True
+            self._attr_effect = event_type
+
+        self.async_write_ha_state()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register event callback."""
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self._entry.entry_id, self._async_handle_event
+            )
+        )
+
+        await super().async_added_to_hass()

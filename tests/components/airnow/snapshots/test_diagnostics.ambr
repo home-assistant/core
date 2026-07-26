@@ -7,15 +7,15 @@
       'Category.Number': 1,
       'DateObserved': '2020-12-20',
       'HourObserved': 15,
-      'Latitude': '**REDACTED**',
+      'Latitude': None,
       'LocalTimeZone': 'PST',
-      'Longitude': '**REDACTED**',
+      'Longitude': None,
       'O3': 0.048,
       'PM10': 12,
       'PM2.5': 6.7,
       'Pollutant': 'O3',
       'ReportingArea': '**REDACTED**',
-      'StateCode': '**REDACTED**',
+      'StateCode': '',
     }),
     'entry': dict({
       'data': dict({

@@ -11,6 +11,11 @@
         "default": "mdi:timer"
       }
     },
+    "event": {
+      "received_command": {
+        "default": "mdi:remote"
+      }
+    },
     "light": {
       "light": {
         "state_attributes": {

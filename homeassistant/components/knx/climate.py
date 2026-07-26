@@ -25,13 +25,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_ENTITY_CATEGORY,
-    CONF_NAME,
-    Platform,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -677,8 +671,7 @@ class KnxYamlClimate(_KnxClimate, KnxYamlEntity):
                 f"{self._device.target_temperature.group_address}_"
                 f"{self._device._setpoint_shift.group_address}"  # noqa: SLF001
             ),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
         default_hvac_mode: HVACMode = config[ClimateConf.DEFAULT_CONTROLLER_MODE]
         fan_max_step = config[ClimateConf.FAN_MAX_STEP]
