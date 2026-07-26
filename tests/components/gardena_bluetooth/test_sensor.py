@@ -15,7 +15,7 @@ from gardena_bluetooth.const import (
     Spray,
     Valve,
 )
-from gardena_bluetooth.parse import ActivationReason, ErrorData
+from gardena_bluetooth.parse import ActivationReason, ErrorData, SkipReason
 from habluetooth import BluetoothServiceInfo
 import pytest
 from syrupy.assertion import SnapshotAssertion
