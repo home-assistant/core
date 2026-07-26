@@ -99,10 +99,10 @@ async def test_no_devices_recovers(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_entry_without_organisation_has_no_unique_id(
+async def test_missing_organisation_is_an_error(
     hass: HomeAssistant, mock_hortos_client: AsyncMock
 ) -> None:
-    """Test an API that does not report an organisation still configures."""
+    """Test an entry is never created without the id it is keyed on."""
     tokens = mock_hortos_client.authenticate.return_value
     mock_hortos_client.authenticate.return_value = type(tokens)(
         token=tokens.token,
@@ -119,8 +119,8 @@ async def test_entry_without_organisation_has_no_unique_id(
         result["flow_id"], USER_INPUT
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id is None
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
 
 
 @pytest.mark.usefixtures("mock_hortos_client", "mock_setup_entry")
@@ -129,39 +129,6 @@ async def test_duplicate_organisation_aborts(
 ) -> None:
     """Test the same organisation cannot be configured twice."""
     mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_entry_without_organisation_rejects_duplicates(
-    hass: HomeAssistant, mock_hortos_client: AsyncMock
-) -> None:
-    """Test duplicates are still caught when there is no organisation id."""
-    tokens = mock_hortos_client.authenticate.return_value
-    mock_hortos_client.authenticate.return_value = type(tokens)(
-        token=tokens.token,
-        expires_at=tokens.expires_at,
-        refresh_token=tokens.refresh_token,
-        refresh_expires_at=tokens.refresh_expires_at,
-        organisation=Organisation(id=None),
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

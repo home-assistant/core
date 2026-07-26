@@ -49,7 +49,12 @@ class HortimaxConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             if not devices:
                 errors["base"] = "no_devices"
-            elif tokens.organisation is not None:
+            elif tokens.organisation is None or tokens.organisation.id is None:
+                # Every API key is issued under an organisation, so this only
+                # happens if the API changes shape.
+                LOGGER.error("HortOS reported no organisation for this API key")
+                errors["base"] = "unknown"
+            else:
                 return tokens.organisation.id
         return None
 
@@ -64,14 +69,8 @@ class HortimaxConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_API_KEY], user_input[CONF_BASE_URL], errors
             )
             if not errors:
-                if organisation_id is not None:
-                    await self.async_set_unique_id(organisation_id)
-                    self._abort_if_unique_id_configured()
-                else:
-                    # An API that does not report an organisation leaves us
-                    # without a stable id; fall back to rejecting an exact
-                    # duplicate of an existing entry.
-                    self._async_abort_entries_match(user_input)
+                await self.async_set_unique_id(organisation_id)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title="Ridder HortiMaX Pro", data=user_input
                 )
