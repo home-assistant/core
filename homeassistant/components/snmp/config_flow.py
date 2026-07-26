@@ -4,8 +4,9 @@ import logging
 from typing import Any, override
 
 from pysnmp.error import PySnmpError
-from pysnmp.hlapi.v3arch.asyncio import ObjectIdentity, get_cmd
+from pysnmp.hlapi.v3arch.asyncio import ObjectIdentity, get_cmd, next_cmd
 from pysnmp.proto import errind
+from pysnmp.proto.rfc1902 import ObjectName
 from pysnmp.smi.error import WrongValueError
 import voluptuous as vol
 
@@ -153,19 +154,28 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
             err_status_str,
         )
 
-    # Also verify that the user-provided baseoid is serializable and valid.
-    # This catches errors like "Short OID 1" during the config flow.
+    # Verify the user-provided baseoid is a valid walk prefix.
+    # Use GetNext because device-tracker OIDs are table columns that
+    # don't respond to GET in SNMPv1 (noSuchName). The prefix check
+    # confirms the returned OID is under the base OID, verifying the
+    # OID is walkable (has at least one instance).
     base_oid = data[CONF_BASEOID]
     base_request_args = await async_create_request_cmd_args(
         hass, auth_data, target, base_oid, context_name
     )
     try:
-        err_indication, err_status, _, _ = await get_cmd(*base_request_args)
+        err_indication, err_status, _, var_binds = await next_cmd(*base_request_args)
     except (PySnmpError, WrongValueError) as err:
         raise InvalidOid from err
 
     if err_indication or err_status:
         raise InvalidOid
+
+    # Confirm the returned OID is under the base OID prefix.
+    if var_binds:
+        returned_oid = var_binds[0][0]
+        if not ObjectName(base_oid).isPrefixOf(returned_oid):
+            raise InvalidOid
 
 
 class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
