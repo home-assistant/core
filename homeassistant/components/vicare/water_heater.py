@@ -46,6 +46,8 @@ SERVICE_SET_CIRCULATION_SCHEDULE = "set_circulation_schedule"
 CIRCULATION_SCHEDULE_WEEKDAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
 CIRCULATION_SCHEDULE_MAX_SLOTS_PER_DAY = 4
 CIRCULATION_SCHEDULE_TIME_PATTERN = r"^([01]\d|2[0-3]):[0-5]\d$"
+# ViCare represents midnight as the end of a slot using "24:00" rather than "00:00".
+CIRCULATION_SCHEDULE_END_TIME_PATTERN = r"^([01]\d|2[0-3]):[0-5]\d$|^24:00$"
 
 
 def _validate_slot_resolution(slot: dict[str, Any]) -> dict[str, Any]:
@@ -60,7 +62,9 @@ CIRCULATION_SCHEDULE_SLOT_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required("start"): cv.matches_regex(CIRCULATION_SCHEDULE_TIME_PATTERN),
-            vol.Required("end"): cv.matches_regex(CIRCULATION_SCHEDULE_TIME_PATTERN),
+            vol.Required("end"): cv.matches_regex(
+                CIRCULATION_SCHEDULE_END_TIME_PATTERN
+            ),
             vol.Required("mode"): vol.In(["on"]),
             vol.Required("position"): vol.All(int, vol.Range(min=0)),
         }
@@ -93,6 +97,17 @@ HA_TO_VICARE_HVAC_DHW = {
     OPERATION_MODE_OFF: VICARE_MODE_OFF,
     OPERATION_MODE_ON: VICARE_MODE_DHW,
 }
+
+# Same mapping, but for circuits that are also heating, so that toggling DHW
+# does not disable space heating (e.g. dhwAndHeating <-> heating).
+HA_TO_VICARE_HVAC_DHW_WITH_HEATING = {
+    OPERATION_MODE_OFF: VICARE_MODE_HEATING,
+    OPERATION_MODE_ON: VICARE_MODE_DHWANDHEATING,
+}
+
+VICARE_HEATING_ACTIVE_MODES = frozenset(
+    {VICARE_MODE_HEATING, VICARE_MODE_DHWANDHEATING, VICARE_MODE_DHWANDHEATINGCOOLING}
+)
 
 
 def _build_entities(
@@ -202,7 +217,12 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     @override
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
-        if (vicare_mode := HA_TO_VICARE_HVAC_DHW.get(operation_mode)) is None:
+        mode_map = (
+            HA_TO_VICARE_HVAC_DHW_WITH_HEATING
+            if self._current_mode in VICARE_HEATING_ACTIVE_MODES
+            else HA_TO_VICARE_HVAC_DHW
+        )
+        if (vicare_mode := mode_map.get(operation_mode)) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="operation_mode_unknown",

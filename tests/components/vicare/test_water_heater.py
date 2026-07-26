@@ -122,15 +122,18 @@ async def test_set_temperature(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("ha_mode", "vicare_mode"),
+    ("current_mode", "ha_mode", "vicare_mode"),
     [
-        pytest.param("on", "dhw", id="on"),
-        pytest.param("off", "standby", id="off"),
+        pytest.param("standby", "on", "dhw", id="on-from-standby"),
+        pytest.param("dhw", "off", "standby", id="off-from-dhw"),
+        pytest.param("dhwAndHeating", "off", "heating", id="off-preserves-heating"),
+        pytest.param("heating", "on", "dhwAndHeating", id="on-preserves-heating"),
     ],
 )
 async def test_set_operation_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    current_mode: str,
     ha_mode: str,
     vicare_mode: str,
 ) -> None:
@@ -148,6 +151,7 @@ async def test_set_operation_mode(
         await setup_integration(hass, mock_config_entry)
 
     entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
+    entity._current_mode = current_mode
     with patch.object(entity._circuit, "setMode") as mock_set_mode:
         await hass.services.async_call(
             "water_heater",
@@ -268,6 +272,46 @@ async def test_set_circulation_schedule_service(
     """Test the set_circulation_schedule service calls the PyViCare API."""
     schedule_payload = {
         "mon": [{"start": "06:00", "end": "22:00", "mode": "on", "position": 0}],
+        "tue": [],
+        "wed": [],
+        "thu": [],
+        "fri": [],
+        "sat": [],
+        "sun": [],
+    }
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(_FIXTURES).as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
+    with patch.object(
+        entity._api, "setDomesticHotWaterCirculationSchedule"
+    ) as mock_set:
+        await hass.services.async_call(
+            "vicare",
+            SERVICE_SET_CIRCULATION_SCHEDULE,
+            {ATTR_ENTITY_ID: ENTITY_WATER_HEATER, "schedule": schedule_payload},
+            blocking=True,
+        )
+        mock_set.assert_called_once_with(schedule_payload)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_set_circulation_schedule_service_midnight_end(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the set_circulation_schedule service accepts a 24:00 end time."""
+    schedule_payload = {
+        "mon": [{"start": "16:30", "end": "24:00", "mode": "on", "position": 0}],
         "tue": [],
         "wed": [],
         "thu": [],
