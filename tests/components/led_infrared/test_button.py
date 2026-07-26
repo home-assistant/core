@@ -86,6 +86,7 @@ async def test_setup(
 async def test_button_press(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    entity_registry: er.EntityRegistry,
     device_type: LEDIrDeviceType,
     key: str,
     expected_codes: list[Generic24KeyCode | Generic13KeyCode],
@@ -106,7 +107,7 @@ async def test_button_press(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = er.async_get(hass).async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         BUTTON_DOMAIN, DOMAIN, f"{config_entry.entry_id}_{key}"
     )
     assert entity_id is not None
