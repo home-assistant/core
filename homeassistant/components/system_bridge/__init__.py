@@ -10,8 +10,6 @@ from systembridgeconnector.exceptions import (
     ConnectionErrorException,
     DataMissingException,
 )
-from systembridgeconnector.http_client import HTTPClient
-from systembridgeconnector.models.modules.system import System
 from systembridgeconnector.version import Version
 
 from homeassistant.const import (
@@ -247,28 +245,6 @@ async def async_migrate_entry(
     if config_entry.minor_version < 3:
         # Migrate entity unique id
 
-        client = HTTPClient(
-            config_entry.data[CONF_HOST],
-            config_entry.data[CONF_PORT],
-            config_entry.data[CONF_TOKEN],
-            session=async_get_clientsession(hass),
-        )
-
-        try:
-            system = System(**await client.get("/api/data/system"))
-        except AuthenticationException as e:
-            _LOGGER.debug("Authentication failed for %s: %s", config_entry.title, e)
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="authentication_failed",
-                translation_placeholders={
-                    "title": config_entry.title,
-                    "host": config_entry.data[CONF_HOST],
-                },
-            ) from e
-        except ConnectionClosedException, ConnectionErrorException, TimeoutError:
-            return False
-
         if TYPE_CHECKING:
             assert config_entry.unique_id
 
@@ -276,14 +252,14 @@ async def async_migrate_entry(
         for entity_entry in er.async_entries_for_config_entry(
             ent_reg, config_entry.entry_id
         ):
-            if not entity_entry.unique_id.startswith(system.hostname):
+            if not entity_entry.unique_id.startswith(config_entry.data[CONF_HOST]):
                 continue
 
             ent_reg.async_update_entity(
                 entity_entry.entity_id,
                 new_unique_id=(
                     config_entry.unique_id
-                    + entity_entry.unique_id[len(system.hostname) :]
+                    + entity_entry.unique_id[len(config_entry.data[CONF_HOST]) :]
                 ),
             )
 
