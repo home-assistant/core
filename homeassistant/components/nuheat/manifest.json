@@ -15,6 +15,6 @@
   "iot_class": "cloud_polling",
   "loggers": ["chemelex_nuheat"],
   "requirements": [
-    "chemelex-nuheat@git+https://github.com/kilo-WATT/chemelex-nuheat.git@4bfc22daa922649891cc7f274007808347b91215"
+    "chemelex-nuheat@git+https://github.com/kilo-WATT/chemelex-nuheat.git@edc87d12fd33b437a98e81b6c0bbd48b62141488"
   ]
 }

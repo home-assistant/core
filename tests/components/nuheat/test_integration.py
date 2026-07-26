@@ -716,6 +716,8 @@ async def test_climate_state_and_writes_follow_ha_unit(
     assert entity.hvac_mode is HVACMode.AUTO
     assert entity.hvac_action is HVACAction.HEATING
     assert entity.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
+    assert entity.supported_features & ClimateEntityFeature.TURN_OFF
+    assert entity.supported_features & ClimateEntityFeature.TURN_ON
 
     await entity.async_set_temperature(temperature=write)
     api.set_target_temperature.assert_awaited_once_with(
@@ -763,6 +765,118 @@ async def test_hvac_action_follows_is_heating(
     entity = NuHeatClimateEntity(coordinator, "ABC123")
 
     assert entity.hvac_action is expected
+
+
+@pytest.mark.asyncio
+async def test_off_remains_optimistic_across_indistinguishable_get(
+    hass: HomeAssistant,
+) -> None:
+    """A local OFF command survives GET data shared by Manual and Standby."""
+    ambiguous = thermostat(
+        mode=3,
+        raw_target_temperature=0,
+        hold_until=None,
+        hold_until_status=HoldUntilStatus.NULL,
+        heating=False,
+    )
+    coordinator, api, _ = await coordinator_with(hass, ambiguous)
+    entity = NuHeatClimateEntity(coordinator, "ABC123")
+
+    assert entity.hvac_modes == [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
+    assert entity.hvac_mode is None
+    assert entity.assumed_state is False
+
+    await entity.async_set_hvac_mode(HVACMode.OFF)
+
+    api.set_standby.assert_awaited_once_with("ABC123")
+    assert api.list_thermostats.await_count == 2
+    assert entity.hvac_mode is HVACMode.OFF
+    assert entity.hvac_action is HVACAction.OFF
+    assert entity.target_temperature is None
+    assert entity.assumed_state is True
+
+    # A newly created entity has no command memory and never infers OFF from
+    # the same mode-3/null-hold/zero-target GET response.
+    restarted_entity = NuHeatClimateEntity(coordinator, "ABC123")
+    assert restarted_entity.hvac_mode is None
+    assert restarted_entity.hvac_action is HVACAction.IDLE
+    assert restarted_entity.target_temperature is None
+    assert restarted_entity.assumed_state is False
+
+
+@pytest.mark.asyncio
+async def test_failed_standby_command_does_not_assume_off(
+    hass: HomeAssistant,
+) -> None:
+    """OFF is remembered only after the Standby command succeeds."""
+    coordinator, api, _ = await coordinator_with(hass, thermostat())
+    api.set_standby.side_effect = NuHeatApiError("write failed")
+    entity = NuHeatClimateEntity(coordinator, "ABC123")
+
+    with pytest.raises(NuHeatApiError, match="write failed"):
+        await entity.async_turn_off()
+
+    assert entity.hvac_mode is HVACMode.AUTO
+    assert entity.assumed_state is False
+    assert api.list_thermostats.await_count == 1
+
+
+@pytest.mark.asyncio
+async def test_turn_off_and_turn_on_use_standby_and_auto(
+    hass: HomeAssistant,
+) -> None:
+    """The standard climate actions map to verified Standby and Auto writes."""
+    coordinator, api, _ = await coordinator_with(hass, thermostat())
+    entity = NuHeatClimateEntity(coordinator, "ABC123")
+
+    await entity.async_turn_off()
+    api.set_standby.assert_awaited_once_with("ABC123")
+    assert entity.hvac_mode is HVACMode.OFF
+
+    await entity.async_turn_on()
+    api.set_schedule_mode.assert_awaited_once_with("ABC123", ScheduleMode.AUTO)
+    assert entity.hvac_mode is HVACMode.AUTO
+    assert entity.hvac_action is HVACAction.HEATING
+    assert entity.target_temperature == 23.0
+    assert entity.assumed_state is False
+    # The coordinator debounces the two immediate post-command refreshes.
+    assert api.list_thermostats.await_count == 2
+    await coordinator.async_shutdown()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "exit_command",
+    ["auto", "heat", "target", "run-preset", "temporary-hold-preset"],
+)
+async def test_successful_control_command_clears_optimistic_off(
+    hass: HomeAssistant, exit_command: str
+) -> None:
+    """Every supported command which exits Standby clears local OFF memory."""
+    coordinator, api, _ = await coordinator_with(hass, thermostat())
+    entity = NuHeatClimateEntity(coordinator, "ABC123")
+    await entity.async_turn_off()
+    assert entity.assumed_state is True
+
+    if exit_command == "auto":
+        await entity.async_set_hvac_mode(HVACMode.AUTO)
+    elif exit_command == "heat":
+        await entity.async_set_hvac_mode(HVACMode.HEAT)
+    elif exit_command == "target":
+        await entity.async_set_temperature(temperature=22.0)
+        api.set_target_temperature.assert_awaited_once_with(
+            "ABC123", 22.0, mode=ScheduleMode.MANUAL
+        )
+    elif exit_command == "run-preset":
+        await entity.async_set_preset_mode(PRESET_RUN)
+    else:
+        await entity.async_set_preset_mode(PRESET_TEMPORARY_HOLD)
+
+    assert entity.assumed_state is False
+    assert entity.hvac_mode is not HVACMode.OFF
+    # The coordinator debounces the two immediate post-command refreshes.
+    assert api.list_thermostats.await_count == 2
+    await coordinator.async_shutdown()
 
 
 @pytest.mark.parametrize(
@@ -864,8 +978,7 @@ async def test_legacy_hvac_command_support_remains_separate_from_read_state(
     )
     api.list_thermostats.return_value = [refreshed]
     entity = NuHeatClimateEntity(coordinator, "ABC123")
-    assert entity.hvac_modes == [HVACMode.AUTO, HVACMode.HEAT]
-    assert HVACMode.OFF not in entity.hvac_modes
+    assert entity.hvac_modes == [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
     assert entity.preset_modes == [
         PRESET_RUN,
         PRESET_TEMPORARY_HOLD,
