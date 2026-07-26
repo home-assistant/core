@@ -49,7 +49,8 @@ async def async_setup_entry(
                     continue
                 known.add((device_id, key))
                 new_entities.append(HortimaxReadoutSensor(coordinator, device_id, key))
-        async_add_entities(new_entities)
+        if new_entities:
+            async_add_entities(new_entities)
 
     _add_new_entities()
     entry.async_on_unload(coordinator.async_add_listener(_add_new_entities))
