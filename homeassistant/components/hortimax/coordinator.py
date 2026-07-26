@@ -10,6 +10,7 @@ from aiohortos import (
     HortosClient,
     HortosError,
     Readout,
+    disambiguate_source_names,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,7 +19,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
-from .naming import disambiguate_source_names
 
 type HortimaxConfigEntry = ConfigEntry[HortimaxCoordinator]
 

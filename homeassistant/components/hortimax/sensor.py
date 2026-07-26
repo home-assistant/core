@@ -3,7 +3,13 @@
 from datetime import datetime, timedelta
 from typing import override
 
-from aiohortos import Readout, ReadoutValueType, decode_cardinal_wind_direction
+from aiohortos import (
+    Readout,
+    ReadoutValueType,
+    decode_cardinal_wind_direction,
+    readout_display_name,
+    readout_subject,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,7 +32,6 @@ from .const import (
 )
 from .coordinator import HortimaxConfigEntry, HortimaxCoordinator
 from .entity import HortimaxEntity
-from .naming import readout_display_name, readout_subject
 
 PARALLEL_UPDATES = 0
 
