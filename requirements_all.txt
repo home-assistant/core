@@ -3342,7 +3342,7 @@ volkszaehler==0.4.0
 volvocarsapi==0.4.3
 
 # homeassistant.components.verisure
-vsure==2.8.0
+vsure==2.10.0
 
 # homeassistant.components.vasttrafik
 vtjp==0.2.1
