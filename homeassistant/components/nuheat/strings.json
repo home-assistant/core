@@ -46,6 +46,21 @@
       }
     }
   },
+  "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "permanent_hold": "Permanent hold",
+              "run_schedule": "Run schedule",
+              "temporary_hold": "Temporary hold"
+            }
+          }
+        }
+      }
+    }
+  },
   "exceptions": {
     "legacy_migration_required": {
       "message": "This NuHeat entry must be reconnected through OAuth."
@@ -56,11 +71,11 @@
     "oauth_subject_migration_failed": {
       "message": "The stored NuHeat authorization has no valid account subject. Reauthenticate the entry before retrying migration."
     },
-    "unsupported_mode": {
-      "message": "NuHeat reported unsupported thermostat mode {mode}. Refresh before retrying."
-    },
     "unsupported_preset": {
       "message": "The preset {preset} is not supported by NuHeat."
+    },
+    "unsupported_state": {
+      "message": "NuHeat reported thermostat state {state}, which cannot be controlled safely. Refresh before retrying."
     }
   },
   "issues": {

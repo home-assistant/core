@@ -25,9 +25,8 @@ from . import NuHeatConfigEntry
 from .behavior import (
     api_mode_for_hvac_mode,
     api_mode_for_preset,
-    hvac_mode_for_api_mode,
-    is_supported_api_mode,
-    preset_for_api_mode,
+    hvac_mode_for_thermostat,
+    preset_for_thermostat,
     setpoint_command_mode,
 )
 from .const import DOMAIN, PRESET_MODES
@@ -62,6 +61,7 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "thermostat"
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT]
     _attr_preset_modes = PRESET_MODES
     _attr_supported_features = (
@@ -96,21 +96,23 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
     @property
     @override
     def available(self) -> bool:
-        return (
-            super().available
-            and self.coordinator.is_thermostat_available(self._serial_number)
-            and is_supported_api_mode(self.thermostat.mode)
+        return super().available and self.coordinator.is_thermostat_available(
+            self._serial_number
         )
 
     @property
     @override
-    def current_temperature(self) -> float:
-        return self._from_celsius(self.thermostat.current_temperature)
+    def current_temperature(self) -> float | None:
+        if (temperature := self.thermostat.current_temperature) is None:
+            return None
+        return self._from_celsius(temperature)
 
     @property
     @override
-    def target_temperature(self) -> float:
-        return self._from_celsius(self.thermostat.target_temperature)
+    def target_temperature(self) -> float | None:
+        if (temperature := self.thermostat.target_temperature) is None:
+            return None
+        return self._from_celsius(temperature)
 
     @property
     @override
@@ -127,7 +129,7 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
     @property
     @override
     def hvac_mode(self) -> HVACMode | None:
-        return hvac_mode_for_api_mode(self.thermostat.mode)
+        return hvac_mode_for_thermostat(self.thermostat)
 
     @property
     @override
@@ -137,7 +139,7 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
     @property
     @override
     def preset_mode(self) -> str | None:
-        return preset_for_api_mode(self.thermostat.mode)
+        return preset_for_thermostat(self.thermostat)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -145,14 +147,12 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         if temperature is None:
             return
         try:
-            mode = setpoint_command_mode(
-                self.thermostat.mode, kwargs.get(ATTR_HVAC_MODE)
-            )
+            mode = setpoint_command_mode(self.thermostat, kwargs.get(ATTR_HVAC_MODE))
         except ValueError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="unsupported_mode",
-                translation_placeholders={"mode": str(self.thermostat.mode)},
+                translation_key="unsupported_state",
+                translation_placeholders={"state": self.thermostat.state},
             ) from err
         thermostat = await self.coordinator.api.set_target_temperature(
             self._serial_number,

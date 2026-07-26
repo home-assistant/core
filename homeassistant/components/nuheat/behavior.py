@@ -1,59 +1,56 @@
-"""Isolated mappings for NuHeat behavior that still needs live validation."""
+"""Map live-validated NuHeat read states separately from write commands."""
 
-from chemelex_nuheat import ScheduleMode, ThermostatMode
+from chemelex_nuheat import ScheduleMode, Thermostat, ThermostatState
 
 from homeassistant.components.climate import HVACMode
 
-from .const import PRESET_MANUAL, PRESET_RUN, PRESET_TEMPORARY_HOLD
+from .const import PRESET_PERMANENT_HOLD, PRESET_RUN, PRESET_TEMPORARY_HOLD
 
-MODE_TO_PRESET = {
-    ThermostatMode.AUTO: PRESET_RUN,
-    ThermostatMode.HOLD: PRESET_TEMPORARY_HOLD,
-    ThermostatMode.MANUAL: PRESET_MANUAL,
+STATE_TO_PRESET = {
+    ThermostatState.SCHEDULED: PRESET_RUN,
+    ThermostatState.TIMED_HOLD: PRESET_TEMPORARY_HOLD,
+    ThermostatState.PERMANENT_HOLD: PRESET_PERMANENT_HOLD,
 }
 PRESET_TO_MODE = {
     PRESET_RUN: ScheduleMode.AUTO,
     PRESET_TEMPORARY_HOLD: ScheduleMode.HOLD,
-    PRESET_MANUAL: ScheduleMode.MANUAL,
 }
 
 
-def is_supported_api_mode(mode: int) -> bool:
-    """Return whether a provisional v2 integer mode has a safe mapping."""
-    try:
-        ThermostatMode(mode)
-    except ValueError:
-        return False
-    return True
-
-
-def preset_for_api_mode(mode: int) -> str | None:
-    """Map a provisional reported v2 mode without disguising unknown values."""
-    try:
-        return MODE_TO_PRESET[ThermostatMode(mode)]
-    except ValueError, KeyError:
-        return None
+def preset_for_thermostat(thermostat: Thermostat) -> str | None:
+    """Return a preset only when the complete response supports one."""
+    return STATE_TO_PRESET.get(thermostat.state)
 
 
 def api_mode_for_preset(preset: str) -> ScheduleMode:
-    """Map a supported Home Assistant preset to a v2 mode command."""
+    """Map presets with validated command behavior to v2 commands.
+
+    Permanent Hold is reported as a preset, but selecting it remains blocked
+    until Hold-without-expiration write semantics are validated.
+    """
     try:
         return PRESET_TO_MODE[preset]
     except KeyError as err:
         raise ValueError(f"Unsupported preset mode: {preset}") from err
 
 
-def hvac_mode_for_api_mode(mode: int) -> HVACMode | None:
-    """Map scheduled operation to AUTO and distinct Manual operation to HEAT."""
-    try:
-        thermostat_mode = ThermostatMode(mode)
-    except ValueError:
-        return None
-    return HVACMode.HEAT if thermostat_mode is ThermostatMode.MANUAL else HVACMode.AUTO
+def hvac_mode_for_thermostat(thermostat: Thermostat) -> HVACMode | None:
+    """Map only unambiguous Auto-family read states.
+
+    A Manual command remains supported, but its mode-3/zero-target readback is
+    indistinguishable from Standby and therefore cannot safely report HEAT.
+    """
+    if thermostat.state in (
+        ThermostatState.SCHEDULED,
+        ThermostatState.TIMED_HOLD,
+        ThermostatState.PERMANENT_HOLD,
+    ):
+        return HVACMode.AUTO
+    return None
 
 
 def api_mode_for_hvac_mode(hvac_mode: HVACMode) -> ScheduleMode:
-    """Map the legacy public HVAC contract to OpenAPI v2 commands."""
+    """Map the existing public HVAC command contract to documented commands."""
     if hvac_mode is HVACMode.AUTO:
         return ScheduleMode.AUTO
     if hvac_mode is HVACMode.HEAT:
@@ -62,19 +59,20 @@ def api_mode_for_hvac_mode(hvac_mode: HVACMode) -> ScheduleMode:
 
 
 def setpoint_command_mode(
-    current_mode: int, requested_hvac_mode: HVACMode | None = None
+    thermostat: Thermostat, requested_hvac_mode: HVACMode | None = None
 ) -> ScheduleMode:
-    """Choose temporary Hold or Manual for a target-temperature write.
+    """Choose a command without deriving it from the numeric mode alone.
 
-    Changing a setpoint during scheduled operation uses the documented Hold
-    command, while Manual/HEAT remains Manual. The v2 response values and Hold
-    expiration semantics still require live validation.
+    An explicit HEAT request retains the existing documented Manual command.
+    Auto-family states use Hold for a setpoint change. Ambiguous and unknown
+    read states require an explicit command so Standby is never guessed.
     """
     if requested_hvac_mode is HVACMode.HEAT:
         return ScheduleMode.MANUAL
-    try:
-        if ThermostatMode(current_mode) is ThermostatMode.MANUAL:
-            return ScheduleMode.MANUAL
-    except ValueError as err:
-        raise ValueError(f"Unsupported API mode: {current_mode}") from err
-    return ScheduleMode.HOLD
+    if thermostat.state in (
+        ThermostatState.SCHEDULED,
+        ThermostatState.TIMED_HOLD,
+        ThermostatState.PERMANENT_HOLD,
+    ):
+        return ScheduleMode.HOLD
+    raise ValueError(f"Unsupported thermostat state: {thermostat.state}")

@@ -10,7 +10,7 @@ OAUTH_SCOPES = ("openid", "openapi", "offline_access")
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-PRESET_RUN = "Run Schedule"
-PRESET_TEMPORARY_HOLD = "Temporary Hold"
-PRESET_MANUAL = "Manual"
-PRESET_MODES = [PRESET_RUN, PRESET_TEMPORARY_HOLD, PRESET_MANUAL]
+PRESET_RUN = "run_schedule"
+PRESET_TEMPORARY_HOLD = "temporary_hold"
+PRESET_PERMANENT_HOLD = "permanent_hold"
+PRESET_MODES = [PRESET_RUN, PRESET_TEMPORARY_HOLD, PRESET_PERMANENT_HOLD]
