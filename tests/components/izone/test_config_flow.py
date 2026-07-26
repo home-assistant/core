@@ -1,5 +1,6 @@
 """Tests for iZone config flow."""
 
+import asyncio
 from collections.abc import Generator
 from types import SimpleNamespace
 from typing import Any
@@ -949,6 +950,42 @@ async def test_user_flow_returns_to_form_when_no_controllers_found(
     assert result["step_id"] == "manual_host"
     assert result["errors"] == {"base": "no_devices_found"}
     mock_stop.assert_awaited_once()
+
+
+async def test_user_discover_progress_while_task_running(hass: HomeAssistant) -> None:
+    """Polling discover while the broadcast task is open keeps showing progress."""
+    controller = create_mock_controller("000000001", "192.0.2.1")
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _slow_discover(_hass: HomeAssistant) -> dict[str, Any]:
+        started.set()
+        await release.wait()
+        return {controller.device_uid: endpoint_from_controller(controller)}
+
+    with patch(
+        "homeassistant.components.izone.discovery.async_discover_all_endpoints",
+        new=AsyncMock(side_effect=_slow_discover),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "discover"}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await started.wait()
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["progress_action"] == "discover"
+
+        release.set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
 
 
 @pytest.mark.usefixtures("mock_entry_setup")
