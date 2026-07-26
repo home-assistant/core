@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL_SEC
+from .const import DOMAIN, SCAN_INTERVAL_SEC_POLLING, SCAN_INTERVAL_SEC_WSRPC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,11 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[Mapping[int, SwitchBeeBaseDevic
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=SCAN_INTERVAL_SEC[type(self.api)]),
+            update_interval=timedelta(
+                seconds=SCAN_INTERVAL_SEC_WSRPC
+                if isinstance(swb_api, CentralUnitWsRPC)
+                else SCAN_INTERVAL_SEC_POLLING
+            ),
         )
 
         # Register callback for notification WsRPC

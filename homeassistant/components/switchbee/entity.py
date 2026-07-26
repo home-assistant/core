@@ -61,10 +61,7 @@ class SwitchBeeDeviceEntity[_DeviceTypeT: SwitchBeeBaseDevice](
             manufacturer=SWITCHBEE_BRAND,
             model=coordinator.api.module_display(device.unit_id),
             suggested_area=device.zone,
-            via_device=(
-                DOMAIN,
-                f"{coordinator.api.name} ({coordinator.api.unique_id})",
-            ),
+            via_device=(DOMAIN, coordinator.unique_id),
         )
 
     @property
