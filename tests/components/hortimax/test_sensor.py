@@ -38,7 +38,7 @@ async def test_unclassified_readouts_are_disabled(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test readouts without a device class or icon are created disabled."""
+    """Test readouts with no device class, icon or state class are disabled."""
     await setup_integration(hass, mock_config_entry)
 
     # An enumeration code nobody has decoded yet: no unit, no device class.
