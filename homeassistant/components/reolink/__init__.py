@@ -536,6 +536,33 @@ def migrate_entity_ids(
                 entity_reg.async_remove(entity.entity_id)
                 continue
 
+        # Can be removed in HA 2027.2
+        if (
+            host.api.is_dual_lens
+            and host.api.supported(1, "zoom_basic")
+            and not host.api.supported(0, "zoom_basic")
+        ):
+            id_parts = entity.unique_id.split("_", 2)
+            if len(id_parts) < 3:
+                continue
+            if id_parts[1] == "0" and id_parts[2] in {
+                "zoom",
+                "ptz_zoom_in",
+                "ptz_zoom_out",
+            }:
+                new_id = f"{host.unique_id}_1_{id_parts[2]}"
+                _LOGGER.debug(
+                    "Updating Reolink entity unique_id from %s to %s",
+                    entity.unique_id,
+                    new_id,
+                )
+                existing_entity = entity_reg.async_get_entity_id(
+                    entity.domain, entity.platform, new_id
+                )
+                if existing_entity is not None:
+                    entity_reg.async_remove(existing_entity)
+                entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
+
         if entity.device_id in ch_device_ids:
             ch = ch_device_ids[entity.device_id]
             id_parts = entity.unique_id.split("_", 2)
