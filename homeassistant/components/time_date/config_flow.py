@@ -2,12 +2,13 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_DISPLAY_OPTIONS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import PlatformData
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -22,7 +23,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_DISPLAY_OPTIONS, DOMAIN, OPTION_TYPES
+from .const import DOMAIN, OPTION_TYPES
 from .sensor import TimeDateSensor
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,15 +65,18 @@ class TimeDateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return f"Time & Date {options[CONF_DISPLAY_OPTIONS]}"
 
+    @override
     def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
         """Abort if instance already exist."""
         self._async_abort_entries_match(dict(options))
 
     @staticmethod
+    @override
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
         websocket_api.async_register_command(hass, ws_start_preview)

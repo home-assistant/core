@@ -40,8 +40,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockStreamReaderChunked
 
 from .const import (
-    MOCK_ALBUM_WITH_ASSETS,
-    MOCK_ALBUM_WITHOUT_ASSETS,
+    ALBUM_DATA,
+    MOCK_ALBUM_ASSETS,
     MOCK_FAVORITE_ASSETS,
     MOCK_PEOPLE_ASSETS,
     MOCK_TAGS_ASSETS,
@@ -80,8 +80,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_immich_albums() -> AsyncMock:
     """Mock the Immich server."""
     mock = AsyncMock(spec=ImmichAlbums)
-    mock.async_get_all_albums.return_value = [MOCK_ALBUM_WITHOUT_ASSETS]
-    mock.async_get_album_info.return_value = MOCK_ALBUM_WITH_ASSETS
+    mock.async_get_all_albums.return_value = [ALBUM_DATA]
     mock.async_add_assets_to_album.return_value = [
         ImmichAddAssetsToAlbumResponse.from_dict(
             {"id": "abcdef-0123456789", "success": True}
@@ -160,6 +159,7 @@ def mock_immich_search() -> AsyncMock:
     """Mock the Immich server."""
     mock = AsyncMock(spec=ImmichSearch)
     mock.async_get_all_favorites.return_value = MOCK_FAVORITE_ASSETS
+    mock.async_get_all_by_album_ids.return_value = MOCK_ALBUM_ASSETS
     mock.async_get_all_by_person_ids.return_value = MOCK_PEOPLE_ASSETS
     mock.async_get_all_by_tag_ids.return_value = MOCK_TAGS_ASSETS
     return mock

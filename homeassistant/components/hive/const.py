@@ -2,7 +2,6 @@
 
 from homeassistant.const import Platform
 
-ATTR_MODE = "mode"
 ATTR_TIME_PERIOD = "time_period"
 ATTR_ONOFF = "on_off"
 CONF_CODE = "2fa"

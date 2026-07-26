@@ -15,7 +15,7 @@ from aiohasupervisor.models import (
 )
 import voluptuous as vol
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_LOCATION, ATTR_NAME
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -43,7 +43,6 @@ from .const import (
     ATTR_HOMEASSISTANT,
     ATTR_HOMEASSISTANT_EXCLUDE_DATABASE,
     ATTR_INPUT,
-    ATTR_LOCATION,
     ATTR_PASSWORD,
     ATTR_SLUG,
     DOMAIN,

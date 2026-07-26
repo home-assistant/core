@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from aiowithings import (
     Activity,
@@ -850,17 +850,22 @@ async def async_setup_entry(
         if new_devices:
             device_registry = dr.async_get(hass)
             for device_id in new_devices:
-                if device := device_registry.async_get_device({(DOMAIN, device_id)}):
-                    if any(
-                        (
-                            config_entry := hass.config_entries.async_get_entry(
-                                config_entry_id
-                            )
+                # The same sub-device can be reported by several config entries, each
+                # owning its own device registry entry. Its sensors share a unique id
+                # across config entries, so only create them if no other loaded config
+                # entry already provides them.
+                if any(
+                    (
+                        config_entry := hass.config_entries.async_get_entry(
+                            device.config_entry_id
                         )
-                        and config_entry.state == ConfigEntryState.LOADED
-                        for config_entry_id in device.config_entries
-                    ):
-                        continue
+                    )
+                    and config_entry.state is ConfigEntryState.LOADED
+                    for device in device_registry.devices.get_entries(
+                        identifiers={(DOMAIN, device_id)}
+                    )
+                ):
+                    continue
                 async_add_entities(
                     WithingsDeviceSensor(device_coordinator, description, device_id)
                     for description in DEVICE_SENSORS
@@ -870,11 +875,17 @@ async def async_setup_entry(
         if old_devices:
             device_registry = dr.async_get(hass)
             for device_id in old_devices:
-                if device := device_registry.async_get_device({(DOMAIN, device_id)}):
-                    device_registry.async_update_device(
-                        device.id, remove_config_entry_id=entry.entry_id
-                    )
-                    current_devices.remove(device_id)
+                # Several config entries can share this identifier, each owning its own
+                # device registry entry, so only remove this entry's own device.
+                for device in device_registry.devices.get_entries(
+                    identifiers={(DOMAIN, device_id)}
+                ):
+                    if device.config_entry_id == entry.entry_id:
+                        device_registry.async_update_device(
+                            device.id, remove_config_entry_id=entry.entry_id
+                        )
+                        break
+                current_devices.remove(device_id)
 
     device_coordinator.async_add_listener(_async_device_listener)
 
@@ -917,6 +928,7 @@ class WithingsMeasurementSensor(
     """Implementation of a Withings measurement sensor."""
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the entity."""
         return self.coordinator.data[
@@ -927,6 +939,7 @@ class WithingsMeasurementSensor(
         ]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the sensor is available."""
         return (
@@ -948,6 +961,7 @@ class WithingsSleepSensor(
     """Implementation of a Withings sleep sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         if not self.coordinator.data:
@@ -964,6 +978,7 @@ class WithingsGoalsSensor(
     """Implementation of a Withings goals sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         assert self.coordinator.data
@@ -979,6 +994,7 @@ class WithingsActivitySensor(
     """Implementation of a Withings activity sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         if not self.coordinator.data:
@@ -986,6 +1002,7 @@ class WithingsActivitySensor(
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def last_reset(self) -> datetime:
         """These values reset every day."""
         return dt_util.start_of_local_day()
@@ -1000,6 +1017,7 @@ class WithingsWorkoutSensor(
     """Implementation of a Withings workout sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         if not self.coordinator.data:
@@ -1023,6 +1041,7 @@ class WithingsDeviceSensor(WithingsDeviceEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         return self.entity_description.value_fn(self.device)

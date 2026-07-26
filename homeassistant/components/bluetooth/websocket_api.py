@@ -273,7 +273,7 @@ async def ws_subscribe_scanner_details(
 
     def _async_registration_changed(registration: HaScannerRegistration) -> None:
         added_event = HaScannerRegistrationEvent.ADDED
-        event_type = "add" if registration.event == added_event else "remove"
+        event_type = "add" if registration.event is added_event else "remove"
         _async_event_message({event_type: [registration.scanner.details]})
 
     manager = _get_manager(hass)

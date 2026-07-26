@@ -24,7 +24,6 @@ from homeassistant.components.ntfy.services import (
     ATTR_DELAY,
     ATTR_EMAIL,
     ATTR_FILENAME,
-    ATTR_ICON,
     ATTR_MARKDOWN,
     ATTR_PRIORITY,
     ATTR_SEQUENCE_ID,
@@ -34,7 +33,7 @@ from homeassistant.components.ntfy.services import (
     SERVICE_PUBLISH,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component

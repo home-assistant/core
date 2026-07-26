@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FastdotcomConfigEntry) -
 
     async def _async_finish_startup(hass: HomeAssistant) -> None:
         """Run this only when HA has finished its startup."""
-        if entry.state == ConfigEntryState.LOADED:
+        if entry.state is ConfigEntryState.LOADED:
             await coordinator.async_refresh()
         else:
             await coordinator.async_config_entry_first_refresh()

@@ -81,7 +81,7 @@ async def test_setup_h_j_model(
 async def test_setup_updates_from_ssdp(hass: HomeAssistant) -> None:
     """Test setting up the entry fetches data from ssdp cache."""
     entry = MockConfigEntry(
-        domain="samsungtv", data=ENTRYDATA_WEBSOCKET, entry_id="sample-entry-id"
+        domain=DOMAIN, data=ENTRYDATA_WEBSOCKET, entry_id="sample-entry-id"
     )
     entry.add_to_hass(hass)
 
@@ -147,7 +147,7 @@ async def test_migrate_future_version_returns_false(
 ) -> None:
     """Test migration failure for downgraded future config entry version."""
     entry = MockConfigEntry(
-        domain="samsungtv",
+        domain=DOMAIN,
         data=ENTRYDATA_WEBSOCKET,
         entry_id="sample-entry-id",
         version=3,
@@ -157,4 +157,4 @@ async def test_migrate_future_version_returns_false(
 
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR

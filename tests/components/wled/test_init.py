@@ -93,7 +93,7 @@ async def test_migrate_entry_future_version_is_downgrade(
     await hass.async_block_till_done()
 
     assert result is False
-    assert entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
     assert entry.version == 2
     assert entry.minor_version == 0
     assert entry.unique_id == "AABBCCDDEEFF"
@@ -110,7 +110,7 @@ async def test_migrate_entry_v1_to_1_2_no_duplicates(
     await hass.async_block_till_done()
 
     assert result is True
-    assert config_entry_v1.state == ConfigEntryState.LOADED
+    assert config_entry_v1.state is ConfigEntryState.LOADED
     assert config_entry_v1.version == 1
     assert config_entry_v1.minor_version == 2
     assert config_entry_v1.unique_id == "aabbccddeeff"
@@ -149,7 +149,7 @@ async def test_migrate_entry_v1_with_ignored_duplicates(
     await hass.async_block_till_done()
 
     assert result is True
-    assert config_entry_v1.state == ConfigEntryState.LOADED
+    assert config_entry_v1.state is ConfigEntryState.LOADED
     assert config_entry_v1.version == 1
     assert config_entry_v1.minor_version == 2
     assert config_entry_v1.unique_id == "aabbccddeeff"
@@ -181,7 +181,7 @@ async def test_migrate_entry_v1_with_non_ignored_duplicate_aborts(
     await hass.async_block_till_done()
 
     assert result is False
-    assert config_entry_v1.state == ConfigEntryState.MIGRATION_ERROR
+    assert config_entry_v1.state is ConfigEntryState.MIGRATION_ERROR
     assert config_entry_v1.version == 1
     assert config_entry_v1.minor_version == 1
     assert config_entry_v1.unique_id == "AABBCCDDEEFF"
@@ -207,7 +207,7 @@ async def test_migrate_entry_already_at_1_2_is_noop(
     await hass.async_block_till_done()
 
     assert result is True
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.version == 1
     assert entry.minor_version == 2
     assert entry.unique_id == "aabbccddeeff"

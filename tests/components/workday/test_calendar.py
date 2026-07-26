@@ -1,6 +1,7 @@
 """Tests for calendar platform of Workday integration."""
 
 from datetime import datetime, timedelta
+import logging
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -14,6 +15,7 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import TEST_CONFIG_WITH_PROVINCE, init_integration
@@ -42,7 +44,7 @@ async def test_holiday_calendar_entity(
         CALENDAR_DOMAIN,
         SERVICE_GET_EVENTS,
         {
-            ATTR_ENTITY_ID: "calendar.workday_sensor_calendar",
+            ATTR_ENTITY_ID: "calendar.workday_sensor_de_bw_calendar",
             EVENT_START_DATETIME: dt_util.now(),
             EVENT_END_DATETIME: dt_util.now() + timedelta(days=10, hours=1),
         },
@@ -52,15 +54,15 @@ async def test_holiday_calendar_entity(
     assert {
         ATTR_END: "2023-01-02",
         ATTR_START: "2023-01-01",
-        EVENT_SUMMARY: "Workday Sensor",
-    } not in response["calendar.workday_sensor_calendar"]["events"]
+        EVENT_SUMMARY: "Workday Sensor DE BW",
+    } not in response["calendar.workday_sensor_de_bw_calendar"]["events"]
     assert {
         ATTR_END: "2023-01-04",
         ATTR_START: "2023-01-03",
-        EVENT_SUMMARY: "Workday Sensor",
-    } in response["calendar.workday_sensor_calendar"]["events"]
+        EVENT_SUMMARY: "Workday Sensor DE BW",
+    } in response["calendar.workday_sensor_de_bw_calendar"]["events"]
 
-    state = hass.states.get("calendar.workday_sensor_calendar")
+    state = hass.states.get("calendar.workday_sensor_de_bw_calendar")
     assert state is not None
     assert state.state == "off"
 
@@ -71,11 +73,11 @@ async def test_holiday_calendar_entity(
     await hass.async_block_till_done()
 
     # Binary sensor added to ensure same state for both entities
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_de_bw")
     assert state is not None
     assert state.state == "on"
 
-    state = hass.states.get("calendar.workday_sensor_calendar")
+    state = hass.states.get("calendar.workday_sensor_de_bw_calendar")
     assert state is not None
     assert state.state == "on"
 
@@ -83,10 +85,41 @@ async def test_holiday_calendar_entity(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_de_bw")
     assert state is not None
     assert state.state == "off"
 
-    state = hass.states.get("calendar.workday_sensor_calendar")
+    state = hass.states.get("calendar.workday_sensor_de_bw_calendar")
     assert state is not None
     assert state.state == "off"
+
+
+async def test_no_update_when_disabled(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a disabled calendar entity does not trigger updates."""
+    zone = await dt_util.async_get_time_zone("US/Hawaii")
+    freezer.move_to(datetime(2023, 1, 1, 0, 1, 1, tzinfo=zone))
+    await init_integration(hass, TEST_CONFIG_WITH_PROVINCE)
+
+    entity_id = "calendar.workday_sensor_de_bw_calendar"
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+    entity_registry.async_update_entity(
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    with caplog.at_level(logging.WARNING, logger="homeassistant.helpers.entity"):
+        freezer.move_to(datetime(2023, 1, 2, 0, 1, 1, tzinfo=zone))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert (
+        "incorrectly being triggered for updates while it is disabled"
+        not in caplog.text
+    )

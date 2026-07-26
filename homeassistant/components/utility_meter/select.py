@@ -1,8 +1,9 @@
 """Support for tariff selection."""
 
 import logging
+from typing import override
 
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
@@ -11,11 +12,12 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_METER, CONF_SOURCE_SENSOR, CONF_TARIFFS, DATA_UTILITY
+from .const import CONF_METER, CONF_SOURCE_SENSOR, CONF_TARIFFS, DATA_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,9 +55,13 @@ async def async_setup_platform(
 ) -> None:
     """Set up the utility meter select."""
     if discovery_info is None:
-        _LOGGER.error(
-            "This platform is not available to configure "
-            "from 'select:' in configuration.yaml"
+        async_create_platform_config_not_supported_issue(
+            hass,
+            DOMAIN,
+            SELECT_DOMAIN,
+            yaml_config_under_integration_supported=True,
+            learn_more_url="https://www.home-assistant.io/integrations/utility_meter/",
+            logger=_LOGGER,
         )
         return
 
@@ -101,15 +107,18 @@ class TariffSelect(SelectEntity, RestoreEntity):
         self._attr_should_poll = False
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the available tariffs."""
         return self._tariffs
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return current tariff."""
         return self._current_tariff
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
@@ -120,6 +129,7 @@ class TariffSelect(SelectEntity, RestoreEntity):
         else:
             self._current_tariff = state.state
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select new tariff (option)."""
         self._current_tariff = option

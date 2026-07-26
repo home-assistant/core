@@ -64,7 +64,7 @@ def mock_api_actions(
     that speak camelCase and 404 for older PascalCase OTBRs.
     """
     status = (
-        HTTPStatus.OK if key_format == KeyFormat.CAMEL_CASE else HTTPStatus.NOT_FOUND
+        HTTPStatus.OK if key_format is KeyFormat.CAMEL_CASE else HTTPStatus.NOT_FOUND
     )
     aioclient_mock.get(re.compile(r".*/api/actions$"), status=status)
 

@@ -33,18 +33,18 @@ async def test_light_without_binary_sensor(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{LIGHT_DOMAIN}.test")
+    state = hass.states.get(f"{LIGHT_DOMAIN}.test_test")
     assert state == snapshot
-    assert entity_registry.async_get(f"{LIGHT_DOMAIN}.test") == snapshot
+    assert entity_registry.async_get(f"{LIGHT_DOMAIN}.test_test") == snapshot
 
     # Emulate websocket message: brightness changed
     test_gateway.publisher.dispatch("Test", ("devolo.Dimmer:Test", 0.0))
     await hass.async_block_till_done()
-    state = hass.states.get(f"{LIGHT_DOMAIN}.test")
+    state = hass.states.get(f"{LIGHT_DOMAIN}.test_test")
     assert state.state == STATE_OFF
     test_gateway.publisher.dispatch("Test", ("devolo.Dimmer:Test", 100.0))
     await hass.async_block_till_done()
-    state = hass.states.get(f"{LIGHT_DOMAIN}.test")
+    state = hass.states.get(f"{LIGHT_DOMAIN}.test_test")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 255
 
@@ -55,7 +55,7 @@ async def test_light_without_binary_sensor(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test"},
+            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(100)
@@ -64,7 +64,7 @@ async def test_light_without_binary_sensor(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test"},
+            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(0)
@@ -73,7 +73,7 @@ async def test_light_without_binary_sensor(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test", ATTR_BRIGHTNESS: 50},
+            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test", ATTR_BRIGHTNESS: 50},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(round(50 / 255 * 100))
@@ -82,7 +82,7 @@ async def test_light_without_binary_sensor(
     test_gateway.devices["Test"].status = 1
     test_gateway.publisher.dispatch("Test", ("Status", False, "status"))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{LIGHT_DOMAIN}.test").state == STATE_UNAVAILABLE
+    assert hass.states.get(f"{LIGHT_DOMAIN}.test_test").state == STATE_UNAVAILABLE
 
 
 async def test_light_with_binary_sensor(
@@ -101,18 +101,18 @@ async def test_light_with_binary_sensor(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{LIGHT_DOMAIN}.test")
+    state = hass.states.get(f"{LIGHT_DOMAIN}.test_test")
     assert state == snapshot
-    assert entity_registry.async_get(f"{LIGHT_DOMAIN}.test") == snapshot
+    assert entity_registry.async_get(f"{LIGHT_DOMAIN}.test_test") == snapshot
 
     # Emulate websocket message: brightness changed
     test_gateway.publisher.dispatch("Test", ("devolo.Dimmer:Test", 0.0))
     await hass.async_block_till_done()
-    state = hass.states.get(f"{LIGHT_DOMAIN}.test")
+    state = hass.states.get(f"{LIGHT_DOMAIN}.test_test")
     assert state.state == STATE_OFF
     test_gateway.publisher.dispatch("Test", ("devolo.Dimmer:Test", 100.0))
     await hass.async_block_till_done()
-    state = hass.states.get(f"{LIGHT_DOMAIN}.test")
+    state = hass.states.get(f"{LIGHT_DOMAIN}.test_test")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 255
 
@@ -123,7 +123,7 @@ async def test_light_with_binary_sensor(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test"},
+            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(True)
@@ -132,7 +132,7 @@ async def test_light_with_binary_sensor(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test"},
+            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(False)
@@ -149,7 +149,7 @@ async def test_remove_from_hass(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{LIGHT_DOMAIN}.test")
+    state = hass.states.get(f"{LIGHT_DOMAIN}.test_test")
     assert state is not None
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()

@@ -4,6 +4,7 @@ from aiohttp import CookieJar
 from pyanglianwater import AnglianWater
 from pyanglianwater.auth import MSOB2CAuth
 from pyanglianwater.exceptions import (
+    ConsentRequiredError,
     ExpiredAccessTokenError,
     SelfAssertedError,
     SmartMeterUnavailableError,
@@ -40,7 +41,7 @@ async def async_setup_entry(
     )
     try:
         await auth.send_refresh_request()
-    except (ExpiredAccessTokenError, SelfAssertedError) as err:
+    except (ConsentRequiredError, ExpiredAccessTokenError, SelfAssertedError) as err:
         raise ConfigEntryAuthFailed from err
 
     _aw = AnglianWater(authenticator=auth)

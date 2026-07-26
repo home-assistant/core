@@ -55,7 +55,7 @@ async def test_set_temperature(
     """Test setting temperature."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("climate.living_room_thermostat")
+    state = hass.states.get("climate.living_room_living_room_thermostat")
     assert state is not None
     assert state.attributes.get(ATTR_TEMPERATURE) == 22.0
 
@@ -63,7 +63,7 @@ async def test_set_temperature(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_TEMPERATURE: 23.5,
         },
         blocking=True,
@@ -88,7 +88,7 @@ async def test_fast_polling(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_TEMPERATURE: 23.5,
         },
         blocking=True,
@@ -138,7 +138,7 @@ async def test_set_hvac_mode_heat(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_HVAC_MODE: HVACMode.HEAT,
         },
         blocking=True,
@@ -161,7 +161,7 @@ async def test_set_hvac_mode_auto(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.bedroom_thermostat",
+            ATTR_ENTITY_ID: "climate.bedroom_bedroom_thermostat",
             ATTR_HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
@@ -184,7 +184,7 @@ async def test_set_hvac_mode_off(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_HVAC_MODE: HVACMode.OFF,
         },
         blocking=True,
@@ -207,7 +207,7 @@ async def test_set_preset_mode_comfort(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_PRESET_MODE: "comfort",
         },
         blocking=True,
@@ -230,7 +230,7 @@ async def test_set_preset_mode_defrost(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_PRESET_MODE: "defrost",
         },
         blocking=True,
@@ -253,7 +253,7 @@ async def test_set_preset_mode_timer(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_PRESET_MODE: "timer",
         },
         blocking=True,
@@ -281,7 +281,7 @@ async def test_set_preset_mode_error(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {
-                ATTR_ENTITY_ID: "climate.living_room_thermostat",
+                ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
                 ATTR_PRESET_MODE: "defrost",
             },
             blocking=True,
@@ -309,7 +309,7 @@ async def test_activate_timer_mode(
         DOMAIN,
         SERVICE_ACTIVATE_TIMER_MODE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
             ATTR_TEMPERATURE: 20.5,
             ATTR_DURATION: duration,
         },
@@ -336,7 +336,7 @@ async def test_activate_timer_mode_temperature_out_of_range(
             DOMAIN,
             SERVICE_ACTIVATE_TIMER_MODE,
             {
-                ATTR_ENTITY_ID: "climate.living_room_thermostat",
+                ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
                 ATTR_TEMPERATURE: temperature,
                 ATTR_DURATION: timedelta(minutes=90),
             },
@@ -363,7 +363,7 @@ async def test_activate_timer_mode_error(
             DOMAIN,
             SERVICE_ACTIVATE_TIMER_MODE,
             {
-                ATTR_ENTITY_ID: "climate.living_room_thermostat",
+                ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
                 ATTR_TEMPERATURE: 20.5,
                 ATTR_DURATION: timedelta(minutes=90),
             },
@@ -389,7 +389,7 @@ async def test_set_temperature_api_error(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.living_room_thermostat",
+                ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
                 ATTR_TEMPERATURE: 23.5,
             },
             blocking=True,
@@ -413,7 +413,7 @@ async def test_set_hvac_mode_value_error(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: "climate.living_room_thermostat",
+                ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
                 ATTR_HVAC_MODE: HVACMode.HEAT,
             },
             blocking=True,

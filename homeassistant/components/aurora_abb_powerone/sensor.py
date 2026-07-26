@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aurorapy.mapping import Mapping as AuroraMapping
 
@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
     EntityCategory,
     UnitOfElectricCurrent,
@@ -31,7 +32,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     ATTR_DEVICE_NAME,
     ATTR_FIRMWARE,
-    ATTR_MODEL,
     DEFAULT_DEVICE_NAME,
     DOMAIN,
     MANUFACTURER,
@@ -220,6 +220,7 @@ class AuroraSensor(CoordinatorEntity[AuroraAbbDataUpdateCoordinator], SensorEnti
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Get the value of the sensor from previously collected data."""
         return self.coordinator.data.get(self.entity_description.key)

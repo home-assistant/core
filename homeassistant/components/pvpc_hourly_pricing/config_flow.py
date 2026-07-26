@@ -1,9 +1,9 @@
 """Config flow for pvpc_hourly_pricing."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
-from aiopvpc import DEFAULT_POWER_KW, PVPCData
+from esios_api import DEFAULT_POWER_KW, PVPCData
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -50,12 +50,14 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> PVPCOptionsFlowHandler:
         """Get the options flow for this handler."""
         return PVPCOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -63,9 +65,10 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self.async_set_unique_id(user_input[ATTR_TARIFF])
             self._abort_if_unique_id_configured()
+            calc_name = f"{DEFAULT_NAME} - {user_input[ATTR_TARIFF]}"
             if not user_input[CONF_USE_API_TOKEN]:
                 return self.async_create_entry(
-                    title=DEFAULT_NAME,
+                    title=calc_name,
                     data={
                         ATTR_TARIFF: user_input[ATTR_TARIFF],
                         ATTR_POWER: user_input[ATTR_POWER],
@@ -74,7 +77,7 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-            self._name = DEFAULT_NAME
+            self._name = calc_name
             self._tariff = user_input[ATTR_TARIFF]
             self._power = user_input[ATTR_POWER]
             self._power_p3 = user_input[ATTR_POWER_P3]
@@ -150,7 +153,7 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle re-authentication with ESIOS Token."""
         self._api_token = entry_data.get(CONF_API_TOKEN)
         self._use_api_token = self._api_token is not None
-        self._name = DEFAULT_NAME
+        self._name = f"{DEFAULT_NAME} - {entry_data[ATTR_TARIFF]}"
         self._tariff = entry_data[ATTR_TARIFF]
         self._power = entry_data[ATTR_POWER]
         self._power_p3 = entry_data[ATTR_POWER_P3]

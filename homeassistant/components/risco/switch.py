@@ -1,6 +1,6 @@
 """Support for bypassing Risco alarm zones."""
 
-from typing import Any
+from typing import Any, override
 
 from pyrisco.common import Zone
 
@@ -52,14 +52,17 @@ class RiscoCloudSwitch(RiscoCloudZoneEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the zone is bypassed."""
         return self._zone.bypassed
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._bypass(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._bypass(False)
@@ -86,14 +89,17 @@ class RiscoLocalSwitch(RiscoLocalZoneEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the zone is bypassed."""
         return self._zone.bypassed
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._bypass(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._bypass(False)

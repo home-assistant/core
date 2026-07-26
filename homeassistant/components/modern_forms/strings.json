@@ -60,6 +60,14 @@
       }
     }
   },
+  "exceptions": {
+    "communication_error": {
+      "message": "Error communicating with the Modern Forms device"
+    },
+    "invalid_response": {
+      "message": "Invalid response from the Modern Forms device"
+    }
+  },
   "services": {
     "clear_fan_sleep_timer": {
       "description": "Clears the sleep timer on a Modern Forms fan.",

@@ -6,7 +6,6 @@ from typing import Any
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.humidifier.condition import CONF_MODE
 from homeassistant.components.humidifier.const import (
     ATTR_ACTION,
     ATTR_HUMIDITY,
@@ -17,6 +16,7 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITY_ID,
+    CONF_MODE,
     CONF_OPTIONS,
     CONF_TARGET,
     STATE_OFF,
@@ -29,7 +29,6 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
@@ -46,28 +45,9 @@ async def target_humidifiers(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "humidifier")
 
 
-@pytest.mark.parametrize(
-    "condition",
-    [
-        "humidifier.is_off",
-        "humidifier.is_on",
-        "humidifier.is_drying",
-        "humidifier.is_humidifying",
-        "humidifier.is_mode",
-        "humidifier.is_target_humidity",
-    ],
-)
-async def test_humidifier_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the humidifier conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
-
-
 _HUMIDITY_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -96,7 +76,6 @@ async def test_humidifier_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -139,7 +118,6 @@ async def test_humidifier_state_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -182,7 +160,6 @@ async def test_humidifier_state_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -239,7 +216,6 @@ async def test_humidifier_attribute_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -296,7 +272,6 @@ async def test_humidifier_attribute_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -333,7 +308,6 @@ async def test_humidifier_numerical_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -370,7 +344,6 @@ async def test_humidifier_numerical_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition", "condition_options", "expected_result"),
     [

@@ -33,5 +33,10 @@
         "default": "mdi:shield-lock"
       }
     }
+  },
+  "services": {
+    "play_rtttl": {
+      "service": "mdi:music-note"
+    }
   }
 }

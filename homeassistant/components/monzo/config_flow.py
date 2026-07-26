@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -25,6 +25,7 @@ class MonzoFlowHandler(
     oauth_data: dict[str, Any]
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
@@ -47,6 +48,7 @@ class MonzoFlowHandler(
             step_id="await_approval_confirmation", data_schema=data_schema
         )
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow."""
         self.oauth_data = data

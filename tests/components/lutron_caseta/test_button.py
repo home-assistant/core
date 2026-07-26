@@ -15,9 +15,9 @@ async def test_button_unique_id(
     await async_setup_integration(hass, MockBridge)
 
     ra3_button_entity_id = (
-        "button.hallway_main_stairs_position_1_keypad_kitchen_pendants"
+        "button.hallway_hallway_main_stairs_position_1_keypad_kitchen_pendants"
     )
-    caseta_button_entity_id = "button.dining_room_pico_stop"
+    caseta_button_entity_id = "button.dining_room_dining_room_pico_stop"
 
     # Assert that Caseta buttons will have the bridge serial hash
     # and the zone id as the uniqueID
@@ -32,7 +32,7 @@ async def test_button_press(hass: HomeAssistant) -> None:
     await async_setup_integration(hass, MockBridge)
 
     ra3_button_entity_id = (
-        "button.hallway_main_stairs_position_1_keypad_kitchen_pendants"
+        "button.hallway_hallway_main_stairs_position_1_keypad_kitchen_pendants"
     )
 
     state = hass.states.get(ra3_button_entity_id)

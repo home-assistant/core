@@ -1,6 +1,6 @@
 """Support for Brunt Blind Engine covers."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientResponseError
 from brunt import Thing
@@ -83,6 +83,7 @@ class BruntDevice(CoordinatorEntity[BruntCoordinator], CoverEntity):
             model=self._thing.model,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -91,6 +92,7 @@ class BruntDevice(CoordinatorEntity[BruntCoordinator], CoverEntity):
         )
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -117,16 +119,19 @@ class BruntDevice(CoordinatorEntity[BruntCoordinator], CoverEntity):
         return self.coordinator.data[self.unique_id].move_state
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self.move_state == 1
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self.move_state == 2
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the detailed device state attributes."""
         return {
@@ -134,18 +139,22 @@ class BruntDevice(CoordinatorEntity[BruntCoordinator], CoverEntity):
         }
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return true if cover is closed, else False."""
         return self.current_cover_position == CLOSED_POSITION
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Set the cover to the open position."""
         await self._async_update_cover(OPEN_POSITION)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Set the cover to the closed position."""
         await self._async_update_cover(CLOSED_POSITION)
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover to a specific position."""
         await self._async_update_cover(int(kwargs[ATTR_POSITION]))

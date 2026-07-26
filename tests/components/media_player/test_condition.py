@@ -15,7 +15,6 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
     other_states,
     parametrize_condition_states_all,
@@ -26,7 +25,7 @@ from tests.components.common import (
     target_entities,
 )
 
-# Volume is stored as 0.0–1.0 but the threshold is in percent.
+# Volume is stored as 0.0-1.0 but the threshold is in percent.
 _VOLUME_VALUE_SCALE = 0.01
 
 _IS_VOLUME_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
@@ -97,27 +96,6 @@ async def target_media_players(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 @pytest.mark.parametrize(
-    "condition",
-    [
-        "media_player.is_muted",
-        "media_player.is_off",
-        "media_player.is_on",
-        "media_player.is_not_playing",
-        "media_player.is_paused",
-        "media_player.is_playing",
-        "media_player.is_unmuted",
-        "media_player.is_volume",
-    ],
-)
-async def test_media_player_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the media player conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
         ("media_player.is_muted", {}, True, True),
@@ -147,7 +125,6 @@ async def test_media_player_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("media_player"),
@@ -230,7 +207,6 @@ async def test_media_player_state_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("media_player"),

@@ -1,7 +1,7 @@
 """Config flow to configure Met component."""
 # pylint: disable=home-assistant-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -100,6 +100,7 @@ class MetConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -140,6 +141,7 @@ class MetConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> MetOptionsFlowHandler:

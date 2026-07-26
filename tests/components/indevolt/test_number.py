@@ -9,7 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.indevolt.coordinator import SCAN_INTERVAL
-from homeassistant.components.number import SERVICE_SET_VALUE
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -82,12 +82,10 @@ async def test_number_set_values(
     # Reset mock call count for this iteration
     mock_indevolt.set_data.reset_mock()
 
-    # Update mock data to reflect the new value
-    mock_indevolt.fetch_data.return_value[read_key] = test_value
-
     # Call the service to set the value
+    fetch_count_before = mock_indevolt.fetch_data.call_count
     await hass.services.async_call(
-        Platform.NUMBER,
+        NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {"entity_id": entity_id, "value": test_value},
         blocking=True,
@@ -96,7 +94,8 @@ async def test_number_set_values(
     # Verify set_data was called with correct parameters
     mock_indevolt.set_data.assert_called_with(write_key, test_value)
 
-    # Verify updated state
+    # Verify state updated optimistically without a new fetch
+    assert mock_indevolt.fetch_data.call_count == fetch_count_before
     assert (state := hass.states.get(entity_id)) is not None
     assert int(float(state.state)) == test_value
 
@@ -116,7 +115,7 @@ async def test_number_set_value_error(
     # Attempt to set value
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            Platform.NUMBER,
+            NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {
                 "entity_id": "number.cms_sf2000_discharge_limit",

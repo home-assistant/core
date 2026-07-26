@@ -23,7 +23,7 @@ _PAYLOAD_SWITCH_SET_STATE_OFF = (
 _TOPIC_SWITCH_STATE = "cloudapp/QBUSMQTTGW/UL1/UL10/state"
 _TOPIC_SWITCH_SET_STATE = "cloudapp/QBUSMQTTGW/UL1/UL10/setState"
 
-_SWITCH_ENTITY_ID = "switch.living"
+_SWITCH_ENTITY_ID = "switch.living_living"
 
 
 async def test_switch_turn_on_off(

@@ -519,6 +519,23 @@ async def test_skip_initial_bad_packets(hass: HomeAssistant) -> None:
     assert len(decoded_stream.audio_packets) == 0
 
 
+async def test_repair_initial_keyframe_missing_dts(hass: HomeAssistant) -> None:
+    """Test a missing DTS on the initial keyframe is repaired."""
+
+    packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
+    first_packet = packets[0]
+    assert first_packet.is_keyframe
+    expected_dts = first_packet.dts
+    first_packet.dts = first_packet.pts = None
+
+    decoded_stream = await async_decode_stream(hass, packets)
+
+    assert len(decoded_stream.video_packets) == len(packets)
+    assert decoded_stream.video_packets[0].dts == expected_dts
+    assert decoded_stream.video_packets[0].pts == expected_dts
+    assert len(decoded_stream.audio_packets) == 0
+
+
 async def test_too_many_initial_bad_packets_fails(hass: HomeAssistant) -> None:
     """Test initial bad packets are too high, causing it to never start."""
 
@@ -837,7 +854,7 @@ async def test_durations(hass: HomeAssistant, worker_finished_stream) -> None:
     target_part_duration = TEST_PART_DURATION - 0.01
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -917,7 +934,7 @@ async def test_has_keyframe(
     """Test that the has_keyframe metadata matches the media."""
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -962,7 +979,7 @@ async def test_h265_video_is_hvc1(hass: HomeAssistant, worker_finished_stream) -
     """Test that a h265 video gets muxed as hvc1."""
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -1007,7 +1024,7 @@ async def test_h265_video_is_hvc1(hass: HomeAssistant, worker_finished_stream) -
 
 async def test_get_image(hass: HomeAssistant, h264_video, filename) -> None:
     """Test getting an image from the stream."""
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
 
     # Since libjpeg-turbo is not installed on the CI runner, we use a mock
     with patch(
@@ -1070,7 +1087,7 @@ async def test_worker_disable_ll_hls(hass: HomeAssistant) -> None:
 
 async def test_get_image_rotated(hass: HomeAssistant, h264_video, filename) -> None:
     """Test getting a rotated image."""
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
 
     # Since libjpeg-turbo is not installed on the CI runner, we use a mock
     with patch(

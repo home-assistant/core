@@ -39,7 +39,7 @@
 # name: test_all_entities[button.cookidoo_clear_shopping_list_and_additional_purchases-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cookidoo Clear shopping list and additional purchases',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cookidoo Clear shopping list and additional purchases',
     }),
     'context': <ANY>,
     'entity_id': 'button.cookidoo_clear_shopping_list_and_additional_purchases',

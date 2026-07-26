@@ -2,18 +2,29 @@
 
 from collections.abc import Callable
 
-from homeassistant.components.media_player import BrowseError, BrowseMedia
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    SearchMedia,
+    SearchMediaQuery,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
-from .const import DOMAIN, MEDIA_SOURCE_DATA
+from .const import DOMAIN
 from .error import UnknownMediaSource, Unresolvable
-from .models import BrowseMediaSource, MediaSourceItem, PlayMedia
+from .models import (
+    BrowseMediaSource,
+    MediaSourceItem,
+    PlayMedia,
+    RootBrowseMediaSource,
+    _async_get_media_source,
+    _async_get_media_sources,
+)
 
 
-@callback
-def _get_media_item(
+async def _get_media_item(
     hass: HomeAssistant, media_content_id: str | None, target_media_player: str | None
 ) -> MediaSourceItem:
     """Return media item."""
@@ -21,10 +32,14 @@ def _get_media_item(
         item = MediaSourceItem.from_uri(hass, media_content_id, target_media_player)
     else:
         # We default to our own domain if its only one registered
-        domain = None if len(hass.data[MEDIA_SOURCE_DATA]) > 1 else DOMAIN
+        sources = await _async_get_media_sources(hass)
+        domain = None if len(sources) > 1 else DOMAIN
         return MediaSourceItem(hass, domain, "", target_media_player)
 
-    if item.domain is not None and item.domain not in hass.data[MEDIA_SOURCE_DATA]:
+    if (
+        item.domain is not None
+        and await _async_get_media_source(hass, item.domain) is None
+    ):
         raise UnknownMediaSource(
             translation_domain=DOMAIN,
             translation_key="unknown_media_source",
@@ -39,13 +54,14 @@ async def async_browse_media(
     media_content_id: str | None,
     *,
     content_filter: Callable[[BrowseMedia], bool] | None = None,
-) -> BrowseMediaSource:
+) -> BrowseMediaSource | RootBrowseMediaSource:
     """Return media player browse media results."""
-    if DOMAIN not in hass.data:
+    if DOMAIN not in hass.config.top_level_components:
         raise BrowseError("Media Source not loaded")
 
     try:
-        item = await _get_media_item(hass, media_content_id, None).async_browse()
+        media_item = await _get_media_item(hass, media_content_id, None)
+        item = await media_item.async_browse()
     except ValueError as err:
         raise BrowseError(
             translation_domain=DOMAIN,
@@ -67,13 +83,42 @@ async def async_browse_media(
     return item
 
 
+async def async_search_media(
+    hass: HomeAssistant,
+    media_content_id: str | None,
+    query: SearchMediaQuery,
+) -> SearchMedia:
+    """Return media searched in the media source."""
+    if DOMAIN not in hass.config.top_level_components:
+        raise BrowseError("Media Source not loaded")
+
+    try:
+        media_item = await _get_media_item(hass, media_content_id, None)
+        return await media_item.async_search(query)
+    except NotImplementedError as err:
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="search_not_supported",
+            translation_placeholders={"media_content_id": str(media_content_id)},
+        ) from err
+    except ValueError as err:
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="search_media_failed",
+            translation_placeholders={
+                "media_content_id": str(media_content_id),
+                "error": str(err),
+            },
+        ) from err
+
+
 async def async_resolve_media(
     hass: HomeAssistant,
     media_content_id: str,
     target_media_player: str | None | UndefinedType = UNDEFINED,
 ) -> PlayMedia:
     """Get info to play media."""
-    if DOMAIN not in hass.data:
+    if DOMAIN not in hass.config.top_level_components:
         raise Unresolvable("Media Source not loaded")
 
     if target_media_player is UNDEFINED:
@@ -84,7 +129,7 @@ async def async_resolve_media(
         target_media_player = None
 
     try:
-        item = _get_media_item(hass, media_content_id, target_media_player)
+        item = await _get_media_item(hass, media_content_id, target_media_player)
     except ValueError as err:
         raise Unresolvable(
             translation_domain=DOMAIN,

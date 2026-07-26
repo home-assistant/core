@@ -428,6 +428,30 @@ async def test_successful_reauth(
     assert mock_config_entry.data[CONF_PIN] == "1234"
 
 
+async def test_user_device_not_found(hass: HomeAssistant) -> None:
+    """Test we handle the device not being found gracefully."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.husqvarna_automower_ble.config_flow.bluetooth.async_ble_device_from_address",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
+                CONF_PIN: "1234",
+            },
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_user_unable_to_connect(
     hass: HomeAssistant,
     mock_automower_client: Mock,

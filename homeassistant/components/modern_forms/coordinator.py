@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiomodernforms import ModernFormsDevice, ModernFormsError
 from aiomodernforms.models import Device as ModernFormsDeviceState
@@ -44,6 +45,7 @@ class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceSt
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> ModernFormsDevice:
         """Fetch data from Modern Forms."""
         try:

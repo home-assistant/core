@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 import logging
+from typing import override
 
 from pyliebherrhomeapi import (
     DeviceState,
@@ -53,28 +54,42 @@ class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
         self.client = client
         self.device_id = device_id
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator by validating device access."""
         try:
             await self.client.get_device(self.device_id)
         except LiebherrAuthenticationError as err:
-            raise ConfigEntryAuthFailed("Invalid API key") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_api_key",
+            ) from err
         except LiebherrConnectionError as err:
             raise ConfigEntryNotReady(
-                f"Failed to connect to device {self.device_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="device_connection_error",
+                translation_placeholders={"device_id": self.device_id},
             ) from err
 
+    @override
     async def _async_update_data(self) -> DeviceState:
         """Fetch data from API for this device."""
         try:
             return await self.client.get_device_state(self.device_id)
         except LiebherrAuthenticationError as err:
-            raise ConfigEntryAuthFailed("API key is no longer valid") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_expired",
+            ) from err
         except LiebherrTimeoutError as err:
             raise UpdateFailed(
-                f"Timeout communicating with device {self.device_id}"
+                translation_domain=DOMAIN,
+                translation_key="device_timeout_error",
+                translation_placeholders={"device_id": self.device_id},
             ) from err
         except LiebherrConnectionError as err:
             raise UpdateFailed(
-                f"Error communicating with device {self.device_id}"
+                translation_domain=DOMAIN,
+                translation_key="device_communication_error",
+                translation_placeholders={"device_id": self.device_id},
             ) from err

@@ -39,7 +39,7 @@
 # name: test_entities[switch][switch.peblar_ev_charger_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Peblar EV Charger Charge',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peblar EV Charger Charge',
     }),
     'context': <ANY>,
     'entity_id': 'switch.peblar_ev_charger_charge',
@@ -89,7 +89,7 @@
 # name: test_entities[switch][switch.peblar_ev_charger_force_single_phase-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Peblar EV Charger Force single phase',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peblar EV Charger Force single phase',
     }),
     'context': <ANY>,
     'entity_id': 'switch.peblar_ev_charger_force_single_phase',

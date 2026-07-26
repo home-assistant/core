@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -85,11 +85,13 @@ class AttributeSensor(WemoEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def name_suffix(self) -> str | None:
         """Return the name of the entity."""
         return self.entity_description.name
 
     @property
+    @override
     def unique_id_suffix(self) -> str | None:
         """Suffix to append to the WeMo device's unique ID."""
         return self.entity_description.unique_id_suffix
@@ -101,6 +103,7 @@ class AttributeSensor(WemoEntity, SensorEntity):
         return convert(value)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value of the device attribute."""
         return self.convert_state(getattr(self.wemo, self.entity_description.key))

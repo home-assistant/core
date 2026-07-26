@@ -9,12 +9,12 @@ from victron_mqtt.testing import create_mocked_hub
 
 from homeassistant.components.victron_gx.const import (
     CONF_INSTALLATION_ID,
-    CONF_MODEL,
     CONF_SERIAL,
     DOMAIN,
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
