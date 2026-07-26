@@ -93,8 +93,7 @@ class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @property
     def _update_status(self) -> dict[str, Any]:
         """Status of the LoRa add-on update, reported by the lora component."""
-        update = self.status.get("update")
-        return update or {}
+        return self.status.get("update") or {}
 
     @property
     @override
