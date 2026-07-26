@@ -4,6 +4,7 @@ import io
 import logging
 import os
 import subprocess
+from typing import override
 
 from PIL import Image
 import voluptuous as vol
@@ -109,6 +110,7 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         ]
         self._command.append(self.filepath)
 
+    @override
     def process_image(self, image: bytes) -> None:
         """Process the image."""
         stream = io.BytesIO(image)

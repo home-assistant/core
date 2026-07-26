@@ -113,7 +113,7 @@
             "partition_number": "Partition number"
           },
           "data_description": {
-            "arm_home_mode": "The mode in which the partition is armed when 'arm home' is used. For more information on what the differences are between them, please refer to Satel Integra manual.",
+            "arm_home_mode": "The arming mode to use for 'arm home':\nMode 1 fully arms and bypasses zones that have the 'Bypassed if no exit' option enabled.\nMode 2 disarms interior zones; exterior zones trigger silent alarms and other alarm zones trigger loud alarms.\nMode 3 is like mode 2, but delayed zones are instant.",
             "name": "The name to give to the alarm panel",
             "partition_number": "Enter partition number to configure"
           },
@@ -223,6 +223,13 @@
     }
   },
   "selector": {
+    "arm_home_mode": {
+      "options": {
+        "1": "1 - Full arming + bypasses",
+        "2": "2 - No interior zones",
+        "3": "3 - No interior zones or entry delay"
+      }
+    },
     "binary_sensor_device_class": {
       "options": {
         "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",

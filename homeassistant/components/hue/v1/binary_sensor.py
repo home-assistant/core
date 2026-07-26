@@ -1,6 +1,6 @@
 """Hue binary sensor entities."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohue.v1.sensors import TYPE_ZLL_PRESENCE
 
@@ -40,11 +40,13 @@ class HuePresence(GenericZLLSensor, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.sensor.presence
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attributes = super().extra_state_attributes

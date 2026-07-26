@@ -1,7 +1,7 @@
 """Support for RFXtrx sensors."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from RFXtrx import ControlEvent, RFXtrxDevice, RFXtrxEvent, SensorEvent
 
@@ -82,6 +82,7 @@ class RfxtrxEventEntity(RfxtrxEntity, EventEntity):
         self._value_attribute = value_attribute
 
     @callback
+    @override
     def _handle_event(self, event: RFXtrxEvent, device_id: DeviceTuple) -> None:
         """Check if event applies to me and update."""
         if not self._event_applies(event, device_id):

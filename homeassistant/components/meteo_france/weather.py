@@ -2,6 +2,7 @@
 
 import logging
 import time
+from typing import override
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -105,6 +106,7 @@ class MeteoFranceWeather(
         self._attr_unique_id = f"{pos['lat']},{pos['lon']}"
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         super()._handle_coordinator_update()
@@ -114,6 +116,7 @@ class MeteoFranceWeather(
         )
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         assert self.platform.config_entry and self.platform.config_entry.unique_id
@@ -126,6 +129,7 @@ class MeteoFranceWeather(
         )
 
     @property
+    @override
     def condition(self) -> str:
         """Return the current condition."""
         return format_condition(
@@ -133,31 +137,37 @@ class MeteoFranceWeather(
         )
 
     @property
+    @override
     def native_temperature(self) -> float:
         """Return the temperature."""
         return self.coordinator.data.current_forecast["T"]["value"]
 
     @property
+    @override
     def native_pressure(self) -> float:
         """Return the pressure."""
         return self.coordinator.data.current_forecast["sea_level"]
 
     @property
+    @override
     def humidity(self) -> float:
         """Return the humidity."""
         return self.coordinator.data.current_forecast["humidity"]
 
     @property
+    @override
     def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return self.coordinator.data.current_forecast["wind"]["speed"]
 
     @property
+    @override
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed."""
         return self.coordinator.data.current_forecast["wind"].get("gust")
 
     @property
+    @override
     def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         wind_bearing = self.coordinator.data.current_forecast["wind"]["direction"]
@@ -219,10 +229,12 @@ class MeteoFranceWeather(
                 )
         return forecast_data
 
+    @override
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         return self._forecast(FORECAST_MODE_DAILY)
 
+    @override
     async def async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast in native units."""
         return self._forecast(FORECAST_MODE_HOURLY)

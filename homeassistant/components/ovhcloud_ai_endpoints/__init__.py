@@ -1,6 +1,12 @@
 """The OVHcloud AI Endpoints integration."""
 
-from openai import AsyncOpenAI, AuthenticationError, BadRequestError, OpenAIError
+from openai import (
+    AsyncOpenAI,
+    AuthenticationError,
+    BadRequestError,
+    OpenAIError,
+    PermissionDeniedError,
+)
 from openai.types.chat import ChatCompletionUserMessageParam
 
 from homeassistant.config_entries import ConfigEntry
@@ -52,7 +58,7 @@ async def async_setup_entry(
 
     try:
         await _validate_api_key(client)
-    except AuthenticationError as err:
+    except (AuthenticationError, PermissionDeniedError) as err:
         raise ConfigEntryAuthFailed(err) from err
     except OpenAIError as err:
         raise ConfigEntryNotReady(err) from err

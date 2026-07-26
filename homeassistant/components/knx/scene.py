@@ -1,6 +1,6 @@
 """Support for KNX scene entities."""
 
-from typing import Any
+from typing import Any, override
 
 from xknx.devices import Device as XknxDevice, Scene as XknxScene
 
@@ -64,10 +64,12 @@ class _KnxScene(BaseScene, _KnxEntityBase):
 
     _device: XknxScene
 
+    @override
     async def _async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         await self._device.run()
 
+    @override
     def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         self._async_record_activation()

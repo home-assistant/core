@@ -1,4 +1,5 @@
 """Central manager for tracking devices with random but resolvable MAC addresses."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from collections.abc import Callable
 import logging

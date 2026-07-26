@@ -9,6 +9,7 @@ from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
+    LockState,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -89,7 +90,7 @@ async def test_updating_state(
 
     state = hass.states.get("lock.front_door_lock")
     assert state is not None
-    assert state.state == "locked"
+    assert state.state == LockState.LOCKED.value
 
     mock_websocket.call_args[1]["on_device_status"](
         "dev_lock_001",
@@ -99,7 +100,8 @@ async def test_updating_state(
             "battery": 80,
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.front_door_lock")
     assert state is not None
-    assert state.state == "unlocked"
+    assert state.state == LockState.UNLOCKED.value

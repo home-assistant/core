@@ -8,7 +8,7 @@ import logging
 import math
 import statistics
 import time
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -24,14 +24,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -783,6 +782,7 @@ class StatisticsSensor(SensorEntity):
             )
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await self._async_stats_sensor_startup()
@@ -840,7 +840,9 @@ class StatisticsSensor(SensorEntity):
         state characteristics.
         """
 
-        base_unit: str | None = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        base_unit: str | None = new_state.attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        )
         unit: str | None = None
         stat_type = self._state_characteristic
         if self.is_binary and stat_type in STATS_BINARY_PERCENTAGE:
@@ -879,7 +881,7 @@ class StatisticsSensor(SensorEntity):
         if stat_type in STATS_DATETIME:
             return SensorDeviceClass.TIMESTAMP
         if stat_type in STATS_NUMERIC_RETAIN_UNIT:
-            device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
+            device_class = new_state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
             if device_class is None:
                 return None
             if (

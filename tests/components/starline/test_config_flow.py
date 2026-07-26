@@ -3,7 +3,7 @@
 import requests_mock
 
 from homeassistant import config_entries
-from homeassistant.components.starline import config_flow
+from homeassistant.components.starline import DOMAIN, config_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -54,7 +54,7 @@ async def test_flow_works(hass: HomeAssistant) -> None:
         )
 
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth_app"
@@ -87,7 +87,7 @@ async def test_step_auth_app_code_falls(hass: HomeAssistant) -> None:
             "https://id.starline.ru/apiV3/application/getCode/", text='{"state": 0}}'
         )
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
+            DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={
                 config_flow.CONF_APP_ID: TEST_APP_ID,
@@ -110,7 +110,7 @@ async def test_step_auth_app_token_falls(hass: HomeAssistant) -> None:
             "https://id.starline.ru/apiV3/application/getToken/", text='{"state": 0}'
         )
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
+            DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={
                 config_flow.CONF_APP_ID: TEST_APP_ID,

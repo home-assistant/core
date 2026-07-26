@@ -4,6 +4,12 @@
       "discussions_count": {
         "default": "mdi:forum"
       },
+      "followers": {
+        "default": "mdi:account-multiple"
+      },
+      "following": {
+        "default": "mdi:account-multiple-outline"
+      },
       "forks_count": {
         "default": "mdi:source-fork"
       },
@@ -30,6 +36,12 @@
       },
       "merged_pulls_count": {
         "default": "mdi:source-merge"
+      },
+      "public_gists": {
+        "default": "mdi:code-json"
+      },
+      "public_repos": {
+        "default": "mdi:source-repository"
       },
       "pulls_count": {
         "default": "mdi:source-pull"

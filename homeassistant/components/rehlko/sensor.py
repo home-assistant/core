@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -257,6 +258,7 @@ class RehlkoSensorEntity(RehlkoEntity, SensorEntity):
     entity_description: RehlkoSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the sensor state."""
         if self.entity_description.value_fn:

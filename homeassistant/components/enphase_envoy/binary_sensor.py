@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from operator import attrgetter
+from typing import override
 
 from pyenphase import EnvoyC6CC, EnvoyCollar, EnvoyEncharge, EnvoyEnpower
 
@@ -176,6 +177,7 @@ class EnvoyEnchargeBinarySensorEntity(EnvoyBaseBinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the Encharge binary_sensor."""
         encharge_inventory = self.data.encharge_inventory
@@ -209,6 +211,7 @@ class EnvoyEnpowerBinarySensorEntity(EnvoyBaseBinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the Enpower binary_sensor."""
         enpower = self.data.enpower
@@ -242,6 +245,7 @@ class EnvoyCollarBinarySensorEntity(EnvoyBaseBinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the Collar binary_sensor."""
         collar_data = self.data.collar
@@ -275,6 +279,7 @@ class EnvoyC6CCBinarySensorEntity(EnvoyBaseBinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the C6 Combiner binary_sensor."""
         c6cc_data = self.data.c6cc

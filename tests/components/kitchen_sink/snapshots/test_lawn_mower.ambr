@@ -3,8 +3,8 @@
   set({
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Mower can do all',
-        'supported_features': <LawnMowerEntityFeature: 7>,
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mower can do all',
+        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LawnMowerEntityFeature: 7>,
       }),
       'context': <ANY>,
       'entity_id': 'lawn_mower.mower_can_do_all',
@@ -15,8 +15,8 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Mower can dock',
-        'supported_features': <LawnMowerEntityFeature: 5>,
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mower can dock',
+        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LawnMowerEntityFeature: 5>,
       }),
       'context': <ANY>,
       'entity_id': 'lawn_mower.mower_can_dock',
@@ -27,8 +27,8 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Mower can mow',
-        'supported_features': <LawnMowerEntityFeature: 1>,
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mower can mow',
+        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LawnMowerEntityFeature: 1>,
       }),
       'context': <ANY>,
       'entity_id': 'lawn_mower.mower_can_mow',
@@ -39,8 +39,8 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Mower can pause',
-        'supported_features': <LawnMowerEntityFeature: 3>,
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mower can pause',
+        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LawnMowerEntityFeature: 3>,
       }),
       'context': <ANY>,
       'entity_id': 'lawn_mower.mower_can_pause',
@@ -51,8 +51,8 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Mower can return',
-        'supported_features': <LawnMowerEntityFeature: 7>,
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mower can return',
+        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LawnMowerEntityFeature: 7>,
       }),
       'context': <ANY>,
       'entity_id': 'lawn_mower.mower_can_return',
@@ -63,8 +63,8 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Mower is paused',
-        'supported_features': <LawnMowerEntityFeature: 7>,
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mower is paused',
+        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LawnMowerEntityFeature: 7>,
       }),
       'context': <ANY>,
       'entity_id': 'lawn_mower.mower_is_paused',

@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 from loqedAPI import loqed
+import pytest
 
 from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -214,3 +215,22 @@ async def test_unload_entry_fails(
     lock.deleteWebhook = AsyncMock(side_effect=Exception)
 
     assert not await hass.config_entries.async_unload(integration.entry_id)
+
+
+@pytest.mark.parametrize("error", [aiohttp.ClientError, TimeoutError])
+async def test_unload_entry_with_unreachable_bridge(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    lock: loqed.Lock,
+    error: type[Exception],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test entry still unloads when the bridge is unreachable."""
+    lock.getWebhooks = AsyncMock(side_effect=error)
+
+    assert await hass.config_entries.async_unload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert integration.state is ConfigEntryState.NOT_LOADED
+    assert not hass.data.get(DOMAIN)
+    assert "Could not remove webhook from LOQED bridge" in caplog.text

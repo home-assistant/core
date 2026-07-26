@@ -1,6 +1,6 @@
 """Scene Platform for Niko Home Control."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.scene import BaseScene
 from homeassistant.core import HomeAssistant
@@ -29,10 +29,12 @@ class NikoHomeControlScene(NikoHomeControlEntity, BaseScene):
 
     _attr_name = None
 
+    @override
     async def _async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         await self._action.activate()
 
+    @override
     def update_state(self) -> None:
         """Update HA state."""
         self._async_record_activation()

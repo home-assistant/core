@@ -40,9 +40,9 @@
 # name: test_all_entities[media_player.echo_test-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speaker',
-      'friendly_name': 'Echo Test',
-      'supported_features': <MediaPlayerEntityFeature: 5644>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Echo Test',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 5644>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.echo_test',

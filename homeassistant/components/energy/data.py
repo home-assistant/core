@@ -3,7 +3,7 @@
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict, override
 
 import voluptuous as vol
 
@@ -698,6 +698,7 @@ def _is_legacy_grid_format(source: dict[str, Any]) -> bool:
 class _EnergyPreferencesStore(storage.Store[EnergyPreferences]):
     """Energy preferences store with migration support."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,

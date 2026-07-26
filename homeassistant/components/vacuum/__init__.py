@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -34,7 +34,14 @@ from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_COMPONENT, DOMAIN, VacuumActivity, VacuumEntityFeature
+from .const import (
+    DATA_COMPONENT,
+    DOMAIN,
+    VacuumActivity,
+    VacuumEntityCapabilityAttribute,
+    VacuumEntityFeature,
+    VacuumEntityStateAttribute,
+)
 from .websocket import async_register_websocket_handlers
 
 _LOGGER = logging.getLogger(__name__)
@@ -181,7 +188,9 @@ class StateVacuumEntity(
 
     entity_description: StateVacuumEntityDescription
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_FAN_SPEED_LIST})
+    _entity_component_unrecorded_attributes = frozenset(
+        {VacuumEntityCapabilityAttribute.FAN_SPEED_LIST}
+    )
 
     _attr_battery_icon: str
     _attr_battery_level: int | None = None
@@ -197,6 +206,7 @@ class StateVacuumEntity(
     __vacuum_legacy_battery_icon: bool = False
     __vacuum_legacy_battery_feature: bool = False
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
@@ -212,6 +222,7 @@ class StateVacuumEntity(
             # Integrations should use a separate battery sensor.
             cls.__vacuum_legacy_battery_icon = True
 
+    @override
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute.
 
@@ -223,6 +234,7 @@ class StateVacuumEntity(
         return super().__setattr__(name, value)
 
     @callback
+    @override
     def add_to_platform_start(
         self,
         hass: HomeAssistant,
@@ -237,6 +249,7 @@ class StateVacuumEntity(
             self._report_deprecated_battery_properties("battery_icon")
 
     @callback
+    @override
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         self._async_check_segments_issues()
@@ -305,10 +318,11 @@ class StateVacuumEntity(
         )
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
         if VacuumEntityFeature.FAN_SPEED in self.supported_features:
-            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
+            return {VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: self.fan_speed_list}
         return None
 
     @cached_property
@@ -322,6 +336,7 @@ class StateVacuumEntity(
         return self._attr_fan_speed_list
 
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
         data: dict[str, Any] = {}
@@ -335,12 +350,13 @@ class StateVacuumEntity(
             data[ATTR_BATTERY_ICON] = self.battery_icon
 
         if VacuumEntityFeature.FAN_SPEED in supported_features:
-            data[ATTR_FAN_SPEED] = self.fan_speed
+            data[VacuumEntityStateAttribute.FAN_SPEED] = self.fan_speed
 
         return data
 
     @final
     @property
+    @override
     def state(self) -> str | None:
         """Return the state of the vacuum cleaner."""
         if (activity := self.activity) is not None:
@@ -357,6 +373,7 @@ class StateVacuumEntity(
         return self._attr_activity
 
     @cached_property
+    @override
     def supported_features(self) -> VacuumEntityFeature:
         """Flag vacuum cleaner features that are supported."""
         return self._attr_supported_features

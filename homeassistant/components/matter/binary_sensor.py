@@ -1,7 +1,7 @@
 """Matter binary sensors."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import uint
@@ -45,6 +45,7 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
     entity_description: MatterBinarySensorEntityDescription
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value: bool | uint | int | Nullable | None
@@ -555,5 +556,49 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.Thermostat.Attributes.RemoteSensing,),
         featuremap_contains=clusters.Thermostat.Bitmaps.Feature.kOccupancy,
         allow_multi=True,
+    ),
+    # GeneralDiagnostics active fault sensors
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="GeneralDiagnosticsActiveHardwareFaults",
+            translation_key="active_hardware_faults",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            device_to_ha=bool,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(
+            clusters.GeneralDiagnostics.Attributes.ActiveHardwareFaults,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="GeneralDiagnosticsActiveRadioFaults",
+            translation_key="active_radio_faults",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            device_to_ha=bool,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.GeneralDiagnostics.Attributes.ActiveRadioFaults,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="GeneralDiagnosticsActiveNetworkFaults",
+            translation_key="active_network_faults",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            device_to_ha=bool,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(
+            clusters.GeneralDiagnostics.Attributes.ActiveNetworkFaults,
+        ),
     ),
 ]

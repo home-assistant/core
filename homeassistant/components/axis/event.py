@@ -1,6 +1,7 @@
 """Support for Axis event entities."""
 
 from dataclasses import dataclass
+from typing import override
 
 from axis.models.event import Event, EventTopic
 
@@ -53,6 +54,7 @@ class AxisEvent(AxisEventEntity, EventEntity):
     entity_description: AxisEventPlatformDescription
 
     @callback
+    @override
     def async_event_callback(self, event: Event) -> None:
         """Handle Axis event updates."""
         if event.is_tripped:

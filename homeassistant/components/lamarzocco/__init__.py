@@ -217,9 +217,6 @@ async def async_migrate_entry(
     hass: HomeAssistant, entry: LaMarzoccoConfigEntry
 ) -> bool:
     """Migrate config entry."""
-    if entry.version > 4:
-        # guard against downgrade from a future version
-        return False
 
     if entry.version in (1, 2):
         _LOGGER.error(

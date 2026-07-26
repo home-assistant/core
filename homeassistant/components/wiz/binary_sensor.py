@@ -1,6 +1,7 @@
 """WiZ integration binary sensor platform."""
 
 from collections.abc import Callable
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -69,6 +70,7 @@ class WizOccupancyEntity(WizEntity, BinarySensorEntity):
         self._async_update_attrs()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         if self._device.state.get_source() in OCCUPANCY_SOURCES:

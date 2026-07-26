@@ -1,8 +1,9 @@
 """The Portainer integration."""
 
+from datetime import timedelta
 import logging
 
-from pyportainer import Portainer
+from pyportainer import Portainer, PortainerImageWatcher
 from pyportainer.exceptions import PortainerError
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,9 +13,10 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_URL,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
@@ -32,6 +34,7 @@ _PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -55,15 +58,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         request_timeout=10,
         max_retries=API_MAX_RETRIES,
     )
+    watcher = PortainerImageWatcher(client, interval=timedelta(hours=24))
 
     coordinator = PortainerCoordinator(hass, entry, client)
+    coordinator.watcher = watcher
     await coordinator.async_config_entry_first_refresh()
 
     docker_system_df_client = Portainer(
         api_url=entry.data[CONF_URL],
         api_key=entry.data[CONF_API_TOKEN],
         session=session,
-        request_timeout=60,
+        request_timeout=120,
         max_retries=API_MAX_RETRIES,
     )
 
@@ -85,6 +90,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+
+    @callback
+    def _start_watcher(_hass: HomeAssistant) -> None:
+        """Start the image watcher in the event loop."""
+        watcher.start()
+
+    @callback
+    def _stop_watcher(_event: Event) -> None:
+        """Stop the image watcher in the event loop."""
+        watcher.stop()
+
+    entry.async_on_unload(async_at_started(hass, _start_watcher))
+    entry.async_on_unload(watcher.stop)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_watcher)
+    )
 
     return True
 

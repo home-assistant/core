@@ -160,6 +160,15 @@
       },
       "name": "Timer paused"
     },
+    "remaining_time_reached": {
+      "description": "Triggers when one or more timers reach a specific remaining time.",
+      "fields": {
+        "remaining": {
+          "name": "Time remaining"
+        }
+      },
+      "name": "Timer remaining time reached"
+    },
     "restarted": {
       "description": "Triggers when one or more timers are restarted.",
       "fields": {
@@ -183,15 +192,6 @@
         }
       },
       "name": "Timer started"
-    },
-    "time_remaining": {
-      "description": "Triggers when one or more timers reach a specific remaining time.",
-      "fields": {
-        "remaining": {
-          "name": "Time remaining"
-        }
-      },
-      "name": "Timer time remaining"
     }
   }
 }

@@ -1,7 +1,7 @@
 """Definition of Picnic shopping cart."""
 
 import logging
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -56,6 +56,7 @@ class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
         self._attr_unique_id = f"{config_entry.unique_id}-cart"
 
     @property
+    @override
     def todo_items(self) -> list[TodoItem] | None:
         """Get the current set of items in cart items."""
         if self.coordinator.data is None:
@@ -74,6 +75,7 @@ class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
             for article in item["items"]
         ]
 
+    @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add item to shopping cart."""
         product_id = await self.hass.async_add_executor_job(

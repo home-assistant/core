@@ -1,6 +1,7 @@
 """Base class for a device entity integrated in devolo Home Control."""
 
 import logging
+from typing import override
 from urllib.parse import urlparse
 
 from devolo_home_control_api.devices.zwave import Zwave
@@ -49,6 +50,7 @@ class DevoloDeviceEntity(Entity):
 
         self._value: float
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         assert self.device_info
@@ -60,6 +62,7 @@ class DevoloDeviceEntity(Entity):
             self._device_instance.uid, self.subscriber, self.sync_callback
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity is removed or disabled."""
         self._homecontrol.publisher.unregister(
@@ -100,16 +103,8 @@ class DevoloDeviceEntity(Entity):
                     ].name,
                 )
             self._attr_available = state
-        elif message[1] == "del" and self.platform.config_entry:
-            device_registry = dr.async_get(self.hass)
-            device = device_registry.async_get_device(
-                identifiers={(DOMAIN, self._device_instance.uid)}
-            )
-            if device:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=self.platform.config_entry.entry_id,
-                )
+        elif message[1] == "del" and self.device_entry:
+            dr.async_get(self.hass).async_remove_device(self.device_entry.id)
         else:
             _LOGGER.debug("No valid message received: %s", message)
 
