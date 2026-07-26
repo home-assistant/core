@@ -1039,7 +1039,7 @@ async def test_user_flow_v3_cannot_connect(hass: HomeAssistant) -> None:
 
 
 async def test_import_flow_with_port_and_context_name(hass: HomeAssistant) -> None:
-    """Test import flow unique_id includes port and context_name."""
+    """Test import flow with port and context_name."""
     with patch("homeassistant.components.snmp.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -1056,4 +1056,8 @@ async def test_import_flow_with_port_and_context_name(hass: HomeAssistant) -> No
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     entry = result["result"]
-    assert entry.unique_id == "192.168.1.1_1161_1.3.6.1.4.1.2021.10.1.3.1_vlan100"
+    assert entry.unique_id is None
+    assert entry.data["host"] == "192.168.1.1"
+    assert entry.data["port"] == 1161
+    assert entry.data["baseoid"] == "1.3.6.1.4.1.2021.10.1.3.1"
+    assert entry.data["context_name"] == "vlan100"

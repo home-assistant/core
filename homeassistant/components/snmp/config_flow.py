@@ -242,7 +242,9 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from the old YAML configuration file."""
-        await self._async_check_unique_id(user_input)
+        self._async_abort_entries_match(
+            {CONF_HOST: user_input[CONF_HOST], CONF_BASEOID: user_input[CONF_BASEOID]}
+        )
 
         # Filter to only include keys that are relevant to SNMP config entries.
         # The legacy platform schema adds extra keys (platform, consider_home,
@@ -266,7 +268,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass,
             HOMEASSISTANT_DOMAIN,
             f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2026.12.0",
+            breaks_in_ha_version="2027.2.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
@@ -279,23 +281,15 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=clean_data[CONF_HOST], data=clean_data)
 
-    async def _async_check_unique_id(self, user_input: dict[str, Any]) -> None:
-        """Set the unique ID and abort if already configured."""
-        port = user_input.get(CONF_PORT, DEFAULT_PORT)
-        context_name = user_input.get(CONF_CONTEXT_NAME)
-        unique_id = f"{user_input[CONF_HOST]}_{port}_{user_input[CONF_BASEOID]}"
-        if context_name:
-            unique_id = f"{unique_id}_{context_name}"
-        await self.async_set_unique_id(unique_id)  # pylint: disable=home-assistant-unique-id-ip-based
-        self._abort_if_unique_id_configured()
-
     async def _async_validate_and_create_entry(
         self,
         data: dict[str, Any],
         errors: dict[str, str],
     ) -> ConfigFlowResult | None:
         """Validate input and create entry."""
-        await self._async_check_unique_id(data)
+        self._async_abort_entries_match(
+            {CONF_HOST: data[CONF_HOST], CONF_BASEOID: data[CONF_BASEOID]}
+        )
         try:
             await validate_input(self.hass, data)
         except SnmpTimeout:
