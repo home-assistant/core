@@ -63,7 +63,7 @@ CAMERA_ENTITIES = (
         key="ext",
         stream="ext",
         translation_key="ext",
-        supported=lambda api, ch: api.protocol in ["rtmp", "flv"],
+        supported=lambda api, ch: api.supported(ch, "ext_stream"),
         entity_registry_enabled_default=False,
     ),
     ReolinkCameraEntityDescription(
