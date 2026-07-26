@@ -12,8 +12,14 @@
       "sourceGroups": ["Weather"]
     },
     "values": [
-      { "timestampUTC": "2026-06-12T07:55:00Z", "value": 17.9 },
-      { "timestampUTC": "2026-06-12T08:00:00Z", "value": 18.203125 }
+      {
+        "timestampUTC": "2026-06-12T07:55:00Z",
+        "value": 17.9
+      },
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 18.203125
+      }
     ]
   },
   {
@@ -29,7 +35,10 @@
       "sourceGroups": ["Weather"]
     },
     "values": [
-      { "timestampUTC": "2026-06-12T08:00:00Z", "value": 90.15303039550781 }
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 90.15303039550781
+      }
     ]
   },
   {
@@ -44,7 +53,12 @@
       "userDefinedName": "Weerstation ",
       "sourceGroups": ["Weather"]
     },
-    "values": [{ "timestampUTC": "2026-06-12T08:00:00Z", "value": 3.5 }]
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 3.5
+      }
+    ]
   },
   {
     "name": "Cardinal wind direction (Weerstation )",
@@ -58,7 +72,12 @@
       "userDefinedName": "Weerstation ",
       "sourceGroups": ["Weather"]
     },
-    "values": [{ "timestampUTC": "2026-06-12T08:00:00Z", "value": 8783 }]
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 8783
+      }
+    ]
   },
   {
     "name": "Sunrise today (Weerstation )",
@@ -72,7 +91,12 @@
       "userDefinedName": "Weerstation ",
       "sourceGroups": ["Weather"]
     },
-    "values": [{ "timestampUTC": "2026-06-12T08:00:00Z", "value": 19145 }]
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 19145
+      }
+    ]
   },
   {
     "name": "Absolute humidity (Weerstation )",
@@ -86,7 +110,12 @@
       "userDefinedName": "Weerstation ",
       "sourceGroups": ["Weather"]
     },
-    "values": [{ "timestampUTC": "2026-06-12T08:00:00Z", "value": 9.4 }]
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 9.4
+      }
+    ]
   },
   {
     "name": "Weather status (Weerstation )",
@@ -100,7 +129,12 @@
       "userDefinedName": "Weerstation ",
       "sourceGroups": ["Weather"]
     },
-    "values": [{ "timestampUTC": "2026-06-12T08:00:00Z", "value": 8789 }]
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 8789
+      }
+    ]
   },
   {
     "name": "Gas consumption today",
@@ -114,7 +148,31 @@
       "userDefinedName": null,
       "sourceGroups": ["Energy"]
     },
-    "values": [{ "timestampUTC": "2026-06-12T08:00:00Z", "value": 42.5 }]
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 42.5
+      }
+    ]
+  },
+  {
+    "name": "Gas consumption total",
+    "readoutIdentifier": "GasConsumptionTotal-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "CubicMeter",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Gas meter 001",
+      "sourceType": "GasMeter",
+      "userDefinedName": null,
+      "sourceGroups": ["Energy"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 128341.0
+      }
+    ]
   },
   {
     "name": "Energy consumption today",
@@ -128,7 +186,12 @@
       "userDefinedName": null,
       "sourceGroups": ["Energy"]
     },
-    "values": [{ "timestampUTC": "2026-06-12T08:00:00Z", "value": 128.25 }]
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 128.25
+      }
+    ]
   },
   {
     "name": "Screen position (OV1 Tropen)",
@@ -142,7 +205,12 @@
       "userDefinedName": "OV1 Tropen",
       "sourceGroups": ["Climate"]
     },
-    "values": [{ "timestampUTC": "2026-06-12T08:00:00Z", "value": 62.5 }]
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 62.5
+      }
+    ]
   },
   {
     "name": "Screen status (OV1 Tropen)",
@@ -156,7 +224,12 @@
       "userDefinedName": "OV1 Tropen",
       "sourceGroups": ["Climate"]
     },
-    "values": [{ "timestampUTC": "2026-06-12T08:00:00Z", "value": "Closing" }]
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": "Closing"
+      }
+    ]
   },
   {
     "name": "Vent position leeward side (OV1 Tropen)",
@@ -170,7 +243,12 @@
       "userDefinedName": "OV1 Tropen",
       "sourceGroups": ["Climate"]
     },
-    "values": [{ "timestampUTC": "2026-06-12T08:00:00Z", "value": 12.0 }]
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 12.0
+      }
+    ]
   },
   {
     "name": "Maximum pipe temperature (OV1 Tropen)",
@@ -184,7 +262,12 @@
       "userDefinedName": "OV1 Tropen",
       "sourceGroups": ["Climate"]
     },
-    "values": [{ "timestampUTC": "2026-06-12T08:00:00Z", "value": 35.0 }]
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 35.0
+      }
+    ]
   },
   {
     "name": "Irrigation volume",
@@ -198,7 +281,12 @@
       "userDefinedName": null,
       "sourceGroups": ["Irrigation"]
     },
-    "values": [{ "timestampUTC": "2026-06-12T08:00:00Z", "value": 1.75 }]
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 1.75
+      }
+    ]
   },
   {
     "name": "Substrate conductivity",
@@ -212,6 +300,11 @@
       "userDefinedName": null,
       "sourceGroups": ["Irrigation"]
     },
-    "values": [{ "timestampUTC": "2026-06-12T08:00:00Z", "value": 2.4 }]
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 2.4
+      }
+    ]
   }
 ]

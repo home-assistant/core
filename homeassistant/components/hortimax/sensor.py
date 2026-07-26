@@ -113,13 +113,16 @@ def _describe(
             ):
                 device_class = SensorDeviceClass.GAS
 
-    # Daily consumption counters reset at midnight, which TOTAL_INCREASING
-    # handles, and which the energy dashboard needs.
-    if "consumptiontoday" in identifier and device_class in (
-        SensorDeviceClass.ENERGY,
-        SensorDeviceClass.GAS,
-    ):
-        state_class = SensorStateClass.TOTAL_INCREASING
+    state_class: SensorStateClass | None
+    if device_class in (SensorDeviceClass.ENERGY, SensorDeviceClass.GAS):
+        # Core rejects MEASUREMENT for these. Daily counters reset at midnight,
+        # which TOTAL_INCREASING handles and the energy dashboard needs; any
+        # other meter readout has unknown cumulative semantics.
+        state_class = (
+            SensorStateClass.TOTAL_INCREASING
+            if "consumptiontoday" in identifier
+            else None
+        )
     else:
         state_class = SensorStateClass.MEASUREMENT
 
