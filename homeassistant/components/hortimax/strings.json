@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unique_id_mismatch": "The API key belongs to a different HortOS organisation than the one configured here"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -12,16 +10,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "[%key:component::hortimax::config::step::user::data_description::api_key%]"
-        },
-        "description": "The API key was rejected. Enter a valid API key.",
-        "title": "Re-authenticate with Ridder HortOS"
-      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",

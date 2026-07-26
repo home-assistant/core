@@ -42,28 +42,25 @@ async def test_connection_error_retries(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_auth_error_starts_reauth(
+async def test_auth_error_sets_error_state(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hortos_client: AsyncMock,
 ) -> None:
-    """Test a rejected API key starts a re-authentication flow."""
+    """Test a rejected API key leaves the entry in an error state."""
     mock_hortos_client.get_devices.side_effect = HortosAuthenticationError("nope")
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == "reauth"
 
 
-async def test_readout_auth_error_starts_reauth(
+async def test_readout_auth_error_sets_error_state(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hortos_client: AsyncMock,
 ) -> None:
-    """Test a key rejected while reading values also triggers reauth."""
+    """Test a key rejected while reading values also errors the entry."""
     mock_hortos_client.get_latest_readouts.side_effect = HortosAuthenticationError(
         "nope"
     )
