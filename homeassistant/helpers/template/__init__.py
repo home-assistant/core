@@ -249,7 +249,7 @@ def _parse_result(render_result: str) -> Any:
     path, which handles the edge cases ("", ".", "+") identically.
     """
     if _IS_NUMERIC.match(render_result):
-        if "." in render_result:
+        if "." in render_result or "e" in render_result.lower():
             try:
                 return float(render_result)
             except ValueError:

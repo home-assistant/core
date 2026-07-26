@@ -893,6 +893,7 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         ('{{ "{{}}" }}', "{{}}"),
         ("not-something", "not-something"),
         ("2a", "2a"),
+        ("1e3", 1000.0),
         ("123E5", 12300000.0),
         ("1e+100", 1e100),
         ("1j", "1j"),
