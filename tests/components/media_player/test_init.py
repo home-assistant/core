@@ -321,6 +321,7 @@ async def test_media_browse(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "children_media_class": None,
         "thumbnail": None,
         "not_shown": 0,
@@ -346,6 +347,44 @@ async def test_media_browse(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {"bla": "yo"}
+
+
+async def test_media_browse_search_media_classes(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test browse media exposes the searchable media classes of a node."""
+    await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.demo.media_player.DemoBrowsePlayer.async_browse_media",
+        return_value=BrowseMedia(
+            media_class=MediaClass.DIRECTORY,
+            media_content_id="mock-id",
+            media_content_type="mock-type",
+            title="Mock Title",
+            can_play=False,
+            can_expand=True,
+            can_search=True,
+            search_media_classes=[MediaClass.ALBUM, MediaClass.ARTIST],
+        ),
+    ):
+        await client.send_json(
+            {
+                "id": 8,
+                "type": "media_player/browse_media",
+                "entity_id": "media_player.browse",
+            }
+        )
+
+        msg = await client.receive_json()
+
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"]["can_search"] is True
+    assert msg["result"]["search_media_classes"] == ["album", "artist"]
 
 
 async def test_media_browse_service(hass: HomeAssistant) -> None:
@@ -466,6 +505,7 @@ async def test_media_search(
             "can_play": False,
             "can_expand": True,
             "can_search": False,
+            "search_media_classes": None,
             "thumbnail": None,
             "not_shown": 0,
             "children": [],

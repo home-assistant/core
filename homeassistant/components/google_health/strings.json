@@ -18,7 +18,9 @@
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "wrong_account": "Wrong account: Please authenticate with the right account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -46,6 +48,21 @@
       },
       "resting_heart_rate": {
         "name": "Resting heart rate"
+      },
+      "sleep_after_wakeup": {
+        "name": "Time after waking up"
+      },
+      "sleep_asleep": {
+        "name": "Time asleep"
+      },
+      "sleep_awake": {
+        "name": "Time awake"
+      },
+      "sleep_in_bed": {
+        "name": "Time in bed"
+      },
+      "sleep_to_fall_asleep": {
+        "name": "Time to fall asleep"
       },
       "steps": {
         "name": "Steps",

@@ -624,20 +624,38 @@ class Thermostat(ClimateEntity):
 
     @override
     def set_fan_mode(self, fan_mode: str) -> None:
-        """Set the fan mode.  Valid values are "on" or "auto"."""
+        """Set the fan mode.  Valid values are "on" or "auto".
+
+        Ecobee's setHold accepts a fan-only payload (HTTP 200) but does not
+        actually change desiredFanMode unless heatHoldTemp/coolHoldTemp are
+        included — see https://www.ecobee.com/home/developer/api/examples/ex7.shtml
+        Pass the current runtime setpoints so the fan hold sticks without
+        altering the temperature the thermostat is already holding.
+        """
         if fan_mode.lower() not in (FAN_ON, FAN_AUTO):
             error = "Invalid fan_mode value:  Valid values are 'on' or 'auto'"
             _LOGGER.error(error)
             return
+
+        cool_temp = self.thermostat["runtime"]["desiredCool"] / 10.0
+        heat_temp = self.thermostat["runtime"]["desiredHeat"] / 10.0
 
         self.data.ecobee.set_fan_mode(
             self.thermostat_index,
             fan_mode,
             self.hold_preference(),
             holdHours=self.hold_hours(),
+            coolHoldTemp=cool_temp,
+            heatHoldTemp=heat_temp,
         )
 
-        _LOGGER.debug("Setting fan mode to: %s", fan_mode)
+        _LOGGER.debug(
+            "Setting fan mode to: %s (preserving heat=%s cool=%s)",
+            fan_mode,
+            heat_temp,
+            cool_temp,
+        )
+        self.update_without_throttle = True
 
     def set_temp_hold(self, temp):
         """Set temperature hold in modes other than auto.

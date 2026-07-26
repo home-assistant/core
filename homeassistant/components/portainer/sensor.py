@@ -43,6 +43,7 @@ class PortainerContainerSensorEntityDescription(SensorEntityDescription):
     """Class to hold Portainer container sensor description."""
 
     value_fn: Callable[[PortainerContainerData], StateType]
+    supported_fn: Callable[[PortainerContainerData], bool] = lambda _: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -85,6 +86,22 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         value_fn=lambda data: data.container.state,
         device_class=SensorDeviceClass.ENUM,
         options=[state.value for state in DockerContainerState],
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="container_health_state",
+        translation_key="container_health_state",
+        value_fn=lambda data: (
+            health.status
+            if (state := data.container_inspect.state) and (health := state.health)
+            else None
+        ),
+        supported_fn=lambda data: (
+            (state := data.container_inspect.state) is not None
+            and state.health is not None
+        ),
+        device_class=SensorDeviceClass.ENUM,
+        options=["healthy", "unhealthy", "starting"],
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerContainerSensorEntityDescription(
         key="memory_limit",
@@ -395,6 +412,7 @@ async def async_setup_entry(
             )
             for (endpoint, container) in containers
             for entity_description in CONTAINER_SENSORS
+            if entity_description.supported_fn(container)
         )
 
     def _async_add_new_stacks(

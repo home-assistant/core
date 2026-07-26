@@ -169,7 +169,9 @@ PARALLEL_UPDATES = 0
 
 
 @callback
-def async_migrate(hass: HomeAssistant, address: str, sensor_name: str) -> None:
+def async_migrate(
+    hass: HomeAssistant, entry_id: str, address: str, sensor_name: str
+) -> None:
     """Migrate entities to new unique ids (with BLE Address)."""
     ent_reg = er.async_get(hass)
     unique_id_trailer = f"_{sensor_name}"
@@ -179,8 +181,8 @@ def async_migrate(hass: HomeAssistant, address: str, sensor_name: str) -> None:
         return
     dev_reg = dr.async_get(hass)
     if not (
-        device := dev_reg.async_get_device(
-            connections={(CONNECTION_BLUETOOTH, address)}
+        device := dev_reg.async_get_device_by_connection(
+            (CONNECTION_BLUETOOTH, address), entry_id
         )
     ):
         return
@@ -221,7 +223,7 @@ async def async_setup_entry(
                 sensor_value,
             )
             continue
-        async_migrate(hass, coordinator.data.address, sensor_type)
+        async_migrate(hass, entry.entry_id, coordinator.data.address, sensor_type)
         entities.append(
             AirthingsSensor(
                 coordinator, coordinator.data, SENSORS_MAPPING_TEMPLATE[sensor_type]

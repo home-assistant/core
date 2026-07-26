@@ -1,5 +1,6 @@
 """Tests for Search integration."""
 
+import attr
 from pytest_unordered import unordered
 
 from homeassistant.components.search import DOMAIN, ItemType, Searcher
@@ -1107,3 +1108,112 @@ async def test_search(
         ),
         ItemType.SCRIPT: unordered(["script.device", "script.hue"]),
     }
+
+
+async def test_search_pre_migration_composite_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test search maps between a pre-migration composite device and its splits.
+
+    When a composite device is split into one device per config entry, each split
+    device records the id of the pre-migration composite. Automations and scripts
+    created before the split still reference the composite id, so:
+    - searching a split device must return them, but not automations or scripts
+      referencing only a sibling split, and
+    - searching such an automation or script must return the live split devices, not
+      the virtual composite id.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    entry_1 = MockConfigEntry(domain="test1")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test2")
+    entry_2.add_to_hass(hass)
+
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test1", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test2", "2")}
+    )
+
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    composite_device_id = "composite00000000000000000000ab"
+    device_registry.devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=composite_device_id
+    )
+    device_registry.devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=composite_device_id
+    )
+
+    def device_action(device_id: str) -> dict[str, dict[str, str]]:
+        """Return a service call action targeting a device."""
+        return {"service": "test.script", "target": {"device_id": device_id}}
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                {
+                    "alias": "composite",
+                    "trigger": {"platform": "template", "value_template": "true"},
+                    "action": [device_action(composite_device_id)],
+                },
+                {
+                    "alias": "split_1",
+                    "trigger": {"platform": "template", "value_template": "true"},
+                    "action": [device_action(device_1.id)],
+                },
+                {
+                    "alias": "split_2",
+                    "trigger": {"platform": "template", "value_template": "true"},
+                    "action": [device_action(device_2.id)],
+                },
+            ]
+        },
+    )
+
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "composite": {"sequence": [device_action(composite_device_id)]},
+                "split_2": {"sequence": [device_action(device_2.id)]},
+            }
+        },
+    )
+
+    def search(item_type: ItemType, item_id: str) -> dict[str, set[str]]:
+        """Search."""
+        searcher = Searcher(hass, {})
+        return searcher.async_search(item_type, item_id)
+
+    # Forward: searching a split device returns automations and scripts referencing
+    # the pre-migration composite and the split itself, but not references to a
+    # sibling split.
+    assert search(ItemType.DEVICE, device_1.id) == {
+        ItemType.AUTOMATION: {"automation.composite", "automation.split_1"},
+        ItemType.SCRIPT: {"script.composite"},
+        ItemType.CONFIG_ENTRY: {entry_1.entry_id},
+        ItemType.INTEGRATION: {"test1"},
+    }
+    assert search(ItemType.DEVICE, device_2.id) == {
+        ItemType.AUTOMATION: {"automation.composite", "automation.split_2"},
+        ItemType.SCRIPT: {"script.composite", "script.split_2"},
+        ItemType.CONFIG_ENTRY: {entry_2.entry_id},
+        ItemType.INTEGRATION: {"test2"},
+    }
+
+    # Reverse: searching an automation or script that references the composite returns
+    # the live split devices, not the virtual composite id.
+    expected_reverse = {
+        ItemType.DEVICE: {device_1.id, device_2.id},
+        ItemType.CONFIG_ENTRY: {entry_1.entry_id, entry_2.entry_id},
+        ItemType.INTEGRATION: {"test1", "test2"},
+    }
+    assert search(ItemType.AUTOMATION, "automation.composite") == expected_reverse
+    assert search(ItemType.SCRIPT, "script.composite") == expected_reverse
