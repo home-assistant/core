@@ -9,11 +9,7 @@ from pysnmp.smi.error import WrongValueError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.snmp.config_flow import (
-    CannotConnect,
-    InvalidAuth,
-    validate_input,
-)
+from homeassistant.components.snmp.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.snmp.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -625,153 +621,82 @@ async def test_user_flow_v3_unknown_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_validate_input_ipv6_fallback(hass: HomeAssistant) -> None:
-    """Test validate_input with IPv6 fallback."""
-    with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            side_effect=PySnmpError,
-        ),
-        patch(
-            "homeassistant.components.snmp.util.Udp6TransportTarget.create",
-            return_value="mock_target",
-        ) as mock_create6,
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
-        ),
-    ):
-        await validate_input(
-            hass,
-            {
-                "host": "1.2.3.4",
-                "baseoid": "1.3.6.1.2.1.1",
-                "version": "2c",
-                "community": "public",
-            },
-        )
-        mock_create6.assert_called()
+async def test_user_flow_v3_no_keys_success(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
+    """Test successful v3 setup with only a username (no auth/priv keys)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "1.2.3.4", "baseoid": "1.3.6.1.2.1.1", "version": "3"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "v3"
 
-
-async def test_validate_input_fail_all(hass: HomeAssistant) -> None:
-    """Test validate_input failing both IPv4 and IPv6."""
-    with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            side_effect=PySnmpError,
-        ),
-        patch(
-            "homeassistant.components.snmp.util.Udp6TransportTarget.create",
-            side_effect=PySnmpError,
-        ),
-        pytest.raises(CannotConnect),
-    ):
-        await validate_input(
-            hass,
-            {
-                "host": "1.2.3.4",
-                "baseoid": "1.3.6.1.2.1.1",
-                "version": "2c",
-                "community": "public",
-            },
-        )
-
-
-async def test_validate_input_unexpected_error(hass: HomeAssistant) -> None:
-    """Test validate_input with an unexpected error during target creation."""
-    with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            side_effect=RuntimeError("Something unexpected"),
-        ),
-        pytest.raises(RuntimeError, match="Something unexpected"),
-    ):
-        await validate_input(
-            hass,
-            {
-                "host": "1.2.3.4",
-                "baseoid": "1.3.6.1.2.1.1",
-                "version": "2c",
-                "community": "public",
-            },
-        )
-
-
-async def test_validate_input_v3_no_keys(hass: HomeAssistant) -> None:
-    """Test validate_input with SNMP v3 and no auth/priv keys."""
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
         return_value=(None, None, None, [[OctetString("98F")]]),
     ):
-        await validate_input(
-            hass,
-            {
-                "host": "1.2.3.4",
-                "baseoid": "1.3.6.1.2.1.1",
-                "version": "3",
-                "username": "test-user",
-            },
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"username": "test-user"}
         )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_validate_input_pysnmp_error_auth(hass: HomeAssistant) -> None:
-    """Test validate_input with PySnmpError during auth creation."""
-    with (
-        patch(
-            "homeassistant.components.snmp.util.UsmUserData",
-            side_effect=PySnmpError,
-        ),
-        pytest.raises(InvalidAuth),
+async def test_user_flow_v3_auth_creation_error(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
+    """Test v3 flow when UsmUserData creation fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "1.2.3.4", "baseoid": "1.3.6.1.2.1.1", "version": "3"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "v3"
+
+    with patch(
+        "homeassistant.components.snmp.util.UsmUserData",
+        side_effect=PySnmpError,
     ):
-        await validate_input(
-            hass,
-            {
-                "host": "1.2.3.4",
-                "baseoid": "1.3.6.1.2.1.1",
-                "version": "3",
-                "username": "test-user",
-            },
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"username": "test-user"}
         )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
 
-async def test_validate_input_wrong_value_error(hass: HomeAssistant) -> None:
-    """Test validate_input with WrongValueError during get_cmd."""
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            side_effect=WrongValueError,
-        ),
-        pytest.raises(InvalidAuth),
+
+async def test_user_flow_v3_wrong_value_error(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
+    """Test v3 flow when get_cmd raises WrongValueError."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "1.2.3.4", "baseoid": "1.3.6.1.2.1.1", "version": "3"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "v3"
+
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        side_effect=WrongValueError,
     ):
-        await validate_input(
-            hass,
-            {
-                "host": "1.2.3.4",
-                "baseoid": "1.3.6.1.2.1.1",
-                "version": "3",
-                "username": "test-user",
-            },
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"username": "test-user", "auth_key": "pass"}
         )
 
-
-async def test_validate_input_pysnmp_error_get(hass: HomeAssistant) -> None:
-    """Test validate_input with PySnmpError during get_cmd."""
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            side_effect=PySnmpError,
-        ),
-        pytest.raises(CannotConnect),
-    ):
-        await validate_input(
-            hass,
-            {
-                "host": "1.2.3.4",
-                "baseoid": "1.3.6.1.2.1.1",
-                "version": "3",
-                "username": "test-user",
-            },
-        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "usm_wrong_digests"}
 
 
 async def test_user_flow_v3_cannot_connect(
