@@ -519,6 +519,23 @@ async def test_skip_initial_bad_packets(hass: HomeAssistant) -> None:
     assert len(decoded_stream.audio_packets) == 0
 
 
+async def test_repair_initial_keyframe_missing_dts(hass: HomeAssistant) -> None:
+    """Test a missing DTS on the initial keyframe is repaired."""
+
+    packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
+    first_packet = packets[0]
+    assert first_packet.is_keyframe
+    expected_dts = first_packet.dts
+    first_packet.dts = first_packet.pts = None
+
+    decoded_stream = await async_decode_stream(hass, packets)
+
+    assert len(decoded_stream.video_packets) == len(packets)
+    assert decoded_stream.video_packets[0].dts == expected_dts
+    assert decoded_stream.video_packets[0].pts == expected_dts
+    assert len(decoded_stream.audio_packets) == 0
+
+
 async def test_too_many_initial_bad_packets_fails(hass: HomeAssistant) -> None:
     """Test initial bad packets are too high, causing it to never start."""
 
