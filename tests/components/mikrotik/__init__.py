@@ -4,7 +4,12 @@ from typing import Any
 from unittest.mock import patch
 
 from homeassistant.components import mikrotik
-from homeassistant.components.mikrotik.const import DOMAIN
+from homeassistant.components.mikrotik.const import (
+    ATTR_ROUTERBOARD_FIRMWARE,
+    ATTR_SERIAL_NUMBER,
+    DOMAIN,
+)
+from homeassistant.const import ATTR_MODEL
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -40,9 +45,9 @@ def _build_command_responses(
         ],
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.ROUTERBOARD]: [
             {
-                "model": TEST_MODEL,
-                "installed-version": TEST_FIRMWARE,
-                "serial-number": TEST_SERIAL_NUMBER,
+                ATTR_MODEL: TEST_MODEL,
+                ATTR_ROUTERBOARD_FIRMWARE: TEST_FIRMWARE,
+                ATTR_SERIAL_NUMBER: TEST_SERIAL_NUMBER,
             }
         ],
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_CAPSMAN]: [],
