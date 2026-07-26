@@ -270,6 +270,41 @@ async def test_user_flow_invalid_oid_short(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_user_flow_invalid_oid_err_status(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
+    """Test user setup flow failure - base OID returns err_status."""
+    mock_err_status = MagicMock()
+    mock_err_status.prettyPrint.return_value = "noSuchName"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "192.168.1.1",
+            "baseoid": "1.3.6.1.4.1.9999",
+            "version": "1",
+        },
+    )
+
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        side_effect=[
+            (None, None, None, [[OctetString("98F")]]),  # sysDescr.0 succeeds
+            (None, mock_err_status, None, None),  # base OID returns err_status
+        ],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"community": "public"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_oid"}
+
+
 async def test_user_flow_v3_invalid_auth(
     hass: HomeAssistant, mock_setup_entry: Mock
 ) -> None:

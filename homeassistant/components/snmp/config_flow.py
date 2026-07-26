@@ -160,10 +160,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         hass, auth_data, target, base_oid, context_name
     )
     try:
-        # We don't necessarily care about the result, just that it serializes and sends.
-        await get_cmd(*base_request_args)
+        err_indication, err_status, _, _ = await get_cmd(*base_request_args)
     except (PySnmpError, WrongValueError) as err:
         raise InvalidOid from err
+
+    if err_indication or err_status:
+        raise InvalidOid
 
 
 class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
