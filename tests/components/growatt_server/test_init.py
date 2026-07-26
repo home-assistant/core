@@ -869,7 +869,7 @@ async def test_dynamic_device_added(
     # Verify multiple entity types to confirm end-to-end dynamic device support
     assert hass.states.get("switch.new456789_charge_from_grid") is not None
     # Additional check: verify entities exist in the entity registry
-    entity_registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     new_device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "NEW456789")}
     )
