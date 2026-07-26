@@ -1711,6 +1711,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "recswitch",
     "reddit",
     "refoss",
+    "rejseplanen",
     "remember_the_milk",
     "remote_rpi_gpio",
     "renson",

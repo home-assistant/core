@@ -32,7 +32,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import CONF_DEPARTURE_TYPE, CONF_DIRECTION, CONF_STOP_ID, DOMAIN
 from .coordinator import RejseplanenConfigEntry, RejseplanenDataUpdateCoordinator
-from .entity import RejseplanenEntity, RejseplanenEntityContext
+from .entity import RejseplanenEntity
 from .helpers import cph_to_tz
 
 _LOGGER = logging.getLogger(__name__)
@@ -209,10 +209,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     # Process all subentries (stop configurations)
-    for subentry in config_entry.subentries.values():
-        if subentry.subentry_type != "stop":
-            continue
-
+    for subentry in config_entry.get_subentries_of_type("stop"):
         async_add_entities(
             [
                 RejseplanenTransportSensor(
@@ -240,21 +237,15 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         stop_id = int(config.data[CONF_STOP_ID])
-        context = RejseplanenEntityContext(
-            stop_id=stop_id,
-            name=config.title,
-            subentry_id=config.subentry_id,
-        )
-        super().__init__(coordinator, context)
+        super().__init__(coordinator, stop_id, config.title, config.subentry_id)
         self.entity_description = entity_description
 
         self._departure_cleanup_unsubscribe: CALLBACK_TYPE | None = None
         self._last_cleanup_time: datetime | None = None
 
-        self._stop_id = context.stop_id
         self._direction = config.data[CONF_DIRECTION]
         self._departure_type = config.data[CONF_DEPARTURE_TYPE]
-        self._attr_unique_id = f"{context.subentry_id}_{entity_description.key}"
+        self._attr_unique_id = f"{config.subentry_id}_{entity_description.key}"
         # Calculate bitflag for filtering
         self._departure_type_bitflag = coordinator.api.calculate_departure_type_bitflag(
             self._departure_type

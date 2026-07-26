@@ -27,6 +27,8 @@ type RejseplanenConfigEntry = ConfigEntry[RejseplanenDataUpdateCoordinator]
 class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
     """Class to manage fetching data from the Rejseplanen API."""
 
+    config_entry: RejseplanenConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -39,6 +41,10 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
             session=async_get_clientsession(hass),
         )
         self.last_update_success_time: datetime | None = None
+        self.stop_ids = {
+            subentry.data[CONF_STOP_ID]
+            for subentry in config_entry.get_subentries_of_type("stop")
+        }
 
         super().__init__(
             hass,
@@ -51,14 +57,8 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
     @override
     async def _async_update_data(self) -> DepartureBoard:
         """Update data via library."""
-        assert self.config_entry is not None
         try:
-            stop_ids = {
-                subentry.data[CONF_STOP_ID]
-                for subentry in self.config_entry.subentries.values()
-                if subentry.subentry_type == "stop"
-            }
-            board = await self._fetch_data(stop_ids)
+            board = await self._fetch_data(self.stop_ids)
         except (APIError, HTTPError) as error:  # runtime errors from the API
             raise UpdateFailed(error) from error
         except ConnectionError as error:  # network errors
@@ -67,7 +67,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
             ) from error
         except TypeError as error:
             raise UpdateFailed(
-                f"Type error fetching data for stop {stop_ids}: {error}"
+                f"Type error fetching data for stop {self.stop_ids}: {error}"
             ) from error
 
         self.last_update_success_time = dt_util.now()
@@ -97,7 +97,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
         return departure_board
 
     def get_filtered_departures(
-        self: RejseplanenDataUpdateCoordinator,
+        self,
         stop_id: int,
         direction_filter: list[str] | None = None,
         departure_type_filter: int | None = None,
