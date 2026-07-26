@@ -1,7 +1,7 @@
 """Coordinator for solarman integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from solarman_opendata.solarman import Solarman
 
@@ -38,6 +38,7 @@ class SolarmanDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             async_get_clientsession(hass), config_entry.data[CONF_HOST], DEFAULT_PORT
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch and update device data."""
         try:

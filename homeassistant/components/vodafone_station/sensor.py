@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -186,6 +186,7 @@ class VodafoneStationSensorEntity(
         self._old_state: str | datetime | float | None = None
 
     @property
+    @override
     def native_value(self) -> str | datetime | float | None:
         """Sensor value."""
         self._old_state = self.entity_description.value(

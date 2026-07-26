@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "resting_heart_rate": {
+        "default": "mdi:heart-pulse"
+      },
+      "steps": {
+        "default": "mdi:walk"
+      }
+    }
+  }
+}

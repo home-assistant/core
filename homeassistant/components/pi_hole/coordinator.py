@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from hole import HoleV5, HoleV6
 from hole.exceptions import HoleError
@@ -52,6 +53,7 @@ class PiHoleUpdateCoordinator(DataUpdateCoordinator[None]):
         self._name = config_entry.data[CONF_NAME]
         self._host = config_entry.data[CONF_HOST]
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from the Pi-hole API."""
         try:

@@ -1,7 +1,7 @@
 """Config flow for Vivotek IP cameras integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from libpyvivotek.vivotek import SECURITY_LEVELS, VivotekCameraError
 import voluptuous as vol
@@ -100,12 +100,14 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: VivotekConfigEntry,
     ) -> OptionsFlowHandler:
         """Create the options flow."""
         return OptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

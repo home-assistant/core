@@ -72,11 +72,13 @@
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "host": "[%key:component::shelly::config::step::user_manual::data_description::host%]",
-          "port": "[%key:component::shelly::config::step::user_manual::data_description::port%]"
+          "port": "[%key:component::shelly::config::step::user_manual::data_description::port%]",
+          "verify_ssl": "[%key:component::shelly::config::step::user_manual::data_description::verify_ssl%]"
         },
         "description": "Update configuration for {device_name}.\n\nBefore setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
       },
@@ -92,11 +94,13 @@
       "user_manual": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "host": "The hostname or IP address of the Shelly device to connect to.",
-          "port": "The TCP port of the Shelly device to connect to (Gen2+)."
+          "port": "The TCP port of the Shelly device to connect to (Gen2+).",
+          "verify_ssl": "Verify SSL/TLS certificate when connecting on HTTPS (port 443, Gen2+)."
         },
         "description": "Before setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
       },
@@ -184,6 +188,12 @@
       "occupancy_with_channel_name": {
         "name": "{channel_name} occupancy"
       },
+      "output": {
+        "name": "Output"
+      },
+      "output_with_channel_name": {
+        "name": "{channel_name} output"
+      },
       "overcurrent": {
         "name": "Overcurrent"
       },
@@ -213,6 +223,12 @@
       },
       "rotation": {
         "name": "Rotation"
+      },
+      "safety_switch": {
+        "name": "Safety switch"
+      },
+      "safety_switch_with_channel_name": {
+        "name": "{channel_name} safety switch"
       },
       "smoke_with_channel_name": {
         "name": "{channel_name} smoke"
@@ -611,6 +627,9 @@
   "exceptions": {
     "auth_error": {
       "message": "Authentication failed for {device}, please update your credentials"
+    },
+    "circuit_breaker_remote_disabled": {
+      "message": "Circuit breaker for {entity} of {device} is tripped and cannot be turned on remotely"
     },
     "config_entry_not_found": {
       "message": "Config entry for device ID {device_id} not found"

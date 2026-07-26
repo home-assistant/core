@@ -276,7 +276,7 @@ async def test_invalid_binary_sensor_schema_with_auto_off(
 ) -> None:
     """Test invalid config schemas create issue and log warning."""
 
-    await async_setup_component(hass, "template", {"template": [config]})
+    await async_setup_component(hass, DOMAIN, {"template": [config]})
 
     assert (
         expected_error is None and "ERROR" not in caplog.text
@@ -383,6 +383,64 @@ async def test_combined_state_variables(
     assert "variables" not in validated
     variables: ScriptVariables = validated["button"][0]["variables"]
     assert variables.as_dict() == expected
+
+
+@pytest.mark.parametrize(
+    ("config", "expected_error"),
+    [
+        pytest.param(
+            {
+                "triggers": [
+                    {"trigger": "event", "event_type": "valid"},
+                    {"trigger": "not_a_platform"},
+                ],
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Invalid trigger 'not_a_platform' specified '', got"
+            " {'triggers': [{'trigger': 'event', 'event_type': 'valid'},"
+            " {'trigger': 'not_a_platform'}],"
+            " 'binary_sensor': {'name': 'test', 'state': '{{ true }}'}}",
+            id="trigger",
+        ),
+        pytest.param(
+            {
+                "triggers": {"trigger": "event", "event_type": "valid"},
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "sensor.foo",
+                        "state": "on",
+                    },
+                    {
+                        "condition": "state",
+                        "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                        "state": "on",
+                    },
+                ],
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            " '', got"
+            " {'triggers': {'trigger': 'event', 'event_type': 'valid'},"
+            " 'conditions': [{'condition': 'state', 'entity_id': 'sensor.foo',"
+            " 'state': 'on'}, {'condition': 'state',"
+            " 'entity_id': 'abcdabcdabcdabcdabcdabcdabcdabcd', 'state': 'on'}],"
+            " 'binary_sensor': {'name': 'test', 'state': '{{ true }}'}}",
+            id="condition",
+        ),
+    ],
+)
+async def test_setup_component_bad_config_logs_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config: dict,
+    expected_error: str,
+) -> None:
+    """Test setting up template with a bad config logs a useful error message."""
+    await async_setup_component(hass, "template", {"template": [config]})
+    assert expected_error in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -536,7 +594,7 @@ async def test_invalid_schema_raises_issue(
 ) -> None:
     """Test invalid config schemas create issue and log warning."""
 
-    await async_setup_component(hass, "template", {"template": [config]})
+    await async_setup_component(hass, DOMAIN, {"template": [config]})
 
     assert expected_warning in caplog.text
 
@@ -553,7 +611,7 @@ async def test_multiple_configuration_keys(
     """Test multiple configurations keys create entities."""
     await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": [{"binary_sensor": [{"name": "Foo", "state": "{{ True }}"}]}],
             "template mytemplates": [

@@ -105,7 +105,7 @@
           "name": "[%key:component::media_player::common::condition_threshold_name%]"
         }
       },
-      "name": "Volume"
+      "name": "Media player volume"
     }
   },
   "device_automation": {
@@ -370,7 +370,7 @@
           "name": "Media"
         }
       },
-      "name": "Play media"
+      "name": "Play specified media"
     },
     "repeat_set": {
       "description": "Sets the repeat mode of a media player.",
@@ -482,7 +482,7 @@
   "title": "Media player",
   "triggers": {
     "muted": {
-      "description": "Triggers after one or more media players are muted.",
+      "description": "Triggers when one or more media players are muted.",
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
@@ -494,7 +494,7 @@
       "name": "Media player muted"
     },
     "paused_playing": {
-      "description": "Triggers after one or more media players pause playing.",
+      "description": "Triggers when one or more media players pause playing.",
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
@@ -506,7 +506,7 @@
       "name": "Media player paused playing"
     },
     "started_playing": {
-      "description": "Triggers after one or more media players start playing.",
+      "description": "Triggers when one or more media players start playing.",
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
@@ -518,7 +518,7 @@
       "name": "Media player started playing"
     },
     "stopped_playing": {
-      "description": "Triggers after one or more media players stop playing.",
+      "description": "Triggers when one or more media players stop playing.",
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
@@ -530,7 +530,7 @@
       "name": "Media player stopped playing"
     },
     "turned_off": {
-      "description": "Triggers after one or more media players turn off.",
+      "description": "Triggers when one or more media players turn off.",
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
@@ -542,7 +542,7 @@
       "name": "Media player turned off"
     },
     "turned_on": {
-      "description": "Triggers after one or more media players turn on.",
+      "description": "Triggers when one or more media players turn on.",
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
@@ -554,7 +554,7 @@
       "name": "Media player turned on"
     },
     "unmuted": {
-      "description": "Triggers after one or more media players are unmuted.",
+      "description": "Triggers when one or more media players are unmuted.",
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
@@ -566,7 +566,7 @@
       "name": "Media player unmuted"
     },
     "volume_changed": {
-      "description": "Triggers after the volume of one or more media players changes.",
+      "description": "Triggers when the volume of one or more media players changes.",
       "fields": {
         "threshold": {
           "name": "[%key:component::media_player::common::trigger_threshold_name%]"
@@ -575,7 +575,7 @@
       "name": "Media player volume changed"
     },
     "volume_crossed_threshold": {
-      "description": "Triggers after the volume of one or more media players crosses a threshold.",
+      "description": "Triggers when the volume of one or more media players crosses a threshold.",
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"

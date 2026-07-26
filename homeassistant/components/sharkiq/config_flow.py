@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from sharkiq import SharkIqAuthError, get_ayla_api
@@ -103,6 +103,7 @@ class SharkIqConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         return info, errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

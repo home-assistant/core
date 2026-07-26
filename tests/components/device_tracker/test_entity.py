@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from typing import Any
 
+import attr
 import pytest
 
 from homeassistant.components.device_tracker import (
@@ -11,6 +12,7 @@ from homeassistant.components.device_tracker import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
+    ATTR_TRACKING_TYPE,
     CONF_ASSOCIATED_ZONE,
     CONNECTED_DEVICE_REGISTERED,
     DOMAIN,
@@ -19,6 +21,7 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,
     SourceType,
     TrackerEntity,
+    TrackingType,
 )
 from homeassistant.components.zone import ATTR_PASSIVE, ATTR_RADIUS
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
@@ -479,6 +482,19 @@ async def test_load_unload_entry_tracker(
     assert not state
 
 
+def test_tracking_type_capability_attribute() -> None:
+    """Test the tracking_type capability attribute set by each base class."""
+    assert MockTrackerEntity().capability_attributes == {
+        ATTR_TRACKING_TYPE: TrackingType.POSITION
+    }
+    assert MockBaseScannerEntity().capability_attributes == {
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION
+    }
+    assert MockScannerEntity().capability_attributes == {
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION
+    }
+
+
 @pytest.mark.parametrize(
     (
         "battery_level",
@@ -772,7 +788,9 @@ async def test_tracker_entity_state(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == expected_state
-    assert state.attributes == expected_attributes
+    assert state.attributes == expected_attributes | {
+        ATTR_TRACKING_TYPE: TrackingType.POSITION
+    }
 
 
 async def test_base_scanner_entity_state(
@@ -789,6 +807,7 @@ async def test_base_scanner_entity_state(
     assert entity_state
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: [],
     }
     assert entity_state.state == STATE_NOT_HOME
@@ -803,6 +822,7 @@ async def test_base_scanner_entity_state(
     # entity_id is reported.
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: ["zone.home"],
     }
 
@@ -815,6 +835,7 @@ async def test_base_scanner_entity_state(
     # is_connected is None -> empty in_zones (always reported).
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: [],
     }
 
@@ -908,6 +929,7 @@ async def test_base_scanner_entity_in_zones_when_connected(
     assert entity_state.state == STATE_HOME
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: expected_in_zones,
     }
 
@@ -1265,6 +1287,7 @@ async def test_scanner_entity_state(
     assert entity_state
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.ROUTER,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: [],
         ATTR_IP: ip_address,
         ATTR_MAC: mac_address,
@@ -1589,6 +1612,96 @@ async def test_register_mac_ignored(
     assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
+async def test_scanner_entity_attaches_to_split_of_composite_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a scanner entity attaches to its config entry's split device."""
+    mac = TEST_MAC_ADDRESS
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    old_id = "composite00000000000000000000000"
+    own_split = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={(TEST_DOMAIN, "own")},
+    )
+    other_split = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={("other", "x")},
+    )
+    # Simulate a migration split: both devices share the pre-migration composite id
+    device_registry.devices[own_split.id] = attr.evolve(
+        own_split, composite_device_id=old_id
+    )
+    device_registry.devices[other_split.id] = attr.evolve(
+        other_split, composite_device_id=old_id
+    )
+    # async_get_device now resolves the shared MAC to the synthesized composite
+    composite = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
+    assert composite is not None
+    assert composite.id == old_id
+    assert old_id not in device_registry.devices
+
+    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity.entity_id = "device_tracker.composite_scanner"
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    # Attached to its own split, not the un-assignable composite id
+    entity_entry = entity_registry.async_get("device_tracker.composite_scanner")
+    assert entity_entry is not None
+    assert entity_entry.device_id == own_split.id
+
+
+async def test_scanner_entity_composite_device_without_own_split(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A composite with no split owned by the scanner's config entry attaches nothing.
+
+    The composite id is not a real device and can't be assigned to an entity, so with no
+    split to resolve to the entity is added without a device instead of raising.
+    """
+    mac = TEST_MAC_ADDRESS
+    other_entry_1 = MockConfigEntry(domain="other_1")
+    other_entry_1.add_to_hass(hass)
+    other_entry_2 = MockConfigEntry(domain="other_2")
+    other_entry_2.add_to_hass(hass)
+    old_id = "composite00000000000000000000000"
+    # Both splits belong to other config entries, none to the scanner's
+    for entry, identifier in ((other_entry_1, "one"), (other_entry_2, "two")):
+        split = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+            identifiers={("other", identifier)},
+        )
+        device_registry.devices[split.id] = attr.evolve(
+            split, composite_device_id=old_id
+        )
+    composite = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
+    assert composite is not None
+    assert composite.id == old_id
+    assert old_id not in device_registry.devices
+
+    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity.entity_id = "device_tracker.composite_scanner"
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    # Added without a device rather than raising on the un-assignable composite id
+    entity_entry = entity_registry.async_get("device_tracker.composite_scanner")
+    assert entity_entry is not None
+    assert entity_entry.device_id is None
+
+
 async def test_connected_device_registered(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -1722,4 +1835,5 @@ async def test_tracker_entity_unavailable(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unavailable"
-    assert state.attributes == {}
+    # Capability attributes are reported even when the entity is unavailable.
+    assert state.attributes == {ATTR_TRACKING_TYPE: TrackingType.POSITION}

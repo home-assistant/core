@@ -1,5 +1,7 @@
 """Support for Fully Kiosk Browser camera."""
 
+from typing import override
+
 from fullykiosk import FullyKioskError
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -32,8 +34,9 @@ class FullyCameraEntity(FullyKioskEntity, Camera):
         """Initialize the camera."""
         FullyKioskEntity.__init__(self, coordinator)
         Camera.__init__(self)
-        self._attr_unique_id = f"{coordinator.data['deviceID']}-camera"
+        self._attr_unique_id = f"{coordinator.data['deviceID']}-camera"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -45,17 +48,20 @@ class FullyCameraEntity(FullyKioskEntity, Camera):
         else:
             return image_bytes
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
         await self.coordinator.fully.enableMotionDetection()
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off camera."""
         await self.coordinator.fully.disableMotionDetection()
         await self.coordinator.async_refresh()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_on = self.coordinator.data["settings"].get("motionDetection")

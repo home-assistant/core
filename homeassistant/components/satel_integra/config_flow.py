@@ -2,7 +2,7 @@
 # pylint: disable=home-assistant-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from satel_integra import AsyncSatel
 from satel_integra.exceptions import (
@@ -63,11 +63,21 @@ CODE_SCHEMA = vol.Schema(
     }
 )
 
+ARM_HOME_MODE_OPTIONS = ["1", "2", "3"]
+
 PARTITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE): vol.In(
-            [1, 2, 3]
+        vol.Required(CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE): vol.All(
+            vol.Coerce(str),
+            selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=ARM_HOME_MODE_OPTIONS,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="arm_home_mode",
+                )
+            ),
+            vol.Coerce(int),
         ),
     }
 )
@@ -137,6 +147,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: SatelConfigEntry,
     ) -> SatelOptionsFlow:
@@ -145,6 +156,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -156,6 +168,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             SUBENTRY_TYPE_SWITCHABLE_OUTPUT: SwitchableOutputSubentryFlowHandler,
         }
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

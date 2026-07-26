@@ -16,6 +16,7 @@ import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    BluetoothCallbackReplay,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfo,
@@ -45,6 +46,7 @@ from homeassistant.components.bluetooth.match import (
     MANUFACTURER_ID,
     SERVICE_DATA_UUID,
     SERVICE_UUID,
+    BluetoothCallbackMatcher,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -467,7 +469,7 @@ async def test_discovery_match_by_service_uuid_and_short_local_name(
     mock_bleak_scanner_start: MagicMock,
 ) -> None:
     """Test bluetooth discovery match by service_uuid and short local name."""
-    entry = MockConfigEntry(domain="bluetooth", unique_id="00:00:00:00:00:01")
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="00:00:00:00:00:01")
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -1501,6 +1503,113 @@ async def test_register_callbacks(
     assert service_info.source == SOURCE_LOCAL
     assert service_info.manufacturer == "Nordic Semiconductor ASA"
     assert service_info.manufacturer_id == 89
+
+
+@pytest.mark.parametrize(
+    ("devices", "matcher", "replay", "expected_addresses"),
+    [
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "older", 1000.0),
+                ("AA:BB:CC:DD:EE:02", "newer", 2000.0),
+            ],
+            None,
+            BluetoothCallbackReplay.OLDEST_FIRST,
+            ["AA:BB:CC:DD:EE:01", "AA:BB:CC:DD:EE:02"],
+            id="oldest-first",
+        ),
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "older", 1000.0),
+                ("AA:BB:CC:DD:EE:02", "newer", 2000.0),
+            ],
+            None,
+            BluetoothCallbackReplay.NEWEST_FIRST,
+            ["AA:BB:CC:DD:EE:02", "AA:BB:CC:DD:EE:01"],
+            id="newest-first",
+        ),
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "target", 1000.0),
+                ("AA:BB:CC:DD:EE:02", "other", 2000.0),
+                ("AA:BB:CC:DD:EE:03", "target", 3000.0),
+            ],
+            {LOCAL_NAME: "target"},
+            BluetoothCallbackReplay.NEWEST_FIRST,
+            ["AA:BB:CC:DD:EE:03", "AA:BB:CC:DD:EE:01"],
+            id="newest-first-with-filter",
+        ),
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "older", 1000.0),
+                ("AA:BB:CC:DD:EE:02", "newer", 2000.0),
+            ],
+            None,
+            BluetoothCallbackReplay.DISABLED,
+            [],
+            id="disabled",
+        ),
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "target", 1000.0),
+                ("AA:BB:CC:DD:EE:02", "other", 2000.0),
+            ],
+            {ADDRESS: "AA:BB:CC:DD:EE:01"},
+            BluetoothCallbackReplay.NEWEST_FIRST,
+            ["AA:BB:CC:DD:EE:01"],
+            id="newest-first-address-match",
+        ),
+        pytest.param(
+            [
+                ("AA:BB:CC:DD:EE:01", "newer", 2000.0),
+                ("AA:BB:CC:DD:EE:02", "older", 1000.0),
+            ],
+            None,
+            BluetoothCallbackReplay.OLDEST_FIRST,
+            ["AA:BB:CC:DD:EE:02", "AA:BB:CC:DD:EE:01"],
+            id="oldest-first-out-of-order-insertion",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("enable_bluetooth", "mock_bleak_scanner_start")
+async def test_register_callbacks_history_replay_order(
+    hass: HomeAssistant,
+    devices: list[tuple[str, str, float]],
+    matcher: BluetoothCallbackMatcher | None,
+    replay: BluetoothCallbackReplay,
+    expected_addresses: list[str],
+) -> None:
+    """History replay respects the replay order kwarg."""
+    mock_bt = []
+    replayed: list[BluetoothServiceInfo] = []
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        for address, name, adv_time in devices:
+            device = generate_ble_device(address, name)
+            adv = generate_advertisement_data(local_name=name)
+            inject_advertisement_with_time_and_source_connectable(
+                hass, device, adv, adv_time, SOURCE_LOCAL, True
+            )
+
+        def _subscriber(
+            service_info: BluetoothServiceInfo, change: BluetoothChange
+        ) -> None:
+            replayed.append(service_info)
+
+        cancel = bluetooth.async_register_callback(
+            hass, _subscriber, matcher, BluetoothScanningMode.ACTIVE, replay=replay
+        )
+        cancel()
+
+    assert [si.address for si in replayed] == expected_addresses
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
@@ -2666,21 +2775,26 @@ async def test_process_advertisements_timeout(
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "mock_bleak_scanner_start")
-async def test_process_advertisements_wires_timeout_as_scan_duration(
+async def test_process_advertisements_triggers_active_scan_of_correct_duration(
     hass: HomeAssistant,
 ) -> None:
-    """async_process_advertisements forwards its timeout as scan_duration."""
+    """async_process_advertisements triggers active scan now."""
 
     def _callback(service_info: BluetoothServiceInfo) -> bool:
         return False
 
+    timeout = 0.001
     mock_cancel = Mock()
+
     with (
         patch.object(
             HomeAssistantBluetoothManager,
             "async_register_active_scan",
             return_value=mock_cancel,
         ) as mock_register,
+        patch.object(
+            HomeAssistantBluetoothManager, "async_request_active_scan"
+        ) as mock_request_active_scan,
         pytest.raises(TimeoutError),
     ):
         await async_process_advertisements(
@@ -2688,9 +2802,10 @@ async def test_process_advertisements_wires_timeout_as_scan_duration(
             _callback,
             {"address": "aa:44:33:11:23:45"},
             BluetoothScanningMode.ACTIVE,
-            0,
+            timeout,
         )
-    mock_register.assert_called_once_with("aa:44:33:11:23:45", None, 0)
+    mock_register.assert_called_once_with("aa:44:33:11:23:45", None, None)
+    mock_request_active_scan.assert_called_once_with(timeout)
     mock_cancel.assert_called_once()
 
 
@@ -3543,7 +3658,7 @@ async def test_title_updated_if_mac_address(
 ) -> None:
     """Test the title is updated if it is the mac address."""
     entry = MockConfigEntry(
-        domain="bluetooth", title="00:00:00:00:00:01", unique_id="00:00:00:00:00:01"
+        domain=DOMAIN, title="00:00:00:00:00:01", unique_id="00:00:00:00:00:01"
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

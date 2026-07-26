@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from refoss_ha.controller.electricity import ElectricityXMix
 
@@ -164,6 +165,7 @@ class RefossSensor(RefossEntity, SensorEntity):
         self._attr_translation_placeholders = {"channel_name": channel_name}
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the native value."""
         value = self.coordinator.device.get_value(

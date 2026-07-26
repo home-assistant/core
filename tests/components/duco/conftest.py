@@ -5,17 +5,25 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from duco_connectivity import (
+    ActionItem,
+    ActionValueType,
     ApiEndpointInfo,
     ApiInfo,
     BoardInfo,
+    ConfigNode,
+    ConfigNodeOverview,
+    ConfigValueString,
     DiagComponent,
-    DiagStatus,
+    KnownActionName,
     LanInfo,
     Node,
+    NodeActionItemList,
     NodeGeneralInfo,
+    NodeListActionItemList,
     NodeMotorStateInfo,
     NodeSensorInfo,
     NodeVentilationInfo,
+    VentilationTemperatureInfo,
 )
 import pytest
 
@@ -99,6 +107,19 @@ def load_nodes_fixture(filename: str) -> list[Node]:
     return [_node_from_dict(node) for node in load_json_array_fixture(filename, DOMAIN)]
 
 
+def node_configs_from_nodes(nodes: list[Node]) -> ConfigNodeOverview:
+    """Build node config names from node fixtures."""
+    return ConfigNodeOverview(
+        nodes=[
+            ConfigNode(
+                node_id=node.node_id,
+                name=ConfigValueString(node.general.name),
+            )
+            for node in nodes
+        ]
+    )
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
@@ -159,9 +180,50 @@ def mock_lan_info() -> LanInfo:
 
 
 @pytest.fixture
+def mock_ventilation_temperature_info() -> VentilationTemperatureInfo:
+    """Return mock ventilation temperatures in Celsius."""
+    return VentilationTemperatureInfo(
+        temp_oda=5.5,
+        temp_sup=18.2,
+        temp_eta=21.4,
+        temp_eha=8.1,
+    )
+
+
+@pytest.fixture
 def mock_nodes() -> list[Node]:
     """Return a list of nodes covering all supported types."""
     return load_nodes_fixture("nodes.json")
+
+
+@pytest.fixture
+def mock_node_actions() -> NodeListActionItemList:
+    """Return node actions for supported ventilation control nodes."""
+    return NodeListActionItemList(
+        nodes=[
+            NodeActionItemList(
+                node_id=1,
+                actions=[
+                    ActionItem(
+                        action=KnownActionName.SET_VENTILATION_STATE,
+                        val_type=ActionValueType.ENUM,
+                        enum_values=[
+                            "AUTO",
+                            "CNT1",
+                            "CNT2",
+                            "CNT3",
+                            "MAN1",
+                            "MAN2",
+                            "MAN3",
+                        ],
+                    )
+                ],
+            ),
+            NodeActionItemList(node_id=2, actions=[]),
+            NodeActionItemList(node_id=50, actions=[]),
+            NodeActionItemList(node_id=113, actions=[]),
+        ]
+    )
 
 
 @pytest.fixture
@@ -184,6 +246,8 @@ def mock_duco_client(
     mock_board_info: BoardInfo,
     mock_lan_info: LanInfo,
     mock_nodes: list[Node],
+    mock_node_actions: NodeListActionItemList,
+    mock_ventilation_temperature_info: VentilationTemperatureInfo,
 ) -> Generator[AsyncMock]:
     """Return a mocked DucoClient used by both the integration and config flow."""
     with (
@@ -201,8 +265,14 @@ def mock_duco_client(
         client.async_get_board_info.return_value = mock_board_info
         client.async_get_lan_info.return_value = mock_lan_info
         client.async_get_nodes.return_value = mock_nodes
+        client.async_get_node_configs.return_value = node_configs_from_nodes(mock_nodes)
+        client.async_get_node_actions.return_value = mock_node_actions
+        client.async_get_time_filter_remaining.return_value = 180
+        client.async_get_ventilation_temperature_info.return_value = (
+            mock_ventilation_temperature_info
+        )
         client.async_get_diagnostics.return_value = [
-            DiagComponent(component="Ventilation", status=DiagStatus.OK)
+            DiagComponent(component="Ventilation", status="Ok")
         ]
         client.async_get_write_requests_remaining.return_value = 100
         yield client

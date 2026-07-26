@@ -1,6 +1,7 @@
 """Workday Calendar."""
 
 from datetime import date, datetime, timedelta
+from typing import override
 
 from holidays import HolidayBase
 
@@ -65,6 +66,7 @@ class WorkdayCalendarEntity(BaseWorkdayEntity, CalendarEntity):
         self.event_list: list[CalendarEvent] = []
         self._name = name
 
+    @override
     def update_data(self, now: datetime) -> None:
         """Update data."""
         event_list = []
@@ -82,6 +84,7 @@ class WorkdayCalendarEntity(BaseWorkdayEntity, CalendarEntity):
         self.event_list = event_list
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         sorted_list: list[CalendarEvent] | None = (
@@ -91,6 +94,7 @@ class WorkdayCalendarEntity(BaseWorkdayEntity, CalendarEntity):
             return None
         return [d for d in sorted_list if d.start >= dt_util.utcnow().date()][0]
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:

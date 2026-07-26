@@ -18,7 +18,8 @@
     "step": {
       "init": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "id": "Hue bridge"
         },
         "data_description": {
           "host": "The hostname or IP address of your Hue bridge."

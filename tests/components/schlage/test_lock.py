@@ -15,8 +15,14 @@ from homeassistant.components.schlage.const import (
     SERVICE_ADD_CODE,
     SERVICE_DELETE_CODE,
     SERVICE_GET_CODES,
+    UPDATE_INTERVAL,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -47,6 +53,22 @@ async def test_lock_attributes(
     lock = hass.states.get("lock.vault_door")
     assert lock is not None
     assert lock.state == LockState.JAMMED
+
+
+async def test_lock_disconnected(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test lock unavailable when disconnected."""
+    mock_lock.connected = False
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    lock = hass.states.get("lock.vault_door")
+    assert lock is not None
+    assert lock.state == STATE_UNAVAILABLE
 
 
 async def test_lock_services(

@@ -4,6 +4,7 @@ import asyncio
 from asyncio import Task
 import json
 import logging
+from typing import override
 
 from serialx import Parity, SerialException, StopBits, open_serial_connection
 import voluptuous as vol
@@ -124,6 +125,7 @@ class SerialSensor(SensorEntity):
         self._serial_loop_task: Task[None] | None = None
         self._template = value_template
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""
         self._serial_loop_task = self.hass.async_create_background_task(

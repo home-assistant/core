@@ -24,11 +24,13 @@ import pytest
 from homeassistant.components.anthropic.const import (
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DOMAIN,
 )
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import model_list
 
@@ -40,7 +42,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
         title="Claude",
-        domain="anthropic",
+        domain=DOMAIN,
         data={
             "api_key": "bla",
         },
@@ -87,7 +89,7 @@ async def mock_init_component(
         new_callable=AsyncMock,
         return_value=AsyncPage(data=model_list),
     ):
-        assert await async_setup_component(hass, "anthropic", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield
 
@@ -170,8 +172,7 @@ def mock_create_stream() -> Generator[AsyncMock]:
             ):
                 container = Container(
                     id=kwargs.get("container_id", "container_1234567890ABCDEFGHIJKLMN"),
-                    expires_at=datetime.datetime.now(tz=datetime.UTC)
-                    + datetime.timedelta(minutes=5),
+                    expires_at=dt_util.utcnow() + datetime.timedelta(minutes=5),
                 )
 
             yield event

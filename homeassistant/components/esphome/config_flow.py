@@ -4,7 +4,7 @@ from collections import OrderedDict
 from collections.abc import Mapping
 import json
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aioesphomeapi import (
     APIClient,
@@ -74,7 +74,11 @@ ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
 ERROR_INVALID_PASSWORD_AUTH = "invalid_auth"
 _LOGGER = logging.getLogger(__name__)
 
-ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
+# A deliberately wrong key (base64 of thirty two ASCII zero characters, not
+# zero bytes) used only to elicit the server hello so the device name can be
+# read. Not to be confused with aioesphomeapi.ZERO_NOISE_PSK, the well known
+# all zeros provisioning key.
+PROBE_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
 DEFAULT_NAME = "ESPHome"
 
 _BLUETOOTH_SCANNING_MODE_SELECTOR = SelectSelector(
@@ -135,6 +139,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -270,7 +275,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 # to get the device name which will allow us to populate
                 # the device name and hopefully get the encryption key
                 # from the dashboard.
-                self._noise_psk = ZERO_NOISE_PSK
+                self._noise_psk = PROBE_NOISE_PSK
                 response = await self.fetch_device_info()
                 self._noise_psk = None
 
@@ -314,6 +319,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={"name": self._async_get_human_readable_name()},
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -426,6 +432,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
@@ -465,6 +472,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -478,6 +486,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # for configured devices.
         return self.async_abort(reason="already_configured")
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -940,6 +949,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ESPHomeConfigEntry,
     ) -> OptionsFlowHandler:

@@ -29,6 +29,7 @@ from . import (
     mypy_config,
     quality_scale,
     requirements,
+    sensor,
     services,
     ssdp,
     translations,
@@ -69,6 +70,7 @@ HASS_PLUGINS = [
     mdi_icons,
     mypy_config,
     metadata,
+    sensor,
 ]
 
 ALL_PLUGIN_NAMES = [

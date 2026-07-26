@@ -1,6 +1,6 @@
 """Adds config flow for Nord Pool integration."""
 
-from typing import Any
+from typing import Any, override
 
 from pynordpool import (
     Currency,
@@ -76,6 +76,7 @@ class NordpoolConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
