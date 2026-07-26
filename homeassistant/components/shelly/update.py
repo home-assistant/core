@@ -115,7 +115,7 @@ class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @override
     def in_progress(self) -> bool:
         """Update installation in progress."""
-        return bool(self._update_status.get("state", "idle") == "updating")
+        return bool(self._update_status.get("state", "") in ["started", "updating"])
 
     @property
     @override
