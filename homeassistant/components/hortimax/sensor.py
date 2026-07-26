@@ -93,7 +93,8 @@ def _describe(
     mapped = unit is not None
     if unit is None:
         unit = raw_unit  # truthful, but rules out a device class
-    precision = UNIT_PRECISION.get(unit, 0) if mapped else 0
+    # An unmapped unit gives no basis for choosing a precision.
+    precision = UNIT_PRECISION.get(unit) if mapped else None
 
     identifier = readout.identifier.lower()
     device_class: SensorDeviceClass | None = None
