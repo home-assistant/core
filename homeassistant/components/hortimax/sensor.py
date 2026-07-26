@@ -188,6 +188,8 @@ class HortimaxReadoutSensor(HortimaxEntity, SensorEntity):
             return None
         subject = readout_subject(readout.identifier)
         if subject in TIME_OF_DAY_READOUTS:
+            # Seconds since midnight at the controller. HortOS reports no
+            # timezone, so this assumes it shares Home Assistant's.
             return dt_util.start_of_local_day() + timedelta(seconds=number)
         if subject == WIND_DIRECTION_SUBJECT:
             # Returns None for ids outside the known enumeration block.
