@@ -1,7 +1,7 @@
 """Support for the Airzone Cloud binary sensors."""
 
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aioairzone_cloud.const import (
     AZD_ACTIVE,
@@ -159,11 +159,13 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
     entity_description: AirzoneBinarySensorEntityDescription
 
     @property
+    @override
     def available(self) -> bool:
         """Return Airzone Cloud binary sensor availability."""
         return super().available and self.is_on is not None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()

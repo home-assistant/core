@@ -62,6 +62,9 @@
       "free_members": {
         "name": "Free members"
       },
+      "gift_members": {
+        "name": "Gift members"
+      },
       "latest_email": {
         "name": "Latest email"
       },

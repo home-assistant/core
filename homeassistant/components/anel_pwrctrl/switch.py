@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from anel_pwrctrl import Device, DeviceMaster, Switch
 import voluptuous as vol
@@ -86,10 +86,12 @@ class PwrCtrlSwitch(SwitchEntity):
         self._parent_device.update()
         self._attr_is_on = self._port.get_state()
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._port.on()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._port.off()

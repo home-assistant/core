@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum, StrEnum
+from typing import override
 
 from pynecil import (
     AnimationSpeed,
@@ -210,11 +211,13 @@ class IronOSSelectEntity(IronOSBaseEntity, SelectEntity):
         self.settings = coordinators.settings
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
 
         return self.entity_description.value_fn(self.settings.data)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
 
@@ -223,6 +226,7 @@ class IronOSSelectEntity(IronOSBaseEntity, SelectEntity):
             self.entity_description.raw_value_fn(option),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 

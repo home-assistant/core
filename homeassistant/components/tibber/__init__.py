@@ -4,12 +4,17 @@ from dataclasses import dataclass, field
 import logging
 
 import aiohttp
-from aiohttp.client_exceptions import ClientError, ClientResponseError
+from aiohttp.client_exceptions import ClientError
 import tibber
 
 from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -104,13 +109,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     session = OAuth2Session(hass, entry, implementation)
     try:
         await session.async_ensure_token_valid()
-    except ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauthentication required"
-            ) from err
-        raise ConfigEntryNotReady from err
-    except ClientError as err:
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed(
+            "OAuth session is not valid, reauthentication required"
+        ) from err
+    except (OAuth2TokenRequestError, ClientError) as err:
         raise ConfigEntryNotReady from err
 
     entry.runtime_data = TibberRuntimeData(

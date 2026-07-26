@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from homeassistant.components.ipma.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import ENTRY_CONFIG, MockLocation
@@ -13,7 +14,7 @@ async def test_ipma_fire_risk_create_sensors(hass: HomeAssistant) -> None:
     """Test creation of fire risk sensors."""
 
     with patch("pyipma.location.Location.get", return_value=MockLocation()):
-        entry = MockConfigEntry(domain="ipma", data=ENTRY_CONFIG)
+        entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -27,7 +28,7 @@ async def test_ipma_uv_index_create_sensors(hass: HomeAssistant) -> None:
     """Test creation of uv index sensors."""
 
     with patch("pyipma.location.Location.get", return_value=MockLocation()):
-        entry = MockConfigEntry(domain="ipma", data=ENTRY_CONFIG)
+        entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -41,7 +42,7 @@ async def test_ipma_warning_create_sensors(hass: HomeAssistant) -> None:
     """Test creation of warning sensors."""
 
     with patch("pyipma.location.Location.get", return_value=MockLocation()):
-        entry = MockConfigEntry(domain="ipma", data=ENTRY_CONFIG)
+        entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

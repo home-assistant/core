@@ -392,6 +392,37 @@ async def test_blindtilt_controlling(
             assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 50
 
 
+async def test_blindtilt_idle_advertisement(
+    hass: HomeAssistant, mock_entry_factory: Callable[[str], MockConfigEntry]
+) -> None:
+    """Test blindtilt handles BLE advertisement without motionDirection."""
+    inject_bluetooth_service_info(hass, WOBLINDTILT_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="blind_tilt")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.get_basic_info",
+        new=AsyncMock(return_value={}),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = "cover.test_name"
+        address = "AA:BB:CC:DD:EE:FF"
+        service_data = b"x\x00*"
+        manufacturer_data = b"\xfbgA`\x98\xe8\x1d%F\x12\x85"
+
+        inject_bluetooth_service_info(
+            hass, make_advertisement(address, manufacturer_data, service_data)
+        )
+        await hass.async_block_till_done()
+
+        # Should not crash; entity should still exist
+        state = hass.states.get(entity_id)
+        assert state is not None
+
+
 async def test_roller_shade_setup(
     hass: HomeAssistant, mock_entry_factory: Callable[[str], MockConfigEntry]
 ) -> None:

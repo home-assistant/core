@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass, replace
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from kasa import (
     AuthenticationError,
@@ -248,6 +248,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         """Return unique ID for the entity."""
         raise NotImplementedError
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call update attributes after the device is added to the platform."""
         await super().async_added_to_hass()
@@ -281,12 +282,14 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             self._attr_available = available
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_call_update_attrs()
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success and self._attr_available
@@ -316,6 +319,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         # values like unit_of_measurement and suggested_display_precision
         self._async_call_update_attrs()
 
+    @override
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
         return self._get_feature_unique_id(self._device, self.entity_description)
@@ -561,6 +565,7 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
             else:
                 self._attr_name = get_device_name(device)
 
+    @override
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
         desc = self.entity_description

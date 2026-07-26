@@ -1,1 +1,1 @@
-"""Tests for the GPSLogger component."""
+"""Tests for the GPSLogger integration."""

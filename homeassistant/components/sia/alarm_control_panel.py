@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pysiaalarm import SIAEvent
 
@@ -105,6 +105,7 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
         self._attr_alarm_state: AlarmControlPanelState | None = None
         self._old_state: AlarmControlPanelState | None = None
 
+    @override
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
         self._attr_alarm_state = None
@@ -116,6 +117,7 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
         if self.state == STATE_UNAVAILABLE:
             self._attr_available = False
 
+    @override
     def update_state(self, sia_event: SIAEvent) -> bool:
         """Update the state of the alarm control panel.
 

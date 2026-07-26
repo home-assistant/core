@@ -30,6 +30,7 @@ def platform_autouse():
         yield
 
 
+@pytest.mark.usefixtures("no_quirk")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,

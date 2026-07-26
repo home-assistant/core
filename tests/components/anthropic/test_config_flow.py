@@ -275,9 +275,9 @@ async def test_subentry_options_thinking_budget_more_than_max(
         },
     )
     assert options["type"] is FlowResultType.FORM
-    assert options["step_id"] == "advanced"
+    assert options["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     options = await hass.config_entries.subentries.async_configure(
         options["flow_id"],
         {"chat_model": "claude-sonnet-4-5"},
@@ -330,9 +330,9 @@ async def test_subentry_web_search_user_location(
         },
     )
     assert options["type"] is FlowResultType.FORM
-    assert options["step_id"] == "advanced"
+    assert options["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     options = await hass.config_entries.subentries.async_configure(
         options["flow_id"],
         {
@@ -424,7 +424,7 @@ async def test_model_list(
         },
     )
     assert options["type"] is FlowResultType.FORM
-    assert options["step_id"] == "advanced"
+    assert options["step_id"] == "additional"
     assert options["data_schema"].schema["chat_model"].config["options"] == snapshot
 
 
@@ -447,9 +447,9 @@ async def test_invalid_model(
         },
     )
     assert options["type"] is FlowResultType.FORM
-    assert options["step_id"] == "advanced"
+    assert options["step_id"] == "additional"
 
-    # Configure advanced step but with api error
+    # Configure additional step but with api error
     with patch(
         "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.retrieve",
         new_callable=AsyncMock,
@@ -659,7 +659,7 @@ async def test_invalid_model(
         (  # Model with thinking effort options
             {
                 CONF_RECOMMENDED: False,
-                CONF_CHAT_MODEL: "claude-opus-4-6",
+                CONF_CHAT_MODEL: "claude-fable-5",
                 CONF_PROMPT: "bla",
                 CONF_PROMPT_CACHING: "automatic",
                 CONF_TOOL_SEARCH: True,
@@ -877,12 +877,12 @@ async def test_ai_task_subentry_not_loaded(
     assert result.get("reason") == "entry_not_loaded"
 
 
-async def test_creating_ai_task_subentry_advanced(
+async def test_creating_ai_task_subentry_additional(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
 ) -> None:
-    """Test creating an AI task subentry with advanced settings."""
+    """Test creating an AI task subentry with additional settings."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "ai_task_data"),
         context={"source": config_entries.SOURCE_USER},
@@ -891,7 +891,7 @@ async def test_creating_ai_task_subentry_advanced(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "init"
 
-    # Go to advanced settings
+    # Go to additional settings
     result2 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
@@ -901,9 +901,9 @@ async def test_creating_ai_task_subentry_advanced(
     )
 
     assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "advanced"
+    assert result2.get("step_id") == "additional"
 
-    # Configure advanced settings
+    # Configure additional settings
     result3 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {

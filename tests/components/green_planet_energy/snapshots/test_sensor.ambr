@@ -42,8 +42,8 @@
 # name: test_sensors[sensor.green_planet_energy_current_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Green Planet Energy Current price',
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Green Planet Energy Current price',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.green_planet_energy_current_price',
@@ -93,8 +93,8 @@
 # name: test_sensors[sensor.green_planet_energy_highest_price_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Green Planet Energy Highest price time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Green Planet Energy Highest price time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.green_planet_energy_highest_price_time',
@@ -147,8 +147,8 @@
 # name: test_sensors[sensor.green_planet_energy_highest_price_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Green Planet Energy Highest price today',
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Green Planet Energy Highest price today',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.green_planet_energy_highest_price_today',
@@ -201,8 +201,8 @@
 # name: test_sensors[sensor.green_planet_energy_lowest_price_day_06_00_18_00-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Green Planet Energy Lowest price day (06:00-18:00)',
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Green Planet Energy Lowest price day (06:00-18:00)',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.green_planet_energy_lowest_price_day_06_00_18_00',
@@ -252,8 +252,8 @@
 # name: test_sensors[sensor.green_planet_energy_lowest_price_day_time_06_00_18_00-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Green Planet Energy Lowest price day time (06:00-18:00)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Green Planet Energy Lowest price day time (06:00-18:00)',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.green_planet_energy_lowest_price_day_time_06_00_18_00',
@@ -306,8 +306,8 @@
 # name: test_sensors[sensor.green_planet_energy_lowest_price_night_18_00_06_00-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Green Planet Energy Lowest price night (18:00-06:00)',
-      'unit_of_measurement': '€/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Green Planet Energy Lowest price night (18:00-06:00)',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.green_planet_energy_lowest_price_night_18_00_06_00',
@@ -357,8 +357,8 @@
 # name: test_sensors[sensor.green_planet_energy_lowest_price_night_time_18_00_06_00-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Green Planet Energy Lowest price night time (18:00-06:00)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Green Planet Energy Lowest price night time (18:00-06:00)',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.green_planet_energy_lowest_price_night_time_18_00_06_00',

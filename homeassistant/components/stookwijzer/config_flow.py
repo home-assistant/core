@@ -1,6 +1,6 @@
 """Config flow to configure the Stookwijzer integration."""
 
-from typing import Any
+from typing import Any, override
 
 from stookwijzer import Stookwijzer
 import voluptuous as vol
@@ -17,6 +17,7 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

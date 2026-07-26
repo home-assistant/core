@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from enum import StrEnum
+from typing import override
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -58,6 +59,7 @@ class SleepAsAndroidSensorEntity(SleepAsAndroidEntity, RestoreSensor):
     entity_description: SensorEntityDescription
 
     @callback
+    @override
     def _async_handle_event(self, webhook_id: str, data: dict[str, str]) -> None:
         """Handle the Sleep as Android event."""
 
@@ -89,6 +91,7 @@ class SleepAsAndroidSensorEntity(SleepAsAndroidEntity, RestoreSensor):
 
             self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore entity state."""
         state = await self.async_get_last_sensor_data()

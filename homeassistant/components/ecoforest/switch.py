@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyecoforest.api import EcoforestApi
 from pyecoforest.models.device import Device
@@ -54,15 +54,18 @@ class EcoforestSwitchEntity(EcoforestEntity, SwitchEntity):
     entity_description: EcoforestSwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the ecoforest device."""
         return self.entity_description.value_fn(self.data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the ecoforest device."""
         await self.entity_description.switch_fn(self.coordinator.api, True)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the ecoforest device."""
         await self.entity_description.switch_fn(self.coordinator.api, False)

@@ -26,6 +26,12 @@
         "description": "The credentials for {username} need to be updated",
         "title": "Re-authenticate Blink"
       },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -54,7 +60,7 @@
   },
   "exceptions": {
     "cant_write": {
-      "message": "Can't write to file."
+      "message": "Can't write to file, check logs for details."
     },
     "failed_arm": {
       "message": "Blink failed to arm camera."

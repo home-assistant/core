@@ -1,5 +1,7 @@
 """Entity to track connections to websocket API."""
 
+from typing import override
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -35,6 +37,7 @@ class APICount(SensorEntity):
         """Initialize the API count."""
         self._attr_native_value = 0
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle addition to hass."""
         self.async_on_remove(

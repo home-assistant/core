@@ -1,7 +1,7 @@
 """Config flow for Ukraine Alarm."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
 from uasiren.client import Client
@@ -26,6 +26,7 @@ class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         self.states: list[dict[str, Any]] | None = None
         self.selected_region: dict[str, Any] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
