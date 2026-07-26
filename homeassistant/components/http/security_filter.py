@@ -56,7 +56,7 @@ def setup_security_filter(app: Application) -> None:
         if (remote := request.remote) is None:
             return "[unknown remote]"
         try:
-            return f"{remote} ({ip_address(remote)})"  # type: ignore[arg-type]
+            return f"{remote} ({ip_address(remote)})"
         except ValueError:
             return remote
 
