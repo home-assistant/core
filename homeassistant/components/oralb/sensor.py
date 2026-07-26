@@ -165,15 +165,11 @@ class OralBBluetoothSensorEntity(
             isinstance(sensor_data.native_value, int)
         ):
             self._previous_native_value = sensor_data.native_value
-        if (
-            (last_state := await self.async_get_last_state()) is not None
-            and (
-                last_reset := last_state.attributes.get(
-                    SensorEntityStateAttribute.LAST_RESET
-                )
+        if (last_state := await self.async_get_last_state()) is not None and (
+            last_reset := last_state.attributes.get(
+                SensorEntityStateAttribute.LAST_RESET
             )
-            is not None
-        ):
+        ) is not None:
             self._attr_last_reset = dt_util.parse_datetime(str(last_reset))
 
     @callback
