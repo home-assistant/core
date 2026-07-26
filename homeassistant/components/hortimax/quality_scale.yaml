@@ -55,13 +55,15 @@ rules:
   discovery:
     status: exempt
     comment: |
-      The HortOS API is a cloud service reached with an API key; there is
-      nothing to discover on the network.
+      The cloud API has no presence on the local network. The on-premise
+      deployment runs on a Ridder Connect Box, which is configured with a
+      static IP and advertises no mDNS service, so it turns up in neither
+      mDNS nor DHCP discovery.
   discovery-update-info:
     status: exempt
     comment: |
-      The HortOS API is a cloud service reached with an API key; there is
-      nothing to discover on the network.
+      Nothing is discovered, so there is no discovery information to keep up
+      to date.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
