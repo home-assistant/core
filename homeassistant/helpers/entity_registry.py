@@ -1889,8 +1889,9 @@ class EntityRegistry(BaseRegistry):
             if not valid_entity_id(new_entity_id):
                 raise ValueError(
                     f"Invalid entity ID {new_entity_id!r}. "
-                    "Entity IDs must use the format 'domain.object_id', "
-                    "where object_id contains only lowercase letters, digits, and underscores."
+                    "Entity IDs must use the format 'domain.object_id', where each part "
+                    "contains only lowercase letters, digits, and single underscores, "
+                    "with no leading or trailing underscores."
                 )
 
             if split_entity_id(new_entity_id)[0] != split_entity_id(entity_id)[0]:
