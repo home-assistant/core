@@ -206,6 +206,17 @@
             }
           }
         }
+      },
+      "encoder": {
+        "name": "Rotary encoder",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "rotate_cw": "Rotated clockwise",
+              "rotate_ccw": "Rotated counter-clockwise"
+            }
+          }
+        }
       }
     },
     "fan": {

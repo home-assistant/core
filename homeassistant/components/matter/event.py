@@ -1,6 +1,7 @@
 """Matter event entities from Node events."""
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, override
 
 from chip.clusters import Objects as clusters
@@ -48,6 +49,29 @@ STANDARD_EVENT_TYPES_MAP: dict[int, str] = {
     clusters.Switch.Events.MultiPressComplete.event_id: (
         ButtonEventType.MULTI_PRESS_END
     ),
+}
+
+
+class EncoderType(Enum):
+    """Type of encoder - affects wrap-around behavior."""
+
+    ROTARY = "rotary"
+    LINEAR = "linear"
+    UNKNOWN = "unknown"
+
+
+@dataclass
+class EncoderConfig:
+    """Configuration for a known encoder device."""
+
+    encoder_type: EncoderType
+    positions: int | None = None
+
+
+# Known encoder devices by (vendor_id, product_id)
+KNOWN_ENCODERS: dict[tuple[int, int], EncoderConfig] = {
+    # IKEA BILRESA scroll wheel (E2490)
+    (0x117C, 0x8000): EncoderConfig(EncoderType.ROTARY, 18),
 }
 
 
@@ -250,8 +274,160 @@ class MatterEventEntity(MatterEventEntityBase):
         self.async_write_ha_state()
 
 
+class MatterEncoderEventEntity(MatterEventEntityBase):
+    """Matter Event entity for rotary/linear encoders.
+
+    Devices like IKEA BILRESA use MultiPressComplete to report encoder position.
+    This entity detects such devices and fires rotate_cw/rotate_ccw events with
+    direction and magnitude instead of button presses.
+    """
+
+    _encoder_type: EncoderType
+    _last_position: int | None
+    _max_positions: int
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the entity."""
+        super().__init__(*args, **kwargs)
+
+        self._encoder_type = EncoderType.UNKNOWN
+        self._last_position = None
+        self._max_positions = 2
+
+        vendor_id = self._get_vendor_id()
+        product_id = self._get_product_id()
+
+        if known := KNOWN_ENCODERS.get((vendor_id, product_id)):
+            self._encoder_type = known.encoder_type
+            if known.positions:
+                self._max_positions = known.positions
+        else:
+            feature_map = int(
+                self.get_matter_attribute_value(clusters.Switch.Attributes.FeatureMap)
+            )
+            if feature_map & SwitchFeature.kLatchingSwitch:
+                self._encoder_type = EncoderType.ROTARY
+                self._max_positions = (
+                    self.get_matter_attribute_value(
+                        clusters.Switch.Attributes.NumberOfPositions
+                    )
+                    or 18
+                )
+            elif feature_map & SwitchFeature.kMomentarySwitchMultiPress:
+                self._max_positions = (
+                    self.get_matter_attribute_value(
+                        clusters.Switch.Attributes.MultiPressMax
+                    )
+                    or 18
+                )
+
+        self._attr_event_types = ["rotate_cw", "rotate_ccw"]
+
+    def _get_vendor_id(self) -> int:
+        """Get the vendor ID for this device."""
+        try:
+            return int(self._endpoint.device_info.vendorID or 0)
+        except (TypeError, ValueError, AttributeError):
+            return 0
+
+    def _get_product_id(self) -> int:
+        """Get the product ID for this device."""
+        try:
+            return int(self._endpoint.device_info.productID or 0)
+        except (TypeError, ValueError, AttributeError):
+            return 0
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle being added to Home Assistant."""
+        await super().async_added_to_hass()
+        current_pos = self.get_matter_attribute_value(
+            clusters.Switch.Attributes.CurrentPosition
+        )
+        if current_pos is not None:
+            self._last_position = int(current_pos)
+
+    @override
+    @callback
+    def _handle_switch_event(self, data: MatterNodeEvent) -> None:
+        """Handle encoder position events."""
+        new_position: int | None = None
+
+        if data.event_id == clusters.Switch.Events.MultiPressComplete.event_id:
+            new_position = (data.data or {}).get("totalNumberOfPressesCounted")
+        elif data.event_id == clusters.Switch.Events.SwitchLatched.event_id:
+            new_position = (data.data or {}).get("newPosition")
+        elif data.event_id == clusters.Switch.Events.InitialPress.event_id:
+            new_position = (data.data or {}).get("newPosition")
+
+        if new_position is None:
+            return
+
+        if self._last_position is None:
+            self._last_position = new_position
+            return
+
+        delta = self._calculate_delta(self._last_position, new_position)
+        if delta != 0:
+            direction = "rotate_cw" if delta > 0 else "rotate_ccw"
+            self._trigger_event(
+                direction,
+                {
+                    "magnitude": abs(delta),
+                    "position": new_position,
+                    "previous_position": self._last_position,
+                    "encoder_type": self._encoder_type.value,
+                },
+            )
+            self.async_write_ha_state()
+
+        self._last_position = new_position
+
+    def _calculate_delta(self, old_pos: int, new_pos: int) -> int:
+        """Calculate position delta, handling wrap-around for rotary encoders."""
+        raw_delta = new_pos - old_pos
+        half_max = self._max_positions // 2
+
+        if self._encoder_type == EncoderType.LINEAR:
+            return raw_delta
+
+        if self._encoder_type == EncoderType.ROTARY:
+            if raw_delta > half_max:
+                return raw_delta - self._max_positions
+            if raw_delta < -half_max:
+                return raw_delta + self._max_positions
+            return raw_delta
+
+        # Unknown: infer from delta and assume rotary
+        if abs(raw_delta) > half_max:
+            self._encoder_type = EncoderType.LINEAR
+        return raw_delta
+
+
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
+    # Encoder devices (IKEA BILRESA, etc.) - must be before generic switch schemas
+    MatterDiscoverySchema(
+        platform=Platform.EVENT,
+        entity_description=MatterEventEntityDescription(
+            key="RotaryEncoder",
+            translation_key="encoder",
+        ),
+        entity_class=MatterEncoderEventEntity,
+        required_attributes=(
+            clusters.Switch.Attributes.CurrentPosition,
+            clusters.Switch.Attributes.FeatureMap,
+        ),
+        device_type=(device_types.GenericSwitch,),
+        vendor_id=(0x117C,),  # IKEA
+        product_id=(0x8000,),  # BILRESA E2490
+        optional_attributes=(
+            clusters.Switch.Attributes.NumberOfPositions,
+            clusters.Switch.Attributes.MultiPressMax,
+            clusters.FixedLabel.Attributes.LabelList,
+        ),
+        allow_multi=True,
+    ),
     MatterDiscoverySchema(
         platform=Platform.EVENT,
         entity_description=MatterEventEntityDescription(
