@@ -25,7 +25,7 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
 )
 
-from .const import DOMAIN, LOGGER, MeshRoles
+from .const import CONF_ALLOW_MESH_INFO_NON_ADMIN, DOMAIN, LOGGER, MeshRoles
 from .coordinator import FritzConfigEntry
 
 
@@ -171,6 +171,28 @@ async def _async_get_mesh_info(service_call: ServiceCall) -> ServiceResponse:
         )
 
     target_entry = target_entries[0]
+
+    user_id = service_call.context.user_id
+    if user_id is None:
+        is_admin = True
+    else:
+        is_admin = False
+        user = await service_call.hass.auth.async_get_user(user_id)
+        if user is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="service_mesh_info_not_permitted",
+            )
+        is_admin = user.is_admin
+
+    if not is_admin and not target_entry.options.get(
+        CONF_ALLOW_MESH_INFO_NON_ADMIN, False
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="service_mesh_info_not_permitted",
+        )
+
     avm_wrapper = target_entry.runtime_data
 
     if (mesh_topology := avm_wrapper.mesh_topology_raw) is None:
