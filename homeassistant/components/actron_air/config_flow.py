@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 
 
 class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):

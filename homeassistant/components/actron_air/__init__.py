@@ -7,7 +7,7 @@ from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import (
     ActronAirConfigEntry,
     ActronAirRuntimeData,

@@ -18,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 
 SCAN_INTERVAL = timedelta(seconds=30)
 STALE_DEVICE_TIMEOUT = timedelta(minutes=5)
