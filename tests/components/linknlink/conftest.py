@@ -20,8 +20,8 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 
 from tests.common import MockConfigEntry
 
-HOST = "192.168.1.8"
-MAC = "e0:4b:41:01:67:bb"
+HOST = "192.0.2.1"
+MAC = "02:00:00:00:00:01"
 PORT = 80
 
 DEVICE = UltraDevice(
