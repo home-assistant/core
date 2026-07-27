@@ -56,6 +56,8 @@ class ImmichSmartSearchArgs(TypedDict, total=False):
     """Type for smart search arguments."""
 
     query: str
+    page_size: int
+    max_pages: int
     asset_type: AssetType
     album_ids: list[str]
     person_ids: list[str]
@@ -405,7 +407,11 @@ class ImmichMediaSource(MediaSource):
         assert entry
         immich_api = entry.runtime_data.api
 
-        search_args: ImmichSmartSearchArgs = {"query": query.search_query}
+        search_args: ImmichSmartSearchArgs = {
+            "query": query.search_query,
+            "page_size": 100,
+            "max_pages": 1,
+        }
         if identifier.collection == "albums":
             search_args["is_not_in_album"] = False
             if album_id := identifier.collection_id:

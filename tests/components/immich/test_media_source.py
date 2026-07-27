@@ -631,7 +631,7 @@ async def test_media_view(
         (
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
             SearchMediaQuery(search_query="my search"),
-            {"query": "my search"},
+            {"query": "my search", "page_size": 100, "max_pages": 1},
         ),
         # search on config entry root (collections overview) with different media class filters
         (
@@ -639,14 +639,24 @@ async def test_media_view(
             SearchMediaQuery(
                 search_query="my search", media_filter_classes=[MediaClass.IMAGE]
             ),
-            {"query": "my search", "asset_type": AssetType.IMAGE},
+            {
+                "query": "my search",
+                "page_size": 100,
+                "max_pages": 1,
+                "asset_type": AssetType.IMAGE,
+            },
         ),
         (
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
             SearchMediaQuery(
                 search_query="my search", media_filter_classes=[MediaClass.VIDEO]
             ),
-            {"query": "my search", "asset_type": AssetType.VIDEO},
+            {
+                "query": "my search",
+                "page_size": 100,
+                "max_pages": 1,
+                "asset_type": AssetType.VIDEO,
+            },
         ),
         (
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
@@ -654,19 +664,26 @@ async def test_media_view(
                 search_query="my search",
                 media_filter_classes=[MediaClass.IMAGE, MediaClass.VIDEO],
             ),
-            {"query": "my search"},
+            {"query": "my search", "page_size": 100, "max_pages": 1},
         ),
         # search on album collection
         (
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e|albums",
             SearchMediaQuery(search_query="my search"),
-            {"query": "my search", "is_not_in_album": False},
+            {
+                "query": "my search",
+                "page_size": 100,
+                "max_pages": 1,
+                "is_not_in_album": False,
+            },
         ),
         (
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e|albums|721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
             SearchMediaQuery(search_query="my search"),
             {
                 "query": "my search",
+                "page_size": 100,
+                "max_pages": 1,
                 "is_not_in_album": False,
                 "album_ids": ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"],
             },
@@ -675,13 +692,15 @@ async def test_media_view(
         (
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e|people",
             SearchMediaQuery(search_query="my search"),
-            {"query": "my search"},
+            {"query": "my search", "page_size": 100, "max_pages": 1},
         ),
         (
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e|people|721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
             SearchMediaQuery(search_query="my search"),
             {
                 "query": "my search",
+                "page_size": 100,
+                "max_pages": 1,
                 "person_ids": ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"],
             },
         ),
@@ -689,13 +708,15 @@ async def test_media_view(
         (
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e|tags",
             SearchMediaQuery(search_query="my search"),
-            {"query": "my search"},
+            {"query": "my search", "page_size": 100, "max_pages": 1},
         ),
         (
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e|tags|721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
             SearchMediaQuery(search_query="my search"),
             {
                 "query": "my search",
+                "page_size": 100,
+                "max_pages": 1,
                 "tag_ids": ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"],
             },
         ),
@@ -703,7 +724,12 @@ async def test_media_view(
         (
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e|favorites",
             SearchMediaQuery(search_query="my search"),
-            {"query": "my search", "is_favorite": True},
+            {
+                "query": "my search",
+                "page_size": 100,
+                "max_pages": 1,
+                "is_favorite": True,
+            },
         ),
     ],
 )
