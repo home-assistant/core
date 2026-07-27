@@ -2,7 +2,6 @@
 
 import asyncio
 from http import HTTPStatus
-from ipaddress import ip_address
 
 from aiohttp import web
 import pytest
@@ -105,9 +104,9 @@ async def test_bad_requests(
 
     assert resp.status == HTTPStatus.BAD_REQUEST
 
-    message = f"Filtered a potential harmful request from {mock_api_client.host} ({ip_address(mock_api_client.host)}) to:"
+    message = f"Filtered a potential harmful request from {mock_api_client.host} to:"
     if fail_on_query_string:
-        message = f"Filtered a request from {mock_api_client.host} ({ip_address(mock_api_client.host)}) with a potential harmful query string:"
+        message = f"Filtered a request from {mock_api_client.host} with a potential harmful query string:"
     assert message in caplog.text
 
 
@@ -155,7 +154,9 @@ async def test_bad_requests_with_unsafe_bytes(
 
     assert resp.status == HTTPStatus.BAD_REQUEST
 
-    message = f"Filtered a request from {mock_api_client.host} ({ip_address(mock_api_client.host)}) with an unsafe byte in path:"
+    message = (
+        f"Filtered a request from {mock_api_client.host} with an unsafe byte in path:"
+    )
     if fail_on_query_string:
-        message = f"Filtered a request from {mock_api_client.host} ({ip_address(mock_api_client.host)}) with unsafe byte query string:"
+        message = f"Filtered a request from {mock_api_client.host} with unsafe byte query string:"
     assert message in caplog.text
