@@ -204,7 +204,9 @@ async def test_button_press(
     entity_registry: er.EntityRegistry,
     device_type: LEDIrDeviceType,
     key: str,
-    expected_codes: list[Generic24KeyCode | Generic13KeyCode],
+    expected_codes: list[
+        Generic24KeyCode | Generic13KeyCode | Generic40KeyCode | Generic44KeyCode
+    ],
 ) -> None:
     """Test button press action."""
     config_entry = MockConfigEntry(
