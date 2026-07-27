@@ -417,6 +417,34 @@
       "signalStrength": 4,
       "name_unicode": "Study Duette",
       "shade_api_class": "ShadeDualOverlappedTilt180"
+    },
+    {
+      "id": 25648,
+      "type": 66,
+      "capabilities": 5,
+      "batteryKind": 2,
+      "smartPowerSupply": {
+        "status": 0,
+        "id": 0,
+        "port": 0
+      },
+      "batteryStatus": 3,
+      "batteryStrength": 110,
+      "roomId": 26472,
+      "firmware": {
+        "revision": 2,
+        "subRevision": 0,
+        "build": 2180,
+        "index": 50
+      },
+      "name": "QWJvdmUgRG9vciBMZWZ0",
+      "signalStrength": 4,
+      "groupId": 6041,
+      "positions": {
+        "posKind1": 3,
+        "position1": 65535
+      },
+      "name_unicode": "Above Door Left"
     }
   ]
 }
