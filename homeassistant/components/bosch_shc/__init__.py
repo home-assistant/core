@@ -59,11 +59,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
     except (SHCConnectionError, SHCSessionError) as err:
         await session.api.close()
         raise ConfigEntryNotReady from err
+    except BaseException:
+        await session.api.close()
+        raise
 
     shc_info = session.information
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
-    if shc_info.updateState.name == "UPDATE_AVAILABLE":
+    if shc_info.update_state == "UPDATE_AVAILABLE":
         _LOGGER.warning("Please check for software updates in the Bosch Smart Home App")
 
     entry.runtime_data = session
@@ -82,12 +85,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
     try:
         await session.start_polling()
     except (SHCConnectionError, SHCSessionError, JSONRPCError) as err:
-        # subscribe (RE/subscribe) is a real network call -- a drop here
-        # used to crash setup uncaught and leak the session.
+        # subscribe (RE/subscribe) is a real network call.
         await session.api.close()
         raise ConfigEntryNotReady from err
+    except BaseException:
+        await session.api.close()
+        raise
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except BaseException:
+        await session.stop_polling()
+        raise
 
     async def stop_polling(event):
         """Stop polling service."""
