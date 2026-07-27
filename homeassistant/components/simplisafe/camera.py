@@ -1,6 +1,6 @@
 """Support for SimpliSafe cameras."""
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from simplipy.device import DeviceTypes
 from simplipy.device.sensor.v3 import SensorV3
@@ -37,7 +37,7 @@ async def async_setup_entry(
         found = [
             sensor
             for sensor in system.sensors.values()
-            if sensor.type == DeviceTypes.OUTDOOR_CAMERA
+            if sensor.type is DeviceTypes.OUTDOOR_CAMERA
         ]
         LOGGER.debug(
             "System %s: found %d outdoor camera(s): %s",
@@ -76,6 +76,7 @@ class SimpliSafeCamera(SimpliSafeEntity, Camera):
         Camera.__init__(self)
 
     @callback
+    @override
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
         """Update the entity when new data comes from the websocket."""
         if event.media_urls is not None:
@@ -92,6 +93,7 @@ class SimpliSafeCamera(SimpliSafeEntity, Camera):
                 self._device.serial,
             )
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
