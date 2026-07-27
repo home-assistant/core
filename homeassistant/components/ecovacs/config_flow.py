@@ -197,6 +197,30 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_DEVICE_ID] = device_id
         return errors, None
 
+    async def _async_finish_device_verification(self) -> ConfigFlowResult:
+        """Validate the connection after device verification succeeds."""
+        errors = await _validate_input(
+            self.hass,
+            self._pending_input,
+            self._verification_device_id,
+        )
+        if errors:
+            return self.async_show_form(
+                step_id="device_validation",
+                data_schema=vol.Schema({}),
+                errors=errors,
+            )
+
+        data = self._pending_input | {CONF_DEVICE_ID: self._verification_device_id}
+        if self._reauth:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data_updates=data
+            )
+        return self.async_create_entry(
+            title=data[CONF_USERNAME],
+            data=data,
+        )
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -289,12 +313,6 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self._verification_authenticator.verify_device(
                     user_input["verification_code"]
                 )
-                await self._verification_authenticator.teardown()
-                errors = await _validate_input(
-                    self.hass,
-                    self._pending_input,
-                    self._verification_device_id,
-                )
             except InvalidVerificationCodeError:
                 errors["base"] = "invalid_verification_code"
             except ClientError:
@@ -303,19 +321,9 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception verifying Ecovacs device")
                 errors["base"] = "unknown"
-
-            if not errors:
-                data = self._pending_input | {
-                    CONF_DEVICE_ID: self._verification_device_id
-                }
-                if self._reauth:
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=data
-                    )
-                return self.async_create_entry(
-                    title=data[CONF_USERNAME],
-                    data=data,
-                )
+            else:
+                await self._verification_authenticator.teardown()
+                return await self._async_finish_device_verification()
 
         return self.async_show_form(
             step_id="device_verification",
@@ -327,6 +335,17 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+    async def async_step_device_validation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Retry connection validation without reusing a verification code."""
+        if user_input is not None:
+            return await self._async_finish_device_verification()
+        return self.async_show_form(
+            step_id="device_validation",
+            data_schema=vol.Schema({}),
         )
 
     async def async_step_reauth(

@@ -28,6 +28,9 @@
           "override_rest_url": "Enter the REST URL of your self-hosted instance including the scheme (http/https)."
         }
       },
+      "device_validation": {
+        "description": "The device was verified, but Home Assistant could not finish connecting. Select submit to retry without requesting a new verification code."
+      },
       "device_verification": {
         "data": {
           "verification_code": "Verification code"
