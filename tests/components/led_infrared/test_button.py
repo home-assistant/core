@@ -155,6 +155,46 @@ async def test_setup(
             "brightness_down",
             [Generic44KeyCode.BRIGHTNESS_DOWN],
         ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "red_up",
+            [Generic44KeyCode.RED_UP],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "green_up",
+            [Generic44KeyCode.GREEN_UP],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "blue_up",
+            [Generic44KeyCode.BLUE_UP],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "red_down",
+            [Generic44KeyCode.RED_DOWN],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "green_down",
+            [Generic44KeyCode.GREEN_DOWN],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "blue_down",
+            [Generic44KeyCode.BLUE_DOWN],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "quick",
+            [Generic44KeyCode.QUICK],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "slow",
+            [Generic44KeyCode.SLOW],
+        ),
     ],
 )
 @pytest.mark.usefixtures("infrared_codes")
