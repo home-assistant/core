@@ -16,8 +16,10 @@ from google_health_api.model import (
     DataType,
     DistanceRollupValue,
     FloorsRollupValue,
+    HydrationLogRollupValue,
     Identity,
     ListDataPointResult,
+    NutritionLogRollupValue,
     StepsRollupValue,
     TotalCaloriesRollupValue,
     UserInfo,
@@ -147,6 +149,17 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         client.floors = AsyncMock()
         client.floors.today.return_value = _rollup_fixture(
             "floors.json", FloorsRollupValue, "floors"
+        )
+        client.hydration_log = AsyncMock()
+        client.hydration_log.today.return_value = _rollup_fixture(
+            "hydration.json", HydrationLogRollupValue, "hydrationLog"
+        )
+        client.hydration_log.required_read_scopes = [
+            "https://www.googleapis.com/auth/googlehealth.nutrition.readonly"
+        ]
+        client.nutrition_log = AsyncMock()
+        client.nutrition_log.today.return_value = _rollup_fixture(
+            "nutrition.json", NutritionLogRollupValue, "nutritionLog"
         )
         client.weight = AsyncMock()
         client.weight.list.return_value = _list_fixture("weight.json", WEIGHT)
