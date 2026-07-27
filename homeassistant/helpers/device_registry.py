@@ -64,7 +64,7 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
 )
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 3
-STORAGE_VERSION_MINOR = 1
+STORAGE_VERSION_MINOR = 2
 
 CLEANUP_DELAY = 10
 
@@ -836,12 +836,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
             # the registries are loaded.
             migrated_at = utcnow().isoformat()
             devices: list[dict[str, Any]] = []
-            # Ids of active devices dropped for lacking a config entry; a retained
-            # child's via_device_id pointing at one is detached below.
-            dropped_device_ids: set[str] = set()
-            # old composite id -> {config entry id -> new split id}, to rewrite
-            # via_device_id links pointing at a split parent
-            composite_splits: dict[str, dict[str, str]] = {}
             # Active splits whose copied disabled_by must be reconciled against their
             # single config entry once the config entries are loaded
             migrated_active_splits: list[dict[str, Any]] = []
@@ -866,7 +860,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 ]
                 if not pairs:
                     # Drop devices that have no config entry / subentry pairs
-                    dropped_device_ids.add(device["id"])
                     continue
                 if len(pairs) == 1:
                     config_entry_id, subentry_id = pairs[0]
@@ -892,9 +885,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     split["has_composite_identifiers"] = True
                     devices.append(split)
                     migrated_active_splits.append(split)
-                    composite_splits.setdefault(old_id, {})[config_entry_id] = split[
-                        "id"
-                    ]
             old_data["devices"] = devices
             # A split inherited the composite's disabled_by, which may not match its
             # single config entry (e.g. a split owned by an enabled entry must not stay
@@ -910,39 +900,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         _migrate_device_disabled_by(
                             split, config_entry.disabled_by is not None
                         )
-
-            def _split_for_via_device(
-                config_entry_id: str, splits: dict[str, str]
-            ) -> str:
-                """Pick the split for via device."""
-                if (split_id := splits.get(config_entry_id)) is not None:
-                    return split_id
-                config_entries = self.hass.config_entries
-                self_entry = config_entries.async_get_entry(config_entry_id)
-                if self_entry is not None:
-                    for split_entry_id, split_id in splits.items():
-                        split_entry = config_entries.async_get_entry(split_entry_id)
-                        if (
-                            split_entry is not None
-                            and split_entry.domain == self_entry.domain
-                        ):
-                            return split_id
-                return next(iter(splits.values()))
-
-            # Rewrite via_device_id links that pointed at a now-split composite parent
-            # to a live split, so the link never dangles on the removed composite id.
-            # The domain rung needs the config entries, which are initialized above
-            # whenever splits exist. A link to a retained unsplit parent is left
-            # unchanged; a link to a dropped parent is detached.
-            for device in devices:
-                if (
-                    splits := composite_splits.get(device["via_device_id"])
-                ) is not None:
-                    device["via_device_id"] = _split_for_via_device(
-                        device["config_entry_id"], splits
-                    )
-                elif device["via_device_id"] in dropped_device_ids:
-                    device["via_device_id"] = None
 
             deleted_devices: list[dict[str, Any]] = []
             for device in old_data["deleted_devices"]:
@@ -992,6 +949,61 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
             for migrated in (*devices, *deleted_devices):
                 migrated.pop("config_entries", None)
                 migrated.pop("config_entries_subentries", None)
+
+        if old_major_version < 3 or (old_major_version == 3 and old_minor_version < 2):
+            # Version 3.2, introduced in 2026.8, rewrites via_device_id links that do
+            # not reference a live device. A link to a composite parent split by the
+            # version 3 migration is remapped to one of the splits; any other stale
+            # link is detached.
+            device_ids = {device["id"] for device in old_data["devices"]}
+            # old composite id -> {config entry id -> split id}
+            composite_splits: dict[str, dict[str, str]] = {}
+            for device in old_data["devices"]:
+                if (composite_id := device["composite_device_id"]) is not None:
+                    composite_splits.setdefault(composite_id, {})[
+                        device["config_entry_id"]
+                    ] = device["id"]
+
+            def _split_for_via_device(
+                config_entry_id: str, splits: dict[str, str]
+            ) -> str:
+                """Pick the split for via device: same entry, same domain, any."""
+                if (split_id := splits.get(config_entry_id)) is not None:
+                    return split_id
+                config_entries = self.hass.config_entries
+                self_entry = config_entries.async_get_entry(config_entry_id)
+                if self_entry is not None:
+                    for split_entry_id, split_id in splits.items():
+                        split_entry = config_entries.async_get_entry(split_entry_id)
+                        if (
+                            split_entry is not None
+                            and split_entry.domain == self_entry.domain
+                        ):
+                            return split_id
+                return next(iter(splits.values()))
+
+            stale_via_devices = [
+                device
+                for device in old_data["devices"]
+                if device["via_device_id"] is not None
+                and device["via_device_id"] not in device_ids
+            ]
+            # The domain rung of the split resolution needs the config entries, which
+            # load concurrently, so wait for them only when a link must be remapped
+            if any(
+                device["via_device_id"] in composite_splits
+                for device in stale_via_devices
+            ):
+                await self.hass.config_entries.async_wait_initialized()
+            for device in stale_via_devices:
+                if (
+                    splits := composite_splits.get(device["via_device_id"])
+                ) is not None:
+                    device["via_device_id"] = _split_for_via_device(
+                        device["config_entry_id"], splits
+                    )
+                else:
+                    device["via_device_id"] = None
 
         if old_major_version > 3:
             raise NotImplementedError

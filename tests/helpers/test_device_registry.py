@@ -5347,6 +5347,139 @@ async def test_migration_remaps_via_device_id_to_split(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+async def test_migration_from_3_1_rewrites_stale_via_device_id(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Stale via_device_id links are remapped or detached when migrating from 3.1."""
+    entry_a = MockConfigEntry(domain="dom_a")
+    entry_a.add_to_hass(hass)
+    entry_a2 = MockConfigEntry(domain="dom_a")
+    entry_a2.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="dom_b")
+    entry_b.add_to_hass(hass)
+    entry_c = MockConfigEntry(domain="dom_c")
+    entry_c.add_to_hass(hass)
+    composite_id = "composite000000000000000000000"
+
+    def _device(
+        id_: str,
+        config_entry_id: str,
+        identifiers: list[list[str]],
+        via: str | None,
+        composite: str | None = None,
+    ) -> dict[str, Any]:
+        return {
+            "area_id": None,
+            "config_entry_id": config_entry_id,
+            "config_subentry_id": None,
+            "configuration_url": None,
+            "connections": [],
+            "created_at": "1970-01-01T00:00:00+00:00",
+            "disabled_by": None,
+            "entry_type": None,
+            "hw_version": None,
+            "id": id_,
+            "identifiers": identifiers,
+            "labels": [],
+            "composite_device_id": composite,
+            "composite_primary_config_entry": None,
+            "split_at": None,
+            "manufacturer": None,
+            "model": None,
+            "model_id": None,
+            "modified_at": "1970-01-01T00:00:00+00:00",
+            "name_by_user": None,
+            "name": None,
+            "has_composite_identifiers": composite is not None,
+            "primary_config_entry": config_entry_id,
+            "serial_number": None,
+            "sw_version": None,
+            "via_device_id": via,
+        }
+
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 3,
+        "minor_version": 1,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                _device(
+                    "splita000000000000000000000000",
+                    entry_a.entry_id,
+                    [["dom_a", "p"]],
+                    None,
+                    composite=composite_id,
+                ),
+                _device(
+                    "splitb000000000000000000000000",
+                    entry_b.entry_id,
+                    [["dom_b", "p"]],
+                    None,
+                    composite=composite_id,
+                ),
+                # composite link from an entry the parent spans: its split
+                _device(
+                    "childa000000000000000000000000",
+                    entry_a.entry_id,
+                    [["dom_a", "c"]],
+                    composite_id,
+                ),
+                # composite link from another entry of a split's domain: that split
+                _device(
+                    "childa200000000000000000000000",
+                    entry_a2.entry_id,
+                    [["dom_a", "c2"]],
+                    composite_id,
+                ),
+                # composite link sharing neither entry nor domain: any split
+                _device(
+                    "childc000000000000000000000000",
+                    entry_c.entry_id,
+                    [["dom_c", "c"]],
+                    composite_id,
+                ),
+                # link to an unknown device: detached
+                _device(
+                    "childx000000000000000000000000",
+                    entry_a.entry_id,
+                    [["dom_a", "cx"]],
+                    "unknown0000000000000000000000",
+                ),
+                # link to a live device: kept
+                _device(
+                    "childl000000000000000000000000",
+                    entry_a.entry_id,
+                    [["dom_a", "cl"]],
+                    "splitb000000000000000000000000",
+                ),
+            ],
+            "deleted_devices": [],
+        },
+    }
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    assert (
+        registry.devices["childa000000000000000000000000"].via_device_id
+        == "splita000000000000000000000000"
+    )
+    assert (
+        registry.devices["childa200000000000000000000000"].via_device_id
+        == "splita000000000000000000000000"
+    )
+    assert registry.devices["childc000000000000000000000000"].via_device_id in {
+        "splita000000000000000000000000",
+        "splitb000000000000000000000000",
+    }
+    assert registry.devices["childx000000000000000000000000"].via_device_id is None
+    assert (
+        registry.devices["childl000000000000000000000000"].via_device_id
+        == "splitb000000000000000000000000"
+    )
+
+
+@pytest.mark.parametrize("load_registries", [False])
 @pytest.mark.parametrize(
     ("composite_disabled_by", "expected_split_enabled", "expected_split_disabled"),
     [
