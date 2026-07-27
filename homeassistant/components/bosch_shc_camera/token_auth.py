@@ -1,10 +1,16 @@
 """Bearer-token lifecycle: read/refresh/proactive-renewal + auth failure alerts.
 
-Extracted from __init__.py's BoschCameraCoordinator (Phase 5 mixin split,
-continuing the pattern established by FCMCoordinatorMixin/
-FrigateCoordinatorMixin/SHCCoordinatorMixin — see those files' docstrings
-for why `self: Any` is used instead of a concrete
-`self: BoschCameraCoordinator` annotation).
+`TokenAuthCoordinatorMixin` is mixed into `BoschCameraCoordinator`
+(coordinator.py) rather than being methods directly on that class, so this
+module has no import-time dependency on it — `BoschCameraCoordinator`
+imports from here, not the other way around, avoiding a circular import.
+Every method below is annotated `self: Any` (not
+`self: BoschCameraCoordinator`) for the same reason: a concrete annotation
+would require importing `BoschCameraCoordinator` for typing only, which
+does create the cycle. The methods still access the real coordinator's
+attributes at runtime (`self.token`, `self._options_snapshot`, etc.) —
+`# type: ignore[no-any-return]` markers throughout note the real return
+type mypy can't see through the `Any` self parameter.
 
 Covers: the `token`/`refresh_token`/`options` properties (options included
 here since it lives right alongside the token properties in the original

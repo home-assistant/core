@@ -14,9 +14,10 @@ tuple, unchanged from the pre-extraction inline code's behavior.
 
 The `except UpdateFailed:`/`TimeoutError`/`aiohttp.ClientError` boundary
 stays in `_async_update_data` itself — this function raises `UpdateFailed`
-on failure but does not catch anything; a raised timeout/network error
-here propagates up through the SAME outer try/except in `__init__.py` as
-before this extraction, unchanged.
+(or `ConfigEntryAuthFailed` when re-authentication is required) on failure
+but does not catch anything; a raised timeout/network error here
+propagates up through the SAME outer try/except in `__init__.py` as before
+this extraction, unchanged.
 """
 
 import asyncio
@@ -26,6 +27,7 @@ from typing import TYPE_CHECKING, Any
 
 import aiohttp
 
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import CLOUD_API, TIMEOUT_VIDEO_INPUTS, VIDEO_INPUTS_RETRY_DELAY_SEC
@@ -46,8 +48,9 @@ async def fetch_camera_list(
 
     Returns ``(cam_list, token, headers)`` — the caller must use the
     returned `token`/`headers` for every subsequent request this tick, since
-    a 401 here refreshes them in place. Raises `UpdateFailed` on any
-    non-recoverable failure (non-200/401 status, or the retry also 401s).
+    a 401 here refreshes them in place. Raises `UpdateFailed` on a
+    non-recoverable HTTP-status failure, or `ConfigEntryAuthFailed` when a
+    freshly-renewed token is still rejected (re-authentication required).
     """
     # getattr handles stub coordinators in tests that predate the
     # diagnostic cloud_api_override field (real instances always set
@@ -151,9 +154,16 @@ async def fetch_camera_list(
                             "camera-account registration step. If no such screen appears, "
                             "contact Bosch support."
                         )
-                    raise UpdateFailed(
-                        "Token expired and renewal failed — go to Settings → Integrations → "
-                        "Bosch Smart Home Camera → Configure → Force new browser login"
+                    # A genuinely renewed-then-still-rejected token means
+                    # re-authentication is required — raise
+                    # ConfigEntryAuthFailed so HA starts the native reauth
+                    # flow automatically. UpdateFailed would just leave this
+                    # non-transient condition retrying forever, and there is
+                    # no manual "Force new browser login" options-flow
+                    # control in this build to direct the user to (bug-hunt
+                    # 2026-07-27, Copilot review round 3).
+                    raise ConfigEntryAuthFailed(
+                        "Token expired and renewal failed — re-authentication required"
                     )
                 if resp2.status != 200:
                     raise UpdateFailed(f"Camera list returned HTTP {resp2.status}")

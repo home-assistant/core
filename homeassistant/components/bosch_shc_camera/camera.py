@@ -23,6 +23,7 @@ from PIL import Image
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -194,14 +195,14 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             # triggers a live refresh on schedule.  Using -math.inf would
             # trigger an immediate re-fetch; instead back-date by one full
             # snapshot_interval so the first refresh fires normally.
-            # [S7] IMAGE_REFRESH_INTERVAL == DEFAULT_OPTIONS["snapshot_interval"] == 1800;
-            # direct read avoids inline import + full dict copy (once-per-restart path)
-            snap_interval = float(
-                int(
-                    self._entry.options.get("snapshot_interval", IMAGE_REFRESH_INTERVAL)
-                )
-            )
-            self.last_image_fetch = time.monotonic() - snap_interval
+            # IMAGE_REFRESH_INTERVAL is the fixed cadence — never read
+            # `entry.options["snapshot_interval"]` directly: the options-flow
+            # field for it was removed (Bronze appropriate-polling requires a
+            # fixed interval), but a HACS-migrated entry can still carry a
+            # stale value under that same key, which a direct read would
+            # silently keep honoring (bug-hunt 2026-07-27, Copilot review
+            # round 3).
+            self.last_image_fetch = time.monotonic() - IMAGE_REFRESH_INTERVAL
             _LOGGER.debug(
                 "%s: restored %d-byte snapshot from disk",
                 self._display_name,
@@ -225,11 +226,9 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     def _handle_coordinator_update(self) -> None:
         """Trigger a background proactive refresh on the configured interval."""
         now = time.monotonic()
-        # [S3] Read single key directly — avoids full dict(DEFAULT_OPTIONS)+update() copy
-        proactive_interval = float(
-            int(self._entry.options.get("snapshot_interval", IMAGE_REFRESH_INTERVAL))
-        )
-        if now - self.last_image_fetch >= proactive_interval:
+        # Fixed cadence — see the async_added_to_hass comment above for why
+        # this must not read entry.options["snapshot_interval"] directly.
+        if now - self.last_image_fetch >= IMAGE_REFRESH_INTERVAL:
             self._image_refresh_task = self.hass.async_create_task(
                 self.async_trigger_image_refresh(delay=0)
             )
@@ -295,7 +294,15 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             # (not self.cached_image checked `not bytes`, but placeholder is
             # truthy — use identity check).
             if self.cached_image is self._PLACEHOLDER_JPEG:
-                quick = await self.async_camera_image()
+                # Call the event-snapshot fetcher directly rather than
+                # async_camera_image() — that already runs the full live
+                # REMOTE/LOCAL cascade, and the slow path below runs it
+                # again immediately after, doubling the connection/snapshot
+                # requests on every cold start (bug-hunt 2026-07-27,
+                # Copilot review round 3).
+                quick = await self.coordinator.async_fetch_fresh_event_snapshot(
+                    self._cam_id
+                )
                 if quick and quick is not self._PLACEHOLDER_JPEG:
                     self.cached_image = quick
                     self.last_image_fetch = time.monotonic()
@@ -405,11 +412,24 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         sensitivity = (
             settings.get("motionAlarmConfiguration", "HIGH") if settings else "HIGH"
         )
-        await self.coordinator.async_put_camera(
+        success = await self.coordinator.async_put_camera(
             self._cam_id,
             "motion",
             {"enabled": True, "motionAlarmConfiguration": sensitivity},
         )
+        if not success:
+            raise HomeAssistantError(
+                f"{self._display_name}: failed to enable motion detection"
+            )
+        # Optimistic cache update + write-lock timestamp — motion is only
+        # ever re-fetched by the ~5-min slow tier, so without this,
+        # motion_detection_enabled would read stale data for minutes after
+        # this service call succeeded (bug-hunt 2026-07-27, Copilot review
+        # round 3).
+        self.coordinator.data.setdefault(self._cam_id, {}).setdefault(
+            "motion", {}
+        ).update({"enabled": True, "motionAlarmConfiguration": sensitivity})
+        self.coordinator.motion_set_at[self._cam_id] = time.monotonic()
         self.hass.async_create_task(self.coordinator.async_request_refresh())
 
     @override
@@ -419,11 +439,20 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         sensitivity = (
             settings.get("motionAlarmConfiguration", "HIGH") if settings else "HIGH"
         )
-        await self.coordinator.async_put_camera(
+        success = await self.coordinator.async_put_camera(
             self._cam_id,
             "motion",
             {"enabled": False, "motionAlarmConfiguration": sensitivity},
         )
+        if not success:
+            raise HomeAssistantError(
+                f"{self._display_name}: failed to disable motion detection"
+            )
+        # See async_enable_motion_detection above.
+        self.coordinator.data.setdefault(self._cam_id, {}).setdefault(
+            "motion", {}
+        ).update({"enabled": False, "motionAlarmConfiguration": sensitivity})
+        self.coordinator.motion_set_at[self._cam_id] = time.monotonic()
         self.hass.async_create_task(self.coordinator.async_request_refresh())
 
     @property

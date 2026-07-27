@@ -85,11 +85,16 @@ async def test_setup_and_unload_entry(hass: HomeAssistant) -> None:
 
 
 async def test_setup_entry_without_any_token_fails(hass: HomeAssistant) -> None:
-    """A config entry with no bearer/refresh token cannot complete setup."""
+    """A config entry with no bearer/refresh token needs re-authentication.
+
+    ConfigEntryAuthFailed (not UpdateFailed) so HA starts the native reauth
+    flow instead of retrying a non-transient condition forever
+    (bug-hunt 2026-07-27, Copilot review round 3).
+    """
     entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data={}, options={})
     entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_ERROR

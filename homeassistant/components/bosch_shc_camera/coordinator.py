@@ -32,7 +32,7 @@ import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
@@ -169,10 +169,29 @@ def _parse_onvif_scopes(raw: bytes) -> dict[str, Any]:
     return result
 
 
+# These four keys are fixed per Bronze's appropriate-polling rule — their
+# options-flow UI fields were removed, but a HACS-migrated config entry can
+# still carry a user's old custom value under the same key names in
+# `entry.options`, which a plain dict merge would silently keep honoring
+# (bug-hunt 2026-07-27, Copilot review round 3).
+_FIXED_POLLING_OPTION_KEYS = (
+    "scan_interval",
+    "interval_status",
+    "interval_events",
+    "snapshot_interval",
+)
+
+
 def get_options(entry: ConfigEntry) -> dict[str, Any]:
-    """Return entry options merged with defaults."""
+    """Return entry options merged with defaults.
+
+    The fixed-polling keys are always taken from DEFAULT_OPTIONS, never from
+    `entry.options` — see `_FIXED_POLLING_OPTION_KEYS`.
+    """
     opts: dict[str, Any] = dict(DEFAULT_OPTIONS)
-    opts.update(entry.options)
+    opts.update(
+        {k: v for k, v in entry.options.items() if k not in _FIXED_POLLING_OPTION_KEYS}
+    )
     return opts
 
 
@@ -891,7 +910,13 @@ class BoschCameraCoordinator(
         # namespace (kept local to avoid a module-level import cycle).
         token = self.token
         if not token and not self.refresh_token:
-            raise UpdateFailed("Not authenticated — re-add the integration to log in")
+            # No token at all is not a transient condition UpdateFailed would
+            # imply (endless SETUP_RETRY) — it means re-authentication is
+            # required, so start the reauth flow instead (bug-hunt 2026-07-27,
+            # Copilot review round 3).
+            raise ConfigEntryAuthFailed(
+                "Not authenticated — re-add the integration to log in"
+            )
 
         opts = self.options
         now = time.monotonic()
@@ -1918,7 +1943,17 @@ class BoschCameraCoordinator(
                     cam_id, -math.inf
                 )
                 probe_memoized_failed = time.monotonic() < probe_failed_until
-                if len(parts) == 2 and not hw_gen2 and not probe_memoized_failed:
+                # RCP 0x099e only ever returns a fixed 320x180 JPEG — must
+                # never be used to satisfy a full-resolution request (the
+                # default jpeg_size=None), or camera.py would cache this
+                # thumbnail as the shared full-res frame (bug-hunt
+                # 2026-07-27, Copilot review round 3).
+                if (
+                    jpeg_size is not None
+                    and len(parts) == 2
+                    and not hw_gen2
+                    and not probe_memoized_failed
+                ):
                     proxy_host_rcp, proxy_hash_rcp = parts[0], parts[1]
                     rcp_base = f"https://{proxy_host_rcp}/{proxy_hash_rcp}/rcp.xml"
                     try:
@@ -2223,6 +2258,20 @@ class BoschCameraCoordinator(
         snap_url = (
             f"https://{camera_host}/snap.jpg?JpegSize={jpeg_size or JPEG_SIZE_FULL}"
         )
+
+        # This is the only runtime path that ever receives freshly-issued
+        # LOCAL Digest credentials — cache them so a cloud outage can fall
+        # back to a LAN fetch using the last-known creds, and so
+        # __init__.py's persistence layer has something to save across a
+        # restart (bug-hunt 2026-07-27, Copilot review round 3).
+        _host, _, _port_str = camera_host.partition(":")
+        self.local_creds_cache[cam_id.upper()] = {
+            "user": user,
+            "password": password,
+            "host": _host,
+            "port": int(_port_str) if _port_str.isdigit() else 443,
+            "ts": time.monotonic(),
+        }
 
         session = async_get_clientsession(self.hass, verify_ssl=False)
         try:

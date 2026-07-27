@@ -4,12 +4,15 @@ import asyncio
 import time
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.bosch_shc_camera.camera import (
     BoschCamera,
     _rotate_jpeg_180,
 )
 from homeassistant.components.bosch_shc_camera.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
@@ -180,3 +183,50 @@ async def test_unload_cancels_pending_image_refresh_task(hass: HomeAssistant) ->
     await hass.async_block_till_done()
 
     assert task.cancelled()
+
+
+async def test_enable_motion_detection_raises_on_write_failure(
+    hass: HomeAssistant,
+) -> None:
+    """A failed PUT must surface as HomeAssistantError, not silent success.
+
+    `async_put_camera` returns False for HTTP/network/token-refresh
+    failures — an ignored result made the camera service report success
+    even though nothing changed (bug-hunt 2026-07-27, Copilot review
+    round 3).
+    """
+    entity = await _setup_camera_entity(hass)
+    with (
+        patch.object(entity.coordinator, "async_put_camera", return_value=False),
+        pytest.raises(HomeAssistantError),
+    ):
+        await entity.async_enable_motion_detection()
+
+
+async def test_enable_motion_detection_updates_cache_on_success(
+    hass: HomeAssistant,
+) -> None:
+    """A successful enable must update the cache + write-lock timestamp immediately.
+
+    Motion is only re-fetched by the ~5-min slow tier, so without this
+    `motion_detection_enabled` reads stale data for minutes (bug-hunt
+    2026-07-27, Copilot review round 3).
+    """
+    entity = await _setup_camera_entity(hass)
+    with patch.object(entity.coordinator, "async_put_camera", return_value=True):
+        await entity.async_enable_motion_detection()
+
+    assert entity.motion_detection_enabled is True
+    assert CAM_ID in entity.coordinator.motion_set_at
+
+
+async def test_disable_motion_detection_raises_on_write_failure(
+    hass: HomeAssistant,
+) -> None:
+    """A failed disable PUT must surface as HomeAssistantError too."""
+    entity = await _setup_camera_entity(hass)
+    with (
+        patch.object(entity.coordinator, "async_put_camera", return_value=False),
+        pytest.raises(HomeAssistantError),
+    ):
+        await entity.async_disable_motion_detection()

@@ -33,7 +33,13 @@ async def run_housekeeping(
     # Quality-Scale Gold (stale-devices): remove devices for cameras that
     # no longer exist in the Bosch cloud account. Skip on the fast first
     # tick so we don't race the device-registry creation in async_setup_entry.
-    if not is_first_tick and data:
+    # `data` is only ever a genuine, successful fetch result by this point —
+    # fetch_camera_list raises on any failure before reaching here — so an
+    # empty `data` is a definitive zero-camera account, not a fetch glitch,
+    # and must still run cleanup (an `and data` guard here previously left
+    # the account's last-removed camera's device/state behind forever;
+    # bug-hunt 2026-07-27, Copilot review round 3).
+    if not is_first_tick:
         coordinator.cleanup_stale_devices(set(data.keys()))
 
     # Per-camera availability transition notifier — fires when a cam
@@ -87,7 +93,7 @@ async def run_housekeeping(
     # this, every cold restart while the cloud is 503 leaves the cred
     # cache empty and the LAN RCP write returns <err> "no auth".
     _creds_store = getattr(coordinator, "local_creds_store", None)
-    if _creds_store is not None and coordinator.local_creds_cache:
+    if _creds_store is not None:
         _cred_snapshot = {
             k: {
                 "user": v["user"],
@@ -99,7 +105,12 @@ async def run_housekeeping(
             if v.get("user") and v.get("password") and v.get("host")
         }
         _cred_prev = getattr(coordinator, "local_creds_snapshot", None)
-        if _cred_snapshot and _cred_snapshot != _cred_prev:
+        # No truthiness guard on `_cred_snapshot` here — the account's last
+        # camera being removed clears `local_creds_cache` to `{}`, and that
+        # empty snapshot must still be persisted so the deleted camera's
+        # Digest credentials don't remain in `.storage` indefinitely
+        # (bug-hunt 2026-07-27, Copilot review round 3).
+        if _cred_snapshot != _cred_prev:
             coordinator.local_creds_snapshot = _cred_snapshot
             coordinator.spawn_tracked(
                 _creds_store.async_save(_cred_snapshot),
