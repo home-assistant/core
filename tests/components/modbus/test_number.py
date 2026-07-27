@@ -1,6 +1,7 @@
 """The tests for the Modbus number component."""
 
 from datetime import timedelta
+import math
 import struct
 from unittest import mock
 
@@ -53,6 +54,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -408,6 +410,37 @@ async def test_service_number_set_value_write_fails(
         },
     ],
 )
+async def test_service_number_set_value_non_finite(
+    hass: HomeAssistant, mock_modbus_ha: mock.AsyncMock
+) -> None:
+    """Test set_value rejects non-finite values before writing."""
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_VALUE: math.nan,
+            },
+            blocking=True,
+        )
+    mock_modbus_ha.write_register.assert_not_called()
+    mock_modbus_ha.write_registers.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_NUMBERS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                },
+            ],
+        },
+    ],
+)
 @pytest.mark.parametrize(
     ("config_addon", "register_words", "expected"),
     [
@@ -724,6 +757,20 @@ async def test_no_discovery_info_number(
                 ]
             },
             id="non_finite_offset",
+        ),
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_DATA_TYPE: DataType.FLOAT32,
+                        CONF_SCALE: 1e-308,
+                        CONF_MAX_VALUE: 100,
+                    }
+                ]
+            },
+            id="non_finite_transformed_limit",
         ),
     ],
 )

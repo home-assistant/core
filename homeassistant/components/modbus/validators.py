@@ -233,6 +233,8 @@ def number_min_max_validator(config: dict[str, Any]) -> dict[str, Any]:
     ):
         try:
             raw: float | int = (limit_value - offset) / scale
+            if not math.isfinite(raw):
+                raise ValueError("transformed limit is not finite")
             if value_is_int:
                 raw = round(raw)
             struct.pack(config[CONF_STRUCTURE], raw)
