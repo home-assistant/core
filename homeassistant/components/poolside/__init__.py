@@ -83,12 +83,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: PoolsideConfigEntry) -> 
 
     try:
         pool_devices = await client.async_get_pool_devices()
-    except PoolsideCommandError:
-        # Older controller firmware without Site.getPoolDevices.
+    except PoolsideCommandError as err:
+        # Expected on older controller firmware without Site.getPoolDevices,
+        # but loud enough to catch a renamed/misrouted method during testing.
+        LOGGER.warning(
+            "Controller rejected Site.getPoolDevices; no pool devices will be"
+            " created: %s",
+            err,
+        )
         pool_devices = []
     except PoolsideConnectionError as err:
         await client.async_disconnect()
         raise ConfigEntryNotReady from err
+    LOGGER.debug(
+        "Loaded %d pool device(s): %s",
+        len(pool_devices),
+        [(device.uuid, device.name, device.device_type) for device in pool_devices],
+    )
 
     entry.runtime_data = PoolsideData(
         client=client, site=site, controls=controls, pool_devices=pool_devices
