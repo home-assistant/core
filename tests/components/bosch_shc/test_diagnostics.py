@@ -76,6 +76,11 @@ async def test_diagnostics_redacts_credentials_and_identifiers(
         assert device["serial"] == REDACTED
         # names are not secret and must survive redaction
         assert device["name"] == "Front door"
+        # raw service state is the whole point of this diagnostics dump --
+        # must survive intact, not just the device metadata around it
+        assert device["services"] == [
+            {"id": "ShutterContact", "state": {"value": "OPEN"}}
+        ]
 
 
 async def test_diagnostics_update_state_string_fallback(hass: HomeAssistant) -> None:
