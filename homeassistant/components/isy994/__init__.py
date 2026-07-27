@@ -28,7 +28,6 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    _LOGGER,
     CONF_IGNORE_STRING,
     CONF_NETWORK,
     CONF_SENSOR_STRING,
@@ -39,6 +38,7 @@ from .const import (
     ISY_CONF_FIRMWARE,
     ISY_CONF_MODEL,
     ISY_CONF_NAME,
+    LOGGER,
     MANUFACTURER,
     PLATFORMS,
     SCHEME_HTTP,
@@ -97,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
         port = host.port or 443
         session = aiohttp_client.async_get_clientsession(hass, verify_ssl=verify_ssl)
     else:
-        _LOGGER.error("The ISY/IoX host value in configuration is invalid")
+        LOGGER.error("The ISY/IoX host value in configuration is invalid")
         return False
 
     # Connect to ISY controller.
@@ -158,7 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
             isy_data.net_resources.append(resource)
 
     # Dump ISY Clock Information. Future: Add ISY as sensor to Hass with attrs
-    _LOGGER.debug(repr(isy.clock))
+    LOGGER.debug(repr(isy.clock))
 
     isy_data.root = isy
     _async_get_or_create_isy_device_in_registry(hass, entry, isy)
@@ -172,10 +172,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
     @callback
     def _async_stop_auto_update(event: Event) -> None:
         """Stop the isy auto update on Home Assistant Shutdown."""
-        _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
+        LOGGER.debug("ISY Stopping Event Stream and automatic updates")
         isy.websocket.stop()
 
-    _LOGGER.debug("ISY Starting Event Stream and automatic updates")
+    LOGGER.debug("ISY Starting Event Stream and automatic updates")
     isy.websocket.start()
 
     entry.async_on_unload(
@@ -225,7 +225,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
+    LOGGER.debug("ISY Stopping Event Stream and automatic updates")
     entry.runtime_data.root.websocket.stop()
 
     return unload_ok

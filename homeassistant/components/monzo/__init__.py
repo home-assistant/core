@@ -39,10 +39,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> b
             unique_id = str(unique_id)
             minor_version = 2
 
-        # 1.2 -> 1.3: Add a stable webhook ID
-        if minor_version == 2:
+        # 1.2/1.3 -> 1.4: Add a stable webhook ID
+        if minor_version < 4:
             data[CONF_WEBHOOK_ID] = async_generate_id()
-            minor_version = 3
+            minor_version = 4
 
         hass.config_entries.async_update_entry(
             entry,
