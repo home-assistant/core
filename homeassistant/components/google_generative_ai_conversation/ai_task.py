@@ -1,7 +1,7 @@
 """AI Task integration for Google Generative AI Conversation."""
 
 from json import JSONDecodeError
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from google.genai.errors import APIError
 from google.genai.types import GenerateContentConfig, Part, PartUnionDict
@@ -71,6 +71,7 @@ class GoogleGenerativeAITaskEntity(
         ):
             self._attr_supported_features |= ai_task.AITaskEntityFeature.GENERATE_IMAGE
 
+    @override
     async def _async_generate_data(
         self,
         task: ai_task.GenDataTask,
@@ -115,6 +116,7 @@ class GoogleGenerativeAITaskEntity(
             data=data,
         )
 
+    @override
     async def _async_generate_image(
         self,
         task: ai_task.GenImageTask,

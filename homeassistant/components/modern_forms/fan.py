@@ -1,6 +1,6 @@
 """Support for Modern Forms Fan Fans."""
 
-from typing import Any
+from typing import Any, override
 
 from aiomodernforms.const import FAN_POWER_OFF, FAN_POWER_ON
 import voluptuous as vol
@@ -84,6 +84,7 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         self._attr_unique_id = f"{self.coordinator.data.info.mac_address}"
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         percentage = 0
@@ -94,28 +95,31 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         return percentage
 
     @property
+    @override
     def current_direction(self) -> str:
         """Return the current direction of the fan."""
         return self.coordinator.data.state.fan_direction
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(self.SPEED_RANGE)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the fan."""
         return bool(self.coordinator.data.state.fan_on)
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
+    @override
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         await self.coordinator.modern_forms.fan(direction=direction)
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage > 0:
@@ -123,8 +127,8 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         else:
             await self.async_turn_off()
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -140,13 +144,12 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
             )
         await self.coordinator.modern_forms.fan(**data)
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self.coordinator.modern_forms.fan(on=FAN_POWER_OFF)
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_set_fan_sleep_timer(
         self,
@@ -155,7 +158,6 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         """Set a Modern Forms light sleep timer."""
         await self.coordinator.modern_forms.fan(sleep=sleep_time * 60)
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_clear_fan_sleep_timer(
         self,

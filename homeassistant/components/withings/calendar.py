@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from datetime import datetime
+from typing import override
 
 from aiowithings import WithingsClient, WorkoutCategory
 
@@ -78,10 +79,12 @@ class WithingsWorkoutCalendarEntity(
         self.client = client
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return None
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:

@@ -37,6 +37,9 @@
         "title": "Re-authenticate AirVisual"
       },
       "user": {
+        "data": {
+          "type": "Integration type"
+        },
         "description": "Pick what type of AirVisual data you want to monitor.",
         "title": "Configure AirVisual"
       }

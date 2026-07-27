@@ -2,7 +2,7 @@
 
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -42,6 +42,7 @@ class ZimiFan(ZimiEntity, FanEntity):
         | FanEntityFeature.TURN_ON
     )
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the desired speed for the fan."""
 
@@ -61,6 +62,7 @@ class ZimiFan(ZimiEntity, FanEntity):
 
         await self._device.set_fanspeed(target_speed)
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -72,6 +74,7 @@ class ZimiFan(ZimiEntity, FanEntity):
         _LOGGER.debug("Sending turn_on() for %s", self.name)
         await self._device.turn_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the fan to turn off."""
 
@@ -80,6 +83,7 @@ class ZimiFan(ZimiEntity, FanEntity):
         await self._device.turn_off()
 
     @property
+    @override
     def percentage(self) -> int:
         """Return the current speed percentage for the fan."""
         if not self._device.fanspeed:
@@ -87,6 +91,7 @@ class ZimiFan(ZimiEntity, FanEntity):
         return ranged_value_to_percentage(self._attr_speed_range, self._device.fanspeed)
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(self._attr_speed_range)

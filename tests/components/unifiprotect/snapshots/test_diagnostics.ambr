@@ -94,8 +94,6 @@
       ]),
       'chimes': list([
       ]),
-      'doorlocks': list([
-      ]),
       'groups': list([
         dict({
           'id': '**REDACTED_ID**',

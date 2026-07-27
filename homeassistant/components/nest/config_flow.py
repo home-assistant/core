@@ -10,7 +10,7 @@ some overrides to custom steps inserted in the middle of the flow.
 
 from collections.abc import Iterable, Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from google_nest_sdm.admin_client import (
     DEFAULT_TOPIC_IAM_POLICY,
@@ -113,11 +113,13 @@ class NestFlowHandler(
         self._eligible_subscriptions: EligibleSubscriptions | None = None
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {
@@ -127,6 +129,7 @@ class NestFlowHandler(
             "prompt": "consent",
         }
 
+    @override
     async def async_generate_authorize_url(self) -> str:
         """Generate a url for the user to authorize based on user input."""
         project_id = self._data.get(CONF_PROJECT_ID)
@@ -134,6 +137,7 @@ class NestFlowHandler(
         authorize_url = OAUTH2_AUTHORIZE.format(project_id=project_id)
         return f"{authorize_url}{query}"
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Complete OAuth setup and finish pubsub or finish."""
         _LOGGER.debug("Finishing post-oauth configuration")
@@ -161,6 +165,7 @@ class NestFlowHandler(
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

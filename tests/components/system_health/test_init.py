@@ -4,9 +4,10 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.client_exceptions import ClientError
+import pytest
 
 from homeassistant.components import system_health
-from homeassistant.components.system_health import async_register_info
+from homeassistant.components.system_health import DOMAIN, async_register_info
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -61,9 +62,8 @@ async def test_info_endpoint_return_info(
         "homeassistant.components.homeassistant.system_health.system_health_info",
         return_value={"hello": True},
     ):
-        assert await async_setup_component(hass, "system_health", {})
-
-    data = await gather_system_health_info(hass, hass_ws_client)
+        assert await async_setup_component(hass, DOMAIN, {})
+        data = await gather_system_health_info(hass, hass_ws_client)
 
     assert len(data) == 1
     data = data["homeassistant"]
@@ -71,7 +71,9 @@ async def test_info_endpoint_return_info(
 
 
 async def test_info_endpoint_register_callback(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that the info endpoint allows registering callbacks."""
 
@@ -79,7 +81,13 @@ async def test_info_endpoint_register_callback(
         return {"storage": "YAML"}
 
     async_register_info(hass, "lovelace", mock_info)
-    assert await async_setup_component(hass, "system_health", {})
+
+    assert "calls system_health.async_register_info, which is deprecated" in caplog.text
+    assert "This will stop working in Home Assistant 2027.1" in caplog.text
+    # The deprecation must not be attributed to system_health itself
+    assert "integration 'system_health'" not in caplog.text
+
+    assert await async_setup_component(hass, DOMAIN, {})
     data = await gather_system_health_info(hass, hass_ws_client)
 
     assert len(data) == 1
@@ -99,7 +107,7 @@ async def test_info_endpoint_register_callback_timeout(
         raise TimeoutError
 
     async_register_info(hass, "lovelace", mock_info)
-    assert await async_setup_component(hass, "system_health", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     data = await gather_system_health_info(hass, hass_ws_client)
 
     assert len(data) == 1
@@ -116,7 +124,7 @@ async def test_info_endpoint_register_callback_exc(
         raise Exception("TEST ERROR")  # noqa: TRY002
 
     async_register_info(hass, "lovelace", mock_info)
-    assert await async_setup_component(hass, "system_health", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     data = await gather_system_health_info(hass, hass_ws_client)
 
     assert len(data) == 1
@@ -165,7 +173,7 @@ async def test_platform_loading(
         ),
     )
 
-    assert await async_setup_component(hass, "system_health", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     data = await gather_system_health_info(hass, hass_ws_client)
 
     assert data["fake_integration"] == {

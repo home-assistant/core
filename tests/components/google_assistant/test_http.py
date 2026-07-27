@@ -14,7 +14,6 @@ import pytest
 
 from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
 from homeassistant.components.google_assistant.const import (
-    DOMAIN,
     EVENT_COMMAND_RECEIVED,
     HOMEGRAPH_TOKEN_URL,
     REPORT_STATE_BASE_URL,
@@ -29,7 +28,7 @@ from homeassistant.components.google_assistant.http import (
     async_get_users,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -342,25 +341,6 @@ async def test_secure_device_pin_config(hass: HomeAssistant) -> None:
     config = GoogleConfig(hass, secure_config)
 
     assert config.secure_devices_pin == secure_pin
-
-
-async def test_should_expose(hass: HomeAssistant) -> None:
-    """Test the google config should expose method."""
-    config = GoogleConfig(hass, DUMMY_CONFIG)
-    await config.async_initialize()
-
-    with patch.object(config, "async_call_homegraph_api"):
-        # Wait for google_assistant.helpers.async_initialize.sync_google to be called
-        await hass.async_block_till_done()
-
-    assert (
-        config.should_expose(State(DOMAIN + ".mock", "mock", {"view": "not None"}))
-        is False
-    )
-
-    with patch.object(config, "async_call_homegraph_api"):
-        # Wait for google_assistant.helpers.async_initialize.sync_google to be called
-        await hass.async_block_till_done()
 
 
 async def test_missing_service_account(hass: HomeAssistant) -> None:

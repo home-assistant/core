@@ -3,6 +3,7 @@
 from datetime import timedelta
 import logging
 from struct import unpack
+from typing import override
 
 from pyasn1.codec.ber import decoder
 from pysnmp.error import PySnmpError
@@ -198,6 +199,7 @@ class SnmpSensor(ManualTriggerSensorEntity):
         self._state = None
         self._value_template = value_template
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle adding to Home Assistant."""
         await super().async_added_to_hass()

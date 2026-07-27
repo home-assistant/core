@@ -24,10 +24,20 @@
       "reauth_confirm": {
         "description": "The Dropbox integration needs to re-authenticate your account.",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reauth_permissions": {
+        "description": "The Dropbox integration requires additional permissions to function correctly.",
+        "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
   },
   "exceptions": {
+    "missing_refresh_token": {
+      "message": "[%key:component::dropbox::config::step::reauth_confirm::description%]"
+    },
+    "missing_scopes": {
+      "message": "[%key:component::dropbox::config::step::reauth_permissions::description%]"
+    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }

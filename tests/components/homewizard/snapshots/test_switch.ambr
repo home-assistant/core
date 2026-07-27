@@ -2,7 +2,7 @@
 # name: test_switch_entities[HWE-KWH1-switch.device_cloud_connection-system-cloud_enabled]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Cloud connection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Cloud connection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_cloud_connection',
@@ -52,8 +52,8 @@
 # name: test_switch_entities[HWE-KWH1-switch.device_cloud_connection-system-cloud_enabled].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -78,8 +78,7 @@
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -87,7 +86,7 @@
 # name: test_switch_entities[HWE-KWH3-switch.device_cloud_connection-system-cloud_enabled]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Cloud connection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Cloud connection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_cloud_connection',
@@ -137,8 +136,8 @@
 # name: test_switch_entities[HWE-KWH3-switch.device_cloud_connection-system-cloud_enabled].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -163,8 +162,7 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -172,8 +170,8 @@
 # name: test_switch_entities[HWE-SKT-11-switch.device-state-power_on]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Device',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device',
@@ -223,8 +221,8 @@
 # name: test_switch_entities[HWE-SKT-11-switch.device-state-power_on].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -249,8 +247,7 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -258,7 +255,7 @@
 # name: test_switch_entities[HWE-SKT-11-switch.device_cloud_connection-system-cloud_enabled]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Cloud connection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Cloud connection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_cloud_connection',
@@ -308,8 +305,8 @@
 # name: test_switch_entities[HWE-SKT-11-switch.device_cloud_connection-system-cloud_enabled].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -334,8 +331,7 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -343,7 +339,7 @@
 # name: test_switch_entities[HWE-SKT-11-switch.device_switch_lock-state-switch_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Switch lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Switch lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_switch_lock',
@@ -393,8 +389,8 @@
 # name: test_switch_entities[HWE-SKT-11-switch.device_switch_lock-state-switch_lock].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -419,8 +415,7 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -428,8 +423,8 @@
 # name: test_switch_entities[HWE-SKT-21-switch.device-state-power_on]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Device',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device',
@@ -479,8 +474,8 @@
 # name: test_switch_entities[HWE-SKT-21-switch.device-state-power_on].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -505,8 +500,7 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -514,7 +508,7 @@
 # name: test_switch_entities[HWE-SKT-21-switch.device_cloud_connection-system-cloud_enabled]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Cloud connection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Cloud connection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_cloud_connection',
@@ -564,8 +558,8 @@
 # name: test_switch_entities[HWE-SKT-21-switch.device_cloud_connection-system-cloud_enabled].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -590,8 +584,7 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -599,7 +592,7 @@
 # name: test_switch_entities[HWE-SKT-21-switch.device_switch_lock-state-switch_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Switch lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Switch lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_switch_lock',
@@ -649,8 +642,8 @@
 # name: test_switch_entities[HWE-SKT-21-switch.device_switch_lock-state-switch_lock].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -675,8 +668,7 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -684,7 +676,7 @@
 # name: test_switch_entities[HWE-WTR-switch.device_cloud_connection-system-cloud_enabled]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Cloud connection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Cloud connection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_cloud_connection',
@@ -734,8 +726,8 @@
 # name: test_switch_entities[HWE-WTR-switch.device_cloud_connection-system-cloud_enabled].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -760,8 +752,7 @@
     'model_id': 'HWE-WTR',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '2.03',
     'via_device_id': None,
   })
@@ -769,7 +760,7 @@
 # name: test_switch_entities[SDM230-switch.device_cloud_connection-system-cloud_enabled]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Cloud connection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Cloud connection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_cloud_connection',
@@ -819,8 +810,8 @@
 # name: test_switch_entities[SDM230-switch.device_cloud_connection-system-cloud_enabled].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -845,8 +836,7 @@
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -854,7 +844,7 @@
 # name: test_switch_entities[SDM630-switch.device_cloud_connection-system-cloud_enabled]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Cloud connection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Cloud connection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_cloud_connection',
@@ -904,8 +894,8 @@
 # name: test_switch_entities[SDM630-switch.device_cloud_connection-system-cloud_enabled].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -930,8 +920,7 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
   })

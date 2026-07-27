@@ -1,7 +1,7 @@
 """Code to handle a Livisi switches."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from livisi.const import CAPABILITY_MAP
 
@@ -63,6 +63,7 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
         )
         super().__init__(coordinator)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback for reachability."""
         await super().async_added_to_hass()

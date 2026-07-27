@@ -1,0 +1,10 @@
+{
+  "resultCode": "0000",
+  "result": {
+    "dataList": [
+      { "energyUsage": 80.0, "usedDate": "2024100908" },
+      { "energyUsage": 70.0, "usedDate": "2024100909" }
+    ],
+    "property": ["energyUsage"]
+  }
+}

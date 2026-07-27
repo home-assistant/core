@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
+    BluetoothProxyFeature,
     DeviceInfo,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
@@ -22,9 +23,11 @@ from homeassistant import config_entries
 from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
+    CONF_BLUETOOTH_SCANNING_MODE,
     CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
     CONF_SUBSCRIBE_LOGS,
+    DEFAULT_BLUETOOTH_SCANNING_MODE,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
 )
@@ -43,7 +46,11 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import VALID_NOISE_PSK
-from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
+from .conftest import (
+    MockBluetoothEntryType,
+    MockESPHomeDeviceType,
+    MockGenericDeviceEntryType,
+)
 
 from tests.common import MockConfigEntry
 
@@ -2076,6 +2083,105 @@ async def test_option_flow_subscribe_logs(
         CONF_SUBSCRIBE_LOGS: True,
     }
     assert len(mock_reload.mock_calls) == 1
+
+
+async def test_option_flow_shows_saved_scanning_mode_when_proxy_unavailable(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """A previously-saved mode keeps surfacing even if the proxy feature flag is gone."""
+    entry = await mock_generic_device_entry(mock_client=mock_client)
+    hass.config_entries.async_update_entry(
+        entry,
+        options={**entry.options, CONF_BLUETOOTH_SCANNING_MODE: "passive"},
+    )
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert CONF_BLUETOOTH_SCANNING_MODE in result["data_schema"].schema
+    with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_ALLOW_SERVICE_CALLS: False,
+                CONF_SUBSCRIBE_LOGS: False,
+                CONF_BLUETOOTH_SCANNING_MODE: "auto",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BLUETOOTH_SCANNING_MODE] == "auto"
+
+
+async def test_option_flow_unloaded_entry_without_saved_mode(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """An unloaded entry without a saved scanning mode hides the option."""
+    entry = await mock_generic_device_entry(mock_client=mock_client)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert CONF_BLUETOOTH_SCANNING_MODE not in result["data_schema"].schema
+
+
+async def test_option_flow_hides_bluetooth_scanning_mode_without_proxy(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Devices without a bluetooth proxy must not see the scanning mode option."""
+    entry = await mock_generic_device_entry(mock_client=mock_client)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert CONF_BLUETOOTH_SCANNING_MODE not in result["data_schema"].schema
+    with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_ALLOW_SERVICE_CALLS: False, CONF_SUBSCRIBE_LOGS: False},
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert CONF_BLUETOOTH_SCANNING_MODE not in result["data"]
+
+
+async def test_option_flow_bluetooth_scanning_mode(
+    hass: HomeAssistant,
+    mock_bluetooth_entry: MockBluetoothEntryType,
+) -> None:
+    """Bluetooth proxy devices with FEATURE_STATE_AND_MODE expose the option."""
+    device = await mock_bluetooth_entry(
+        bluetooth_proxy_feature_flags=BluetoothProxyFeature.PASSIVE_SCAN
+        | BluetoothProxyFeature.ACTIVE_CONNECTIONS
+        | BluetoothProxyFeature.RAW_ADVERTISEMENTS
+        | BluetoothProxyFeature.FEATURE_STATE_AND_MODE
+    )
+    entry = device.entry
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["data_schema"]({}) == {
+        CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+        CONF_SUBSCRIBE_LOGS: False,
+        CONF_BLUETOOTH_SCANNING_MODE: DEFAULT_BLUETOOTH_SCANNING_MODE,
+    }
+    with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_ALLOW_SERVICE_CALLS: False,
+                CONF_SUBSCRIBE_LOGS: False,
+                CONF_BLUETOOTH_SCANNING_MODE: "passive",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BLUETOOTH_SCANNING_MODE] == "passive"
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")

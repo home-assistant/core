@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pyblu import Player
 
@@ -105,7 +105,7 @@ class BluesoundButton(CoordinatorEntity[BluesoundCoordinator], ButtonEntity):
         if port == DEFAULT_PORT:
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, format_mac(sync_status.mac))},
-                connections={(CONNECTION_NETWORK_MAC, format_mac(sync_status.mac))},
+                connections={(CONNECTION_NETWORK_MAC, sync_status.mac)},
                 name=sync_status.name,
                 manufacturer=sync_status.brand,
                 model=sync_status.model_name,
@@ -121,6 +121,7 @@ class BluesoundButton(CoordinatorEntity[BluesoundCoordinator], ButtonEntity):
                 via_device=(DOMAIN, format_mac(sync_status.mac)),
             )
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.entity_description.press_fn(self._player)

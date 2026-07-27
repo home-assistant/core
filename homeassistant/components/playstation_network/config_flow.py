@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPAuthenticationError,
@@ -44,12 +44,14 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"friend": FriendSubentryFlowHandler}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -148,7 +150,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                     }
                 )
 
-                return self.async_update_reload_and_abort(
+                return self.async_update_and_abort(
                     entry,
                     data_updates={CONF_NPSSO: npsso},
                 )

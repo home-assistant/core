@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, ConnectError
@@ -70,6 +70,7 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     hassio_discovery: dict[str, Any] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -138,6 +139,7 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:

@@ -43,7 +43,7 @@ async def test_ventilator_20min_when_on(hass: HomeAssistant, data) -> None:
     """Test the ventilator switch goes on."""
 
     data.return_value["settings"]["ventilatorOffDateTime"] = (
-        datetime.now() + timedelta(days=1)
+        datetime.now() + timedelta(days=1)  # pylint: disable=home-assistant-enforce-naive-now
     ).strftime(DATE_FORMAT)
     with mock.patch("pyecobee.Ecobee.get_thermostat", data):
         await setup_platform(hass, SWITCH_DOMAIN)
@@ -58,7 +58,7 @@ async def test_ventilator_20min_when_off(hass: HomeAssistant, data) -> None:
     """Test the ventilator switch goes on."""
 
     data.return_value["settings"]["ventilatorOffDateTime"] = (
-        datetime.now() - timedelta(days=1)
+        datetime.now() - timedelta(days=1)  # pylint: disable=home-assistant-enforce-naive-now
     ).strftime(DATE_FORMAT)
     with mock.patch("pyecobee.Ecobee.get_thermostat", data):
         await setup_platform(hass, SWITCH_DOMAIN)

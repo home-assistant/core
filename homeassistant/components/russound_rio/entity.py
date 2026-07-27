@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from aiorussound.rio import RussoundRIOClient
 from aiorussound.rio.client import Controller, ZoneControlSurface
@@ -90,10 +90,12 @@ class RussoundBaseEntity(Entity):
         self._controller = _client.controllers[self._controller.controller_id]
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback handlers."""
         await self._client.register_state_update_callbacks(self._state_update_callback)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove callbacks."""
         self._client.unregister_state_update_callbacks(self._state_update_callback)

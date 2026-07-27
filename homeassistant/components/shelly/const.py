@@ -237,6 +237,7 @@ class BLEScannerMode(StrEnum):
     DISABLED = "disabled"
     ACTIVE = "active"
     PASSIVE = "passive"
+    AUTO = "auto"
 
 
 BLE_SCANNER_MIN_FIRMWARE = "1.5.1"
@@ -338,6 +339,8 @@ MODEL_TOP_EV_CHARGER_EVE01 = "EVE01"
 MODEL_FRANKEVER_IRRIGATION_CONTROLLER = "Irrigation"
 
 ROLE_GENERIC = "generic"
+
+RPC_ERROR_CODE_REMOTE_DISABLED = -110
 
 TRV_CHANNEL = 0
 

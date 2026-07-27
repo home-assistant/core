@@ -1,5 +1,7 @@
 """Support for IHC binary sensors."""
 
+from typing import override
+
 from ihcsdk.ihccontroller import IHCController
 
 from homeassistant.components.binary_sensor import (
@@ -68,6 +70,7 @@ class IHCBinarySensor(IHCEntity, BinarySensorEntity):
         self._attr_device_class = try_parse_enum(BinarySensorDeviceClass, sensor_type)
         self.inverting = inverting
 
+    @override
     def on_ihc_change(self, ihc_id, value):
         """IHC resource has changed."""
         if self.inverting:

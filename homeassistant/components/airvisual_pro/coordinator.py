@@ -3,7 +3,7 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pyairvisual.node import (
     InvalidAuthenticationError,
@@ -55,6 +55,7 @@ class AirVisualProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._node = node
         self.reload_task: asyncio.Task[bool] | None = None
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Get data from the device."""
         try:

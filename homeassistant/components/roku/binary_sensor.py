@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from rokuecp.models import Device as RokuDevice
 
@@ -75,6 +76,7 @@ class RokuBinarySensorEntity(RokuEntity, BinarySensorEntity):
     entity_description: RokuBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

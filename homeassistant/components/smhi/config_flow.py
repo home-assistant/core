@@ -1,6 +1,6 @@
 """Config flow to configure SMHI component."""
 
-from typing import Any
+from typing import Any, override
 
 from pysmhi import SmhiForecastException, SMHIPointForecast
 import voluptuous as vol
@@ -38,6 +38,7 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 3
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -101,8 +102,8 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
 
                 device_reg = dr.async_get(self.hass)
-                if device := device_reg.async_get_device(
-                    identifiers={(DOMAIN, f"{old_lat}, {old_lon}")}
+                if device := device_reg.async_get_device_by_identifier(
+                    (DOMAIN, f"{old_lat}, {old_lon}"), reconfigure_entry.entry_id
                 ):
                     device_reg.async_update_device(
                         device.id, new_identifiers={(DOMAIN, f"{lat}, {lon}")}

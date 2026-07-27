@@ -1,11 +1,6 @@
 """Constants for the ElevenLabs text-to-speech integration."""
 
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_MODEL = "model"
-
 CONF_VOICE = "voice"
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_MODEL = "model"
 CONF_CONFIGURE_VOICE = "configure_voice"
 CONF_STABILITY = "stability"
 CONF_SIMILARITY = "similarity"

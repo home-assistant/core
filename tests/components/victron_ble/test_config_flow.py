@@ -126,12 +126,16 @@ async def test_async_step_user_with_devices_found(
     hass: HomeAssistant, mock_discovered_service_info: AsyncMock
 ) -> None:
     """Test setup from service info cache with devices found."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
+    with patch(
+        "homeassistant.components.victron_ble.config_flow.bluetooth.async_request_active_scan"
+    ) as mock_request_active_scan:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    mock_request_active_scan.assert_awaited_once_with(hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

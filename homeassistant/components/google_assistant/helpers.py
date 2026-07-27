@@ -8,7 +8,7 @@ from functools import lru_cache
 from http import HTTPStatus
 import logging
 import pprint
-from typing import Any
+from typing import Any, override
 
 from aiohttp.web import json_response
 from awesomeversion import AwesomeVersion
@@ -185,7 +185,7 @@ class AbstractConfig(ABC):
         """
 
     @abstractmethod
-    def should_expose(self, state) -> bool:
+    def should_expose(self, entity_id: str) -> bool:
         """Return if entity should be exposed."""
 
     @abstractmethod
@@ -530,9 +530,10 @@ class GoogleEntity:
         self.entity_id = state.entity_id
         self._traits: list[trait._Trait] | None = None
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
-        return f"<GoogleEntity {self.state.entity_id}: {self.state.name}>"
+        return f"<GoogleEntity {self.entity_id}: {self.state.name}>"
 
     @callback
     def traits(self) -> list[trait._Trait]:
@@ -549,7 +550,7 @@ class GoogleEntity:
     @callback
     def should_expose(self):
         """If entity should be exposed."""
-        return self.config.should_expose(self.state)
+        return self.config.should_expose(self.entity_id)
 
     @callback
     def should_expose_local(self) -> bool:
@@ -733,7 +734,7 @@ class GoogleEntity:
         if not executed:
             raise SmartHomeError(
                 ERR_FUNCTION_NOT_SUPPORTED,
-                f"Unable to execute {command} for {self.state.entity_id}",
+                f"Unable to execute {command} for {self.entity_id}",
             )
 
     @callback

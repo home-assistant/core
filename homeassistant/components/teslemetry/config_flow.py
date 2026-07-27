@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectionError
 from tesla_fleet_api.exceptions import (
@@ -42,10 +42,12 @@ class OAuth2FlowHandler(
         self.uid: str | None = None
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return LOGGER
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -57,6 +59,7 @@ class OAuth2FlowHandler(
         )
         return await super().async_step_user()
 
+    @override
     async def async_oauth_create_entry(
         self,
         data: dict[str, Any],
