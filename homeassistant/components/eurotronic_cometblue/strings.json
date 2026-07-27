@@ -54,7 +54,7 @@
       "name": "Get schedule"
     },
     "set_holiday": {
-      "description": "Set holiday/away mode on device.",
+      "description": "Sets holiday/away mode on one or multiple devices.",
       "fields": {
         "from": {
           "description": "Start of the away mode.",
@@ -69,10 +69,10 @@
           "name": "To"
         }
       },
-      "name": "Set holiday (away mode)"
+      "name": "Set holiday/away mode"
     },
     "set_schedule": {
-      "description": "Sets the configured heating time ranges of one or multiple devices. Days not included in the service call will be left unchanged.",
+      "description": "Sets the configured heating time ranges of one or multiple devices. Days not included will be left unchanged.",
       "fields": {
         "friday": {
           "description": "Heating time periods for Friday. Up to 4 heat times can be set.",

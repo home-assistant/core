@@ -301,6 +301,7 @@ async def test_coordinator_update_failed_errors(
 async def test_coordinator_consent_required_error(
     recorder_mock: Recorder,
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_anglian_water_client: AsyncMock,
 ) -> None:
@@ -316,15 +317,12 @@ async def test_coordinator_consent_required_error(
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "consent_required"
     assert exc_info.value.retry_after == 900.0
-    assert (
-        ir.async_get(hass).async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID)
-        is not None
-    )
+    assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is not None
 
     mock_anglian_water_client.update.side_effect = None
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
-    assert ir.async_get(hass).async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is None
+    assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is None
 
 
 @pytest.mark.parametrize(
