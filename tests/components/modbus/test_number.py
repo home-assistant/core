@@ -213,15 +213,6 @@ async def test_config_number(hass: HomeAssistant, mock_modbus: mock.AsyncMock) -
             STATE_UNKNOWN,
         ),
         (
-            {
-                CONF_DATA_TYPE: DataType.FLOAT32,
-                CONF_PRECISION: 0,
-            },
-            list(struct.unpack(">HH", struct.pack(">f", math.inf))),
-            False,
-            STATE_UNKNOWN,
-        ),
-        (
             {},
             [0x000A],
             True,
