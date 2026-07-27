@@ -154,7 +154,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     duration = int(
                         data.get(ATTR_DURATION, Notifications.DEFAULT_DURATION)
                     )
-                except (TypeError, ValueError) as err:
+                except (OverflowError, TypeError, ValueError) as err:
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
                         translation_key="invalid_duration",

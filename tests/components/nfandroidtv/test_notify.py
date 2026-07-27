@@ -150,7 +150,7 @@ async def test_legacy_send_message_invalid_data(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_legacy_notifications: MagicMock,
-    service_data: dict[str, str],
+    service_data: dict[str, str | None],
     translation_key: str,
 ) -> None:
     """Test that invalid service data raises and sends nothing."""
