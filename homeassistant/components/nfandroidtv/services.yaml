@@ -20,15 +20,13 @@ send_message:
       selector:
         media:
           accept:
-            - image/*
-            - video/*
+            - "*"
     icon:
       required: false
       selector:
         media:
           accept:
-            - image/*
-            - video/*
+            - "*"
     position:
       required: false
       selector:

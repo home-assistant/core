@@ -55,6 +55,7 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
+from .issue import deprecated_notify_action_call
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -188,6 +189,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
     @override
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to an Android TV device."""
+        deprecated_notify_action_call(self.hass, self._service_name)
         if self.notify is None:
             try:
                 self.notify = Notifications(self.host)

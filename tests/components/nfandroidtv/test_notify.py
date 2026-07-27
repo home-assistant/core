@@ -34,7 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import NAME
@@ -411,4 +411,30 @@ async def test_nfandroidtv_send_message_exception(
 
     mock_notifications_android_tv.send.assert_called_once_with(
         message="Hello", title="World"
+    )
+
+
+@pytest.mark.usefixtures("mock_notifications_android_tv")
+async def test_deprecated_legacy_notify_action(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test deprecation issue for legacy notify action."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        "android_tv_fire_tv_1_2_3_4",
+        {ATTR_MESSAGE: "Hello World"},
+        blocking=True,
+    )
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="deprecated_notify_action_android_tv_fire_tv_1_2_3_4"
     )
