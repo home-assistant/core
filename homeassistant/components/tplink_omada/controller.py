@@ -3,7 +3,12 @@
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
-from tplink_omada_client import OmadaSiteClient
+from tplink_omada_client import OmadaClient, OmadaSiteClient
+from tplink_omada_client.definitions import (
+    OmadaControllerInfo,
+    OmadaControllerStatus,
+    OmadaControllerType,
+)
 from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
 
 from homeassistant.core import HomeAssistant, callback
@@ -28,12 +33,22 @@ class OmadaSiteController:
         self,
         hass: HomeAssistant,
         config_entry: OmadaConfigEntry,
+        controller_client: OmadaClient,
         omada_client: OmadaSiteClient,
+        controller_info: OmadaControllerInfo,
+        controller_type: OmadaControllerType,
+        controller_status: OmadaControllerStatus,
+        controller_name: str,
     ) -> None:
         """Create the controller."""
         self._hass = hass
         self._config_entry = config_entry
+        self._controller_client = controller_client
         self._omada_client = omada_client
+        self._controller_info = controller_info
+        self._controller_type = controller_type
+        self._controller_status = controller_status
+        self._controller_name = controller_name
 
         self._switch_port_coordinators: dict[str, OmadaSwitchPortCoordinator] = {}
         self._devices_coordinator = OmadaDevicesCoordinator(
@@ -100,6 +115,31 @@ class OmadaSiteController:
 
         # Call once on initial setup
         await _async_register_entities()
+
+    @property
+    def controller_client(self) -> OmadaClient:
+        """Get the connected controller-level API client."""
+        return self._controller_client
+
+    @property
+    def controller_info(self) -> OmadaControllerInfo:
+        """Get information about the Omada controller."""
+        return self._controller_info
+
+    @property
+    def controller_type(self) -> OmadaControllerType:
+        """Get the Omada controller type."""
+        return self._controller_type
+
+    @property
+    def controller_status(self) -> OmadaControllerStatus:
+        """Get status information about the Omada controller."""
+        return self._controller_status
+
+    @property
+    def controller_name(self) -> str:
+        """Get the display name of the Omada controller."""
+        return self._controller_name
 
     @property
     def omada_client(self) -> OmadaSiteClient:

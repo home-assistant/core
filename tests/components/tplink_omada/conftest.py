@@ -12,6 +12,10 @@ from tplink_omada_client.clients import (
     OmadaWiredClient,
     OmadaWirelessClient,
 )
+from tplink_omada_client.definitions import (
+    OmadaControllerInfo,
+    OmadaControllerUpdateInfo,
+)
 from tplink_omada_client.devices import (
     OmadaFirmwareUpdate,
     OmadaGateway,
@@ -188,6 +192,20 @@ def mock_omada_client(mock_omada_site_client: AsyncMock) -> Generator[MagicMock]
         client = client_mock.return_value
 
         client.get_site_client.return_value = mock_omada_site_client
+        client.get_controller_info.return_value = OmadaControllerInfo(
+            {
+                "controllerVer": "6.2.14",
+                "apiVer": "2",
+                "configured": True,
+                "type": 1,
+                "supportApp": True,
+                "omadacId": "12345",
+                "omadacCategory": "OC200",
+                "mspMode": False,
+            }
+        )
+        client.check_firmware_updates.return_value = OmadaControllerUpdateInfo({})
+        client.upgrade_controller_firmware = AsyncMock()
         client.login.return_value = "12345"
         client.get_controller_name.return_value = "OC200"
         client.get_sites.return_value = [OmadaSite("Display Name", "SiteId")]
@@ -206,6 +224,20 @@ def mock_omada_clients_only_client(
         client = client_mock.return_value
 
         client.get_site_client.return_value = mock_omada_clients_only_site_client
+        client.get_controller_info.return_value = OmadaControllerInfo(
+            {
+                "controllerVer": "6.2.14",
+                "apiVer": "2",
+                "configured": True,
+                "type": 1,
+                "supportApp": True,
+                "omadacId": "12345",
+                "omadacCategory": "OC200",
+                "mspMode": False,
+            }
+        )
+        client.check_firmware_updates.return_value = OmadaControllerUpdateInfo({})
+        client.get_controller_name.return_value = "OC200"
         yield client
 
 

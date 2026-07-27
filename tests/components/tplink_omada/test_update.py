@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tplink_omada_client.definitions import OmadaControllerUpdateInfo
 from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 
@@ -18,6 +19,7 @@ from homeassistant.components.update import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import (
@@ -60,6 +62,114 @@ async def init_integration(
         await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+async def _setup_controller_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    update_data: dict,
+) -> MockConfigEntry:
+    """Set up the integration with controller update data."""
+    mock_omada_client.check_firmware_updates.return_value = (
+        OmadaControllerUpdateInfo(update_data)
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.tplink_omada.PLATFORMS", [Platform.UPDATE]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry
+
+
+async def test_hardware_controller_update(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test a hardware controller update entity and device."""
+    await _setup_controller_update(
+        hass,
+        mock_config_entry,
+        mock_omada_client,
+        {
+            "hardware": {
+                "upgrade": True,
+                "currentVersion": "1.28.2",
+                "latestVersion": "1.31.3",
+                "fwReleaseLog": "Hardware controller release notes",
+            }
+        },
+    )
+
+    entity_id = entity_registry.async_get_entity_id(
+        UPDATE_DOMAIN,
+        "tplink_omada",
+        "controller_12345_Default_firmware",
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes["installed_version"] == "1.28.2"
+    assert state.attributes["latest_version"] == "1.31.3"
+    assert state.attributes["device_class"] == "firmware"
+
+    device = device_registry.async_get_device(
+        identifiers={("tplink_omada", "controller_12345_Default")}
+    )
+    assert device is not None
+    assert device.manufacturer == "TP-Link"
+    assert device.model == "OC200"
+    assert device.name == "OC200"
+    assert device.sw_version == "6.2.14"
+
+
+async def test_software_controller_update(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test a software controller update entity."""
+    await _setup_controller_update(
+        hass,
+        mock_config_entry,
+        mock_omada_client,
+        {
+            "software": {
+                "upgrade": True,
+                "currentVersion": "6.2.14",
+                "latestVersion": "6.2.16",
+                "releaseLog": "Software controller release notes",
+            }
+        },
+    )
+
+    entity_id = entity_registry.async_get_entity_id(
+        UPDATE_DOMAIN,
+        "tplink_omada",
+        "controller_12345_Default_firmware",
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes["installed_version"] == "6.2.14"
+    assert state.attributes["latest_version"] == "6.2.16"
+    assert state.attributes["device_class"] == "firmware"
+
+    device = device_registry.async_get_device(
+        identifiers={("tplink_omada", "controller_12345_Default")}
+    )
+    assert device is not None
+    assert device.model == "Omada Controller Software"
 
 
 async def test_entities(
@@ -130,6 +240,44 @@ async def test_install_firmware_success(
     assert await_args[0].mac == "54-AF-97-00-00-01"
 
 
+async def test_install_hardware_controller_firmware(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test successful hardware controller firmware installation."""
+    await _setup_controller_update(
+        hass,
+        mock_config_entry,
+        mock_omada_client,
+        {
+            "hardware": {
+                "upgrade": True,
+                "currentVersion": "1.28.2",
+                "latestVersion": "1.31.3",
+                "fwReleaseLog": "Hardware controller release notes",
+            }
+        },
+    )
+
+    entity_id = entity_registry.async_get_entity_id(
+        UPDATE_DOMAIN,
+        "tplink_omada",
+        "controller_12345_Default_firmware",
+    )
+    assert entity_id is not None
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_omada_client.upgrade_controller_firmware.assert_awaited_once_with("1.31.3")
+
+
 @pytest.mark.parametrize(
     ("exception_type", "error_message"),
     [
@@ -172,6 +320,58 @@ async def test_install_firmware_exceptions(
 
 
 @pytest.mark.parametrize(
+    ("exception_type", "error_message"),
+    [
+        (
+            RequestFailed(500, "Update rejected"),
+            "Controller firmware update request rejected",
+        ),
+        (
+            OmadaClientException("Connection error"),
+            "Unable to update the Omada controller firmware",
+        ),
+    ],
+)
+async def test_install_controller_firmware_exceptions(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    exception_type: Exception,
+    error_message: str,
+) -> None:
+    """Test hardware controller firmware installation exception handling."""
+    await _setup_controller_update(
+        hass,
+        mock_config_entry,
+        mock_omada_client,
+        {
+            "hardware": {
+                "upgrade": True,
+                "currentVersion": "1.28.2",
+                "latestVersion": "1.31.3",
+            }
+        },
+    )
+    mock_omada_client.upgrade_controller_firmware.side_effect = exception_type
+
+    entity_id = entity_registry.async_get_entity_id(
+        UPDATE_DOMAIN,
+        "tplink_omada",
+        "controller_12345_Default_firmware",
+    )
+    assert entity_id is not None
+
+    with pytest.raises(HomeAssistantError, match=error_message):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
     ("entity_name", "expected_notes"),
     [
         ("test_router", None),
@@ -202,3 +402,64 @@ async def test_release_notes(
     result = await client.receive_json()
 
     assert expected_notes == result["result"]
+
+
+@pytest.mark.parametrize(
+    ("update_data", "unique_id", "expected_notes"),
+    [
+        (
+            {
+                "hardware": {
+                    "upgrade": True,
+                    "currentVersion": "1.28.2",
+                    "latestVersion": "1.31.3",
+                    "fwReleaseLog": "Hardware controller release notes",
+                }
+            },
+            "controller_12345_Default_firmware",
+            "Hardware controller release notes",
+        ),
+        (
+            {
+                "software": {
+                    "upgrade": True,
+                    "currentVersion": "6.2.14",
+                    "latestVersion": "6.2.16",
+                    "releaseLog": "Software controller release notes",
+                }
+            },
+            "controller_12345_Default_firmware",
+            "Software controller release notes",
+        ),
+    ],
+)
+async def test_controller_release_notes(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    update_data: dict,
+    unique_id: str,
+    expected_notes: str,
+) -> None:
+    """Test controller release notes."""
+    await _setup_controller_update(
+        hass, mock_config_entry, mock_omada_client, update_data
+    )
+    entity_id = entity_registry.async_get_entity_id(
+        UPDATE_DOMAIN, "tplink_omada", unique_id
+    )
+    assert entity_id is not None
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": entity_id,
+        }
+    )
+    result = await client.receive_json()
+
+    assert result["result"] == expected_notes

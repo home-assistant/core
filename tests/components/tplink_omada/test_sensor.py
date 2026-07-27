@@ -15,6 +15,7 @@ from homeassistant.components.tplink_omada.coordinator import (
     POLL_SWITCH_PORT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import (
@@ -52,6 +53,34 @@ async def test_entities(
 ) -> None:
     """Test the creation of the TP-Link Omada sensor entities."""
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
+
+
+async def test_controller_status_sensor(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the controller status sensor belongs to the controller device."""
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        "controller_12345_Default_device_status",
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "connected"
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "controller_12345_Default")}
+    )
+    assert device is not None
+    assert entity_entry.device_id == device.id
+    assert device.model == "Omada Controller Software"
 
 
 async def test_device_specific_status(

@@ -5,8 +5,9 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, NamedTuple, override
 
-from tplink_omada_client import OmadaSiteClient, OmadaSwitchPortDetails
+from tplink_omada_client import OmadaClient, OmadaSiteClient, OmadaSwitchPortDetails
 from tplink_omada_client.clients import OmadaWirelessClient
+from tplink_omada_client.definitions import OmadaControllerUpdateInfo
 from tplink_omada_client.devices import (
     OmadaFirmwareUpdate,
     OmadaGateway,
@@ -153,6 +154,39 @@ class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
             async for c in self.omada_client.get_connected_clients()
             if isinstance(c, OmadaWirelessClient)
         }
+
+
+class OmadaControllerUpdateCoordinator(
+    DataUpdateCoordinator[OmadaControllerUpdateInfo]
+):
+    """Coordinator for Omada controller update information."""
+
+    config_entry: OmadaConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaClient,
+    ) -> None:
+        """Initialize the controller update coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="Omada Controller Updates",
+            update_interval=timedelta(seconds=POLL_DEVICES),
+        )
+        self.omada_client = omada_client
+
+    @override
+    async def _async_update_data(self) -> OmadaControllerUpdateInfo:
+        """Fetch controller update information."""
+        try:
+            async with asyncio.timeout(10):
+                return await self.omada_client.check_firmware_updates()
+        except OmadaClientException as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
 
 class FirmwareUpdateStatus(NamedTuple):

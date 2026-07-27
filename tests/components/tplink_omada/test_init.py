@@ -10,6 +10,7 @@ from tplink_omada_client.exceptions import (
 )
 
 from homeassistant.components.tplink_omada.const import DOMAIN
+from homeassistant.components.tplink_omada.entity import controller_device_identifier
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -83,12 +84,22 @@ async def test_missing_devices_removed_at_startup(
         model="Some old model",
     )
 
+    controller_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, controller_device_identifier(mock_config_entry))},
+        manufacturer="TP-Link",
+        name="OC200",
+        model="OC200",
+    )
+
     assert device_registry.async_get(device_entry.id) == device_entry
+    assert device_registry.async_get(controller_entry.id) == controller_entry
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert device_registry.async_get(device_entry.id) is None
+    assert device_registry.async_get(controller_entry.id) == controller_entry
 
 
 async def test_migrate_entry_v1_to_v2(

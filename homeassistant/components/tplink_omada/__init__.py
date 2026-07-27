@@ -21,6 +21,7 @@ from homeassistant.helpers.typing import ConfigType
 from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
 from .controller import OmadaSiteController
+from .entity import controller_device_identifier
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,8 +67,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
             f"Unexpected error connecting to Omada controller: {ex}"
         ) from ex
 
+    controller_info = await client.get_controller_info()
+    controller_type = await client.get_controller_type()
+    controller_name = await client.get_controller_name()
+    controller_status = await client.get_controller_status()
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
-    controller = OmadaSiteController(hass, entry, site_client)
+    controller = OmadaSiteController(
+        hass,
+        entry,
+        client,
+        site_client,
+        controller_info,
+        controller_type,
+        controller_status,
+        controller_name,
+    )
     await controller.initialize_first_refresh()
 
     entry.runtime_data = controller
@@ -97,7 +111,11 @@ def _remove_old_devices(
         mac = next(
             (i[1] for i in registered_device.identifiers if i[0] == DOMAIN), None
         )
-        if mac and mac not in omada_devices:
+        if (
+            mac
+            and mac != controller_device_identifier(entry)
+            and mac not in omada_devices
+        ):
             device_registry.async_remove_device(registered_device.id)
 
 

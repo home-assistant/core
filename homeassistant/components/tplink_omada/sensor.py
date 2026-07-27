@@ -1,10 +1,18 @@
-"""Support for TPLink Omada binary sensors."""
+"""Support for TPLink Omada sensors."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from tplink_omada_client.definitions import DeviceStatus, DeviceStatusCategory, PortType
+from tplink_omada_client.definitions import (
+    DeviceStatus,
+    DeviceStatusCategory,
+    OmadaControllerInfo,
+    OmadaControllerStatus,
+    OmadaControllerType,
+    PortType,
+)
+
 from tplink_omada_client.devices import (
     OmadaListDevice,
     OmadaSwitch,
@@ -17,6 +25,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
@@ -26,7 +35,12 @@ from homeassistant.helpers.typing import StateType
 from . import OmadaConfigEntry
 from .const import OmadaDeviceStatus
 from .coordinator import OmadaDevicesCoordinator, OmadaSwitchPortCoordinator
-from .entity import OmadaDeviceEntity, get_switch_port_base_name
+from .entity import (
+    OmadaControllerEntity,
+    OmadaDeviceEntity,
+    controller_device_identifier,
+    get_switch_port_base_name,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -57,6 +71,7 @@ def _map_device_status(device: OmadaListDevice) -> str | None:
     display_status = DEVICE_STATUS_MAP.get(
         device.status
     ) or DEVICE_STATUS_CATEGORY_MAP.get(device.status_category)
+
     return display_status.value if display_status else None
 
 
@@ -67,8 +82,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors."""
     controller = config_entry.runtime_data
-
     devices_coordinator = controller.devices_coordinator
+
+    async_add_entities(
+        [
+            OmadaControllerStatusSensor(
+                devices_coordinator,
+                config_entry,
+                controller.controller_info,
+                controller.controller_type,
+                controller.controller_status,
+                controller.controller_name,
+            )
+        ]
+    )
 
     async def _create_device_sensor_entities(
         device: OmadaListDevice,
@@ -76,9 +103,9 @@ async def async_setup_entry(
         """Create sensor entities for a device."""
         async_add_entities(
             [
-                OmadaDeviceSensor(devices_coordinator, device, desc)
-                for desc in OMADA_DEVICE_SENSORS
-                if desc.exists_func(device)
+                OmadaDeviceSensor(devices_coordinator, device, description)
+                for description in OMADA_DEVICE_SENSORS
+                if description.exists_func(device)
             ]
         )
 
@@ -117,6 +144,42 @@ async def async_setup_entry(
     )
 
 
+class OmadaControllerStatusSensor(
+    OmadaControllerEntity[OmadaDevicesCoordinator],
+    SensorEntity,
+):
+    """Connection status sensor for an Omada controller."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_options = [value.value for value in OmadaDeviceStatus]
+    _attr_translation_key = "device_status"
+    _attr_native_value = OmadaDeviceStatus.CONNECTED.value
+
+    def __init__(
+        self,
+        coordinator: OmadaDevicesCoordinator,
+        config_entry: OmadaConfigEntry,
+        controller_info: OmadaControllerInfo,
+        controller_type: OmadaControllerType,
+        controller_status: OmadaControllerStatus,
+        controller_name: str,
+    ) -> None:
+        """Initialize the controller status sensor."""
+        super().__init__(
+            coordinator,
+            config_entry,
+            controller_info,
+            controller_type,
+            controller_status,
+            controller_name,
+        )
+
+        self._attr_unique_id = (
+            f"{controller_device_identifier(config_entry)}_device_status"
+        )
+
+
 @dataclass(frozen=True, kw_only=True)
 class OmadaDeviceSensorEntityDescription(SensorEntityDescription):
     """Entity description for status from an Omada device."""
@@ -132,7 +195,7 @@ OMADA_DEVICE_SENSORS: list[OmadaDeviceSensorEntityDescription] = [
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         update_func=_map_device_status,
-        options=[v.value for v in OmadaDeviceStatus],
+        options=[value.value for value in OmadaDeviceStatus],
     ),
     OmadaDeviceSensorEntityDescription(
         key="cpu_usage",
@@ -153,8 +216,11 @@ OMADA_DEVICE_SENSORS: list[OmadaDeviceSensorEntityDescription] = [
 ]
 
 
-class OmadaDeviceSensor(OmadaDeviceEntity[OmadaDevicesCoordinator], SensorEntity):
-    """Sensor for property of a generic Omada device."""
+class OmadaDeviceSensor(
+    OmadaDeviceEntity[OmadaDevicesCoordinator],
+    SensorEntity,
+):
+    """Sensor for property of a generic device."""
 
     entity_description: OmadaDeviceSensorEntityDescription
 
@@ -166,6 +232,7 @@ class OmadaDeviceSensor(OmadaDeviceEntity[OmadaDevicesCoordinator], SensorEntity
     ) -> None:
         """Initialize the device sensor."""
         super().__init__(coordinator, device)
+
         self.entity_description = entity_description
         self._attr_unique_id = f"{device.mac}_{entity_description.key}"
 
