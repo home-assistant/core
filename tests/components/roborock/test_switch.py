@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 import roborock
-from roborock import RoborockCommand
+from roborock import RoborockCommand, RoborockException
 from roborock.data import RoborockDockTypeCode, RoborockStateCode
 from roborock.device_features import RoborockDockFeatures
 from roborock.roborock_message import RoborockZeoProtocol
@@ -206,6 +206,53 @@ async def test_mop_wash_ignores_going_to_wash_state(
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.roborock_s7_maxv_dock_mop_wash").state == "off"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "service", "expected_command"),
+    [
+        (
+            "switch.roborock_s7_maxv_dock_mop_wash",
+            SERVICE_TURN_ON,
+            "APP_START_WASH",
+        ),
+        (
+            "switch.roborock_s7_maxv_dock_mop_wash",
+            SERVICE_TURN_OFF,
+            "APP_STOP_WASH",
+        ),
+        (
+            "switch.roborock_s7_maxv_dock_mop_drying",
+            SERVICE_TURN_ON,
+            "APP_SET_DRYER_STATUS",
+        ),
+        (
+            "switch.roborock_s7_maxv_dock_mop_drying",
+            SERVICE_TURN_OFF,
+            "APP_SET_DRYER_STATUS",
+        ),
+    ],
+)
+async def test_dock_switch_command_failure(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    entity_id: str,
+    service: str,
+    expected_command: str,
+) -> None:
+    """Test a failing dock command is raised to the user."""
+    fake_vacuum.v1_properties.command.send.side_effect = RoborockException
+
+    with pytest.raises(
+        HomeAssistantError, match=f"Error while calling {expected_command}"
+    ):
+        await hass.services.async_call(
+            "switch",
+            service,
+            blocking=True,
+            target={"entity_id": entity_id},
+        )
 
 
 @pytest.fixture

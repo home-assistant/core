@@ -46,7 +46,7 @@ class RoborockButtonDescription(ButtonEntityDescription):
 
     attribute: ConsumableAttribute
     is_dock_entity: bool = False
-    is_supported: Callable[[RoborockDataUpdateCoordinator], bool] = lambda _: True
+    is_supported: Callable[[RoborockDockFeatures], bool] = lambda _: True
 
 
 CONSUMABLE_BUTTON_DESCRIPTIONS = [
@@ -85,9 +85,7 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         is_dock_entity=True,
-        is_supported=lambda coordinator: (
-            coordinator.properties_api.device_features.dock_features.is_washable
-        ),
+        is_supported=lambda dock_features: dock_features.is_washable,
     ),
     RoborockButtonDescription(
         key="reset_dock_cleaning_brush_consumable",
@@ -96,9 +94,7 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         is_dock_entity=True,
-        is_supported=lambda coordinator: (
-            coordinator.properties_api.device_features.dock_features.is_washable
-        ),
+        is_supported=lambda dock_features: dock_features.is_washable,
     ),
 ]
 
@@ -108,14 +104,13 @@ class RoborockDockButtonDescription(ButtonEntityDescription):
     """Describes a Roborock dock action button entity."""
 
     command: RoborockCommand
-    params: dict[str, Any] | None = None
     is_supported: Callable[[RoborockDockFeatures], bool]
 
 
 DOCK_BUTTON_DESCRIPTIONS = [
     RoborockDockButtonDescription(
-        key="empty_dust_bin",
-        translation_key="empty_dust_bin",
+        key="empty_dustbin",
+        translation_key="empty_dustbin",
         command=RoborockCommand.APP_START_COLLECT_DUST,
         is_supported=lambda dock_features: dock_features.is_collectable,
     ),
@@ -171,12 +166,12 @@ async def async_setup_entry(
         """Add entities for a specific coordinator."""
         entities: list[ButtonEntity] = []
         if isinstance(coordinator, RoborockDataUpdateCoordinator):
+            dock_features = coordinator.properties_api.device_features.dock_features
             entities.extend(
                 RoborockButtonEntity(coordinator, description)
                 for description in CONSUMABLE_BUTTON_DESCRIPTIONS
-                if description.is_supported(coordinator)
+                if description.is_supported(dock_features)
             )
-            dock_features = coordinator.properties_api.device_features.dock_features
             entities.extend(
                 RoborockDockButtonEntity(coordinator, description)
                 for description in DOCK_BUTTON_DESCRIPTIONS
@@ -297,7 +292,7 @@ class RoborockDockButtonEntity(RoborockCoordinatedEntityV1, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Press the button."""
-        await self.send(self.entity_description.command, self.entity_description.params)
+        await self.send(self.entity_description.command)
 
 
 class RoborockRoutineButtonEntity(RoborockEntity, ButtonEntity):

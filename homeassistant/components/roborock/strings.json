@@ -94,9 +94,6 @@
       }
     },
     "button": {
-      "empty_dust_bin": {
-        "name": "Empty dust bin"
-      },
       "empty_dustbin": {
         "name": "Empty dustbin"
       },

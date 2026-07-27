@@ -21,7 +21,7 @@
       }
     },
     "button": {
-      "empty_dust_bin": {
+      "empty_dustbin": {
         "default": "mdi:delete-empty"
       },
       "reset_air_filter_consumable": {

@@ -84,7 +84,7 @@ async def test_dock_buttons_absent_for_non_wash_n_fill_dock(
     )
 
 
-EMPTY_DUST_BIN_ENTITY_ID = "button.roborock_s7_maxv_dock_empty_dust_bin"
+EMPTY_DUST_BIN_ENTITY_ID = "button.roborock_s7_maxv_dock_empty_dustbin"
 
 
 async def test_press_empty_dust_bin_button(
@@ -103,6 +103,25 @@ async def test_press_empty_dust_bin_button(
     fake_vacuum.v1_properties.command.send.assert_called_once_with(
         RoborockCommand.APP_START_COLLECT_DUST, params=None
     )
+
+
+async def test_empty_dustbin_button_failure(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test a failing dock command is raised to the user."""
+    fake_vacuum.v1_properties.command.send.side_effect = RoborockException
+
+    with pytest.raises(
+        HomeAssistantError, match="Error while calling APP_START_COLLECT_DUST"
+    ):
+        await hass.services.async_call(
+            "button",
+            SERVICE_PRESS,
+            blocking=True,
+            target={"entity_id": EMPTY_DUST_BIN_ENTITY_ID},
+        )
 
 
 @pytest.fixture
