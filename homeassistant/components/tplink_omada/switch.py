@@ -36,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import OmadaConfigEntry
 from .controller import OmadaGatewayCoordinator, OmadaSwitchPortCoordinator
 from .coordinator import OmadaCoordinator
-from .entity import OmadaDeviceEntity
+from .entity import OmadaDeviceEntity, get_switch_port_base_name
 
 PARALLEL_UPDATES = 0
 
@@ -68,7 +68,7 @@ async def async_setup_entry(
                 port,
                 port.port_id,
                 desc,
-                port_name=_get_switch_port_base_name(port),
+                port_name=get_switch_port_base_name(port),
             )
             for port in coordinator.data.values()
             for desc in SWITCH_PORT_DETAILS_SWITCHES
@@ -118,14 +118,6 @@ async def async_setup_entry(
         ),
         entity_callback=_create_gateway_port_entities,
     )
-
-
-def _get_switch_port_base_name(port: OmadaSwitchPortDetails) -> str:
-    """Get display name for a switch port."""
-
-    if port.name == f"Port{port.port}":
-        return str(port.port)
-    return f"{port.port} ({port.name})"
 
 
 @dataclass(frozen=True, kw_only=True)

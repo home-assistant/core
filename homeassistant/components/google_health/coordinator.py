@@ -18,6 +18,8 @@ from google_health_api.model import (
     DailyRestingHeartRate,
     DistanceRollupValue,
     FloorsRollupValue,
+    HydrationLogRollupValue,
+    NutritionLogRollupValue,
     Sleep,
     StepsRollupValue,
     TotalCaloriesRollupValue,
@@ -248,3 +250,46 @@ class GoogleHealthSleepCoordinator(
         sleep_result = await self.api.sleep.list(page_size=DEFAULT_PAGE_SIZE)
         sleep = sleep_result.data_points[0].data if sleep_result.data_points else None
         return GoogleHealthSleepData(sleep=sleep)
+
+
+@dataclass
+class GoogleHealthNutritionData:
+    """Class to hold hydration and nutrition data."""
+
+    hydration: HydrationLogRollupValue | None = None
+    nutrition: NutritionLogRollupValue | None = None
+
+
+class GoogleHealthNutritionCoordinator(
+    GoogleHealthDataUpdateCoordinator[GoogleHealthNutritionData]
+):
+    """Coordinator to fetch nutrition data from Google Health API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: GoogleHealthConfigEntry,
+        api_client: GoogleHealthApi,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_nutrition",
+            update_interval=POLLING_INTERVAL,
+            entry=entry,
+            api_client=api_client,
+        )
+
+    @override
+    async def _async_fetch_data(self) -> GoogleHealthNutritionData:
+        """Fetch hydration and nutrition rollups for today."""
+        hydration_rollup, nutrition_rollup = await asyncio.gather(
+            self.api.hydration_log.today(self.hass.config.time_zone),
+            self.api.nutrition_log.today(self.hass.config.time_zone),
+        )
+
+        return GoogleHealthNutritionData(
+            hydration=hydration_rollup.data if hydration_rollup else None,
+            nutrition=nutrition_rollup.data if nutrition_rollup else None,
+        )

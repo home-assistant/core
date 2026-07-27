@@ -315,9 +315,11 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
-        if state and state.attributes.get(ClimateEntityStateAttribute.TEMPERATURE):
+        if state and state.attributes.get(
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE
+        ):
             self._attr_target_temperature = float(
-                state.attributes[ClimateEntityStateAttribute.TEMPERATURE]
+                state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE]
             )
 
     @override
