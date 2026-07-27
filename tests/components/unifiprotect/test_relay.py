@@ -1,5 +1,6 @@
 """Tests for the UniFi Protect relay (Public API) switch entities."""
 
+from collections.abc import Callable
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -454,11 +455,11 @@ async def test_public_ws_state_change_without_public_bootstrap(
     assert data.last_public_update_success is False
 
 
-async def test_relay_public_ws_message_with_none_new_obj(
+async def test_relay_public_ws_message_without_public_old_obj(
     hass: HomeAssistant,
     ufp_with_relay: tuple[MockUFPFixture, Mock],
 ) -> None:
-    """Public WS message with new_obj=None is silently ignored."""
+    """A new_obj=None message without a PublicDeviceModel old_obj is ignored."""
     ufp, _ = ufp_with_relay
     await init_entry(hass, ufp, [])
 
@@ -467,6 +468,7 @@ async def test_relay_public_ws_message_with_none_new_obj(
 
     mock_msg = Mock()
     mock_msg.new_obj = None
+    mock_msg.old_obj = None
 
     assert ufp.devices_ws_subscription is not None
     ufp.devices_ws_subscription(mock_msg)
@@ -476,26 +478,57 @@ async def test_relay_public_ws_message_with_none_new_obj(
     assert hass.states.get(SWITCH_ENTITY_ID) == state_before
 
 
-async def test_relay_switch_output_removed_from_relay_update(
+def _outputs_removed_ws_message(ufp: MockUFPFixture, relay: Mock) -> Mock:
+    """Build an update whose merged relay no longer contains any outputs.
+
+    The library merges the update into the public bootstrap before
+    dispatching, so mirror that here: entities re-read the bootstrap on
+    dispatch.
+    """
+    relay_no_outputs = _make_relay(outputs=[])
+    relay_no_outputs.id = relay.id
+    relay_no_outputs.mac = relay.mac
+    ufp.api.public_bootstrap.relays[relay.id] = relay_no_outputs
+
+    mock_msg = Mock()
+    mock_msg.new_obj = relay_no_outputs
+    return mock_msg
+
+
+def _relay_deleted_ws_message(ufp: MockUFPFixture, relay: Mock) -> Mock:
+    """Build a delete event (new_obj=None) for the relay.
+
+    The library removes the object from the bootstrap before dispatching;
+    data.py dispatches None and the entity re-reads the relay as missing.
+    """
+    del ufp.api.public_bootstrap.relays[relay.id]
+
+    mock_msg = Mock()
+    mock_msg.old_obj = relay
+    mock_msg.new_obj = None
+    return mock_msg
+
+
+@pytest.mark.parametrize(
+    "make_ws_message",
+    [
+        pytest.param(_outputs_removed_ws_message, id="outputs_removed"),
+        pytest.param(_relay_deleted_ws_message, id="relay_deleted"),
+    ],
+)
+async def test_relay_switch_unavailable_after_ws_message(
     hass: HomeAssistant,
     ufp_with_relay: tuple[MockUFPFixture, Mock],
+    make_ws_message: Callable[[MockUFPFixture, Mock], Mock],
 ) -> None:
-    """WS update where the output is no longer present marks the entity unavailable."""
+    """WS messages that leave no usable relay output mark the entity unavailable."""
     ufp, relay = ufp_with_relay
     relay.outputs[0].state = RelayOutputState.ON
     await init_entry(hass, ufp, [])
 
     assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON  # type: ignore[union-attr]
 
-    # Build a relay WS update that no longer contains any outputs.
-    relay_no_outputs = _make_relay(outputs=[])
-    relay_no_outputs.id = relay.id
-    relay_no_outputs.mac = relay.mac
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.old_obj = relay_no_outputs
-    mock_msg.new_obj = relay_no_outputs
+    mock_msg = make_ws_message(ufp, relay)
 
     assert ufp.devices_ws_subscription is not None
     ufp.devices_ws_subscription(mock_msg)

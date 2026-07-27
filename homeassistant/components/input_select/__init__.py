@@ -15,8 +15,9 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
     SelectEntity,
+    SelectEntityCapabilityAttribute,
 )
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
     CONF_ICON,
     CONF_ID,
@@ -32,6 +33,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
+
+from .const import InputSelectEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -250,9 +253,10 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
 
     _entity_component_unrecorded_attributes = (
-        SelectEntity._entity_component_unrecorded_attributes - {ATTR_OPTIONS}  # noqa: SLF001
+        SelectEntity._entity_component_unrecorded_attributes  # noqa: SLF001
+        - {SelectEntityCapabilityAttribute.OPTIONS}
     )
-    _unrecorded_attributes = frozenset({ATTR_EDITABLE})
+    _unrecorded_attributes = frozenset({InputSelectEntityStateAttribute.EDITABLE})
 
     _attr_should_poll = False
     editable: bool
@@ -299,7 +303,7 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     @override
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the state attributes."""
-        return {ATTR_EDITABLE: self.editable}
+        return {InputSelectEntityStateAttribute.EDITABLE: self.editable}
 
     @override
     async def async_select_option(self, option: str) -> None:

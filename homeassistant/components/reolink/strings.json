@@ -203,6 +203,9 @@
       "guard_set": {
         "name": "Guard set current position"
       },
+      "pre_siren": {
+        "name": "Pre-siren"
+      },
       "ptz_auto": {
         "name": "PTZ continuous rotation"
       },
@@ -543,7 +546,8 @@
           "autoadaptive": "Auto adaptive",
           "off": "[%key:common::state::off%]",
           "onatnight": "On at night",
-          "schedule": "Schedule"
+          "schedule": "Schedule",
+          "scheduleplus": "Schedule plus"
         }
       },
       "hdr": {
@@ -845,6 +849,9 @@
       },
       "pre_record": {
         "name": "Pre-recording"
+      },
+      "pre_siren_on_event": {
+        "name": "Pre-siren on event"
       },
       "privacy_mask": {
         "name": "Privacy mask"

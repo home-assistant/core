@@ -8,7 +8,7 @@ from ical.event import Event
 from ical.timeline import Timeline, materialize_timeline
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -88,15 +88,13 @@ class RemoteCalendarEntity(
 
         return await self.hass.async_add_executor_job(events_in_range)
 
-    @override
-    async def async_update(self) -> None:
-        """Refresh the timeline.
+    async def _async_update_timeline(self) -> None:
+        """Refresh the timeline and write state.
 
         This is called when the coordinator updates. Creating the timeline may
         require walking through the entire calendar and handling recurring
         events, so it is done as a separate task without blocking the event loop.
         """
-        await super().async_update()
 
         def _get_timeline() -> Timeline | None:
             """Return a materialized timeline with upcoming events."""
@@ -110,6 +108,28 @@ class RemoteCalendarEntity(
             )
 
         self._timeline = await self.hass.async_add_executor_job(_get_timeline)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        await self._async_update_timeline()
+        self.async_write_ha_state()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.coordinator.config_entry.async_create_task(
+            self.hass,
+            self._async_handle_coordinator_update(),
+            name="remote calendar timeline update",
+        )
+
+    async def _async_handle_coordinator_update(self) -> None:
+        """Refresh the timeline and write state."""
+        await self._async_update_timeline()
+        self.async_write_ha_state()
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:

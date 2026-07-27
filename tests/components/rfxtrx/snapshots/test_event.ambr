@@ -7,8 +7,8 @@
   +     'Command': 'On',
   +     'Rssi numeric': 5,
         ...
-  -     'event_type': None,
-  +     'event_type': 'on',
+  -     <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+  +     <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'on',
           ...
   -   'state': 'unknown',
   +   'state': '2021-01-09T12:00:00.000+00:00',
@@ -17,9 +17,9 @@
 # name: test_control_event[1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'off',
         'on',
         'dim',
@@ -29,7 +29,7 @@
         'chime',
         'illegal_command',
       ]),
-      'friendly_name': 'ARC C1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ARC C1',
     }),
     'context': <ANY>,
     'entity_id': 'event.arc_c1',
@@ -42,9 +42,9 @@
 # name: test_control_event[2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'off',
         'on',
         'dim',
@@ -54,7 +54,7 @@
         'chime',
         'illegal_command',
       ]),
-      'friendly_name': 'ARC D1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ARC D1',
     }),
     'context': <ANY>,
     'entity_id': 'event.arc_d1',
@@ -70,8 +70,8 @@
   +     'Rssi numeric': 8,
   +     'Sensor Status': 'Normal',
         ...
-  -     'event_type': None,
-  +     'event_type': 'normal',
+  -     <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+  +     <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'normal',
           ...
   -   'state': 'unknown',
   +   'state': '2021-01-09T12:00:00.000+00:00',
@@ -80,9 +80,9 @@
 # name: test_status_event[1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'normal',
         'normal_delayed',
         'alarm',
@@ -112,7 +112,7 @@
         'motion_tamper',
         'no_motion_tamper',
       ]),
-      'friendly_name': 'X10 Security d3dc54:32',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X10 Security d3dc54:32',
     }),
     'context': <ANY>,
     'entity_id': 'event.x10_security_d3dc54_32',

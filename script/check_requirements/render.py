@@ -14,6 +14,7 @@ from .models import CheckKind, CheckRunResult, CheckStatus, PackageChange
 MARKER = "<!-- requirements-check -->"
 HEADER = "## Check requirements"
 REPO_URL = "https://github.com/home-assistant/core"
+COMMIT_PATH = "/commit/"
 
 # Column / bullet labels per check kind, in display order.
 _CHECK_DISPLAY: tuple[tuple[CheckKind, str], ...] = (
@@ -127,7 +128,7 @@ def _intro(result: CheckRunResult) -> str:
     """Marker, header, and the optional commit line the gate reads back."""
     parts: list[str] = []
     if result.head_sha:
-        commit = f"[`{result.head_sha[:7]}`]({REPO_URL}/commit/{result.head_sha})"
+        commit = f"[`{result.head_sha[:7]}`]({REPO_URL}{COMMIT_PATH}{result.head_sha})"
         parts.append(f"Checked at commit {commit}.")
     return "\n\n".join([f"{MARKER}\n{HEADER}", *parts])
 

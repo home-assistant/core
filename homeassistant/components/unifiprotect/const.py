@@ -41,7 +41,6 @@ DEFAULT_VERIFY_SSL = False
 DEFAULT_MAX_MEDIA = 1000
 
 DEVICES_THAT_ADOPT = {
-    ModelType.AIPORT,
     ModelType.CAMERA,
     ModelType.LIGHT,
     ModelType.VIEWPORT,

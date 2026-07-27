@@ -12,8 +12,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     STATE_UNKNOWN,
+    UnitOfDensity,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -235,7 +235,7 @@ async def test_airsensor_update(airsensor, hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert (
         state.attributes[ATTR_UNIT_OF_MEASUREMENT]
-        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
     )
 
     assert state.state == "49"
@@ -304,10 +304,7 @@ async def test_open_status_sensor_none_value(
     """Test that a None native_value yields an unknown state."""
     feature_mock, entity_id = open_status_sensor
 
-    def set_none():
-        feature_mock.native_value = None
-
-    feature_mock.async_update = AsyncMock(side_effect=set_none)
+    feature_mock.native_value = None
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
@@ -380,10 +377,7 @@ async def test_co2_definition_sensor_none_value(
     """Test that a None native_value yields an unknown state."""
     feature_mock, entity_id = co2_definition_sensor
 
-    def set_none():
-        feature_mock.native_value = None
-
-    feature_mock.async_update = AsyncMock(side_effect=set_none)
+    feature_mock.native_value = None
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)

@@ -12,7 +12,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import EntityCategory, UnitOfRatio
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -40,7 +40,7 @@ DISPLAY_BRIGHTNESS = AirGradientNumberEntityDescription(
     native_min_value=0,
     native_max_value=100,
     native_step=1,
-    native_unit_of_measurement=PERCENTAGE,
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     value_fn=lambda config: config.display_brightness,
     set_value_fn=lambda client, value: client.set_display_brightness(value),
 )
@@ -52,7 +52,7 @@ LED_BAR_BRIGHTNESS = AirGradientNumberEntityDescription(
     native_min_value=0,
     native_max_value=100,
     native_step=1,
-    native_unit_of_measurement=PERCENTAGE,
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     value_fn=lambda config: config.led_bar_brightness,
     set_value_fn=lambda client, value: client.set_led_bar_brightness(value),
 )

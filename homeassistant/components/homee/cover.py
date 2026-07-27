@@ -1,6 +1,6 @@
 """The homee cover platform."""
 
-from enum import Enum
+from enum import IntEnum
 import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
@@ -38,22 +38,22 @@ IS_CLOSED_ATTRIBUTES = [
 ]
 
 
-class HomeeCoverState(float, Enum):
+class HomeeCoverState(IntEnum):
     """Open/closed states for covers in homee."""
 
-    OPEN = 0.0
-    CLOSED = 1.0
-    STOPPED = 2.0
-    OPENING = 3.0
-    CLOSING = 4.0
+    OPEN = 0
+    CLOSED = 1
+    STOPPED = 2
+    OPENING = 3
+    CLOSING = 4
 
 
-class HomeeSlatState(float, Enum):
+class HomeeSlatState(IntEnum):
     """Slat states for covers in homee."""
 
-    STOPPED = 0.0
-    CLOSED = 1.0
-    OPEN = 2.0
+    STOPPED = 0
+    CLOSED = 1
+    OPEN = 2
 
 
 def get_open_close_attribute(node: HomeeNode) -> HomeeAttribute | None:
