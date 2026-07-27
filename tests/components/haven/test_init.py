@@ -1,6 +1,6 @@
 """Test setup for the HAVEN IAQ integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
 from haveniaq import (
     DeviceInfo,
@@ -12,10 +12,17 @@ import pytest
 
 from homeassistant.components.haven.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from . import TEST_HOST, TEST_INFO, TEST_SENSORS, TEST_UNSUPPORTED_CONTROLLER_INFO
+from . import (
+    TEST_HOST,
+    TEST_INFO,
+    TEST_PATH,
+    TEST_PORT,
+    TEST_SENSORS,
+    TEST_UNSUPPORTED_CONTROLLER_INFO,
+)
 
 from tests.common import MockConfigEntry
 
@@ -24,7 +31,11 @@ async def test_setup_unload_ram_entry(hass: HomeAssistant) -> None:
     """Test setting up and unloading an air-quality entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: TEST_HOST},
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_PATH: TEST_PATH,
+        },
     )
     entry.add_to_hass(hass)
 
@@ -36,6 +47,12 @@ async def test_setup_unload_ram_entry(hass: HomeAssistant) -> None:
 
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+        client_class.assert_called_once_with(
+            TEST_HOST,
+            session=ANY,
+            port=TEST_PORT,
+            path=TEST_PATH,
+        )
         client.get_sensors.assert_awaited_once()
         client.get_status.assert_not_awaited()
         client.get_controller.assert_not_awaited()
