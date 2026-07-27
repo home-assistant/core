@@ -5,13 +5,11 @@ from unittest.mock import patch
 import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.nuki.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-from .mock import setup_nuki_integration
 
 from tests.common import snapshot_platform
 
