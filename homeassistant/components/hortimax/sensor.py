@@ -1,6 +1,7 @@
 """Sensor platform: one sensor per HortOS readout."""
 
 from datetime import datetime, timedelta
+from math import isfinite
 from typing import override
 
 from aiohortos import (
@@ -185,6 +186,10 @@ class HortimaxReadoutSensor(HortimaxEntity, SensorEntity):
         try:
             number = float(readout.value)
         except TypeError, ValueError:
+            return None
+        # float() and the JSON parser both accept NaN and Infinity, which
+        # numeric sensors reject and timedelta() cannot convert.
+        if not isfinite(number):
             return None
         subject = readout_subject(readout.identifier)
         if subject in TIME_OF_DAY_READOUTS:

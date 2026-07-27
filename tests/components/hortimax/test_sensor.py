@@ -192,24 +192,57 @@ async def test_wind_direction_codes(
 
 
 @pytest.mark.usefixtures("mock_hortos_client")
-async def test_non_numeric_double_is_unknown(
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("n/a", id="text"),
+        pytest.param(float("nan"), id="nan"),
+        pytest.param(float("inf"), id="infinity"),
+        pytest.param("NaN", id="nan_as_text"),
+    ],
+)
+async def test_unusable_double_is_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hortos_client: AsyncMock,
+    value: float | str,
 ) -> None:
-    """Test a numeric readout carrying text is reported as unknown."""
+    """Test a numeric readout without a usable value is reported as unknown."""
     mock_hortos_client.get_latest_readouts.return_value = [
         Readout(
             identifier="OutsideTemperature-Measured",
             name="Outside temperature",
             unit="DegreeCelsius",
             source=Source(name="Weather station 001", type="WeatherStation"),
-            value="n/a",
+            value=value,
         )
     ]
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.weather_station_001_outside_temperature")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.usefixtures("mock_hortos_client")
+async def test_non_finite_time_of_day_is_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hortos_client: AsyncMock,
+) -> None:
+    """Test a non-finite time-of-day readout never reaches timedelta()."""
+    mock_hortos_client.get_latest_readouts.return_value = [
+        Readout(
+            identifier="SunriseToday-Measured",
+            name="Sunrise today",
+            unit="Second",
+            source=Source(name="Weather station 001", type="WeatherStation"),
+            value=float("nan"),
+        )
+    ]
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.weather_station_001_sunrise_today")
     assert state is not None
     assert state.state == "unknown"
 
