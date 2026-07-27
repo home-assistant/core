@@ -146,7 +146,10 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
                 data={"issue_id": data["issue_id"]},
             )
         except data_entry_flow.UnknownFlow as ex:
-            return self.json_message(f"Unknown Flow: {ex!s}", HTTPStatus.NOT_FOUND)
+            return self.json_message(
+                f"Unknown flow{f': {ex!s}' if str(ex) else ''}",
+                HTTPStatus.NOT_FOUND,
+            )
         except data_entry_flow.UnknownStep as ex:
             return self.json_message(str(ex), HTTPStatus.BAD_REQUEST)
         except UnknownEntry as ex:
