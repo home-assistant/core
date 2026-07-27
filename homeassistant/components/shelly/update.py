@@ -146,11 +146,6 @@ class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         try:
             await self.coordinator.device.trigger_add_on_ota_update()
         except DeviceConnectionError as err:
-            if self.in_progress:
-                # During device update the device can become unreachable
-                # but the update is still in progress.
-                # In this case we should not raise an error.
-                return
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="ota_update_connection_error",
