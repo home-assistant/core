@@ -223,19 +223,18 @@ class WattwaechterDiagnosticSensorDescription(SensorEntityDescription):
     section: str
     field: str
     value_fn: Callable[[str], StateType] = lambda value: value
-    entity_registry_enabled_default: bool = False
 
 
 DIAGNOSTIC_SENSORS: tuple[WattwaechterDiagnosticSensorDescription, ...] = (
     WattwaechterDiagnosticSensorDescription(
         key="wifi_signal",
-        translation_key="wifi_signal",
         section="wifi",
         field="signal_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=int,
     ),
     WattwaechterDiagnosticSensorDescription(
@@ -244,20 +243,7 @@ DIAGNOSTIC_SENSORS: tuple[WattwaechterDiagnosticSensorDescription, ...] = (
         section="wifi",
         field="ssid",
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    WattwaechterDiagnosticSensorDescription(
-        key="ip_address",
-        translation_key="ip_address",
-        section="wifi",
-        field="ip_address",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    WattwaechterDiagnosticSensorDescription(
-        key="mdns_name",
-        translation_key="mdns_name",
-        section="wifi",
-        field="mdns_name",
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 )
 

@@ -70,12 +70,9 @@
       "import_tariff_1": { "name": "Consumption tariff 1" },
       "import_tariff_2": { "name": "Consumption tariff 2" },
       "import_total": { "name": "Total consumption" },
-      "ip_address": { "name": "IP address" },
-      "mdns_name": { "name": "mDNS name" },
       "power_factor_phase": { "name": "Power factor {phase}" },
       "ssid": { "name": "SSID" },
-      "voltage_phase": { "name": "Voltage {phase}" },
-      "wifi_signal": { "name": "Wi-Fi signal" }
+      "voltage_phase": { "name": "Voltage {phase}" }
     }
   },
   "exceptions": {
