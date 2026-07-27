@@ -23,8 +23,8 @@ from tests.common import MockConfigEntry
 
 async def _setup_entry(
     hass: HomeAssistant,
-    info: dict = TEST_INFO,
-    sensors: dict | None = TEST_SENSORS,
+    info: dict,
+    sensors: dict | None,
 ) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -49,7 +49,7 @@ async def test_ram_sensors(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test RAM entities and device metadata."""
-    await _setup_entry(hass)
+    await _setup_entry(hass, TEST_INFO, TEST_SENSORS)
 
     assert len(hass.states.async_all("sensor")) == 15
     temp_entity = entity_registry.async_get_entity_id(
@@ -101,7 +101,7 @@ async def test_measurement_sensors_unavailable_when_not_ready(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test measurements are unavailable before sensor data is ready."""
-    await _setup_entry(hass, sensors={**TEST_SENSORS, "sensor_ready": False})
+    await _setup_entry(hass, TEST_INFO, {**TEST_SENSORS, "sensor_ready": False})
 
     temp_entity = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "TEST-RAM-0001_temperature_c"
@@ -119,7 +119,7 @@ async def test_missing_measurement_is_unknown(
 ) -> None:
     """Test a missing measurement is unknown while the sensor remains ready."""
     sensors = {**TEST_SENSORS, "temperature_c": None}
-    await _setup_entry(hass, sensors=sensors)
+    await _setup_entry(hass, TEST_INFO, sensors)
 
     temp_entity = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "TEST-RAM-0001_temperature_c"

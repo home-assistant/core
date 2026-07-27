@@ -30,7 +30,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-def _mock_client(info: dict = TEST_INFO) -> AsyncMock:
+def _mock_client(info: dict) -> AsyncMock:
     client = AsyncMock()
     client.get_info.return_value = DeviceInfo.from_dict(info)
     return client
@@ -55,7 +55,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.haven.config_flow.HavenClient",
-        return_value=_mock_client(),
+        return_value=_mock_client(TEST_INFO),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: TEST_HOST}
@@ -77,7 +77,7 @@ async def test_user_flow_cannot_connect_then_recovers(hass: HomeAssistant) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    client = _mock_client()
+    client = _mock_client(TEST_INFO)
     client.get_info.side_effect = [
         HavenApiError,
         DeviceInfo.from_dict(TEST_INFO),
@@ -109,7 +109,7 @@ async def test_user_flow_rejects_unsupported_device(hass: HomeAssistant) -> None
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
-        client = _mock_client()
+        client = _mock_client(TEST_INFO)
         client.get_info.side_effect = error
         with patch(
             "homeassistant.components.haven.config_flow.HavenClient",
@@ -153,7 +153,7 @@ async def test_user_flow_aborts_duplicate(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.haven.config_flow.HavenClient",
-        return_value=_mock_client(),
+        return_value=_mock_client(TEST_INFO),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: TEST_HOST}
@@ -168,7 +168,7 @@ async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
     """Test zeroconf discovery."""
     with patch(
         "homeassistant.components.haven.config_flow.HavenClient",
-        return_value=_mock_client(),
+        return_value=_mock_client(TEST_INFO),
     ) as client_class:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -209,7 +209,7 @@ async def test_zeroconf_updates_existing_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.haven.config_flow.HavenClient",
-        return_value=_mock_client(),
+        return_value=_mock_client(TEST_INFO),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -233,7 +233,7 @@ async def test_zeroconf_aborts_on_device_errors(hass: HomeAssistant) -> None:
         (HavenUnsupportedApiVersionError, "unsupported_api_version"),
         (HavenUnsupportedProductError, "unsupported_product"),
     ):
-        client = _mock_client()
+        client = _mock_client(TEST_INFO)
         client.get_info.side_effect = error
         with patch(
             "homeassistant.components.haven.config_flow.HavenClient",
