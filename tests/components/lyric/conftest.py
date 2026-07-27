@@ -1,12 +1,14 @@
 """Fixtures for the Honeywell Lyric integration tests."""
 
+from collections.abc import AsyncGenerator
 import time
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiolyric import Lyric
 from aiolyric.exceptions import LyricException
 from aiolyric.objects.location import LyricLocation
+from aiolyric.objects.priority import LyricRoom
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -100,3 +102,76 @@ def lyric_exception(
             "status": status,
         }
     )
+
+
+LCC_SUPPORTED_MAC = "AABBCC000001"
+NON_LCC_SUPPORTED_MAC = "AABBCC000002"
+UNSUPPORTED_MAC = "AABBCC000003"
+UNSUPPORTED_DEVICE_ID = "LCC-AABBCC000003"
+
+LIVING_ROOM_JSON = {
+    "id": 0,
+    "roomName": "Living Room",
+    "roomAvgTemp": 22,
+    "roomAvgHumidity": 50,
+    "accessories": [
+        {"id": 0, "type": "IndoorAirSensor", "temperature": 22.5, "status": "Ok"}
+    ],
+}
+
+OFFICE_ROOM_JSON = {
+    "id": 0,
+    "roomName": "Office",
+    "roomAvgTemp": 24,
+    "roomAvgHumidity": 40,
+    "accessories": [
+        {"id": 0, "type": "IndoorAirSensor", "temperature": 24.5, "status": "Ok"}
+    ],
+}
+
+
+@pytest.fixture
+async def mock_lyric_mixed_devices() -> AsyncGenerator[MagicMock]:
+    """Yield a mocked Lyric client with an LCC device, a non-LCC device, and an unsupported device.
+
+    Room priority support depends on the thermostat model, not on whether
+    its device ID happens to start with "LCC" (see the T9/T10 regression
+    this integration guards against), so this fixture exercises a
+    supported device on each prefix. ``get_thermostat_rooms`` populates
+    ``rooms_dict`` as a side effect, mirroring the real library, so a
+    device that the coordinator skips calling never gets room data.
+    """
+    location = LyricLocation(
+        MagicMock(),
+        location_json(
+            1,
+            [
+                thermostat_json(LCC_SUPPORTED_MAC, "LCC-AABBCC000001", "Living Room"),
+                thermostat_json(NON_LCC_SUPPORTED_MAC, "TCC-AABBCC000002", "Office"),
+                thermostat_json(UNSUPPORTED_MAC, UNSUPPORTED_DEVICE_ID, "Bedroom"),
+            ],
+        ),
+    )
+    rooms = {
+        LCC_SUPPORTED_MAC: LIVING_ROOM_JSON,
+        NON_LCC_SUPPORTED_MAC: OFFICE_ROOM_JSON,
+    }
+    mac_by_device_id = {device.device_id: device.mac_id for device in location.devices}
+
+    lyric = MagicMock(spec=Lyric)
+    lyric.locations = [location]
+    lyric.locations_dict = {location.location_id: location}
+    lyric.rooms_dict = {}
+    lyric.priorities_dict = {}
+
+    async def get_thermostat_rooms(location_id: int, device_id: str) -> None:
+        if device_id == UNSUPPORTED_DEVICE_ID:
+            raise lyric_exception(400)
+        mac_id = mac_by_device_id[device_id]
+        room_json = rooms[mac_id]
+        lyric.rooms_dict[mac_id] = {room_json["id"]: LyricRoom(room_json)}
+
+    lyric.get_thermostat_rooms = AsyncMock(side_effect=get_thermostat_rooms)
+
+    with patch("homeassistant.components.lyric.Lyric", return_value=lyric):
+        yield lyric
