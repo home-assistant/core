@@ -41,7 +41,7 @@ class TH2E(PapouchDevice):
         self._name = self.get_name()
         self._location = self.get_location()
         self.api_client = api_client
-        self.units_sensors = []
+        self.units_sensors = {}
 
         self.parse_xml(self.info)
         self._parse_initial_settings()
@@ -51,26 +51,25 @@ class TH2E(PapouchDevice):
         root = defused_ET.fromstring(xml_data)
         parsed_data: dict[str, dict[str, Any]] = {"sensor": {}}
 
-        populate = len(self.units_sensors) == 0
-
         for element in root.iter():
-            if element.tag.endswith("sns"):
-                item_id = element.attrib.get("id")
-                sns_type = element.attrib.get("type")
-                unit_code = element.attrib.get("unit", "0")
-                status = element.attrib.get("status", "0")
+            if not element.tag.endswith("sns"):
+                continue
 
-                if populate:
-                    self.units_sensors.append(
-                        {"id": item_id, "type": sns_type, "unit": unit_code}
-                    )
+            item_id = element.attrib.get("id")
+            sns_type = element.attrib.get("type")
+            unit_code = element.attrib.get("unit", "0")
+            status = element.attrib.get("status", "0")
 
-                if status in ("1", "4"):
-                    parsed_data["sensor"][item_id] = None
-                else:
-                    parsed_data["sensor"][item_id] = float(
-                        element.attrib.get("val", "0")
-                    )
+            self.units_sensors[item_id] = {
+                "id": item_id,
+                "type": sns_type,
+                "unit": unit_code,
+            }
+
+            if status in ("1", "4"):
+                parsed_data["sensor"][item_id] = None
+            else:
+                parsed_data["sensor"][item_id] = float(element.attrib.get("val", "0"))
 
         return parsed_data
 
@@ -108,7 +107,7 @@ class TH2E(PapouchDevice):
         sensors = []
         unit_map = {"0": "°C", "1": "°F", "2": "K"}
 
-        for sns in self.units_sensors:
+        for sns in self.units_sensors.values():
             item_id = sns["id"]
             sns_type = sns["type"]
             unit_code = sns["unit"]

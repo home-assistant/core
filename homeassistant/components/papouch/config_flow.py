@@ -1,6 +1,7 @@
 """Config flow for the Papouch integration."""
 
 import asyncio
+import ipaddress
 import logging
 import re
 
@@ -149,11 +150,12 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self._discovered_ips is None:
             results = await async_discover_papouch_devices(self.hass)
-
+            sorted_ips = sorted(results.keys(), key=ipaddress.ip_address)
             self._discovered_ips = {}
-            for ip, device_info in results.items():
-                location, name = device_info
-                self._discovered_ips[ip] = f"{name} ({location}) - {ip}"
+
+            for ip in sorted_ips:
+                location, name = results[ip]
+                self._discovered_ips[ip] = f"{ip} - {name} ({location})"
 
         if not self._discovered_ips and not self.discovered_ip and not errors:
             return await self.async_step_manual()

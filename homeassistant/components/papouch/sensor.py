@@ -3,7 +3,7 @@
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PapouchConfigEntry
@@ -55,3 +55,16 @@ class PapouchSensor(PapouchEntity, SensorEntity):
     def native_value(self) -> float | int | None:
         """Return the state of the sensor."""
         return self.coordinator.data.get(self.data_key, {}).get(self.item_id)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        for sensor_data in self.coordinator.device.get_supported_sensors():
+            if (
+                sensor_data.get("item_id") == self.item_id
+                and sensor_data.get("type") == self.data_key
+            ):
+                if "unit" in sensor_data:
+                    self._attr_native_unit_of_measurement = sensor_data["unit"]
+                break
+
+        super()._handle_coordinator_update()

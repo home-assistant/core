@@ -66,6 +66,8 @@ class TME(PapouchDevice):
 
         if populate:
             self.units_sensor.append({"id": ITEM_ID, "unit": unit_code})
+        else:
+            self.units_sensor[0]["unit"] = unit_code
 
         if status in ("1", "4"):  # invalid or ready to measure
             parsed_data["sensor"][ITEM_ID] = None
