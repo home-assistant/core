@@ -119,7 +119,9 @@ class VictronSensor(VictronBaseEntity, RestoreSensor):
     @callback
     @override
     def _on_update_cb(self, value: Any) -> None:
-        if self._baseline is not None:
+        # FormulaMetric emits None when a dependency is unavailable or stale;
+        # only add the baseline to numeric values.
+        if self._baseline is not None and isinstance(value, int | float):
             value += self._baseline
         self._attr_native_value = VictronSensor._normalize_value(value)
         self.async_write_ha_state()

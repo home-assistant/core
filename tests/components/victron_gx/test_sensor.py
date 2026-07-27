@@ -264,6 +264,36 @@ async def test_formula_sensor_restores_baseline(
     assert state.state == "15.0"
 
 
+async def test_formula_sensor_none_update_after_restore(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+) -> None:
+    """Test a None update after restore does not add the baseline."""
+    victron_hub, _mock_config_entry = init_integration
+
+    mock_restore_cache(hass, (State(ENERGY_ENTITY_ID, "5.0"),))
+
+    await _inject_pv_power(victron_hub, 100)
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENERGY_ENTITY_ID)
+    assert state is not None
+    assert state.state == "5.0"
+
+    # A None update (stale/unavailable dependency) must not add the baseline,
+    # which would otherwise raise a TypeError.
+    with patch.object(
+        FormulaMetric, "value", new_callable=PropertyMock, return_value=None
+    ):
+        await _inject_pv_power(victron_hub, 200)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENERGY_ENTITY_ID)
+    assert state is not None
+    assert state.state == "unknown"
+
+
 @pytest.mark.parametrize(
     ("restore_cache", "expected_log"),
     [
