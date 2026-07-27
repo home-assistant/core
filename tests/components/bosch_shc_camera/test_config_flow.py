@@ -1,7 +1,9 @@
 """Tests for the Bosch Smart Home Camera config/options flow helpers."""
 
 import base64
+from http import HTTPStatus
 import json
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -9,6 +11,14 @@ from homeassistant.components.bosch_shc_camera.config_flow import (
     _detect_token_client_id,
     _flatten_sections,
 )
+from homeassistant.components.bosch_shc_camera.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_entry_oauth2_flow
+
+from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 
 def test_flatten_sections_empty() -> None:
@@ -112,3 +122,119 @@ def test_detect_token_client_id_missing_azp_claim() -> None:
     payload = base64.urlsafe_b64encode(json.dumps({"sub": "x"}).encode()).rstrip(b"=")
     token = f"header.{payload.decode()}.signature"
     assert _detect_token_client_id(token) is None
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_bosch_cloud_session")
+async def test_full_oauth_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """A fresh user-initiated flow completes OAuth and creates a config entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://my.home-assistant.io/redirect/oauth",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Bosch Smart Home Camera"
+    assert result["data"]["bearer_token"] == "mock-access-token"
+    assert result["data"]["refresh_token"] == "mock-refresh-token"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_bosch_cloud_session")
+async def test_duplicate_entry_aborts(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """A second setup attempt aborts once an entry already exists (single_config_entry)."""
+    existing = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN)
+    existing.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    # manifest.json's single_config_entry:true makes HA-core's own flow
+    # manager reject the second flow before our unique_id check ever runs.
+    assert result["reason"] == "single_instance_allowed"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_bosch_cloud_session")
+async def test_reauth_flow_updates_existing_entry(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Reauth replaces the stored tokens on the existing entry instead of creating a new one."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        data={"bearer_token": "stale-token", "refresh_token": "stale-refresh"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://my.home-assistant.io/redirect/oauth",
+        },
+    )
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data["bearer_token"] == "mock-access-token"
+    assert entry.data["refresh_token"] == "mock-refresh-token"
+    # Reauth updates in place — never a second entry.
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_options_flow_toggle_enable_snapshots(hass: HomeAssistant) -> None:
+    """Submitting the options form persists a real feature toggle through hass."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        data={"bearer_token": "tok", "refresh_token": "reftok"},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"features": {"enable_snapshots": False}},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options["enable_snapshots"] is False

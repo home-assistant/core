@@ -55,22 +55,6 @@
             "description": "Migrate to the OSS OAuth client.",
             "name": "Authentication"
           },
-          "events_storage": {
-            "data": {
-              "download_path": "Local save folder",
-              "enable_local_save": "Save events locally",
-              "file_pattern": "File name pattern",
-              "folder_pattern": "Subfolder pattern"
-            },
-            "data_description": {
-              "download_path": "Where to store event files. Example: /config/bosch_events. Only active when 'Save events locally' is on.",
-              "enable_local_save": "Save every new motion/audio event as JPEG + MP4 to the folder below. **Off by default** — turn on to activate local saving.",
-              "file_pattern": "File name pattern (without extension). Available variables: `camera`, `date`, `time`, `type`, `id`, `year`, `month`, `day` (wrap each in curly braces in your pattern). Default uses camera, date, time, type, id joined with underscores.",
-              "folder_pattern": "Subfolder pattern. Available variables: `camera`, `year`, `month`, `day`, `type` (wrap each in curly braces in your pattern). Default uses camera/year/month/day."
-            },
-            "description": "Save Bosch cloud event JPEGs locally.",
-            "name": "Event storage"
-          },
           "features": {
             "data": {
               "enable_snapshots": "Camera snapshots"

@@ -16,7 +16,6 @@ import asyncio
 import json as _json
 import logging
 import pathlib as _pathlib
-from pathlib import Path as _Path
 import re as _re_mod
 import time
 from typing import Any
@@ -29,10 +28,9 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.http import StaticPathConfig as _StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event as _Event, HomeAssistant, callback as _callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -50,7 +48,6 @@ from .cloud_ssl import (
     async_get_bosch_cloud_session as async_get_bosch_cloud_session,  # re-export: mypy --no-implicit-reexport (token_auth.py imports it via `from . import`)
 )
 from .const import (
-    CARD_VERSION,
     CLOUD_API as CLOUD_API,  # re-export: mypy --no-implicit-reexport (coordinator.py imports it via `from . import`)
     DEFAULT_OPTIONS as DEFAULT_OPTIONS,  # re-export: mypy --no-implicit-reexport (config_flow.py imports it via `from . import`)
     DOMAIN,
@@ -213,106 +210,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         ClientCredential(CLIENT_ID, CLIENT_SECRET, name="Bosch SingleKey ID"),
     )
-
-    # Serve the bundled card JS files via HA's static path handler.
-    # cache_headers=False → no-store so browsers always revalidate.
-    _www = _Path(__file__).parent / "www"
-    await hass.http.async_register_static_paths(
-        [
-            _StaticPathConfig(
-                f"/{DOMAIN}/bosch-camera-card.js",
-                str(_www / "bosch-camera-card.js"),
-                False,
-            ),
-            _StaticPathConfig(
-                f"/{DOMAIN}/bosch-camera-autoplay-fix.js",
-                str(_www / "bosch-camera-autoplay-fix.js"),
-                False,
-            ),
-            _StaticPathConfig(
-                f"/{DOMAIN}/ai-alert-timeline-card.js",
-                str(_www / "ai-alert-timeline-card.js"),
-                False,
-            ),
-        ]
-    )
-
-    async def _register_lovelace_resources() -> None:
-        """Write card URLs into Lovelace resource storage (appears in UI)."""
-        lovelace = hass.data.get("lovelace")
-        if lovelace is None:
-            _LOGGER.warning(
-                "%s: Lovelace not available — card not auto-registered", DOMAIN
-            )
-            return
-        resources = lovelace.resources
-        await resources.async_load()
-
-        # Remove legacy /local/ entries left over from pre-v10.3.19 installs.
-        # Having both old and new entries causes the card to load twice, which
-        # triggers a "custom element already defined" error and the older cached
-        # version wins.
-        # Also remove the bosch-camera-autoplay-fix.js resource (ANY path):
-        # deprecated as of v13.3.0 — the watchdog it contained is a no-op now
-        # (the card self-heals per-instance), and its old index-paired HLS
-        # injection could disrupt the wrong camera. We stop registering it
-        # (loop below) and delete any previously auto-registered entry here. The
-        # static path still serves the no-op stub, so cached/manual references
-        # resolve harmlessly instead of 404-ing.
-        _remove_prefixes = (
-            "/local/bosch-camera-card",
-            "/local/bosch-camera-autoplay-fix",
-            f"/{DOMAIN}/bosch-camera-autoplay-fix",
-        )
-        for item in list(resources.async_items()):
-            if item.get("url", "").startswith(_remove_prefixes):
-                await resources.async_delete_item(item["id"])
-                _LOGGER.debug(
-                    "%s: Removed deprecated Lovelace resource: %s", DOMAIN, item["url"]
-                )
-
-        # NOTE: ai-alert-timeline-card.js is deliberately NOT auto-registered
-        # here — same lesson as bosch-camera-autoplay-fix.js above (a second
-        # auto-registered module resource risks double-load/ordering issues
-        # with the main card). It's still served as a static path (below)
-        # and documented for manual dashboard-resource addition, matching
-        # how any second HACS-bundled card would normally be added.
-        for card_path in (f"/{DOMAIN}/bosch-camera-card.js",):
-            versioned = f"{card_path}?v={CARD_VERSION}"
-            existing_id = None
-            already_current = False
-            for item in resources.async_items():
-                item_url = item.get("url", "")
-                if item_url.startswith(card_path):
-                    already_current = item_url == versioned
-                    existing_id = item["id"]
-                    break
-            if already_current:
-                _LOGGER.debug(
-                    "%s: Lovelace resource already current: %s", DOMAIN, versioned
-                )
-                continue
-            if existing_id:
-                await resources.async_update_item(
-                    existing_id, {"res_type": "module", "url": versioned}
-                )
-                _LOGGER.debug("%s: Updated Lovelace resource: %s", DOMAIN, versioned)
-            else:
-                await resources.async_create_item(
-                    {"res_type": "module", "url": versioned}
-                )
-                _LOGGER.debug("%s: Registered Lovelace resource: %s", DOMAIN, versioned)
-
-    if hass.is_running:
-        # Integration reloaded while HA is already up
-        await _register_lovelace_resources()
-    else:
-
-        @_callback
-        def _on_ha_started(_event: _Event) -> None:
-            hass.async_create_task(_register_lovelace_resources())
-
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _on_ha_started)
 
     return True
 

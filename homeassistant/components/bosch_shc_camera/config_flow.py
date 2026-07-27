@@ -97,12 +97,6 @@ OPTIONS_SECTIONS: dict[str, list[str]] = {
     "features": [
         "enable_snapshots",
     ],
-    "events_storage": [
-        "folder_pattern",
-        "file_pattern",
-        "enable_local_save",
-        "download_path",
-    ],
     "auth": [
         "migrate_to_oss_client",
     ],
@@ -275,10 +269,9 @@ class BoschOAuth2Implementation(AbstractOAuth2Implementation):
             },
         ) as resp:
             if resp.status >= 400:
-                body = await resp.text()
-                _LOGGER.error(
-                    "Token exchange failed: HTTP %d — %s", resp.status, body[:200]
-                )
+                # Do not log the response body — Keycloak error responses can
+                # echo token material back in the payload (see token_auth.py).
+                _LOGGER.error("Token exchange failed: HTTP %d", resp.status)
             resp.raise_for_status()
             return await resp.json()  # type: ignore[no-any-return]
 
@@ -363,16 +356,12 @@ async def _do_refresh(session: Any, refresh_token: str) -> dict[str, Any] | None
             ) as resp:
                 if resp.status == 200:
                     return await resp.json()  # type: ignore[no-any-return]
-                body = (await resp.text())[:300]
-                _LOGGER.warning(
-                    "Token refresh HTTP %d — Keycloak response: %s",
-                    resp.status,
-                    body,
-                )
+                # Do not log or embed the response body in an exception message —
+                # Keycloak error responses can echo token material back in the
+                # payload (see token_auth.py).
+                _LOGGER.warning("Token refresh failed: HTTP %d", resp.status)
                 if resp.status in (400, 401):
-                    raise RefreshTokenInvalidError(
-                        f"Keycloak HTTP {resp.status}: {body}"
-                    )
+                    raise RefreshTokenInvalidError(f"Keycloak HTTP {resp.status}")
                 if 500 <= resp.status < 600:
                     raise AuthServerOutageError(f"Bosch Keycloak HTTP {resp.status}")
     except (TimeoutError, aiohttp.ClientError) as err:
@@ -524,12 +513,8 @@ class BoschCameraOptionsFlow(config_entries.OptionsFlow):
 
             migrate_to_oss = user_input.pop("migrate_to_oss_client", False)
 
-            for k in (
-                "enable_snapshots",
-                "enable_local_save",
-            ):
-                if k in user_input:
-                    user_input[k] = bool(user_input[k])
+            if "enable_snapshots" in user_input:
+                user_input["enable_snapshots"] = bool(user_input["enable_snapshots"])
 
             if not errors:
                 if migrate_to_oss:
@@ -584,41 +569,6 @@ class BoschCameraOptionsFlow(config_entries.OptionsFlow):
             {"collapsed": False},
         )
 
-        sectioned_schema[vol.Required("events_storage")] = section(
-            vol.Schema(
-                {
-                    vol.Optional(
-                        "folder_pattern",
-                        description={
-                            "suggested_value": opts.get(
-                                "folder_pattern", "{camera}/{year}/{month}/{day}"
-                            )
-                        },
-                    ): str,
-                    vol.Optional(
-                        "file_pattern",
-                        description={
-                            "suggested_value": opts.get(
-                                "file_pattern", "{camera}_{date}_{time}_{type}_{id}"
-                            )
-                        },
-                    ): str,
-                    vol.Optional(
-                        "enable_local_save",
-                        default=bool(opts.get("enable_local_save", False)),
-                    ): bool,
-                    vol.Optional(
-                        "download_path",
-                        description={
-                            "suggested_value": opts.get("download_path")
-                            or DEFAULT_OPTIONS.get("download_path", "")
-                        },
-                    ): str,
-                }
-            ),
-            {"collapsed": True},
-        )
-
         if is_legacy_client:
             sectioned_schema[vol.Required("auth")] = section(
                 vol.Schema(
@@ -637,16 +587,5 @@ class BoschCameraOptionsFlow(config_entries.OptionsFlow):
                 "token_status": "active (auto-renews)"
                 if has_refresh
                 else "no refresh token",
-                # Pattern-variable literals — without these, formatjs/ICU parses
-                # {camera}, {year}, … in the events_storage descriptions as
-                # missing variables and renders the whole description blank.
-                "camera": "{camera}",
-                "year": "{year}",
-                "month": "{month}",
-                "day": "{day}",
-                "type": "{type}",
-                "date": "{date}",
-                "time": "{time}",
-                "id": "{id}",
             },
         )

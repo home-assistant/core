@@ -13,7 +13,15 @@ rules:
   brands: done
   common-modules: done
   config-flow: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: done
+    comment: |
+      2026-07-27: added real integration tests exercising the actual flow
+      through hass (test_full_oauth_flow, test_duplicate_entry_aborts,
+      test_reauth_flow_updates_existing_entry,
+      test_options_flow_toggle_enable_snapshots) — not just the pure
+      _flatten_sections/_detect_token_client_id helper tests that were
+      here before.
   dependency-transparency: done
   docs-actions:
     status: exempt

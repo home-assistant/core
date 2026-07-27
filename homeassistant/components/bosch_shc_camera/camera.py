@@ -19,7 +19,6 @@ from typing import Any, override
 import aiohttp
 from bosch_shc_camera_client.auth_utils import async_digest_request
 from PIL import Image
-import urllib3
 
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
@@ -31,7 +30,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import BoschCameraCoordinator, _is_safe_bosch_url, get_options
 from .cloud_ssl import async_get_bosch_cloud_session
 from .const import (
-    AUTO_PLAY_DEFAULT_VALUES,
     DOMAIN,
     JPEG_SIZE_FULL,
     TIMEOUT_SNAP,
@@ -42,8 +40,6 @@ from .models import (
     get_display_name,  # [S4] hoisted: avoid per-call import binding on hot path
 )
 from .snapshot_store import load_snapshot, save_snapshot
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,6 +64,13 @@ IDLE_FRAME_INTERVAL = (
 # call can bind the event loop before falling back to the cached
 # image/placeholder.
 SNAPSHOT_FALLBACK_MAX_BUDGET_SEC = 10 + 12 + 10
+
+# Budget for the stale-cache refresh-and-fall-back-to-cached-image path in
+# _async_camera_image_impl — must stay under HA core's own CAMERA_IMAGE_TIMEOUT
+# (10s, homeassistant/components/camera/const.py) so a slow/failing REMOTE+LOCAL
+# chain still leaves time to return the cached frame instead of the whole call
+# being cancelled and serving nothing.
+REFRESH_ON_STALE_CACHE_BUDGET_SEC = 8
 
 
 def _rotate_jpeg_180(jpeg_bytes: bytes) -> bytes:
@@ -433,17 +436,25 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         """Return the raw hardwareVersion model string."""
         return self._model  # type: ignore[no-any-return]
 
+    _UNAVAILABLE_STATUSES = ("OFFLINE", "UPDATING", "SESSION_LIMIT")
+
     @property
     @override
     def available(self) -> bool:
-        """Return False while a firmware install is in progress or the coordinator is down."""
+        """Return False while this camera is offline/updating/session-limited, or the coordinator is down."""
         # Firmware install reboots the camera (3-7 min). Mark unavailable so
         # automations and the UI don't poll a dead endpoint or surface stale
         # snapshots as live state.
         is_updating = getattr(self.coordinator, "is_updating", None)
         if is_updating is not None and is_updating(self._cam_id):
             return False
-        return self.coordinator.last_update_success
+        if not self.coordinator.last_update_success:
+            return False
+        # A successful account-level coordinator update does not mean every
+        # camera is reachable — check this camera's own cached status too,
+        # otherwise an OFFLINE/UPDATING/SESSION_LIMIT camera stays marked
+        # available and serves stale imagery as if it were live.
+        return self._cam_data.get("status", "UNKNOWN") not in self._UNAVAILABLE_STATUSES
 
     @property
     @override
@@ -467,8 +478,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         latest = events[0] if events else {}
 
         info = cam_data.get("info", {})
-        bosch_priority = info.get("priority")
-        attrs = {
+        return {
             "camera_id": self._cam_id,
             "status": cam_data.get("status", "UNKNOWN"),
             "last_event": latest.get("timestamp", "")[:19],
@@ -479,32 +489,8 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             "mac": self._mac,
             # Bosch-app camera order. Mirrors the float priority returned by
             # GET /v11/video_inputs (settable via PUT /v11/video_inputs/order).
-            # The overview card reads this when `use_bosch_sort: true` so the
-            # HA layout matches the Bosch app order.
-            "bosch_priority": bosch_priority,
+            "bosch_priority": info.get("priority"),
         }
-        # [S2] Single get_options() call for all option reads in this method
-        entry_opts = get_options(self._entry)
-        # Player-side buffer profile — read by the Lovelace card to configure
-        # hls.js. Mode → (liveSyncDurationCount, liveMaxLatencyDurationCount,
-        # maxBufferLength, lowLatencyMode) is mapped client-side.
-        attrs["live_buffer_mode"] = entry_opts.get("live_buffer_mode", "balanced")
-        # Card auto-play default — collapses any non-canonical value to "lan"
-        # so a typo or stale option from a previous version never disables
-        # stream start. Per-card YAML `auto_play` still overrides this.
-        mode = entry_opts.get("auto_play_default", "lan")
-        attrs["auto_play_default"] = mode if mode in AUTO_PLAY_DEFAULT_VALUES else "lan"
-        # Camera-side timestamp overlay (burned-in date/time, bottom-right of
-        # the video frame). The card reads this to hide its own last-event
-        # glass pill — otherwise the user sees two timestamps stacked, one
-        # burned-in by the camera and one drawn by the card. Defensive
-        # getattr covers test stubs that lack the cache.
-        ts_cache = getattr(self.coordinator, "timestamp_cache", None)
-        if ts_cache is not None:
-            ts_overlay = ts_cache.get(self._cam_id)
-            if ts_overlay is not None:
-                attrs["camera_timestamp_overlay"] = bool(ts_overlay)
-        return attrs
 
     # ── Snapshot image ────────────────────────────────────────────────────────
     @override
@@ -649,14 +635,31 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
                 self._display_name,
                 int(cache_age),
             )
-            fresh2: bytes | None = await self.coordinator.async_fetch_live_snapshot(
-                self._cam_id, jpeg_size=req_jpeg_size
-            )
-            if not fresh2:
-                # REMOTE snap.jpg returns 401 on CAMERA_360 — try LOCAL Digest fallback
-                fresh2 = await self.coordinator.async_fetch_live_snapshot_local(
-                    self._cam_id, jpeg_size=req_jpeg_size
+            # Bounded well under HA's own CAMERA_IMAGE_TIMEOUT (10s, see
+            # homeassistant/components/camera/const.py) — we already hold a
+            # real cached image here, so on a slow/outage REMOTE+LOCAL chain
+            # we must fall back to it before HA's outer timeout cancels this
+            # call entirely and serves nothing (the worst-case REMOTE+LOCAL
+            # chain alone can run well past 10s).
+            fresh2: bytes | None = None
+            try:
+                async with asyncio.timeout(REFRESH_ON_STALE_CACHE_BUDGET_SEC):
+                    fresh2 = await self.coordinator.async_fetch_live_snapshot(
+                        self._cam_id, jpeg_size=req_jpeg_size
+                    )
+                    if not fresh2:
+                        # REMOTE snap.jpg returns 401 on CAMERA_360 — try LOCAL Digest fallback
+                        fresh2 = await self.coordinator.async_fetch_live_snapshot_local(
+                            self._cam_id, jpeg_size=req_jpeg_size
+                        )
+            except TimeoutError:
+                _LOGGER.debug(
+                    "%s: fresh fetch exceeded %ds budget — returning cached (%ds old)",
+                    self._display_name,
+                    REFRESH_ON_STALE_CACHE_BUDGET_SEC,
+                    int(cache_age),
                 )
+                return self.cached_image
             if fresh2:
                 self.cached_image = fresh2
                 self.last_image_fetch = now

@@ -4,10 +4,6 @@ import re
 
 DOMAIN = "bosch_shc_camera"
 
-# Lovelace card version — must match CARD_VERSION in src/bosch-camera-card.js.
-# Bumped here alongside every card release so the auto-registered resource URL
-# changes and browsers fetch the new file (HA serves www/ with max-age=31 days).
-CARD_VERSION = "14.1.16"
 CLOUD_API = "https://residential.cbs.boschsecurity.com"
 
 # Bounded slow-tier defer. See slow_tier.py.
@@ -109,19 +105,11 @@ LAN_RECHECK_FORCE_INTERVAL_SEC = 600.0
 SHC_MAX_FAILS = 3  # mark SHC offline after this many consecutive failures
 SHC_RETRY_INTERVAL = 120  # seconds — retry SHC after this long while offline
 
-# Card auto-play modes for `auto_play_default` (extra_state_attributes,
-# read by the Lovelace card). "lan" = only auto-play when on the home LAN.
-AUTO_PLAY_DEFAULT_VALUES = ("lan", "always", "never")
-
 DEFAULT_OPTIONS = {
     "scan_interval": 60,
     "interval_status": 300,
     "interval_events": 300,
     "snapshot_interval": 1800,
     "enable_snapshots": True,
-    "enable_local_save": False,
-    "download_path": "/config/bosch_events",
     "stream_connection_type": "local",
-    "folder_pattern": "{camera}/{year}/{month}/{day}",
-    "file_pattern": "{camera}_{date}_{time}_{type}_{id}",
 }
