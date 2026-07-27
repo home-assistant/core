@@ -5,7 +5,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_REG_NUMBER
 from .coordinator import DVLACoordinator
 
 type DVLAConfigEntry = ConfigEntry[DVLACoordinator]
@@ -22,7 +21,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DVLAConfigEntry) -> bool
         hass,
         entry,
         session,
-        entry.data[CONF_REG_NUMBER],
     )
     await coordinator.async_config_entry_first_refresh()
 

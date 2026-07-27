@@ -1,8 +1,9 @@
 """DVLA sensor platform."""
 
-from contextlib import suppress
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from datetime import date
-from typing import override
+from typing import Any, cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,114 +21,185 @@ from . import DVLAConfigEntry
 from .const import DOMAIN
 from .coordinator import DVLACoordinator
 
-SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="registrationNumber",
-        icon="mdi:ocr",
-        name="Registration number",
-    ),
-    SensorEntityDescription(
+TAX_STATUS_OPTIONS = {
+    "Not Taxed for on Road Use": "not_taxed_for_on_road_use",
+    "SORN": "sorn",
+    "Taxed": "taxed",
+    "Untaxed": "untaxed",
+}
+
+MOT_STATUS_OPTIONS = {
+    "No details held by DVLA": "no_details_held_by_dvla",
+    "No results returned": "no_results_returned",
+    "Not valid": "not_valid",
+    "Valid": "valid",
+}
+
+ENUM_OPTIONS = {
+    "taxStatus": TAX_STATUS_OPTIONS,
+    "motStatus": MOT_STATUS_OPTIONS,
+}
+
+
+@dataclass(frozen=True, kw_only=True)
+class DVLASensorEntityDescription(SensorEntityDescription):
+    """Describe a DVLA sensor."""
+
+    value_fn: Callable[[Mapping[str, Any]], StateType | date]
+
+
+def value_fn(key: str) -> Callable[[Mapping[str, Any]], StateType]:
+    """Return a value function for a raw DVLA field."""
+
+    def _value_fn(data: Mapping[str, Any]) -> StateType:
+        return cast(StateType, data.get(key))
+
+    return _value_fn
+
+
+def enum_value_fn(
+    key: str,
+    options: Mapping[str, str],
+) -> Callable[[Mapping[str, Any]], StateType]:
+    """Return a value function for a DVLA enum field."""
+
+    def _value_fn(data: Mapping[str, Any]) -> StateType:
+        value = data.get(key)
+
+        if value is None:
+            return None
+
+        return options.get(str(value))
+
+    return _value_fn
+
+
+def int_value_fn(key: str) -> Callable[[Mapping[str, Any]], StateType]:
+    """Return a value function for an integer DVLA field."""
+
+    def _value_fn(data: Mapping[str, Any]) -> StateType:
+        value = data.get(key)
+
+        if value is None:
+            return None
+
+        try:
+            return int(value)
+        except TypeError, ValueError:
+            return None
+
+    return _value_fn
+
+
+def date_value_fn(key: str) -> Callable[[Mapping[str, Any]], StateType | date]:
+    """Return a value function for a date DVLA field."""
+
+    def _value_fn(data: Mapping[str, Any]) -> StateType | date:
+        value = data.get(key)
+
+        if not isinstance(value, str):
+            return None
+
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            return None
+
+    return _value_fn
+
+
+SENSOR_DESCRIPTIONS: tuple[DVLASensorEntityDescription, ...] = (
+    DVLASensorEntityDescription(
         key="taxStatus",
-        icon="mdi:cash-clock",
-        name="Tax status",
+        translation_key="tax_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(TAX_STATUS_OPTIONS.values()),
+        value_fn=enum_value_fn("taxStatus", TAX_STATUS_OPTIONS),
     ),
-    SensorEntityDescription(
+    DVLASensorEntityDescription(
         key="taxDueDate",
+        translation_key="tax_due_date",
         device_class=SensorDeviceClass.DATE,
-        icon="mdi:calendar-clock",
-        name="Tax due date",
+        value_fn=date_value_fn("taxDueDate"),
     ),
-    SensorEntityDescription(
+    DVLASensorEntityDescription(
         key="artEndDate",
+        translation_key="additional_rate_of_tax_end_date",
         device_class=SensorDeviceClass.DATE,
-        icon="mdi:calendar-end",
-        name="Additional rate of tax end date",
+        value_fn=date_value_fn("artEndDate"),
     ),
-    SensorEntityDescription(
+    DVLASensorEntityDescription(
         key="motStatus",
-        icon="mdi:car-wrench",
-        name="MOT status",  # codespell:ignore
+        translation_key="mot_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(MOT_STATUS_OPTIONS.values()),
+        value_fn=enum_value_fn("motStatus", MOT_STATUS_OPTIONS),
     ),
-    SensorEntityDescription(
-        key="make",
-        icon="mdi:car",
-        name="Make",
-    ),
-    SensorEntityDescription(
-        key="yearOfManufacture",
-        icon="mdi:calendar-month",
-        name="Year of manufacture",
-    ),
-    SensorEntityDescription(
+    DVLASensorEntityDescription(
         key="engineCapacity",
-        icon="mdi:engine",
-        name="Engine capacity",
+        translation_key="engine_capacity",
         native_unit_of_measurement="cc",
+        value_fn=int_value_fn("engineCapacity"),
     ),
-    SensorEntityDescription(
+    DVLASensorEntityDescription(
         key="co2Emissions",
-        icon="mdi:molecule-co2",
-        name="CO2 emissions",
+        translation_key="co2_emissions",
         native_unit_of_measurement="g/km",
+        value_fn=int_value_fn("co2Emissions"),
     ),
-    SensorEntityDescription(
+    DVLASensorEntityDescription(
         key="fuelType",
-        icon="mdi:gas-station",
-        name="Fuel type",
+        translation_key="fuel_type",
+        value_fn=value_fn("fuelType"),
     ),
-    SensorEntityDescription(
+    DVLASensorEntityDescription(
         key="colour",
-        icon="mdi:spray",
-        name="Color",
+        translation_key="color",
+        value_fn=value_fn("colour"),
     ),
-    SensorEntityDescription(
+    DVLASensorEntityDescription(
         key="typeApproval",
-        icon="mdi:car",
-        name="Type approval",
+        translation_key="type_approval",
+        value_fn=value_fn("typeApproval"),
     ),
-    SensorEntityDescription(
+    DVLASensorEntityDescription(
         key="revenueWeight",
+        translation_key="revenue_weight",
         device_class=SensorDeviceClass.WEIGHT,
-        icon="mdi:weight-kilogram",
-        name="Revenue weight",
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        value_fn=int_value_fn("revenueWeight"),
     ),
-    SensorEntityDescription(
+    DVLASensorEntityDescription(
         key="dateOfLastV5CIssued",
+        translation_key="date_of_last_v5c_issued",
         device_class=SensorDeviceClass.DATE,
-        icon="mdi:calendar",
-        name="Date of last V5C issued",
+        value_fn=date_value_fn("dateOfLastV5CIssued"),
     ),
-    SensorEntityDescription(
+    DVLASensorEntityDescription(
         key="motExpiryDate",
+        translation_key="mot_expiry_date",
         device_class=SensorDeviceClass.DATE,
-        icon="mdi:calendar-check",
-        name="MOT expiry date",  # codespell:ignore
+        value_fn=date_value_fn("motExpiryDate"),
     ),
-    SensorEntityDescription(
+    DVLASensorEntityDescription(
         key="wheelplan",
-        icon="mdi:tire",
-        name="Wheelplan",
+        translation_key="wheelplan",
+        value_fn=value_fn("wheelplan"),
     ),
-    SensorEntityDescription(
+    DVLASensorEntityDescription(
         key="monthOfFirstRegistration",
-        icon="mdi:calendar-month",
-        name="Month of first registration",
+        translation_key="month_of_first_registration",
+        value_fn=value_fn("monthOfFirstRegistration"),
     ),
-    SensorEntityDescription(
-        key="monthOfFirstDvlaRegistration",
-        icon="mdi:calendar-month-outline",
-        name="Month of first DVLA registration",
-    ),
-    SensorEntityDescription(
+    DVLASensorEntityDescription(
         key="realDrivingEmissions",
-        icon="mdi:gas-station-outline",
-        name="Real driving emissions",
+        translation_key="real_driving_emissions",
+        value_fn=int_value_fn("realDrivingEmissions"),
     ),
-    SensorEntityDescription(
+    DVLASensorEntityDescription(
         key="euroStatus",
-        icon="mdi:currency-eur",
-        name="Euro status",
+        translation_key="euro_status",
+        value_fn=value_fn("euroStatus"),
     ),
 )
 
@@ -150,54 +222,67 @@ async def async_setup_entry(
 class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
     """Define a DVLA sensor."""
 
+    entity_description: DVLASensorEntityDescription
+
     _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: DVLACoordinator,
-        name: str,
-        description: SensorEntityDescription,
+        reg_number: str,
+        description: DVLASensorEntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
+        year_of_manufacture = coordinator.data.get("yearOfManufacture")
+
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, name)},
+            identifiers={(DOMAIN, reg_number)},
             manufacturer=coordinator.data.get("make"),
-            name=name.upper(),
+            name=reg_number,
             entry_type=DeviceEntryType.SERVICE,
+            hw_version=str(year_of_manufacture)
+            if year_of_manufacture is not None
+            else None,
         )
-        self._attr_unique_id = f"{name}-{description.key}".lower()
+        self._attr_unique_id = f"{reg_number}-{description.key}"
         self.entity_description = description
-        self._state: StateType | date = None
-        self.update_from_coordinator()
-
-    def update_from_coordinator(self) -> None:
-        """Update sensor state and attributes from coordinator data."""
-        key = self.entity_description.key
-        self._state = self.coordinator.data.get(key)
-
-        if key == "revenueWeight" and self._state is not None:
-            with suppress(TypeError, ValueError):
-                self._state = int(self._state)
-
-            if not isinstance(self._state, int):
-                self._state = None
-
-        if (
-            self._state
-            and self.entity_description.device_class == SensorDeviceClass.DATE
-        ):
-            try:
-                self._state = date.fromisoformat(str(self._state))
-            except ValueError:
-                self._state = None
+        self._state = description.value_fn(coordinator.data)
+        self._state = self._get_native_value()
 
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self.update_from_coordinator()
+        self._state = self.entity_description.value_fn(self.coordinator.data)
         self.async_write_ha_state()
+
+    def _get_native_value(self) -> StateType | date:
+        """Return the normalized native value."""
+        value = self.coordinator.data.get(self.entity_description.key)
+
+        if value is None:
+            return None
+
+        if enum_options := ENUM_OPTIONS.get(self.entity_description.key):
+            return enum_options.get(str(value))
+
+        if self.entity_description.key == "revenueWeight":
+            try:
+                return int(value)
+            except TypeError, ValueError:
+                return None
+
+        if self.entity_description.device_class is SensorDeviceClass.DATE:
+            if not isinstance(value, str):
+                return None
+
+            try:
+                return date.fromisoformat(value)
+            except ValueError:
+                return None
+
+        return value
 
     @property
     @override

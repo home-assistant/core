@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import API_KEY
+from .const import API_KEY, CONF_REG_NUMBER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,6 @@ class DVLACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         config_entry: DVLAConfigEntry,
         session: ClientSession,
-        reg_number: str,
     ) -> None:
         """Initialize coordinator."""
 
@@ -38,7 +37,9 @@ class DVLACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(days=1),
         )
         self.client = DVLAClient(session, API_KEY)
-        self.reg_number = str(reg_number).replace(" ", "").upper()
+        self.reg_number = (
+            str(config_entry.data[CONF_REG_NUMBER]).replace(" ", "").upper()
+        )
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:

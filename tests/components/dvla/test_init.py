@@ -53,9 +53,16 @@ async def test_setup_entry(
     )
     assert entity_entries
 
-    state = hass.states.get("sensor.ab12cde_registration_number")
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        "AB12CDE-taxStatus",
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "AB12CDE"
+    assert state.state == "taxed"
 
 
 async def test_unload_entry(
