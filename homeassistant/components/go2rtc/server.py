@@ -12,7 +12,7 @@ from go2rtc_client import Go2RtcRestClient
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import HA_MANAGED_API_PORT, HA_MANAGED_URL
+from .const import HA_MANAGED_API_PORT, HA_MANAGED_RTSP_PORT, HA_MANAGED_URL
 from .util import get_go2rtc_unix_socket_path
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ exec:
     - ffmpeg
 
 rtsp:
-  listen: "127.0.0.1:18554"
+  listen: "{rtsp_listen}"
 
 webrtc:
   listen: ":18555/tcp"
@@ -147,6 +147,7 @@ def _create_temp_file(
         file.write(
             _GO2RTC_CONFIG_FORMAT.format(
                 listen_config=listen_config,
+                rtsp_listen=f"127.0.0.1:{HA_MANAGED_RTSP_PORT}",
                 unix_socket=get_go2rtc_unix_socket_path(working_dir),
                 app_modules=_format_list_for_yaml(app_modules),
                 api_allow_paths=_format_list_for_yaml(api_paths),
