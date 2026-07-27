@@ -8286,8 +8286,6 @@ async def test_get_or_create_does_not_clean_restored_device(
         name="Living Room Thermostat",
     )
     device_registry.async_update_device(device.id, **updates)
-
-    # Removing the config entry orphans the device so re-registering restores it.
     device_registry.async_clear_config_entry(mock_config_entry.entry_id)
 
     new_entry = MockConfigEntry()
@@ -8328,6 +8326,5 @@ async def test_get_or_create_cleaned_name_entity_naming(
     )
 
     assert device.name_by_user == "Thermostat"
-    # The entity id prefixes the area, the full entity name does not.
     assert entity.entity_id == "climate.living_room_thermostat"
     assert er.async_get_full_entity_name(hass, entity) == "Thermostat"
