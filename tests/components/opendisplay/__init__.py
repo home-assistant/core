@@ -28,8 +28,8 @@ TEST_ADDRESS = "AA:BB:CC:DD:EE:FF"
 TEST_TITLE = "OpenDisplay 1234"
 ENCRYPTION_KEY = "aabbccddee112233aabbccddee112233"  # 32 hex chars = 16 bytes
 
-# Firmware version response: major=1, minor=2, sha="abc123"
-FIRMWARE_VERSION = {"major": 1, "minor": 2, "sha": "abc123"}
+# Firmware version response: major=1, minor=2, patch=3, sha="abc123"
+FIRMWARE_VERSION = {"major": 1, "minor": 2, "patch": 3, "sha": "abc123"}
 
 DEVICE_CONFIG = GlobalConfig(
     system=SystemConfig(
@@ -43,7 +43,7 @@ DEVICE_CONFIG = GlobalConfig(
         manufacturer_id=BoardManufacturer.SEEED,
         board_type=1,
         board_revision=0,
-        reserved=b"\x00" * 18,
+        reserved=b"\x00" * 6,
     ),
     power=PowerOption(
         power_mode=0,
@@ -58,7 +58,12 @@ DEVICE_CONFIG = GlobalConfig(
         voltage_scaling_factor=0,
         deep_sleep_current_ua=0,
         deep_sleep_time_seconds=0,
-        reserved=b"\x00" * 12,
+        charge_enable_pin=0xFF,
+        charge_state_pin=0xFF,
+        charger_flags=0,
+        min_wake_time_seconds=0,
+        screen_timeout_seconds=0,
+        reserved=b"\x00" * 4,
     ),
     displays=[
         DisplayConfig(

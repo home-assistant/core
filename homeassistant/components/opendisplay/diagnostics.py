@@ -33,6 +33,7 @@ async def async_get_config_entry_diagnostics(
         "firmware": {
             "major": fw["major"],
             "minor": fw["minor"],
+            "patch": fw["patch"],
             "sha": fw["sha"],
         },
         "is_flex": runtime.is_flex,
