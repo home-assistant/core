@@ -39,6 +39,7 @@ class WirelessTagBaseSensor(Entity):
         self.tag_manager_mac = self._tag.tag_manager_mac
         self._attr_name = self._tag.name
         self._state = None
+        self._tag_missing = False
 
     @property
     def principal_value(self):
@@ -62,7 +63,7 @@ class WirelessTagBaseSensor(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._tag.is_alive
+        return not self._tag_missing and self._tag.is_alive
 
     def update(self) -> None:
         """Update state."""
@@ -71,9 +72,15 @@ class WirelessTagBaseSensor(Entity):
 
         updated_tags = self._api.load_tags()
         if (updated_tag := updated_tags.get(self._uuid)) is None:
-            _LOGGER.error('Unable to update tag: "%s"', self.name)
+            # The tag is gone from the account, so there is nothing left to
+            # poll. Reported through availability rather than a log message
+            # repeated on every poll.
+            _LOGGER.debug('Unable to update tag: "%s"', self.name)
+            self._tag_missing = True
+            self._state = None
             return
 
+        self._tag_missing = False
         self._tag = updated_tag
         self._state = self.updated_state_value()
 

@@ -1,11 +1,8 @@
 """Tests for the Wireless Sensor Tags sensor platform."""
 
-import logging
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import STATE_UNAVAILABLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
@@ -47,14 +44,11 @@ def _mock_tag() -> MagicMock:
     return tag
 
 
-async def test_update_handles_tag_missing_from_reload(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+async def test_update_handles_tag_missing_from_reload(hass: HomeAssistant) -> None:
     """Test an update where the tag is no longer returned is handled gracefully.
 
-    If a reload no longer contains the entity's tag, the update must log and
-    return instead of raising a KeyError.
+    If a reload no longer contains the entity's tag, the update must mark the
+    entity unavailable instead of raising a KeyError or keeping a stale value.
     """
     tag = _mock_tag()
     with patch("homeassistant.components.wirelesstag.WirelessTags") as mock_api_class:
@@ -65,18 +59,18 @@ async def test_update_handles_tag_missing_from_reload(
         await hass.async_block_till_done()
         assert await async_setup_component(hass, "sensor", CONFIG)
         await hass.async_block_till_done()
-        assert hass.states.get(ENTITY_ID) is not None
+        assert hass.states.get(ENTITY_ID).state == "21.5"
 
         # The tag is no longer returned by a reload.
         mock_api.load_tags.return_value = {}
-        caplog.clear()
         await async_update_entity(hass, ENTITY_ID)
         await hass.async_block_till_done()
 
-    # The entity survives and the graceful error path is taken (no KeyError).
-    assert hass.states.get(ENTITY_ID) is not None
-    assert any(
-        record.levelno == logging.ERROR
-        and "Unable to update tag" in record.getMessage()
-        for record in caplog.records
-    )
+        assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+        # The tag is returned again and the entity recovers.
+        mock_api.load_tags.return_value = {tag.uuid: tag}
+        await async_update_entity(hass, ENTITY_ID)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == "21.5"
