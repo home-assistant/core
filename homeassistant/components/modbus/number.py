@@ -102,7 +102,7 @@ class ModbusNumber(ModbusStructEntity, RestoreNumber, NumberEntity):
         """Convert a value to a list of registers, honoring structure and swap settings."""
         raw: float | int = (value - offset) / scale
         if self._value_is_int:
-            raw = int(raw)
+            raw = round(raw)
         as_bytes = struct.pack(self._structure, raw)
         raw_regs = [
             int.from_bytes(as_bytes[i : i + 2], "big")
