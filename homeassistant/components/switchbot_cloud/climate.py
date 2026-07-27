@@ -131,7 +131,8 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
             ClimateEntityStateAttribute.FAN_MODE, self._attr_fan_mode
         )
         self._attr_target_temperature = last_state.attributes.get(
-            ClimateEntityStateAttribute.TEMPERATURE, self._attr_target_temperature
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE,
+            self._attr_target_temperature,
         )
 
     def _get_mode(self, hvac_mode: HVACMode | None) -> int:

@@ -180,7 +180,9 @@ async def async_setup_entry(  # noqa: C901
         if player_id in entry.runtime_data.discovered_players:
             entry.runtime_data.discovered_players.remove(player_id)
         dev_reg = dr.async_get(hass)
-        if hass_device := dev_reg.async_get_device({(DOMAIN, player_id)}):
+        if hass_device := dev_reg.async_get_device_by_identifier(
+            (DOMAIN, player_id), entry.entry_id
+        ):
             dev_reg.async_update_device(
                 hass_device.id, remove_config_entry_id=entry.entry_id
             )
@@ -248,9 +250,7 @@ async def async_setup_entry(  # noqa: C901
     for device in dev_entries:
         for identifier in device.identifiers:
             if identifier[0] == DOMAIN and identifier[1] not in player_ids:
-                dev_reg.async_update_device(
-                    device.id, remove_config_entry_id=entry.entry_id
-                )
+                dev_reg.async_remove_device(device.id)
 
     return True
 

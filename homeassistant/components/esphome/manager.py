@@ -1053,6 +1053,10 @@ class ESPHomeManager:
             self._async_cleanup()
             if device_info.name:
                 reconnect_logic.name = device_info.name
+            # Seed the backoff cap from the restored device_info so the first
+            # reconnect after a restart already caps for a deep-sleep device,
+            # before the first live connect refreshes it.
+            reconnect_logic.deep_sleep = device_info.has_deep_sleep
             if (
                 bluetooth_mac_address := device_info.bluetooth_mac_address
             ) and entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS) != bluetooth_mac_address:

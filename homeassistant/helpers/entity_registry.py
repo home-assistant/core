@@ -926,6 +926,8 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
     Maintains six additional indexes:
     - id -> entry
     - (domain, platform, unique_id) -> entity_id
+        domain: entity component domain (e.g. light, sensor)
+        platform: integration domain (e.g. hue, zwave)
     - config_entry_id -> dict[key, True]
     - device_id -> dict[key, True]
     - area_id -> dict[key, True]
@@ -999,7 +1001,11 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         return self._device_id_index.keys()
 
     def get_entity_id(self, key: tuple[str, str, str]) -> str | None:
-        """Get entity_id from (domain, platform, unique_id)."""
+        """Get entity_id from (domain, platform, unique_id).
+
+        domain: entity component domain (e.g. light, sensor)
+        platform: integration domain (e.g. hue, zwave)
+        """
         return self._index.get(key)
 
     def get_entry(self, key: str) -> RegistryEntry | None:
@@ -1019,32 +1025,24 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         split devices.
         """
         data = self.data
-        device_registry = dr.async_get(self._hass)
-        if device_id in device_registry.devices:
-            # Fast path: a live device id resolves directly to its own entities
+        if keys := self._device_id_index.get(device_id):
+            # Entities are indexed only under real (live or just-removed) device ids,
+            # never under a composite device id, so a non-empty bucket means the direct
+            # result is complete and the device registry can be skipped.
             return [
                 entry
-                for key in self._device_id_index.get(device_id, ())
+                for key in keys
                 if not (entry := data[key]).disabled_by or include_disabled_entities
             ]
-        # A pre-migration composite device id resolves to the entities of the split
-        # devices it was migrated into. device_id is kept in the list because the slow
-        # path is also hit for a device that was just removed (no longer in
-        # device_registry.devices) whose entities still need to be found - e.g. when the
-        # entity registry prunes the entities of a removed device.
-        device_ids = [
-            device_id,
-            *(
-                device.id
-                for device in device_registry.async_get_devices_for_composite_device_id(
-                    device_id
-                )
-            ),
-        ]
+        # No directly indexed entities: device_id may be a pre-migration composite device
+        # id, which resolves to the entities of the split devices it was migrated into.
+        device_registry = dr.async_get(self._hass)
         return [
             entry
-            for a_device_id in device_ids
-            for key in self._device_id_index.get(a_device_id, ())
+            for device in device_registry.async_get_devices_for_composite_device_id(
+                device_id
+            )
+            for key in self._device_id_index.get(device.id, ())
             if not (entry := data[key]).disabled_by or include_disabled_entities
         ]
 
@@ -1131,7 +1129,7 @@ def _validate_item(
             )
     if device_id and device_id is not UNDEFINED:
         device_registry = dr.async_get(hass)
-        if not device_registry.async_get(device_id):
+        if device_id not in device_registry.devices:
             raise ValueError(f"Device {device_id} does not exist")
     if (
         disabled_by
@@ -1205,7 +1203,7 @@ class EntityRegistry(BaseRegistry):
     ) -> str | None:
         """Check if an entity_id is currently registered.
 
-        domain: entity platform domain (e.g. light, sensor)
+        domain: entity component domain (e.g. light, sensor)
         platform: integration domain (e.g. hue, zwave)
         """
         return self.entities.get_entity_id((domain, platform, unique_id))
@@ -1400,7 +1398,11 @@ class EntityRegistry(BaseRegistry):
         translation_key: str | None | UndefinedType = UNDEFINED,
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
-        """Get entity. Create if it doesn't exist."""
+        """Get entity. Create if it doesn't exist.
+
+        domain: entity component domain (e.g. light, sensor)
+        platform: integration domain (e.g. hue, zwave)
+        """
         config_entry_id: str | None | UndefinedType = UNDEFINED
         if not config_entry:
             config_entry_id = None
@@ -1431,6 +1433,7 @@ class EntityRegistry(BaseRegistry):
             )
 
         self.hass.verify_event_loop_thread("entity_registry.async_get_or_create")
+        device_id = self._ignore_composite_device_id(platform, device_id)
         _validate_item(
             self.hass,
             domain,
@@ -1754,6 +1757,38 @@ class EntityRegistry(BaseRegistry):
             )
 
     @callback
+    def _ignore_composite_device_id(
+        self, platform: str, device_id: str | None | UndefinedType
+    ) -> str | None | UndefinedType:
+        """Ignore a request to link an entity to a composite device id.
+
+        A pre-migration composite device was split into one device per config
+        entry, and the composite id no longer refers to a real device. Return
+        UNDEFINED to keep the entity's current device link, and ask the user to
+        report an issue.
+        """
+        if not device_id or device_id is UNDEFINED:
+            return device_id
+        device_registry = dr.async_get(self.hass)
+        if not device_registry.async_is_composite_device_id(device_id):
+            # A real device or an unknown id; let _validate_item handle it
+            return device_id
+        report_issue = async_suggest_report_issue(
+            self.hass, integration_domain=platform
+        )
+        _LOGGER.warning(
+            (
+                "Ignoring request to link entity from integration %s to device %s:"
+                " the device id refers to a composite device which was split into"
+                " one device per config entry, please %s"
+            ),
+            platform,
+            device_id,
+            report_issue,
+        )
+        return UNDEFINED
+
+    @callback
     def _async_update_entity(
         self,
         entity_id: str,
@@ -1789,6 +1824,8 @@ class EntityRegistry(BaseRegistry):
     ) -> RegistryEntry:
         """Private facing update properties method."""
         old = self.entities[entity_id]
+
+        device_id = self._ignore_composite_device_id(old.platform, device_id)
 
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
@@ -2088,7 +2125,9 @@ class EntityRegistry(BaseRegistry):
             for successor in successors:
                 if successor.config_entry_id == config_entry_id:
                     return successor.id
-            return successors[0].id
+            # No split device matches the entity's config entry; detach the entity
+            # rather than move it to an arbitrary split device it does not belong to.
+            return None
 
         if data is not None:
             for entity in data["entities"]:
