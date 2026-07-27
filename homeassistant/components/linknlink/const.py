@@ -5,7 +5,6 @@ import logging
 
 DOMAIN = "linknlink"
 DISPLAY_MODEL = "eMotion Ultra"
-LEGACY_DISPLAY_MODEL = "eMotion Ultra2"
 
 DEFAULT_PORT = 80
 POSITION_SUBSCRIPTION_CONFIRM_TIMEOUT = 60.0

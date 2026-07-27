@@ -86,7 +86,7 @@ async def test_sensor_setup(
         f"{MAC}_zone_3_target_counts",
         f"{MAC}_zone_4_target_counts",
     }
-    assert mock_config_entry.runtime_data.environment_state is ENVIRONMENT_STATE
+    assert mock_config_entry.runtime_data.data.environment_state is ENVIRONMENT_STATE
 
 
 async def test_position_updates_and_availability(
