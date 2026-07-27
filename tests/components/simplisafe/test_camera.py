@@ -2,16 +2,22 @@
 
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from simplipy.errors import SimplipyError
+from simplipy.system.v3 import SystemV3
 from simplipy.websocket import WebsocketEvent
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import async_get_image
 from homeassistant.components.simplisafe import _resolve_image_url
+from homeassistant.components.simplisafe.coordinator import DEFAULT_SCAN_INTERVAL
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 CAMERA_SERIAL = "abc123"
 IMAGE_URL_TEMPLATE = (
@@ -52,11 +58,6 @@ def _make_motion_event(
     )
 
 
-# ---------------------------------------------------------------------------
-# URL resolution unit tests (no HA setup required)
-# ---------------------------------------------------------------------------
-
-
 def test_resolve_image_url_substitutes_width() -> None:
     """Default width of 720 is substituted into the template."""
     url = "https://example.com/snap?a=1{&width}"
@@ -83,29 +84,30 @@ def test_resolve_image_url_strips_remaining_templates() -> None:
     assert "}" not in resolved
 
 
-# ---------------------------------------------------------------------------
-# Camera entity creation
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_camera_entity_created(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     patch_simplisafe_api,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """An entity is created for the outdoor camera sensor."""
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with (
+        patch("homeassistant.components.simplisafe.PLATFORMS", [Platform.CAMERA]),
+        patch("random.SystemRandom.getrandbits", return_value=123123123123),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    state = hass.states.get("camera.backyard_outdoor_camera")
-    assert state is not None
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_camera_entity_not_created_for_v2_system(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     patch_simplisafe_api,
-    system_v3,
+    system_v3: SystemV3,
 ) -> None:
     """No camera entity is created when the system reports version 2."""
     with patch.object(
@@ -117,38 +119,40 @@ async def test_camera_entity_not_created_for_v2_system(
     assert hass.states.get("camera.backyard_outdoor_camera") is None
 
 
-# ---------------------------------------------------------------------------
-# Websocket motion event handling
-# ---------------------------------------------------------------------------
-
-
-async def test_motion_event_caches_media_urls(
+async def test_outdoor_camera_battery_binary_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     patch_simplisafe_api,
-    websocket: Mock,
+    system_v3: SystemV3,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Motion event stores media URLs on the SimpliSafe data object."""
+    """The outdoor camera creates and updates a low-battery binary sensor."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    event_callback = websocket.add_event_callback.call_args[0][0]
-    event_callback(_make_motion_event())
-    await hass.async_block_till_done()
+    entity_id = "binary_sensor.backyard_outdoor_camera_battery"
+    assert hass.states.get(entity_id).state == STATE_OFF
 
-    simplisafe = config_entry.runtime_data
-    assert CAMERA_SERIAL in simplisafe.camera_media_urls
-    assert "image_url" in simplisafe.camera_media_urls[CAMERA_SERIAL]
-    assert "clip_url" in simplisafe.camera_media_urls[CAMERA_SERIAL]
+    with patch.object(
+        type(system_v3.sensors[CAMERA_SERIAL]),
+        "low_battery",
+        new_callable=PropertyMock,
+        return_value=True,
+    ):
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert hass.states.get(entity_id).state == STATE_ON
 
 
-async def test_motion_event_with_no_media_does_not_cache(
+async def test_motion_event_with_no_media_leaves_image_unavailable(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     patch_simplisafe_api,
     websocket: Mock,
 ) -> None:
-    """Motion event without media URLs leaves the cache empty."""
+    """A motion event without media URLs leaves no image available."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -156,8 +160,8 @@ async def test_motion_event_with_no_media_does_not_cache(
     event_callback(_make_motion_event(with_media=False))
     await hass.async_block_till_done()
 
-    simplisafe = config_entry.runtime_data
-    assert CAMERA_SERIAL not in simplisafe.camera_media_urls
+    with pytest.raises(HomeAssistantError):
+        await async_get_image(hass, "camera.backyard_outdoor_camera")
 
 
 async def test_motion_event_wrong_system_ignored(
@@ -166,7 +170,7 @@ async def test_motion_event_wrong_system_ignored(
     patch_simplisafe_api,
     websocket: Mock,
 ) -> None:
-    """Motion event from a different system does not populate the cache."""
+    """A motion event from a different system does not make an image available."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -174,8 +178,8 @@ async def test_motion_event_wrong_system_ignored(
     event_callback(_make_motion_event(system_id=99999))
     await hass.async_block_till_done()
 
-    simplisafe = config_entry.runtime_data
-    assert CAMERA_SERIAL not in simplisafe.camera_media_urls
+    with pytest.raises(HomeAssistantError):
+        await async_get_image(hass, "camera.backyard_outdoor_camera")
 
 
 async def test_motion_event_wrong_serial_ignored(
@@ -184,7 +188,7 @@ async def test_motion_event_wrong_serial_ignored(
     patch_simplisafe_api,
     websocket: Mock,
 ) -> None:
-    """Motion event for a different camera serial does not populate this camera's cache."""
+    """A motion event for a different camera serial does not make an image available."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -192,13 +196,8 @@ async def test_motion_event_wrong_serial_ignored(
     event_callback(_make_motion_event(serial="other_serial"))
     await hass.async_block_till_done()
 
-    simplisafe = config_entry.runtime_data
-    assert CAMERA_SERIAL not in simplisafe.camera_media_urls
-
-
-# ---------------------------------------------------------------------------
-# async_camera_image
-# ---------------------------------------------------------------------------
+    with pytest.raises(HomeAssistantError):
+        await async_get_image(hass, "camera.backyard_outdoor_camera")
 
 
 async def test_async_camera_image_raises_before_motion(
