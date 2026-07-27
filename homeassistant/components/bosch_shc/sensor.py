@@ -33,6 +33,8 @@ from homeassistant.helpers.typing import StateType
 from . import BoschConfigEntry
 from .entity import SHCEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class SHCSensorEntityDescription[_DeviceT: SHCDevice](SensorEntityDescription):
