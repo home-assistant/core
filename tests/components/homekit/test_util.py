@@ -254,6 +254,17 @@ def test_validate_entity_config() -> None:
             CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
         }
     }
+    config = {
+        CONF_LINKED_VALVE_DURATION: "number.valve_duration",
+        CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
+    }
+    assert vec({"valve.sprinkler": config}) == {
+        "valve.sprinkler": {
+            CONF_LINKED_VALVE_DURATION: "number.valve_duration",
+            CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
+            CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
+        }
+    }
     assert vec({"sensor.co": {CONF_THRESHOLD_CO: 500}}) == {
         "sensor.co": {CONF_THRESHOLD_CO: 500, CONF_LOW_BATTERY_THRESHOLD: 20}
     }

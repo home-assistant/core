@@ -903,14 +903,44 @@ async def test_valve_switch_with_duration_characteristics(
     assert acc.get_duration() == 0
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "state", "accessory_class", "config"),
+    [
+        pytest.param(
+            "switch.sprinkler",
+            STATE_OFF,
+            ValveSwitch,
+            {
+                "type": "sprinkler",
+                "linked_valve_duration": "number.valve_duration",
+                "linked_valve_end_time": "sensor.valve_end_time",
+            },
+            id="switch",
+        ),
+        pytest.param(
+            "valve.sprinkler",
+            STATE_CLOSED,
+            Valve,
+            {
+                "linked_valve_duration": "number.valve_duration",
+                "linked_valve_end_time": "sensor.valve_end_time",
+            },
+            id="valve",
+        ),
+    ],
+)
 async def test_valve_with_duration_characteristics(
-    hass: HomeAssistant, hk_driver, events: list[Event]
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    events: list[Event],
+    entity_id: str,
+    state: str,
+    accessory_class: type[Valve | ValveSwitch],
+    config: dict[str, str],
 ) -> None:
     """Test valve with set duration and remaining duration characteristics."""
-    entity_id = "switch.sprinkler"
-
     # Test with duration and end time entities linked
-    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set(entity_id, state)
     hass.states.async_set(
         "number.valve_duration",
         "900",
@@ -919,17 +949,13 @@ async def test_valve_with_duration_characteristics(
     hass.states.async_set("sensor.valve_end_time", dt_util.utcnow().isoformat())
     await hass.async_block_till_done()
 
-    acc = ValveSwitch(
+    acc = accessory_class(
         hass,
         hk_driver,
         "Sprinkler",
         entity_id,
         5,
-        {
-            "type": "sprinkler",
-            "linked_valve_duration": "number.valve_duration",
-            "linked_valve_end_time": "sensor.valve_end_time",
-        },
+        config,
     )
     acc.run()
     await hass.async_block_till_done()
