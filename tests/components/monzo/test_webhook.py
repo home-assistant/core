@@ -121,7 +121,7 @@ async def test_replaces_previous_owned_url(
     ]
 
 
-async def test_transaction_payload_is_preserved(
+async def test_transaction_payload_is_preserved_and_data_is_refreshed(
     hass: HomeAssistant,
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
@@ -129,6 +129,8 @@ async def test_transaction_payload_is_preserved(
 ) -> None:
     """Test the complete transaction reaches the correct event entity."""
     await setup_integration(hass, polling_config_entry)
+    monzo.user_account.accounts.reset_mock()
+    monzo.user_account.pots.reset_mock()
     client = await hass_client_no_auth()
 
     response = await client.post(
@@ -144,6 +146,8 @@ async def test_transaction_payload_is_preserved(
     flex_state = hass.states.get("event.flex_transaction")
     assert flex_state is not None
     assert flex_state.state == "unknown"
+    monzo.user_account.accounts.assert_awaited_once_with()
+    monzo.user_account.pots.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize(
@@ -180,6 +184,8 @@ async def test_invalid_webhook_is_ignored(
 ) -> None:
     """Test invalid and unsupported webhooks do not trigger an entity."""
     await setup_integration(hass, polling_config_entry)
+    monzo.user_account.accounts.reset_mock()
+    monzo.user_account.pots.reset_mock()
     client = await hass_client_no_auth()
 
     response = await client.post(async_generate_path(WEBHOOK_ID), json=payload)
@@ -187,6 +193,8 @@ async def test_invalid_webhook_is_ignored(
     state = hass.states.get("event.current_account_transaction")
     assert state is not None
     assert state.state == "unknown"
+    monzo.user_account.accounts.assert_not_awaited()
+    monzo.user_account.pots.assert_not_awaited()
 
 
 async def test_unload_removes_owned_remote_and_local_webhooks(

@@ -23,7 +23,7 @@ async def async_setup_entry(
     """Set up Monzo transaction event entities."""
     async_add_entities(
         MonzoTransactionEvent(account)
-        for account in config_entry.runtime_data.coordinator.data.accounts
+        for account in config_entry.runtime_data.coordinator.data.accounts.values()
     )
 
 

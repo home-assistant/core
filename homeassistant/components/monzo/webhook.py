@@ -149,8 +149,7 @@ class MonzoWebhookManager:
         previous_url = self.entry.data.get(CONF_WEBHOOK_URL)
         self._remote_webhook_ids.clear()
 
-        for account in self.coordinator.data.accounts:
-            account_id = account["id"]
+        for account_id in self.coordinator.data.accounts:
             account_webhooks = (
                 await self.coordinator.api.user_account.list_account_webhooks(
                     account_id
@@ -227,8 +226,7 @@ class MonzoWebhookManager:
             _LOGGER.warning("Received an invalid Monzo transaction webhook")
             return
 
-        account_ids = {account["id"] for account in self.coordinator.data.accounts}
-        if account_id not in account_ids:
+        if account_id not in self.coordinator.data.accounts:
             _LOGGER.warning("Received a Monzo webhook for an unknown account")
             return
 
@@ -238,6 +236,7 @@ class MonzoWebhookManager:
             EVENT_TRANSACTION_CREATED,
             transaction,
         )
+        await self.coordinator.async_request_refresh()
 
     @callback
     def _async_cloud_connection_changed(
