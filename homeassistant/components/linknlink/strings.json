@@ -1,24 +1,13 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "wrong_device": "The device at this address does not match the configured LinknLink device."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reconfigure": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        },
-        "data_description": {
-          "host": "The new IP address or hostname of the eMotion Ultra device."
-        },
-        "description": "Update the network address for {device_name}."
-      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -32,12 +21,6 @@
   },
   "entity": {
     "sensor": {
-      "humidity": {
-        "name": "Humidity"
-      },
-      "illuminance": {
-        "name": "Illuminance"
-      },
       "nearest_distance": {
         "name": "Nearest target 3D distance"
       },
@@ -48,13 +31,7 @@
         "name": "Persons in fenced zones"
       },
       "target_count": {
-        "name": "Target count"
-      },
-      "temperature": {
-        "name": "Temperature"
-      },
-      "wifi_signal": {
-        "name": "Wi-Fi signal"
+        "name": "Detected targets"
       },
       "zone_1_target_count": {
         "name": "Zone 1 target count"

@@ -1,6 +1,10 @@
-"""Distance sensors for LinknLink eMotion Ultra target positions."""
+"""Sensors for LinknLink eMotion Ultra."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import override
+
+from aiolinknlink import UltraPositionUpdate
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,86 +20,181 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import LinknLinkConfigEntry
+from .coordinator import LinknLinkConfigEntry, LinknLinkData
 from .entity import LinknLinkEntity
 
 PARALLEL_UPDATES = 0
 
-POSITION_SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class LinknLinkSensorEntityDescription(SensorEntityDescription):
+    """Describe a LinknLink sensor."""
+
+    value_fn: Callable[[LinknLinkData], StateType]
+    available_fn: Callable[[LinknLinkData], bool]
+
+
+def _environment_value(key: str) -> Callable[[LinknLinkData], StateType]:
+    """Return a function that reads an environmental value."""
+
+    def _value(data: LinknLinkData) -> StateType:
+        if data.environment_state is None:
+            return None
+        return data.environment_state.values.get(key)
+
+    return _value
+
+
+def _environment_available(data: LinknLinkData) -> bool:
+    """Return whether environmental state is available."""
+    return data.environment_available and data.environment_state is not None
+
+
+def _optional_environment_available(
+    key: str,
+) -> Callable[[LinknLinkData], bool]:
+    """Return availability for an optional environmental peripheral."""
+
+    def _available(data: LinknLinkData) -> bool:
+        return (
+            _environment_available(data)
+            and data.environment_state is not None
+            and key in data.environment_state.available_fields
+        )
+
+    return _available
+
+
+def _position_available(data: LinknLinkData) -> bool:
+    """Return whether local target positions are available."""
+    return data.position_state is not None and data.position_state.subscribed
+
+
+def _latest_position_value(
+    value_fn: Callable[[UltraPositionUpdate], StateType],
+) -> Callable[[LinknLinkData], StateType]:
+    """Return a function that reads a value from the latest target positions."""
+
+    def _value(data: LinknLinkData) -> StateType:
+        state = data.position_state
+        if state is None or state.stale or state.latest_update is None:
+            return None
+        return value_fn(state.latest_update)
+
+    return _value
+
+
+def _target_count(data: LinknLinkData) -> StateType:
+    """Return the freshest available detected-target count."""
+    state = data.position_state
+    if (
+        state is not None
+        and state.subscribed
+        and not state.stale
+        and state.latest_update is not None
+    ):
+        return state.latest_update.target_count
+    return _environment_value("target_count")(data)
+
+
+def _target_count_available(data: LinknLinkData) -> bool:
+    """Return whether either source for detected-target count is available."""
+    state = data.position_state
+    return (
+        state is not None
+        and state.subscribed
+        and not state.stale
+        and state.latest_update is not None
+    ) or _environment_available(data)
+
+
+SENSOR_DESCRIPTIONS: tuple[LinknLinkSensorEntityDescription, ...] = (
+    LinknLinkSensorEntityDescription(
         key="nearest_horizontal_distance",
         translation_key="nearest_horizontal_distance",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_latest_position_value(
+            lambda update: update.nearest_horizontal_distance
+        ),
+        available_fn=_position_available,
     ),
-    SensorEntityDescription(
+    LinknLinkSensorEntityDescription(
         key="nearest_distance",
         translation_key="nearest_distance",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_latest_position_value(lambda update: update.nearest_distance),
+        available_fn=_position_available,
     ),
-)
-
-ENVIRONMENT_SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+    LinknLinkSensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_environment_value("temperature"),
+        available_fn=_optional_environment_available("temperature"),
     ),
-    SensorEntityDescription(
+    LinknLinkSensorEntityDescription(
         key="humidity",
-        translation_key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_environment_value("humidity"),
+        available_fn=_optional_environment_available("humidity"),
     ),
-    SensorEntityDescription(
+    LinknLinkSensorEntityDescription(
         key="illuminance",
-        translation_key="illuminance",
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_environment_value("illuminance"),
+        available_fn=_environment_available,
     ),
-    SensorEntityDescription(
+    LinknLinkSensorEntityDescription(
         key="wifi_signal",
-        translation_key="wifi_signal",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        value_fn=_environment_value("wifi_signal"),
+        available_fn=_environment_available,
     ),
-    SensorEntityDescription(
+    LinknLinkSensorEntityDescription(
         key="target_count",
         translation_key="target_count",
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_target_count,
+        available_fn=_target_count_available,
     ),
-    SensorEntityDescription(
+    LinknLinkSensorEntityDescription(
         key="persons_in_fenced_zones",
         translation_key="persons_in_fenced_zones",
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_environment_value("persons_in_fenced_zones"),
+        available_fn=_environment_available,
     ),
-)
-
-ZONE_COUNT_SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = tuple(
-    SensorEntityDescription(
-        key=f"zone_{zone}_target_counts",
-        translation_key=f"zone_{zone}_target_count",
-        state_class=SensorStateClass.MEASUREMENT,
-    )
-    for zone in range(1, 5)
+    *(
+        LinknLinkSensorEntityDescription(
+            key=f"zone_{zone}_target_counts",
+            translation_key=f"zone_{zone}_target_count",
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=_environment_value(f"zone_{zone}_target_counts"),
+            available_fn=_environment_available,
+        )
+        for zone in range(1, 5)
+    ),
 )
 
 
@@ -104,114 +203,28 @@ async def async_setup_entry(
     entry: LinknLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Ultra position distance sensors."""
+    """Set up LinknLink sensors."""
     async_add_entities(
-        LinknLinkPositionSensor(entry.runtime_data, description)
-        for description in POSITION_SENSOR_DESCRIPTIONS
-    )
-    async_add_entities(
-        LinknLinkEnvironmentSensor(entry.runtime_data, description)
-        for description in (
-            *ENVIRONMENT_SENSOR_DESCRIPTIONS,
-            *ZONE_COUNT_SENSOR_DESCRIPTIONS,
-        )
+        LinknLinkSensor(entry.runtime_data, description)
+        for description in SENSOR_DESCRIPTIONS
     )
 
 
-class LinknLinkPositionSensor(LinknLinkEntity, SensorEntity):
-    """Representation of an Ultra nearest-target distance."""
+class LinknLinkSensor(LinknLinkEntity, SensorEntity):
+    """Representation of a LinknLink sensor."""
 
-    entity_description: SensorEntityDescription
+    entity_description: LinknLinkSensorEntityDescription
 
     @property
     @override
     def available(self) -> bool:
-        """Return whether the target position subscription is available."""
-        state = self.coordinator.position_state
-        return state is not None and state.subscribed
-
-    @property
-    @override
-    def native_value(self) -> StateType:
-        """Return the nearest target distance in meters."""
-        state = self.coordinator.position_state
-        if state is None or state.stale or state.latest_update is None:
-            return None
-        if self.entity_description.key == "nearest_horizontal_distance":
-            return state.latest_update.nearest_horizontal_distance
-        return state.latest_update.nearest_distance
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to high-frequency position updates."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.coordinator.async_add_position_listener(
-                self._async_handle_position_update
-            )
+        """Return whether the sensor's local data source is available."""
+        return super().available and self.entity_description.available_fn(
+            self.coordinator.data
         )
-
-    @callback
-    def _async_handle_position_update(self, _: object) -> None:
-        """Write a new distance or expiry state."""
-        self.async_write_ha_state()
-
-
-class LinknLinkEnvironmentSensor(LinknLinkEntity, SensorEntity):
-    """Representation of an Ultra environmental or count sensor."""
-
-    entity_description: SensorEntityDescription
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return whether this state currently has a valid local source."""
-        if self.entity_description.key == "target_count":
-            position = self.coordinator.position_state
-            if (
-                position is not None
-                and position.subscribed
-                and not position.stale
-                and position.latest_update is not None
-            ):
-                return True
-        state = self.coordinator.environment_state
-        if not self.coordinator.environment_available or state is None:
-            return False
-        if self.entity_description.key in {"temperature", "humidity"}:
-            return self.entity_description.key in state.available_fields
-        return True
 
     @property
     @override
     def native_value(self) -> StateType:
         """Return the latest locally reported value."""
-        if self.entity_description.key == "target_count":
-            position = self.coordinator.position_state
-            if (
-                position is not None
-                and position.subscribed
-                and not position.stale
-                and position.latest_update is not None
-            ):
-                return position.latest_update.target_count
-        state = self.coordinator.environment_state
-        if state is None:
-            return None
-        return state.values.get(self.entity_description.key)
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe target count to real-time position updates."""
-        await super().async_added_to_hass()
-        if self.entity_description.key == "target_count":
-            self.async_on_remove(
-                self.coordinator.async_add_position_listener(
-                    self._async_handle_position_update
-                )
-            )
-
-    @callback
-    def _async_handle_position_update(self, _: object) -> None:
-        """Write an updated target count."""
-        self.async_write_ha_state()
+        return self.entity_description.value_fn(self.coordinator.data)

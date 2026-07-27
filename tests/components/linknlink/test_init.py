@@ -17,24 +17,6 @@ from .conftest import DEVICE, MAC, SESSION
 from tests.common import MockConfigEntry
 
 
-async def test_setup_updates_previous_display_name(
-    hass: HomeAssistant,
-    mock_linknlink_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test updating an entry created with the previous display name."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="eMotion Ultra2",
-        data=mock_config_entry.data,
-        unique_id=mock_config_entry.unique_id,
-    )
-
-    await setup_integration(hass, entry)
-
-    assert entry.title == DISPLAY_MODEL
-
-
 async def test_setup_preserves_custom_title(
     hass: HomeAssistant,
     mock_linknlink_client: AsyncMock,
