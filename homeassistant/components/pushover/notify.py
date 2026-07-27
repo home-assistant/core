@@ -1,6 +1,5 @@
 """Pushover platform for notify component."""
 
-import logging
 from typing import TYPE_CHECKING, Any, override
 
 from pushover_complete import BadAPIRequestError, PushoverAPI
@@ -13,7 +12,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -29,9 +28,8 @@ from .const import (
     ATTR_URL,
     ATTR_URL_TITLE,
     CONF_USER_KEY,
+    DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_service(
@@ -82,22 +80,23 @@ class PushoverNotificationService(BaseNotificationService):
         # Check for attachment
         if (image := data.get(ATTR_ATTACHMENT)) is not None:
             # Only allow attachments from whitelisted paths, check valid path
-            if self._hass.config.is_allowed_path(data[ATTR_ATTACHMENT]):
-                # try to open it as a normal file.
-                try:
-                    # pylint: disable-next=consider-using-with
-                    file_handle = open(data[ATTR_ATTACHMENT], "rb")
-                    # Replace the attachment identifier with file object.
-                    image = file_handle
-                # pylint: disable-next=home-assistant-action-swallowed-exception
-                except OSError as ex_val:
-                    _LOGGER.error(ex_val)
-                    # Remove attachment key to send without attachment.
-                    image = None
-            else:
-                _LOGGER.error("Path is not whitelisted")
-                # Remove attachment key to send without attachment.
-                image = None
+            if not self._hass.config.is_allowed_path(data[ATTR_ATTACHMENT]):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="attachment_not_allowed",
+                    translation_placeholders={"attachment": data[ATTR_ATTACHMENT]},
+                )
+            try:
+                # pylint: disable-next=consider-using-with
+                file_handle = open(data[ATTR_ATTACHMENT], "rb")
+            except OSError as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="attachment_open_failed",
+                    translation_placeholders={"attachment": data[ATTR_ATTACHMENT]},
+                ) from err
+            # Replace the attachment identifier with file object.
+            image = file_handle
 
         try:
             self.pushover.send_message(
