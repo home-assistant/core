@@ -3918,6 +3918,29 @@ async def test_update_device_unknown_via_device_id_raises(
     assert device_registry.async_get(device.id).via_device_id is None
 
 
+async def test_update_device_unknown_via_device_id_raises_before_removal(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """An unknown via_device_id raises before a removal in the same call."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("hue", "device")}
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="unknown via device unknown-device-id"
+    ):
+        device_registry.async_update_device(
+            device.id,
+            remove_config_entry_id=config_entry.entry_id,
+            via_device_id="unknown-device-id",
+        )
+
+    # The device was not removed
+    assert device_registry.async_get(device.id) == device
+
+
 async def test_get_or_create_composite_via_device_id_resolved(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -7970,6 +7993,62 @@ async def test_composite_move_clears_sibling_pending_moves(
             is None
         )
     assert device_registry.async_get(device_2.id) is None
+
+
+async def test_composite_move_unknown_via_device_id_keeps_sibling_moves(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """An unknown via_device_id raises before a move clears sibling pending moves."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    entry_target = MockConfigEntry(domain="test")
+    entry_target.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "shared")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "shared")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry.devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+
+    # Arm a deferred move on the composite id: fans out to both splits
+    with patch.object(dr, "_current_integration_domain", return_value="test"):
+        device_registry.async_update_device(
+            old_id, add_config_entry_id=entry_target.entry_id
+        )
+
+    # The failed call must not move the device or clear the sibling's pending move
+    with (
+        patch.object(dr, "_current_integration_domain", return_value="test"),
+        pytest.raises(HomeAssistantError, match="unknown via device unknown-device-id"),
+    ):
+        device_registry.async_update_device(
+            device_1.id,
+            remove_config_entry_id=entry_1.entry_id,
+            via_device_id="unknown-device-id",
+        )
+    assert device_registry.async_get(device_1.id).config_entry_id == entry_1.entry_id
+    assert device_registry.async_get(device_1.id)._pending_move is not None
+    assert device_registry.async_get(device_2.id)._pending_move is not None
+
+    # The armed moves are intact and can still complete
+    with patch.object(dr, "_current_integration_domain", return_value="test"):
+        device_registry.async_update_device(
+            device_1.id, remove_config_entry_id=entry_1.entry_id
+        )
+    assert (
+        device_registry.async_get(device_1.id).config_entry_id == entry_target.entry_id
+    )
+    assert device_registry.async_get(device_2.id)._pending_move is None
 
 
 async def test_add_and_remove_config_entry_in_one_call(

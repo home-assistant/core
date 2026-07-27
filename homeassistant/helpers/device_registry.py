@@ -1968,6 +1968,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "Cannot define both merge_identifiers and new_identifiers"
             )
 
+        if (
+            via_device_id is not UNDEFINED
+            and via_device_id is not None
+            and via_device_id not in self.devices
+            and not self.devices.get_devices_for_composite_device_id(via_device_id)
+        ):
+            raise HomeAssistantError(
+                f"Can't link device to unknown via device {via_device_id}"
+            )
+
         # A device belongs to exactly one config entry and subentry:
         # - add_config_entry_id (with an optional add_config_subentry_id) records a
         #   transient pending move to that config entry and subentry; on its own it does
@@ -2099,14 +2109,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         is_move = effective_config_entry_id != old.config_entry_id
 
         if via_device_id is not UNDEFINED and via_device_id is not None:
-            resolved_via_device_id = self._resolve_via_device_id(
+            # Existence was already validated, so this cannot be None
+            via_device_id = self._resolve_via_device_id(
                 via_device_id, effective_config_entry_id
             )
-            if resolved_via_device_id is None:
-                raise HomeAssistantError(
-                    f"Can't link device to unknown via device {via_device_id}"
-                )
-            via_device_id = resolved_via_device_id
 
         added_connections: set[tuple[str, str]] | None = None
         added_identifiers: set[tuple[str, str]] | None = None
