@@ -3,7 +3,12 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from infrared_protocols.codes.generic.led import Generic13KeyCode, Generic24KeyCode
+from infrared_protocols.codes.generic.led import (
+    Generic13KeyCode,
+    Generic24KeyCode,
+    Generic40KeyCode,
+    Generic44KeyCode,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -79,6 +84,76 @@ async def test_setup(
             LEDIrDeviceType.GENERIC_13_KEY,
             "timer",
             [Generic13KeyCode.TIMER],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "brightness_up",
+            [Generic40KeyCode.BRIGHTNESS_UP],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "brightness_down",
+            [Generic40KeyCode.BRIGHTNESS_DOWN],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_brightness_up",
+            [Generic40KeyCode.WHITE_BRIGHTNESS_UP],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_brightness_down",
+            [Generic40KeyCode.WHITE_BRIGHTNESS_DOWN],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_on",
+            [Generic40KeyCode.WHITE_ON],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_off",
+            [Generic40KeyCode.WHITE_OFF],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_brightness_25",
+            [Generic40KeyCode.WHITE_BRIGHTNESS_25],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_brightness_50",
+            [Generic40KeyCode.WHITE_BRIGHTNESS_50],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_brightness_75",
+            [Generic40KeyCode.WHITE_BRIGHTNESS_75],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "white_brightness_100",
+            [Generic40KeyCode.WHITE_BRIGHTNESS_100],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "quick",
+            [Generic40KeyCode.QUICK],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_40_KEY,
+            "slow",
+            [Generic40KeyCode.SLOW],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "brightness_up",
+            [Generic44KeyCode.BRIGHTNESS_UP],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_44_KEY,
+            "brightness_down",
+            [Generic44KeyCode.BRIGHTNESS_DOWN],
         ),
     ],
 )
