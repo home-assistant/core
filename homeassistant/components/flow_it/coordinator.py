@@ -49,7 +49,7 @@ class FlowItCoordinator(DataUpdateCoordinator[FlowItCoordinatorData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: FlowItConfigEntry,
         vmc: FlowItVMCMachine,
     ) -> None:
         """Initialize the coordinator."""
