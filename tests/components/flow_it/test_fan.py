@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID = "fan.00_11_22_33_44_55"
+ENTITY_ID = "fan.001122334455"
 
 
 @pytest.mark.parametrize(
