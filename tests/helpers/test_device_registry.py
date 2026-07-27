@@ -8,7 +8,7 @@ import json
 import pathlib
 import time
 from typing import Any
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, AsyncMock, patch
 
 import attr
 from freezegun.api import FrozenDateTimeFactory
@@ -29,9 +29,13 @@ from homeassistant.util.dt import utcnow
 
 from tests.common import (
     MockConfigEntry,
+    MockModule,
     async_capture_events,
     flush_store,
+    mock_config_flow,
     mock_device_registry,
+    mock_integration,
+    mock_platform,
 )
 
 
@@ -7929,6 +7933,67 @@ async def test_via_device_id_to_removed_stale_duplicate_raises(
             via_device_id="stale",
         )
     assert device_registry.async_get("stale") is None
+
+
+async def test_key_collision_reconciled_after_config_entry_reload(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A key moved between devices raises while loaded and reconciles after reload."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    class MockFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+    with mock_config_flow("test", MockFlow):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+        connection = (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")
+        device_a = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={("test", "device_a")},
+            connections={connection},
+        )
+        device_b = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={("test", "device_b")},
+        )
+
+        # Both devices are registered this setup session, so moving the key raises
+        with pytest.raises(dr.DeviceInfoError, match="already registered"):
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={("test", "device_b")},
+                connections={connection},
+            )
+        device_a_refetched = device_registry.async_get(device_a.id)
+        assert device_a_refetched is not None
+        assert device_a_refetched.connections == {connection}
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+        # In the new setup session the registering device is authoritative
+        device_b_refetched = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={("test", "device_b")},
+            connections={connection},
+        )
+        assert device_b_refetched.id == device_b.id
+        assert device_b_refetched.connections == {connection}
+        device_a_refetched = device_registry.async_get(device_a.id)
+        assert device_a_refetched is not None
+        assert device_a_refetched.connections == set()
 
 
 @pytest.mark.parametrize(

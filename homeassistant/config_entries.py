@@ -2441,9 +2441,16 @@ class ConfigEntries:
 
         if _lock:
             async with entry.setup_lock:
-                return await entry.async_unload(self.hass)
+                return await self._async_unload(entry)
 
-        return await entry.async_unload(self.hass)
+        return await self._async_unload(entry)
+
+    async def _async_unload(self, entry: ConfigEntry) -> bool:
+        """Unload the entry, ending its setup session in the device registry."""
+        unload_success = await entry.async_unload(self.hass)
+        if unload_success:
+            dr.async_get(self.hass).async_config_entry_unloaded(entry.entry_id)
+        return unload_success
 
     @callback
     def async_schedule_reload(self, entry_id: str) -> None:

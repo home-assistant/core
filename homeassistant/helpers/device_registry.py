@@ -1425,9 +1425,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
         self.hass = hass
-        # Devices registered through async_get_or_create this run. A key collision
-        # with one of these raises; one with a not yet registered device is reconciled.
-        self._live_device_ids: set[str] = set()
+        # Devices registered through async_get_or_create in the current setup session
+        # of their config entry, keyed by config entry id. A key collision with one of
+        # these raises; one with a not yet registered device is reconciled.
+        self._live_device_ids: dict[str, set[str]] = {}
         self._loaded_event = asyncio.Event()
         self._store = DeviceRegistryStore(
             hass,
@@ -1988,7 +1989,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # This is safe because _async_update_device will always return a device
         # in this use case.
         assert device
-        self._live_device_ids.add(device.id)
+        self._live_device_ids.setdefault(device.config_entry_id, set()).add(device.id)
         return device
 
     @callback
@@ -2585,8 +2586,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Resolve device key collisions with the registering device.
 
         Shared keys are stripped from stale duplicates (devices not registered this
-        run); a duplicate left without any keys is removed. A collision with a device
-        registered this run raises.
+        setup session); a duplicate left without any keys is removed. A collision
+        with a device registered this setup session raises.
         """
         matched_device_id: str | None = None
         if matched_device is not None:
@@ -2600,8 +2601,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             config_entry_id=config_entry.entry_id,
             exclude_device_id=matched_device_id,
         )
+        live_device_ids = self._live_device_ids.get(config_entry.entry_id, ())
         for holder_id, (shared_identifiers, shared_connections) in colliding.items():
-            if holder_id not in self._live_device_ids:
+            if holder_id not in live_device_ids:
                 continue
             raise DeviceInfoError(
                 config_entry.domain,
@@ -2983,10 +2985,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.async_schedule_save()
 
     @callback
+    def async_config_entry_unloaded(self, config_entry_id: str) -> None:
+        """Forget the live devices of an unloaded config entry."""
+        self._live_device_ids.pop(config_entry_id, None)
+
+    @callback
     def async_clear_config_entry(
         self, config_entry_id: str, domain: str | None = None
     ) -> None:
         """Clear config entry from registry entries."""
+        self._live_device_ids.pop(config_entry_id, None)
         domain = self._resolve_orphan_domain(config_entry_id, domain)
         now_time = time.time()
         for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
