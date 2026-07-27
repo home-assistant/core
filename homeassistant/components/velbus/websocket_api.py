@@ -281,6 +281,10 @@ def ws_list_modules(
     modules = []
     for module in controller.get_modules().values():
         address = module.get_addresses()[0]
+        channels = {
+            str(channel_num): {"name": channel.get_name()}
+            for channel_num, channel in module.get_channels().items()
+        }
         modules.append(
             {
                 "address": address,
@@ -289,6 +293,7 @@ def ws_list_modules(
                 "type_name": module.get_type_name(),
                 "serial": module.get_serial(),
                 "device_id": _device_id_for_module(hass, entry, address),
+                "channels": channels,
             }
         )
     modules.sort(key=lambda item: item["address"])
@@ -357,7 +362,8 @@ async def ws_get_module(
         vol.Required("type"): "velbus/config_panel/module/config/set",
         vol.Required(CONF_CONFIG_ENTRY): str,
         vol.Required(CONF_ADDRESS): vol.All(vol.Coerce(int), vol.Range(min=1, max=254)),
-        vol.Required(CONF_CHANNEL): vol.All(vol.Coerce(int), vol.Range(min=1, max=32)),
+        # Specs include editable channels above 32 (e.g. temperature name 33/34).
+        vol.Required(CONF_CHANNEL): vol.All(vol.Coerce(int), vol.Range(min=1, max=64)),
         vol.Required("key"): str,
         vol.Required("value"): vol.Any(str, bool, int, float),
     }
@@ -422,7 +428,7 @@ async def ws_set_module_config(
         vol.Required("type"): "velbus/config_panel/module/actions/get",
         vol.Required(CONF_CONFIG_ENTRY): str,
         vol.Required(CONF_ADDRESS): vol.All(vol.Coerce(int), vol.Range(min=1, max=254)),
-        vol.Required(CONF_CHANNEL): vol.All(vol.Coerce(int), vol.Range(min=1, max=8)),
+        vol.Required(CONF_CHANNEL): vol.All(vol.Coerce(int), vol.Range(min=1, max=32)),
         vol.Optional("refresh", default=False): bool,
     }
 )
@@ -464,13 +470,13 @@ async def ws_get_channel_actions(
         vol.Required("type"): "velbus/config_panel/module/actions/set",
         vol.Required(CONF_CONFIG_ENTRY): str,
         vol.Required(CONF_ADDRESS): vol.All(vol.Coerce(int), vol.Range(min=1, max=254)),
-        vol.Required(CONF_CHANNEL): vol.All(vol.Coerce(int), vol.Range(min=1, max=8)),
+        vol.Required(CONF_CHANNEL): vol.All(vol.Coerce(int), vol.Range(min=1, max=32)),
         vol.Required("source_address"): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=254)
         ),
         vol.Required("action"): vol.Any(str, int),
         vol.Optional("source_channel"): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=8)
+            vol.Coerce(int), vol.Range(min=1, max=32)
         ),
         vol.Optional("slot"): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
         vol.Optional("time1", default=0xFF): vol.All(
@@ -528,13 +534,13 @@ async def ws_set_channel_action(
         vol.Required("type"): "velbus/config_panel/module/actions/clear",
         vol.Required(CONF_CONFIG_ENTRY): str,
         vol.Required(CONF_ADDRESS): vol.All(vol.Coerce(int), vol.Range(min=1, max=254)),
-        vol.Required(CONF_CHANNEL): vol.All(vol.Coerce(int), vol.Range(min=1, max=8)),
+        vol.Required(CONF_CHANNEL): vol.All(vol.Coerce(int), vol.Range(min=1, max=32)),
         vol.Optional("slot"): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
         vol.Optional("source_address"): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=254)
         ),
         vol.Optional("source_channel"): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=8)
+            vol.Coerce(int), vol.Range(min=1, max=32)
         ),
     }
 )

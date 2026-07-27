@@ -217,14 +217,15 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     step_errors[CONF_VLP_FILE] = str(e)
             if self.source == SOURCE_RECONFIGURE:
                 old_entry = self._get_reconfigure_entry()
-                return self.async_update_reload_and_abort(
-                    old_entry,
-                    data={
-                        **old_entry.data,
-                        CONF_VLP_FILE: self._vlp_file,
-                        CONF_PORT: self._device,
-                    },
-                )
+                data = {
+                    **old_entry.data,
+                    CONF_VLP_FILE: self._vlp_file,
+                }
+                # Keep the existing port when VLP is reconfigured without
+                # visiting the network/USB step (self._device stays empty).
+                if self._device:
+                    data[CONF_PORT] = self._device
+                return self.async_update_reload_and_abort(old_entry, data=data)
             if not step_errors:
                 return await self.async_step_advanced_mode()
 
