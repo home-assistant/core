@@ -188,4 +188,4 @@ LIGHT_MODBUS_INVALID_VALUE = 0xFFFF
 DEFAULT_SCALE = 1.0
 DEFAULT_OFFSET = 0
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
