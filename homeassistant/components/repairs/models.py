@@ -83,7 +83,7 @@ class RepairsFlow(
             return
         flow_type, flow_id = next_flow
         if flow_type not in FlowType:
-            raise data_entry_flow.UnknownFlow("Invalid next_flow type")
+            raise data_entry_flow.UnknownFlow("Invalid next_flow FlowType")
         entry_id: str | None = None
         if flow_type == FlowType.CONFIG_FLOW:
             config_flow: ConfigFlowResult = self.hass.config_entries.flow.async_get(
