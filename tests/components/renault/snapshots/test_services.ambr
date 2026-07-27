@@ -8,64 +8,64 @@
         'activated': True,
         'friday': dict({
           'duration': 450,
-          'start_time': 'T00:00Z',
+          'start_time': '00:00',
         }),
         'id': 1,
         'monday': dict({
           'duration': 450,
-          'start_time': 'T00:00Z',
+          'start_time': '00:00',
         }),
         'saturday': dict({
           'duration': 450,
-          'start_time': 'T00:00Z',
+          'start_time': '00:00',
         }),
         'sunday': dict({
           'duration': 450,
-          'start_time': 'T00:00Z',
+          'start_time': '00:00',
         }),
         'thursday': dict({
           'duration': 450,
-          'start_time': 'T00:00Z',
+          'start_time': '00:00',
         }),
         'tuesday': dict({
           'duration': 450,
-          'start_time': 'T00:00Z',
+          'start_time': '00:00',
         }),
         'wednesday': dict({
           'duration': 450,
-          'start_time': 'T00:00Z',
+          'start_time': '00:00',
         }),
       }),
       dict({
         'activated': True,
         'friday': dict({
           'duration': 15,
-          'start_time': 'T23:30Z',
+          'start_time': '23:30',
         }),
         'id': 2,
         'monday': dict({
           'duration': 15,
-          'start_time': 'T23:30Z',
+          'start_time': '23:30',
         }),
         'saturday': dict({
           'duration': 15,
-          'start_time': 'T23:30Z',
+          'start_time': '23:30',
         }),
         'sunday': dict({
           'duration': 15,
-          'start_time': 'T23:30Z',
+          'start_time': '23:30',
         }),
         'thursday': dict({
           'duration': 15,
-          'start_time': 'T23:30Z',
+          'start_time': '23:30',
         }),
         'tuesday': dict({
           'duration': 15,
-          'start_time': 'T23:30Z',
+          'start_time': '23:30',
         }),
         'wednesday': dict({
           'duration': 15,
-          'start_time': 'T23:30Z',
+          'start_time': '23:30',
         }),
       }),
       dict({

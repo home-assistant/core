@@ -170,6 +170,11 @@ async def charge_set_schedules(service_call: ServiceCall) -> None:
     )
 
 
+def _format_charge_schedule_time(start_time: str) -> str:
+    """Format charge schedule start time for the service response."""
+    return start_time.removeprefix("T").removesuffix("Z")
+
+
 def _serialize_charge_schedules(
     charge_schedules: KamereonVehicleChargingSettingsData,
 ) -> ServiceResponse:
@@ -186,7 +191,9 @@ def _serialize_charge_schedules(
                 "activated": schedule.activated,
                 **{
                     day: {
-                        "start_time": day_schedule.startTime,
+                        "start_time": _format_charge_schedule_time(
+                            day_schedule.startTime
+                        ),
                         "duration": day_schedule.duration,
                     }
                     for day in CHARGE_SCHEDULE_DAYS
