@@ -64,7 +64,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SteamConfigEntry) -> b
             hass.config_entries.async_add_subentry(entry, subentry)
 
         dev_reg = dr.async_get(hass)
-        if device := dev_reg.async_get_device({(DOMAIN, entry.entry_id)}):
+        if device := dev_reg.async_get_device_by_identifier(
+            (DOMAIN, entry.entry_id), entry.entry_id
+        ):
             if TYPE_CHECKING:
                 assert entry.unique_id
             dev_reg.async_update_device(

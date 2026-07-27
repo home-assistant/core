@@ -137,9 +137,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
             device_registry, entry.entry_id
         ):
             if device.identifiers.isdisjoint(expected_identifiers):
-                device_registry.async_update_device(
-                    device.id, remove_config_entry_id=entry.entry_id
-                )
+                device_registry.async_remove_device(device.id)
 
     _cleanup_devices(hub)
     hub.register_callback(_cleanup_devices)
