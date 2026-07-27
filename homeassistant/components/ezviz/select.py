@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pyezvizapi.constants import (
     BatteryCameraWorkMode,
@@ -152,11 +152,13 @@ class EzvizSelect(EzvizEntity, SelectEntity):
         self.entity_description = description
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         desc = cast(EzvizSelectEntityDescription, self.entity_description)
         return desc.current_option(self)
 
+    @override
     def select_option(self, option: str) -> None:
         """Change the selected option."""
         desc = cast(EzvizSelectEntityDescription, self.entity_description)

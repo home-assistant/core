@@ -1,7 +1,7 @@
 """Feed Entity Manager Sensor support for GeoNet NZ Quakes Feeds."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, callback
@@ -60,6 +60,7 @@ class GeonetnzQuakesSensor(SensorEntity):
         self._removed = None
         self._remove_signal_status = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_status = async_dispatcher_connect(
@@ -71,6 +72,7 @@ class GeonetnzQuakesSensor(SensorEntity):
         # First update is manual because of how the feed entity manager is updated.
         await self.async_update()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
         if self._remove_signal_status:
@@ -109,6 +111,7 @@ class GeonetnzQuakesSensor(SensorEntity):
         self._removed = status_info.removed
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {

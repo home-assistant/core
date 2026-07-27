@@ -4,6 +4,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from ohme import ApiException, OhmeApiClient
 
@@ -50,6 +51,7 @@ class OhmeBaseCoordinator(DataUpdateCoordinator[None]):
         self.name = f"Ohme {self.coordinator_name}"
         self.client = client
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         try:
@@ -70,6 +72,7 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
     coordinator_name = "Charge Sessions"
     _default_update_interval = timedelta(seconds=30)
 
+    @override
     async def _internal_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.client.async_get_charge_session()
@@ -81,6 +84,7 @@ class OhmeDeviceInfoCoordinator(OhmeBaseCoordinator):
     coordinator_name = "Device Info"
     _default_update_interval = timedelta(minutes=30)
 
+    @override
     async def _internal_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.client.async_update_device_info()

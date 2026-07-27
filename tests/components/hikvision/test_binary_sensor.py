@@ -165,6 +165,43 @@ async def test_binary_sensor_nvr_device(
     assert len(states) == 2
 
 
+@pytest.mark.parametrize("amount_of_channels", [2])
+async def test_binary_sensor_duplicate_channels_deduplicated(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test duplicate channel entries do not create colliding unique IDs.
+
+    pyhik can report the same channel several times for a sensor type when the
+    channel has multiple notification methods enabled. Only one entity should be
+    created per channel and no duplicate unique ID warnings should occur.
+    """
+    mock_hikcamera.return_value.get_type = "NVR"
+    mock_hikcamera.return_value.current_event_states = {
+        # Channel 1 reported three times, channel 2 reported twice.
+        "Line Crossing": [(False, 1), (False, 1), (False, 1), (False, 2), (False, 2)],
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    # One entity per distinct channel, not one per reported entry.
+    states = hass.states.async_entity_ids("binary_sensor")
+    assert len(states) == 2
+
+    unique_ids = {
+        entry.unique_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+    }
+    assert unique_ids == {
+        f"{TEST_DEVICE_ID}_Line Crossing_1",
+        f"{TEST_DEVICE_ID}_Line Crossing_2",
+    }
+
+
 async def test_binary_sensor_state_on(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

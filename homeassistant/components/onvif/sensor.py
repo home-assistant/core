@@ -2,6 +2,7 @@
 
 from datetime import date, datetime
 from decimal import Decimal
+from typing import override
 
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
 from homeassistant.core import HomeAssistant, callback
@@ -98,6 +99,7 @@ class ONVIFSensor(ONVIFBaseEntity, RestoreSensor):
         super().__init__(device)
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         assert self._attr_unique_id is not None
@@ -105,6 +107,7 @@ class ONVIFSensor(ONVIFBaseEntity, RestoreSensor):
             return event.value
         return self._attr_native_value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
         self.async_on_remove(

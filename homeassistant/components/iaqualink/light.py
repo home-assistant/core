@@ -1,6 +1,6 @@
 """Support for Aqualink pool lights."""
 
-from typing import Any
+from typing import Any, override
 
 from iaqualink.device import AqualinkLight
 
@@ -54,11 +54,13 @@ class HassAqualinkLight(AqualinkEntity[AqualinkLight], LightEntity):
         self._attr_supported_color_modes = {color_mode}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the light is on or off."""
         return self.dev.is_on
 
     @refresh_system
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light.
 
@@ -84,6 +86,7 @@ class HassAqualinkLight(AqualinkEntity[AqualinkLight], LightEntity):
             )
 
     @refresh_system
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await await_or_reraise(
@@ -91,6 +94,7 @@ class HassAqualinkLight(AqualinkEntity[AqualinkLight], LightEntity):
         )
 
     @property
+    @override
     def brightness(self) -> int:
         """Return current brightness of the light.
 
@@ -99,6 +103,7 @@ class HassAqualinkLight(AqualinkEntity[AqualinkLight], LightEntity):
         return round(self.dev.brightness * 255 / 100)
 
     @property
+    @override
     def effect(self) -> str:
         """Return the current light effect if supported."""
         return self.dev.effect

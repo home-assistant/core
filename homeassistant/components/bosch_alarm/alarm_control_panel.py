@@ -1,5 +1,7 @@
 """Support for Bosch Alarm Panel."""
 
+from typing import override
+
 from bosch_alarm_mode2 import Panel
 
 from homeassistant.components.alarm_control_panel import (
@@ -52,6 +54,7 @@ class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
         self._attr_unique_id = self._area_unique_id
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the alarm."""
         if self._area.is_triggered():
@@ -68,14 +71,17 @@ class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
             return AlarmControlPanelState.ARMED_AWAY
         return None
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm this panel."""
         await self.panel.area_disarm(self._area_id)
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self.panel.area_arm_part(self._area_id)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self.panel.area_arm_all(self._area_id)

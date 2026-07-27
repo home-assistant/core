@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from aioautomower.model import MowerActivities, MowerAttributes
 
@@ -80,6 +81,7 @@ class AutomowerBinarySensorEntity(AutomowerBaseEntity, BinarySensorEntity):
         self._attr_unique_id = f"{mower_id}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
         return self.entity_description.value_fn(self.mower_attributes)

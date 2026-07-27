@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from copy import deepcopy
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import web_response
 import plexapi.exceptions
@@ -96,6 +96,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> PlexOptionsFlowHandler:
@@ -110,6 +111,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
         self._manual = False
         self._reauth_config: dict[str, Any] | None = None
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -287,6 +289,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
             errors={},
         )
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: dict[str, Any]
     ) -> ConfigFlowResult:

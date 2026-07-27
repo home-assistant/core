@@ -1,5 +1,7 @@
 """Data coordinator for the dwd_weather_warnings integration."""
 
+from typing import override
+
 from dwdwfsapi import DwdWeatherWarningsAPI
 
 from homeassistant.config_entries import ConfigEntry
@@ -41,6 +43,7 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
         self._device_tracker = None
         self._previous_position = None
 
+    @override
     async def _async_setup(self) -> None:
         """Set up coordinator."""
         if region_identifier := self.config_entry.data.get(CONF_REGION_IDENTIFIER):
@@ -52,6 +55,7 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
                 CONF_REGION_DEVICE_TRACKER
             )
 
+    @override
     async def _async_update_data(self) -> None:
         """Get the latest data from the DWD Weather Warnings API."""
         if self._device_tracker:

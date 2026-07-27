@@ -1,7 +1,7 @@
 """Sensor to indicate whether the current day is a workday."""
 
 from datetime import datetime
-from typing import Final
+from typing import Final, override
 
 from holidays import HolidayBase
 import voluptuous as vol
@@ -85,6 +85,7 @@ class IsWorkdaySensor(BaseWorkdayEntity, BinarySensorEntity):
             CONF_OFFSET: days_offset,
         }
 
+    @override
     def update_data(self, now: datetime) -> None:
         """Get date and look whether it is a holiday."""
         self._attr_is_on = self.date_is_workday(now)

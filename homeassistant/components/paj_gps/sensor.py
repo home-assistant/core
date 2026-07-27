@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import override
 
 from pajgps_api.models.trackpoint import TrackPoint
 
@@ -99,6 +100,7 @@ class PajGpsSensor(PajGpsEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.user_id}_{device_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the sensor value from the latest trackpoint."""
         tp = self.coordinator.data.positions.get(self._device_id)

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any, Self, cast
+from typing import TYPE_CHECKING, Any, Self, cast, override
 
 from kasa import (
     AuthenticationError,
@@ -91,6 +91,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, Device] = {}
         self._discovered_device: Device | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -99,6 +100,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info.ip, dr.format_mac(discovery_info.macaddress)
         )
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
@@ -197,6 +199,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow.host == self.host
@@ -314,6 +317,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             return bool(camera_module.stream_rtsp_url())
         return False
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, override
 
 import pyitachip2ir
 import voluptuous as vol
@@ -132,18 +132,21 @@ class ITachIP2IRRemote(remote.RemoteEntity):
         self._attr_name = name or DEVICE_DEFAULT_NAME
         self._ir_count = ir_count or DEFAULT_IR_COUNT
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._attr_is_on = True
         self.itachip2ir.send(self.name, "ON", self._ir_count)
         self.schedule_update_ha_state()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._attr_is_on = False
         self.itachip2ir.send(self.name, "OFF", self._ir_count)
         self.schedule_update_ha_state()
 
+    @override
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs.get(ATTR_NUM_REPEATS, DEFAULT_NUM_REPEATS)

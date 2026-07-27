@@ -1,7 +1,7 @@
 """Config flow flow LIFX."""
 
 import socket
-from typing import Any, Self
+from typing import Any, Self, override
 
 from aiolifx.aiolifx import Light
 from aiolifx.connection import LIFXConnection
@@ -46,6 +46,7 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, Light] = {}
         self._discovered_device: Light | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -69,12 +70,14 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
         return await self._async_handle_discovery(host)
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle HomeKit discovery."""
         return await self._async_handle_discovery(host=discovery_info.host)
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
@@ -102,6 +105,7 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device = device
         return await self.async_step_discovery_confirm()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow.host == self.host
@@ -147,6 +151,7 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

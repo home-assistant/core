@@ -1,7 +1,7 @@
 """Config flow for PECO Outage Counter integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from peco import (
     HttpError,
@@ -50,6 +50,7 @@ class PecoConfigFlow(ConfigFlow, domain=DOMAIN):
         except HttpError:
             self.meter_error = {"phone_number": "http_error", "type": "error"}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

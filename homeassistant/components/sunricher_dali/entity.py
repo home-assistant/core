@@ -1,6 +1,7 @@
 """Base entity for Sunricher DALI integration."""
 
 import logging
+from typing import override
 
 from PySrDaliGateway import CallbackEventType, DaliObjectBase, Device
 
@@ -23,6 +24,7 @@ class DaliCenterEntity(Entity):
         self._unavailable_logged = False
         self._attr_available = True
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register availability listener."""
         self.async_on_remove(

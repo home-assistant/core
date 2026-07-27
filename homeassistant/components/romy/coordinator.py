@@ -1,5 +1,7 @@
 """ROMY coordinator."""
 
+from typing import override
+
 from romy import RomyRobot
 
 from homeassistant.config_entries import ConfigEntry
@@ -29,6 +31,7 @@ class RomyVacuumCoordinator(DataUpdateCoordinator[None]):
         )
         self.romy = romy
 
+    @override
     async def _async_update_data(self) -> None:
         """Update ROMY Vacuum Cleaner data."""
         await self.romy.async_update()

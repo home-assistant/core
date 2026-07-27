@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homematicip.base.channel_event import ChannelEvent
 from homematicip.base.enums import FunctionalChannelType
@@ -104,6 +105,7 @@ class HomematicipChannelEvent(HomematicipGenericEntity, EventEntity):
         if description.is_multi_channel:
             self._attr_translation_placeholders = {"channel": str(channel.index)}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()

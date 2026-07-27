@@ -39,8 +39,8 @@
 # name: test_all_entities[switch.slide_bedroom_touchgo-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'slide bedroom TouchGo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'slide bedroom TouchGo',
     }),
     'context': <ANY>,
     'entity_id': 'switch.slide_bedroom_touchgo',

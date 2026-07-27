@@ -3,7 +3,7 @@
 import datetime
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import growattServer
 from growattServer import GrowattV1ApiErrorCode
@@ -331,6 +331,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return self.data
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Asynchronously update data via library."""
         try:
