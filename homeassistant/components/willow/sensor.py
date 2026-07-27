@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -113,6 +113,7 @@ class WillowSensor(CoordinatorEntity[WillowDataUpdateCoordinator], SensorEntity)
         self._attr_device_info = self._device_info(device)
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the native value."""
         device = self.coordinator.data.get(self._sensor_id)
@@ -133,6 +134,7 @@ class WillowSensor(CoordinatorEntity[WillowDataUpdateCoordinator], SensorEntity)
         return value
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.native_value is not None

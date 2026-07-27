@@ -41,23 +41,16 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type WillowConfigEntry = ConfigEntry[api.WillowRuntimeData]
 
-_PANEL_REGISTERED = "panel_registered"
-_STATIC_REGISTERED = "static_registered"
-
 
 async def _async_register_panel(hass: HomeAssistant) -> None:
     """Register the Willow sidebar panel and its frontend assets."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
-
-    if not domain_data.get(_STATIC_REGISTERED):
-        frontend_dir = Path(__file__).parent / "frontend"
-        await hass.http.async_register_static_paths(
-            [StaticPathConfig(PANEL_STATIC_PATH, str(frontend_dir), True)]
-        )
-        domain_data[_STATIC_REGISTERED] = True
-
-    if domain_data.get(_PANEL_REGISTERED):
+    if frontend.async_panel_exists(hass, PANEL_URL_PATH):
         return
+
+    frontend_dir = Path(__file__).parent / "frontend"
+    await hass.http.async_register_static_paths(
+        [StaticPathConfig(PANEL_STATIC_PATH, str(frontend_dir), True)]
+    )
 
     integration = await async_get_integration(hass, DOMAIN)
     module_url = f"{PANEL_STATIC_PATH}/{PANEL_FILE}?v={integration.version}"
@@ -72,16 +65,11 @@ async def _async_register_panel(hass: HomeAssistant) -> None:
         embed_iframe=False,
         require_admin=False,
     )
-    domain_data[_PANEL_REGISTERED] = True
 
 
 def _async_unregister_panel(hass: HomeAssistant) -> None:
     """Remove the Willow sidebar panel."""
-    domain_data = hass.data.get(DOMAIN, {})
-    if not domain_data.get(_PANEL_REGISTERED):
-        return
-    frontend.async_remove_panel(hass, PANEL_URL_PATH)
-    domain_data[_PANEL_REGISTERED] = False
+    frontend.async_remove_panel(hass, PANEL_URL_PATH, warn_if_unknown=False)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

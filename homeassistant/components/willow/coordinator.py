@@ -1,7 +1,7 @@
 """Coordinator for the Willow integration."""
 
 from collections.abc import Mapping
-from typing import NotRequired, TypedDict, cast
+from typing import NotRequired, TypedDict, cast, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -77,6 +77,7 @@ class WillowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, WillowDevice]]
         self.client = client
         self._oauth_session = oauth_session
 
+    @override
     async def _async_update_data(self) -> dict[str, WillowDevice]:
         """Fetch Willow profile and devices."""
         try:

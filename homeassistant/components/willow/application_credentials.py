@@ -1,6 +1,6 @@
 """Application credentials platform for the Willow integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.core import HomeAssistant
@@ -31,11 +31,13 @@ async def async_get_auth_implementation(
 class WillowOAuth2Implementation(LocalOAuth2Implementation):
     """Willow OAuth2 implementation."""
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
         token = await super().async_resolve_external_data(external_data)
         return self._normalize_token(token)
 
+    @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""
         if not token.get("refresh_token"):
