@@ -38,7 +38,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         assert vmc.state is not None
     return {
         "title": info.hostname,
-        "unique_id": vmc.state.name,
+        "mac_address": vmc.state.name,
     }
 
 
@@ -72,7 +72,7 @@ class FlowItConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["unique_id"])
+                await self.async_set_unique_id(info["mac_address"])
                 self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -123,7 +123,7 @@ class FlowItConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["unique_id"])
+                await self.async_set_unique_id(info["mac_address"])
                 self._abort_if_unique_id_configured(updates=data)
                 return self.async_create_entry(
                     title=info["title"],
