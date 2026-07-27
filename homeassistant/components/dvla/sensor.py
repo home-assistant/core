@@ -248,7 +248,6 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
         self._attr_unique_id = f"{reg_number}-{description.key}"
         self.entity_description = description
         self._state = description.value_fn(coordinator.data)
-        self._state = self._get_native_value()
 
     @callback
     @override
@@ -256,33 +255,6 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
         """Handle updated data from the coordinator."""
         self._state = self.entity_description.value_fn(self.coordinator.data)
         self.async_write_ha_state()
-
-    def _get_native_value(self) -> StateType | date:
-        """Return the normalized native value."""
-        value = self.coordinator.data.get(self.entity_description.key)
-
-        if value is None:
-            return None
-
-        if enum_options := ENUM_OPTIONS.get(self.entity_description.key):
-            return enum_options.get(str(value))
-
-        if self.entity_description.key == "revenueWeight":
-            try:
-                return int(value)
-            except TypeError, ValueError:
-                return None
-
-        if self.entity_description.device_class is SensorDeviceClass.DATE:
-            if not isinstance(value, str):
-                return None
-
-            try:
-                return date.fromisoformat(value)
-            except ValueError:
-                return None
-
-        return value
 
     @property
     @override
