@@ -2564,7 +2564,12 @@ class BoschCameraCoordinator(
                             async with session.put(
                                 url, headers=headers, **put_kwargs
                             ) as resp2:
-                                ok2 = resp2.status in (200, 204)
+                                # Must accept the same status set as the
+                                # initial attempt below (200/201/204) — this
+                                # is the identical write, retried after a
+                                # token refresh, not a different semantic
+                                # operation (Copilot review round 9).
+                                ok2 = resp2.status in (200, 201, 204)
                                 if not ok2:
                                     body2 = await resp2.text()
                                     _LOGGER.debug(

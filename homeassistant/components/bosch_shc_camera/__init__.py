@@ -548,27 +548,6 @@ async def _async_run_post_refresh_migrations(
         _ereg.async_remove(_stale_id)
 
 
-def _enable_previously_disabled_entities(
-    hass: HomeAssistant, coordinator: BoschCameraCoordinator
-) -> None:
-    """v8.0.2 migration: auto-enable entities disabled_by=integration in older builds."""
-    ent_reg = er.async_get(hass)
-    for uid_suffix in ("front_light_", "wallwasher_", "front_light_intensity_"):
-        for cam_id in coordinator.data:
-            uid = f"bosch_shc_{uid_suffix}{cam_id.lower()}"
-            ent = ent_reg.async_get_entity_id(
-                "switch" if "intensity" not in uid_suffix else "number", DOMAIN, uid
-            )
-            if ent:
-                entry_obj = ent_reg.async_get(ent)
-                if (
-                    entry_obj
-                    and entry_obj.disabled_by == er.RegistryEntryDisabler.INTEGRATION
-                ):
-                    ent_reg.async_update_entity(ent, disabled_by=None)
-                    _LOGGER.info("Migration v8.0.2: enabled %s", ent)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bosch Smart Home Camera from a config entry."""
     coordinator = BoschCameraCoordinator(hass, entry)
@@ -603,8 +582,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # setup retry (HA retries on ConfigEntryNotReady) armed one more zombie
     # timer with no bound on how many could accumulate (bug-hunt 2026-07-03).
     coordinator.schedule_token_refresh()
-
-    _enable_previously_disabled_entities(hass, coordinator)
 
     # Reload integration when options change (e.g. scan_interval updated)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))

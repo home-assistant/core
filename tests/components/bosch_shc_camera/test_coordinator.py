@@ -1,15 +1,17 @@
 """Tests for coordinator.py's pure helper functions."""
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
+import pytest
 
 from homeassistant.components.bosch_shc_camera.camera_status import (
     _check_one_camera_status,
 )
 from homeassistant.components.bosch_shc_camera.const import DOMAIN
 from homeassistant.components.bosch_shc_camera.coordinator import (
+    BoschCameraCoordinator,
     _is_safe_bosch_host,
     _is_safe_local_camera_host,
     _parse_safe_rcp_proxy_url,
@@ -18,6 +20,8 @@ from homeassistant.components.bosch_shc_camera.coordinator import (
 from homeassistant.components.bosch_shc_camera.tick_housekeeping import run_housekeeping
 
 from tests.common import MockConfigEntry
+
+CAM_ID = "AABBCCDD-1122-3344-5566-778899001122"
 
 
 def test_get_options_ignores_legacy_polling_keys() -> None:
@@ -230,3 +234,72 @@ async def test_camera_status_preserves_last_known_on_double_probe_failure() -> N
     assert status == "OFFLINE"
     # Preserved OFFLINE status must keep offline_since tracking intact.
     assert "CAM1" in coordinator.offline_since
+
+
+class TestAsyncPutCameraRetryStatus:
+    """`async_put_camera`'s retry must accept the same success statuses.
+
+    The post-401-refresh retry must accept the same success status set
+    (200/201/204) as the initial attempt — it's the identical write, not
+    a different semantic operation (Copilot review round 9).
+    """
+
+    def _bind(self, coord: SimpleNamespace) -> SimpleNamespace:
+        coord.async_put_camera = BoschCameraCoordinator.async_put_camera.__get__(coord)
+        return coord
+
+    def _make_coord(self) -> SimpleNamespace:
+        return SimpleNamespace(token="old-tok", hass=MagicMock())
+
+    @staticmethod
+    def _put_side_effect(first_status: int, retry_status: int):
+        first_resp = MagicMock()
+        first_resp.status = first_status
+        retry_resp = MagicMock()
+        retry_resp.status = retry_status
+        call_count = [0]
+
+        def _put_cm(*_args: object, **_kwargs: object) -> MagicMock:
+            call_count[0] += 1
+            cm = MagicMock()
+            cm.__aenter__ = AsyncMock(
+                return_value=first_resp if call_count[0] == 1 else retry_resp
+            )
+            cm.__aexit__ = AsyncMock(return_value=None)
+            return cm
+
+        return _put_cm
+
+    @pytest.mark.asyncio
+    async def test_401_then_201_on_retry_returns_true(self) -> None:
+        """A 201 on the post-refresh retry must return True."""
+        coord = self._bind(self._make_coord())
+        coord.ensure_valid_token = AsyncMock(return_value="new-tok")
+
+        session = MagicMock()
+        session.put = MagicMock(side_effect=self._put_side_effect(401, 201))
+
+        with patch(
+            "homeassistant.components.bosch_shc_camera.coordinator.async_get_bosch_cloud_session",
+            new=AsyncMock(return_value=session),
+        ):
+            result = await coord.async_put_camera(CAM_ID, "privacy", {"enabled": True})
+
+        assert result is True, "A 201 on the post-refresh retry must return True"
+
+    @pytest.mark.asyncio
+    async def test_401_then_200_on_retry_returns_true(self) -> None:
+        """A 200 on the post-refresh retry must still work (regression guard)."""
+        coord = self._bind(self._make_coord())
+        coord.ensure_valid_token = AsyncMock(return_value="new-tok")
+
+        session = MagicMock()
+        session.put = MagicMock(side_effect=self._put_side_effect(401, 200))
+
+        with patch(
+            "homeassistant.components.bosch_shc_camera.coordinator.async_get_bosch_cloud_session",
+            new=AsyncMock(return_value=session),
+        ):
+            result = await coord.async_put_camera(CAM_ID, "privacy", {"enabled": True})
+
+        assert result is True
