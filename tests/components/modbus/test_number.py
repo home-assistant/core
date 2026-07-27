@@ -291,11 +291,7 @@ async def test_all_number(
             list(reversed(struct.unpack(">HH", struct.pack(">i", 32)))),
             (
                 "write_registers",
-                {
-                    "values": list(
-                        reversed(struct.unpack(">HH", struct.pack(">i", 32)))
-                    )
-                },
+                {"values": list(reversed(struct.unpack(">HH", struct.pack(">i", 32))))},
             ),
             {
                 CONF_NUMBERS: [
@@ -330,9 +326,7 @@ async def test_service_number_set_value(
     )
     await hass.async_block_till_done()
     method_name, kwargs = expected_writer
-    getattr(mock_modbus_ha, method_name).assert_called_with(
-        51, device_id=10, **kwargs
-    )
+    getattr(mock_modbus_ha, method_name).assert_called_with(51, device_id=10, **kwargs)
 
 
 @pytest.mark.parametrize(
