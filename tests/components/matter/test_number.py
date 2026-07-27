@@ -438,17 +438,40 @@ async def test_valve_default_open_duration_discovery_when_nullable(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test the DefaultOpenDuration number entity is discovered when the attribute is null."""
+    """Test the DefaultOpenDuration number entity when the attribute is null."""
     entity_id = "number.mock_valve_default_open_duration"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "unknown"
+    # null on the device (no default duration configured) is represented
+    # as 0 in HA, since the attribute's minimum value on the wire is 1.
+    assert state.state == "0"
 
     set_node_attribute(matter_node, 1, 129, 1, 30)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "30"
+
+    # Setting the value back to 0 in HA clears the default duration
+    # (null) on the device.
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": entity_id,
+            "value": 0,
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.ValveConfigurationAndControl.Attributes.DefaultOpenDuration,
+        ),
+        value=None,
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_occupancy_sensor_pir"])
