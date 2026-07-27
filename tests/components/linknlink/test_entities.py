@@ -136,6 +136,44 @@ async def test_position_updates_and_availability(
     )
 
 
+async def test_position_status_logs_only_real_transitions(
+    hass: HomeAssistant,
+    mock_linknlink_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_position_subscription: tuple[MagicMock, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test initial setup is not logged as a recovered position subscription."""
+    subscription_class, subscription = mock_position_subscription
+
+    async def _async_start() -> None:
+        status_callback = subscription_class.call_args.kwargs["status_callback"]
+        status_callback(
+            replace(
+                POSITION_STATE,
+                subscribed=False,
+                stale=True,
+                confirmation_count=0,
+                latest_update=None,
+                last_error=None,
+            )
+        )
+
+    subscription.start.side_effect = _async_start
+    caplog.set_level(logging.INFO, logger="homeassistant.components.linknlink")
+
+    await setup_integration(hass, mock_config_entry)
+    status_callback = subscription_class.call_args.kwargs["status_callback"]
+    assert "position subscription is available" not in caplog.text
+
+    status_callback(replace(POSITION_STATE, subscribed=False, last_error="offline"))
+    status_callback(POSITION_STATE)
+    await hass.async_block_till_done()
+
+    assert caplog.text.count("position subscription is unavailable") == 1
+    assert caplog.text.count("position subscription is available") == 1
+
+
 async def test_empty_position_update(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
