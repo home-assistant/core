@@ -34,6 +34,8 @@ data:
             "example_yaml_2": """
 ```yaml
 action: nfandroidtv.send_message
+target:
+    entity_id: notify.my_tv
 data:
   title: Hello
   message: World!
