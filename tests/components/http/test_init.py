@@ -1032,6 +1032,23 @@ async def test_supervisor_http_config_view(
         assert resp.status == HTTPStatus.OK
         assert (await resp.json())["server_host"] == ["1.2.3.4"]
 
+        # TLS is reported from the active SSL context and peer certificate.
+        hass.http.context = Mock(spec=ssl.SSLContext)
+        hass.http.ssl_peer_certificate = "/config/peer.pem"
+        resp = await client.get("/api/core/http_config")
+        assert resp.status == HTTPStatus.OK
+        result = await resp.json()
+        assert result["ssl"] is True
+        assert result["ssl_peer_certificate"] is True
+
+        # Recovery mode can leave a certificate configured while the context
+        # failed to build and the listener runs plaintext: report plaintext.
+        hass.http.ssl_certificate = "/config/cert.pem"
+        hass.http.context = None
+        resp = await client.get("/api/core/http_config")
+        assert resp.status == HTTPStatus.OK
+        assert (await resp.json())["ssl"] is False
+
 
 @pytest.mark.usefixtures("freezer")
 async def test_yaml_migration_to_storage(
