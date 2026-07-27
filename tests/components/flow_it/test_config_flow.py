@@ -64,7 +64,7 @@ async def test_user_flow_exceptions(
         USER_INPUT,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
     mock_flow_it.return_value.refresh_state.side_effect = None
@@ -97,7 +97,7 @@ async def test_zeroconf(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
     assert result["description_placeholders"] == {"name": "mock_name"}
 
@@ -109,7 +109,7 @@ async def test_zeroconf(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Flow-it Device"
     assert result["data"] == {
         "host": "http://mock_hostname.local",
@@ -157,7 +157,7 @@ async def test_zeroconf_exceptions(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
     mock_flow_it.return_value.refresh_state.side_effect = None
@@ -170,7 +170,7 @@ async def test_zeroconf_exceptions(
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Flow-it Device"
     assert result["data"] == {
         "host": "http://mock_hostname.local",
@@ -181,16 +181,9 @@ async def test_zeroconf_exceptions(
 
 
 async def test_user_already_configured(
-    hass: HomeAssistant, mock_flow_it: AsyncMock
+    hass: HomeAssistant, mock_flow_it: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test user already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="001122334455",
-        data={"host": "http://1.1.1.1", "username": "api", "password": "old"},
-    )
-    entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -200,23 +193,14 @@ async def test_user_already_configured(
         USER_INPUT,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
+async def test_zeroconf_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test zeroconf already configured aborts."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="001122334455",
-        data={
-            "host": "http://mock_hostname.local",
-            "username": "api",
-            "password": "old",
-        },
-    )
-    entry.add_to_hass(hass)
-
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("1.1.1.1"),
         ip_addresses=[ip_address("1.1.1.1")],
@@ -233,7 +217,7 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
