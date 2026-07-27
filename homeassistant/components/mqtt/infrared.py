@@ -81,7 +81,7 @@ def validate_mqtt_infrared_discovery(config_value: dict[str, Any]) -> ConfigType
 
 
 INFRARED_BASE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_SCHEMA): vol.All(vol.Lower, vol.Any("emitter", "receiver"))},
+    {vol.Required(CONF_SCHEMA): vol.Any("emitter", "receiver")},
     extra=vol.ALLOW_EXTRA,
 )
 

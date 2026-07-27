@@ -349,6 +349,83 @@ async def test_async_send_command_success_with_command_template(
 
 
 @pytest.mark.parametrize(
+    "discovery_config",
+    [
+        DEFAULT_CONFIG_EMITTER[mqtt.DOMAIN][infrared.DOMAIN],
+        DEFAULT_CONFIG_RECEIVER[mqtt.DOMAIN][infrared.DOMAIN],
+    ],
+)
+async def test_discovery_ir_entity_succeeds(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    discovery_config: dict[str, Any],
+) -> None:
+    """Test discovery of an IR entity succeeds."""
+    await mqtt_mock_entry()
+    topic = "homeassistant/infrared/bla/config"
+    payload = orjson.dumps(discovery_config).decode()
+    async_fire_mqtt_message(hass, topic, payload)
+    await hass.async_block_till_done()
+    state = hass.states.get("infrared.test")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("discovery_config", "error"),
+    [
+        (
+            {
+                "schema": "Emitter",
+                "name": "test",
+                "command_topic": "test-topic",
+            },
+            "Error 'not a valid value for dictionary value @ data['schema']'",
+        ),
+        (
+            {
+                "schema": "emitter",
+                "name": "test",
+            },
+            "Error 'required key not provided @ data['command_topic']'",
+        ),
+        (
+            {
+                "schema": "Receiver",
+                "name": "test",
+                "state_topic": "test-topic",
+            },
+            "Error 'not a valid value for dictionary value @ data['schema']'",
+        ),
+        (
+            {
+                "schema": "receiver",
+                "name": "test",
+            },
+            "Error 'required key not provided @ data['state_topic']'",
+        ),
+    ],
+)
+async def test_discovery_ir_entity_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    discovery_config: dict[str, Any],
+    error: str,
+) -> None:
+    """Test discovery of an IR entity fails."""
+    await mqtt_mock_entry()
+    topic = "homeassistant/infrared/bla/config"
+    payload = orjson.dumps(discovery_config).decode()
+    with caplog.at_level(logging.ERROR):
+        async_fire_mqtt_message(hass, topic, payload)
+        await hass.async_block_till_done()
+    assert error in caplog.text
+    state = hass.states.get("infrared.test")
+    assert state is None
+
+
+@pytest.mark.parametrize(
     "hass_config", [DEFAULT_CONFIG_EMITTER, DEFAULT_CONFIG_RECEIVER]
 )
 async def test_availability_when_connection_lost(
