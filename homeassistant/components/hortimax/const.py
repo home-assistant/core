@@ -37,7 +37,7 @@ SCAN_INTERVAL: Final = 60  # seconds
 DIMENSIONLESS_UNITS: Final = {"Scalar", "None"}
 
 # Seconds since local midnight (SunriseToday = 19145 -> 05:19), rendered as a
-# timestamp. Keyed by lowercased identifier subject, see naming.py.
+# timestamp. Keyed by the lowercased subject from `readout_subject()`.
 TIME_OF_DAY_READOUTS: Final[frozenset[str]] = frozenset({"sunrisetoday", "sunsettoday"})
 
 # Icons for readouts that have no device class, and so no automatic icon.
