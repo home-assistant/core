@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.bosch_shc_camera.camera_status import (
     _check_one_camera_status,
 )
-from homeassistant.components.bosch_shc_camera.const import DOMAIN
+from homeassistant.components.bosch_shc_camera.const import CLOUD_API, DOMAIN
 from homeassistant.components.bosch_shc_camera.coordinator import (
     BoschCameraCoordinator,
     _is_safe_bosch_host,
@@ -18,6 +18,7 @@ from homeassistant.components.bosch_shc_camera.coordinator import (
     get_options,
 )
 from homeassistant.components.bosch_shc_camera.tick_housekeeping import run_housekeeping
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -342,3 +343,60 @@ def test_persist_cloud_outage_flag_no_store_configured_skips() -> None:
     coord._persist_cloud_outage_flag()  # must not raise
 
     coord.spawn_tracked.assert_not_called()
+
+
+class TestCloudApiOverrideValidation:
+    """`cloud_api_override` validation against the Bosch-domain allowlist.
+
+    It has no UI in this (Core) config flow — it can only ever be legacy
+    data inherited from a HACS-migrated entry, so it must be validated
+    before use: every request built from `self._cloud_api` attaches the
+    real bearer token, and an unvalidated override could exfiltrate it to
+    an arbitrary host (Copilot review round 11).
+    """
+
+    def _make_entry(self, cloud_api_override: str) -> MockConfigEntry:
+        return MockConfigEntry(
+            domain=DOMAIN,
+            unique_id=DOMAIN,
+            data={
+                "bearer_token": "tok",
+                "refresh_token": "rtok",
+                "cloud_api_override": cloud_api_override,
+            },
+            options={},
+        )
+
+    async def test_safe_bosch_override_is_used(self, hass: HomeAssistant) -> None:
+        """A real Bosch-domain override is accepted and used as-is."""
+        entry = self._make_entry("https://staging.boschsecurity.com")
+        entry.add_to_hass(hass)
+
+        coord = BoschCameraCoordinator(hass, entry)
+
+        assert coord._cloud_api == "https://staging.boschsecurity.com"
+
+    async def test_unsafe_override_falls_back_to_default(
+        self, hass: HomeAssistant
+    ) -> None:
+        """A non-Bosch override is rejected, falling back to the default API."""
+        entry = self._make_entry("https://evil.example.com")
+        entry.add_to_hass(hass)
+
+        coord = BoschCameraCoordinator(hass, entry)
+
+        assert coord._cloud_api == CLOUD_API
+
+    async def test_no_override_uses_default(self, hass: HomeAssistant) -> None:
+        """No override at all uses the default API, as before."""
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id=DOMAIN,
+            data={"bearer_token": "tok", "refresh_token": "rtok"},
+            options={},
+        )
+        entry.add_to_hass(hass)
+
+        coord = BoschCameraCoordinator(hass, entry)
+
+        assert coord._cloud_api == CLOUD_API

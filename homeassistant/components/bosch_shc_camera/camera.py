@@ -760,12 +760,16 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
                         )
             except TimeoutError:
                 _LOGGER.debug(
-                    "%s: fresh fetch exceeded %ds budget — returning cached (%ds old)",
+                    "%s: fresh fetch exceeded %ds budget — trying LOCAL outage snap "
+                    "before returning cached (%ds old)",
                     self._display_name,
                     REFRESH_ON_STALE_CACHE_BUDGET_SEC,
                     int(cache_age),
                 )
-                return self.cached_image
+                outage_data = await self._async_local_outage_snap(
+                    session, req_jpeg_size
+                )
+                return outage_data or self.cached_image
             if fresh2:
                 # See the tier-1a comment above: only a full-resolution fetch
                 # may update the shared cache.
@@ -779,60 +783,19 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             if req_jpeg_size is None:
                 self.last_image_fetch = now
             _LOGGER.debug(
-                "%s: fresh fetch failed — returning cached (%ds old)",
+                "%s: fresh fetch failed — trying LOCAL outage snap before "
+                "returning cached (%ds old)",
                 self._display_name,
                 int(cache_age),
             )
-            return self.cached_image
+            outage_data = await self._async_local_outage_snap(session, req_jpeg_size)
+            return outage_data or self.cached_image
         else:
             return self.cached_image
 
-        # ── 2. LOCAL snap.jpg with cached Digest creds (cloud-outage fallback) ──
-        # When the Bosch cloud or auth server is unreachable, PUT /connection
-        # REMOTE fails — but we may still have valid LOCAL creds from the
-        # previous session (cached in coordinator.local_creds_cache). Try
-        # fetching snap.jpg directly from the camera's LAN IP using those
-        # creds before giving up. Digest creds are ephemeral (camera rotates
-        # them on reboot) but usually stable for minutes to hours.
-        creds = self.coordinator.local_creds_cache.get(self._cam_id)
-        if creds and self.coordinator.auth_outage_count > 0:
-            local_user = creds.get("user", "")
-            local_pass = creds.get("password", "")
-            host = creds.get("host", "")
-            port = creds.get("port", 443)
-            if local_user and local_pass and host:
-                snap_url = with_jpeg_size(
-                    f"https://{host}:{port}/snap.jpg?JpegSize={JPEG_SIZE_FULL}",
-                    req_jpeg_size,
-                )
-                outage_data: bytes | None = None
-                try:
-                    async with asyncio.timeout(12):
-                        async with await async_digest_request(
-                            session,
-                            "GET",
-                            snap_url,
-                            local_user,
-                            local_pass,
-                            timeout=TIMEOUT_SNAP,
-                            ssl=False,
-                        ) as resp:
-                            if resp.status == 200 and "image" in resp.headers.get(
-                                "Content-Type", ""
-                            ):
-                                outage_data = await resp.read()
-                except (TimeoutError, aiohttp.ClientError) as err:
-                    _LOGGER.debug("LOCAL outage snap failed: %s", err)
-                    outage_data = None
-                if outage_data:
-                    self.cached_image = outage_data
-                    self.last_image_fetch = time.monotonic()
-                    _LOGGER.info(
-                        "%s: outage fallback — LOCAL snap.jpg %d bytes via cached Digest creds",
-                        self._display_name,
-                        len(outage_data),
-                    )
-                    return self.cached_image
+        outage_data = await self._async_local_outage_snap(session, req_jpeg_size)
+        if outage_data:
+            return outage_data
 
         # ── 3. Cached image (fallback for cameras whose REMOTE snap.jpg needs auth) ──
         # For cameras like CAMERA_360 the cloud fetch above returns None;
@@ -897,3 +860,62 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
 
         # Return last cached image if all methods failed
         return self.cached_image or self._PLACEHOLDER_JPEG
+
+    async def _async_local_outage_snap(
+        self, session: aiohttp.ClientSession, req_jpeg_size: int | None
+    ) -> bytes | None:
+        """LOCAL snap.jpg via cached Digest creds — cloud-outage fallback.
+
+        Called from every tier-1 failure point in `_async_camera_image_impl`
+        (not just the no-cache first-load path) — the cloud/camera-API fetch
+        having already failed at the call site IS the "cloud unreachable"
+        signal; this no longer additionally gates on
+        `coordinator.auth_outage_count`, which only tracks OAuth/Keycloak
+        token-refresh 5xx outages (`token_auth.py`) and says nothing about
+        whether the camera-cloud API itself is reachable — a camera-API 5xx
+        or timeout never incremented it, so this advertised outage fallback
+        was effectively unreachable for the failure mode it exists to cover
+        (Copilot review round 11). Returns None (never raises) so every
+        caller can fall back to whatever it already has.
+        """
+        creds = self.coordinator.local_creds_cache.get(self._cam_id)
+        if not creds:
+            return None
+        local_user = creds.get("user", "")
+        local_pass = creds.get("password", "")
+        host = creds.get("host", "")
+        port = creds.get("port", 443)
+        if not (local_user and local_pass and host):
+            return None
+        snap_url = with_jpeg_size(
+            f"https://{host}:{port}/snap.jpg?JpegSize={JPEG_SIZE_FULL}",
+            req_jpeg_size,
+        )
+        outage_data: bytes | None = None
+        try:
+            async with asyncio.timeout(12):
+                async with await async_digest_request(
+                    session,
+                    "GET",
+                    snap_url,
+                    local_user,
+                    local_pass,
+                    timeout=TIMEOUT_SNAP,
+                    ssl=False,
+                ) as resp:
+                    if resp.status == 200 and "image" in resp.headers.get(
+                        "Content-Type", ""
+                    ):
+                        outage_data = await resp.read()
+        except (TimeoutError, aiohttp.ClientError) as err:
+            _LOGGER.debug("LOCAL outage snap failed: %s", err)
+            return None
+        if outage_data:
+            self.cached_image = outage_data
+            self.last_image_fetch = time.monotonic()
+            _LOGGER.info(
+                "%s: outage fallback — LOCAL snap.jpg %d bytes via cached Digest creds",
+                self._display_name,
+                len(outage_data),
+            )
+        return outage_data

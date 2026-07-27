@@ -90,7 +90,16 @@ async def fetch_camera_list(
                             coordinator, "async_outage_ping_all", None
                         )
                         if _outage_ping is not None:
-                            coordinator.hass.async_create_task(_outage_ping())
+                            # Tracked (not a bare hass.async_create_task) —
+                            # otherwise this can survive config-entry unload
+                            # and keep running against a torn-down
+                            # coordinator, bypassing the teardown contract
+                            # the other outage-ping call sites already
+                            # honor (Copilot review round 11).
+                            coordinator.spawn_tracked(
+                                _outage_ping(),
+                                name="bosch_shc_camera_camera_list_outage_ping",
+                            )
                         raise UpdateFailed(f"Camera list returned HTTP {resp.status}")
                     else:
                         cam_list = await resp.json()

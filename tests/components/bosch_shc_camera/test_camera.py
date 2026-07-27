@@ -3,7 +3,7 @@
 import asyncio
 import contextlib
 import time
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -258,6 +258,61 @@ async def test_slow_refresh_falls_back_to_cached_image_within_budget(
         image = await entity.async_camera_image()
 
     assert image == cached_frame
+
+
+async def test_stale_cache_both_fetches_fail_tries_local_outage_snap_first(
+    hass: HomeAssistant,
+) -> None:
+    """A stale-cache double-fetch failure must try the LOCAL outage snap first.
+
+    When REMOTE+LOCAL cloud fetches both fail on a stale cache, the LOCAL
+    Digest-creds outage snap must be tried before falling back to the
+    stale cached frame.
+
+    A prior version only reached this fallback via the no-cache first-load
+    path — every other failure point (this one included) returned the
+    stale cached image directly, without ever trying it, even though the
+    fallback's whole purpose is "the cloud/camera-API is unreachable"
+    (Copilot review round 11). The gate on `coordinator.auth_outage_count`
+    is also removed for the same reason: it only tracks OAuth/Keycloak
+    token-refresh 5xx outages, not camera-cloud API failures, so it never
+    reflected the actual condition this fallback exists to detect.
+    """
+    entity = await _setup_camera_entity(hass)
+    entity.cached_image = b"stale-frame"
+    entity.last_image_fetch = time.monotonic() - 3600  # stale
+    entity.coordinator.auth_outage_count = 0  # deliberately 0 — must not gate
+    entity.coordinator.local_creds_cache[CAM_ID] = {
+        "user": "cbs-user",
+        "password": "cbs-pass",
+        "host": "192.168.1.50",
+        "port": 443,
+    }
+
+    digest_resp = MagicMock()
+    digest_resp.status = 200
+    digest_resp.headers = {"Content-Type": "image/jpeg"}
+    digest_resp.read = AsyncMock(return_value=b"\xff\xd8local-outage-frame")
+    digest_cm = MagicMock()
+    digest_cm.__aenter__ = AsyncMock(return_value=digest_resp)
+    digest_cm.__aexit__ = AsyncMock(return_value=None)
+
+    with (
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot", return_value=None
+        ),
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot_local", return_value=None
+        ),
+        patch(
+            "homeassistant.components.bosch_shc_camera.camera.async_digest_request",
+            new=AsyncMock(return_value=digest_cm),
+        ),
+    ):
+        image = await entity.async_camera_image()
+
+    assert image == b"\xff\xd8local-outage-frame"
+    assert entity.cached_image == b"\xff\xd8local-outage-frame"
 
 
 async def test_unload_cancels_pending_image_refresh_task(hass: HomeAssistant) -> None:

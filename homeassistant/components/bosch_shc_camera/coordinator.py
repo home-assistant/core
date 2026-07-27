@@ -33,7 +33,7 @@ import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
@@ -219,6 +219,20 @@ class BoschCameraCoordinator(
         # camera-API base URL in to test whether their account is registered
         # there instead of production (2026-07-06 SebastianHarder investigation).
         cloud_api_override = entry.data.get("cloud_api_override", "")
+        # Validated against the same Bosch-domain allowlist as image/video
+        # URLs — this field has no UI in this (Core) config flow at all and
+        # can only ever be present as legacy data inherited from a
+        # HACS-migrated entry, so it must never be trusted blindly: every
+        # request built from `self._cloud_api` attaches the real bearer
+        # token, and an unvalidated override could exfiltrate it to an
+        # arbitrary host (Copilot review round 11).
+        if cloud_api_override and not _is_safe_bosch_url(cloud_api_override):
+            _LOGGER.warning(
+                "Ignoring cloud_api_override %s — not a recognized Bosch "
+                "domain, falling back to the default camera API",
+                cloud_api_override,
+            )
+            cloud_api_override = ""
         self._cloud_api = cloud_api_override or CLOUD_API
         if cloud_api_override:
             _LOGGER.warning(
@@ -416,14 +430,6 @@ class BoschCameraCoordinator(
         self.protocol_checked: bool = False
         # Firmware update status cache — keyed by cam_id, from GET /firmware
         self.firmware_cache: dict[str, dict[str, Any]] = {}
-        # Per-camera lock serializing async_install_firmware()'s
-        # check-then-PUT-then-set sequence. Bug-hunt 2026-07-20: without
-        # this, the Update entity's Install button and the Repairs "Fix"
-        # action (both call the same method) could race — both read
-        # firmware_cache[cam_id]["updating"] as False before either await
-        # completes and sets it, sending two overlapping install PUTs to
-        # Bosch's cloud for the same camera.
-        self._firmware_install_locks: dict[str, asyncio.Lock] = {}
         # SMB/NVR upload+recording are not part of this minimal build (smb.py
         # and recorder.py removed) — these timestamps are kept only because
         # tick_housekeeping.py (a KEPT module) still reads/writes them; the
@@ -581,11 +587,6 @@ class BoschCameraCoordinator(
         self.motion_set_at: dict[str, float] = {}  # motion sensitivity write
         self.alarm_settings_set_at: dict[str, float] = {}  # alarm_settings write
         self.lighting_options_set_at: dict[str, float] = {}  # lighting schedule write
-        # firmware install-trigger write — held just long enough for the
-        # optimistic `updating=True` (set by async_install_firmware) to
-        # survive one slow-tier poll cycle before Bosch's own backend
-        # reports the real in-progress state.
-        self.firmware_set_at: dict[str, float] = {}
         self.WRITE_LOCK_SECS = (
             30.0  # seconds to hold write lock (Bosch cloud propagation can take 20s+)
         )
@@ -1232,84 +1233,6 @@ class BoschCameraCoordinator(
             else:
                 self._fw_update_alerted.discard(cam_id)
 
-    async def async_install_firmware(self, cam_id: str) -> None:
-        """Install the pending firmware update for `cam_id` right now.
-
-        Shared by two entry points: the `update` entity's Install button
-        (update.py, BoschFirmwareUpdate.async_install) and the "Fix" action on
-        the `firmware_update_available` Repairs issue (repairs.py) — one
-        implementation so both stay in sync instead of duplicating the
-        guard/write-lock logic.
-
-        PUTs the same endpoint/payload the official Bosch app's "Update now"
-        button uses (research/apk_2.12.0 decompile: FirmwareBackendService.
-        UpdateCameraFirmware — {"id": <update field>} to the same URL this
-        integration already GETs for status).
-        """
-        # Serializes the check-then-PUT-then-set sequence below across BOTH
-        # call sites (update.py's Install button, repairs.py's Fix action) —
-        # without this, a double-click or a race between the two could send
-        # two overlapping install PUTs (bug-hunt 2026-07-20). The write-lock
-        # timestamp set at the end guards against a LATER poll reverting the
-        # optimistic state, not this — it's set only after the first PUT
-        # already succeeded, so it can't prevent a second concurrent caller.
-        async with get_or_create_lock(self._firmware_install_locks, cam_id):
-            fw: dict[str, Any] = self.firmware_cache.get(cam_id, {})
-            if fw.get("updating"):
-                raise HomeAssistantError("Firmware install is already in progress")
-            target = fw.get("update")
-            if not target:
-                raise HomeAssistantError(
-                    "No firmware update is currently available to install"
-                )
-            ok = await self.async_put_camera(cam_id, "firmware", {"id": target})
-            if not ok:
-                raise HomeAssistantError(
-                    f"Bosch cloud rejected the firmware install request for {target}"
-                )
-            fw["updating"] = True
-            self.firmware_cache[cam_id] = fw
-            self.firmware_set_at[cam_id] = time.monotonic()
-
-    async def async_soft_reset_camera(self, cam_id: str) -> None:
-        """Reboot the camera (soft reset).
-
-        PUTs the same bodyless endpoint the official Bosch app's camera
-        "Restart" action uses (research/apk_2.12.0 decompile:
-        BackendUrlProviderService.GetCameraSoftResetUrl → PUT
-        video_inputs/{id}/soft_reset). The camera briefly drops offline
-        while it reboots; no local state to update here — the next
-        status poll picks up the new online/offline state naturally.
-
-        Live-tested 2026-07-08 against a real online camera: Bosch's
-        cloud returned HTTP 404 sh:entity.notfound despite the request
-        matching the app byte-for-byte — the button entity is disabled
-        by default (button.py) for this reason.
-        """
-        ok = await self.async_put_camera(cam_id, "soft_reset", None)
-        if not ok:
-            raise HomeAssistantError(
-                "Bosch cloud rejected the soft-reset (restart) request"
-            )
-
-    async def async_hard_reset_camera(self, cam_id: str) -> None:
-        """Factory-reset the camera (hard reset).
-
-        PUTs the same bodyless endpoint the official Bosch app's camera
-        "Factory Reset" action uses (research/apk_2.12.0 decompile:
-        BackendUrlProviderService.GetCameraHardResetUrl → PUT
-        video_inputs/{id}/hard_reset). Unlike soft reset, this is
-        destructive — the camera loses its Bosch account pairing and
-        must be re-commissioned from scratch via the Bosch app before it
-        will work with this integration again. The button entity is
-        disabled by default for exactly this reason (button.py).
-        """
-        ok = await self.async_put_camera(cam_id, "hard_reset", None)
-        if not ok:
-            raise HomeAssistantError(
-                "Bosch cloud rejected the hard-reset (factory reset) request"
-            )
-
     def _persist_cloud_outage_flag(self) -> None:
         """Persist the cloud-outage-notified dedup flag.
 
@@ -1634,7 +1557,6 @@ class BoschCameraCoordinator(
         "privacy_sound_cache",
         "commissioned_cache",
         "firmware_cache",
-        "_firmware_install_locks",
         "timestamp_cache",
         "ledlights_cache",
         "lens_elevation_cache",
@@ -1680,7 +1602,6 @@ class BoschCameraCoordinator(
         "motion_set_at",
         "alarm_settings_set_at",
         "lighting_options_set_at",
-        "firmware_set_at",
         "_offline_seen_at",
         "_snapshot_fetch_locks",
         "_fresh_snap_locks",
