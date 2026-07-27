@@ -8,6 +8,12 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
+from homeassistant.components.number import (
+    DEFAULT_MAX_VALUE,
+    DEFAULT_MIN_VALUE,
+    DEFAULT_STEP,
+    DEVICE_CLASSES_SCHEMA as NUMBER_DEVICE_CLASSES_SCHEMA,
+)
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -105,6 +111,8 @@ from .const import (
     CONF_MIN_VALUE,
     CONF_MSG_WAIT,
     CONF_NAN_VALUE,
+    CONF_NUMBER_STEP,
+    CONF_NUMBERS,
     CONF_PARITY,
     CONF_PRECISION,
     CONF_SCALE,
@@ -453,6 +461,22 @@ SENSOR_SCHEMA = vol.All(
     ),
 )
 
+NUMBER_SCHEMA = vol.All(
+    BASE_STRUCT_SCHEMA.extend(
+        {
+            vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+                [CALL_TYPE_REGISTER_HOLDING]
+            ),
+            vol.Optional(CONF_DEVICE_CLASS): NUMBER_DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_MIN_VALUE, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
+            vol.Optional(CONF_MAX_VALUE, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
+            vol.Optional(CONF_NUMBER_STEP, default=DEFAULT_STEP): vol.Coerce(float),
+        }
+    ),
+    struct_validator,
+)
+
 BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -483,6 +507,7 @@ MODBUS_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHT_SCHEMA]),
+        vol.Optional(CONF_NUMBERS): vol.All(cv.ensure_list, [NUMBER_SCHEMA]),
         vol.Optional(CONF_SENSORS): vol.All(
             cv.ensure_list, [vol.All(SENSOR_SCHEMA, struct_validator)]
         ),
@@ -532,6 +557,7 @@ PLATFORM_SCHEMAS: dict[Platform, VolSchemaType] = {
     Platform.COVER: COVERS_SCHEMA,
     Platform.FAN: FAN_SCHEMA,
     Platform.LIGHT: LIGHT_SCHEMA,
+    Platform.NUMBER: NUMBER_SCHEMA,
     Platform.SENSOR: vol.All(SENSOR_SCHEMA, struct_validator),
     Platform.SWITCH: SWITCH_SCHEMA,
 }
