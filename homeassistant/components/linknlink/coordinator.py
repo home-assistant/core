@@ -1,6 +1,7 @@
 """Coordinator for LinknLink eMotion Ultra local position updates."""
 
 from collections.abc import Callable
+from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import override
 
@@ -29,10 +30,18 @@ from .const import (
 )
 
 type LinknLinkConfigEntry = ConfigEntry[LinknLinkCoordinator]
-type PositionListener = Callable[[UltraPositionUpdate | None], None]
 
 
-class LinknLinkCoordinator(DataUpdateCoordinator[None]):
+@dataclass(frozen=True, slots=True)
+class LinknLinkData:
+    """Data provided to LinknLink entities."""
+
+    environment_state: UltraEnvironmentState | None = None
+    environment_available: bool = False
+    position_state: UltraPositionSubscriptionState | None = None
+
+
+class LinknLinkCoordinator(DataUpdateCoordinator[LinknLinkData]):
     """Manage one Ultra DNA session and local position subscription."""
 
     config_entry: LinknLinkConfigEntry
@@ -54,14 +63,11 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
         )
         self.client = client
         self.device = device
-        self.session: UltraSession | None = None
+        self.session: UltraSession
         self.position_subscription: UltraPositionSubscription | None = None
-        self.position_state: UltraPositionSubscriptionState | None = None
+        self.data = LinknLinkData()
         self._position_connected: bool | None = None
-        self.environment_state: UltraEnvironmentState | None = None
-        self.environment_available = False
         self._environment_connected: bool | None = None
-        self._position_listeners: set[PositionListener] = set()
         self._cancel_position_notification: Callable[[], None] | None = None
         self._position_notification_pending = False
 
@@ -80,8 +86,9 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
             await self.position_subscription.wait_confirmed(
                 POSITION_SUBSCRIPTION_CONFIRM_TIMEOUT
             )
-            self.position_state = self.position_subscription.state
-            self._position_connected = self.position_state.subscribed
+            position_state = self.position_subscription.state
+            self.data = replace(self.data, position_state=position_state)
+            self._position_connected = position_state.subscribed
         except (OSError, TimeoutError, UltraError, ValueError) as err:
             if self.position_subscription is not None:
                 await self.position_subscription.stop()
@@ -93,52 +100,36 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
             ) from err
 
     @override
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> LinknLinkData:
         """Refresh lower-frequency environmental and count state."""
-        if self.session is None:
-            return
         try:
-            self.environment_state = await self.client.get_environment_state(
-                self.session
-            )
+            environment_state = await self.client.get_environment_state(self.session)
         except (OSError, TimeoutError, UltraError) as err:
             if self._environment_connected is not False:
                 LOGGER.info("Ultra environmental state is unavailable: %s", err)
             self._environment_connected = False
-            self.environment_available = False
-            return
+            return replace(self.data, environment_available=False)
         if self._environment_connected is False:
             LOGGER.info("Ultra environmental state is available")
         self._environment_connected = True
-        self.environment_available = True
-
-    @callback
-    def async_add_position_listener(
-        self, listener: PositionListener
-    ) -> Callable[[], None]:
-        """Register a callback for position or position-status changes."""
-        self._position_listeners.add(listener)
-
-        @callback
-        def _remove_listener() -> None:
-            self._position_listeners.discard(listener)
-
-        return _remove_listener
+        return replace(
+            self.data,
+            environment_state=environment_state,
+            environment_available=True,
+        )
 
     @callback
     def _async_handle_position(self, update: UltraPositionUpdate) -> None:
         """Coalesce target-position updates before notifying entities."""
         assert self.position_subscription is not None
-        self.position_state = self.position_subscription.state
+        position_state = self.position_subscription.state
         if self._position_connected is False:
             LOGGER.info("Ultra local position subscription is available")
         self._position_connected = True
-        if not self._position_listeners:
-            return
         if self._cancel_position_notification is not None:
             self._position_notification_pending = True
             return
-        self._async_notify_position_listeners(update)
+        self.async_set_updated_data(replace(self.data, position_state=position_state))
         self._async_schedule_position_notification()
 
     @callback
@@ -157,19 +148,12 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
         if not self._position_notification_pending:
             return
         self._position_notification_pending = False
-        state = self.position_state
-        self._async_notify_position_listeners(
-            state.latest_update if state is not None else None
+        if self.position_subscription is None:
+            return
+        self.async_set_updated_data(
+            replace(self.data, position_state=self.position_subscription.state)
         )
         self._async_schedule_position_notification()
-
-    @callback
-    def _async_notify_position_listeners(
-        self, update: UltraPositionUpdate | None
-    ) -> None:
-        """Notify position entities of the latest coalesced state."""
-        for listener in self._position_listeners:
-            listener(update)
 
     @callback
     def _async_cancel_position_notification(self) -> None:
@@ -183,11 +167,14 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
     def _async_handle_position_status(
         self, state: UltraPositionSubscriptionState
     ) -> None:
-        """Forward meaningful subscription or expiry state changes."""
-        previous = self.position_state
+        """Update entities after meaningful subscription or expiry changes."""
+        previous = self.data.position_state
         was_connected = self._position_connected
-        self.position_state = state
-        self._position_connected = state.subscribed
+        initial_pending = (
+            was_connected is None and not state.subscribed and state.last_error is None
+        )
+        if not initial_pending:
+            self._position_connected = state.subscribed
         if (
             was_connected is state.subscribed
             and previous is not None
@@ -207,7 +194,7 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
         elif state.subscribed and was_connected is False:
             LOGGER.info("Ultra local position subscription is available")
         self._async_cancel_position_notification()
-        self._async_notify_position_listeners(None)
+        self.async_set_updated_data(replace(self.data, position_state=state))
 
     @override
     async def async_shutdown(self) -> None:
