@@ -467,3 +467,104 @@ class TestPrivacyDriftForcesRefresh:
         coord.spawn_tracked.assert_called_once()
         _, call_kwargs = coord.spawn_tracked.call_args
         assert call_kwargs["name"] == "bosch_shc_camera_privacy_drift_refresh"
+
+
+class TestFetchLiveSnapshotLocalUsesPooledSession:
+    """The LOCAL-bootstrap PUT must reuse the pooled Bosch cloud session.
+
+    `async_fetch_live_snapshot_local` must use `async_bosch_cloud_session_cm`
+    instead of opening a fresh connector/TLS handshake on every call —
+    otherwise every REMOTE-401 fallback attempt (e.g. CAMERA_360) pays a
+    full TCP+TLS handshake cost instead of reusing the pool the rest of the
+    integration already established (Copilot review round 14).
+    """
+
+    @pytest.mark.asyncio
+    async def test_put_local_uses_shared_session_cm(self) -> None:
+        """PUT LOCAL must go through the shared session context manager."""
+        coord = SimpleNamespace(
+            token="tok",
+            hass=MagicMock(),
+            shc_state_cache={},
+            get_quality_params=MagicMock(return_value=(True, 0)),
+        )
+        coord.async_fetch_live_snapshot_local = (
+            BoschCameraCoordinator.async_fetch_live_snapshot_local.__get__(coord)
+        )
+
+        resp = MagicMock()
+        resp.status = 404  # any non-(200,201) short-circuits before urls parsing
+        resp.text = AsyncMock(return_value="{}")
+        resp_cm = MagicMock()
+        resp_cm.__aenter__ = AsyncMock(return_value=resp)
+        resp_cm.__aexit__ = AsyncMock(return_value=None)
+
+        session = MagicMock()
+        session.put = MagicMock(return_value=resp_cm)
+        session_cm = MagicMock()
+        session_cm.__aenter__ = AsyncMock(return_value=session)
+        session_cm.__aexit__ = AsyncMock(return_value=None)
+
+        with patch(
+            "homeassistant.components.bosch_shc_camera.coordinator.async_bosch_cloud_session_cm",
+            return_value=session_cm,
+        ) as mock_session_cm:
+            result = await coord.async_fetch_live_snapshot_local(CAM_ID)
+
+        assert result is None
+        mock_session_cm.assert_called_once_with(coord.hass)
+        session.put.assert_called_once()
+
+
+class TestLocalTcpPingRejectsUnsafeHost:
+    """Must reject an unsafe/public host before ever opening a connection.
+
+    `rcp_lan_ip_cache` is populated from RCP data returned via the cloud
+    proxy and restored unvalidated from storage — unlike
+    `local_creds_cache`, whose host is validated at every write site, this
+    cache had no equivalent guard before a raw `asyncio.open_connection`
+    call in `async_local_tcp_ping` (Copilot review round 14).
+    """
+
+    @pytest.mark.asyncio
+    async def test_public_ip_never_reaches_open_connection(self) -> None:
+        """A public IP must never reach asyncio.open_connection."""
+        coord = SimpleNamespace(
+            rcp_lan_ip_cache={CAM_ID: "8.8.8.8"},
+            local_creds_cache={},
+            lan_tcp_reachable={},
+        )
+        coord.get_cam_lan_ip = BoschCameraCoordinator.get_cam_lan_ip.__get__(coord)
+        coord.async_local_tcp_ping = (
+            BoschCameraCoordinator.async_local_tcp_ping.__get__(coord)
+        )
+
+        with patch("asyncio.open_connection") as mock_open_connection:
+            result = await coord.async_local_tcp_ping(CAM_ID)
+
+        assert result is False
+        mock_open_connection.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_private_ip_reaches_open_connection(self) -> None:
+        """A genuine private LAN IP still gets pinged normally."""
+        coord = SimpleNamespace(
+            rcp_lan_ip_cache={CAM_ID: "192.168.1.50"},
+            local_creds_cache={},
+            lan_tcp_reachable={},
+        )
+        coord.get_cam_lan_ip = BoschCameraCoordinator.get_cam_lan_ip.__get__(coord)
+        coord.async_local_tcp_ping = (
+            BoschCameraCoordinator.async_local_tcp_ping.__get__(coord)
+        )
+
+        writer = MagicMock()
+        writer.close = MagicMock()
+        writer.wait_closed = AsyncMock()
+        with patch(
+            "asyncio.open_connection", new=AsyncMock(return_value=(MagicMock(), writer))
+        ) as mock_open_connection:
+            result = await coord.async_local_tcp_ping(CAM_ID)
+
+        assert result is True
+        mock_open_connection.assert_called_once_with("192.168.1.50", 443)

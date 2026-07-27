@@ -391,7 +391,21 @@ async def _async_load_persisted_caches(
             if not (isinstance(_cid, str) and isinstance(_payload, dict)):
                 continue
             if "user" in _payload and "password" in _payload and "host" in _payload:
-                _port = int(_payload.get("port", 443))
+                _raw_port = _payload.get("port", 443)
+                # A corrupted or legacy value (e.g. null, "not-a-port") must
+                # only discard this one record, not crash the entire
+                # config-entry setup for every camera (Copilot review
+                # round 14).
+                try:
+                    _port = int(_raw_port)
+                except TypeError, ValueError:
+                    _LOGGER.warning(
+                        "Discarding persisted LOCAL Digest cred(s) for %s: "
+                        "malformed port %r",
+                        _cid,
+                        _raw_port,
+                    )
+                    continue
                 # The store loader accepts arbitrary legacy dicts, unlike the
                 # fresh-creds path (coordinator.py's
                 # fetch_live_snapshot_local), which only ever caches a host

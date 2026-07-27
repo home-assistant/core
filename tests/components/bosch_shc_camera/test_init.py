@@ -223,6 +223,51 @@ async def test_persisted_local_creds_accept_safe_host(hass: HomeAssistant) -> No
     assert entry.runtime_data.local_creds_cache[CAM_ID]["host"] == "192.168.1.50"
 
 
+async def test_persisted_local_creds_skip_malformed_port(hass: HomeAssistant) -> None:
+    """A corrupted/legacy port value must discard only that one record.
+
+    `int(_payload.get("port", 443))` previously raised uncaught for a
+    malformed value (e.g. a legacy `null` or `"not-a-port"`), which failed
+    the entire config-entry setup — no cameras loaded — instead of just
+    discarding the one bad credential record (Copilot review round 14).
+    """
+    _DOMAIN = DOMAIN
+    entry = _mock_config_entry()
+    entry.add_to_hass(hass)
+
+    await Store(hass, version=1, key=f"{_DOMAIN}_local_creds").async_save(
+        {
+            CAM_ID: {
+                "user": "admin",
+                "password": "secret",
+                "host": "192.168.1.50",
+                "port": "not-a-port",
+            }
+        }
+    )
+
+    coordinator_path = (
+        "homeassistant.components.bosch_shc_camera.coordinator.BoschCameraCoordinator"
+    )
+    with (
+        patch(
+            f"{coordinator_path}._async_update_data",
+            return_value=FAKE_COORDINATOR_DATA,
+        ),
+        patch(f"{coordinator_path}.async_fetch_live_snapshot", return_value=None),
+        patch(f"{coordinator_path}.async_fetch_live_snapshot_local", return_value=None),
+        patch(
+            f"{coordinator_path}.async_fetch_fresh_event_snapshot", return_value=None
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert entry.state is ConfigEntryState.LOADED
+
+    assert CAM_ID not in entry.runtime_data.local_creds_cache
+
+
 async def test_cloud_degraded_startup_uses_spawn_tracked_not_bare_create_task(
     hass: HomeAssistant,
 ) -> None:

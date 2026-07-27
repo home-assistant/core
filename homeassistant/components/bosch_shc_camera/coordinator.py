@@ -217,7 +217,15 @@ class BoschCameraCoordinator(
         # "Advanced" field) — NEVER defaulted to any specific host. Only ever
         # non-empty if a user explicitly typed a Bosch-confirmed alternate
         # camera-API base URL in to test whether their account is registered
-        # there instead of production (2026-07-06 SebastianHarder investigation).
+        # there instead of production (2026-07-06 SebastianHarder
+        # investigation). Deliberately narrow-scope (CAUTION: never expand
+        # this to redirect real camera-cloud traffic — the point is to probe
+        # ONE endpoint, not to run the integration against non-production
+        # Bosch infrastructure): only `camera_list.fetch_camera_list` reads
+        # `self._cloud_api` — every other request (status/events/snapshots/
+        # RCP/writes) always uses the module-level `CLOUD_API`, on purpose
+        # (Copilot review round 14 — the field name/log below now say so
+        # explicitly, since neither previously stated the scope).
         cloud_api_override = entry.data.get("cloud_api_override", "")
         # Validated against the same Bosch-domain allowlist as image/video
         # URLs — this field has no UI in this (Core) config flow at all and
@@ -236,9 +244,11 @@ class BoschCameraCoordinator(
         self._cloud_api = cloud_api_override or CLOUD_API
         if cloud_api_override:
             _LOGGER.warning(
-                "Using diagnostic camera-API override %s instead of the "
-                "default — this should only be set for troubleshooting a "
-                "specific account issue with Bosch support's guidance",
+                "Using diagnostic camera-API override %s for the initial "
+                "camera-list probe only (not for status/events/snapshots/"
+                "writes, which always use the production API) — this "
+                "should only be set for troubleshooting a specific account "
+                "issue with Bosch support's guidance",
                 cloud_api_override,
             )
         opts = get_options(entry)
@@ -765,6 +775,13 @@ class BoschCameraCoordinator(
         cam_ip = self.get_cam_lan_ip(cam_id)
         if not cam_ip:
             return False  # no known LAN IP — can't ping locally
+        # rcp_lan_ip_cache is populated from RCP data returned via the cloud
+        # proxy and restored unvalidated from storage (unlike
+        # local_creds_cache, whose host is validated at every write site) —
+        # reject anything that isn't a private LAN address before opening a
+        # TCP connection to it (Copilot review round 14).
+        if not _is_safe_local_camera_host(f"{cam_ip}:443"):
+            return False
         try:
             _, writer = await asyncio.wait_for(
                 asyncio.open_connection(cam_ip, 443),
@@ -2088,9 +2105,6 @@ class BoschCameraCoordinator(
         if self.shc_state_cache.get(cam_id, {}).get("privacy_mode"):
             return None
 
-        connector = aiohttp.TCPConnector(
-            ssl=await async_get_bosch_cloud_ssl_context(self.hass)
-        )
         headers = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
@@ -2100,7 +2114,10 @@ class BoschCameraCoordinator(
 
         result = None
         try:
-            async with aiohttp.ClientSession(connector=connector) as session:
+            # Reuse the pooled cloud session instead of opening a fresh
+            # connector/TLS handshake on every LOCAL-bootstrap attempt
+            # (Copilot review round 14).
+            async with async_bosch_cloud_session_cm(self.hass) as session:
                 async with asyncio.timeout(15):
                     async with session.put(
                         url,
