@@ -2,13 +2,17 @@
 
 from unittest.mock import Mock, patch
 
-from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
+from deebot_client.exceptions import (
+    DeebotError,
+    DeviceVerificationRequiredError,
+    InvalidAuthenticationError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -82,6 +86,25 @@ async def test_invalid_auth(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_device_verification_required(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: Mock,
+) -> None:
+    """Test device verification required during setup triggers reauthentication."""
+    mock_api_client.get_devices.side_effect = DeviceVerificationRequiredError
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_devices_in_dr(

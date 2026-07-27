@@ -1,5 +1,6 @@
 """Config flow for Ecovacs mqtt integration."""
 
+from collections.abc import Mapping
 from functools import partial
 import logging
 import ssl
@@ -328,7 +329,9 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauthentication."""
         self._reauth = True
         self._pending_input = dict(entry_data)
