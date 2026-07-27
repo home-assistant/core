@@ -37,6 +37,17 @@
     }
   },
   "entity": {
+    "button": {
+      "brightness_down": {
+        "name": "Brightness down"
+      },
+      "brightness_up": {
+        "name": "Brightness up"
+      },
+      "timer": {
+        "name": "Timer"
+      }
+    },
     "event": {
       "received_command": {
         "name": "Received command",
