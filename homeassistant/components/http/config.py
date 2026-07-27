@@ -604,6 +604,7 @@ class HTTPConfigStore:
             elif (
                 failed_type is ActiveConfigType.DEFAULT
                 and ENV_SUPERVISOR in os.environ
+                # _DEFAULT_CONFIG depends on environment variables
                 and _DEFAULT_CONFIG[CONF_SERVER_PORT] != SERVER_PORT
             ):
                 # Under Supervisor the previous default port (8123) is still
