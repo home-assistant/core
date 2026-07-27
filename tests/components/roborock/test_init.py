@@ -849,3 +849,23 @@ async def test_dynamic_device_discovery(
     state_2 = hass.states.get(sensor_entity_id_2)
     assert state_2 is not None
     assert state_2.state == "100"
+
+
+async def test_legacy_mop_drying_sensor_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_roborock_entry: MockConfigEntry,
+) -> None:
+    """Test the mop drying binary sensor is removed in favor of the switch."""
+    legacy_entity = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        "dry_status_abc123",
+        config_entry=mock_roborock_entry,
+        suggested_object_id="roborock_s7_maxv_dock_mop_drying",
+    )
+
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(legacy_entity.entity_id) is None

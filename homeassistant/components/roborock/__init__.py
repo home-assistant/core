@@ -16,10 +16,14 @@ from roborock.devices.device_manager import UserParams, create_device_manager
 from roborock.map.map_parser import MapParserConfig
 from roborock.mqtt.session import MqttSessionUnauthorized
 
-from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -144,11 +148,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     devices = await device_manager.get_devices()
     _LOGGER.debug("Device manager found %d devices", len(devices))
 
+    _remove_legacy_mop_drying_sensor(hass, entry)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     _remove_stale_devices(hass, entry, devices)
 
     return True
+
+
+def _remove_legacy_mop_drying_sensor(
+    hass: HomeAssistant, entry: RoborockConfigEntry
+) -> None:
+    """Remove the mop drying binary sensor replaced by a switch.
+
+    Can be removed in HA Core 2027.8.
+    """
+    entity_registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if entity.domain == Platform.BINARY_SENSOR and entity.unique_id.startswith(
+            "dry_status_"
+        ):
+            entity_registry.async_remove(entity.entity_id)
 
 
 def _is_device_disabled(
