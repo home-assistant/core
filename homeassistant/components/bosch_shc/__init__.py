@@ -50,10 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
     shc_info = session.information
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
-    if (
-        shc_info.updateState is not None
-        and shc_info.updateState.name == "UPDATE_AVAILABLE"
-    ):
+    if shc_info.updateState.name == "UPDATE_AVAILABLE":
         _LOGGER.warning("Please check for software updates in the Bosch Smart Home App")
 
     entry.runtime_data = session
