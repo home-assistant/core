@@ -33,32 +33,58 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("current_mode", "option", "expected_mode"),
+    [
+        ("heat-flow", "room", "heat-thermostat"),
+        ("heat-flow", "flow", "heat-flow"),
+        ("heat-flow", "curve", "curve"),
+        ("cool-flow", "room", "cool-thermostat"),
+        ("cool-flow", "flow", "cool-flow"),
+        ("cool-flow", "curve", "curve"),
+    ],
+)
 @pytest.mark.usefixtures("mock_get_devices")
 async def test_select_option(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_atw_device: MagicMock,
+    current_mode: str,
+    option: str,
+    expected_mode: str,
 ) -> None:
-    """Selecting an option calls the library setter."""
+    """Selecting a method keeps the current heating/cooling direction."""
+    mock_atw_device.zones[0].operation_mode = current_mode
     await setup_platform(hass, mock_config_entry, [Platform.SELECT])
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: OPERATION_MODE_ENTITY, ATTR_OPTION: "curve"},
+        {ATTR_ENTITY_ID: OPERATION_MODE_ENTITY, ATTR_OPTION: option},
         blocking=True,
     )
-    mock_atw_device.zones[0].set_operation_mode.assert_awaited_once_with("curve")
+    mock_atw_device.zones[0].set_operation_mode.assert_awaited_once_with(expected_mode)
 
 
+@pytest.mark.parametrize(
+    ("operation_mode", "expected_state"),
+    [
+        ("heat-thermostat", "room"),
+        ("cool-flow", "flow"),
+        ("curve", "curve"),
+        ("unknown", STATE_UNKNOWN),
+    ],
+)
 @pytest.mark.usefixtures("mock_get_devices")
-async def test_current_option_unknown(
+async def test_current_option(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_atw_device: MagicMock,
+    operation_mode: str,
+    expected_state: str,
 ) -> None:
-    """An operation mode outside the available options reports unknown."""
-    mock_atw_device.zones[0].operation_mode = "unknown"
+    """The state reflects the current control method."""
+    mock_atw_device.zones[0].operation_mode = operation_mode
     await setup_platform(hass, mock_config_entry, [Platform.SELECT])
     state = hass.states.get(OPERATION_MODE_ENTITY)
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == expected_state

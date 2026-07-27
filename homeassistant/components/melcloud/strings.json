@@ -66,11 +66,9 @@
       "operation_mode": {
         "name": "Operation mode",
         "state": {
-          "cool-flow": "Flow temperature (cooling)",
-          "cool-thermostat": "Room thermostat (cooling)",
-          "curve": "Weather compensation curve",
-          "heat-flow": "Flow temperature",
-          "heat-thermostat": "Room thermostat"
+          "curve": "Curve",
+          "flow": "Flow",
+          "room": "Room"
         }
       }
     },
