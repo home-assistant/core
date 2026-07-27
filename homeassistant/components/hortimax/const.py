@@ -28,8 +28,8 @@ MANUFACTURER: Final = "Ridder"
 
 CONF_BASE_URL: Final = "base_url"
 
-#: Unchanged readouts are refreshed at most every five minutes, and each poll
-#: costs one request per controller against a limit of 100 per 15 seconds.
+# Changed readouts are published about once a minute; unchanged ones keep a
+# stale timestamp for up to five. One request per controller, limit 100/15s.
 SCAN_INTERVAL: Final = 60  # seconds
 
 # Dimensionless readouts are mostly status/override codes, so they get neither
