@@ -4,8 +4,13 @@ import logging
 from typing import TYPE_CHECKING
 
 from boschshcpy import SHCSessionAsync
+from boschshcpy.api import JSONRPCError
 from boschshcpy.api_async import build_ssl_context
-from boschshcpy.exceptions import SHCAuthenticationError, SHCConnectionError
+from boschshcpy.exceptions import (
+    SHCAuthenticationError,
+    SHCConnectionError,
+    SHCSessionError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
@@ -34,9 +39,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
 
     # build_ssl_context() reads the cert/key files (blocking I/O), so it must
     # not run directly on the event loop.
-    ssl_context = await hass.async_add_executor_job(
-        build_ssl_context, data[CONF_SSL_CERTIFICATE], data[CONF_SSL_KEY]
-    )
+    try:
+        ssl_context = await hass.async_add_executor_job(
+            build_ssl_context, data[CONF_SSL_CERTIFICATE], data[CONF_SSL_KEY]
+        )
+    except (OSError, ValueError) as err:
+        raise ConfigEntryAuthFailed from err
     session = SHCSessionAsync(
         data[CONF_HOST],
         data[CONF_SSL_CERTIFICATE],
@@ -46,8 +54,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
     try:
         await session.async_init()
     except SHCAuthenticationError as err:
+        await session.api.close()
         raise ConfigEntryAuthFailed from err
-    except SHCConnectionError as err:
+    except (SHCConnectionError, SHCSessionError) as err:
+        await session.api.close()
         raise ConfigEntryNotReady from err
 
     shc_info = session.information
@@ -69,13 +79,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
         sw_version=shc_info.version,
     )
 
+    try:
+        await session.start_polling()
+    except (SHCConnectionError, SHCSessionError, JSONRPCError) as err:
+        # subscribe (RE/subscribe) is a real network call -- a drop here
+        # used to crash setup uncaught and leak the session.
+        await session.api.close()
+        raise ConfigEntryNotReady from err
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def stop_polling(event):
         """Stop polling service."""
         await session.stop_polling()
 
-    await session.start_polling()
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_polling)
     )
