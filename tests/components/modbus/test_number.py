@@ -34,6 +34,7 @@ from homeassistant.components.number import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ADDRESS,
+    CONF_COUNT,
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
@@ -42,6 +43,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
+    CONF_STRUCTURE,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
@@ -460,16 +462,46 @@ async def test_no_discovery_info_number(
 @pytest.mark.parametrize(
     "do_config",
     [
-        {
-            CONF_NUMBERS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 51,
-                    CONF_DATA_TYPE: DataType.INT16,
-                    CONF_SCALE: 0,
-                }
-            ]
-        },
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_DATA_TYPE: DataType.INT16,
+                        CONF_SCALE: 0,
+                    }
+                ]
+            },
+            id="zero_scale",
+        ),
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_DATA_TYPE: DataType.STRING,
+                        CONF_COUNT: 2,
+                    }
+                ]
+            },
+            id="string_data_type",
+        ),
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_DATA_TYPE: DataType.CUSTOM,
+                        CONF_STRUCTURE: ">ff",
+                        CONF_COUNT: 2,
+                    }
+                ]
+            },
+            id="custom_data_type",
+        ),
     ],
 )
 async def test_err_config_number(
