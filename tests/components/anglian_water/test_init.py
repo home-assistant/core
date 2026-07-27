@@ -83,6 +83,7 @@ async def test_setup_auth_failures(
 async def test_setup_consent_required(
     recorder_mock: Recorder,
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_anglian_water_client: AsyncMock,
     mock_anglian_water_authenticator: MagicMock,
@@ -98,7 +99,6 @@ async def test_setup_consent_required(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
-    issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is not None
 
     # Test that the issue is deleted once consent is granted
