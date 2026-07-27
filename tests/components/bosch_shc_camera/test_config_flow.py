@@ -3,10 +3,11 @@
 import base64
 from http import HTTPStatus
 import json
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.bosch_shc_camera import config_flow as cf_module
 from homeassistant.components.bosch_shc_camera.config_flow import (
     _detect_token_client_id,
     _flatten_sections,
@@ -238,3 +239,42 @@ async def test_options_flow_toggle_enable_snapshots(hass: HomeAssistant) -> None
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options["enable_snapshots"] is False
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_bosch_cloud_session")
+async def test_camera_access_denied_aborts_before_creating_entry(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """A successful OAuth exchange whose account can't reach the camera API must abort.
+
+    A successful token exchange only proves SingleKey ID login succeeded —
+    Bosch's camera API can still reject the fresh token for an account whose
+    camera registration never completed (bug-hunt 2026-07-27, Copilot review
+    round 4).
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://my.home-assistant.io/redirect/oauth",
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    with patch.object(
+        cf_module.BoschCameraConfigFlow,
+        "_async_verify_camera_access",
+        AsyncMock(return_value=False),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "camera_access_denied"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    assert len(mock_setup_entry.mock_calls) == 0

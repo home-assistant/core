@@ -75,6 +75,11 @@ def mock_bosch_cloud_session() -> AsyncGenerator[MagicMock]:
             },
         )
     )
+    # The config-flow's post-login camera-access verification GETs
+    # /v11/video_inputs with the fresh token — default to a healthy 200 so
+    # tests that aren't specifically exercising that check don't need their
+    # own GET stub.
+    session.get = MagicMock(return_value=_FakeKeycloakResponse(200, {}))
     with patch(
         "homeassistant.components.bosch_shc_camera.config_flow.async_get_bosch_cloud_session",
         AsyncMock(return_value=session),

@@ -466,6 +466,38 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
+    async def _async_verify_camera_access(self, bearer_token: str) -> bool:
+        """Verify the freshly-issued token can actually reach the camera API.
+
+        A successful OAuth token exchange only proves SingleKey ID login
+        succeeded — Bosch's camera API can still reject a valid token with
+        `sh:authorization.failed` for an account whose separate camera
+        registration never completed (see camera_list.py's identical
+        handling in the coordinator's regular tick). Bronze's
+        test-before-configure rule requires catching this before the entry
+        is ever created, not after the first coordinator refresh silently
+        fails. Returns True (does not block setup) on a timeout/network
+        error — a transient hiccup during setup must not be conflated with
+        a genuine account-access rejection; the coordinator's own first
+        refresh retries and surfaces a clearer error if the problem persists.
+        """
+        try:
+            session = await async_get_bosch_cloud_session(self.hass)
+            async with (
+                asyncio.timeout(10),
+                session.get(
+                    f"{CLOUD_API}/v11/video_inputs",
+                    headers={
+                        "Authorization": f"Bearer {bearer_token}",
+                        "Accept": "application/json",
+                    },
+                ) as resp,
+            ):
+                return resp.status == 200
+        except (TimeoutError, aiohttp.ClientError) as err:
+            _LOGGER.debug("Camera-access verification skipped (%s)", err)
+            return True
+
     @override
     async def async_oauth_create_entry(
         self, data: dict[str, Any]
@@ -482,6 +514,10 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             # Application Credentials. Was previously discarded entirely.
             "auth_implementation": data.get("auth_implementation", DOMAIN),
         }
+
+        if not await self._async_verify_camera_access(new_data["bearer_token"]):
+            return self.async_abort(reason="camera_access_denied")
+
         # Reauth: update the existing entry in place (keeps options, entities,
         # automations, FCM config, SMB settings — everything).
         # HA 2026.6 deprecates async_update_reload_and_abort when the entry also

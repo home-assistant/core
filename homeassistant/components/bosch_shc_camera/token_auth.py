@@ -236,22 +236,21 @@ class TokenAuthCoordinatorMixin:
                         await asyncio.sleep(2)
         except TimeoutError:
             # The retry loop itself timed out (Keycloak unresponsive across
-            # one or more attempts) — treat exactly like a transient failure
-            # so the caller's fail-count/reauth escalation still applies,
-            # but abort the loop early instead of letting it run to ~49s.
-            self._token_fail_count += 1
+            # one or more attempts) — a timeout proves nothing about the
+            # refresh token's validity, so it must stay transient and NEVER
+            # escalate to reauth, however many times it repeats. Tracked in
+            # its own counter, kept entirely separate from
+            # _token_fail_count (which drives the reauth escalation below
+            # and must only reflect a genuine invalid-grant/empty-response
+            # failure) — abort the loop early instead of letting it run to
+            # ~49s (bug-hunt 2026-07-27, Copilot review round 4).
+            self._token_timeout_fail_count += 1
             _LOGGER.warning(
                 "Token refresh timed out after 15s (attempt %d) — Keycloak "
                 "unresponsive, aborting retry loop early to release the "
                 "token-refresh lock",
-                self._token_fail_count,
+                self._token_timeout_fail_count,
             )
-            if self._token_fail_count >= 3:
-                raise ConfigEntryAuthFailed(
-                    "Token refresh timed out repeatedly — please "
-                    "re-authenticate via the Reconfigure button on the "
-                    "integration card."
-                ) from None
             raise UpdateFailed(
                 "Token refresh timed out after 15s — will retry"
             ) from None
@@ -334,6 +333,7 @@ class TokenAuthCoordinatorMixin:
                     "Token refresh recovered after %d failures", self._token_fail_count
                 )
             self._token_fail_count = 0
+            self._token_timeout_fail_count = 0
             if self._token_alert_sent:
                 self._token_alert_sent = False
                 ir.async_delete_issue(self.hass, DOMAIN, "token_expired")

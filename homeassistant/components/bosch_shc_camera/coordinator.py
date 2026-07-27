@@ -441,6 +441,14 @@ class BoschCameraCoordinator(
         # Token refresh failure tracking — alert once, not every 80s
         self._token_alert_sent: bool = False  # True after first alert sent
         self._token_fail_count: int = 0  # consecutive refresh failures
+        # Consecutive refresh-timeout failures — tracked separately from
+        # _token_fail_count. A timeout proves nothing about the refresh
+        # token's validity (Keycloak/network unresponsive, not invalid_grant),
+        # so it must never contribute toward the reauth-escalation count —
+        # only a genuine invalid-grant response or a completed-but-empty
+        # token response does that (bug-hunt 2026-07-27, Copilot review
+        # round 4).
+        self._token_timeout_fail_count: int = 0
         # Bosch auth-server outage tracking — distinct from hard failures.
         # 5xx from Keycloak = Bosch infrastructure problem, NOT user/config issue:
         # no reauth trigger, no escalation, just back off and retry.
