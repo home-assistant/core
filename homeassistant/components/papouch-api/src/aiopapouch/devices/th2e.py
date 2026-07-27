@@ -1,4 +1,4 @@
-"""This file contains classes that define Papouch devices."""
+"""This file contains definition of the TH2E device."""
 
 import logging
 from typing import Any, override
@@ -6,7 +6,7 @@ from typing import Any, override
 import defusedxml.ElementTree as defused_ET
 
 from ..client import PapouchApiClient
-from .base import PapouchDevice
+from .base import PapouchDevice, find_tag
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,12 @@ class TH2E(PapouchDevice):
         return "Papouch s.r.o."
 
     def __init__(self, api_client: PapouchApiClient, info: str) -> None:
-        """Constructor for TH2E device. Downloading the settings before creation."""
+        """Constructor for TH2E device.
+
+        Note that TH2E needs info in parameters.
+        So creating TH2E needs using the network even for dummy devices.
+        """
+
         self.info = info
 
         self._name = self.get_name()
@@ -38,6 +43,7 @@ class TH2E(PapouchDevice):
         self.api_client = api_client
         self.units_sensors = []
 
+        self.parse_xml(self.info)
         self._parse_initial_settings()
 
     @override
@@ -47,21 +53,24 @@ class TH2E(PapouchDevice):
 
         populate = len(self.units_sensors) == 0
 
-        for element in root.findall("sns"):
-            item_id = element.attrib.get("id")
-            sns_type = element.attrib.get("type")
-            unit_code = element.attrib.get("unit", "0")
-            status = element.attrib.get("status", "0")
+        for element in root.iter():
+            if element.tag.endswith("sns"):
+                item_id = element.attrib.get("id")
+                sns_type = element.attrib.get("type")
+                unit_code = element.attrib.get("unit", "0")
+                status = element.attrib.get("status", "0")
 
-            if populate:
-                self.units_sensors.append(
-                    {"id": item_id, "type": sns_type, "unit": unit_code}
-                )
+                if populate:
+                    self.units_sensors.append(
+                        {"id": item_id, "type": sns_type, "unit": unit_code}
+                    )
 
-            if status in ("1", "4"):  # invalid or ready to measure
-                parsed_data["sensor"][item_id] = None
-            else:
-                parsed_data["sensor"][item_id] = float(element.attrib.get("val", "0"))
+                if status in ("1", "4"):
+                    parsed_data["sensor"][item_id] = None
+                else:
+                    parsed_data["sensor"][item_id] = float(
+                        element.attrib.get("val", "0")
+                    )
 
         return parsed_data
 
@@ -69,15 +78,15 @@ class TH2E(PapouchDevice):
     def get_location(self) -> str:
         """Return the location of the device."""
         root = defused_ET.fromstring(self.info)
-        heartbeat = root.find("heartbeat")
-        return heartbeat.attrib.get("location")
+        heartbeat = find_tag(root, "heartbeat")
+        return heartbeat.attrib.get("location") if heartbeat is not None else ""
 
     @override
     def get_name(self) -> str:
         """Return the name of the device."""
         root = defused_ET.fromstring(self.info)
-        heartbeat = root.find("heartbeat")
-        return heartbeat.attrib.get("device")
+        heartbeat = find_tag(root, "heartbeat")
+        return heartbeat.attrib.get("device") if heartbeat is not None else ""
 
     @override
     def get_supported_buttons(self) -> list[dict[str, Any]]:
@@ -180,68 +189,7 @@ class TH2E(PapouchDevice):
     @override
     async def switch_to_web_mode(self) -> None:
         """Switch the device network mode to WEB using its current settings."""
-        # root = defused_ET.fromstring(self.settings)
-        # box = root.find(".//set[@box='1']")
-        # if box is None:
-        #     raise ValueError("Network settings not found")
-
-        # def pad_ip(ip_str: str) -> str:
-        #     return ".".join(part.zfill(3) for part in ip_str.split("."))
-
-        # save_root = ET.Element("root")
-        # ET.SubElement(
-        #     save_root,
-        #     "set",
-        #     box="1",
-        #     ip1=pad_ip(box.get("ip", "0.0.0.0")),
-        #     ip2=pad_ip(box.get("mask", "0.0.0.0")),
-        #     ip3=pad_ip(box.get("gate", "0.0.0.0")),
-        #     ip4=pad_ip(box.get("dip", "0.0.0.0")),
-        #     ip5=pad_ip(box.get("rip", "0.0.0.0")),
-        #     num1=box.get("wport", "80").zfill(5),
-        #     num2=box.get("lport", "10001").zfill(5),
-        #     num3="3",
-        #     num4=box.get("rport", "0").zfill(5),
-        #     num5=box.get("mport", "502").zfill(5),
-        #     num6=box.get("dhcp", "0"),
-        #     num7=box.get("single", "0"),
-        #     num8=box.get("tcpto", "0").zfill(5),
-        # )
-
-        # xml_payload = ET.tostring(save_root, encoding="unicode")
-        # await self.api_client.send_command_POST(xml_payload)
 
     @override
     def _parse_initial_settings(self) -> None:
         pass
-        # if not self.settings:
-        #     return
-
-        # try:
-        #     root = defused_ET.fromstring(self.settings)
-        #     for item in root.findall(".//set[@box='10']/item"):
-        #         if (item_id := item.get("id")) is None:
-        #             continue
-
-        #         mode_index_str = item.get("cnt", "0")
-
-        #         try:
-        #             mode_index = int(mode_index_str)
-        #             if 0 <= mode_index < len(self.COUNTER_MODES):
-        #                 self.counter_states[item_id] = self.COUNTER_MODES[mode_index]
-        #         except ValueError:
-        #             _LOGGER.error(
-        #                 "Invalid mode index for item %s: %s", item_id, mode_index_str
-        #             )
-
-        #     box_elem = root.find(".//set[@box='8']")
-        #     unit = box_elem.get("units")
-        #     if unit == "C":
-        #         self.temperature_unit = "°C"
-        #     elif unit == "F":
-        #         self.temperature_unit = "°F"
-        #     else:
-        #         self.temperature_unit = "K"
-
-        # except (defused_ET.ParseError, ValueError, TypeError) as err:
-        #     _LOGGER.error("Failed to parse initial settings: %s", err)

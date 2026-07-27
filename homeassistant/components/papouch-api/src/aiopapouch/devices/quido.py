@@ -1,4 +1,4 @@
-"""This file contains classes that define Papouch devices."""
+"""This file contains definition of the Quido device."""
 
 import logging
 from typing import Any, override
@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 import defusedxml.ElementTree as defused_ET
 
 from ..client import PapouchApiClient
-from .base import PapouchDevice
+from .base import PapouchDevice, find_tag
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -402,15 +402,15 @@ class Quido(PapouchDevice):
     def get_location(self) -> str:
         """Return the location of the device."""
         root = defused_ET.fromstring(self.info)
-        heartbeat = root.find("heartbeat")
-        return heartbeat.attrib.get("location")
+        heartbeat = find_tag(root, "heartbeat")
+        return heartbeat.attrib.get("location") if heartbeat is not None else ""
 
     @override
     def get_name(self) -> str:
         """Return the name of the device."""
         root = defused_ET.fromstring(self.info)
-        heartbeat = root.find("heartbeat")
-        return heartbeat.attrib.get("device")
+        heartbeat = find_tag(root, "heartbeat")
+        return heartbeat.attrib.get("device") if heartbeat is not None else ""
 
     async def _turn_on_coil(self, item_id: str) -> None:
         """Command for turning on the coil by its id."""

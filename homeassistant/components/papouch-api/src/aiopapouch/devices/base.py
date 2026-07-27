@@ -4,8 +4,19 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 
+def find_tag(root, tag_name):
+    """Find element and ignore the namespace."""
+    for element in root.iter():
+        if element.tag.endswith(tag_name):
+            return element
+    return None
+
+
 class PapouchDevice(ABC):
-    """Abstract class for Papouch devices."""
+    """Abstract class for Papouch devices.
+
+    Beware of the XML namespaces! Some devices can have some while other don't.
+    """
 
     @property
     @abstractmethod

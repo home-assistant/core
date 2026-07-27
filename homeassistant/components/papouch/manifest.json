@@ -6,6 +6,12 @@
   "dhcp": [
     {
       "macaddress": "0080A3*"
+    },
+    {
+      "macaddress": "00204A*"
+    },
+    {
+      "macaddress": "049162*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/papouch",

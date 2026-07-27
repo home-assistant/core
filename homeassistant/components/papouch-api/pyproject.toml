@@ -5,12 +5,12 @@ build-backend = "hatchling.build"
 [project]
 name = "aiopapouch"
 version = "0.1.0"
-description = "API client and device models for Papouch hardware"
+description = "API client and device models for Papouch's devices"
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [
-    { name = "Vladislav Levitskii" }
+    { name = "Papouch s.r.o." }
 ]
 dependencies = [
     "aiohttp>=3.0.0",

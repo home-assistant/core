@@ -86,14 +86,27 @@ class PapouchApiClient:
             _LOGGER.error("Response doesn't have result tag!")
 
     async def get_device_mode(self):
-        """Function is used for the resolving the mode of the device.
-
-        Suppose that every device will have "info.xml" and heartbeat tag otherwise return -1.
-        """
+        """Function is used for the resolving the mode of the device."""
         info_xml = await self.fetch_info()
-        heartbeat_tag = defused_ET.fromstring(info_xml).find("heartbeat")
+        root = defused_ET.fromstring(info_xml)
+
+        heartbeat_tag = None
+        for element in root.iter():
+            if element.tag.endswith("heartbeat"):
+                heartbeat_tag = element
+                break
+
         if heartbeat_tag is not None:
-            return heartbeat_tag.attrib.get("mode")
+            mode = heartbeat_tag.attrib.get("mode")
+            if mode is not None:
+                return mode
+
+            # TODO: this is a bad practice but the easiest one
+            if heartbeat_tag.attrib.get("device") == "TME":
+                return WEB_MODE_INDEX
+
+            _LOGGER.error("Heartbeat tag found, but 'mode' attribute is missing!")
+            return -1
 
         _LOGGER.error("Response doesn't have heartbeat tag!")
         return -1
