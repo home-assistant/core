@@ -3,6 +3,7 @@
     "abort": {
       "already_configured": "Already configured.",
       "camera_access_denied": "Login succeeded, but Bosch rejected access to the camera API for this account. This usually means the account's camera registration was never completed. Open the official Bosch Smart Camera app and complete any registration or terms-of-service screen it shows, then try again.",
+      "cannot_connect": "Login succeeded, but Bosch's camera API is temporarily unavailable (rate limited or a server-side outage). Please try again in a few minutes.",
       "missing_configuration": "The Bosch Smart Home Camera integration is not set up correctly for OAuth. Restart Home Assistant and try again — if this keeps happening, please file an issue.",
       "missing_credentials": "No Bosch SingleKey ID application credential is registered. Restart Home Assistant and try again — if this keeps happening, please file an issue.",
       "oauth_implementation_unavailable": "The selected login method is no longer available. Please start over.",

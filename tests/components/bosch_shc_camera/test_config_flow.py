@@ -9,7 +9,9 @@ import pytest
 
 from homeassistant.components.bosch_shc_camera import config_flow as cf_module
 from homeassistant.components.bosch_shc_camera.config_flow import (
+    AuthServerOutageError,
     _detect_token_client_id,
+    _do_refresh,
     _flatten_sections,
 )
 from homeassistant.components.bosch_shc_camera.const import DOMAIN
@@ -280,13 +282,51 @@ async def test_camera_access_denied_aborts_before_creating_entry(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_verify_camera_access_returns_true_on_429() -> None:
-    """A 429 (rate limited) must not be treated as account denial.
+@pytest.mark.usefixtures("current_request_with_host", "mock_bosch_cloud_session")
+async def test_camera_access_transient_aborts_with_cannot_connect(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """An inconclusive camera-access check (429/5xx) must abort with retry semantics.
+
+    It must not silently create an unverified entry (bug-hunt 2026-07-27,
+    Copilot review round 6).
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://my.home-assistant.io/redirect/oauth",
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    with patch.object(
+        cf_module.BoschCameraConfigFlow,
+        "_async_verify_camera_access",
+        AsyncMock(return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_verify_camera_access_returns_none_on_429() -> None:
+    """A 429 (rate limited) must not be treated as account denial, nor silently verified.
 
     It says nothing about whether this account can reach the camera API,
-    only that this one request didn't land — blocking setup on it would
-    show the misleading "registration incomplete" message for a transient
-    Bosch-side condition (bug-hunt 2026-07-27, Copilot review round 5).
+    only that this one request didn't land — accepting it as verified would
+    create an unverified entry that could immediately fail its first
+    coordinator refresh; the caller aborts with retry semantics instead
+    (bug-hunt 2026-07-27, Copilot review round 6, refining round 5's fix).
     """
     session = MagicMock()
     resp = MagicMock()
@@ -302,10 +342,10 @@ async def test_verify_camera_access_returns_true_on_429() -> None:
         "homeassistant.components.bosch_shc_camera.config_flow.async_get_bosch_cloud_session",
         AsyncMock(return_value=session),
     ):
-        assert await flow._async_verify_camera_access("tok") is True
+        assert await flow._async_verify_camera_access("tok") is None
 
 
-async def test_verify_camera_access_returns_true_on_5xx() -> None:
+async def test_verify_camera_access_returns_none_on_5xx() -> None:
     """A 5xx (Bosch-side outage) must not be treated as account denial either."""
     session = MagicMock()
     resp = MagicMock()
@@ -321,7 +361,7 @@ async def test_verify_camera_access_returns_true_on_5xx() -> None:
         "homeassistant.components.bosch_shc_camera.config_flow.async_get_bosch_cloud_session",
         AsyncMock(return_value=session),
     ):
-        assert await flow._async_verify_camera_access("tok") is True
+        assert await flow._async_verify_camera_access("tok") is None
 
 
 async def test_verify_camera_access_returns_false_on_403() -> None:
@@ -341,3 +381,21 @@ async def test_verify_camera_access_returns_false_on_403() -> None:
         AsyncMock(return_value=session),
     ):
         assert await flow._async_verify_camera_access("tok") is False
+
+
+async def test_do_refresh_raises_auth_server_outage_on_429() -> None:
+    """A 429 (rate limited) must route through the same transient/backoff path as a 5xx.
+
+    It says nothing about the refresh token's validity, so it must never
+    count toward the invalid-grant/reauth escalation (bug-hunt 2026-07-27,
+    Copilot review round 6).
+    """
+    resp = MagicMock()
+    resp.status = 429
+    resp.__aenter__ = AsyncMock(return_value=resp)
+    resp.__aexit__ = AsyncMock(return_value=None)
+    session = MagicMock()
+    session.post = MagicMock(return_value=resp)
+
+    with pytest.raises(AuthServerOutageError):
+        await _do_refresh(session, "old_refresh_token")

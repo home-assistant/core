@@ -1,63 +1,53 @@
-"""Tests for token_auth.py's TokenAuthCoordinatorMixin refresh logic."""
+"""Tests for token_auth.py's TokenAuthCoordinatorMixin refresh logic.
 
-import math
-import types
-from types import SimpleNamespace
+Exercises the public `ensure_valid_token` path through a real
+`BoschCameraCoordinator` built from a `MockConfigEntry` — not by binding
+private mixin methods onto a bare `SimpleNamespace` — so the coordinator,
+config-entry, and locking contracts are all genuinely exercised instead of
+bypassed (bug-hunt 2026-07-27, Copilot review round 6).
+"""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest
 
-from homeassistant.components.bosch_shc_camera.token_auth import (
-    TokenAuthCoordinatorMixin,
-)
+from homeassistant.components.bosch_shc_camera import BoschCameraCoordinator
+from homeassistant.components.bosch_shc_camera.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
+from tests.common import MockConfigEntry
 
-def _make_stub() -> SimpleNamespace:
-    stub = SimpleNamespace(
-        entry=SimpleNamespace(
-            data={"refresh_token": "rtok", "bearer_token": "old-token"},
-        ),
-        hass=SimpleNamespace(
-            config_entries=SimpleNamespace(async_update_entry=MagicMock()),
-        ),
-        token="old-token",
-        _token_still_valid=MagicMock(return_value=False),
-        _token_fail_count=0,
-        _token_timeout_fail_count=0,
-        _token_alert_sent=False,
-        auth_outage_count=0,
-        _auth_outage_next_retry_ts=-math.inf,
-        _auth_outage_alert_sent=False,
-        schedule_token_refresh=MagicMock(),
+
+def _make_coordinator(hass: HomeAssistant) -> BoschCameraCoordinator:
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        data={"bearer_token": "old-token", "refresh_token": "rtok"},
+        options={},
     )
-    # SimpleNamespace has no MRO to TokenAuthCoordinatorMixin, so
-    # `self._handle_successful_refresh(...)` inside `_refresh_token_locked`
-    # would otherwise AttributeError — bind the real method onto the stub.
-    stub._handle_successful_refresh = types.MethodType(
-        TokenAuthCoordinatorMixin._handle_successful_refresh, stub
-    )
-    return stub
+    entry.add_to_hass(hass)
+    return BoschCameraCoordinator(hass, entry)
 
 
-async def _refresh(stub: SimpleNamespace) -> None:
+async def _refresh(coord: BoschCameraCoordinator) -> str:
     with patch(
         "homeassistant.components.bosch_shc_camera.token_auth.async_get_bosch_cloud_session",
         AsyncMock(return_value=MagicMock()),
     ):
-        await TokenAuthCoordinatorMixin._refresh_token_locked(stub, "old-token")
+        return await coord.ensure_valid_token("old-token")
 
 
 @pytest.mark.asyncio
-async def test_repeated_timeouts_never_trigger_reauth() -> None:
+async def test_repeated_timeouts_never_trigger_reauth(hass: HomeAssistant) -> None:
     """A refresh-timeout must stay transient (UpdateFailed) no matter how many times it repeats.
 
     It proves nothing about the refresh token's validity, unlike a genuine
     invalid-grant rejection (bug-hunt 2026-07-27, Copilot review round 4).
     """
-    stub = _make_stub()
+    coord = _make_coordinator(hass)
 
     with (
         patch(
@@ -71,22 +61,22 @@ async def test_repeated_timeouts_never_trigger_reauth() -> None:
     ):
         for _ in range(5):
             with pytest.raises(UpdateFailed):
-                await _refresh(stub)
+                await _refresh(coord)
 
     # 3 per-attempt retries per call — each one increments the counter.
-    assert stub._token_timeout_fail_count == 15
+    assert coord._token_timeout_fail_count == 15
     # The reauth-escalation counter must be completely untouched by timeouts.
-    assert stub._token_fail_count == 0
+    assert coord._token_fail_count == 0
 
 
 @pytest.mark.asyncio
-async def test_repeated_empty_responses_do_trigger_reauth() -> None:
+async def test_repeated_empty_responses_do_trigger_reauth(hass: HomeAssistant) -> None:
     """A genuinely empty/malformed (non-timeout) refresh response is a real failure signal.
 
     It must still escalate to ConfigEntryAuthFailed after 3 consecutive
     occurrences.
     """
-    stub = _make_stub()
+    coord = _make_coordinator(hass)
 
     with (
         patch(
@@ -100,20 +90,20 @@ async def test_repeated_empty_responses_do_trigger_reauth() -> None:
     ):
         for _ in range(2):
             with pytest.raises(UpdateFailed):
-                await _refresh(stub)
+                await _refresh(coord)
         with pytest.raises(ConfigEntryAuthFailed):
-            await _refresh(stub)
+            await _refresh(coord)
 
-    assert stub._token_fail_count == 3
-    assert stub._token_timeout_fail_count == 0
+    assert coord._token_fail_count == 3
+    assert coord._token_timeout_fail_count == 0
 
 
 @pytest.mark.asyncio
-async def test_success_resets_both_counters() -> None:
+async def test_success_resets_both_counters(hass: HomeAssistant) -> None:
     """A successful refresh clears both the timeout and reauth-escalation counters."""
-    stub = _make_stub()
-    stub._token_fail_count = 2
-    stub._token_timeout_fail_count = 4
+    coord = _make_coordinator(hass)
+    coord._token_fail_count = 2
+    coord._token_timeout_fail_count = 4
 
     with patch(
         "homeassistant.components.bosch_shc_camera.config_flow._do_refresh",
@@ -121,14 +111,15 @@ async def test_success_resets_both_counters() -> None:
             return_value={"access_token": "new-token", "refresh_token": "new-rtok"}
         ),
     ):
-        await _refresh(stub)
+        out = await _refresh(coord)
 
-    assert stub._token_fail_count == 0
-    assert stub._token_timeout_fail_count == 0
+    assert out == "new-token"
+    assert coord._token_fail_count == 0
+    assert coord._token_timeout_fail_count == 0
 
 
 @pytest.mark.asyncio
-async def test_repeated_client_errors_never_trigger_reauth() -> None:
+async def test_repeated_client_errors_never_trigger_reauth(hass: HomeAssistant) -> None:
     """A network/DNS-class aiohttp.ClientError must stay transient too.
 
     `_do_refresh` used to swallow this into a bare `None` return,
@@ -137,7 +128,7 @@ async def test_repeated_client_errors_never_trigger_reauth() -> None:
     eventually triggered unnecessary reauthentication despite the
     timeout-only fix (bug-hunt 2026-07-27, Copilot review round 5).
     """
-    stub = _make_stub()
+    coord = _make_coordinator(hass)
 
     with (
         patch(
@@ -151,7 +142,7 @@ async def test_repeated_client_errors_never_trigger_reauth() -> None:
     ):
         for _ in range(5):
             with pytest.raises(UpdateFailed):
-                await _refresh(stub)
+                await _refresh(coord)
 
-    assert stub._token_timeout_fail_count == 15
-    assert stub._token_fail_count == 0
+    assert coord._token_timeout_fail_count == 15
+    assert coord._token_fail_count == 0

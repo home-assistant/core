@@ -484,7 +484,6 @@ class BoschCameraCoordinator(
         # 5xx from Keycloak = Bosch infrastructure problem, NOT user/config issue:
         # no reauth trigger, no escalation, just back off and retry.
         self.auth_outage_count: int = 0  # consecutive 5xx responses
-        self._auth_outage_alert_sent: bool = False
         self._auth_outage_next_retry_ts: float = -math.inf  # monotonic time gate
         # Cached LOCAL Digest credentials per camera — survives live-connection
         # teardown. Populated on every successful PUT /connection LOCAL and used
@@ -1277,19 +1276,21 @@ class BoschCameraCoordinator(
                 self._notif_disabled_logged.discard(cam_id)
 
     def _refresh_firmware_update_issues(self) -> None:
-        """Create or clear Repairs issues for cameras with a firmware update available.
+        """Log once per camera when a firmware update becomes available.
 
-        Called once per coordinator tick (inside _async_update_data) AFTER data is
-        built. Idempotent — safe to call every tick. Mirrors
-        _refresh_notifications_disabled_issues (same Repairs-issue pattern):
-        previously a firmware update becoming available had NO user-visible
-        signal from the integration at all — only HA core's own generic
-        Settings → Updates panel, easy to miss (Thomas report 2026-07-07,
-        "just had a firmware update, got no alert").
+        Called once per coordinator tick (inside _async_update_data) AFTER
+        data is built. Idempotent — safe to call every tick. Does NOT raise
+        a Repairs issue: Bosch installs camera firmware automatically on its
+        own schedule with no action available for the user to take here (no
+        `update`/Repairs fix-flow platform exists in this snapshot-only
+        build), so a Repairs issue for it would be non-actionable — exactly
+        the class of issue HA's Repairs guidelines rule out (bug-hunt
+        2026-07-27, Copilot review round 6). The one-time INFO log below is
+        the informational signal instead.
 
         A camera is only processed once its firmware endpoint has been fetched
         at least once (`firmware_cache[cam_id]['upToDate']` present) to avoid
-        a false-positive "issue cleared" transition on startup.
+        a false-positive "cleared" transition on startup.
         """
         # Local import (not top-level): keeps unittest.mock.patch(
         # "custom_components.bosch_shc_camera.ir", ...) working the same
@@ -1304,33 +1305,16 @@ class BoschCameraCoordinator(
             if up_to_date is None:
                 continue
 
-            issue_id = f"firmware_update_available_{cam_id}"
-
             if not up_to_date:
-                cam_title: str = (
-                    (self.data or {})
-                    .get(cam_id, {})
-                    .get("info", {})
-                    .get("title", cam_id)
-                )
-                current = fw.get("current") or "?"
-                latest = fw.get("update") or "?"
-                ir.async_create_issue(
-                    self.hass,
-                    DOMAIN,
-                    issue_id,
-                    is_fixable=False,
-                    is_persistent=False,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="firmware_update_available",
-                    translation_placeholders={
-                        "camera": cam_title,
-                        "current": current,
-                        "latest": latest,
-                    },
-                    data={"cam_id": cam_id},
-                )
                 if cam_id not in self._fw_update_alerted:
+                    cam_title: str = (
+                        (self.data or {})
+                        .get(cam_id, {})
+                        .get("info", {})
+                        .get("title", cam_id)
+                    )
+                    current = fw.get("current") or "?"
+                    latest = fw.get("update") or "?"
                     self._fw_update_alerted.add(cam_id)
                     _LOGGER.info(
                         "Firmware update available for %r: %s -> %s",
@@ -1339,7 +1323,6 @@ class BoschCameraCoordinator(
                         latest,
                     )
             else:
-                ir.async_delete_issue(self.hass, DOMAIN, issue_id)
                 self._fw_update_alerted.discard(cam_id)
 
     async def async_install_firmware(self, cam_id: str) -> None:
@@ -2218,8 +2201,15 @@ class BoschCameraCoordinator(
                         continue
                     try:
                         async with asyncio.timeout(20):
+                            # allow_redirects=False: _is_safe_bosch_url only
+                            # validates img_url itself — aiohttp follows
+                            # redirects by default, so a validated URL could
+                            # still redirect to an arbitrary internal host
+                            # (bug-hunt 2026-07-27, Copilot review round 6 —
+                            # same fix already applied to camera.py's
+                            # equivalent event-snapshot fetch).
                             async with session.get(
-                                img_url, headers=img_headers
+                                img_url, headers=img_headers, allow_redirects=False
                             ) as snap_resp:
                                 if snap_resp.status == 200:
                                     evdata: bytes = await snap_resp.read()

@@ -84,10 +84,16 @@ async def run_housekeeping(
     # the LAN-fallback gate on the privacy / front-light switches
     # report "unavailable" even though the LAN RCP path would work.
     _hw_store = getattr(coordinator, "hw_version_store", None)
-    if _hw_store is not None and coordinator.hw_version:
+    if _hw_store is not None:
         _hw_snapshot = {k: v for k, v in coordinator.hw_version.items() if v}
         _hw_prev = getattr(coordinator, "hw_version_snapshot", None)
-        if _hw_snapshot and _hw_snapshot != _hw_prev:
+        # No truthiness guard on `_hw_snapshot` here — cleanup_stale_devices()
+        # clears hw_version when the account's last camera is removed, and
+        # that empty snapshot must still be persisted, or the removed
+        # camera's hardware version is reloaded from .storage after a
+        # restart (same class of bug already fixed for LAN IPs and LOCAL
+        # creds — bug-hunt 2026-07-27, Copilot review round 6).
+        if _hw_snapshot != _hw_prev:
             coordinator.hw_version_snapshot = _hw_snapshot
             coordinator.spawn_tracked(
                 _hw_store.async_save(_hw_snapshot),

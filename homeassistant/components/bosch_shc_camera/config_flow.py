@@ -368,8 +368,8 @@ async def _do_refresh(
     response).
     Raises RefreshTokenInvalidError on 400/401 (invalid_grant) — caller should
     trigger the reauth flow, retrying is pointless.
-    Raises AuthServerOutageError on 5xx — Bosch server is down, retry later
-    but do NOT trigger reauth.
+    Raises AuthServerOutageError on 429 (rate limited) or 5xx — Bosch server
+    is down or overloaded, retry later but do NOT trigger reauth.
     """
     async with asyncio.timeout(15):
         async with session.post(
@@ -389,7 +389,12 @@ async def _do_refresh(
             _LOGGER.warning("Token refresh failed: HTTP %d", resp.status)
             if resp.status in (400, 401):
                 raise RefreshTokenInvalidError(f"Keycloak HTTP {resp.status}")
-            if 500 <= resp.status < 600:
+            # 429 (rate limited) says nothing about the refresh token's
+            # validity, same as a 5xx outage — route it through the same
+            # transient/backoff path so repeated rate-limiting never counts
+            # toward the invalid-grant/reauth escalation (bug-hunt
+            # 2026-07-27, Copilot review round 6).
+            if resp.status == 429 or 500 <= resp.status < 600:
                 raise AuthServerOutageError(f"Bosch Keycloak HTTP {resp.status}")
     return None
 
@@ -470,7 +475,7 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
-    async def _async_verify_camera_access(self, bearer_token: str) -> bool:
+    async def _async_verify_camera_access(self, bearer_token: str) -> bool | None:
         """Verify the freshly-issued token can actually reach the camera API.
 
         A successful OAuth token exchange only proves SingleKey ID login
@@ -480,10 +485,23 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         handling in the coordinator's regular tick). Bronze's
         test-before-configure rule requires catching this before the entry
         is ever created, not after the first coordinator refresh silently
-        fails. Returns True (does not block setup) on a timeout/network
-        error — a transient hiccup during setup must not be conflated with
-        a genuine account-access rejection; the coordinator's own first
-        refresh retries and surfaces a clearer error if the problem persists.
+        fails.
+
+        Returns True when verified reachable, False on a definitive
+        account-access denial, or None when the check itself was
+        inconclusive — a 429 (rate limited) or 5xx (Bosch-side outage) says
+        nothing about whether this account can reach the camera API, only
+        that this one request didn't land, so it must not be accepted as
+        "verified" (an unverified entry could immediately fail its first
+        coordinator refresh, contradicting the very rule this check exists
+        to satisfy) — the caller aborts with retry semantics instead
+        (bug-hunt 2026-07-27, Copilot review round 6). A timeout/network
+        error during setup still returns True unconditionally: unlike a
+        definitive Bosch-side HTTP response, it says nothing at all about
+        Bosch's API, and forcing the user to redo the whole OAuth login for
+        a one-off local network blip would be poor UX — the coordinator's
+        own first refresh retries and surfaces a clearer error if the
+        problem persists.
         """
         try:
             session = await async_get_bosch_cloud_session(self.hass)
@@ -499,19 +517,12 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             ):
                 if resp.status == 200:
                     return True
-                # A 429 (rate limited) or 5xx (Bosch-side outage) is not an
-                # account-access denial — it says nothing about whether this
-                # account can reach the camera API, only that this one
-                # request didn't land. Blocking setup on it would show the
-                # misleading "registration incomplete" message for what's
-                # really just a transient Bosch-side condition (bug-hunt
-                # 2026-07-27, Copilot review round 5).
                 if resp.status == 429 or 500 <= resp.status < 600:
                     _LOGGER.debug(
-                        "Camera-access verification got transient HTTP %d — not blocking setup",
+                        "Camera-access verification got transient HTTP %d — aborting with retry semantics",
                         resp.status,
                     )
-                    return True
+                    return None
                 return False
         except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.debug("Camera-access verification skipped (%s)", err)
@@ -534,8 +545,11 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             "auth_implementation": data.get("auth_implementation", DOMAIN),
         }
 
-        if not await self._async_verify_camera_access(new_data["bearer_token"]):
+        camera_access = await self._async_verify_camera_access(new_data["bearer_token"])
+        if camera_access is False:
             return self.async_abort(reason="camera_access_denied")
+        if camera_access is None:
+            return self.async_abort(reason="cannot_connect")
 
         # Reauth: update the existing entry in place (keeps options, entities,
         # automations, FCM config, SMB settings — everything).

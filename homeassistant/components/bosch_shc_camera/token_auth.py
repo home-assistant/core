@@ -199,9 +199,6 @@ class TokenAuthCoordinatorMixin:
             )
             self.auth_outage_count = 0
             self._auth_outage_next_retry_ts = -math.inf
-            if self._auth_outage_alert_sent:
-                self._auth_outage_alert_sent = False
-                ir.async_delete_issue(self.hass, DOMAIN, "auth_server_outage")
         return self._refreshed_token  # type: ignore[no-any-return]
 
     async def _refresh_token_locked(
@@ -361,20 +358,11 @@ class TokenAuthCoordinatorMixin:
                 backoff,
                 self.auth_outage_count,
             )
-            # One-time repair issue after 3 consecutive outages so the user
-            # sees a clear explanation in Settings → Repairs while entities
-            # are unavailable. Quality-Scale Gold rule `repair-issues`.
-            if self.auth_outage_count >= 3 and not self._auth_outage_alert_sent:
-                self._auth_outage_alert_sent = True
-                ir.async_create_issue(
-                    self.hass,
-                    DOMAIN,
-                    "auth_server_outage",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.ERROR,
-                    translation_key="auth_server_outage",
-                    translation_placeholders={"error": str(err)},
-                )
+            # No Repairs issue here — Repairs must be user-actionable, and
+            # this one's own text said the opposite ("no action needed",
+            # retries automatically). The WARNING log above plus the
+            # entities-unavailable state already surface this correctly
+            # (bug-hunt 2026-07-27, Copilot review round 6).
             raise UpdateFailed(
                 f"Bosch auth server outage — will retry in {backoff}s"
             ) from err
