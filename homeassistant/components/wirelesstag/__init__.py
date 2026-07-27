@@ -111,7 +111,12 @@ class WirelessTagPlatform:
                         str(ex),
                     )
 
+        def _stop_monitoring(_event: Event) -> None:
+            """Stop cloud push monitoring on Home Assistant shutdown."""
+            self.stop_monitoring()
+
         self.api.start_monitoring(push_callback)
+        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_monitoring)
 
     def stop_monitoring(self) -> None:
         """Stop monitoring push events."""
@@ -131,12 +136,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         platform.load_tags()
         platform.start_monitoring()
         hass.data[WIRELESSTAG_DATA] = platform
-
-        def _stop_monitoring(_event: Event) -> None:
-            """Stop cloud push monitoring on Home Assistant shutdown."""
-            platform.stop_monitoring()
-
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_monitoring)
     except (ConnectTimeout, HTTPError, WirelessTagsException) as ex:
         _LOGGER.error("Unable to connect to wirelesstag.net service: %s", str(ex))
         persistent_notification.create(
