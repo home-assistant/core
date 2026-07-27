@@ -1934,8 +1934,14 @@ class BoschCameraCoordinator(
                                     # visually wrong and this WARNING repeats on
                                     # every snapshot until the next poll. The
                                     # coordinator debouncer coalesces repeats.
-                                    self.hass.async_create_task(
-                                        self.async_request_refresh()
+                                    # Tracked (not a bare hass.async_create_task)
+                                    # — otherwise this can outlive config-entry
+                                    # unload and keep running against an
+                                    # already-torn-down coordinator (Copilot
+                                    # review round 12).
+                                    self.spawn_tracked(
+                                        self.async_request_refresh(),
+                                        name="bosch_shc_camera_privacy_drift_refresh",
                                     )
                                 return None
                             _LOGGER.debug(

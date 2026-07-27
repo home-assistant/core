@@ -400,3 +400,70 @@ class TestCloudApiOverrideValidation:
         coord = BoschCameraCoordinator(hass, entry)
 
         assert coord._cloud_api == CLOUD_API
+
+
+class TestPrivacyDriftForcesRefresh:
+    """`_async_fetch_live_snapshot_impl`'s privacy-state-drift detection.
+
+    An empty snap.jpg body while HA's own cached privacy state is OFF
+    means the camera's privacy mode was toggled via the Bosch app and the
+    cloud poll hasn't caught up yet — the WARNING promises "forcing
+    refresh", which must go through `spawn_tracked` (not a bare
+    `hass.async_create_task`), or it can outlive config-entry unload and
+    run against an already-torn-down coordinator (Copilot review
+    round 12).
+    """
+
+    @staticmethod
+    def _resp_cm(status: int, body: bytes = b"", content_type: str = "") -> MagicMock:
+        resp = MagicMock()
+        resp.status = status
+        resp.headers = {"Content-Type": content_type}
+        resp.read = AsyncMock(return_value=body)
+        resp.text = AsyncMock(return_value="")
+        cm = MagicMock()
+        cm.__aenter__ = AsyncMock(return_value=resp)
+        cm.__aexit__ = AsyncMock(return_value=None)
+        return cm
+
+    @pytest.mark.asyncio
+    async def test_empty_body_with_ha_privacy_off_uses_spawn_tracked(self) -> None:
+        """Drift-forced refresh must go through spawn_tracked, not a bare task."""
+        coord = SimpleNamespace(
+            token="tok",
+            hass=MagicMock(),
+            shc_state_cache={},
+            _proxy_url_cache={
+                CAM_ID: (
+                    "proxy-01.live.cbs.boschsecurity.com:42090/hash",
+                    9_999_999_999.0,
+                )
+            },
+            _rcp_099e_probe_failed_until={},
+            hw_version={},
+            data={CAM_ID: {"privacyMode": "OFF"}},
+            async_request_refresh=AsyncMock(),
+            spawn_tracked=MagicMock(side_effect=lambda coro, **_kw: coro.close()),
+        )
+        coord._async_fetch_live_snapshot_impl = (
+            BoschCameraCoordinator._async_fetch_live_snapshot_impl.__get__(coord)
+        )
+
+        session = MagicMock()
+        session.get = MagicMock(
+            return_value=self._resp_cm(200, body=b"", content_type="image/jpeg")
+        )
+        session_cm = MagicMock()
+        session_cm.__aenter__ = AsyncMock(return_value=session)
+        session_cm.__aexit__ = AsyncMock(return_value=None)
+
+        with patch(
+            "homeassistant.components.bosch_shc_camera.coordinator.async_bosch_cloud_session_cm",
+            return_value=session_cm,
+        ):
+            result = await coord._async_fetch_live_snapshot_impl(CAM_ID)
+
+        assert result is None
+        coord.spawn_tracked.assert_called_once()
+        _, call_kwargs = coord.spawn_tracked.call_args
+        assert call_kwargs["name"] == "bosch_shc_camera_privacy_drift_refresh"

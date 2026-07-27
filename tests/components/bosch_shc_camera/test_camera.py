@@ -402,6 +402,31 @@ async def test_enable_motion_detection_updates_cache_on_success(
     assert CAM_ID in entity.coordinator.motion_set_at
 
 
+async def test_enable_motion_detection_tracks_refresh_task(
+    hass: HomeAssistant,
+) -> None:
+    """The post-enable refresh must go through `coordinator.spawn_tracked`.
+
+    Not a bare `hass.async_create_task` — otherwise it can outlive
+    config-entry unload and keep running against an already-torn-down
+    coordinator (Copilot review round 12).
+    """
+    entity = await _setup_camera_entity(hass)
+    with (
+        patch.object(entity.coordinator, "async_put_camera", return_value=True),
+        patch.object(entity.coordinator, "async_request_refresh", return_value=None),
+        patch.object(
+            entity.coordinator, "spawn_tracked", wraps=entity.coordinator.spawn_tracked
+        ) as mock_spawn_tracked,
+    ):
+        await entity.async_enable_motion_detection()
+    await hass.async_block_till_done()
+
+    mock_spawn_tracked.assert_called_once()
+    _, call_kwargs = mock_spawn_tracked.call_args
+    assert call_kwargs["name"] == "bosch_shc_camera_motion_enable_refresh"
+
+
 async def test_disable_motion_detection_raises_on_write_failure(
     hass: HomeAssistant,
 ) -> None:
@@ -412,3 +437,23 @@ async def test_disable_motion_detection_raises_on_write_failure(
         pytest.raises(HomeAssistantError),
     ):
         await entity.async_disable_motion_detection()
+
+
+async def test_disable_motion_detection_tracks_refresh_task(
+    hass: HomeAssistant,
+) -> None:
+    """Same tracked-task guard as the enable path (Copilot review round 12)."""
+    entity = await _setup_camera_entity(hass)
+    with (
+        patch.object(entity.coordinator, "async_put_camera", return_value=True),
+        patch.object(entity.coordinator, "async_request_refresh", return_value=None),
+        patch.object(
+            entity.coordinator, "spawn_tracked", wraps=entity.coordinator.spawn_tracked
+        ) as mock_spawn_tracked,
+    ):
+        await entity.async_disable_motion_detection()
+    await hass.async_block_till_done()
+
+    mock_spawn_tracked.assert_called_once()
+    _, call_kwargs = mock_spawn_tracked.call_args
+    assert call_kwargs["name"] == "bosch_shc_camera_motion_disable_refresh"
