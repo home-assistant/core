@@ -1,4 +1,88 @@
 # serializer version: 1
+# name: test_service_get_charge_schedule[zoe_40]
+  dict({
+    'active_schedule_count': 2,
+    'schedule_count': 5,
+    'schedules': list([
+      dict({
+        'activated': True,
+        'friday': dict({
+          'duration': 450,
+          'start_time': 'T00:00Z',
+        }),
+        'id': 1,
+        'monday': dict({
+          'duration': 450,
+          'start_time': 'T00:00Z',
+        }),
+        'saturday': dict({
+          'duration': 450,
+          'start_time': 'T00:00Z',
+        }),
+        'sunday': dict({
+          'duration': 450,
+          'start_time': 'T00:00Z',
+        }),
+        'thursday': dict({
+          'duration': 450,
+          'start_time': 'T00:00Z',
+        }),
+        'tuesday': dict({
+          'duration': 450,
+          'start_time': 'T00:00Z',
+        }),
+        'wednesday': dict({
+          'duration': 450,
+          'start_time': 'T00:00Z',
+        }),
+      }),
+      dict({
+        'activated': True,
+        'friday': dict({
+          'duration': 15,
+          'start_time': 'T23:30Z',
+        }),
+        'id': 2,
+        'monday': dict({
+          'duration': 15,
+          'start_time': 'T23:30Z',
+        }),
+        'saturday': dict({
+          'duration': 15,
+          'start_time': 'T23:30Z',
+        }),
+        'sunday': dict({
+          'duration': 15,
+          'start_time': 'T23:30Z',
+        }),
+        'thursday': dict({
+          'duration': 15,
+          'start_time': 'T23:30Z',
+        }),
+        'tuesday': dict({
+          'duration': 15,
+          'start_time': 'T23:30Z',
+        }),
+        'wednesday': dict({
+          'duration': 15,
+          'start_time': 'T23:30Z',
+        }),
+      }),
+      dict({
+        'activated': False,
+        'id': 3,
+      }),
+      dict({
+        'activated': False,
+        'id': 4,
+      }),
+      dict({
+        'activated': False,
+        'id': 5,
+      }),
+    ]),
+  })
+# ---
 # name: test_service_set_ac_schedule[zoe_40]
   list([
     dict({
