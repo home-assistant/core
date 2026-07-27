@@ -1,0 +1,86 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: done
+    comment: |
+      2026-07-27: removed the user-configurable scan_interval/interval_status/
+      interval_events/snapshot_interval options-flow fields (previously
+      inherited from the HACS build) — pylint's
+      home-assistant-config-flow-polling-field rule and this Bronze rule both
+      require fixed polling intervals. DEFAULT_OPTIONS' values are now the
+      integration's fixed poll cadence.
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: No custom actions/services in this snapshot-only cut.
+  docs-conditions:
+    status: exempt
+    comment: No conditions platform in this integration.
+  docs-triggers:
+    status: exempt
+    comment: No triggers platform in this integration.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: No custom actions/services in this snapshot-only cut.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No configuration options beyond the config flow itself in this cut.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: todo
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: Bosch cloud is the source of truth; devices added via OAuth flow. No local discovery applicable.
+  discovery-update-info:
+    status: exempt
+    comment: See discovery.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: todo
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: todo
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: todo
+    comment: Blocked — TLS pinning to Bosch's CA is done via a custom SSLContext; async_create_clientsession has no extension point for this.
+  strict-typing: todo

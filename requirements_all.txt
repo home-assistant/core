@@ -1009,9 +1009,6 @@ fing_agent_api==1.1.0
 # homeassistant.components.fints
 fints==3.1.0
 
-# homeassistant.components.bosch_shc_camera
-firebase-messaging==0.4.5
-
 # homeassistant.components.fish_audio
 fish-audio-sdk==1.1.0
 

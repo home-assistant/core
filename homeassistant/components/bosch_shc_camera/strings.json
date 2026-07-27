@@ -1,0 +1,89 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Already configured.",
+      "missing_configuration": "The Bosch Smart Home Camera integration is not set up correctly for OAuth. Restart Home Assistant and try again — if this keeps happening, please file an issue.",
+      "missing_credentials": "No Bosch SingleKey ID application credential is registered. Restart Home Assistant and try again — if this keeps happening, please file an issue.",
+      "oauth_implementation_unavailable": "The selected login method is no longer available. Please start over.",
+      "reauth_successful": "Re-authentication successful — your Bosch Smart Home Camera integration has been updated with a fresh token. All entities, automations, and options are preserved."
+    },
+    "step": {
+      "reauth_confirm": {
+        "description": "Your Bosch Cloud token has expired and cannot be refreshed automatically. This usually happens when the refresh token was invalidated on Bosch's side.\n\nClick **Submit** to log in again via Bosch SingleKey ID. Your existing configuration (entities, automations, options) will be preserved.",
+        "submit": "Submit",
+        "title": "Re-authenticate Bosch Smart Home Camera"
+      }
+    }
+  },
+  "issues": {
+    "auth_server_outage": {
+      "description": "The Bosch authentication server is currently returning HTTP {error}. This is a Bosch-side problem, not a configuration issue on your side.\n\nThe integration will retry automatically (exponential backoff up to 10 minutes). Entities are unavailable until the server recovers — no action needed.",
+      "title": "Bosch Camera — Auth server outage"
+    },
+    "doubled_prefix_entity_ids_migrated": {
+      "description": "**{count}** Bosch camera entity ID(s) carried a doubled `bosch_NAME_bosch_NAME_` prefix (v11.0.0–v12.2.1 bug) and were renamed to their correct form.\n\nExamples: {examples}\n\n**You must update any automations, scripts, scenes, and Lovelace dashboards that reference the old IDs.** Home Assistant does not rewrite YAML files or Lovelace cards automatically when entity IDs change. History and statistics are migrated automatically.\n\nSee the v12.3.0 release notes for the full mapping.",
+      "title": "Bosch Camera — Entity IDs renamed"
+    },
+    "firmware_update_available": {
+      "description": "A firmware update is available for camera **{camera}**: **{current}** → **{latest}**.\n\nBosch installs camera firmware updates automatically in the background on its own schedule, so no action is required — this issue clears itself once the update has installed.",
+      "title": "Bosch Camera — Firmware update available"
+    },
+    "notifications_disabled": {
+      "description": "The **{types}** cloud notification(s) are disabled for camera **{camera}**.\n\nWithout these notifications, Bosch does not send motion or person events, so the corresponding binary sensors will permanently show **Clear** even when motion occurs.\n\n**How to fix:** Enable the **{types}** notification switch(es) for this camera in Home Assistant (Settings → Devices & Services → Bosch Smart Home Camera → the camera device), or turn them on in the Bosch Smart Home app under the camera's notification settings.",
+      "title": "Bosch Camera — Notifications disabled"
+    },
+    "token_expired": {
+      "description": "The bearer token could not be renewed.\n\n{message}\n\nClick **Reconfigure** on the integration card (Settings → Devices & Services → Bosch Smart Home Camera) to log in again. Existing entities and automations are preserved.",
+      "title": "Bosch Camera — Token expired"
+    }
+  },
+  "options": {
+    "abort": {
+      "migration_started": "Migration started — please complete the Reauthentication flow on the integration card."
+    },
+    "step": {
+      "init": {
+        "description": "**Token:** {token_status}",
+        "sections": {
+          "auth": {
+            "data": {
+              "migrate_to_oss_client": "Switch to OSS OAuth client"
+            },
+            "data_description": {
+              "migrate_to_oss_client": "Switch from the legacy `residential_app` client to the dedicated `oss_residential_app` client Bosch provides for open source integrations. Enabling this will trigger the reauth flow — you will be asked to log in once via Bosch SingleKey ID, and your existing entities, automations, and options will be preserved."
+            },
+            "description": "Migrate to the OSS OAuth client.",
+            "name": "Authentication"
+          },
+          "events_storage": {
+            "data": {
+              "download_path": "Local save folder",
+              "enable_local_save": "Save events locally",
+              "file_pattern": "File name pattern",
+              "folder_pattern": "Subfolder pattern"
+            },
+            "data_description": {
+              "download_path": "Where to store event files. Example: /config/bosch_events. Only active when 'Save events locally' is on.",
+              "enable_local_save": "Save every new motion/audio event as JPEG + MP4 to the folder below. **Off by default** — turn on to activate local saving.",
+              "file_pattern": "File name pattern (without extension). Available variables: `camera`, `date`, `time`, `type`, `id`, `year`, `month`, `day` (wrap each in curly braces in your pattern). Default uses camera, date, time, type, id joined with underscores.",
+              "folder_pattern": "Subfolder pattern. Available variables: `camera`, `year`, `month`, `day`, `type` (wrap each in curly braces in your pattern). Default uses camera/year/month/day."
+            },
+            "description": "Save Bosch cloud event JPEGs locally.",
+            "name": "Event storage"
+          },
+          "features": {
+            "data": {
+              "enable_snapshots": "Camera snapshots"
+            },
+            "data_description": {
+              "enable_snapshots": "Show the latest motion-triggered JPEG as a camera entity in HA."
+            },
+            "description": "Toggle the entity types the integration creates.",
+            "name": "Features"
+          }
+        },
+        "title": "Bosch Camera — Settings"
+      }
+    }
+  }
+}
