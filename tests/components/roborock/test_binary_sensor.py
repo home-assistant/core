@@ -5,7 +5,8 @@ from datetime import timedelta
 from typing import Any
 
 import pytest
-from roborock.data import RoborockStateCode
+from roborock.data import RoborockDockTypeCode, RoborockStateCode
+from roborock.device_features import RoborockDockFeatures
 from roborock.exceptions import RoborockException
 from syrupy.assertion import SnapshotAssertion
 
@@ -143,3 +144,32 @@ async def test_emptying_dust_bin_follows_pushed_state(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "on"
+
+
+@pytest.fixture
+def dock_type(request: pytest.FixtureRequest, fake_vacuum: FakeDevice) -> None:
+    """Report the parametrized dock type for the fake vacuum."""
+    fake_vacuum.v1_properties.device_features.dock_features = (
+        RoborockDockFeatures.from_dock_type(request.param)
+    )
+
+
+@pytest.mark.parametrize(
+    ("dock_type", "expected"),
+    [
+        pytest.param(RoborockDockTypeCode.o1_dock, True, id="collect-only"),
+        pytest.param(RoborockDockTypeCode.o2_dock, False, id="wash-only"),
+        pytest.param(RoborockDockTypeCode.shell_e_dock, True, id="collect-wash-dry"),
+        pytest.param(RoborockDockTypeCode.o0_dock, False, id="no-dock"),
+    ],
+    indirect=["dock_type"],
+)
+@pytest.mark.usefixtures("dock_type")
+async def test_emptying_dust_bin_requires_collectable_dock(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    expected: bool,
+) -> None:
+    """Test the emptying sensor only exists for a dock that can empty."""
+    entity_id = "binary_sensor.roborock_s7_maxv_dock_emptying_dust_bin"
+    assert (hass.states.get(entity_id) is not None) == expected
