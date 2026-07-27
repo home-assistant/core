@@ -1,20 +1,22 @@
 """The tests for Philips Hue device triggers for V2 bridge."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from aiohue.v2.models.button import ButtonEvent
 from pytest_unordered import unordered
 
-from homeassistant.components import hue
+from homeassistant.components import automation, hue
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.hue.v2.device import async_setup_devices
 from homeassistant.components.hue.v2.hue_event import async_setup_hue_events
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonArrayType
 
-from .conftest import setup_platform
+from .conftest import create_config_entry, setup_platform
 
 from tests.common import async_capture_events, async_get_device_automations
 
@@ -143,3 +145,80 @@ async def test_get_triggers_for_removed_device(
         hass, DeviceAutomationType.TRIGGER, orphaned_device.id
     )
     assert triggers == []
+
+
+async def test_if_fires_when_config_entry_loads_late(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test a trigger attached before the bridge is loaded still fires.
+
+    Regression test for https://github.com/home-assistant/core/issues/156390
+    """
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    config_entry = create_config_entry(api_version=2)
+    config_entry.add_to_hass(hass)
+
+    # the device is restored from the registry while the bridge is still setting up
+    wall_switch_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(hue.DOMAIN, "3ff06175-29e8-44a8-8fe7-af591b0025da")},
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": hue.DOMAIN,
+                        "device_id": wall_switch_device.id,
+                        "type": ButtonEvent.INITIAL_PRESS.value,
+                        "subtype": 1,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "{{ trigger.event.data.type }}"},
+                    },
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert config_entry.state is not ConfigEntryState.LOADED
+
+    mock_bridge_v2.config_entry = config_entry
+    with (
+        patch.object(hue.migration, "is_v2_bridge", return_value=True),
+        patch("homeassistant.components.hue.HueBridge", return_value=mock_bridge_v2),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_hue_events(mock_bridge_v2)
+    await hass.async_block_till_done()
+
+    # Emit button update event
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "button": {
+                "button_report": {
+                    "event": "initial_press",
+                    "updated": "2021-10-01T12:00:00Z",
+                }
+            },
+            "id": "c658d3d8-a013-4b81-8ac6-78b248537e70",
+            "metadata": {"control_id": 1},
+            "type": "button",
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == ButtonEvent.INITIAL_PRESS.value
