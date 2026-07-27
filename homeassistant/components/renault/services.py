@@ -1,6 +1,6 @@
 """Support for Renault services."""
 
-from datetime import datetime
+from datetime import UTC, datetime, time
 from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any
@@ -17,6 +17,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .renault_vehicle import RenaultVehicleProxy
@@ -170,9 +171,14 @@ async def charge_set_schedules(service_call: ServiceCall) -> None:
     )
 
 
-def _format_charge_schedule_time(start_time: str) -> str:
+def _format_charge_schedule_time(start_time: str | None) -> str | None:
     """Format charge schedule start time for the service response."""
-    return start_time.removeprefix("T").removesuffix("Z")
+    if start_time is None:
+        return None
+
+    utc_time = time.fromisoformat(start_time.removeprefix("T").removesuffix("Z"))
+    utc_datetime = datetime.combine(dt_util.utcnow().date(), utc_time, UTC)
+    return dt_util.as_local(utc_datetime).strftime("%H:%M")
 
 
 def _serialize_charge_schedules(
