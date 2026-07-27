@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def patch_webhook_id() -> Generator[str]:
+def patch_webhook_id() -> Generator[None]:
     """Patch webhook ID generation."""
     with patch(
         "homeassistant.components.overseerr.config_flow.async_generate_id",
