@@ -34,6 +34,7 @@ class MonzoTransactionEvent(EventEntity):
     _attr_event_types = [EVENT_TRANSACTION_CREATED]
     _attr_has_entity_name = True
     _attr_translation_key = "transaction"
+    _unrecorded_attributes = frozenset({ATTR_DATA})
 
     def __init__(self, account: dict[str, Any]) -> None:
         """Initialize the event entity."""
