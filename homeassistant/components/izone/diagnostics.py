@@ -1,10 +1,9 @@
 """Diagnostics support for iZone."""
 
 from collections.abc import Mapping
-import re
 from typing import Any
 
-from homeassistant.components.diagnostics import REDACTED, async_redact_data
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
@@ -17,17 +16,28 @@ TO_REDACT = {
     "source_ip",
 }
 
-_IPV4 = re.compile(r"(?<!\d)(?:\d{1,3}\.){3}\d{1,3}(?!\d)")
 
-
-def _redact_ipv4_strings(data: Any) -> Any:
-    """Replace IPv4 literals embedded in strings (e.g. UDP ``IP_…`` payloads)."""
-    if isinstance(data, str):
-        return _IPV4.sub(str(REDACTED), data)
+def _redact_data(data: Any) -> Any:
+    """Redact host keys and scrub those host values from sibling strings."""
     if isinstance(data, list):
-        return [_redact_ipv4_strings(item) for item in data]
+        return [_redact_data(item) for item in data]
     if isinstance(data, Mapping):
-        return {key: _redact_ipv4_strings(value) for key, value in data.items()}
+        hosts = {
+            value
+            for key, value in data.items()
+            if key in TO_REDACT and isinstance(value, str)
+        }
+        result: dict[Any, Any] = {}
+        for key, value in data.items():
+            if key in TO_REDACT:
+                result[key] = REDACTED
+                continue
+            redacted = _redact_data(value)
+            if hosts and isinstance(redacted, str):
+                for host in hosts:
+                    redacted = redacted.replace(host, REDACTED)
+            result[key] = redacted
+        return result
     return data
 
 
@@ -46,16 +56,13 @@ async def async_get_config_entry_diagnostics(
     else:
         discovery = {"running": False}
 
-    return _redact_ipv4_strings(
-        async_redact_data(
-            {
-                "entry": {
-                    **dict(entry.data),
-                    "unique_id": entry.unique_id,
-                },
-                "discovery": discovery,
-                "controller": controller.dump_state(),
+    return _redact_data(
+        {
+            "entry": {
+                **dict(entry.data),
+                "unique_id": entry.unique_id,
             },
-            TO_REDACT,
-        )
+            "discovery": discovery,
+            "controller": controller.dump_state(),
+        }
     )

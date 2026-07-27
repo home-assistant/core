@@ -1,6 +1,7 @@
 """Test the iZone diagnostics."""
 
 from collections.abc import Callable
+from unittest.mock import Mock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -35,7 +36,7 @@ async def test_config_entry_diagnostics(
     udp = result["discovery"]["recent_udp"][0]
     assert udp["host"] == str(REDACTED)
     assert udp["source_ip"] == str(REDACTED)
-    assert "10." not in udp["message"]
+    assert entry.runtime_data.controller.device_ip not in udp["message"]
     assert str(REDACTED) in udp["message"]
     assert result["controller"]["device_ip"] == str(REDACTED)
     assert result["controller"]["device_uid"] == "000000001"
@@ -45,6 +46,56 @@ async def test_config_entry_diagnostics(
     assert result["controller"]["connected"] is True
     assert result["controller"]["fan_modes"] == ["low", "med", "high", "auto"]
     assert result == snapshot
+
+
+async def test_config_entry_diagnostics_redacts_discovery_peer_hosts(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    init_integration: MockConfigEntry,
+    mock_discovery_service: Mock,
+) -> None:
+    """Hosts from discovery peers are redacted in UDP message payloads."""
+    peer_ip = "198.51.100.9"
+
+    def dump_state() -> dict:
+        return {
+            "closed": False,
+            "udp_bound": True,
+            "claimed": [
+                {
+                    "uid": "000000001",
+                    "host": "192.0.2.1",
+                }
+            ],
+            "known": [
+                {
+                    "uid": "000000009",
+                    "host": peer_ip,
+                }
+            ],
+            "recent_udp": [
+                {
+                    "source_ip": peer_ip,
+                    "source_port": 12107,
+                    "received_at": "2026-07-25T14:37:00.257385+00:00",
+                    "message": f"ASPort_12107,Mac_000000009,IP_{peer_ip},iZone",
+                    "uid": "000000009",
+                    "host": peer_ip,
+                    "tags": ["iZone"],
+                }
+            ],
+        }
+
+    mock_discovery_service.dump_state = dump_state
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+
+    assert result["discovery"]["known"][0]["host"] == str(REDACTED)
+    udp = result["discovery"]["recent_udp"][0]
+    assert udp["host"] == str(REDACTED)
+    assert udp["source_ip"] == str(REDACTED)
+    assert peer_ip not in udp["message"]
+    assert str(REDACTED) in udp["message"]
 
 
 def _pop_discovery_slot(hass: HomeAssistant) -> None:
