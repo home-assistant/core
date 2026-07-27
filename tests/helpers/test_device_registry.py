@@ -8112,6 +8112,27 @@ async def test_dict_repr_dual_writes_deprecated_keys(
             id="name-equals-area-no-fallback",
         ),
         pytest.param(
+            [("Hall", ["Downstairs"]), ("Cellar", ["Downstairs"])],
+            "Downstairs Light",
+            None,
+            None,
+            id="ambiguous-shared-alias",
+        ),
+        pytest.param(
+            [("Kitchen", []), ("Cookhouse", ["Kitchen"])],
+            "Kitchen Sensor",
+            None,
+            None,
+            id="ambiguous-alias-matches-other-area-name",
+        ),
+        pytest.param(
+            [("Master", []), ("Spare", ["Master"]), ("Master Bedroom", [])],
+            "Master Bedroom Lamp",
+            None,
+            dr.DeviceAreaSuggestion("Lamp", "master_bedroom"),
+            id="longest-label-beats-shorter-ambiguity",
+        ),
+        pytest.param(
             [("Kitchen", [])],
             "Kitchenette Sensor",
             None,

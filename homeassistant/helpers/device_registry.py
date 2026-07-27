@@ -1276,17 +1276,24 @@ class DeviceAreaSuggestion(NamedTuple):
     area_id: str | None = None
 
 
-def _match_area(name: str, area: AreaEntry) -> tuple[str, int] | None:
+class _AreaMatch(NamedTuple):
+    """A device name with an area label stripped, and the length of that label."""
+
+    name: str
+    label_length: int
+
+
+def _match_area(name: str, area: AreaEntry) -> _AreaMatch | None:
     """Return the stripped name and length of the area's longest matching label."""
-    best: tuple[str, int] | None = None
+    best: _AreaMatch | None = None
     for label in (area.name, *area.aliases):
         if not label:
             continue
         stripped = strip_boundary_label(name, label)
         if stripped is None:
             continue
-        if best is None or len(label) > best[1]:
-            best = (stripped, len(label))
+        if best is None or len(label) > best.label_length:
+            best = _AreaMatch(stripped, len(label))
     return best
 
 
@@ -1298,26 +1305,33 @@ def suggest_device_area(
     """Suggest a cleaned device name and area from a known area label.
 
     An already assigned area is never overridden, only stripped from the name.
-    Returns None when nothing should change.
+    Labels are not unique across areas, so an equally long match from another
+    area is ambiguous. Returns None when nothing should change.
     """
     if not (name := (name or "").strip()):
         return None
 
     if current_area_id:
         area = next((area for area in areas if area.id == current_area_id), None)
-        if area and (match := _match_area(name, area)) and match[0]:
-            return DeviceAreaSuggestion(name=match[0])
+        if area and (match := _match_area(name, area)) and match.name:
+            return DeviceAreaSuggestion(name=match.name)
         return None
 
-    best: tuple[str, str] | None = None
-    best_length = 0
+    best: _AreaMatch | None = None
+    best_area_id: str | None = None
+    is_ambiguous = False
     for area in areas:
-        if (match := _match_area(name, area)) and match[1] > best_length:
-            best = (area.id, match[0])
-            best_length = match[1]
-    if best and best[1]:
-        return DeviceAreaSuggestion(name=best[1], area_id=best[0])
-    return None
+        if not (match := _match_area(name, area)):
+            continue
+        if best is None or match.label_length > best.label_length:
+            best = match
+            best_area_id = area.id
+            is_ambiguous = False
+        elif match.label_length == best.label_length:
+            is_ambiguous = True
+    if is_ambiguous or best is None or not best.name:
+        return None
+    return DeviceAreaSuggestion(name=best.name, area_id=best_area_id)
 
 
 class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
