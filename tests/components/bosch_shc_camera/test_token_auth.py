@@ -88,9 +88,15 @@ async def test_repeated_empty_responses_do_trigger_reauth() -> None:
     """
     stub = _make_stub()
 
-    with patch(
-        "homeassistant.components.bosch_shc_camera.config_flow._do_refresh",
-        AsyncMock(return_value=None),
+    with (
+        patch(
+            "homeassistant.components.bosch_shc_camera.config_flow._do_refresh",
+            AsyncMock(return_value=None),
+        ),
+        patch(
+            "homeassistant.components.bosch_shc_camera.token_auth.asyncio.sleep",
+            AsyncMock(),
+        ),
     ):
         for _ in range(2):
             with pytest.raises(UpdateFailed):
