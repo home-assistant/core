@@ -146,7 +146,7 @@ async def test_existing_device_updates_host(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test rediscovery of a configured device updates its host."""
-    new_host = "192.168.1.9"
+    new_host = "192.0.2.2"
     new_device = replace(DEVICE, ip=new_host)
     mock_linknlink_client.discover_host.return_value = new_device
     mock_linknlink_client.connect.return_value = replace(SESSION, device=new_device)
