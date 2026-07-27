@@ -1,5 +1,7 @@
 """Generic Plugwise Entity Class."""
 
+from typing import override
+
 from plugwise import GwEntityData
 
 from homeassistant.const import ATTR_NAME, ATTR_VIA_DEVICE, CONF_HOST
@@ -69,6 +71,7 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
             )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (

@@ -2,7 +2,7 @@
 
 from datetime import time
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -61,10 +61,12 @@ class VictronTime(VictronBaseEntity, TimeEntity):
         self._attr_native_value = VictronTime.victron_time_to_time(metric.value)
 
     @callback
+    @override
     def _on_update_cb(self, value: Any) -> None:
         self._attr_native_value = VictronTime.victron_time_to_time(value)
         self.async_write_ha_state()
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Set a new time value."""
         if TYPE_CHECKING:

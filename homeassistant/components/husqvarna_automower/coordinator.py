@@ -68,6 +68,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self._on_data_update()
         super().async_update_listeners()
 
+    @override
     async def _async_setup(self) -> None:
         """Initialize websocket connection and callbacks."""
         await self.api.connect()
@@ -85,6 +86,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
 
         self.api.register_ws_ready_callback(start_watchdog)
 
+    @override
     async def _async_update_data(self) -> MowerDictionary:
         """Poll data from the API."""
         try:
@@ -143,6 +145,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self.async_set_updated_data(ws_data)
 
     @callback
+    @override
     def async_set_updated_data(self, data: MowerDictionary) -> None:
         """Override DataUpdateCoordinator to preserve fixed polling interval.
 
@@ -227,7 +230,9 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             _LOGGER.debug("Removing orphaned devices: %s", orphaned_devices)
             device_registry = dr.async_get(self.hass)
             for mower_id in orphaned_devices:
-                dev = device_registry.async_get_device(identifiers={(DOMAIN, mower_id)})
+                dev = device_registry.async_get_device_by_identifier(
+                    (DOMAIN, mower_id), self.config_entry.entry_id
+                )
                 if dev is not None:
                     device_registry.async_update_device(
                         device_id=dev.id,

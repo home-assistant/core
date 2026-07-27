@@ -23,6 +23,7 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
+from .const import GeolocationEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +45,10 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 
 def source_match(state: State | None, source: str) -> bool:
     """Check if the state matches the provided source."""
-    return state is not None and state.attributes.get("source") == source
+    return (
+        state is not None
+        and state.attributes.get(GeolocationEntityStateAttribute.SOURCE) == source
+    )
 
 
 async def async_attach_trigger(

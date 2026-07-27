@@ -2,7 +2,7 @@
 
 from datetime import datetime, time, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 from zoneinfo import ZoneInfo
 
 from PyTado.interface import Tado
@@ -84,6 +84,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return fallback flag to Smart Schedule."""
         return self._fallback
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the (initial) latest data from Tado."""
 

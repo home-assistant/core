@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine, Mapping
 import dataclasses
 import logging
 from logging import Logger
-from typing import Any, TypeGuard
+from typing import Any, TypeGuard, override
 
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -206,8 +206,19 @@ def async_extract_referenced_entity_ids(
             selected.missing_areas.add(area_id)
 
     for device_id in target_selection.device_ids:
-        if device_id not in dev_reg.devices:
+        if device_id in dev_reg.devices:
+            selected.referenced_devices.add(device_id)
+        elif split_devices := dev_reg.async_get_devices_for_composite_device_id(
+            device_id
+        ):
+            # A multi config entry composite device id is no longer a device itself;
+            # it resolves to the devices it was split into so actions targeting it
+            # still trickle down. Only the splits are referenced, not the composite id,
+            # so a device-id consumer does not act on the same underlying device twice.
+            selected.referenced_devices.update(device.id for device in split_devices)
+        else:
             selected.missing_devices.add(device_id)
+            selected.referenced_devices.add(device_id)
 
     if target_selection.label_ids:
         label_reg = lr.async_get(hass)
@@ -234,7 +245,6 @@ def async_extract_referenced_entity_ids(
         )
 
     selected.referenced_areas.update(target_selection.area_ids)
-    selected.referenced_devices.update(target_selection.device_ids)
 
     if not selected.referenced_areas and not selected.referenced_devices:
         return selected
@@ -380,12 +390,9 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         """Initialize the state change tracker.
 
         `on_entities_update` may be a plain callback or a coroutine function.
-        A coroutine is awaited for the initial entity set (so setup is
-        deterministic) and scheduled as a background task for later
-        registry-driven changes. It is called with the added and removed
-        entity ids and the states of all currently targeted entities; the
-        states mapping is only valid during the synchronous call, so a
-        coroutine must copy what it needs before awaiting.
+        It is called with the added and removed entity ids and the states of
+        all currently targeted entities; the states mapping is only valid during
+        the synchronous call, so a coroutine must copy what it needs before awaiting.
         """
         super().__init__(
             hass,
@@ -400,13 +407,12 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         self._tracked_entity_states: dict[str, State | None] = {}
         self._update_tasks: set[asyncio.Task[None]] = set()
 
+    @override
     async def async_setup(self) -> Callable[[], None]:
         """Set up tracking, awaiting the update for the initial entity set.
 
         The initial update is awaited so that a coroutine `on_entities_update`
-        (e.g. one that loads history) completes before setup returns. Later
-        registry-driven updates instead arrive via the callback
-        `_handle_entities_update` and are scheduled as background tasks.
+        (e.g. one that loads history) completes before setup returns.
         """
         self._setup_registry_listeners()
         entities = self._referenced_entities()
@@ -415,6 +421,7 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         return self._unsubscribe
 
     @callback
+    @override
     def _handle_entities_update(self, tracked_entities: set[str]) -> None:
         """Handle a registry-driven change to the tracked entity set."""
         if (coro := self._apply_entities_update(tracked_entities)) is None:
@@ -478,6 +485,7 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
             previous_unsub()
         return result
 
+    @override
     def _unsubscribe(self) -> None:
         """Unsubscribe from all events."""
         super()._unsubscribe()
@@ -511,9 +519,7 @@ async def async_track_target_selector_state_change_event(
 
     `on_entities_update` is called with the added and removed entity ids and
     the states of all currently targeted entities. It may be a coroutine
-    function; it is awaited for the initial entity set and scheduled as a
-    task for later registry-driven changes, so this function must itself be
-    awaited. The states mapping is only valid during the synchronous call.
+    function; The states mapping is only valid during the synchronous call.
     """
     target_selection = TargetSelection(target_selector_config)
     if not target_selection.has_any_target:

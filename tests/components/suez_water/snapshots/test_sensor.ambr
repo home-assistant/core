@@ -5,7 +5,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -24,7 +26,7 @@
     'object_id_base': 'Water price',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water price',
     'platform': 'suez_water',
@@ -33,16 +35,16 @@
     'supported_features': 0,
     'translation_key': 'water_price',
     'unique_id': '123456_water_price',
-    'unit_of_measurement': '€',
+    'unit_of_measurement': '€/m³',
   })
 # ---
 # name: test_sensors_valid_state[sensor.suez_mock_device_water_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by toutsurmoneau.fr',
-      'device_class': 'monetary',
-      'friendly_name': 'Suez mock device Water price',
-      'unit_of_measurement': '€',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by toutsurmoneau.fr',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Suez mock device Water price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.suez_mock_device_water_price',
@@ -95,9 +97,9 @@
 # name: test_sensors_valid_state[sensor.suez_mock_device_water_usage_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by toutsurmoneau.fr',
-      'device_class': 'water',
-      'friendly_name': 'Suez mock device Water usage yesterday',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by toutsurmoneau.fr',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Suez mock device Water usage yesterday',
       'highest_monthly_consumption': 2558,
       'history': dict({
         '2024-01-01': 130,
@@ -115,7 +117,7 @@
         '2024-01-02': 145,
       }),
       'this_year_overall': 1500,
-      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.suez_mock_device_water_usage_yesterday',

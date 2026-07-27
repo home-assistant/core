@@ -1,7 +1,7 @@
 """Base classes for KNX entities."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from xknx.devices import Device as XknxDevice
 
@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import DOMAIN
+from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN
 from .storage.config_store import PlatformControllerBase
 from .storage.const import CONF_DEVICE_INFO
 
@@ -42,12 +42,14 @@ class KnxUiEntityPlatformController(PlatformControllerBase):
         self._entity_platform = entity_platform
         self._entity_class = entity_class
 
+    @override
     async def create_entity(self, unique_id: str, config: dict[str, Any]) -> None:
         """Add a new UI entity."""
         await self._entity_platform.async_add_entities(
             [self._entity_class(self._knx_module, unique_id, config)]
         )
 
+    @override
     async def update_entity(
         self, entity_entry: RegistryEntry, config: dict[str, Any]
     ) -> None:
@@ -68,6 +70,7 @@ class _KnxEntityBase(Entity):
     _knx_entity_identifier: KnxEntityIdentifier | None = None
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._knx_module.connected
@@ -80,6 +83,7 @@ class _KnxEntityBase(Entity):
         """Call after device was updated."""
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Store register state change callback and start device object."""
         self._device.register_device_updated_cb(self.after_update_callback)
@@ -99,6 +103,7 @@ class _KnxEntityBase(Entity):
         # eg. for restoring state (like _KNXSwitch)
         await super().async_added_to_hass()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self._device.unregister_device_updated_cb(self.after_update_callback)
@@ -117,14 +122,17 @@ class KnxYamlEntity(_KnxEntityBase):
         self,
         knx_module: KNXModule,
         unique_id: str,
-        name: str,
-        entity_category: EntityCategory | None,
+        entity_config: dict[str, Any],
     ) -> None:
         """Initialize the YAML entity."""
         self._knx_module = knx_module
-        self._attr_name = name or None
+        self._attr_name = entity_config[CONF_NAME] or None
         self._attr_unique_id = unique_id
-        self._attr_entity_category = entity_category
+        self._attr_entity_category = entity_config.get(CONF_ENTITY_CATEGORY)
+
+        default_entity_id: str | None
+        if (default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
+            self.entity_id = default_entity_id
 
 
 class KnxUiEntity(_KnxEntityBase):

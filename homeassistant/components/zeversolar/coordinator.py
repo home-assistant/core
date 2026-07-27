@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 import zeversolar
 
@@ -33,6 +34,7 @@ class ZeversolarCoordinator(DataUpdateCoordinator[zeversolar.ZeverSolarData]):
         )
         self._client = zeversolar.ZeverSolarClient(host=entry.data[CONF_HOST])
 
+    @override
     async def _async_update_data(self) -> zeversolar.ZeverSolarData:
         """Fetch the latest data from the source."""
         try:

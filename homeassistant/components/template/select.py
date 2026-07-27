@@ -1,7 +1,7 @@
 """Support for selects which integrates with other components."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -137,6 +137,7 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
         if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
             self.add_script(CONF_SELECT_OPTION, select_option, name, DOMAIN)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         if self._attr_assumed_state:

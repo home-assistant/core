@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pysmlight.const import Events as SmEvents
 from pysmlight.models import Firmware, Info
@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, ZWAVE_TYPES
 from .coordinator import SmConfigEntry, SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
 
@@ -77,7 +77,8 @@ async def async_setup_entry(
 
     entities.extend(
         SmUpdateEntity(coordinator, ZB_UPDATE_ENTITY, idx)
-        for idx, _ in enumerate(radios)
+        for idx, radio in enumerate(radios)
+        if radio.zb_type != -1
     )
 
     async_add_entities(entities)
@@ -114,12 +115,22 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         self._unload: list[Callable] = []
         self.idx = idx
 
+        if (
+            (data := coordinator.data)
+            and idx < len(data.info.radios)
+            and data.info.radios[idx].zb_type in ZWAVE_TYPES
+        ):
+            if description.key == "zigbee_update":
+                self._attr_translation_key = "z_wave_update"
+
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update callbacks."""
         self._firmware = self.entity_description.latest_version(
@@ -129,6 +140,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             self.async_write_ha_state()
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version installed.."""
         data = self.coordinator.data
@@ -136,6 +148,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         return self.entity_description.installed_version(data.info, self.idx)
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
 
@@ -165,10 +178,20 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             )
         )
 
+    @override
     def release_notes(self) -> str | None:
         """Return release notes for firmware."""
         if "zigbee" in self.entity_description.key:
-            notes = f"### {'ZNP' if self.idx else 'EZSP'} Firmware\n\n"
+            radio_desc = "Zigbee"
+            if (data := self.coordinator.data) and self.idx < len(data.info.radios):
+                radio = data.info.radios[self.idx]
+                if radio.zb_type in ZWAVE_TYPES:
+                    radio_desc = "Z-Wave"
+                elif radio.zb_hw and "EFR32" in radio.zb_hw:
+                    radio_desc = "EZSP"
+                elif radio.zb_hw and "CC2" in radio.zb_hw:
+                    radio_desc = "ZNP"
+            notes = f"### {radio_desc} Firmware\n\n"
         else:
             notes = "### Core Firmware\n\n"
 
@@ -216,6 +239,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             },
         )
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:

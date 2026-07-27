@@ -11,7 +11,6 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
@@ -26,21 +25,6 @@ async def target_remotes(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "remote", domain_excluded="switch")
 
 
-@pytest.mark.parametrize(
-    "condition",
-    [
-        "remote.is_off",
-        "remote.is_on",
-    ],
-)
-async def test_remote_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the remote conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -65,7 +49,6 @@ async def test_remote_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("remote"),
@@ -110,7 +93,6 @@ async def test_remote_state_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("remote"),

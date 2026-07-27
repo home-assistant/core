@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from yolink.client_request import ClientRequest
 from yolink.const import ATTR_DEVICE_SPEAKER_HUB
@@ -99,6 +99,7 @@ class YoLinkNumberTypeConfigEntity(YoLinkEntity, NumberEntity):
         self._attr_unique_id = f"{coordinator.device.device_id} {description.key}"
 
     @callback
+    @override
     def update_entity_state(self, state: dict) -> None:
         """Update HA Entity State."""
         if (
@@ -112,6 +113,7 @@ class YoLinkNumberTypeConfigEntity(YoLinkEntity, NumberEntity):
         """Update SpeakerHub volume."""
         await self.call_device(ClientRequest("setOption", {"volume": volume}))
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         if (

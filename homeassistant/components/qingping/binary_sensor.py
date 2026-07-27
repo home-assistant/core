@@ -1,5 +1,7 @@
 """Support for Qingping binary sensors."""
 
+from typing import override
+
 from qingping_ble import (
     BinarySensorDeviceClass as QingpingBinarySensorDeviceClass,
     SensorUpdate,
@@ -98,6 +100,7 @@ class QingpingBluetoothSensorEntity(
     """Representation of a Qingping binary sensor."""
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

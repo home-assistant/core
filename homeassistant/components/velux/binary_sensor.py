@@ -1,5 +1,7 @@
 """Support for rain sensors built into some Velux windows."""
 
+from typing import override
+
 from pyvlx import Window
 
 from homeassistant.components.binary_sensor import (
@@ -53,20 +55,23 @@ class VeluxRainSensor(
         self._attr_unique_id = f"{unique_id}_rain_sensor"
         self._attr_device_info = velux_device_info(node, config_entry_id)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Called when the entity is added to Home Assistant."""
         await super().async_added_to_hass()
         # Get initial state as we didn't do it on coordinator initialization to avoid doing it for disabled entities
-        await self.coordinator.async_request_refresh()
+        if self.coordinator.data is None:
+            await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if rain is detected."""
         # Velux windows with rain sensors report an opening
         # limitation when rain is detected. So far we've
         # seen 89, 91, 93 (most cases) or 100 (Velux GPU).
-        # It probably makes sense to
-        # assume that any large enough limitation (we use >=89) means rain is detected.
+        # It probably makes sense to assume that any large
+        # enough limitation (we use >=89) means rain is detected.
         # Documentation on this is non-existent AFAIK.
         if self.coordinator.data is None:
             return None

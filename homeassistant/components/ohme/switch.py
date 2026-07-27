@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from ohme import ApiException, OhmeApiClient
 
@@ -106,15 +106,18 @@ class OhmeSwitch(OhmeEntity, SwitchEntity):
     entity_description: OhmeSwitchDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self.entity_description.is_on_fn(self.coordinator.client)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.off_fn(self.coordinator.client)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.on_fn(self.coordinator.client)
@@ -127,16 +130,19 @@ class OhmeConfigSwitch(OhmeEntity, SwitchEntity):
     entity_description: OhmeConfigSwitchDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the entity value to represent the entity state."""
         return self.coordinator.client.configuration_value(
             self.entity_description.configuration_key
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._toggle(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._toggle(False)
