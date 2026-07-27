@@ -51,15 +51,6 @@ def setup_security_filter(app: Application) -> None:
             unquoted = _recursive_unquote(unquoted)
         return unquoted
 
-    def _remote_info(request: Request) -> str:
-        """Retrieves the request remote source information."""
-        if (remote := request.remote) is None:
-            return "[unknown remote]"
-        try:
-            return f"{remote} ({ip_address(remote)})"
-        except ValueError:
-            return remote
-
     @middleware
     async def security_filter_middleware(
         request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
@@ -78,13 +69,13 @@ def setup_security_filter(app: Application) -> None:
                 if unsafe_byte in query_string:
                     _LOGGER.warning(
                         "Filtered a request from %s with unsafe byte query string: %s",
-                        _remote_info(request),
+                        request.remote,
                         request.raw_path,
                     )
                     raise HTTPBadRequest
                 _LOGGER.warning(
                     "Filtered a request from %s with an unsafe byte in path: %s",
-                    _remote_info(request),
+                    request.remote,
                     request.raw_path,
                 )
                 raise HTTPBadRequest
@@ -96,14 +87,14 @@ def setup_security_filter(app: Application) -> None:
             if FILTERS.search(_recursive_unquote(query_string)):
                 _LOGGER.warning(
                     "Filtered a request from %s with a potential harmful query string: %s",
-                    _remote_info(request),
+                    request.remote,
                     request.raw_path,
                 )
                 raise HTTPBadRequest
 
             _LOGGER.warning(
                 "Filtered a potential harmful request from %s to: %s",
-                _remote_info(request),
+                request.remote,
                 request.raw_path,
             )
             raise HTTPBadRequest
