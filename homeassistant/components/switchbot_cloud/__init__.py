@@ -217,6 +217,7 @@ async def make_device_data(
 
     if isinstance(device, Device) and device.device_type in [
         "Battery Circulator Fan",
+        "Battery Circulator Fan 2 Pro",
         "Standing Fan",
     ]:
         coordinator = await coordinator_for_device(
