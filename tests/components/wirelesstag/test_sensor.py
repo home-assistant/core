@@ -1,9 +1,14 @@
 """Tests for the Wireless Sensor Tags sensor platform."""
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+from homeassistant.components.wirelesstag.const import SIGNAL_TAG_UPDATE
 from homeassistant.const import STATE_UNAVAILABLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
@@ -44,11 +49,39 @@ def _mock_tag() -> MagicMock:
     return tag
 
 
-async def test_update_handles_tag_missing_from_reload(hass: HomeAssistant) -> None:
+async def _recover_by_poll(
+    hass: HomeAssistant, tag: MagicMock, mock_api: MagicMock
+) -> None:
+    """Make the tag available again through the polling path."""
+    mock_api.load_tags.return_value = {tag.uuid: tag}
+    await async_update_entity(hass, ENTITY_ID)
+
+
+async def _recover_by_push(
+    hass: HomeAssistant, tag: MagicMock, mock_api: MagicMock
+) -> None:
+    """Make the tag available again through a push notification."""
+    async_dispatcher_send(
+        hass, SIGNAL_TAG_UPDATE.format(tag.tag_id, tag.tag_manager_mac), tag
+    )
+
+
+@pytest.mark.parametrize(
+    "recover",
+    [
+        pytest.param(_recover_by_poll, id="poll"),
+        pytest.param(_recover_by_push, id="push"),
+    ],
+)
+async def test_update_handles_tag_missing_from_reload(
+    hass: HomeAssistant,
+    recover: Callable[[HomeAssistant, MagicMock, MagicMock], Awaitable[None]],
+) -> None:
     """Test an update where the tag is no longer returned is handled gracefully.
 
     If a reload no longer contains the entity's tag, the update must mark the
     entity unavailable instead of raising a KeyError or keeping a stale value.
+    The entity recovers once the tag shows up again, by poll or by push.
     """
     tag = _mock_tag()
     with patch("homeassistant.components.wirelesstag.WirelessTags") as mock_api_class:
@@ -68,9 +101,7 @@ async def test_update_handles_tag_missing_from_reload(hass: HomeAssistant) -> No
 
         assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
-        # The tag is returned again and the entity recovers.
-        mock_api.load_tags.return_value = {tag.uuid: tag}
-        await async_update_entity(hass, ENTITY_ID)
+        await recover(hass, tag, mock_api)
         await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == "21.5"

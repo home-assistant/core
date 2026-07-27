@@ -80,8 +80,12 @@ class WirelessTagBaseSensor(Entity):
             self._state = None
             return
 
+        self._apply_tag(updated_tag)
+
+    def _apply_tag(self, tag: SensorTag) -> None:
+        """Adopt a freshly received tag and refresh the state from it."""
         self._tag_missing = False
-        self._tag = updated_tag
+        self._tag = tag
         self._state = self.updated_state_value()
 
     @property
