@@ -56,6 +56,7 @@ from .coordinator import (
     get_options as get_options,  # re-export: mypy --no-implicit-reexport (camera.py imports it via `from . import`)
 )
 from .models import MODELS
+from .snapshot_store import async_remove_all_snapshots
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -374,7 +375,13 @@ async def _async_load_persisted_caches(
     # Bosch cycles LOCAL Digest creds on every PUT /connection LOCAL.
     # Security note: stored in HA's .storage (same protection level as the
     # cloud bearer token). LAN-only effective scope (camera not internet-exposed).
-    _creds_store: Store = Store(hass, version=1, key=f"{DOMAIN}_local_creds")
+    # private=True: Store defaults to mode 0644 (world-readable) — this file
+    # holds each camera's plaintext Digest username/password, so it must be
+    # written with the same restrictive mode HA's other credential stores use
+    # (bug-hunt 2026-07-27, Copilot review round 5).
+    _creds_store: Store = Store(
+        hass, version=1, key=f"{DOMAIN}_local_creds", private=True
+    )
     coordinator.local_creds_store = _creds_store
     _persisted_creds = await _creds_store.async_load() or {}
     if isinstance(_persisted_creds, dict):
@@ -664,6 +671,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await _async_cancel_coordinator_tasks(coord)
 
     return bool(await hass.config_entries.async_unload_platforms(entry, PLATFORMS))
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Delete every integration-owned on-disk file when the entry is removed.
+
+    Called only on full config-entry removal — never on a reload/unload,
+    which must leave this state intact. Without this, the four Store files
+    (cloud-outage-notified flag, LAN IPs, hardware versions, LOCAL Digest
+    credentials) and the persisted-snapshot JPEG directory all retained LAN
+    credentials and camera images indefinitely after removal (bug-hunt
+    2026-07-27, Copilot review round 5).
+    """
+    for key in (
+        f"{DOMAIN}_cloud_alert_state",
+        f"{DOMAIN}_lan_ips",
+        f"{DOMAIN}_hw_versions",
+        f"{DOMAIN}_local_creds",
+    ):
+        await Store(hass, version=1, key=key).async_remove()
+    await async_remove_all_snapshots(hass)
 
 
 async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:

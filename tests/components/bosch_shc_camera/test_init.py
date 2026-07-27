@@ -9,9 +9,11 @@ isn't reachable via the standard `aioclient_mock` fixture.
 
 from unittest.mock import patch
 
+from homeassistant.components.bosch_shc_camera import async_remove_entry
 from homeassistant.components.bosch_shc_camera.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 
 from tests.common import MockConfigEntry
 
@@ -98,3 +100,39 @@ async def test_setup_entry_without_any_token_fails(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_remove_entry_deletes_all_persisted_files(hass: HomeAssistant) -> None:
+    """Full config-entry removal deletes every integration-owned Store file.
+
+    Without this, the four Store files (cloud-outage flag, LAN IPs,
+    hardware versions, LOCAL Digest credentials) and the persisted-snapshot
+    directory all retained LAN credentials and camera images indefinitely
+    after removal (bug-hunt 2026-07-27, Copilot review round 5).
+    """
+    _DOMAIN = DOMAIN
+
+    entry = _mock_config_entry()
+    entry.add_to_hass(hass)
+
+    for key in (
+        f"{_DOMAIN}_cloud_alert_state",
+        f"{_DOMAIN}_lan_ips",
+        f"{_DOMAIN}_hw_versions",
+        f"{_DOMAIN}_local_creds",
+    ):
+        await Store(hass, version=1, key=key).async_save({"x": 1})
+
+    with patch(
+        "homeassistant.components.bosch_shc_camera.async_remove_all_snapshots"
+    ) as remove_snapshots:
+        await async_remove_entry(hass, entry)
+    remove_snapshots.assert_called_once_with(hass)
+
+    for key in (
+        f"{_DOMAIN}_cloud_alert_state",
+        f"{_DOMAIN}_lan_ips",
+        f"{_DOMAIN}_hw_versions",
+        f"{_DOMAIN}_local_creds",
+    ):
+        assert await Store(hass, version=1, key=key).async_load() is None

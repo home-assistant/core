@@ -63,7 +63,13 @@ async def _check_one_camera_status(
         return (cam_id, "ONLINE")
 
     # Cloud path: /ping (primary, 8 bytes) + /commissioned (fallback)
-    status = "UNKNOWN"
+    # Seed from the last known cached status, NOT a bare "UNKNOWN" literal —
+    # if both probes below are inconclusive (network error/timeout on both),
+    # `status` must stay whatever it already was (e.g. a genuine OFFLINE),
+    # not silently reset to UNKNOWN. A reset here clears offline_since
+    # tracking and makes an unavailable camera read as available again on a
+    # transient probe blip (bug-hunt 2026-07-27, Copilot review round 5).
+    status = coordinator.cached_status.get(cam_id, "UNKNOWN")
     ping_ok = False
     try:
         async with asyncio.timeout(5):

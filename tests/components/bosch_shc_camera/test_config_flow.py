@@ -3,7 +3,7 @@
 import base64
 from http import HTTPStatus
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -278,3 +278,66 @@ async def test_camera_access_denied_aborts_before_creating_entry(
     assert result["reason"] == "camera_access_denied"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_verify_camera_access_returns_true_on_429() -> None:
+    """A 429 (rate limited) must not be treated as account denial.
+
+    It says nothing about whether this account can reach the camera API,
+    only that this one request didn't land — blocking setup on it would
+    show the misleading "registration incomplete" message for a transient
+    Bosch-side condition (bug-hunt 2026-07-27, Copilot review round 5).
+    """
+    session = MagicMock()
+    resp = MagicMock()
+    resp.status = 429
+    resp.__aenter__ = AsyncMock(return_value=resp)
+    resp.__aexit__ = AsyncMock(return_value=None)
+    session.get = MagicMock(return_value=resp)
+
+    flow = cf_module.BoschCameraConfigFlow.__new__(cf_module.BoschCameraConfigFlow)
+    flow.hass = MagicMock()
+
+    with patch(
+        "homeassistant.components.bosch_shc_camera.config_flow.async_get_bosch_cloud_session",
+        AsyncMock(return_value=session),
+    ):
+        assert await flow._async_verify_camera_access("tok") is True
+
+
+async def test_verify_camera_access_returns_true_on_5xx() -> None:
+    """A 5xx (Bosch-side outage) must not be treated as account denial either."""
+    session = MagicMock()
+    resp = MagicMock()
+    resp.status = 503
+    resp.__aenter__ = AsyncMock(return_value=resp)
+    resp.__aexit__ = AsyncMock(return_value=None)
+    session.get = MagicMock(return_value=resp)
+
+    flow = cf_module.BoschCameraConfigFlow.__new__(cf_module.BoschCameraConfigFlow)
+    flow.hass = MagicMock()
+
+    with patch(
+        "homeassistant.components.bosch_shc_camera.config_flow.async_get_bosch_cloud_session",
+        AsyncMock(return_value=session),
+    ):
+        assert await flow._async_verify_camera_access("tok") is True
+
+
+async def test_verify_camera_access_returns_false_on_403() -> None:
+    """A definitive rejection (e.g. 403) must still deny — only 429/5xx are transient."""
+    session = MagicMock()
+    resp = MagicMock()
+    resp.status = 403
+    resp.__aenter__ = AsyncMock(return_value=resp)
+    resp.__aexit__ = AsyncMock(return_value=None)
+    session.get = MagicMock(return_value=resp)
+
+    flow = cf_module.BoschCameraConfigFlow.__new__(cf_module.BoschCameraConfigFlow)
+    flow.hass = MagicMock()
+
+    with patch(
+        "homeassistant.components.bosch_shc_camera.config_flow.async_get_bosch_cloud_session",
+        AsyncMock(return_value=session),
+    ):
+        assert await flow._async_verify_camera_access("tok") is False

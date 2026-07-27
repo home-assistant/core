@@ -1,9 +1,11 @@
 """Tests for token_auth.py's TokenAuthCoordinatorMixin refresh logic."""
 
 import math
+import types
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
 import pytest
 
 from homeassistant.components.bosch_shc_camera.token_auth import (
@@ -14,7 +16,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
 def _make_stub() -> SimpleNamespace:
-    return SimpleNamespace(
+    stub = SimpleNamespace(
         entry=SimpleNamespace(
             data={"refresh_token": "rtok", "bearer_token": "old-token"},
         ),
@@ -31,6 +33,13 @@ def _make_stub() -> SimpleNamespace:
         _auth_outage_alert_sent=False,
         schedule_token_refresh=MagicMock(),
     )
+    # SimpleNamespace has no MRO to TokenAuthCoordinatorMixin, so
+    # `self._handle_successful_refresh(...)` inside `_refresh_token_locked`
+    # would otherwise AttributeError — bind the real method onto the stub.
+    stub._handle_successful_refresh = types.MethodType(
+        TokenAuthCoordinatorMixin._handle_successful_refresh, stub
+    )
+    return stub
 
 
 async def _refresh(stub: SimpleNamespace) -> None:
@@ -50,15 +59,22 @@ async def test_repeated_timeouts_never_trigger_reauth() -> None:
     """
     stub = _make_stub()
 
-    with patch(
-        "homeassistant.components.bosch_shc_camera.config_flow._do_refresh",
-        AsyncMock(side_effect=TimeoutError()),
+    with (
+        patch(
+            "homeassistant.components.bosch_shc_camera.config_flow._do_refresh",
+            AsyncMock(side_effect=TimeoutError()),
+        ),
+        patch(
+            "homeassistant.components.bosch_shc_camera.token_auth.asyncio.sleep",
+            AsyncMock(),
+        ),
     ):
         for _ in range(5):
             with pytest.raises(UpdateFailed):
                 await _refresh(stub)
 
-    assert stub._token_timeout_fail_count == 5
+    # 3 per-attempt retries per call — each one increments the counter.
+    assert stub._token_timeout_fail_count == 15
     # The reauth-escalation counter must be completely untouched by timeouts.
     assert stub._token_fail_count == 0
 
@@ -103,3 +119,33 @@ async def test_success_resets_both_counters() -> None:
 
     assert stub._token_fail_count == 0
     assert stub._token_timeout_fail_count == 0
+
+
+@pytest.mark.asyncio
+async def test_repeated_client_errors_never_trigger_reauth() -> None:
+    """A network/DNS-class aiohttp.ClientError must stay transient too.
+
+    `_do_refresh` used to swallow this into a bare `None` return,
+    indistinguishable from an ambiguous HTTP response, so repeated DNS/
+    connection failures still incremented `_token_fail_count` and
+    eventually triggered unnecessary reauthentication despite the
+    timeout-only fix (bug-hunt 2026-07-27, Copilot review round 5).
+    """
+    stub = _make_stub()
+
+    with (
+        patch(
+            "homeassistant.components.bosch_shc_camera.config_flow._do_refresh",
+            AsyncMock(side_effect=aiohttp.ClientConnectionError("DNS failure")),
+        ),
+        patch(
+            "homeassistant.components.bosch_shc_camera.token_auth.asyncio.sleep",
+            AsyncMock(),
+        ),
+    ):
+        for _ in range(5):
+            with pytest.raises(UpdateFailed):
+                await _refresh(stub)
+
+    assert stub._token_timeout_fail_count == 15
+    assert stub._token_fail_count == 0

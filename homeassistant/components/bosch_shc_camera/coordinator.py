@@ -115,6 +115,37 @@ def _is_safe_bosch_url(url: str) -> bool:
     )
 
 
+def _is_safe_bosch_host(host_and_port: str) -> bool:
+    """Validate a bare ``host[:port]`` string (no scheme) against the Bosch allowlist.
+
+    Used for the RCP proxy host/hash pair Bosch's cloud PUT /connection
+    response hands back (e.g. "proxy-01.live.cbs.boschsecurity.com:42090")
+    before it is used to build a request URL for the RCP client library —
+    an unvalidated value here is an SSRF path (bug-hunt 2026-07-27, Copilot
+    review round 5).
+    """
+    hostname = host_and_port.rsplit(":", 1)[0]
+    return any(hostname.endswith(d) for d in _SAFE_DOMAINS)
+
+
+def _parse_safe_rcp_proxy_url(url_entry: str, cam_id: str) -> tuple[str, str] | None:
+    """Split a Bosch ``urls[0]`` proxy entry into ``(host, hash)``, validated.
+
+    Returns None (logging a warning) for a malformed entry or one whose host
+    fails `_is_safe_bosch_host` — never hands back an unvalidated host to a
+    caller that will use it to build a request URL.
+    """
+    parts = url_entry.split("/", 1)
+    if len(parts) != 2 or not _is_safe_bosch_host(parts[0]):
+        _LOGGER.warning(
+            "Rejected unsafe/malformed RCP proxy entry for %s: %s",
+            cam_id,
+            url_entry[:60],
+        )
+        return None
+    return parts[0], parts[1]
+
+
 def _parse_onvif_scopes(raw: bytes) -> dict[str, Any]:
     """Parse ONVIF scope TLV payload from RCP 0x0a98 (ASCII, ~720 bytes).
 
@@ -1095,19 +1126,25 @@ class BoschCameraCoordinator(
                                             content_type=None
                                         )
                                         urls = conn_data.get("urls", [])
-                                        if urls:
-                                            # urls[0] = "proxy-NN.live.cbs.boschsecurity.com:42090/{hash}"
-                                            parts = urls[0].split("/", 1)
-                                            if len(parts) == 2:
-                                                proxy_host = parts[
-                                                    0
-                                                ]  # "proxy-NN:42090"
-                                                proxy_hash = parts[1]  # "{hash}"
-                                                await self._async_update_rcp_data(
-                                                    cam_id_key,
-                                                    proxy_host,
-                                                    proxy_hash,
-                                                )
+                                        # urls[0] = "proxy-NN.live.cbs.boschsecurity.com:42090/{hash}"
+                                        # _parse_safe_rcp_proxy_url rejects a
+                                        # malformed/unsafe entry by returning
+                                        # None (logs internally) — an
+                                        # unvalidated proxy host here is an
+                                        # SSRF path (bug-hunt 2026-07-27,
+                                        # Copilot review round 5).
+                                        parsed_proxy = (
+                                            _parse_safe_rcp_proxy_url(
+                                                urls[0], cam_id_key
+                                            )
+                                            if urls
+                                            else None
+                                        )
+                                        if parsed_proxy:
+                                            proxy_host, proxy_hash = parsed_proxy
+                                            await self._async_update_rcp_data(
+                                                cam_id_key, proxy_host, proxy_hash
+                                            )
                                     else:
                                         _LOGGER.debug(
                                             "RCP proxy connection HTTP %d for %s",
@@ -1930,6 +1967,19 @@ class BoschCameraCoordinator(
                 url_entry = await _get_proxy_url_entry()
                 if not url_entry:
                     return None
+                # Validate the host portion before it's used to build any
+                # request URL (RCP 0x099e below, or the snap.jpg fetch
+                # further down) — an unvalidated proxy host from Bosch's
+                # own PUT /connection response is an SSRF path (bug-hunt
+                # 2026-07-27, Copilot review round 5).
+                _entry_host = url_entry.split("/", 1)[0]
+                if not _is_safe_bosch_host(_entry_host):
+                    _LOGGER.warning(
+                        "Rejected unsafe RCP proxy host for %s: %s",
+                        cam_id,
+                        _entry_host[:60],
+                    )
+                    return None
 
                 # ── RCP 0x099e: 320x180 JPEG (Gen1 only) ──
                 # Gen1 (INDOOR/OUTDOOR/CAMERA_360) returns a JPEG via the proxy RCP
@@ -2030,6 +2080,12 @@ class BoschCameraCoordinator(
                             self._proxy_url_cache.pop(cam_id, None)
                             url_entry2 = await _get_proxy_url_entry()
                             if not url_entry2:
+                                return None
+                            if not _is_safe_bosch_host(url_entry2.split("/", 1)[0]):
+                                _LOGGER.warning(
+                                    "Rejected unsafe RCP proxy host for %s (retry)",
+                                    cam_id,
+                                )
                                 return None
                             proxy_url2 = f"https://{url_entry2}/snap.jpg?JpegSize={snap_jpeg_size}"
                             async with asyncio.timeout(TIMEOUT_SNAP):

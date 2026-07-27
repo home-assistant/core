@@ -63,10 +63,16 @@ async def run_housekeeping(
     # startup can ping cameras without first needing a cloud call.
     # Throttle: only write if the mapping actually changed.
     _store = getattr(coordinator, "lan_ips_store", None)
-    if _store is not None and coordinator.rcp_lan_ip_cache:
+    if _store is not None:
         _snapshot = {k: v for k, v in coordinator.rcp_lan_ip_cache.items() if v}
         _prev = getattr(coordinator, "lan_ips_snapshot", None)
-        if _snapshot and _snapshot != _prev:
+        # No truthiness guard on `_snapshot` here — cleanup_stale_devices()
+        # clears rcp_lan_ip_cache when the account's last camera is removed,
+        # and that empty snapshot must still be persisted, or the stale
+        # camera ID/IP is reloaded and pinged again after a restart
+        # (bug-hunt 2026-07-27, Copilot review round 5 — same class of bug
+        # already fixed for local_creds_cache in round 3).
+        if _snapshot != _prev:
             coordinator.lan_ips_snapshot = _snapshot
             coordinator.spawn_tracked(
                 _store.async_save(_snapshot), name="bosch_shc_camera_lan_ips_save"

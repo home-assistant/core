@@ -1,10 +1,19 @@
 """Tests for coordinator.py's pure helper functions."""
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
+import aiohttp
+
+from homeassistant.components.bosch_shc_camera.camera_status import (
+    _check_one_camera_status,
+)
 from homeassistant.components.bosch_shc_camera.const import DOMAIN
-from homeassistant.components.bosch_shc_camera.coordinator import get_options
+from homeassistant.components.bosch_shc_camera.coordinator import (
+    _is_safe_bosch_host,
+    _parse_safe_rcp_proxy_url,
+    get_options,
+)
 from homeassistant.components.bosch_shc_camera.tick_housekeeping import run_housekeeping
 
 from tests.common import MockConfigEntry
@@ -93,3 +102,88 @@ async def test_housekeeping_persists_empty_credential_snapshot_on_last_camera_re
     await run_housekeeping(coordinator, {}, {}, now=0.0, is_first_tick=False)
     assert coordinator.local_creds_snapshot == {}
     coordinator.spawn_tracked.assert_called_once()
+
+
+async def test_housekeeping_persists_empty_lan_ip_snapshot_on_last_camera_removed() -> (
+    None
+):
+    """Clearing the last camera's LAN-IP cache must still persist the empty snapshot.
+
+    `cleanup_stale_devices()` clears `rcp_lan_ip_cache` first, but the old
+    truthiness guard skipped the write, so a stale camera ID/IP was reloaded
+    and pinged again after a restart (bug-hunt 2026-07-27, Copilot review
+    round 5 — same class of bug already fixed for local_creds in round 3).
+    """
+    store = MagicMock()
+    store.async_save = MagicMock(return_value=None)
+    coordinator = SimpleNamespace(
+        cleanup_stale_devices=MagicMock(),
+        lan_ips_store=store,
+        rcp_lan_ip_cache={},
+        lan_ips_snapshot={"OLD-CAM": "192.0.2.1"},
+        spawn_tracked=MagicMock(),
+    )
+    await run_housekeeping(coordinator, {}, {}, now=0.0, is_first_tick=False)
+    assert coordinator.lan_ips_snapshot == {}
+    coordinator.spawn_tracked.assert_called_once()
+
+
+def test_is_safe_bosch_host_accepts_known_domain() -> None:
+    """A real Bosch RCP proxy host passes validation."""
+    assert _is_safe_bosch_host("proxy-01.live.cbs.boschsecurity.com:42090") is True
+
+
+def test_is_safe_bosch_host_rejects_arbitrary_host() -> None:
+    """An unvalidated proxy host is an SSRF path (bug-hunt 2026-07-27, Copilot review round 5)."""
+    assert _is_safe_bosch_host("169.254.169.254:80") is False
+    assert _is_safe_bosch_host("internal-service.local:8080") is False
+
+
+def test_parse_safe_rcp_proxy_url_rejects_unsafe_host() -> None:
+    """A malformed-but-unsafe entry is rejected before use."""
+    assert _parse_safe_rcp_proxy_url("evil.example.com:443/hash", "cam1") is None
+
+
+def test_parse_safe_rcp_proxy_url_accepts_bosch_host() -> None:
+    """A well-formed, safe entry splits cleanly into (host, hash)."""
+    assert _parse_safe_rcp_proxy_url(
+        "proxy-01.live.cbs.boschsecurity.com:42090/abcHash", "cam1"
+    ) == ("proxy-01.live.cbs.boschsecurity.com:42090", "abcHash")
+
+
+def test_parse_safe_rcp_proxy_url_rejects_malformed_entry() -> None:
+    """An entry with no '/' separator (no hash component) is rejected."""
+    assert _parse_safe_rcp_proxy_url("no-slash-here", "cam1") is None
+
+
+async def test_camera_status_preserves_last_known_on_double_probe_failure() -> None:
+    """Both status probes failing must not reset a cached OFFLINE to UNKNOWN.
+
+    Resetting to UNKNOWN would clear offline_since tracking and make an
+    unavailable camera read as available again on a transient probe blip
+    (bug-hunt 2026-07-27, Copilot review round 5).
+    """
+    coordinator = SimpleNamespace(
+        should_check_status=lambda cam_id, now, interval: True,
+        cached_status={"CAM1": "OFFLINE"},
+        async_local_tcp_ping=AsyncMock(return_value=False),
+        offline_since={"CAM1": 0.0},
+        per_cam_status_at={},
+    )
+    session = MagicMock()
+
+    class _Raiser:
+        async def __aenter__(self):
+            raise aiohttp.ClientError("boom")
+
+        async def __aexit__(self, *exc):
+            return None
+
+    session.get = MagicMock(return_value=_Raiser())
+
+    _cam_id, status = await _check_one_camera_status(
+        coordinator, "CAM1", session, {}, now=100.0, interval_status=60
+    )
+    assert status == "OFFLINE"
+    # Preserved OFFLINE status must keep offline_since tracking intact.
+    assert "CAM1" in coordinator.offline_since

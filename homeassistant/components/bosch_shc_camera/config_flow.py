@@ -356,37 +356,41 @@ async def _do_refresh(
     `token_auth.py::_refresh_token_locked`) — Keycloak rejects a refresh_token
     presented with a different client than the one it was issued to.
 
-    Returns the token dict on success.
-    Returns None on transient client-side failures (network error, timeout)
-    — caller may retry.
+    Returns the token dict on success. Returns None when Keycloak responded
+    with some other, ambiguous non-2xx/400/401/5xx status (rare/unexpected;
+    no basis to call it a confirmed-invalid token).
+    Raises TimeoutError/aiohttp.ClientError on a transient network-layer
+    failure (timeout, DNS, connection reset) — the caller must retry without
+    counting this toward the invalid-grant/reauth escalation, since it
+    proves nothing about the refresh token's own validity (bug-hunt
+    2026-07-27, Copilot review round 5 — a prior version swallowed these
+    into a plain None return, indistinguishable from an ambiguous HTTP
+    response).
     Raises RefreshTokenInvalidError on 400/401 (invalid_grant) — caller should
     trigger the reauth flow, retrying is pointless.
     Raises AuthServerOutageError on 5xx — Bosch server is down, retry later
     but do NOT trigger reauth.
     """
-    try:
-        async with asyncio.timeout(15):
-            async with session.post(
-                f"{KEYCLOAK_BASE}/token",
-                data={
-                    "client_id": client_id,
-                    "client_secret": client_secret,
-                    "grant_type": "refresh_token",
-                    "refresh_token": refresh_token,
-                },
-            ) as resp:
-                if resp.status == 200:
-                    return await resp.json()  # type: ignore[no-any-return]
-                # Do not log or embed the response body in an exception message —
-                # Keycloak error responses can echo token material back in the
-                # payload (see token_auth.py).
-                _LOGGER.warning("Token refresh failed: HTTP %d", resp.status)
-                if resp.status in (400, 401):
-                    raise RefreshTokenInvalidError(f"Keycloak HTTP {resp.status}")
-                if 500 <= resp.status < 600:
-                    raise AuthServerOutageError(f"Bosch Keycloak HTTP {resp.status}")
-    except (TimeoutError, aiohttp.ClientError) as err:
-        _LOGGER.warning("Token refresh error: %s", err)
+    async with asyncio.timeout(15):
+        async with session.post(
+            f"{KEYCLOAK_BASE}/token",
+            data={
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token,
+            },
+        ) as resp:
+            if resp.status == 200:
+                return await resp.json()  # type: ignore[no-any-return]
+            # Do not log or embed the response body in an exception message —
+            # Keycloak error responses can echo token material back in the
+            # payload (see token_auth.py).
+            _LOGGER.warning("Token refresh failed: HTTP %d", resp.status)
+            if resp.status in (400, 401):
+                raise RefreshTokenInvalidError(f"Keycloak HTTP {resp.status}")
+            if 500 <= resp.status < 600:
+                raise AuthServerOutageError(f"Bosch Keycloak HTTP {resp.status}")
     return None
 
 
@@ -493,7 +497,22 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     },
                 ) as resp,
             ):
-                return resp.status == 200
+                if resp.status == 200:
+                    return True
+                # A 429 (rate limited) or 5xx (Bosch-side outage) is not an
+                # account-access denial — it says nothing about whether this
+                # account can reach the camera API, only that this one
+                # request didn't land. Blocking setup on it would show the
+                # misleading "registration incomplete" message for what's
+                # really just a transient Bosch-side condition (bug-hunt
+                # 2026-07-27, Copilot review round 5).
+                if resp.status == 429 or 500 <= resp.status < 600:
+                    _LOGGER.debug(
+                        "Camera-access verification got transient HTTP %d — not blocking setup",
+                        resp.status,
+                    )
+                    return True
+                return False
         except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.debug("Camera-access verification skipped (%s)", err)
             return True
