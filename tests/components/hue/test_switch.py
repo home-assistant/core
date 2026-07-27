@@ -19,8 +19,8 @@ async def test_switch(
     await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
-    # 4 entities should be created from test data
-    assert len(hass.states.async_all()) == 4
+    # 5 entities should be created from test data
+    assert len(hass.states.async_all()) == 5
 
     # test config switch to enable/disable motion sensor
     test_entity = hass.states.get("switch.hue_motion_sensor_motion_sensor_enabled")
@@ -34,6 +34,15 @@ async def test_switch(
     test_entity = hass.states.get("switch.philips_hue_automation_timer_test")
     assert test_entity is not None
     assert test_entity.name == "Philips hue Automation: Timer Test"
+    assert test_entity.state == "on"
+    assert test_entity.attributes["device_class"] == "switch"
+
+    # test config switch to enable/disable a MotionAware zone
+    test_entity = hass.states.get(
+        "switch.philips_hue_motionaware_motion_aware_sensor_1"
+    )
+    assert test_entity is not None
+    assert test_entity.name == "Philips hue MotionAware: Motion Aware Sensor 1"
     assert test_entity.state == "on"
     assert test_entity.attributes["device_class"] == "switch"
 
@@ -101,6 +110,62 @@ async def test_switch_turn_off_service(
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is not None
     assert test_entity.state == "off"
+
+
+async def test_motionaware_switch_turn_on_off_service(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test enabling/disabling a MotionAware zone."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+
+    await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
+
+    test_entity_id = "switch.philips_hue_motionaware_motion_aware_sensor_1"
+
+    # verify the switch is on before we start
+    assert hass.states.get(test_entity_id).state == "on"
+
+    # call the HA turn_off service
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": test_entity_id},
+        blocking=True,
+    )
+
+    # PUT request should have been sent to the motion_area_configuration resource
+    assert len(mock_bridge_v2.mock_requests) == 1
+    assert mock_bridge_v2.mock_requests[0]["method"] == "put"
+    assert (
+        mock_bridge_v2.mock_requests[0]["path"]
+        == "clip/v2/resource/motion_area_configuration/"
+        "5e6f7a8b-9c1d-4e2f-b3a4-5c6d7e8f9a0b"
+    )
+    assert mock_bridge_v2.mock_requests[0]["json"]["enabled"] is False
+
+    # Now generate update event by emitting the json we've sent as incoming event
+    event = {
+        "id": "5e6f7a8b-9c1d-4e2f-b3a4-5c6d7e8f9a0b",
+        "type": "motion_area_configuration",
+        **mock_bridge_v2.mock_requests[0]["json"],
+    }
+    mock_bridge_v2.api.emit_event("update", event)
+    await hass.async_block_till_done()
+
+    # the switch should now be off
+    assert hass.states.get(test_entity_id).state == "off"
+
+    # call the HA turn_on service
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": test_entity_id},
+        blocking=True,
+    )
+
+    assert len(mock_bridge_v2.mock_requests) == 2
+    assert mock_bridge_v2.mock_requests[1]["method"] == "put"
+    assert mock_bridge_v2.mock_requests[1]["json"]["enabled"] is True
 
 
 async def test_switch_added(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
