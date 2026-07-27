@@ -10,6 +10,16 @@
       "no_modules": "No Velbus modules found, please check your VLP file."
     },
     "step": {
+      "advanced_mode": {
+        "data": {
+          "advanced_mode": "Advanced mode"
+        },
+        "data_description": {
+          "advanced_mode": "Unlocks the Velbus configuration panel and allows writing module EEPROM, including channel names, contact type (NO/NC), and relay action links. Leave disabled unless you are intentionally configuring modules."
+        },
+        "description": "Advanced mode unlocks the Velbus configuration panel and exposes module programming that permanently changes module memory. Only enable this when you need to configure modules from Home Assistant.",
+        "title": "Advanced mode"
+      },
       "network": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -25,6 +35,14 @@
         },
         "description": "TCP/IP configuration, in case you use a Signum, VelServ, velbus-tcp or any other Velbus to TCP/IP interface.",
         "title": "TCP/IP configuration"
+      },
+      "reconfigure": {
+        "menu_options": {
+          "advanced_mode": "Advanced mode",
+          "network": "Connection settings",
+          "vlp": "VLP file"
+        },
+        "title": "Velbus configuration"
       },
       "usbselect": {
         "data": {
@@ -57,6 +75,9 @@
     }
   },
   "exceptions": {
+    "advanced_mode_required": {
+      "message": "Enable advanced mode in the Velbus integration configuration before programming module memory."
+    },
     "api_call_failed": {
       "message": "Action execute for {entity} failed."
     },
@@ -71,6 +92,9 @@
     },
     "module_not_found": {
       "message": "Module with address {address} not found."
+    },
+    "relay_channel_not_found": {
+      "message": "Relay channel {channel} on module {address} not found."
     },
     "scan_failed": {
       "message": "Scan service: {error}."
