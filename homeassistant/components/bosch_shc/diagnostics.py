@@ -32,7 +32,12 @@ TO_REDACT = {
 
 
 def _device_dump(device: Any) -> dict[str, Any]:
-    """One device + the raw state of each of its services."""
+    """One device + the state of each of its known services.
+
+    boschshcpy only builds device_services for service IDs it recognizes
+    (SUPPORTED_DEVICE_SERVICE_IDS); an unknown/unmapped service on a device
+    won't appear here.
+    """
     return {
         "device_id": device.id,
         "root_device_id": device.root_device_id,
@@ -54,9 +59,9 @@ async def async_get_config_entry_diagnostics(
     """Return redacted diagnostics for a Bosch SHC config entry."""
     session = entry.runtime_data
     info = session.information
-    # The sync SHCInformation exposes an updateState enum; the async session
-    # (#177379) replaces it with a plain update_state string. Support both so
-    # this doesn't crash regardless of which of the two PRs merges first.
+    # SHCInformation exposes an updateState enum; the async
+    # _AsyncSHCInformation counterpart exposes a plain update_state string
+    # instead. Support both shapes since either can be the runtime type here.
     update_state_enum = getattr(info, "updateState", None)
     update_state = (
         update_state_enum.name
