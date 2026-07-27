@@ -204,11 +204,22 @@ class BoschOAuth2Implementation(AbstractOAuth2Implementation):
         hass: HomeAssistant,
         client_id: str = CLIENT_ID,
         client_secret: str = CLIENT_SECRET,
+        auth_domain: str = DOMAIN,
     ) -> None:
-        """Initialize the OAuth2 implementation with the given client credential."""
+        """Initialize the OAuth2 implementation with the given client credential.
+
+        `auth_domain` identifies WHICH registered application_credentials
+        entry this instance was built from (defaults to `DOMAIN` for the
+        single auto-imported default credential). Must be distinct per
+        credential — `homeassistant.helpers.config_entry_oauth2_flow.
+        async_get_implementations` keys its registry by `impl.domain`, so
+        two credentials sharing one domain value would make the second
+        silently overwrite the first in that registry.
+        """
         self.hass = hass
         self._client_id = client_id
         self._client_secret = client_secret
+        self._auth_domain = auth_domain
         self._last_verifier: str | None = None
 
     @property
@@ -220,8 +231,8 @@ class BoschOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     @override
     def domain(self) -> str:
-        """Return the integration domain."""
-        return DOMAIN
+        """Return the auth_implementation key this credential is registered under."""
+        return self._auth_domain
 
     @property
     def redirect_uri(self) -> str:
@@ -332,8 +343,18 @@ class AuthServerOutageError(Exception):
     """
 
 
-async def _do_refresh(session: Any, refresh_token: str) -> dict[str, Any] | None:
+async def _do_refresh(
+    session: Any,
+    refresh_token: str,
+    client_id: str = CLIENT_ID,
+    client_secret: str = CLIENT_SECRET,
+) -> dict[str, Any] | None:
     """Silent renewal via saved refresh_token.
+
+    `client_id`/`client_secret` default to the fixed public OSS client but
+    should be the credential actually used at login (see
+    `token_auth.py::_refresh_token_locked`) — Keycloak rejects a refresh_token
+    presented with a different client than the one it was issued to.
 
     Returns the token dict on success.
     Returns None on transient client-side failures (network error, timeout)
@@ -348,8 +369,8 @@ async def _do_refresh(session: Any, refresh_token: str) -> dict[str, Any] | None
             async with session.post(
                 f"{KEYCLOAK_BASE}/token",
                 data={
-                    "client_id": CLIENT_ID,
-                    "client_secret": CLIENT_SECRET,
+                    "client_id": client_id,
+                    "client_secret": client_secret,
                     "grant_type": "refresh_token",
                     "refresh_token": refresh_token,
                 },
@@ -454,6 +475,12 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         new_data = {
             "bearer_token": token_data.get("access_token", ""),
             "refresh_token": token_data.get("refresh_token", ""),
+            # Persisted so a reactive refresh can look up the SAME credential
+            # (client_id/secret) the user actually authenticated with, instead
+            # of always assuming the default public OSS client — matters if an
+            # admin ever registers a custom credential via Settings →
+            # Application Credentials. Was previously discarded entirely.
+            "auth_implementation": data.get("auth_implementation", DOMAIN),
         }
         # Reauth: update the existing entry in place (keeps options, entities,
         # automations, FCM config, SMB settings — everything).
@@ -517,10 +544,22 @@ class BoschCameraOptionsFlow(config_entries.OptionsFlow):
                 user_input["enable_snapshots"] = bool(user_input["enable_snapshots"])
 
             if not errors:
+                # Base the persisted dict on the entry's PREVIOUSLY-persisted
+                # options only — NOT `opts` (which also carries DEFAULT_OPTIONS'
+                # fixed polling-cadence fields). Every remaining field in this
+                # options flow uses `default=` (not `suggested_value`), so
+                # `user_input` always contains a value for each one on a full
+                # form submission; there is nothing left that needs preserving
+                # from a wider merge. Using `opts` here previously wrote
+                # scan_interval/interval_status/interval_events/
+                # snapshot_interval/stream_connection_type into entry.options
+                # on every save even though they have no form field — besides
+                # being an appropriate-polling violation, it also permanently
+                # froze a saving user onto whatever DEFAULT_OPTIONS happened to
+                # be at that moment, ignoring any later default change in code
+                # (bug-hunt 2026-07-27, Copilot review).
                 if migrate_to_oss:
-                    # Merge submitted changes on top of existing opts so that
-                    # suggested_value fields absent from user_input are preserved.
-                    merged = {**opts, **user_input}
+                    merged = {**dict(self._config_entry.options), **user_input}
                     # Persist any other option changes first so they survive reauth
                     self.hass.config_entries.async_update_entry(
                         self._config_entry,
@@ -533,13 +572,7 @@ class BoschCameraOptionsFlow(config_entries.OptionsFlow):
                     self._config_entry.async_start_reauth(self.hass)
                     return self.async_abort(reason="migration_started")
 
-                # Merge submitted changes on top of existing opts so that fields
-                # using only suggested_value (no default=) that the user did not
-                # edit are absent from user_input but still preserved in the saved
-                # options dict.  Bug: without this merge, unedited suggested_value
-                # fields revert to DEFAULT_OPTIONS defaults on every save.
-                merged = {**opts, **user_input}
-
+                merged = {**dict(self._config_entry.options), **user_input}
                 return self.async_create_entry(title="", data=merged)
 
         if errors and user_input is not None:

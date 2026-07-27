@@ -128,10 +128,39 @@ class TokenAuthCoordinatorMixin:
         # DOMAIN from this package's __init__.py, which imports coordinator.py,
         # which imports this module — a top-level import here would be circular.
         from .config_flow import (  # noqa: PLC0415
+            CLIENT_ID,
+            CLIENT_SECRET,
             AuthServerOutageError,
             RefreshTokenInvalidError,
             _do_refresh,
         )
+
+        # Resolve the SAME client_id/client_secret this entry actually
+        # authenticated with — Keycloak rejects a refresh_token presented
+        # with a different client than the one it was issued to. The
+        # default (no admin-registered custom credential) is the fast path:
+        # no application_credentials storage lookup needed. Only entries
+        # created before this field existed fall back to DOMAIN too — those
+        # can only ever have used the default client anyway (application_
+        # credentials.py's async_get_auth_implementation is the only
+        # provider registered for this domain).
+        auth_domain = self.entry.data.get("auth_implementation", DOMAIN)
+        client_id, client_secret = CLIENT_ID, CLIENT_SECRET
+        if auth_domain != DOMAIN:
+            from homeassistant.components.application_credentials import (  # noqa: PLC0415
+                DATA_COMPONENT,
+            )
+
+            credential = (
+                self.hass.data[DATA_COMPONENT]
+                .async_client_credentials(DOMAIN)
+                .get(auth_domain)
+            )
+            if credential is not None:
+                client_id, client_secret = (
+                    credential.client_id,
+                    credential.client_secret,
+                )
 
         # Another caller may have just refreshed the token while we were
         # waiting on the lock — if so, skip the POST entirely. Prefer
@@ -188,7 +217,9 @@ class TokenAuthCoordinatorMixin:
         try:
             async with asyncio.timeout(15):
                 for attempt in range(3):
-                    tokens = await _do_refresh(session, refresh)
+                    tokens = await _do_refresh(
+                        session, refresh, client_id, client_secret
+                    )
                     if tokens:
                         break
                     if attempt < 2:

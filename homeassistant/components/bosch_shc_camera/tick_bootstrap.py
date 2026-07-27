@@ -24,6 +24,8 @@ from typing import TYPE_CHECKING
 
 import aiohttp
 
+from homeassistant.const import __version__ as HA_VERSION
+
 from .const import CLOUD_API
 
 if TYPE_CHECKING:  # pragma: no cover — only for type hints
@@ -77,11 +79,15 @@ async def ensure_protocol_checked(
         return
     coordinator.protocol_checked = True
     try:
-        _version = coordinator.integration_version
+        # Core manifests have no per-integration version (that field is
+        # HACS-only), so `coordinator.integration_version` is always
+        # "unknown" here — use the running HA Core version instead, which
+        # is at least real, useful client-identifying information for Bosch
+        # (bug-hunt 2026-07-27, Copilot review).
         async with asyncio.timeout(5):
             async with (
                 session.get(
-                    f"{CLOUD_API}/protocol_support?protocol=11&client=haV{_version}",  # codespell:ignore
+                    f"{CLOUD_API}/protocol_support?protocol=11&client=haV{HA_VERSION}",  # codespell:ignore
                     headers=headers,
                 ) as proto_resp
             ):

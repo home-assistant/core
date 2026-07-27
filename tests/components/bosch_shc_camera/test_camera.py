@@ -1,6 +1,68 @@
-"""Tests for camera.py's isolated (non-network) BoschCamera logic."""
+"""Tests for camera.py's BoschCamera entity behavior."""
 
-from homeassistant.components.bosch_shc_camera.camera import _rotate_jpeg_180
+import asyncio
+import time
+from unittest.mock import patch
+
+from homeassistant.components.bosch_shc_camera.camera import (
+    BoschCamera,
+    _rotate_jpeg_180,
+)
+from homeassistant.components.bosch_shc_camera.const import DOMAIN
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
+
+CAM_ID = "AABBCCDD-1122-3344-5566-778899001122"
+
+FAKE_COORDINATOR_DATA = {
+    CAM_ID: {
+        "info": {
+            "title": "Front Door",
+            "hardwareVersion": "HOME_Eyes_Outdoor",
+            "firmwareVersion": "9.40.104",
+            "macAddress": "aa:bb:cc:dd:ee:ff",
+        },
+        "status": "ONLINE",
+        "events": [],
+    }
+}
+
+_COORDINATOR_PATH = (
+    "homeassistant.components.bosch_shc_camera.coordinator.BoschCameraCoordinator"
+)
+
+
+async def _setup_camera_entity(hass: HomeAssistant) -> BoschCamera:
+    """Set up a config entry with one fake camera and return its entity."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        data={
+            "bearer_token": "test-bearer-token",
+            "refresh_token": "test-refresh-token",
+        },
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            f"{_COORDINATOR_PATH}._async_update_data",
+            return_value=FAKE_COORDINATOR_DATA,
+        ),
+        patch(f"{_COORDINATOR_PATH}.async_fetch_live_snapshot", return_value=None),
+        patch(
+            f"{_COORDINATOR_PATH}.async_fetch_live_snapshot_local", return_value=None
+        ),
+        patch(
+            f"{_COORDINATOR_PATH}.async_fetch_fresh_event_snapshot", return_value=None
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    return entry.runtime_data.camera_entities[CAM_ID]  # type: ignore[no-any-return]
 
 
 def test_rotate_jpeg_180_returns_bytes_for_a_real_jpeg() -> None:
@@ -25,3 +87,96 @@ def test_rotate_jpeg_180_returns_original_bytes_on_decode_failure() -> None:
     """Non-JPEG bytes fail to decode and the original bytes are returned unchanged."""
     garbage = b"not a jpeg at all"
     assert _rotate_jpeg_180(garbage) == garbage
+
+
+async def test_privacy_mode_returns_placeholder_instead_of_stale_cached_frame(
+    hass: HomeAssistant,
+) -> None:
+    """Privacy mode ON serves the placeholder, never the last real scene before privacy engaged."""
+    entity = await _setup_camera_entity(hass)
+    entity.cached_image = b"a-real-cached-frame-from-before-privacy-was-enabled"
+    entity.last_image_fetch = (
+        time.monotonic()
+    )  # fresh — would normally short-circuit to cached_image
+    entity.coordinator.shc_state_cache[CAM_ID] = {"privacy_mode": True}
+
+    image = await entity.async_camera_image()
+
+    assert image == entity._PLACEHOLDER_JPEG
+
+
+async def test_width_specific_fetch_does_not_poison_full_resolution_cache(
+    hass: HomeAssistant,
+) -> None:
+    """A thumbnail (width=N) request must not overwrite the shared full-res cache."""
+    entity = await _setup_camera_entity(hass)
+    full_res_frame = b"full-resolution-frame"
+    entity.cached_image = full_res_frame
+    # Stale enough to enter the "cache stale" fetch-fresh branch.
+    entity.last_image_fetch = time.monotonic() - 3600
+
+    with patch.object(
+        entity.coordinator,
+        "async_fetch_live_snapshot",
+        return_value=b"undersized-thumbnail",
+    ):
+        image = await entity.async_camera_image(width=200)
+
+    assert image == b"undersized-thumbnail"
+    # The shared cache must still hold the original full-resolution frame —
+    # a subsequent full-res request must not be served the thumbnail.
+    assert entity.cached_image == full_res_frame
+
+
+async def test_slow_refresh_falls_back_to_cached_image_within_budget(
+    hass: HomeAssistant,
+) -> None:
+    """A REMOTE+LOCAL fetch chain slower than the internal budget falls back to the cached frame.
+
+    Bounds the stale-cache refresh path well under HA-core's own
+    CAMERA_IMAGE_TIMEOUT (10s) — without this, a slow/hanging cloud fetch
+    would get the whole async_camera_image() call cancelled by HA core and
+    serve nothing at all, instead of the frame we already have cached.
+    """
+    entity = await _setup_camera_entity(hass)
+    cached_frame = b"last-known-good-frame"
+    entity.cached_image = cached_frame
+    entity.last_image_fetch = time.monotonic() - 3600  # stale
+
+    async def _hangs_forever(*_args: object, **_kwargs: object) -> bytes | None:
+        await asyncio.sleep(10)
+        return b"too-late"
+
+    with (
+        patch(
+            "homeassistant.components.bosch_shc_camera.camera.REFRESH_ON_STALE_CACHE_BUDGET_SEC",
+            0.01,
+        ),
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot", side_effect=_hangs_forever
+        ),
+    ):
+        image = await entity.async_camera_image()
+
+    assert image == cached_frame
+
+
+async def test_unload_cancels_pending_image_refresh_task(hass: HomeAssistant) -> None:
+    """Removing the entity mid-delay cancels its still-pending background refresh task.
+
+    Without this, unloading during the startup/proactive refresh delay left a
+    network task running against an already-removed entity (bug-hunt
+    2026-07-27, Copilot review).
+    """
+    entity = await _setup_camera_entity(hass)
+
+    # Simulate a still-pending background refresh (e.g. the 2s startup delay,
+    # or a proactive-refresh trigger) scheduled but not yet complete.
+    task = hass.async_create_task(entity.async_trigger_image_refresh(delay=100))
+    entity._image_refresh_task = task
+    await asyncio.sleep(0)  # let the task actually start (enter the sleep)
+
+    await entity.async_will_remove_from_hass()
+    await hass.async_block_till_done()
+
+    assert task.cancelled()

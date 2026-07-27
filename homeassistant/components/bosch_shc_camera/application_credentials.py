@@ -41,5 +41,5 @@ async def async_get_auth_implementation(
 ) -> AbstractOAuth2Implementation:
     """Return a custom PKCE-capable auth implementation for Bosch SingleKey ID."""
     return BoschOAuth2Implementation(
-        hass, credential.client_id, credential.client_secret
+        hass, credential.client_id, credential.client_secret, auth_domain=auth_domain
     )

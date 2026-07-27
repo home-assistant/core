@@ -37,7 +37,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
 from . import async_digest_request, async_get_bosch_cloud_session, ir
 from .camera_list import fetch_camera_list
@@ -101,25 +100,6 @@ FCM_DOWN_EVENT_POLL_SEC = 60.0
 # The camera ENTITY availability still flips immediately — only the notification
 # is debounced.
 CAMERA_OFFLINE_ANNOUNCE_GRACE_SEC = 300.0  # 5 min
-
-# Read integration version once at import time (sync I/O at module level is fine — import
-# happens in the executor during HA startup, not inside the event loop).
-# Duplicated from __init__.py (both modules need it — __init__.py for the
-# feedback-hint/persistent_notification code in async_setup_entry, this module
-# for BoschCameraCoordinator.__init__'s self.integration_version — this is a
-# self-contained leaf computation, not worth a shared-module round-trip for).
-try:
-    import pathlib as _pathlib
-
-    _INTEGRATION_VERSION: str = _json.loads(
-        (_pathlib.Path(__file__).parent / "manifest.json").read_text()
-    )["version"]
-except (
-    OSError,
-    ValueError,
-    KeyError,
-):  # pragma: no cover — manifest.json ships with the package; only fires on a corrupted install
-    _INTEGRATION_VERSION = "unknown"
 
 # ── URL allowlist for image/video downloads (SSRF prevention) ────────────────
 _SAFE_DOMAINS = frozenset({".boschsecurity.com", ".bosch.com"})
@@ -421,7 +401,6 @@ class BoschCameraCoordinator(
         self.feature_flags: dict[str, bool] = {}
         # Protocol version check — run once at startup
         self.protocol_checked: bool = False
-        self.integration_version = _INTEGRATION_VERSION
         # Firmware update status cache — keyed by cam_id, from GET /firmware
         self.firmware_cache: dict[str, dict[str, Any]] = {}
         # Per-camera lock serializing async_install_firmware()'s
@@ -695,50 +674,6 @@ class BoschCameraCoordinator(
         cache = getattr(self, "_rcp_lan_denied_until", None)
         if cache is not None:
             cache.pop((cam_id, opcode_hex), None)
-
-    def _maybe_fire_intrusion_event(
-        self, cam_id: str, cam_name: str, alarm_status: dict[str, Any]
-    ) -> None:
-        """Fire `bosch_shc_camera_intrusion` on rising edge of `alarmType`.
-
-        Bosch /v11/video_inputs/{id}/alarmStatus returns
-        `{"alarmType": "NONE" | "INTRUSION_DETECTED" | ..., "intrusionSystem": "ACTIVE" | "INACTIVE" | ...}`.
-        Real intrusion → alarmType transitions from "NONE"/empty to something
-        else. We fire once per rising edge; identical repeats and falling
-        edges do not fire (those would either spam or be misleading).
-
-        Without this, the event type was registered as a webhook target and
-        exposed via send_event_webhook but never auto-fired — webhook users
-        only got the manual test event.
-
-        Defensive against SimpleNamespace test stubs that lack
-        `_last_alarm_type` — lazy-init on first call.
-        """
-        if not alarm_status:
-            return
-        raw = alarm_status.get("alarmType")
-        if raw is None:
-            return
-        if not hasattr(self, "_last_alarm_type"):
-            self._last_alarm_type = {}
-        new_type = str(raw).strip().upper()
-        prev_type = self._last_alarm_type.get(cam_id, "NONE").strip().upper()
-        was_idle = prev_type in ("", "NONE")
-        is_idle = new_type in ("", "NONE")
-        if was_idle and not is_idle:
-            self.hass.bus.async_fire(
-                "bosch_shc_camera_intrusion",
-                {
-                    "camera_id": cam_id,
-                    "camera_name": cam_name,
-                    "alarm_type": new_type,
-                    "intrusion_system": str(
-                        alarm_status.get("intrusionSystem", "")
-                    ).upper(),
-                    "timestamp": dt_util.utcnow().isoformat().replace("+00:00", "Z"),
-                },
-            )
-        self._last_alarm_type[cam_id] = new_type
 
     def _alert_services(self) -> list[str]:
         """Return configured notify service name(s) for system alerts.
@@ -1072,7 +1007,7 @@ class BoschCameraCoordinator(
                 # tick (not slow-tier-gated), only gated on is_online.
                 await _poll_cam_control(self, cam_id_key, ctx, session, headers)
 
-                # ── Slow tier: wifiinfo, ambient light, motion, audio, recording ──
+                # ── Slow tier: motion detection settings ──────────────────────
                 # Only fetched every interval_slow seconds (default 5 min).
                 await _poll_slow_tier_endpoints(
                     self,
@@ -1082,11 +1017,6 @@ class BoschCameraCoordinator(
                     data,
                     session,
                     headers,
-                    lambda cid, title, ep_data: (
-                        BoschCameraCoordinator._maybe_fire_intrusion_event(
-                            self, cid, title, ep_data
-                        )
-                    ),
                 )
 
                 # ── RCP data via cloud proxy (slow tier — every 5 min) ────────
