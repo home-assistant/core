@@ -85,7 +85,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
     PortainerContainerSensorEntityDescription(
         key="image_version",
         translation_key="image_version",
-        supported_fn=lambda data: data.container.labels is not None,
+        supported_fn=lambda data: data.container.labels.get("org.opencontainers.image.version") is not None,
         value_fn=lambda data: (
             data.container.labels.get("org.opencontainers.image.version")
             if data.container.labels
@@ -95,7 +95,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
     PortainerContainerSensorEntityDescription(
         key="image_created",
         translation_key="image_created",
-        supported_fn=lambda data: data.container.labels is not None,
+        supported_fn=lambda data: data.container.labels.get("org.opencontainers.image.created") is not None,
         value_fn=lambda data: (
             parsed
             if data.container.labels
