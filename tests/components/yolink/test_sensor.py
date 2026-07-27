@@ -254,9 +254,18 @@ async def test_water_meter_temperature_retained_on_partial_report(
         }
     }
     resolve_sub_message(device, partial_report, "Report")
-    YoLinkHomeMessageListener(hass, mock_config_entry).on_message(
-        device, partial_report
+    setup_call = mock_yolink_home.return_value.async_setup.await_args
+    assert setup_call is not None
+    registered_listener = next(
+        (
+            argument
+            for argument in (*setup_call.args, *setup_call.kwargs.values())
+            if isinstance(argument, YoLinkHomeMessageListener)
+        ),
+        None,
     )
+    assert isinstance(registered_listener, YoLinkHomeMessageListener)
+    registered_listener.on_message(device, partial_report)
     await hass.async_block_till_done()
 
     _assert_temperature_state(hass, entity_id, 17.7)
