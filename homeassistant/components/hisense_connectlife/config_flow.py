@@ -163,10 +163,10 @@ class OAuth2FlowHandler(
             )
 
         # User has submitted the form, start OAuth
-        self._flow_impl = HisenseOAuth2Implementation(self.hass)
+        self.flow_impl = HisenseOAuth2Implementation(self.hass)
 
         try:
-            url = await self._flow_impl.async_generate_authorize_url(self.flow_id)
+            url = await self.flow_impl.async_generate_authorize_url(self.flow_id)
             _LOGGER.debug("Generated authorization URL: %s", url)
             return self.async_external_step(step_id="auth", url=url)
         except Exception:
