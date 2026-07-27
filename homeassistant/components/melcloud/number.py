@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import MelCloudConfigEntry, MelCloudDeviceUpdateCoordinator
-from .entity import MelCloudEntity
+from .entity import AtwZoneEntity
 
 FLOW_MODES = {ZONE_OPERATION_MODE_HEAT_FLOW, ZONE_OPERATION_MODE_COOL_FLOW}
 
@@ -74,7 +74,7 @@ async def async_setup_entry(
     )
 
 
-class AtwZoneNumber(MelCloudEntity, NumberEntity):
+class AtwZoneNumber(AtwZoneEntity, NumberEntity):
     """Number entity for an Air-to-Water zone."""
 
     entity_description: MelcloudNumberEntityDescription
@@ -86,13 +86,11 @@ class AtwZoneNumber(MelCloudEntity, NumberEntity):
         description: MelcloudNumberEntityDescription,
     ) -> None:
         """Initialize the number."""
-        super().__init__(coordinator)
-        self._zone = zone
+        super().__init__(coordinator, zone)
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.device.serial}-{zone.zone_index}-{description.key}"
         )
-        self._attr_device_info = coordinator.zone_device_info(zone)
         self._attr_native_step = coordinator.device.temperature_increment
 
     @property
