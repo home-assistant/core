@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from homeassistant.components.event import ButtonEventType
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -157,7 +158,7 @@ async def test_button_down_event_fired(
 
     state_after = hass.states.get(entity_id)
     assert state_after is not None
-    assert state_after.attributes.get("event_type") == "button_down"
+    assert state_after.attributes.get("event_type") == ButtonEventType.PRESS_START
     assert state_before != state_after
 
 
@@ -186,7 +187,7 @@ async def test_button_up_event_fired(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes.get("event_type") == "button_up"
+    assert state.attributes.get("event_type") == ButtonEventType.PRESS_END
 
 
 async def test_no_event_for_wrong_button_id(
