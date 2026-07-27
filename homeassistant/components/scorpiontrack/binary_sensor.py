@@ -40,16 +40,14 @@ class ScorpionTrackIgnitionBinarySensor(ScorpionTrackEntity, BinarySensorEntity)
         self._attr_unique_id = f"{coordinator.data.id}_{vehicle_id}_ignition"
 
     def _available_ignition(self) -> bool | None:
-        """Return the ignition value if the vehicle is available."""
-        if not super().available:
-            return None
+        """Return the ignition value."""
         return self.get_vehicle().position.ignition
 
     @property
     @override
     def available(self) -> bool:
         """Return if the ignition binary sensor is available."""
-        return self._available_ignition() is not None
+        return super().available and self._available_ignition() is not None
 
     @property
     @override
