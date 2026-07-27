@@ -100,25 +100,30 @@ async def test_user_flow_cannot_connect_then_recovers(hass: HomeAssistant) -> No
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_rejects_unsupported_device(hass: HomeAssistant) -> None:
-    """Test unsupported API and product errors remain actionable."""
-    for error, expected in (
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
         (HavenUnsupportedApiVersionError, "unsupported_api_version"),
         (HavenUnsupportedProductError, "unsupported_product"),
+    ],
+)
+async def test_user_flow_rejects_unsupported_device(
+    hass: HomeAssistant, error: type[Exception], expected: str
+) -> None:
+    """Test unsupported API and product errors remain actionable."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    client = _mock_client(TEST_INFO)
+    client.get_info.side_effect = error
+    with patch(
+        "homeassistant.components.haven.config_flow.HavenClient",
+        return_value=client,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST}
         )
-        client = _mock_client(TEST_INFO)
-        client.get_info.side_effect = error
-        with patch(
-            "homeassistant.components.haven.config_flow.HavenClient",
-            return_value=client,
-        ):
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_HOST: TEST_HOST}
-            )
-        assert result["errors"] == {"base": expected}
+    assert result["errors"] == {"base": expected}
 
 
 async def test_user_flow_rejects_controller(hass: HomeAssistant) -> None:
@@ -226,23 +231,28 @@ async def test_zeroconf_updates_existing_entry(hass: HomeAssistant) -> None:
     }
 
 
-async def test_zeroconf_aborts_on_device_errors(hass: HomeAssistant) -> None:
-    """Test discovery failures abort with specific reasons."""
-    for error, expected in (
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
         (HavenApiError, "cannot_connect"),
         (HavenUnsupportedApiVersionError, "unsupported_api_version"),
         (HavenUnsupportedProductError, "unsupported_product"),
+    ],
+)
+async def test_zeroconf_aborts_on_device_errors(
+    hass: HomeAssistant, error: type[Exception], expected: str
+) -> None:
+    """Test discovery failures abort with specific reasons."""
+    client = _mock_client(TEST_INFO)
+    client.get_info.side_effect = error
+    with patch(
+        "homeassistant.components.haven.config_flow.HavenClient",
+        return_value=client,
     ):
-        client = _mock_client(TEST_INFO)
-        client.get_info.side_effect = error
-        with patch(
-            "homeassistant.components.haven.config_flow.HavenClient",
-            return_value=client,
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_ZEROCONF},
-                data=ZEROCONF_DISCOVERY,
-            )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == expected
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=ZEROCONF_DISCOVERY,
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected
