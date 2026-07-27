@@ -7682,6 +7682,48 @@ async def test_remove_device_promotes_shadowed_duplicate(
     )
 
 
+async def test_update_device_reindexes_shadowed_duplicate(
+    hass: HomeAssistant,
+) -> None:
+    """Updating a shadowed duplicate re-indexes it, so it wins the lookups."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device_registry = mock_device_registry(
+        hass,
+        {
+            "shadowed": dr.DeviceEntry(
+                id="shadowed",
+                config_entry_id=entry.entry_id,
+                identifiers={("test", "shared")},
+            ),
+            "winner": dr.DeviceEntry(
+                id="winner",
+                config_entry_id=entry.entry_id,
+                identifiers={("test", "shared")},
+            ),
+        },
+    )
+    assert (
+        device_registry.async_get_device(identifiers={("test", "shared")}).id
+        == "winner"
+    )
+
+    # The updated shadowed duplicate takes over the lookup slot (last indexed wins)
+    device_registry.async_update_device("shadowed", name_by_user="renamed")
+    assert (
+        device_registry.async_get_device(identifiers={("test", "shared")}).id
+        == "shadowed"
+    )
+
+    # An updated slot holder stays in the slot
+    device_registry.async_update_device("shadowed", name_by_user="renamed again")
+    assert (
+        device_registry.async_get_device(identifiers={("test", "shared")}).id
+        == "shadowed"
+    )
+    assert len(device_registry.devices) == 2
+
+
 @pytest.mark.parametrize(
     ("device_extra", "stale_extra", "register_extra"),
     [
@@ -7710,6 +7752,7 @@ async def test_remove_device_promotes_shadowed_duplicate(
 )
 async def test_legacy_duplicate_keys_stripped_on_registration(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
     device_extra: dict[str, set[tuple[str, str]]],
     stale_extra: dict[str, set[tuple[str, str]]],
     register_extra: dict[str, set[tuple[str, str]]],
@@ -7773,6 +7816,17 @@ async def test_legacy_duplicate_keys_stripped_on_registration(
     )
     assert registered.id == "device"
     assert len(device_registry.devices) == 3
+    # The stripped keys are persisted
+    await flush_store(device_registry._store)
+    stored_stale = next(
+        device
+        for device in hass_storage[dr.STORAGE_KEY]["data"]["devices"]
+        if device["id"] == "stale"
+    )
+    assert {tuple(identifier) for identifier in stored_stale["identifiers"]} == {
+        ("test", "stale")
+    }
+    assert stored_stale["connections"] == []
 
 
 async def test_legacy_duplicate_fully_stripped_device_removed(
@@ -7811,8 +7865,109 @@ async def test_legacy_duplicate_fully_stripped_device_removed(
     )
 
 
+@pytest.mark.parametrize("load_registries", [False])
+async def test_loading_from_storage_with_legacy_duplicates(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Duplicates from an old store are tracked on load and reconciled on registration."""
+    entry_id = mock_config_entry.entry_id
+    created_at = "2024-01-01T00:00:00+00:00"
+
+    def _stored_device(
+        device_id: str, identifiers: list[list[str]], connections: list[list[str]]
+    ) -> dict[str, Any]:
+        return {
+            "area_id": None,
+            "config_entries": [entry_id],
+            "config_entries_subentries": {entry_id: [None]},
+            "config_entry_id": entry_id,
+            "config_subentry_id": None,
+            "composite_device_id": None,
+            "composite_primary_config_entry": None,
+            "split_at": None,
+            "has_composite_identifiers": False,
+            "configuration_url": None,
+            "connections": connections,
+            "created_at": created_at,
+            "disabled_by": None,
+            "entry_type": None,
+            "hw_version": None,
+            "id": device_id,
+            "identifiers": identifiers,
+            "labels": [],
+            "manufacturer": None,
+            "model": None,
+            "model_id": None,
+            "modified_at": created_at,
+            "name_by_user": None,
+            "name": None,
+            "primary_config_entry": entry_id,
+            "serial_number": None,
+            "sw_version": None,
+            "via_device_id": None,
+        }
+
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "data": {
+            "devices": [
+                _stored_device(
+                    "old",
+                    [["test", "shared"]],
+                    [[dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef"]],
+                ),
+                _stored_device(
+                    "new",
+                    [["test", "shared"], ["test", "own"]],
+                    [[dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef"]],
+                ),
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    assert (
+        "Loaded 2 identifiers/connections registered to multiple devices of one "
+        "config entry" in caplog.text
+    )
+    # The last stored duplicate wins the lookups
+    assert registry.async_get_device(identifiers={("test", "shared")}).id == "new"
+    assert (
+        registry.async_get_device(
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")}
+        ).id
+        == "new"
+    )
+    assert len(registry.devices) == 2
+
+    # Registration reconciles: the fully shadowed duplicate is removed
+    registered = registry.async_get_or_create(
+        config_entry_id=entry_id,
+        identifiers={("test", "shared")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
+    )
+    assert registered.id == "new"
+    assert registry.async_get("old") is None
+    assert "old" not in registry.deleted_devices
+
+    # The reconciled state is persisted
+    await flush_store(registry._store)
+    stored_devices = hass_storage[dr.STORAGE_KEY]["data"]["devices"]
+    assert [device["id"] for device in stored_devices] == ["new"]
+    assert hass_storage[dr.STORAGE_KEY]["data"]["deleted_devices"] == []
+
+
 async def test_registration_purges_same_entry_deleted_duplicates(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Registering a device purges same-entry deleted devices holding its keys.
 
@@ -7850,6 +8005,12 @@ async def test_registration_purges_same_entry_deleted_duplicates(
     assert "deleted_winner" not in device_registry.deleted_devices
     assert "deleted_shadowed" not in device_registry.deleted_devices
     assert "deleted_other_entry" in device_registry.deleted_devices
+    # The purge is persisted
+    await flush_store(device_registry._store)
+    assert [
+        device["id"]
+        for device in hass_storage[dr.STORAGE_KEY]["data"]["deleted_devices"]
+    ] == ["deleted_other_entry"]
 
 
 async def test_restore_purges_same_entry_deleted_duplicate(
