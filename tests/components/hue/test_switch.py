@@ -38,11 +38,9 @@ async def test_switch(
     assert test_entity.attributes["device_class"] == "switch"
 
     # test config switch to enable/disable a MotionAware zone
-    test_entity = hass.states.get(
-        "switch.philips_hue_motionaware_motion_aware_sensor_1"
-    )
+    test_entity = hass.states.get("switch.test_room_test_room_motionaware")
     assert test_entity is not None
-    assert test_entity.name == "Philips hue MotionAware: Motion Aware Sensor 1"
+    assert test_entity.name == "Test Room MotionAware"
     assert test_entity.state == "on"
     assert test_entity.attributes["device_class"] == "switch"
 
@@ -120,7 +118,7 @@ async def test_motionaware_switch_turn_on_off_service(
 
     await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
 
-    test_entity_id = "switch.philips_hue_motionaware_motion_aware_sensor_1"
+    test_entity_id = "switch.test_room_test_room_motionaware"
 
     # verify the switch is on before we start
     assert hass.states.get(test_entity_id).state == "on"

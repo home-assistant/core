@@ -24,9 +24,11 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .bridge import HueConfigEntry
+from .bridge import HueBridge, HueConfigEntry
+from .const import DOMAIN
 from .v2.entity import HueBaseEntity
 
 
@@ -144,20 +146,30 @@ class HueBehaviorInstanceEnabledEntity(HueResourceEnabledEntity):
 class HueMotionAreaConfigurationEnabledEntity(HueResourceEnabledEntity):
     """Representation of a Switch entity to enable/disable a Hue MotionAware zone."""
 
+    controller: MotionAreaConfigurationController
     resource: MotionAreaConfiguration
 
     entity_description = SwitchEntityDescription(
         key="motion_area_configuration",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
+        translation_key="motion_aware",
     )
 
-    @property
-    @override
-    def name(self) -> str:
-        """Return name for this entity."""
-        # this resource holds a flat `name` property instead of `metadata.name`
-        return f"MotionAware: {self.resource.name}"
+    def __init__(
+        self,
+        bridge: HueBridge,
+        controller: MotionAreaConfigurationController,
+        resource: MotionAreaConfiguration,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(bridge, controller, resource)
+        # link the switch to the group the MotionAware zone is associated with
+        self.hue_group = controller.get_group(resource.id)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.hue_group.id)},
+        )
 
 
 class HueMotionSensorEnabledEntity(HueResourceEnabledEntity):
