@@ -16,8 +16,10 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -26,8 +28,10 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from . import RussoundConfigEntry
 from .const import (
     CONF_BAUDRATE,
+    CONF_ZONE_SOURCE_EXCLUSION,
     DEFAULT_BAUDRATE,
     DEFAULT_PORT,
     DOMAIN,
@@ -64,6 +68,15 @@ SERIAL_SCHEMA = vol.Schema(
     }
 )
 
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_ZONE_SOURCE_EXCLUSION,
+            default=True,
+        ): bool,
+    }
+)
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,10 +97,35 @@ async def _async_validate_connection(
     return controller
 
 
+class OptionsFlowHandler(OptionsFlowWithReload):
+    """Handle Russound RIO options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
+        )
+
+
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Russound RIO configuration flow."""
 
     VERSION = 2
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: RussoundConfigEntry) -> OptionsFlowHandler:
+        """Create the options flow."""
+        return OptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize the config flow."""

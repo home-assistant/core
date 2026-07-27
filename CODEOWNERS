@@ -1370,8 +1370,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/ourgroceries/ @OnFreund
 /homeassistant/components/overkiz/ @imicknl
 /tests/components/overkiz/ @imicknl
-/homeassistant/components/overseerr/ @joostlek @AmGarera
-/tests/components/overseerr/ @joostlek @AmGarera
+/homeassistant/components/overseerr/ @joostlek @AmGarera @felixschndr
+/tests/components/overseerr/ @joostlek @AmGarera @felixschndr
 /homeassistant/components/ovhcloud_ai_endpoints/ @Crocmagnon
 /tests/components/ovhcloud_ai_endpoints/ @Crocmagnon
 /homeassistant/components/ovo_energy/ @timmo001
