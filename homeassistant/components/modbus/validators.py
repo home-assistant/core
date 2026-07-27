@@ -1,7 +1,6 @@
 """Validate Modbus configuration."""
 
 from collections import namedtuple
-import logging
 import struct
 from typing import Any
 
@@ -43,12 +42,11 @@ from .const import (
     DEFAULT_SCALE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    LOGGER,
     PLATFORMS,
     SERIAL,
     DataType,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 ENTRY = namedtuple(  # noqa: PYI024
     "ENTRY",
@@ -131,7 +129,7 @@ def modbus_create_issue(
         issue_domain=DOMAIN,
         learn_more_url="https://www.home-assistant.io/integrations/modbus",
     )
-    _LOGGER.warning(err)
+    LOGGER.warning(err)
 
 
 def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
@@ -247,7 +245,7 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
                 f"Modbus fan mode {key} has a duplicate value"
                 f" {value}, not loaded, values must be unique!"
             )
-            _LOGGER.warning(warn)
+            LOGGER.warning(warn)
             errors.append(key)
         else:
             fan_modes.add(value)
@@ -312,7 +310,7 @@ def duplicate_swing_mode_validator(config: dict[str, Any]) -> dict:
                 f" value {value}, not loaded,"
                 " values must be unique!"
             )
-            _LOGGER.warning(warn)
+            LOGGER.warning(warn)
             errors.append(key)
         else:
             swing_modes.add(value)
@@ -401,7 +399,7 @@ def validate_entity(
             f"{hub_name} {name} scan_interval is lower than 5 seconds, "
             "which may cause Home Assistant stability issues"
         )
-        _LOGGER.warning(err)
+        LOGGER.warning(err)
     entity[CONF_SCAN_INTERVAL] = scan_interval
     minimum_scan_interval = min(scan_interval, minimum_scan_interval)
     if name in ent_names:
@@ -472,7 +470,7 @@ def check_config(hass: HomeAssistant, config: dict) -> dict:
             continue
         if hub[CONF_TIMEOUT] >= minimum_scan_interval:
             hub[CONF_TIMEOUT] = minimum_scan_interval - 1
-            _LOGGER.warning(
+            LOGGER.warning(
                 "Modbus %s timeout is adjusted(%d) due to scan_interval",
                 hub[CONF_NAME],
                 hub[CONF_TIMEOUT],
