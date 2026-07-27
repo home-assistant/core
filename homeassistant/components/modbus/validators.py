@@ -231,12 +231,12 @@ def number_min_max_validator(config: dict[str, Any]) -> dict[str, Any]:
         (CONF_MIN_VALUE, min_value),
         (CONF_MAX_VALUE, max_value),
     ):
-        raw: float | int = (limit_value - offset) / scale
-        if value_is_int:
-            raw = round(raw)
         try:
+            raw: float | int = (limit_value - offset) / scale
+            if value_is_int:
+                raw = round(raw)
             struct.pack(config[CONF_STRUCTURE], raw)
-        except (OverflowError, struct.error) as err:
+        except (OverflowError, struct.error, ValueError) as err:
             raise vol.Invalid(
                 f"{name}: `{limit_key}: {limit_value}` cannot be represented with"
                 f" `{CONF_DATA_TYPE}: {data_type}`, `{CONF_SCALE}: {scale}`"
