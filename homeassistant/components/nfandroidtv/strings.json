@@ -34,6 +34,12 @@
     "connection_failed": {
       "message": "Failed to connect to host: {host}"
     },
+    "invalid_duration": {
+      "message": "Invalid duration value: {duration}"
+    },
+    "invalid_interrupt": {
+      "message": "Invalid interrupt value: {interrupt}"
+    },
     "invalid_notification_icon": {
       "message": "Invalid icon data provided. Got {type}"
     },
