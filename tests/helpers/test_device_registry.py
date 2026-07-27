@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Iterable
 from contextlib import AbstractContextManager, nullcontext
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import partial
 import json
 import pathlib
@@ -18,7 +18,7 @@ from yarl import URL
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, ReleaseChannel
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -31,6 +31,7 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     async_capture_events,
+    async_fire_time_changed,
     flush_store,
     mock_config_flow,
     mock_device_registry,
@@ -8155,6 +8156,70 @@ async def test_key_collision_reconciled_after_config_entry_reload(
         device_a_refetched = device_registry.async_get(device_a.id)
         assert device_a_refetched is not None
         assert device_a_refetched.connections == set()
+
+
+async def test_key_collision_reconciled_after_setup_retry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A key moved between devices reconciles on the retry after a failed setup."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    connection = (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")
+
+    async def first_attempt(
+        hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+    ) -> bool:
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("test", "device_a")},
+            connections={connection},
+        )
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("test", "device_b")},
+        )
+        raise ConfigEntryNotReady
+
+    async def second_attempt(
+        hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+    ) -> bool:
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("test", "device_b")},
+            connections={connection},
+        )
+        return True
+
+    attempts = [first_attempt, second_attempt]
+
+    async def async_setup_entry(
+        hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+    ) -> bool:
+        return await attempts.pop(0)(hass, config_entry)
+
+    mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    class MockFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+    with mock_config_flow("test", MockFlow):
+        await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+
+    # The retry reconciled the key away from the failed attempt's device
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    device_b = device_registry.async_get_device(identifiers={("test", "device_b")})
+    assert device_b is not None
+    assert device_b.connections == {connection}
+    device_a = device_registry.async_get_device(identifiers={("test", "device_a")})
+    assert device_a is not None
+    assert device_a.connections == set()
 
 
 @pytest.mark.parametrize(

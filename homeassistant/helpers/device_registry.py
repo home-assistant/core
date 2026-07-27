@@ -2986,7 +2986,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
     @callback
     def async_config_entry_unloaded(self, config_entry_id: str) -> None:
-        """Forget the live devices of an unloaded config entry."""
+        """Forget the live devices of a config entry that unloaded or failed setup."""
         self._live_device_ids.pop(config_entry_id, None)
 
     @callback
