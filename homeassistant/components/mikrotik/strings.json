@@ -60,6 +60,14 @@
       "memory_usage": {
         "name": "Memory usage"
       }
+    },
+    "update": {
+      "firmware_update": {
+        "name": "RouterOS"
+      },
+      "routerboard_update": {
+        "name": "RouterBOARD"
+      }
     }
   },
   "exceptions": {

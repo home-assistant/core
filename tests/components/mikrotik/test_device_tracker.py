@@ -22,6 +22,7 @@ from .const import (
     DHCP_DATA,
     MOCK_DATA,
     MOCK_OPTIONS,
+    UPDATE_DATA,
     WIRELESS_DATA,
 )
 
@@ -63,6 +64,8 @@ def mock_command(
         return DHCP_DATA
     if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.WIRELESS]:
         return WIRELESS_DATA
+    if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.UPDATE]:
+        return UPDATE_DATA
     return {}
 
 

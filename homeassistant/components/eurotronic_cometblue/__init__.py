@@ -8,11 +8,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
+from .services import async_setup_services
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.CLIMATE,
@@ -74,6 +77,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    return True
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Eurotronic Comet Blue integration."""
+    async_setup_services(hass)
     return True
 
 
