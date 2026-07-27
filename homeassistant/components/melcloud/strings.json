@@ -137,6 +137,11 @@
       }
     }
   },
+  "exceptions": {
+    "set_number_failed": {
+      "message": "Failed to send the value to the device."
+    }
+  },
   "services": {
     "set_vane_horizontal": {
       "description": "Sets horizontal vane position.",

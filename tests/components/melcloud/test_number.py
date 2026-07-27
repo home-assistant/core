@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from aiohttp import ClientError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,6 +13,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_platform
@@ -48,6 +50,24 @@ async def test_set_flow_temperature(
         blocking=True,
     )
     mock_atw_device.zones[0].set_target_flow_temperature.assert_awaited_once_with(45.0)
+
+
+@pytest.mark.usefixtures("mock_get_devices")
+async def test_set_flow_temperature_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_atw_device: MagicMock,
+) -> None:
+    """A failed set surfaces as a HomeAssistantError."""
+    mock_atw_device.zones[0].set_target_flow_temperature.side_effect = ClientError
+    await setup_platform(hass, mock_config_entry, [Platform.NUMBER])
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: FLOW_TEMPERATURE_ENTITY, ATTR_VALUE: 45},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(
