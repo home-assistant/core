@@ -99,7 +99,7 @@ class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @override
     def installed_version(self) -> str | None:
         """Version currently in use."""
-        return cast(str, self.status.get("fw_version"))
+        return cast(str | None, self.status.get("fw_version"))
 
     @property
     @override
@@ -119,13 +119,13 @@ class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @override
     def in_progress(self) -> bool:
         """Update installation in progress."""
-        return bool(self._update_status.get("state", "") in ["started", "updating"])
+        return bool(self._update_status.get("state") in ("started", "updating"))
 
     @property
     @override
     def update_percentage(self) -> int | None:
         """Update installation progress."""
-        return cast(int, self._update_status.get("progress"))
+        return cast(int | None, self._update_status.get("progress"))
 
     @override
     async def async_install(
@@ -192,10 +192,8 @@ RPC_UPDATES: Final = {
     "loraupdate": RpcUpdateDescription(
         key="lora",
         translation_key="lora_firmware",
-        latest_version=lambda status: (
-            # Right after firmware update, lora status can be None
-            status or {}
-        ),
+        # Right after firmware update, lora status can be None
+        latest_version=lambda status: status or {},
         beta=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
