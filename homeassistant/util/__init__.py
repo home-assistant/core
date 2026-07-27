@@ -120,12 +120,11 @@ _ENDS_WITH_SEPARATOR = re.compile(rf"[{_SEPARATOR_CLASS}]$")
 def strip_boundary_label(text: str, label: str) -> str | None:
     """Strip label from the start or end of text on a word boundary.
 
-    Matching is case-insensitive and only made on a separator boundary (any of
-    whitespace, ``-``, ``_`` or ``.``), so "Kitchen" is not stripped from
-    "Kitchenette". Surrounding separators are trimmed from the remainder.
+    Matching is case-insensitive and requires a separator boundary (whitespace,
+    ``-``, ``_`` or ``.``), so "Kitchen" is not stripped from "Kitchenette".
 
-    Returns an empty string when text equals label, the trimmed remainder for a
-    prefix or suffix match, or None when label is neither.
+    Returns the trimmed remainder, an empty string when text equals label, or
+    None when label is neither a prefix nor a suffix.
     """
     lower_text = text.lower()
     lower_label = label.lower()

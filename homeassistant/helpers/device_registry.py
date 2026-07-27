@@ -1297,12 +1297,8 @@ def suggest_device_area(
 ) -> DeviceAreaSuggestion | None:
     """Suggest a cleaned device name and area from a known area label.
 
-    When the device already has an area, only that area's label is stripped, so
-    an assigned area is never overridden. Otherwise the area with the longest
-    matching name or alias wins and is suggested along with the cleaned name.
-
-    A match that strips the whole name (name equals the label) is a no-op, with
-    no fallback to a shorter label. Returns None when nothing should change.
+    An already assigned area is never overridden, only stripped from the name.
+    Returns None when nothing should change.
     """
     if not (name := (name or "").strip()):
         return None
@@ -1699,6 +1695,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
 
         is_new = False
+        is_restored = False
 
         if device is None:
             is_new = True
@@ -1741,6 +1738,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 )
 
             else:
+                is_restored = True
                 self.deleted_devices.pop(deleted_device.id)
                 device = deleted_device.to_device_entry(
                     config_entry,
@@ -1815,15 +1813,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "merge_identifiers": identifiers or UNDEFINED,
             }
 
-        # On creation, strip a known area label from the device name into
-        # name_by_user and, when the device has no area, assign the matching area.
-        # Storing the cleaned name as name_by_user leaves the integration's raw name
-        # in name and lets the cleaned name survive re-registration untouched, so
-        # this only runs for new devices. A device restored with a user-set name is
-        # left alone.
+        # The cleaned name goes in name_by_user so the integration's raw name in name
+        # is left alone and re-registration can't overwrite the cleaned name.
         device_area_id: str | None | UndefinedType = UNDEFINED
         device_name_by_user: str | UndefinedType = UNDEFINED
-        if is_new and name is not UNDEFINED and name and device.name_by_user is None:
+        if is_new and not is_restored and name is not UNDEFINED and name:
             from . import area_registry as ar  # noqa: PLC0415  # Circular dependency
 
             if suggestion := suggest_device_area(

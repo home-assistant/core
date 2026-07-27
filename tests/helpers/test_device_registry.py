@@ -8163,7 +8163,6 @@ async def test_dict_repr_dual_writes_deprecated_keys(
     ],
 )
 async def test_suggest_device_area(
-    hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     areas: list[tuple[str, list[str]]],
     name: str,
@@ -8181,7 +8180,6 @@ async def test_suggest_device_area(
 
 
 async def test_get_or_create_strips_area_from_name(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
     mock_config_entry: MockConfigEntry,
@@ -8195,12 +8193,10 @@ async def test_get_or_create_strips_area_from_name(
         name="Living Room Thermostat",
     )
 
-    # The integration's raw name is kept, the cleaned name is stored as name_by_user.
     assert device.name == "Living Room Thermostat"
     assert device.name_by_user == "Thermostat"
     assert device.area_id == living_room.id
 
-    # Re-registering with the original name keeps the cleaned name and area.
     device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("bla", "123")},
@@ -8213,7 +8209,6 @@ async def test_get_or_create_strips_area_from_name(
 
 
 async def test_get_or_create_strips_suggested_area_from_name(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
     mock_config_entry: MockConfigEntry,
@@ -8234,7 +8229,6 @@ async def test_get_or_create_strips_suggested_area_from_name(
 
 
 async def test_get_or_create_keeps_name_when_it_matches_another_area(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
     mock_config_entry: MockConfigEntry,
@@ -8256,21 +8250,42 @@ async def test_get_or_create_keeps_name_when_it_matches_another_area(
     assert device.area_id == kitchen.id
 
 
-async def test_get_or_create_does_not_reclean_restored_device(
+@pytest.mark.parametrize(
+    ("updates", "expected_name_by_user", "expected_area_id"),
+    [
+        pytest.param(
+            {"name_by_user": "My Thermostat"},
+            "My Thermostat",
+            "living_room",
+            id="user-renamed",
+        ),
+        pytest.param({"name_by_user": None}, None, "living_room", id="never-renamed"),
+        pytest.param(
+            {"name_by_user": None, "area_id": None},
+            None,
+            None,
+            id="area-cleared",
+        ),
+    ],
+)
+async def test_get_or_create_does_not_clean_restored_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
     mock_config_entry: MockConfigEntry,
+    updates: dict[str, str | None],
+    expected_name_by_user: str | None,
+    expected_area_id: str | None,
 ) -> None:
-    """Test a restored device keeps its user name instead of being re-cleaned."""
-    living_room = area_registry.async_create("Living Room")
+    """Test a restored device keeps the name and area the user left it with."""
+    area_registry.async_create("Living Room")
 
     device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("bla", "123")},
         name="Living Room Thermostat",
     )
-    device_registry.async_update_device(device.id, name_by_user="My Thermostat")
+    device_registry.async_update_device(device.id, **updates)
 
     # Removing the config entry orphans the device so re-registering restores it.
     device_registry.async_clear_config_entry(mock_config_entry.entry_id)
@@ -8284,5 +8299,35 @@ async def test_get_or_create_does_not_reclean_restored_device(
     )
 
     assert restored.id == device.id
-    assert restored.name_by_user == "My Thermostat"
-    assert restored.area_id == living_room.id
+    assert restored.name_by_user == expected_name_by_user
+    assert restored.area_id == expected_area_id
+
+
+async def test_get_or_create_cleaned_name_entity_naming(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test how the cleaned device name is reflected in entity naming."""
+    area_registry.async_create("Living Room")
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bla", "123")},
+        name="Living Room Thermostat",
+    )
+    entity = entity_registry.async_get_or_create(
+        "climate",
+        "test",
+        "unique",
+        device_id=device.id,
+        has_entity_name=True,
+        original_name=None,
+    )
+
+    assert device.name_by_user == "Thermostat"
+    # The entity id prefixes the area, the full entity name does not.
+    assert entity.entity_id == "climate.living_room_thermostat"
+    assert er.async_get_full_entity_name(hass, entity) == "Thermostat"
