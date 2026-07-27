@@ -172,6 +172,12 @@ BUTTON_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "reboot"),
         method=lambda api, ch: api.reboot(ch),
     ),
+    ReolinkButtonEntityDescription(
+        key="pre_siren",
+        translation_key="pre_siren",
+        supported=lambda api, ch: api.supported(ch, "pre_siren"),
+        method=lambda api, ch: api.baichuan.PreAlarm(ch),
+    ),
 )
 
 HOST_BUTTON_ENTITIES = (
