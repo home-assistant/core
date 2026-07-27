@@ -2,7 +2,7 @@
   "lastUpdate": 123456789,
   "chrono_id": "test",
   "status": true,
-  "name": "00:11:22:33:44:55",
+  "name": "001122334455",
   "data": {
     "event": "update",
     "sensors": {

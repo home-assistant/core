@@ -28,7 +28,7 @@ def mock_flow_it() -> Generator[AsyncMock]:
     mock_vmc.get_info.return_value.hostname = "Flow-it Device"
 
     json_data = load_json_value_fixture("machine_status.json", DOMAIN)
-    json_data["name"] = "00:11:22:33:44:55"
+    json_data["name"] = "001122334455"
     mock_vmc.state = MachineStatusResponse(**json_data)
 
     mock_vmc.register_websocket_callback = MagicMock()
@@ -53,7 +53,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Flow-it Device",
-        unique_id="00:11:22:33:44:55",
+        unique_id="001122334455",
         data={
             "host": "http://1.1.1.1",
             "username": "api",

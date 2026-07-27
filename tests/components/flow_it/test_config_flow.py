@@ -35,7 +35,10 @@ async def test_user_flow(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
         USER_INPUT,
     )
     await hass.async_block_till_done()
-    assert result["data"]["host"] == f"http://{USER_INPUT['host']}"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Flow-it Device"
+    assert result["data"] == {**USER_INPUT, "host": f"http://{USER_INPUT['host']}"}
+    assert result["result"].unique_id == "001122334455"
 
 
 @pytest.mark.parametrize(
@@ -71,7 +74,10 @@ async def test_user_flow_exceptions(
         USER_INPUT,
     )
     await hass.async_block_till_done()
-    assert result["data"]["host"] == f"http://{USER_INPUT['host']}"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Flow-it Device"
+    assert result["data"] == {**USER_INPUT, "host": f"http://{USER_INPUT['host']}"}
+    assert result["result"].unique_id == "001122334455"
 
 
 async def test_zeroconf(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
@@ -111,7 +117,7 @@ async def test_zeroconf(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
         "username": "api",
         "password": "test-password",
     }
-    assert result["result"].unique_id == "00:11:22:33:44:55"
+    assert result["result"].unique_id == "001122334455"
 
 
 @pytest.mark.parametrize(
@@ -173,7 +179,7 @@ async def test_zeroconf_exceptions(
         "username": "api",
         "password": "test-password",
     }
-    assert result["result"].unique_id == "00:11:22:33:44:55"
+    assert result["result"].unique_id == "001122334455"
 
 
 async def test_user_already_configured(
@@ -182,7 +188,7 @@ async def test_user_already_configured(
     """Test user already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="00:11:22:33:44:55",
+        unique_id="001122334455",
         data={"host": "http://1.1.1.1", "username": "api", "password": "old"},
     )
     entry.add_to_hass(hass)
@@ -204,7 +210,7 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     """Test zeroconf already configured aborts."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="00:11:22:33:44:55",
+        unique_id="001122334455",
         data={
             "host": "http://mock_hostname.local",
             "username": "api",
@@ -243,10 +249,11 @@ async def test_user_flow_with_http(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {**USER_INPUT, "host": "http://1.1.1.1"},
+        {**USER_INPUT, "host": f"http://{USER_INPUT['host']}"},
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"]["host"] == "http://1.1.1.1"
-    assert result["result"].unique_id == "00:11:22:33:44:55"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Flow-it Device"
+    assert result["data"] == {**USER_INPUT, "host": f"http://{USER_INPUT['host']}"}
+    assert result["result"].unique_id == "001122334455"

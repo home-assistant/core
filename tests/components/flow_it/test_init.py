@@ -17,7 +17,7 @@ async def test_setup_unload_entry(hass: HomeAssistant, mock_flow_it: AsyncMock) 
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Flow-it Device",
-        unique_id="00:11:22:33:44:55",
+        unique_id="001122334455",
         data={
             "host": "http://1.1.1.1",
             "username": "api",
@@ -58,7 +58,7 @@ async def test_setup_exceptions(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Flow-it Device",
-        unique_id="00:11:22:33:44:55",
+        unique_id="001122334455",
         data={
             "host": "http://1.1.1.1",
             "username": "api",
