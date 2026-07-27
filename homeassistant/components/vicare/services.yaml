@@ -4,11 +4,222 @@ set_circulation_schedule:
       integration: vicare
       domain: water_heater
   fields:
-    schedule:
-      required: true
-      example: '{ "mon": [{ "start": "06:00", "end": "22:00", "mode": "on", "position": 0 }], "tue": [], "wed": [], "thu": [], "fri": [], "sat": [], "sun": [] }'
+    monday:
       selector:
         object:
+          multiple: true
+          label_field: start
+          description_field: end
+          fields:
+            start:
+              required: true
+              selector:
+                text:
+            end:
+              required: true
+              selector:
+                text:
+            mode:
+              required: true
+              selector:
+                select:
+                  options:
+                    - "on"
+                    - "off"
+                  custom_value: true
+                  mode: dropdown
+            position:
+              required: true
+              selector:
+                number:
+                  min: 0
+                  mode: box
+    tuesday:
+      selector:
+        object:
+          multiple: true
+          label_field: start
+          description_field: end
+          fields:
+            start:
+              required: true
+              selector:
+                text:
+            end:
+              required: true
+              selector:
+                text:
+            mode:
+              required: true
+              selector:
+                select:
+                  options:
+                    - "on"
+                    - "5/25-cycles"
+                    - "5/10-cycles"
+                  custom_value: true
+                  mode: dropdown
+            position:
+              required: true
+              selector:
+                number:
+                  min: 0
+                  mode: box
+    wednesday:
+      selector:
+        object:
+          multiple: true
+          label_field: start
+          description_field: end
+          fields:
+            start:
+              required: true
+              selector:
+                text:
+            end:
+              required: true
+              selector:
+                text:
+            mode:
+              required: true
+              selector:
+                select:
+                  options:
+                    - "on"
+                    - "5/25-cycles"
+                    - "5/10-cycles"
+                  custom_value: true
+                  mode: dropdown
+            position:
+              required: true
+              selector:
+                number:
+                  min: 0
+                  mode: box
+    thursday:
+      selector:
+        object:
+          multiple: true
+          label_field: start
+          description_field: end
+          fields:
+            start:
+              required: true
+              selector:
+                text:
+            end:
+              required: true
+              selector:
+                text:
+            mode:
+              required: true
+              selector:
+                select:
+                  options:
+                    - "on"
+                    - "5/25-cycles"
+                    - "5/10-cycles"
+                  custom_value: true
+                  mode: dropdown
+            position:
+              required: true
+              selector:
+                number:
+                  min: 0
+                  mode: box
+    friday:
+      selector:
+        object:
+          multiple: true
+          label_field: start
+          description_field: end
+          fields:
+            start:
+              required: true
+              selector:
+                text:
+            end:
+              required: true
+              selector:
+                text:
+            mode:
+              required: true
+              selector:
+                select:
+                  options:
+                    - "on"
+                    - "5/25-cycles"
+                    - "5/10-cycles"
+                  custom_value: true
+                  mode: dropdown
+            position:
+              required: true
+              selector:
+                number:
+                  min: 0
+                  mode: box
+    saturday:
+      selector:
+        object:
+          multiple: true
+          label_field: start
+          description_field: end
+          fields:
+            start:
+              required: true
+              selector:
+                text:
+            end:
+              required: true
+              selector:
+                text:
+            mode:
+              required: true
+              selector:
+                select:
+                  options:
+                    - "on"
+                    - "5/25-cycles"
+                    - "5/10-cycles"
+                  custom_value: true
+                  mode: dropdown
+            position:
+              required: true
+              selector:
+                number:
+                  min: 0
+                  mode: box
+    sunday:
+      selector:
+        object:
+          multiple: true
+          label_field: start
+          description_field: end
+          fields:
+            start:
+              required: true
+              selector:
+                text:
+            end:
+              required: true
+              selector:
+                text:
+            mode:
+              required: true
+              selector:
+                select:
+                  options:
+                    - "on"
+                    - "5/25-cycles"
+                    - "5/10-cycles"
+                  custom_value: true
+                  mode: dropdown
+            position:
+              required: true
+              selector:
+                number:
+                  min: 0
+                  mode: box
 set_vicare_mode:
   target:
     entity:

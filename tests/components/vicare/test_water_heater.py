@@ -31,6 +31,16 @@ ENTITY_WATER_HEATER = "water_heater.model0_domestic_hot_water"
 
 _FIXTURES: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
 
+_EMPTY_CIRCULATION_SCHEDULE_DAYS = {
+    "monday": [],
+    "tuesday": [],
+    "wednesday": [],
+    "thursday": [],
+    "friday": [],
+    "saturday": [],
+    "sunday": [],
+}
+
 
 def _get_water_heater_entity(hass: HomeAssistant, entity_id: str) -> ViCareWater:
     """Return the ViCareWater entity object for the given entity_id."""
@@ -66,11 +76,11 @@ async def test_all_entities(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_dhw_active_state(
+async def test_current_operation_reflects_circuit_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test water heater uses direct DHW status for on/off state."""
+    """Test the water heater's current_operation is the ViCare circuit's active mode."""
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
@@ -85,7 +95,7 @@ async def test_dhw_active_state(
         await async_update_entity(hass, ENTITY_WATER_HEATER)
 
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.state == "on"
+    assert state.state == "dhw"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -122,60 +132,50 @@ async def test_set_temperature(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("current_mode", "circuit_modes", "ha_mode", "vicare_mode"),
+    ("fixture_file", "ha_mode", "vicare_mode"),
     [
-        pytest.param("standby", ["standby", "dhw"], "on", "dhw", id="on-from-standby"),
-        pytest.param("dhw", ["standby", "dhw"], "off", "standby", id="off-from-dhw"),
         pytest.param(
+            "vicare/Vitodens300W.json",
+            "dhw_and_heating",
             "dhwAndHeating",
-            ["standby", "heating", "dhwAndHeating"],
-            "off",
-            "heating",
-            id="off-preserves-heating",
+            id="vitodens300w",
         ),
+        pytest.param("vicare/Vitocal250A.json", "heating", "heating", id="vitocal250a"),
         pytest.param(
-            "heating",
-            ["standby", "heating", "dhwAndHeating"],
-            "on",
-            "dhwAndHeating",
-            id="on-preserves-heating",
+            "vicare/Vitocal222G_Vitovent300W.json", "dhw", "dhw", id="vitocal222g"
         ),
     ],
 )
 async def test_set_operation_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    current_mode: str,
-    circuit_modes: list[str],
+    fixture_file: str,
     ha_mode: str,
     vicare_mode: str,
 ) -> None:
-    """Test set_operation_mode maps HA modes to ViCare circuit modes reported by the device."""
+    """Test set_operation_mode sends the raw ViCare mode reported by the circuit."""
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
         patch(
             f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(_FIXTURES).as_vicare_data(),
+            return_value=MockPyViCare([Fixture(set(), fixture_file)]).as_vicare_data(),
         ),
         patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
     ):
         await setup_integration(hass, mock_config_entry)
 
     entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
-    with (
-        patch.object(entity._circuit, "getActiveMode", return_value=current_mode),
-        patch.object(entity._circuit, "getModes", return_value=circuit_modes),
-    ):
-        await entity.async_update_ha_state(force_refresh=True)
+    await entity.async_update_ha_state(force_refresh=True)
+    assert ha_mode in entity.operation_list
 
-        await hass.services.async_call(
-            "water_heater",
-            SERVICE_SET_OPERATION_MODE,
-            {ATTR_ENTITY_ID: ENTITY_WATER_HEATER, ATTR_OPERATION_MODE: ha_mode},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        "water_heater",
+        SERVICE_SET_OPERATION_MODE,
+        {ATTR_ENTITY_ID: ENTITY_WATER_HEATER, ATTR_OPERATION_MODE: ha_mode},
+        blocking=True,
+    )
 
     entity._api.service.setProperty.assert_called_once_with(
         entity._api.service.accessor,
@@ -187,14 +187,14 @@ async def test_set_operation_mode(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("fixture_file", "ha_mode"),
+    ("fixture_file", "unsupported_mode"),
     [
         pytest.param(
-            "vicare/Vitocal250A.json", "on", id="vitocal250a-dhw-not-supported"
+            "vicare/Vitocal250A.json", "dhw", id="vitocal250a-dhw-not-supported"
         ),
         pytest.param(
             "vicare/Vitocal222G_Vitovent300W.json",
-            "off",
+            "heating",
             id="vitocal222g-heating-not-supported",
         ),
     ],
@@ -203,7 +203,7 @@ async def test_set_operation_mode_not_supported_by_circuit(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     fixture_file: str,
-    ha_mode: str,
+    unsupported_mode: str,
 ) -> None:
     """Test set_operation_mode rejects modes the device's circuit does not support."""
     with (
@@ -220,12 +220,16 @@ async def test_set_operation_mode_not_supported_by_circuit(
 
     entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
     await entity.async_update_ha_state(force_refresh=True)
+    assert unsupported_mode not in entity.operation_list
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             "water_heater",
             SERVICE_SET_OPERATION_MODE,
-            {ATTR_ENTITY_ID: ENTITY_WATER_HEATER, ATTR_OPERATION_MODE: ha_mode},
+            {
+                ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
+                ATTR_OPERATION_MODE: unsupported_mode,
+            },
             blocking=True,
         )
 
@@ -237,22 +241,22 @@ async def test_set_operation_mode_not_supported_by_circuit(
     ("fixture_file", "expected_operation_list"),
     [
         pytest.param(
-            "vicare/Vitocal250A.json", ["off"], id="vitocal250a-only-off-reachable"
+            "vicare/Vitocal250A.json", ["heating", "standby"], id="vitocal250a"
         ),
         pytest.param(
             "vicare/Vitocal222G_Vitovent300W.json",
-            ["on"],
-            id="vitocal222g-only-on-reachable",
+            ["dhw", "dhw_and_heating", "standby"],
+            id="vitocal222g",
         ),
     ],
 )
-async def test_operation_list_excludes_unreachable_modes(
+async def test_operation_list_matches_circuit_modes(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     fixture_file: str,
     expected_operation_list: list[str],
 ) -> None:
-    """Test operation_list only advertises modes the circuit can actually reach."""
+    """Test operation_list is derived from the raw modes reported by the circuit."""
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
@@ -359,15 +363,6 @@ async def test_set_circulation_schedule_service(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the set_circulation_schedule service calls the PyViCare API."""
-    schedule_payload = {
-        "mon": [{"start": "06:00", "end": "22:00", "mode": "on", "position": 0}],
-        "tue": [],
-        "wed": [],
-        "thu": [],
-        "fri": [],
-        "sat": [],
-        "sun": [],
-    }
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
@@ -387,10 +382,28 @@ async def test_set_circulation_schedule_service(
         await hass.services.async_call(
             "vicare",
             SERVICE_SET_CIRCULATION_SCHEDULE,
-            {ATTR_ENTITY_ID: ENTITY_WATER_HEATER, "schedule": schedule_payload},
+            {
+                ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
+                **_EMPTY_CIRCULATION_SCHEDULE_DAYS,
+                "monday": [
+                    {"start": "06:00", "end": "22:00", "mode": "on", "position": 0}
+                ],
+            },
             blocking=True,
         )
-        mock_set.assert_called_once_with(schedule_payload)
+        mock_set.assert_called_once_with(
+            {
+                "mon": [
+                    {"start": "06:00", "end": "22:00", "mode": "on", "position": 0}
+                ],
+                "tue": [],
+                "wed": [],
+                "thu": [],
+                "fri": [],
+                "sat": [],
+                "sun": [],
+            }
+        )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -399,15 +412,6 @@ async def test_set_circulation_schedule_service_midnight_end(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the set_circulation_schedule service accepts a 24:00 end time."""
-    schedule_payload = {
-        "mon": [{"start": "16:30", "end": "24:00", "mode": "on", "position": 0}],
-        "tue": [],
-        "wed": [],
-        "thu": [],
-        "fri": [],
-        "sat": [],
-        "sun": [],
-    }
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
@@ -427,10 +431,28 @@ async def test_set_circulation_schedule_service_midnight_end(
         await hass.services.async_call(
             "vicare",
             SERVICE_SET_CIRCULATION_SCHEDULE,
-            {ATTR_ENTITY_ID: ENTITY_WATER_HEATER, "schedule": schedule_payload},
+            {
+                ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
+                **_EMPTY_CIRCULATION_SCHEDULE_DAYS,
+                "monday": [
+                    {"start": "16:30", "end": "24:00", "mode": "on", "position": 0}
+                ],
+            },
             blocking=True,
         )
-        mock_set.assert_called_once_with(schedule_payload)
+        mock_set.assert_called_once_with(
+            {
+                "mon": [
+                    {"start": "16:30", "end": "24:00", "mode": "on", "position": 0}
+                ],
+                "tue": [],
+                "wed": [],
+                "thu": [],
+                "fri": [],
+                "sat": [],
+                "sun": [],
+            }
+        )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -439,18 +461,10 @@ async def test_set_circulation_schedule_service_at_device_max_entries(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test set_circulation_schedule accepts a schedule at the device's maxEntries."""
-    schedule_payload = {
-        "mon": [
-            {"start": "06:00", "end": "07:00", "mode": "on", "position": i}
-            for i in range(8)
-        ],
-        "tue": [],
-        "wed": [],
-        "thu": [],
-        "fri": [],
-        "sat": [],
-        "sun": [],
-    }
+    monday_slots = [
+        {"start": "06:00", "end": "07:00", "mode": "on", "position": i}
+        for i in range(8)
+    ]
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
@@ -468,6 +482,7 @@ async def test_set_circulation_schedule_service_at_device_max_entries(
     entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
     await entity.async_update_ha_state(force_refresh=True)
     assert entity._circulation_schedule_max_entries == 8
+    assert entity._circulation_schedule_modes == ["5/25-cycles", "5/10-cycles", "on"]
 
     with patch.object(
         entity._api, "setDomesticHotWaterCirculationSchedule"
@@ -475,10 +490,24 @@ async def test_set_circulation_schedule_service_at_device_max_entries(
         await hass.services.async_call(
             "vicare",
             SERVICE_SET_CIRCULATION_SCHEDULE,
-            {ATTR_ENTITY_ID: ENTITY_WATER_HEATER, "schedule": schedule_payload},
+            {
+                ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
+                **_EMPTY_CIRCULATION_SCHEDULE_DAYS,
+                "monday": monday_slots,
+            },
             blocking=True,
         )
-        mock_set.assert_called_once_with(schedule_payload)
+        mock_set.assert_called_once_with(
+            {
+                "mon": monday_slots,
+                "tue": [],
+                "wed": [],
+                "thu": [],
+                "fri": [],
+                "sat": [],
+                "sun": [],
+            }
+        )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -487,18 +516,10 @@ async def test_set_circulation_schedule_service_exceeds_device_max_entries(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test set_circulation_schedule rejects a schedule exceeding the device's maxEntries."""
-    schedule_payload = {
-        "mon": [
-            {"start": "06:00", "end": "07:00", "mode": "on", "position": i}
-            for i in range(9)
-        ],
-        "tue": [],
-        "wed": [],
-        "thu": [],
-        "fri": [],
-        "sat": [],
-        "sun": [],
-    }
+    monday_slots = [
+        {"start": "06:00", "end": "07:00", "mode": "on", "position": i}
+        for i in range(9)
+    ]
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
@@ -524,7 +545,59 @@ async def test_set_circulation_schedule_service_exceeds_device_max_entries(
             await hass.services.async_call(
                 "vicare",
                 SERVICE_SET_CIRCULATION_SCHEDULE,
-                {ATTR_ENTITY_ID: ENTITY_WATER_HEATER, "schedule": schedule_payload},
+                {
+                    ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
+                    **_EMPTY_CIRCULATION_SCHEDULE_DAYS,
+                    "monday": monday_slots,
+                },
+                blocking=True,
+            )
+        mock_set.assert_not_called()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_set_circulation_schedule_service_unsupported_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test set_circulation_schedule rejects a mode the device does not report."""
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(
+                [Fixture(set(), "vicare/Vitocal222G_Vitovent300W.json")]
+            ).as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
+    await entity.async_update_ha_state(force_refresh=True)
+    assert entity._circulation_schedule_modes == ["5/25-cycles", "5/10-cycles", "on"]
+
+    with patch.object(
+        entity._api, "setDomesticHotWaterCirculationSchedule"
+    ) as mock_set:
+        with pytest.raises(ServiceValidationError):
+            await hass.services.async_call(
+                "vicare",
+                SERVICE_SET_CIRCULATION_SCHEDULE,
+                {
+                    ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
+                    **_EMPTY_CIRCULATION_SCHEDULE_DAYS,
+                    "monday": [
+                        {
+                            "start": "06:00",
+                            "end": "07:00",
+                            "mode": "unsupported-mode",
+                            "position": 0,
+                        }
+                    ],
+                },
                 blocking=True,
             )
         mock_set.assert_not_called()

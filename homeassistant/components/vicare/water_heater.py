@@ -2,6 +2,7 @@
 
 from contextlib import suppress
 import logging
+import re
 from typing import Any, override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
@@ -19,6 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN
 from .entity import ViCareEntity
@@ -27,23 +29,21 @@ from .utils import get_circuits, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
 
-VICARE_MODE_DHW = "dhw"
-VICARE_MODE_HEATING = "heating"
-VICARE_MODE_DHWANDHEATING = "dhwAndHeating"
-VICARE_MODE_DHWANDHEATINGCOOLING = "dhwAndHeatingCooling"
-VICARE_MODE_FORCEDREDUCED = "forcedReduced"
-VICARE_MODE_FORCEDNORMAL = "forcedNormal"
-VICARE_MODE_OFF = "standby"
-
 VICARE_TEMP_WATER_MIN = 10
 VICARE_TEMP_WATER_MAX = 60
 
-OPERATION_MODE_ON = "on"
-OPERATION_MODE_OFF = "off"
-
 SERVICE_SET_CIRCULATION_SCHEDULE = "set_circulation_schedule"
 
-CIRCULATION_SCHEDULE_WEEKDAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
+# Maps the full weekday service field names to the short keys PyViCare expects.
+CIRCULATION_SCHEDULE_DAYS = (
+    ("monday", "mon"),
+    ("tuesday", "tue"),
+    ("wednesday", "wed"),
+    ("thursday", "thu"),
+    ("friday", "fri"),
+    ("saturday", "sat"),
+    ("sunday", "sun"),
+)
 CIRCULATION_SCHEDULE_TIME_PATTERN = r"^([01]\d|2[0-3]):[0-5]\d$"
 # ViCare represents midnight as the end of a slot using "24:00" rather than "00:00".
 CIRCULATION_SCHEDULE_END_TIME_PATTERN = r"^([01]\d|2[0-3]):[0-5]\d$|^24:00$"
@@ -64,48 +64,25 @@ CIRCULATION_SCHEDULE_SLOT_SCHEMA = vol.All(
             vol.Required("end"): cv.matches_regex(
                 CIRCULATION_SCHEDULE_END_TIME_PATTERN
             ),
-            vol.Required("mode"): vol.In(["on"]),
+            vol.Required("mode"): cv.string,
             vol.Required("position"): vol.All(int, vol.Range(min=0)),
         }
     ),
     _validate_slot_resolution,
 )
 
-CIRCULATION_SCHEDULE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(day, default=list): vol.All(
-            cv.ensure_list,
-            [CIRCULATION_SCHEDULE_SLOT_SCHEMA],
-        )
-        for day in CIRCULATION_SCHEDULE_WEEKDAYS
-    }
-)
-
-VICARE_TO_HA_HVAC_DHW = {
-    VICARE_MODE_DHW: OPERATION_MODE_ON,
-    VICARE_MODE_DHWANDHEATING: OPERATION_MODE_ON,
-    VICARE_MODE_DHWANDHEATINGCOOLING: OPERATION_MODE_ON,
-    VICARE_MODE_HEATING: OPERATION_MODE_OFF,
-    VICARE_MODE_FORCEDREDUCED: OPERATION_MODE_OFF,
-    VICARE_MODE_FORCEDNORMAL: OPERATION_MODE_ON,
-    VICARE_MODE_OFF: OPERATION_MODE_OFF,
+CIRCULATION_SCHEDULE_SCHEMA: VolDictType = {
+    vol.Optional(day_name, default=list): vol.All(
+        cv.ensure_list,
+        [CIRCULATION_SCHEDULE_SLOT_SCHEMA],
+    )
+    for day_name, _ in CIRCULATION_SCHEDULE_DAYS
 }
 
-HA_TO_VICARE_HVAC_DHW = {
-    OPERATION_MODE_OFF: VICARE_MODE_OFF,
-    OPERATION_MODE_ON: VICARE_MODE_DHW,
-}
 
-# Same mapping, but for circuits that are also heating, so that toggling DHW
-# does not disable space heating (e.g. dhwAndHeating <-> heating).
-HA_TO_VICARE_HVAC_DHW_WITH_HEATING = {
-    OPERATION_MODE_OFF: VICARE_MODE_HEATING,
-    OPERATION_MODE_ON: VICARE_MODE_DHWANDHEATING,
-}
-
-VICARE_HEATING_ACTIVE_MODES = frozenset(
-    {VICARE_MODE_HEATING, VICARE_MODE_DHWANDHEATING, VICARE_MODE_DHWANDHEATINGCOOLING}
-)
+def _to_snake_case(vicare_mode: str) -> str:
+    """Convert a camelCase ViCare circuit mode into a translatable operation mode."""
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", vicare_mode).lower()
 
 
 def _build_entities(
@@ -134,7 +111,7 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SET_CIRCULATION_SCHEDULE,
-        {vol.Required("schedule"): CIRCULATION_SCHEDULE_SCHEMA},
+        CIRCULATION_SCHEDULE_SCHEMA,
         "set_circulation_schedule",
     )
 
@@ -157,9 +134,9 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     _attr_translation_key = "domestic_hot_water"
     _current_mode: str | None = None
     _circuit_modes: list[str] | None = None
-    _dhw_active: bool | None = None
     _circulation_schedule: dict[str, Any] | None = None
     _circulation_schedule_max_entries: int | None = None
+    _circulation_schedule_modes: list[str] | None = None
 
     def __init__(
         self,
@@ -193,9 +170,6 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
                 self._circuit_modes = self._circuit.getModes()
 
             with suppress(PyViCareNotSupportedFeatureError):
-                self._dhw_active = self._api.getDomesticHotWaterActive()
-
-            with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_min_temp = self._api.getDomesticHotWaterMinTemperature()
 
             with suppress(PyViCareNotSupportedFeatureError):
@@ -204,6 +178,11 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             with suppress(PyViCareNotSupportedFeatureError):
                 self._circulation_schedule = (
                     self._api.getDomesticHotWaterCirculationSchedule()
+                )
+
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._circulation_schedule_modes = (
+                    self._api.getDomesticHotWaterCirculationScheduleModes()
                 )
 
             with suppress(PyViCareNotSupportedFeatureError, KeyError):
@@ -223,58 +202,54 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     @override
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
-        vicare_mode = self._operation_mode_map[operation_mode]
-        if self._circuit_modes is not None and vicare_mode not in self._circuit_modes:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="operation_mode_not_supported",
-                translation_placeholders={"mode": operation_mode},
-            )
-        self._circuit.setMode(vicare_mode)
+        self._circuit.setMode(self._circuit_mode_map[operation_mode])
 
-    def set_circulation_schedule(self, schedule: dict[str, Any]) -> None:
+    def set_circulation_schedule(self, **schedule_by_day: list[dict[str, Any]]) -> None:
         """Set the DHW circulation pump schedule."""
         max_entries = self._circulation_schedule_max_entries
-        if max_entries is not None:
-            for day, slots in schedule.items():
-                if len(slots) > max_entries:
-                    raise ServiceValidationError(
-                        translation_domain=DOMAIN,
-                        translation_key="circulation_schedule_too_many_slots",
-                        translation_placeholders={
-                            "day": day,
-                            "max_entries": str(max_entries),
-                        },
-                    )
+        modes = self._circulation_schedule_modes
+        for day, slots in schedule_by_day.items():
+            if max_entries is not None and len(slots) > max_entries:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="circulation_schedule_too_many_slots",
+                    translation_placeholders={
+                        "day": day,
+                        "max_entries": str(max_entries),
+                    },
+                )
+            if modes is not None:
+                for slot in slots:
+                    if slot["mode"] not in modes:
+                        raise ServiceValidationError(
+                            translation_domain=DOMAIN,
+                            translation_key="circulation_schedule_mode_not_supported",
+                            translation_placeholders={
+                                "day": day,
+                                "mode": slot["mode"],
+                                "modes": ", ".join(modes),
+                            },
+                        )
+
+        schedule = {
+            short_day: schedule_by_day[full_day]
+            for full_day, short_day in CIRCULATION_SCHEDULE_DAYS
+        }
         self._api.setDomesticHotWaterCirculationSchedule(schedule)
 
     @property
-    def _operation_mode_map(self) -> dict[str, str]:
-        """Return the HA-to-ViCare mode mapping for the current circuit state."""
-        return (
-            HA_TO_VICARE_HVAC_DHW_WITH_HEATING
-            if self._current_mode in VICARE_HEATING_ACTIVE_MODES
-            else HA_TO_VICARE_HVAC_DHW
-        )
-
-    @property
-    def _supported_operation_modes(self) -> list[str]:
-        """Return the HA operation modes this circuit can actually reach."""
-        mode_map = self._operation_mode_map
+    def _circuit_mode_map(self) -> dict[str, str]:
+        """Return the operation-mode-to-ViCare-circuit-mode mapping."""
         if self._circuit_modes is None:
-            return list(mode_map)
-        return [
-            ha_mode
-            for ha_mode, vicare_mode in mode_map.items()
-            if vicare_mode in self._circuit_modes
-        ]
+            return {}
+        return {_to_snake_case(mode): mode for mode in self._circuit_modes}
 
     @property
     @override
     def supported_features(self) -> WaterHeaterEntityFeature:
         """Return the supported features."""
         features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
-        if self._supported_operation_modes:
+        if self._circuit_modes:
             features |= WaterHeaterEntityFeature.OPERATION_MODE
         return features
 
@@ -282,17 +257,15 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     @override
     def operation_list(self) -> list[str] | None:
         """Return the list of operation modes supported by this circuit."""
-        return self._supported_operation_modes or None
+        return list(self._circuit_mode_map) or None
 
     @property
     @override
     def current_operation(self) -> str | None:
-        """Return current operation ie. heat, cool, idle."""
-        if self._dhw_active is not None:
-            return OPERATION_MODE_ON if self._dhw_active else OPERATION_MODE_OFF
+        """Return the currently active ViCare circuit mode."""
         if self._current_mode is None:
             return None
-        return VICARE_TO_HA_HVAC_DHW.get(self._current_mode)
+        return _to_snake_case(self._current_mode)
 
     @property
     @override
