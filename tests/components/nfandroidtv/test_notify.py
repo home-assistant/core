@@ -142,6 +142,7 @@ def mock_legacy_notifications() -> Generator[MagicMock]:
     ("service_data", "translation_key"),
     [
         pytest.param({"duration": "invalid"}, "invalid_duration", id="duration"),
+        pytest.param({"duration": None}, "invalid_duration", id="duration_none"),
         pytest.param({"interrupt": "invalid"}, "invalid_interrupt", id="interrupt"),
     ],
 )
