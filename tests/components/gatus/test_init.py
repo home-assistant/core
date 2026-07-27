@@ -51,6 +51,7 @@ async def test_setup_failure_retry(
 @pytest.mark.usefixtures("mock_gatus_client")
 async def test_remove_stale_device_runtime(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     mock_gatus_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
@@ -58,7 +59,6 @@ async def test_remove_stale_device_runtime(
     """Test that a device is removed at runtime when it is no longer returned by the Gatus API."""
     await setup_integration(hass, mock_config_entry)
 
-    device_registry = dr.async_get(hass)
     device = next(
         (
             dev
@@ -95,12 +95,12 @@ async def test_remove_stale_device_runtime(
 @pytest.mark.usefixtures("mock_gatus_client")
 async def test_remove_stale_device_on_startup(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that stale devices in the registry are removed on startup."""
     mock_config_entry.add_to_hass(hass)
 
-    device_registry = dr.async_get(hass)
     stale_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("gatus", f"{mock_config_entry.entry_id}_stale_service")},
