@@ -40,15 +40,14 @@ async def test_fan_turn_on_off(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = ENTITY_ID
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         FAN_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_flow_it.return_value.send_command.assert_awaited_once_with(
