@@ -484,7 +484,13 @@ async def _async_first_refresh_with_fallback(
         )
         # Kick an immediate LAN ping so the LAN-reachable sensors and
         # switch fallbacks have a useful state right away.
-        hass.async_create_task(coordinator.async_outage_ping_all())
+        # Tracked (not a bare hass.async_create_task) so a removal/reload
+        # immediately after this degraded setup cancels and awaits it
+        # instead of leaving it running against an already-torn-down
+        # coordinator (Copilot review round 10).
+        coordinator.spawn_tracked(
+            coordinator.async_outage_ping_all(), name="bosch_shc_camera_startup_ping"
+        )
 
 
 async def _async_run_post_refresh_migrations(

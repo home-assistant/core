@@ -69,6 +69,46 @@ async def _setup_camera_entity(hass: HomeAssistant) -> BoschCamera:
     return entry.runtime_data.camera_entities[CAM_ID]  # type: ignore[no-any-return]
 
 
+async def test_available_false_when_coordinator_update_failed(
+    hass: HomeAssistant,
+) -> None:
+    """A definitively-down coordinator (no LAN reachability confirmed either) is unavailable."""
+    entity = await _setup_camera_entity(hass)
+    entity.coordinator.last_update_success = False
+
+    assert entity.available is False
+
+
+async def test_available_true_during_cloud_outage_when_lan_reachable(
+    hass: HomeAssistant,
+) -> None:
+    """A cloud-degraded startup with this camera confirmed LAN-reachable must still be available.
+
+    `_async_first_refresh_with_fallback` sets `last_update_success = False`
+    on a cloud-side failure and rehydrates cameras from the entity
+    registry so LAN-only paths can take over — without also honoring
+    `lan_tcp_reachable` here, the camera stayed marked unavailable for the
+    whole outage and Home Assistant never even attempted the LAN-backed
+    snapshot fetch (Copilot review round 10).
+    """
+    entity = await _setup_camera_entity(hass)
+    entity.coordinator.last_update_success = False
+    entity.coordinator.lan_tcp_reachable[CAM_ID] = (True, time.monotonic())
+
+    assert entity.available is True
+
+
+async def test_available_false_during_cloud_outage_when_lan_unreachable(
+    hass: HomeAssistant,
+) -> None:
+    """A cloud-degraded startup where LAN ping also failed stays unavailable."""
+    entity = await _setup_camera_entity(hass)
+    entity.coordinator.last_update_success = False
+    entity.coordinator.lan_tcp_reachable[CAM_ID] = (False, time.monotonic())
+
+    assert entity.available is False
+
+
 def test_rotate_jpeg_180_returns_bytes_for_a_real_jpeg() -> None:
     """A valid JPEG is rotated and re-encoded, producing new (still JPEG) bytes."""
     # 1x1 black JPEG — same fixture BoschCamera._PLACEHOLDER_JPEG uses.

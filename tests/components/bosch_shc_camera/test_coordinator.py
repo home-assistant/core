@@ -303,3 +303,42 @@ class TestAsyncPutCameraRetryStatus:
             result = await coord.async_put_camera(CAM_ID, "privacy", {"enabled": True})
 
         assert result is True
+
+
+def test_persist_cloud_outage_flag_uses_spawn_tracked() -> None:
+    """The cloud-outage-notified dedup flag save must go through spawn_tracked.
+
+    An untracked `hass.async_create_task` save can still complete after
+    config-entry removal deletes the Store, recreating integration-owned
+    state on disk after removal — bypassing the teardown behavior
+    `spawn_tracked()` documents (Copilot review round 10).
+    """
+    store = MagicMock()
+    store.async_save = MagicMock()
+    coord = SimpleNamespace(
+        cloud_alert_store=store,
+        cloud_outage_notified=True,
+        spawn_tracked=MagicMock(),
+    )
+    coord._persist_cloud_outage_flag = (
+        BoschCameraCoordinator._persist_cloud_outage_flag.__get__(coord)
+    )
+
+    coord._persist_cloud_outage_flag()
+
+    coord.spawn_tracked.assert_called_once()
+    _, call_kwargs = coord.spawn_tracked.call_args
+    assert call_kwargs["name"] == "bosch_shc_camera_persist_cloud_outage_flag"
+    store.async_save.assert_called_once_with({"outage_notified": True})
+
+
+def test_persist_cloud_outage_flag_no_store_configured_skips() -> None:
+    """No `cloud_alert_store` attribute at all must not raise."""
+    coord = SimpleNamespace(spawn_tracked=MagicMock())
+    coord._persist_cloud_outage_flag = (
+        BoschCameraCoordinator._persist_cloud_outage_flag.__get__(coord)
+    )
+
+    coord._persist_cloud_outage_flag()  # must not raise
+
+    coord.spawn_tracked.assert_not_called()

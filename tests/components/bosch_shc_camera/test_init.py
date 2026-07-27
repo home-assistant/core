@@ -13,6 +13,7 @@ from homeassistant.components.bosch_shc_camera import async_remove_entry
 from homeassistant.components.bosch_shc_camera.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.storage import Store
 
 from tests.common import MockConfigEntry
@@ -136,3 +137,67 @@ async def test_remove_entry_deletes_all_persisted_files(hass: HomeAssistant) -> 
         f"{_DOMAIN}_local_creds",
     ):
         assert await Store(hass, version=1, key=key).async_load() is None
+
+
+async def test_cloud_degraded_startup_uses_spawn_tracked_not_bare_create_task(
+    hass: HomeAssistant,
+) -> None:
+    """The cloud-degraded startup's LAN outage-ping is a tracked task.
+
+    `_async_first_refresh_with_fallback` kicks an immediate
+    `async_outage_ping_all()` so LAN-reachable sensors/fallbacks have a
+    useful state right away. It must go through `coordinator.spawn_tracked`
+    (landing in `bg_tasks`), not a bare `hass.async_create_task` — otherwise
+    a removal/reload immediately after this degraded setup leaves it
+    running against an already-torn-down coordinator instead of being
+    cancelled by `_async_cancel_coordinator_tasks` (Copilot review
+    round 10).
+    """
+    coordinator_path = (
+        "homeassistant.components.bosch_shc_camera.coordinator.BoschCameraCoordinator"
+    )
+    entry = _mock_config_entry()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            f"{coordinator_path}._async_update_data",
+            return_value=FAKE_COORDINATOR_DATA,
+        ),
+        patch(f"{coordinator_path}.async_fetch_live_snapshot", return_value=None),
+        patch(f"{coordinator_path}.async_fetch_live_snapshot_local", return_value=None),
+        patch(
+            f"{coordinator_path}.async_fetch_fresh_event_snapshot", return_value=None
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    def _spawn_tracked_capture(coro, *, name):
+        coro.close()  # never actually scheduled here, avoid a leaked-coroutine warning
+
+    with (
+        patch(
+            f"{coordinator_path}.async_config_entry_first_refresh",
+            side_effect=ConfigEntryNotReady("cloud down"),
+        ),
+        patch(f"{coordinator_path}.async_outage_ping_all", return_value=None),
+        patch(
+            f"{coordinator_path}.spawn_tracked", side_effect=_spawn_tracked_capture
+        ) as mock_spawn_tracked,
+        patch(f"{coordinator_path}.async_fetch_live_snapshot", return_value=None),
+        patch(f"{coordinator_path}.async_fetch_live_snapshot_local", return_value=None),
+        patch(
+            f"{coordinator_path}.async_fetch_fresh_event_snapshot", return_value=None
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_spawn_tracked.assert_called_once()
+    assert (
+        mock_spawn_tracked.call_args.kwargs["name"] == "bosch_shc_camera_startup_ping"
+    )
+    assert entry.runtime_data.last_update_success is False

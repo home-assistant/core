@@ -515,7 +515,18 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         if is_updating is not None and is_updating(self._cam_id):
             return False
         if not self.coordinator.last_update_success:
-            return False
+            # A cloud-degraded startup (`_async_first_refresh_with_fallback`)
+            # sets this False and rehydrates cameras from the entity
+            # registry so LAN-only paths can take over — but never flips it
+            # back once `async_outage_ping_all()` confirms this specific
+            # camera is LAN-reachable. Without this check the camera stayed
+            # marked unavailable for as long as the cloud was down, even
+            # though snap.jpg over LOCAL Digest auth works fine without it,
+            # and Home Assistant skips fetching images from unavailable
+            # entities entirely (Copilot review round 10).
+            lan_entry = self.coordinator.lan_tcp_reachable.get(self._cam_id)
+            if not (lan_entry and lan_entry[0]):
+                return False
         # A successful account-level coordinator update does not mean every
         # camera is reachable — check this camera's own cached status too,
         # otherwise an OFFLINE/UPDATING/SESSION_LIMIT camera stays marked
