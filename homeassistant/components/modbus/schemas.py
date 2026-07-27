@@ -487,7 +487,9 @@ NUMBER_SCHEMA = vol.All(
             vol.Optional(CONF_MAX_VALUE, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
             vol.Optional(CONF_NUMBER_STEP, default=DEFAULT_STEP): vol.All(
                 vol.Coerce(float),
-                vol.Range(min=0, min_included=False, msg="Step must be greater than 0."),
+                vol.Range(
+                    min=0, min_included=False, msg="Step must be greater than 0."
+                ),
             ),
         }
     ),
