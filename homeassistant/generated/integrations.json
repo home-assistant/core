@@ -1549,6 +1549,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "dyson_infrared": {
+      "name": "Dyson Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "eafm": {
       "name": "Environment Agency Flood Gauges",
       "integration_type": "service",
@@ -7898,12 +7904,6 @@
     "volvo": {
       "name": "Volvo",
       "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
-    "volvooncall": {
-      "name": "Volvo On Call",
-      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
