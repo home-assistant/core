@@ -2,12 +2,16 @@
 
 from unittest.mock import Mock
 
+from homeassistant.components import hue
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_platform
 from .const import FAKE_BINARY_SENSOR, FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY
+
+TEST_ROOM_ID = "6ddc9066-7e7d-4a03-a773-c73937968296"
 
 
 async def test_switch(
@@ -43,6 +47,28 @@ async def test_switch(
     assert test_entity.name == "Test Room MotionAware"
     assert test_entity.state == "on"
     assert test_entity.attributes["device_class"] == "switch"
+
+
+async def test_motionaware_switch_device(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the MotionAware switch is attached to the zone device, not the bridge."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+
+    await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
+
+    entity_entry = entity_registry.async_get("switch.test_room_test_room_motionaware")
+    assert entity_entry is not None
+
+    zone_device = device_registry.async_get_device(
+        identifiers={(hue.DOMAIN, TEST_ROOM_ID)}
+    )
+    assert zone_device is not None
+    assert entity_entry.device_id == zone_device.id
 
 
 async def test_switch_turn_on_service(
