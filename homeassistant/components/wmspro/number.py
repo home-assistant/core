@@ -27,14 +27,14 @@ async def async_setup_entry(
     hub = config_entry.runtime_data
 
     entities: list[WebControlProGenericEntity] = []
-    for d in hub.dests.values():
-        if d.hasAction(ACTION_DESC.SlatRotate):
-            entities.append(WebControlProSlatRangeMin(config_entry.entry_id, d))
-            entities.append(WebControlProSlatRangeMax(config_entry.entry_id, d))
-            entities.append(WebControlProSlatRotationRaw(config_entry.entry_id, d))
-            if not d.hasAction(ACTION_DESC.SlatDrive):
+    for dest in hub.dests.values():
+        if dest.hasAction(ACTION_DESC.SlatRotate):
+            entities.append(WebControlProSlatRangeMin(config_entry.entry_id, dest))
+            entities.append(WebControlProSlatRangeMax(config_entry.entry_id, dest))
+            entities.append(WebControlProSlatRotationRaw(config_entry.entry_id, dest))
+            if not dest.hasAction(ACTION_DESC.SlatDrive):
                 # Only add the numeric slat rotation entity if no cover entity exists
-                entities.append(WebControlProSlatRotation(config_entry.entry_id, d))
+                entities.append(WebControlProSlatRotation(config_entry.entry_id, dest))
 
     async_add_entities(entities)
 
@@ -44,8 +44,8 @@ class WebControlProSlatRange(WebControlProGenericEntity, NumberEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
 
-    _value_func: Callable
     _value_name: str
+    _value_func: Callable[[float, float], float]
 
     @override
     async def async_update(self) -> None:
@@ -103,7 +103,7 @@ class WebControlProSlatRangeMin(WebControlProSlatRange):
     _attr_translation_key = "rotation-min"
 
     _value_name = "minValue"
-    _value_func = min
+    _value_func = staticmethod(min)
 
 
 class WebControlProSlatRangeMax(WebControlProSlatRange):
@@ -112,7 +112,7 @@ class WebControlProSlatRangeMax(WebControlProSlatRange):
     _attr_translation_key = "rotation-max"
 
     _value_name = "maxValue"
-    _value_func = max
+    _value_func = staticmethod(max)
 
 
 class WebControlProSlatRotation(WebControlProGenericEntity, NumberEntity):

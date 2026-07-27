@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
-from .const import _LOGGER, DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN
+from .const import DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN, LOGGER
 from .hap import HomematicipAuth
 
 
@@ -43,10 +43,10 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
             self.auth = HomematicipAuth(self.hass, user_input)
             connected = await self.auth.async_setup()
             if connected:
-                _LOGGER.debug("Connection to HomematicIP Cloud established")
+                LOGGER.debug("Connection to HomematicIP Cloud established")
                 return await self.async_step_link()
 
-            _LOGGER.debug("Connection to HomematicIP Cloud failed")
+            LOGGER.debug("Connection to HomematicIP Cloud failed")
             errors["base"] = "invalid_sgtin_or_pin"
 
         return self.async_show_form(
@@ -69,7 +69,7 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
         if pressed:
             authtoken = await self.auth.async_register()
             if authtoken:
-                _LOGGER.debug("Write config entry for HomematicIP Cloud")
+                LOGGER.debug("Write config entry for HomematicIP Cloud")
                 if self.source == "reauth":
                     return self.async_update_reload_and_abort(
                         self._get_reauth_entry(),
@@ -136,7 +136,7 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(hapid)
         self._abort_if_unique_id_configured()
 
-        _LOGGER.debug("Imported authentication for %s", hapid)
+        LOGGER.debug("Imported authentication for %s", hapid)
         return self.async_create_entry(
             title=hapid,
             data={HMIPC_AUTHTOKEN: authtoken, HMIPC_HAPID: hapid, HMIPC_NAME: name},
