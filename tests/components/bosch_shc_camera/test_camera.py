@@ -132,6 +132,61 @@ async def test_width_specific_fetch_does_not_poison_full_resolution_cache(
     assert entity.cached_image == full_res_frame
 
 
+async def test_failed_thumbnail_fetch_does_not_suppress_full_res_retry(
+    hass: HomeAssistant,
+) -> None:
+    """A failed width=N (thumbnail) fetch must not advance the shared timestamp.
+
+    Otherwise a following full-resolution request within the cache TTL
+    would see `cache_stale=False` and skip retrying, even though the
+    shared cache was never actually refreshed (Copilot review round 8).
+    """
+    entity = await _setup_camera_entity(hass)
+    old_timestamp = time.monotonic() - 3600
+    entity.last_image_fetch = old_timestamp  # stale enough to enter the fetch branch
+
+    with (
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot", return_value=None
+        ),
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot_local", return_value=None
+        ),
+        patch.object(
+            entity.coordinator, "async_fetch_fresh_event_snapshot", return_value=None
+        ),
+    ):
+        await entity.async_camera_image(width=200)
+
+    assert entity.last_image_fetch == old_timestamp
+
+
+async def test_failed_thumbnail_fetch_with_real_cache_does_not_suppress_full_res_retry(
+    hass: HomeAssistant,
+) -> None:
+    """Same guard as above, through the stale-but-already-cached branch.
+
+    A real frame is already held, so both REMOTE+LOCAL failing must still
+    not advance the shared timestamp for a width=N request.
+    """
+    entity = await _setup_camera_entity(hass)
+    entity.cached_image = b"already-cached-full-res-frame"
+    old_timestamp = time.monotonic() - 3600
+    entity.last_image_fetch = old_timestamp  # stale
+
+    with (
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot", return_value=None
+        ),
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot_local", return_value=None
+        ),
+    ):
+        await entity.async_camera_image(width=200)
+
+    assert entity.last_image_fetch == old_timestamp
+
+
 async def test_slow_refresh_falls_back_to_cached_image_within_budget(
     hass: HomeAssistant,
 ) -> None:
