@@ -1,7 +1,5 @@
 """Support for AVM Fritz!Box functions."""
 
-import logging
-
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -21,12 +19,11 @@ from .const import (
     DOMAIN,
     FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
+    LOGGER,
     PLATFORMS,
 )
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .services import async_setup_services
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -39,7 +36,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bool:
     """Set up fritzboxtools from config entry."""
-    _LOGGER.debug("Setting up FRITZ!Box Tools component")
+    LOGGER.debug("Setting up FRITZ!Box Tools component")
 
     avm_wrapper = AvmWrapper(
         hass=hass,

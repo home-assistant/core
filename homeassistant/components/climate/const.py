@@ -2,6 +2,8 @@
 
 from enum import IntFlag, StrEnum
 
+from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
+
 
 class HVACMode(StrEnum):
     """HVAC mode for climate devices."""
@@ -153,15 +155,24 @@ class ClimateEntityCapabilityAttribute(StrEnum):
     SWING_HORIZONTAL_MODES = "swing_horizontal_modes"
 
 
-class ClimateEntityStateAttribute(StrEnum):
+class ClimateEntityStateAttribute(
+    StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "TEMPERATURE": ("ClimateEntityStateAttribute.TARGET_TEMPERATURE", "2027.2.0"),
+        "HUMIDITY": ("ClimateEntityStateAttribute.TARGET_HUMIDITY", "2027.2.0"),
+    },
+):
     """State attributes for climate entities."""
 
     CURRENT_TEMPERATURE = "current_temperature"
-    TEMPERATURE = "temperature"
+    TARGET_TEMPERATURE = "temperature"
+    TEMPERATURE = "temperature"  # Deprecated, replaced with TARGET_TEMPERATURE
     TARGET_TEMP_HIGH = "target_temp_high"
     TARGET_TEMP_LOW = "target_temp_low"
     CURRENT_HUMIDITY = "current_humidity"
-    HUMIDITY = "humidity"
+    TARGET_HUMIDITY = "humidity"
+    HUMIDITY = "humidity"  # Deprecated, replaced with TARGET_HUMIDITY
     FAN_MODE = "fan_mode"
     HVAC_ACTION = "hvac_action"
     PRESET_MODE = "preset_mode"
