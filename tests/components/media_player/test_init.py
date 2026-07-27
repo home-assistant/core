@@ -249,6 +249,121 @@ async def test_get_image_http_log_credentials_redacted(
     ) in caplog.text
 
 
+async def test_get_image_http_truncated_response(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test responses with Content-Length larger than the body are discarded."""
+    url = "http://example.com/truncated.jpg"
+    body = b"hello-world"
+    headers = {"Content-Type": "image/jpeg", "Content-Length": "9999"}
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.bedroom")
+        aioclient_mock.get(url, content=body, headers=headers)
+        client = await hass_client_no_auth()
+        resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_get_image_http_complete_response(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test responses whose body matches Content-Length are served."""
+    url = "http://example.com/complete.jpg"
+    body = b"hello-world"
+    headers = {"Content-Type": "image/jpeg", "Content-Length": str(len(body))}
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.bedroom")
+        aioclient_mock.get(url, content=body, headers=headers)
+        client = await hass_client_no_auth()
+        resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == body
+
+
+async def test_get_image_http_content_encoding_skips_length_check(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test responses with Content-Encoding skip the body-length comparison."""
+    url = "http://example.com/encoded.jpg"
+    body = b"hello-world"
+    headers = {
+        "Content-Type": "image/jpeg",
+        "Content-Length": "9999",
+        "Content-Encoding": "gzip",
+    }
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("media_player.bedroom")
+        aioclient_mock.get(url, content=body, headers=headers)
+        client = await hass_client_no_auth()
+        resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == body
+
+
+async def test_get_image_http_truncated_fetch_is_not_cached(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that a truncated fetch is not cached so a later retry can succeed."""
+    url = "http://example.com/recoverable.jpg"
+    body = b"hello-world"
+    truncated_headers = {"Content-Type": "image/jpeg", "Content-Length": "9999"}
+    complete_headers = {"Content-Type": "image/jpeg", "Content-Length": str(len(body))}
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("media_player.bedroom")
+        client = await hass_client_no_auth()
+
+        aioclient_mock.get(url, content=body, headers=truncated_headers)
+        resp1 = await client.get(state.attributes["entity_picture"])
+        assert resp1.status == HTTPStatus.NOT_FOUND
+
+        aioclient_mock.clear_requests()
+        aioclient_mock.get(url, content=body, headers=complete_headers)
+        resp2 = await client.get(state.attributes["entity_picture"])
+        assert resp2.status == HTTPStatus.OK
+        assert await resp2.read() == body
+
+
 async def test_get_async_get_browse_image(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -321,6 +436,7 @@ async def test_media_browse(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "children_media_class": None,
         "thumbnail": None,
         "not_shown": 0,
@@ -346,6 +462,44 @@ async def test_media_browse(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {"bla": "yo"}
+
+
+async def test_media_browse_search_media_classes(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test browse media exposes the searchable media classes of a node."""
+    await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.demo.media_player.DemoBrowsePlayer.async_browse_media",
+        return_value=BrowseMedia(
+            media_class=MediaClass.DIRECTORY,
+            media_content_id="mock-id",
+            media_content_type="mock-type",
+            title="Mock Title",
+            can_play=False,
+            can_expand=True,
+            can_search=True,
+            search_media_classes=[MediaClass.ALBUM, MediaClass.ARTIST],
+        ),
+    ):
+        await client.send_json(
+            {
+                "id": 8,
+                "type": "media_player/browse_media",
+                "entity_id": "media_player.browse",
+            }
+        )
+
+        msg = await client.receive_json()
+
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"]["can_search"] is True
+    assert msg["result"]["search_media_classes"] == ["album", "artist"]
 
 
 async def test_media_browse_service(hass: HomeAssistant) -> None:
@@ -466,6 +620,7 @@ async def test_media_search(
             "can_play": False,
             "can_expand": True,
             "can_search": False,
+            "search_media_classes": None,
             "thumbnail": None,
             "not_shown": 0,
             "children": [],
