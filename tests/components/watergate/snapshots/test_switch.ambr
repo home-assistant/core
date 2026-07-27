@@ -1,0 +1,14 @@
+# serializer version: 1
+# name: test_switch_snapshot
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sonic Auto shut-off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.sonic_auto_shut_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

@@ -29,7 +29,7 @@ class WatergateAgregatedRequests:
     state: DeviceState
     telemetry: TelemetryData
     networking: NetworkingData
-    auto_shut_off: AutoShutOffState
+    auto_shut_off: AutoShutOffState | None
 
 
 type WatergateConfigEntry = ConfigEntry[WatergateDataCoordinator]
