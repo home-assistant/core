@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from pyportainer import Portainer, PortainerImageWatcher
 from pyportainer.exceptions import PortainerError
@@ -146,7 +147,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
                 continue
 
             parent_devices = device_registry.async_get(device.via_device_id)
-            assert parent_devices
+            if TYPE_CHECKING:
+                assert parent_devices is not None
             for parent_device in parent_devices.identifiers:
                 if parent_device[0] == DOMAIN:
                     parent_device_identifiers = parent_device

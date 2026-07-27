@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import Any, override
 
 from wmspro.const import (
-    WMS_WebControl_pro_API_actionDescription,
+    WMS_WebControl_pro_API_actionDescription as ACTION_DESC,
     WMS_WebControl_pro_API_responseType,
 )
 
@@ -30,7 +30,7 @@ async def async_setup_entry(
     async_add_entities(
         WebControlProSwitch(config_entry.entry_id, dest)
         for dest in hub.dests.values()
-        if dest.hasAction(WMS_WebControl_pro_API_actionDescription.LoadSwitch)
+        if dest.hasAction(ACTION_DESC.LoadSwitch)
     )
 
 
@@ -43,13 +43,13 @@ class WebControlProSwitch(WebControlProGenericEntity, SwitchEntity):
     @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        action = self._dest.action(WMS_WebControl_pro_API_actionDescription.LoadSwitch)
+        action = self._dest.action(ACTION_DESC.LoadSwitch)
         return action["onOffState"]
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        action = self._dest.action(WMS_WebControl_pro_API_actionDescription.LoadSwitch)
+        action = self._dest.action(ACTION_DESC.LoadSwitch)
         await action(
             onOffState=True, responseType=WMS_WebControl_pro_API_responseType.Detailed
         )
@@ -57,7 +57,7 @@ class WebControlProSwitch(WebControlProGenericEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        action = self._dest.action(WMS_WebControl_pro_API_actionDescription.LoadSwitch)
+        action = self._dest.action(ACTION_DESC.LoadSwitch)
         await action(
             onOffState=False, responseType=WMS_WebControl_pro_API_responseType.Detailed
         )
