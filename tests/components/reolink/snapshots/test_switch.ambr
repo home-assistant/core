@@ -699,7 +699,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[switch.test_reolink_cam_privacy_mask-entry]
+# name: test_all_entities[switch.test_reolink_cam_privacy_mask_lens_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -713,7 +713,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.test_reolink_cam_privacy_mask',
+    'entity_id': 'switch.test_reolink_cam_privacy_mask_lens_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -721,28 +721,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Privacy mask',
+    'object_id_base': 'Privacy mask lens 0',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Privacy mask',
+    'original_name': 'Privacy mask lens 0',
     'platform': 'reolink',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'privacy_mask',
+    'translation_key': 'privacy_mask_lens',
     'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_privacy_mask',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[switch.test_reolink_cam_privacy_mask-state]
+# name: test_all_entities[switch.test_reolink_cam_privacy_mask_lens_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Privacy mask',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Privacy mask lens 0',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_reolink_cam_privacy_mask',
+    'entity_id': 'switch.test_reolink_cam_privacy_mask_lens_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

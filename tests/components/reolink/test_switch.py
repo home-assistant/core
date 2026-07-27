@@ -36,8 +36,11 @@ async def test_all_entities(
     snapshot: SnapshotAssertion,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    reolink_host: MagicMock,
 ) -> None:
     """Test all entities."""
+    reolink_host.is_dual_lens = True
+    reolink_host.stream_channels = [0, 1]
     with patch(
         "homeassistant.components.reolink.PLATFORMS",
         [Platform.SWITCH],
