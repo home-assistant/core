@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 from aiolyric import Lyric
 from aiolyric.objects.location import LyricLocation
-from aiolyric.objects.priority import LyricPriority
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -25,18 +24,12 @@ CLIENT_SECRET = "5678"
 
 BASE_URL = "https://api.honeywellhome.com/v2"
 
-# Real payload shapes captured from a live T9-T10 account with paired
-# RCHTSENSOR room accessories. Deliberately using the actual field names
-# Resideo returns (e.g. vacationHold.Enabled, accessories[].sensorType),
-# not the ones aiolyric happens to read, so tests exercise real parsing
-# rather than hiding behind pre-parsed mocks.
+# Real payload shape captured from a live account, using the actual field
+# names Resideo returns (e.g. vacationHold.Enabled) rather than the ones
+# aiolyric happens to read, so the test exercises real parsing instead of
+# a pre-parsed mock.
 LOCATION_ID = "35202000168931"
-# Deliberately "LCC-"-prefixed: this branch is intentionally cut from a
-# clean base without the coordinator fix from home-assistant/core#177022
-# (which removes a device-ID-prefix heuristic gating the /priority fetch).
-# Using a non-"LCC-" ID here would make room-level entities fail to be
-# created for that unrelated, separately-tracked reason, muddying what
-# these tests are actually checking.
+# Use an LCC-prefixed ID so the current coordinator fetches room data.
 DEVICE_ID = "LCC-7f86b153-8480-f111-b78f-6045bdb25006"
 MAC_ID = "5CFCE1B67035"
 
@@ -62,33 +55,6 @@ LOCATIONS_RESPONSE = [
         "users": [],
     }
 ]
-
-PRIORITY_RESPONSE = {
-    "deviceId": MAC_ID,
-    "priorityStatus": "NoHold",
-    "priority": {
-        "priorityType": "PickARoom",
-        "selectedRooms": [1],
-        "rooms": [
-            {
-                "id": 1,
-                "name": "Primary Bedroom",
-                "avgTemperature": 79,
-                "avgHumidity": 54,
-                "overallMotion": False,
-                "accessories": [
-                    {
-                        "id": 1,
-                        "sensorType": "IndoorAirSensor",
-                        "temperature": 79,
-                        "status": "Ok",
-                        "detectMotion": True,
-                    }
-                ],
-            }
-        ],
-    },
-}
 
 
 @pytest.fixture
@@ -120,12 +86,14 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_lyric_api() -> Generator[None]:
-    """Patch the aiolyric client to build real Location/Priority objects.
+    """Patch the aiolyric client to build a real Location object.
 
-    Patches Lyric.get_locations/get_thermostat_rooms directly rather than
-    mocking HTTP responses, so tests exercise real aiolyric parsing (the
-    same LyricLocation/LyricPriority code reading the actual field names
-    Resideo returns) without depending on network-mocking machinery.
+    Patches Lyric.get_locations directly rather than mocking HTTP
+    responses, so the test exercises real aiolyric parsing (the same
+    LyricLocation code reading the actual field names Resideo returns)
+    without depending on network-mocking machinery. get_thermostat_rooms
+    is a no-op: this test only covers device-level sensors, not the
+    room/priority data it would otherwise populate.
     """
 
     async def get_locations(self: Lyric) -> None:
@@ -139,11 +107,7 @@ def mock_lyric_api() -> Generator[None]:
     async def get_thermostat_rooms(
         self: Lyric, location_id: str, device_id: str
     ) -> None:
-        priority = LyricPriority(PRIORITY_RESPONSE)
-        self._priorities_dict[priority.device_id] = priority
-        self._rooms_dict[priority.device_id] = {
-            room.id: room for room in priority.current_priority.rooms
-        }
+        return
 
     with (
         patch.object(Lyric, "get_locations", get_locations),
