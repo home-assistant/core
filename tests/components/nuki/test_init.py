@@ -40,7 +40,15 @@ async def test_migrate_integer_unique_id(
         legacy_entry.entity_id
     )
     assert entry.minor_version == NukiConfigFlow.MINOR_VERSION
-    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 2
+    assert (
+        sum(
+            entity_entry.domain == Platform.LOCK
+            for entity_entry in er.async_entries_for_config_entry(
+                entity_registry, entry.entry_id
+            )
+        )
+        == 2
+    )
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
