@@ -14,7 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_SYSTEM_ID, DEFAULT_PORT, PLATFORMS
+from .const import CONF_SYSTEM_ID, PLATFORMS
 
 type SomfyMyLinkConfigEntry = ConfigEntry[SomfyMyLinkRuntimeData]
 
@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SomfyMyLinkConfigEntry) 
     somfy_mylink = SomfyMyLink(
         entry.data[CONF_HOST],
         entry.data[CONF_SYSTEM_ID],
-        port=entry.data.get(CONF_PORT, DEFAULT_PORT),
+        port=entry.data[CONF_PORT],
     )
 
     try:
