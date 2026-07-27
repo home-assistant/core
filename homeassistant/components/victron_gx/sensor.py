@@ -164,7 +164,7 @@ class VictronSensor(VictronBaseEntity, RestoreSensor):
 
         try:
             self._baseline = float(last_state.state)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             _LOGGER.warning(
                 "Could not restore state for %s: invalid value '%s' (type: %s)",
                 self.entity_id,
