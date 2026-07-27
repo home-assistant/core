@@ -1,7 +1,7 @@
 {
   "domain": "matter",
   "name": "Matter",
-  "after_dependencies": ["bluetooth", "hassio"],
+  "after_dependencies": ["bluetooth", "hassio", "thread"],
   "codeowners": ["@home-assistant/matter"],
   "config_flow": true,
   "dependencies": ["websocket_api"],
