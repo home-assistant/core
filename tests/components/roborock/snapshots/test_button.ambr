@@ -49,6 +49,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[button.roborock_s7_2_dock_empty_dust_bin-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.roborock_s7_2_dock_empty_dust_bin',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Empty dust bin',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Empty dust bin',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'empty_dust_bin',
+    'unique_id': 'empty_dust_bin_device_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[button.roborock_s7_2_dock_empty_dust_bin-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Empty dust bin',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.roborock_s7_2_dock_empty_dust_bin',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[button.roborock_s7_2_dock_reset_cleaning_brush_consumable-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -443,6 +493,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_2_sc2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[button.roborock_s7_maxv_dock_empty_dust_bin-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.roborock_s7_maxv_dock_empty_dust_bin',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Empty dust bin',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Empty dust bin',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'empty_dust_bin',
+    'unique_id': 'empty_dust_bin_abc123',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[button.roborock_s7_maxv_dock_empty_dust_bin-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Empty dust bin',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.roborock_s7_maxv_dock_empty_dust_bin',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

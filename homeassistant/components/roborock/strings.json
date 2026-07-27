@@ -70,14 +70,14 @@
       "dirty_box_full": {
         "name": "Dirty water box"
       },
+      "dust_collection_status": {
+        "name": "Emptying dust bin"
+      },
       "in_cleaning": {
         "name": "Cleaning"
       },
       "mop_attached": {
         "name": "Mop attached"
-      },
-      "mop_drying_status": {
-        "name": "Mop drying"
       },
       "softener_empty": {
         "name": "Softener",
@@ -94,6 +94,9 @@
       }
     },
     "button": {
+      "empty_dust_bin": {
+        "name": "Empty dust bin"
+      },
       "empty_dustbin": {
         "name": "Empty dustbin"
       },
@@ -622,6 +625,12 @@
       },
       "dust_collection": {
         "name": "Dust collection"
+      },
+      "mop_drying": {
+        "name": "Mop drying"
+      },
+      "mop_wash": {
+        "name": "Mop wash"
       },
       "off_peak_switch": {
         "name": "Off-peak charging"

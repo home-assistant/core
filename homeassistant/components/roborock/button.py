@@ -5,9 +5,11 @@ from dataclasses import dataclass
 import logging
 from typing import Any, override
 
+from roborock.device_features import RoborockDockFeatures
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
+from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -28,6 +30,7 @@ from .coordinator import (
 from .entity import (
     RoborockCoordinatedEntityA01,
     RoborockCoordinatedEntityB01Q10,
+    RoborockCoordinatedEntityV1,
     RoborockEntity,
     RoborockEntityV1,
 )
@@ -83,7 +86,7 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
         entity_registry_enabled_default=False,
         is_dock_entity=True,
         is_supported=lambda coordinator: (
-            coordinator.properties_api.wash_towel_mode is not None
+            coordinator.properties_api.device_features.dock_features.is_washable
         ),
     ),
     RoborockButtonDescription(
@@ -94,8 +97,27 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
         entity_registry_enabled_default=False,
         is_dock_entity=True,
         is_supported=lambda coordinator: (
-            coordinator.properties_api.wash_towel_mode is not None
+            coordinator.properties_api.device_features.dock_features.is_washable
         ),
+    ),
+]
+
+
+@dataclass(frozen=True, kw_only=True)
+class RoborockDockButtonDescription(ButtonEntityDescription):
+    """Describes a Roborock dock action button entity."""
+
+    command: RoborockCommand
+    params: dict[str, Any] | None = None
+    is_supported: Callable[[RoborockDockFeatures], bool]
+
+
+DOCK_BUTTON_DESCRIPTIONS = [
+    RoborockDockButtonDescription(
+        key="empty_dust_bin",
+        translation_key="empty_dust_bin",
+        command=RoborockCommand.APP_START_COLLECT_DUST,
+        is_supported=lambda dock_features: dock_features.is_collectable,
     ),
 ]
 
@@ -153,6 +175,12 @@ async def async_setup_entry(
                 RoborockButtonEntity(coordinator, description)
                 for description in CONSUMABLE_BUTTON_DESCRIPTIONS
                 if description.is_supported(coordinator)
+            )
+            dock_features = coordinator.properties_api.device_features.dock_features
+            entities.extend(
+                RoborockDockButtonEntity(coordinator, description)
+                for description in DOCK_BUTTON_DESCRIPTIONS
+                if description.is_supported(dock_features)
             )
 
             async def async_add_routine_buttons() -> None:
@@ -246,6 +274,30 @@ class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
                     "command": "RESET_CONSUMABLE",
                 },
             ) from err
+
+
+class RoborockDockButtonEntity(RoborockCoordinatedEntityV1, ButtonEntity):
+    """A class to define Roborock dock action button entities."""
+
+    entity_description: RoborockDockButtonDescription
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinator,
+        entity_description: RoborockDockButtonDescription,
+    ) -> None:
+        """Create a dock action button entity."""
+        self.entity_description = entity_description
+        super().__init__(
+            f"{entity_description.key}_{coordinator.duid_slug}",
+            coordinator,
+            is_dock_entity=True,
+        )
+
+    @override
+    async def async_press(self) -> None:
+        """Press the button."""
+        await self.send(self.entity_description.command, self.entity_description.params)
 
 
 class RoborockRoutineButtonEntity(RoborockEntity, ButtonEntity):

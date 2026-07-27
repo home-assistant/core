@@ -1,19 +1,22 @@
 """Test Roborock Binary Sensor."""
 
 import copy
+from datetime import timedelta
 from typing import Any
 
 import pytest
+from roborock.data import RoborockStateCode
 from roborock.exceptions import RoborockException
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import FakeDevice
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture
@@ -122,3 +125,21 @@ async def test_zeo_request_protocols_filtered_by_schema(
     # Verify that the second Zeo device has detergent entities but NOT softener entities
     assert hass.states.get("binary_sensor.zeo_two_detergent") is not None
     assert hass.states.get("binary_sensor.zeo_two_softener") is None
+
+
+async def test_emptying_dust_bin_follows_pushed_state(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test the emptying sensor follows the pushed vacuum state."""
+    entity_id = "binary_sensor.roborock_s7_maxv_dock_emptying_dust_bin"
+    assert hass.states.get(entity_id).state == "off"
+
+    # Stop the mock trait from restoring the status template on every refresh.
+    fake_vacuum.v1_properties.status.refresh.side_effect = None
+    fake_vacuum.v1_properties.status.state = RoborockStateCode.emptying_the_bin
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "on"

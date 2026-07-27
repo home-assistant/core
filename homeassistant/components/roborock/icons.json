@@ -4,14 +4,14 @@
       "clean_fluid_empty": {
         "default": "mdi:spray-bottle"
       },
+      "dust_collection_status": {
+        "default": "mdi:delete-empty"
+      },
       "in_cleaning": {
         "default": "mdi:vacuum"
       },
       "mop_attached": {
         "default": "mdi:square-rounded"
-      },
-      "mop_drying_status": {
-        "default": "mdi:heat-wave"
       },
       "water_box_attached": {
         "default": "mdi:water"
@@ -21,6 +21,9 @@
       }
     },
     "button": {
+      "empty_dust_bin": {
+        "default": "mdi:delete-empty"
+      },
       "reset_air_filter_consumable": {
         "default": "mdi:air-filter"
       },
@@ -139,6 +142,12 @@
       },
       "dust_collection": {
         "default": "mdi:delete"
+      },
+      "mop_drying": {
+        "default": "mdi:heat-wave"
+      },
+      "mop_wash": {
+        "default": "mdi:water-sync"
       },
       "off_peak_switch": {
         "default": "mdi:power-plug"

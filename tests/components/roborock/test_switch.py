@@ -6,6 +6,9 @@ from typing import Any
 
 import pytest
 import roborock
+from roborock import RoborockCommand
+from roborock.data import RoborockDockTypeCode, RoborockStateCode
+from roborock.device_features import RoborockDockFeatures
 from roborock.roborock_message import RoborockZeoProtocol
 from syrupy.assertion import SnapshotAssertion
 
@@ -89,6 +92,166 @@ async def test_update_success(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "on"
+
+
+DOCK_SWITCH_ENTITY_IDS = {
+    "switch.roborock_s7_maxv_dock_mop_wash",
+    "switch.roborock_s7_maxv_dock_mop_drying",
+}
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "service", "expected_command", "expected_params"),
+    [
+        (
+            "switch.roborock_s7_maxv_dock_mop_wash",
+            SERVICE_TURN_ON,
+            RoborockCommand.APP_START_WASH,
+            None,
+        ),
+        (
+            "switch.roborock_s7_maxv_dock_mop_wash",
+            SERVICE_TURN_OFF,
+            RoborockCommand.APP_STOP_WASH,
+            None,
+        ),
+        (
+            "switch.roborock_s7_maxv_dock_mop_drying",
+            SERVICE_TURN_ON,
+            RoborockCommand.APP_SET_DRYER_STATUS,
+            {"status": 1},
+        ),
+        (
+            "switch.roborock_s7_maxv_dock_mop_drying",
+            SERVICE_TURN_OFF,
+            RoborockCommand.APP_SET_DRYER_STATUS,
+            {"status": 0},
+        ),
+    ],
+)
+async def test_dock_switch_commands(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    entity_id: str,
+    service: str,
+    expected_command: RoborockCommand,
+    expected_params: dict[str, int] | None,
+) -> None:
+    """Test the dock action switches send the right start and stop commands."""
+    assert hass.states.get(entity_id) is not None
+    await hass.services.async_call(
+        "switch",
+        service,
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+    fake_vacuum.v1_properties.command.send.assert_called_once_with(
+        expected_command, params=expected_params
+    )
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "status_field", "value"),
+    [
+        pytest.param(
+            "switch.roborock_s7_maxv_dock_mop_wash",
+            "state",
+            RoborockStateCode.washing_the_mop,
+            id="wash-from-pushed-state",
+        ),
+        pytest.param(
+            "switch.roborock_s7_maxv_dock_mop_wash",
+            "state",
+            RoborockStateCode.washing_the_mop_2,
+            id="wash-from-alternate-pushed-state",
+        ),
+        pytest.param(
+            "switch.roborock_s7_maxv_dock_mop_drying",
+            "dry_status",
+            1,
+            id="drying-from-pushed-status",
+        ),
+    ],
+)
+async def test_dock_switch_reflects_status(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    entity_id: str,
+    status_field: str,
+    value: int | RoborockStateCode,
+) -> None:
+    """Test the dock action switches follow the status reported by the device."""
+    assert hass.states.get(entity_id).state == "off"
+
+    # Stop the mock trait from restoring the status template on every refresh.
+    fake_vacuum.v1_properties.status.refresh.side_effect = None
+    setattr(fake_vacuum.v1_properties.status, status_field, value)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "on"
+
+
+async def test_mop_wash_ignores_going_to_wash_state(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test travelling to the dock to wash does not turn the wash switch on."""
+    fake_vacuum.v1_properties.status.refresh.side_effect = None
+    fake_vacuum.v1_properties.status.state = RoborockStateCode.going_to_wash_the_mop
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.roborock_s7_maxv_dock_mop_wash").state == "off"
+
+
+@pytest.fixture
+def dock_type(request: pytest.FixtureRequest, fake_vacuum: FakeDevice) -> None:
+    """Report the parametrized dock type for the fake vacuum."""
+    fake_vacuum.v1_properties.device_features.dock_features = (
+        RoborockDockFeatures.from_dock_type(request.param)
+    )
+
+
+@pytest.mark.parametrize(
+    ("dock_type", "expected_entity_ids"),
+    [
+        pytest.param(RoborockDockTypeCode.o1_dock, set(), id="collect-only"),
+        pytest.param(
+            RoborockDockTypeCode.o2_dock,
+            {"switch.roborock_s7_maxv_dock_mop_wash"},
+            id="wash-only-no-dry",
+        ),
+        pytest.param(
+            RoborockDockTypeCode.o3_dock,
+            {"switch.roborock_s7_maxv_dock_mop_wash"},
+            id="collect-and-wash-no-dry",
+        ),
+        pytest.param(
+            RoborockDockTypeCode.shell_e_dock,
+            DOCK_SWITCH_ENTITY_IDS,
+            id="collect-wash-and-dry",
+        ),
+        pytest.param(RoborockDockTypeCode.o0_dock, set(), id="no-dock"),
+    ],
+    indirect=["dock_type"],
+)
+@pytest.mark.usefixtures("dock_type")
+async def test_dock_switches_match_dock_capabilities(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    expected_entity_ids: set[str],
+) -> None:
+    """Test only the dock action switches the dock supports are created."""
+    created = {
+        entity_id
+        for entity_id in DOCK_SWITCH_ENTITY_IDS
+        if hass.states.get(entity_id) is not None
+    }
+    assert created == expected_entity_ids
 
 
 @pytest.mark.parametrize(

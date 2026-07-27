@@ -35,6 +35,7 @@ from roborock.data import (
     ZeoError,
     ZeoState,
 )
+from roborock.device_features import RoborockDockFeatures
 from roborock.devices.device import RoborockDevice
 from roborock.devices.device_manager import DeviceManager
 from roborock.devices.traits.b01.q10.status import StatusTrait as Q10StatusTrait
@@ -430,6 +431,9 @@ def make_device_features() -> Mock:
     device_features.is_support_clean_estimate = True
     device_features.is_clean_route_setting_supported = True
     device_features.is_field_supported.return_value = True
+    device_features.dock_features = RoborockDockFeatures.from_dock_type(
+        STATUS.dock_type
+    )
     return device_features
 
 

@@ -254,7 +254,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_mop_drying-entry]
+# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_emptying_dust_bin-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -268,7 +268,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.roborock_s7_2_dock_mop_drying',
+    'entity_id': 'binary_sensor.roborock_s7_2_dock_emptying_dust_bin',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -276,29 +276,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Mop drying',
+    'object_id_base': 'Emptying dust bin',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Mop drying',
+    'original_name': 'Emptying dust bin',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'mop_drying_status',
-    'unique_id': 'dry_status_device_2',
+    'translation_key': 'dust_collection_status',
+    'unique_id': 'dust_collection_status_device_2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_mop_drying-state]
+# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_emptying_dust_bin-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Mop drying',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Emptying dust bin',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.roborock_s7_2_dock_mop_drying',
+    'entity_id': 'binary_sensor.roborock_s7_2_dock_emptying_dust_bin',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -713,7 +713,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_mop_drying-entry]
+# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_emptying_dust_bin-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -727,7 +727,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_mop_drying',
+    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_emptying_dust_bin',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -735,29 +735,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Mop drying',
+    'object_id_base': 'Emptying dust bin',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Mop drying',
+    'original_name': 'Emptying dust bin',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'mop_drying_status',
-    'unique_id': 'dry_status_abc123',
+    'translation_key': 'dust_collection_status',
+    'unique_id': 'dust_collection_status_abc123',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_mop_drying-state]
+# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_emptying_dust_bin-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Mop drying',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Emptying dust bin',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_mop_drying',
+    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_emptying_dust_bin',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
