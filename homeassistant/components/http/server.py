@@ -575,7 +575,11 @@ class HassioHTTPConfigView(HomeAssistantView):
         return self.json(
             {
                 "port": server.server_port,
-                "ssl": server.ssl_certificate is not None,
+                # The active SSL context, not the configured certificate: in
+                # recovery mode the context can be None (both the configured and
+                # emergency certificates failed) while a certificate is still
+                # configured, so the listener actually serves plaintext.
+                "ssl": server.context is not None,
                 "ssl_peer_certificate": server.ssl_peer_certificate is not None,
                 # The bind address(es). Supervisor decides whether it can reach
                 # Core there or must skip probes that assume the container IP.
