@@ -52,6 +52,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
@@ -201,6 +202,24 @@ async def test_config_number(hass: HomeAssistant, mock_modbus: mock.AsyncMock) -
             [0x00AB, 0xCDEF],
             False,
             "112593750",
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.FLOAT32,
+                CONF_PRECISION: 2,
+            },
+            list(struct.unpack(">HH", struct.pack(">f", float("inf")))),
+            False,
+            STATE_UNKNOWN,
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.FLOAT32,
+                CONF_PRECISION: 0,
+            },
+            list(struct.unpack(">HH", struct.pack(">f", float("inf")))),
+            False,
+            STATE_UNKNOWN,
         ),
         (
             {},

@@ -96,10 +96,14 @@ class ModbusNumber(ModbusStructEntity, RestoreNumber):
         )
         if result is None:
             self._attr_native_value = None
-        elif self._precision == 0:
-            self._attr_native_value = int(result)
         else:
-            self._attr_native_value = float(result)
+            numeric_result = float(result)
+            if not math.isfinite(numeric_result):
+                self._attr_native_value = None
+            elif self._precision == 0:
+                self._attr_native_value = int(numeric_result)
+            else:
+                self._attr_native_value = numeric_result
 
     def _convert_to_registers(
         self, value: float, scale: float, offset: float
