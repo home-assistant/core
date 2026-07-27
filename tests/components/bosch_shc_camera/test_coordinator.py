@@ -190,6 +190,15 @@ def test_is_safe_local_camera_host_rejects_out_of_range_port() -> None:
     assert _is_safe_local_camera_host("192.168.1.100:70000") is False
 
 
+def test_is_safe_local_camera_host_rejects_link_local_metadata_address() -> None:
+    """169.254.169.254 is the well-known cloud-metadata SSRF target.
+
+    Excluded explicitly even though Python's `ipaddress.is_private` counts
+    link-local as private.
+    """
+    assert _is_safe_local_camera_host("169.254.169.254:443") is False
+
+
 async def test_camera_status_preserves_last_known_on_double_probe_failure() -> None:
     """Both status probes failing must not reset a cached OFFLINE to UNKNOWN.
 

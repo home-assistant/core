@@ -158,14 +158,19 @@ def _is_safe_local_camera_host(host_and_port: str) -> bool:
     redirect the snapshot request — made with TLS verification disabled —
     to an arbitrary host, and that same host is cached for later outage
     fallback, extending the exposure window (Copilot review round 7).
+    Link-local addresses are explicitly excluded even though Python's
+    `is_private` counts them as private — 169.254.169.254 is the
+    well-known cloud-metadata SSRF target, and a physical camera's LOCAL
+    address is never link-local in practice.
     """
     host, _, port_str = host_and_port.partition(":")
     if not port_str.isdigit() or not 1 <= int(port_str) <= 65535:
         return False
     try:
-        return ipaddress.ip_address(host).is_private
+        addr = ipaddress.ip_address(host)
     except ValueError:
         return False
+    return addr.is_private and not addr.is_link_local
 
 
 # These four keys are fixed per Bronze's appropriate-polling rule — their
