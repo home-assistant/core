@@ -49,13 +49,13 @@ rules:
     status: exempt
     comment: The device's BLE MAC address is both its unique identifier and does not change.
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: Only one device per config entry. New devices are set up as new entries.
@@ -80,4 +80,4 @@ rules:
   inject-websession:
     status: exempt
     comment: The opendisplay library communicates over BLE and does not use HTTP.
-  strict-typing: todo
+  strict-typing: done

@@ -3,7 +3,7 @@
 import asyncio
 import contextlib
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from opendisplay import (
     AuthenticationFailedError,
@@ -49,7 +49,7 @@ class OpenDisplayRuntimeData:
     firmware: FirmwareVersion
     device_config: GlobalConfig
     is_flex: bool
-    upload_task: asyncio.Task | None = None
+    upload_task: asyncio.Task[Any] | None = None
 
 
 type OpenDisplayConfigEntry = ConfigEntry[OpenDisplayRuntimeData]
