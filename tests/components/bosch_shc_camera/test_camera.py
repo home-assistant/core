@@ -29,6 +29,7 @@ FAKE_COORDINATOR_DATA = {
         },
         "status": "ONLINE",
         "events": [],
+        "motion": {"enabled": False, "motionAlarmConfiguration": "HIGH"},
     }
 }
 
@@ -425,6 +426,40 @@ async def test_enable_motion_detection_tracks_refresh_task(
     mock_spawn_tracked.assert_called_once()
     _, call_kwargs = mock_spawn_tracked.call_args
     assert call_kwargs["name"] == "bosch_shc_camera_motion_enable_refresh"
+
+
+async def test_enable_motion_detection_raises_when_sensitivity_unknown(
+    hass: HomeAssistant,
+) -> None:
+    """Must fail loudly, not invent a sensitivity, when motion settings haven't loaded yet.
+
+    Silently defaulting to HIGH before the coordinator's slow tier has ever
+    fetched motion settings (e.g. right after startup while the camera was
+    offline) would reset a real LOW/MEDIUM setting the first time the
+    coordinator's PUT actually lands (Copilot review round 13).
+    """
+    entity = await _setup_camera_entity(hass)
+    with (
+        patch.object(entity.coordinator, "motion_settings", return_value={}),
+        patch.object(entity.coordinator, "async_put_camera") as mock_put,
+        pytest.raises(HomeAssistantError),
+    ):
+        await entity.async_enable_motion_detection()
+    mock_put.assert_not_called()
+
+
+async def test_disable_motion_detection_raises_when_sensitivity_unknown(
+    hass: HomeAssistant,
+) -> None:
+    """See test_enable_motion_detection_raises_when_sensitivity_unknown above."""
+    entity = await _setup_camera_entity(hass)
+    with (
+        patch.object(entity.coordinator, "motion_settings", return_value={}),
+        patch.object(entity.coordinator, "async_put_camera") as mock_put,
+        pytest.raises(HomeAssistantError),
+    ):
+        await entity.async_disable_motion_detection()
+    mock_put.assert_not_called()
 
 
 async def test_disable_motion_detection_raises_on_write_failure(

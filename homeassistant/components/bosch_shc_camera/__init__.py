@@ -53,6 +53,7 @@ from .const import (
 from .coordinator import (
     BoschCameraCoordinator as BoschCameraCoordinator,  # re-export: mypy --no-implicit-reexport (platform modules import it via `from . import`)
     _is_safe_bosch_url as _is_safe_bosch_url,  # re-export: mypy --no-implicit-reexport (camera.py imports it via `from . import`)
+    _is_safe_local_camera_host,
     get_options as get_options,  # re-export: mypy --no-implicit-reexport (camera.py imports it via `from . import`)
 )
 from .models import MODELS
@@ -390,11 +391,28 @@ async def _async_load_persisted_caches(
             if not (isinstance(_cid, str) and isinstance(_payload, dict)):
                 continue
             if "user" in _payload and "password" in _payload and "host" in _payload:
+                _port = int(_payload.get("port", 443))
+                # The store loader accepts arbitrary legacy dicts, unlike the
+                # fresh-creds path (coordinator.py's
+                # fetch_live_snapshot_local), which only ever caches a host
+                # already validated by _is_safe_local_camera_host. A stale
+                # or previously-poisoned entry here would otherwise bypass
+                # that check and let the outage-fallback snap fetch
+                # (camera.py's _async_local_outage_snap) send authenticated
+                # Digest credentials to an arbitrary host (Copilot review
+                # round 13).
+                if not _is_safe_local_camera_host(f"{_payload['host']}:{_port}"):
+                    _LOGGER.warning(
+                        "Discarding persisted LOCAL Digest cred(s) for %s: "
+                        "unsafe/malformed host",
+                        _cid,
+                    )
+                    continue
                 coordinator.local_creds_cache[_cid.upper()] = {
                     "user": _payload["user"],
                     "password": _payload["password"],
                     "host": _payload["host"],
-                    "port": int(_payload.get("port", 443)),
+                    "port": _port,
                     "ts": time.monotonic(),
                 }
                 _loaded_creds += 1

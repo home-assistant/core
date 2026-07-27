@@ -139,6 +139,90 @@ async def test_remove_entry_deletes_all_persisted_files(hass: HomeAssistant) -> 
         assert await Store(hass, version=1, key=key).async_load() is None
 
 
+async def test_persisted_local_creds_reject_unsafe_host(hass: HomeAssistant) -> None:
+    """A poisoned/stale persisted LOCAL Digest cred entry must not be loaded.
+
+    The fresh-creds path (coordinator.py's fetch_live_snapshot_local) only
+    ever caches a host validated by `_is_safe_local_camera_host`. The
+    persisted-store restore path in `__init__.py` read arbitrary
+    `host`/`port` values straight out of HA's `.storage` JSON with no such
+    check — a stale or previously-poisoned entry would bypass validation
+    and let the outage-fallback snap fetch (camera.py's
+    `_async_local_outage_snap`) send authenticated Digest credentials to
+    an arbitrary host (Copilot review round 13).
+    """
+    _DOMAIN = DOMAIN
+    entry = _mock_config_entry()
+    entry.add_to_hass(hass)
+
+    await Store(hass, version=1, key=f"{_DOMAIN}_local_creds").async_save(
+        {
+            CAM_ID: {
+                "user": "admin",
+                "password": "secret",
+                "host": "8.8.8.8",  # public IP — not a physical camera's LAN address
+                "port": 443,
+            }
+        }
+    )
+
+    coordinator_path = (
+        "homeassistant.components.bosch_shc_camera.coordinator.BoschCameraCoordinator"
+    )
+    with (
+        patch(
+            f"{coordinator_path}._async_update_data",
+            return_value=FAKE_COORDINATOR_DATA,
+        ),
+        patch(f"{coordinator_path}.async_fetch_live_snapshot", return_value=None),
+        patch(f"{coordinator_path}.async_fetch_live_snapshot_local", return_value=None),
+        patch(
+            f"{coordinator_path}.async_fetch_fresh_event_snapshot", return_value=None
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert CAM_ID not in entry.runtime_data.local_creds_cache
+
+
+async def test_persisted_local_creds_accept_safe_host(hass: HomeAssistant) -> None:
+    """A genuine, private-LAN persisted cred entry is still loaded normally."""
+    _DOMAIN = DOMAIN
+    entry = _mock_config_entry()
+    entry.add_to_hass(hass)
+
+    await Store(hass, version=1, key=f"{_DOMAIN}_local_creds").async_save(
+        {
+            CAM_ID: {
+                "user": "admin",
+                "password": "secret",
+                "host": "192.168.1.50",
+                "port": 443,
+            }
+        }
+    )
+
+    coordinator_path = (
+        "homeassistant.components.bosch_shc_camera.coordinator.BoschCameraCoordinator"
+    )
+    with (
+        patch(
+            f"{coordinator_path}._async_update_data",
+            return_value=FAKE_COORDINATOR_DATA,
+        ),
+        patch(f"{coordinator_path}.async_fetch_live_snapshot", return_value=None),
+        patch(f"{coordinator_path}.async_fetch_live_snapshot_local", return_value=None),
+        patch(
+            f"{coordinator_path}.async_fetch_fresh_event_snapshot", return_value=None
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.runtime_data.local_creds_cache[CAM_ID]["host"] == "192.168.1.50"
+
+
 async def test_cloud_degraded_startup_uses_spawn_tracked_not_bare_create_task(
     hass: HomeAssistant,
 ) -> None:

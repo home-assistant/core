@@ -421,9 +421,18 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     async def async_enable_motion_detection(self, **kwargs: Any) -> None:
         """Enable motion detection via standard HA camera service."""
         settings = self.coordinator.motion_settings(self._cam_id)
-        sensitivity = (
-            settings.get("motionAlarmConfiguration", "HIGH") if settings else "HIGH"
-        )
+        if not settings:
+            # Bosch's PUT requires motionAlarmConfiguration alongside
+            # enabled, and inventing a default here would silently reset a
+            # real LOW/MEDIUM setting to HIGH before the coordinator has
+            # ever fetched it (e.g. right after startup while the camera
+            # was offline) — fail instead of guessing (Copilot review
+            # round 13).
+            raise HomeAssistantError(
+                f"{self._display_name}: motion sensitivity not yet known — "
+                "try again once the integration has finished its first update"
+            )
+        sensitivity = settings.get("motionAlarmConfiguration", "HIGH")
         success = await self.coordinator.async_put_camera(
             self._cam_id,
             "motion",
@@ -454,9 +463,13 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     async def async_disable_motion_detection(self, **kwargs: Any) -> None:
         """Disable motion detection via standard HA camera service."""
         settings = self.coordinator.motion_settings(self._cam_id)
-        sensitivity = (
-            settings.get("motionAlarmConfiguration", "HIGH") if settings else "HIGH"
-        )
+        if not settings:
+            # See async_enable_motion_detection above.
+            raise HomeAssistantError(
+                f"{self._display_name}: motion sensitivity not yet known — "
+                "try again once the integration has finished its first update"
+            )
+        sensitivity = settings.get("motionAlarmConfiguration", "HIGH")
         success = await self.coordinator.async_put_camera(
             self._cam_id,
             "motion",
