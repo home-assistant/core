@@ -12,24 +12,6 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, load_json_value_fixture
 
 
-def get_mock_vmc(
-    info_hostname: str = "Flow-it Device",
-    state_name: str = "00:11:22:33:44:55",
-) -> AsyncMock:
-    """Return a mock FlowItVMCMachine."""
-    mock_vmc = AsyncMock()
-    mock_vmc.get_info.return_value.hostname = info_hostname
-
-    json_data = load_json_value_fixture("machine_status.json", DOMAIN)
-    json_data["name"] = state_name
-    mock_vmc.state = MachineStatusResponse(**json_data)
-
-    mock_vmc.register_websocket_callback = MagicMock()
-    mock_vmc.websocket.start = MagicMock()
-
-    return mock_vmc
-
-
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -42,18 +24,27 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_flow_it() -> Generator[AsyncMock]:
     """Mock FlowItVMCMachine for integration tests."""
+    mock_vmc = AsyncMock()
+    mock_vmc.get_info.return_value.hostname = "Flow-it Device"
+
+    json_data = load_json_value_fixture("machine_status.json", DOMAIN)
+    json_data["name"] = "00:11:22:33:44:55"
+    mock_vmc.state = MachineStatusResponse(**json_data)
+
+    mock_vmc.register_websocket_callback = MagicMock()
+    mock_vmc.websocket.start = MagicMock()
+
     with (
         patch(
             "homeassistant.components.flow_it.FlowItVMCMachine",
-            autospec=True,
+            return_value=mock_vmc,
         ) as mock,
         patch(
             "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
             new=mock,
         ),
     ):
-        instance = mock.return_value
-        yield instance
+        yield mock
 
 
 @pytest.fixture
