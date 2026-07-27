@@ -50,6 +50,7 @@ class EncoderConfig:
 
 # Known encoder devices by (vendor_id, product_id)
 # Community can PR additions to this table
+# Pattern: similar to VENDOR_LABELING_LIST in entity.py for device-specific quirks
 KNOWN_ENCODERS: dict[tuple[int, int], EncoderConfig] = {
     # IKEA BILRESA scroll wheel (E2490)
     # 18-position rotary encoder, wraps around
@@ -113,7 +114,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
         self._last_position: int | None = None
         self._max_positions: int = 2
 
-        # Try to get device identifiers for known device lookup
+        # Get device identifiers from endpoint device_info (standard HA Matter pattern)
         vendor_id = self._get_vendor_id()
         product_id = self._get_product_id()
 
@@ -122,6 +123,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
 
         if feature_map & SwitchFeature.kLatchingSwitch:
             self._is_encoder = True
+            self._encoder_type = EncoderType.ROTARY
             self._max_positions = self.get_matter_attribute_value(
                 clusters.Switch.Attributes.NumberOfPositions
             ) or 18
@@ -166,31 +168,31 @@ class MatterEventEntity(MatterEntity, EventEntity):
         self._attr_event_types = event_types
 
     def _get_vendor_id(self) -> int:
-        """Get the vendor ID for this device."""
+        """Get the vendor ID for this device from endpoint device_info."""
         try:
-            return int(
-                self.get_matter_attribute_value(
-                    clusters.BasicInformation.Attributes.VendorID
-                ) or 0
-            )
-        except (TypeError, ValueError):
+            return int(self._endpoint.device_info.vendorID or 0)
+        except (TypeError, ValueError, AttributeError):
             return 0
 
     def _get_product_id(self) -> int:
-        """Get the product ID for this device."""
+        """Get the product ID for this device from endpoint device_info."""
         try:
-            return int(
-                self.get_matter_attribute_value(
-                    clusters.BasicInformation.Attributes.ProductID
-                ) or 0
-            )
-        except (TypeError, ValueError):
+            return int(self._endpoint.device_info.productID or 0)
+        except (TypeError, ValueError, AttributeError):
             return 0
 
     @override
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
+
+        # Initialize last_position from current device state for encoders
+        if self._is_encoder:
+            current_pos = self.get_matter_attribute_value(
+                clusters.Switch.Attributes.CurrentPosition
+            )
+            if current_pos is not None:
+                self._last_position = int(current_pos)
 
         self._unsubscribes.append(
             self.matter_client.subscribe_events(
@@ -239,7 +241,21 @@ class MatterEventEntity(MatterEntity, EventEntity):
         if new_position is None:
             return
 
-        if self._last_position is not None:
+        if self._last_position is None:
+            # First event - fire initial position event so users get feedback
+            self._trigger_event("rotate_cw", {
+                "magnitude": 0,
+                "position": new_position,
+                "previous_position": None,
+                "encoder_type": self._encoder_type.value,
+                "initial": True,
+            })
+            self.async_write_ha_state()
+        else:
+            # Infer encoder type from delta if still unknown
+            raw_delta = new_position - self._last_position
+            self._infer_encoder_type_from_delta(raw_delta)
+
             delta = self._calculate_encoder_delta(self._last_position, new_position)
 
             if delta != 0:
@@ -256,12 +272,26 @@ class MatterEventEntity(MatterEntity, EventEntity):
 
         self._last_position = new_position
 
+    def _infer_encoder_type_from_delta(self, raw_delta: int) -> None:
+        """Infer encoder type from observed delta if type is unknown.
+
+        Large jumps suggest linear encoder (user slid far).
+        Small deltas are ambiguous but we don't change inference.
+        """
+        if self._encoder_type != EncoderType.UNKNOWN:
+            return
+
+        half_max = self._max_positions // 2
+        if abs(raw_delta) > half_max:
+            # Large jump suggests linear encoder (slider moved a lot)
+            self._encoder_type = EncoderType.LINEAR
+
     def _calculate_encoder_delta(self, old_pos: int, new_pos: int) -> int:
         """Calculate position delta, handling wrap-around for rotary encoders.
 
         For rotary encoders, finds the shortest path (may wrap around).
         For linear encoders, uses direct delta (no wrap).
-        For unknown type, infers from observed behavior.
+        For unknown type, assumes rotary behavior (handles wrap correctly).
         """
         raw_delta = new_pos - old_pos
         half_max = self._max_positions // 2
@@ -270,28 +300,16 @@ class MatterEventEntity(MatterEntity, EventEntity):
             # Linear encoder: no wrap-around, use raw delta
             return raw_delta
 
-        elif self._encoder_type == EncoderType.ROTARY:
+        if self._encoder_type == EncoderType.ROTARY:
             # Rotary encoder: find shortest path, may wrap
             if raw_delta > half_max:
                 return raw_delta - self._max_positions
-            elif raw_delta < -half_max:
+            if raw_delta < -half_max:
                 return raw_delta + self._max_positions
             return raw_delta
 
-        else:
-            # Unknown type: infer from behavior
-            # If we see a large delta, it's probably linear (user slid far)
-            # If deltas are always small, it's probably rotary (wrapping)
-            if abs(raw_delta) > half_max:
-                # Large jump suggests linear encoder (slider moved a lot)
-                # Remember this inference for future events
-                self._encoder_type = EncoderType.LINEAR
-                return raw_delta
-            else:
-                # Small delta - could be either, assume rotary for now
-                # (rotary is more common and this handles wrap correctly)
-                return raw_delta
-
+        # Unknown type: assume rotary for now (rotary is more common)
+        return raw_delta
 
     def _handle_button_event(self, data: MatterNodeEvent) -> None:
         """Handle traditional button press events."""
