@@ -260,6 +260,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
                 ]
             )
         ),
+        should_update_entity=lambda value: value is not None,
         value=parse_data_temperature,
     ),
     # mcu temperature
