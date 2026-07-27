@@ -231,19 +231,20 @@ def number_min_max_validator(config: dict[str, Any]) -> dict[str, Any]:
         (CONF_MIN_VALUE, min_value),
         (CONF_MAX_VALUE, max_value),
     ):
+        error_prefix = (
+            f"{name}: `{limit_key}: {limit_value}` cannot be represented with"
+            f" `{CONF_DATA_TYPE}: {data_type}`, `{CONF_SCALE}: {scale}`"
+            f" and `{CONF_OFFSET}: {offset}` -->"
+        )
+        raw: float | int = (limit_value - offset) / scale
+        if not math.isfinite(raw):
+            raise vol.Invalid(f"{error_prefix} transformed limit is not finite")
         try:
-            raw: float | int = (limit_value - offset) / scale
-            if not math.isfinite(raw):
-                raise ValueError("transformed limit is not finite")
             if value_is_int:
                 raw = round(raw)
             struct.pack(config[CONF_STRUCTURE], raw)
-        except (OverflowError, struct.error, ValueError) as err:
-            raise vol.Invalid(
-                f"{name}: `{limit_key}: {limit_value}` cannot be represented with"
-                f" `{CONF_DATA_TYPE}: {data_type}`, `{CONF_SCALE}: {scale}`"
-                f" and `{CONF_OFFSET}: {offset}` --> {err!s}"
-            ) from err
+        except (OverflowError, struct.error) as err:
+            raise vol.Invalid(f"{error_prefix} {err!s}") from err
     return config
 
 
