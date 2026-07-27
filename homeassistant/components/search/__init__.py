@@ -220,6 +220,12 @@ class Searcher:
             automation.blueprint_in_automation(self.hass, automation_entity_id),
         )
 
+        # Labels referenced in this automation
+        self._add(
+            ItemType.LABEL,
+            automation.labels_in_automation(self.hass, automation_entity_id),
+        )
+
         # Floors referenced in this automation
         self._add(
             ItemType.FLOOR,
@@ -289,6 +295,19 @@ class Searcher:
         ):
             self._add(ItemType.ENTITY, entity_entry.entity_id)
             self._async_search_entity(entity_entry.entity_id, entry_point=False)
+
+    @callback
+    def _async_search_integration(self, domain: str) -> None:
+        """Find results for an integration."""
+        for entry in self.hass.config_entries.async_entries(domain):
+            self._add(ItemType.CONFIG_ENTRY, entry.entry_id)
+            self._async_search_config_entry(entry.entry_id)
+
+        for entity_id, source in self._entity_sources.items():
+            if source["domain"] != domain:
+                continue
+            self._add(ItemType.ENTITY, entity_id)
+            self._async_search_entity(entity_id, entry_point=False)
 
     @callback
     def _async_search_device(self, device_id: str, *, entry_point: bool = True) -> None:
@@ -491,6 +510,9 @@ class Searcher:
             ItemType.SCRIPT_BLUEPRINT,
             script.blueprint_in_script(self.hass, script_entity_id),
         )
+
+        # Labels referenced in this script
+        self._add(ItemType.LABEL, script.labels_in_script(self.hass, script_entity_id))
 
         # Floors referenced in this script
         self._add(ItemType.FLOOR, script.floors_in_script(self.hass, script_entity_id))

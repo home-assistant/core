@@ -3,8 +3,10 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "unknown_device_type": "This isn't a supported energieleser product. Please check that the device is a stromleser, gasleser, wasserleser, or wärmeleser."
+      "unknown_device_type": "This isn't a supported energieleser product. Please check that the device is a stromleser, gasleser, wasserleser, or wärmeleser.",
+      "wrong_device": "The device at this IP address does not match the originally configured device."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -13,6 +15,16 @@
     },
     "flow_title": "{device_type} · {host}",
     "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::energieleser::config::step::user::data_description::host%]"
+        },
+        "description": "Update the IP address or hostname of your energieleser device.",
+        "title": "Reconfigure energieleser"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -79,6 +91,17 @@
       "water_today_consumption": {
         "name": "Water today"
       }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the device {device_id}"
+    },
+    "connection_error": {
+      "message": "An error occurred while connecting to the device {device_id}"
+    },
+    "unknown_device": {
+      "message": "The device type for {device_id} is unknown or unsupported"
     }
   }
 }

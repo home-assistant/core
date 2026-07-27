@@ -15,6 +15,6 @@
   "documentation": "https://www.home-assistant.io/integrations/nobo_hub",
   "integration_type": "hub",
   "iot_class": "local_push",
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["pynobo==1.9.0"]
 }

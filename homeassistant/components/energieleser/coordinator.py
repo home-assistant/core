@@ -52,14 +52,26 @@ class EnergieleserCoordinator(DataUpdateCoordinator[EnergieleserDevice]):
             device = await self.client.get_device()
         except EnergieleserUnknownDeviceError as err:
             raise UpdateFailed(
-                f"Unknown or unsupported device type for {self.device_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="unknown_device",
+                translation_placeholders={
+                    "device_id": self.device_id,
+                },
             ) from err
         except EnergieleserConnectionError as err:
             raise UpdateFailed(
-                f"Cannot connect to energieleser device {self.device_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={
+                    "device_id": self.device_id,
+                },
             ) from err
         except EnergieleserError as err:
             raise UpdateFailed(
-                f"Error communicating with energieleser device {self.device_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={
+                    "device_id": self.device_id,
+                },
             ) from err
         return device

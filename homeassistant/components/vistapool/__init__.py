@@ -20,6 +20,7 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -96,6 +97,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) ->
             await coordinator.async_shutdown()
         raise
 
+    # Catch pools removed from the account while Home Assistant was offline; the
+    # first live snapshot is a no-op so it wouldn't clean these up.
+    _async_remove_stale_devices(hass, entry, set(pools))
+
     def _on_user_pools_snapshot(pool_ids: list[str]) -> None:
         """Bridge the Firestore snapshot from the watch thread to the HA loop."""
         hass.loop.call_soon_threadsafe(_schedule_reconcile, pool_ids)
@@ -134,6 +139,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) -
             for coordinator in entry.runtime_data.coordinators.values():
                 await coordinator.async_shutdown()
     return unload_ok
+
+
+@callback
+def _async_remove_stale_devices(
+    hass: HomeAssistant, entry: VistapoolConfigEntry, valid_pool_ids: set[str]
+) -> None:
+    """Remove registry devices for pools no longer present on the account."""
+    device_registry = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        pool_id = next((i[1] for i in device.identifiers if i[0] == DOMAIN), None)
+        if pool_id is not None and pool_id not in valid_pool_ids:
+            device_registry.async_update_device(
+                device.id, remove_config_entry_id=entry.entry_id
+            )
 
 
 async def _async_initial_refresh(
@@ -210,3 +229,8 @@ async def _async_reconcile_pools(
             async_dispatcher_send(
                 hass, f"{SIGNAL_NEW_POOL}_{entry.entry_id}", coordinator
             )
+
+        if stale := current - fetched:
+            for pool_id in stale:
+                await entry.runtime_data.coordinators.pop(pool_id).async_shutdown()
+            _async_remove_stale_devices(hass, entry, fetched)

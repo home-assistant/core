@@ -523,7 +523,9 @@ async def test_update_addon_with_backup_removes_old_backups(
     update_addon.assert_called_once_with("test", StoreAddonUpdate(backup=False))
 
 
-async def test_update_os(hass: HomeAssistant, supervisor_client: AsyncMock) -> None:
+async def test_update_os(
+    hass: HomeAssistant, supervisor_client: AsyncMock, os_info: AsyncMock
+) -> None:
     """Test updating OS update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -537,7 +539,15 @@ async def test_update_os(hass: HomeAssistant, supervisor_client: AsyncMock) -> N
         assert result
     await hass.async_block_till_done()
 
-    supervisor_client.os.update.return_value = None
+    async def mock_os_update(*args: Any) -> None:
+        """Simulate Supervisor reporting the new version after the update."""
+        os_info.return_value = replace(
+            os_info.return_value,
+            version="1.0.0dev2222",
+            update_available=False,
+        )
+
+    supervisor_client.os.update.side_effect = mock_os_update
     with patch(
         "homeassistant.components.backup.manager.BackupManager.async_create_backup",
     ) as mock_create_backup:
@@ -549,6 +559,13 @@ async def test_update_os(hass: HomeAssistant, supervisor_client: AsyncMock) -> N
         )
     mock_create_backup.assert_not_called()
     supervisor_client.os.update.assert_called_once_with(OSUpdate(version=None))
+
+    # The coordinator is refreshed after install so the new version
+    # shows up immediately
+    state = hass.states.get("update.home_assistant_operating_system_update")
+    assert state is not None
+    assert state.state == "off"
+    assert state.attributes["installed_version"] == "1.0.0dev2222"
 
 
 @pytest.mark.parametrize(

@@ -230,7 +230,7 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
     ProxmoxVMSensorEntityDescription(
         key="vm_uptime",
         translation_key="vm_uptime",
-        value_fn=lambda data: data["uptime"],
+        value_fn=lambda data: data.get("uptime"),
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
@@ -347,7 +347,7 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
     ProxmoxContainerSensorEntityDescription(
         key="container_uptime",
         translation_key="container_uptime",
-        value_fn=lambda data: data["uptime"],
+        value_fn=lambda data: data.get("uptime"),
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,

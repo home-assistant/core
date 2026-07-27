@@ -883,3 +883,108 @@
   list([
   ])
 # ---
+# name: test_fan_state[CoreBreeze 432S][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'corebreeze432s',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LPF-R432S-AEU',
+      'model_id': None,
+      'name': 'CoreBreeze 432S',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_fan_state[CoreBreeze 432S][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+          'normal',
+          'sleep',
+          'turbo',
+        ]),
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'fan',
+      'entity_category': None,
+      'entity_id': 'fan.corebreeze_432s',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': None,
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': <FanEntityFeature: 59>,
+      'translation_key': 'vesync',
+      'unique_id': 'corebreeze432s',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_fan_state[CoreBreeze 432S][fan.corebreeze_432s]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'active_time': None,
+      'child_lock': False,
+      'display_status': 'off',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoreBreeze 432S',
+      'mode': <FanModes.NORMAL: 'normal'>,
+      <FanEntityStateAttribute.OSCILLATING: 'oscillating'>: True,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 8,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 8.333333333333334,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'normal',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'normal',
+        'sleep',
+        'turbo',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 59>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.corebreeze_432s',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

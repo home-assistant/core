@@ -72,11 +72,15 @@
           "fan_mode": {
             "state": {
               "auto": "[%key:common::state::auto%]",
+              "breeze": "Light breeze",
               "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
+              "low_mid": "Low medium",
               "medium": "[%key:common::state::medium%]",
+              "mid_high": "Medium high",
               "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
-              "slow": "Slow"
+              "slow": "Slow",
+              "slow_low": "Super low"
             }
           },
           "preset_mode": {

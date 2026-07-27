@@ -3,10 +3,11 @@
   "name": "Modbus Connection",
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
+  "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/modbus_connection",
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["modbus_connection", "tmodbus"],
   "quality_scale": "bronze",
-  "requirements": ["modbus-connection[tmodbus]==3.3.0"]
+  "requirements": ["modbus-connection[tmodbus]==3.4.1"]
 }

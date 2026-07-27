@@ -48,14 +48,13 @@ from homeassistant.components.backup import (
     RestoreBackupState,
     WrittenBackup,
     async_get_manager as async_get_backup_manager,
-    suggested_filename as suggested_backup_filename,
     suggested_filename_from_name_date,
 )
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.enum import try_parse_enum
 
 from .const import DATA_CONFIG_STORE, DOMAIN, EVENT_SUPERVISOR_EVENT
@@ -66,6 +65,16 @@ RESTORE_JOB_ID_ENV = "SUPERVISOR_RESTORE_JOB_ID"
 # Set on backups automatically created when updating an addon
 TAG_ADDON_UPDATE = "supervisor.addon_update"
 _LOGGER = logging.getLogger(__name__)
+
+
+def _suggested_backup_filename(name: str, date: str) -> str:
+    """Suggest a filename for a Supervisor backup.
+
+    Slugify the name so a display name with path separators (e.g. an add-on
+    named "Nabu Casa / Webhook Proxy") can't produce a filename Supervisor
+    rejects. The unsanitized name is still stored as the backup's display name.
+    """
+    return suggested_filename_from_name_date(slugify(name), date)
 
 
 async def async_get_backup_agents(
@@ -202,7 +211,7 @@ class SupervisorBackupAgent(BackupAgent):
         stream = await open_stream()
         upload_options = supervisor_backups.UploadBackupOptions(
             location={self.location},
-            filename=PurePath(suggested_backup_filename(backup)),
+            filename=PurePath(_suggested_backup_filename(backup.name, backup.date)),
         )
 
         async def stream_with_progress() -> AsyncIterator[bytes]:
@@ -361,7 +370,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
 
         date = dt_util.now().isoformat()
         extra_metadata = extra_metadata | {"supervisor.backup_request_date": date}
-        filename = suggested_filename_from_name_date(backup_name, date)
+        filename = _suggested_backup_filename(backup_name, date)
         try:
             backup = await self._client.backups.partial_backup(
                 supervisor_backups.PartialBackupOptions(

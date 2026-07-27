@@ -5,7 +5,12 @@ from typing import Any, override
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ColorMode,
+    LightEntity,
+    LightEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
@@ -70,7 +75,9 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
             old_state = await self.async_get_last_state()
             if old_state is not None:
                 self._attr_is_on = old_state.state == STATE_ON
-                if brightness := old_state.attributes.get(ATTR_BRIGHTNESS):
+                if brightness := old_state.attributes.get(
+                    LightEntityStateAttribute.BRIGHTNESS
+                ):
                     self._attr_brightness = int(brightness)
 
     @override

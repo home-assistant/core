@@ -11,7 +11,11 @@ from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity
 
 from .const import DOMAIN
@@ -109,6 +113,10 @@ async def async_migrate_data(
     async_deprecate_hdr(hass, entry)
     _LOGGER.debug("Completed Migrate: async_deprecate_hdr")
 
+    _LOGGER.debug("Start Migrate: async_remove_aiport_devices")
+    async_remove_aiport_devices(hass, entry)
+    _LOGGER.debug("Completed Migrate: async_remove_aiport_devices")
+
     _LOGGER.debug("Start Migrate: async_migrate_insecure_cameras")
     async_migrate_insecure_cameras(hass, entry)
     _LOGGER.debug("Completed Migrate: async_migrate_insecure_cameras")
@@ -116,6 +124,35 @@ async def async_migrate_data(
     _LOGGER.debug("Start Migrate: async_remove_package_binary_sensor")
     async_remove_package_binary_sensor(hass, entry)
     _LOGGER.debug("Completed Migrate: async_remove_package_binary_sensor")
+
+
+# Device type (``ProtectAdoptableDeviceModel.type``) reported by AI Ports. Matched
+# in the registry so cleanup does not depend on the bundled library still exposing
+# the AI Port model.
+_AIPORT_DEVICE_TYPE = "AI Port"
+
+
+@callback
+def async_remove_aiport_devices(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
+    """Remove AI Port devices and their diagnostic-only entities.
+
+    AI Ports only ever exposed diagnostic sensors (no automation-relevant
+    functionality) and behave transparently, extending the camera they back.
+    They have no public API representation, so support is dropped. Devices are
+    matched from the registry (by device type) rather than the live bootstrap, so
+    cleanup works even once the library drops the AI Port model.
+
+    Added in 2026.7.0
+    """
+    device_registry = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if device.model_id != _AIPORT_DEVICE_TYPE:
+            continue
+        # Detaching the config entry removes the device (it has no other entry)
+        # and its entities along with it.
+        device_registry.async_update_device(
+            device.id, remove_config_entry_id=entry.entry_id
+        )
 
 
 @callback

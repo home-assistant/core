@@ -1,0 +1,12 @@
+{
+  "domain": "google_health",
+  "name": "Google Health",
+  "codeowners": ["@allenporter"],
+  "config_flow": true,
+  "dependencies": ["application_credentials", "http", "webhook"],
+  "documentation": "https://www.home-assistant.io/integrations/google_health",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["google-health-api==0.5.1"]
+}

@@ -18,7 +18,7 @@ import threading
 import time
 from time import monotonic
 import traceback
-from typing import Any
+from typing import Any, override
 
 import packaging.tags
 
@@ -173,7 +173,7 @@ class RuntimeConfig:
     safe_mode: bool = False
 
 
-class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[name-defined,misc]
+class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     """Event loop policy for Home Assistant."""
 
     def __init__(self, debug: bool) -> None:
@@ -184,8 +184,9 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[name-
     @property
     def loop_name(self) -> str:
         """Return name of the loop."""
-        return self._loop_factory.__name__  # type: ignore[no-any-return]
+        return self._loop_factory.__name__  # type: ignore[attr-defined,no-any-return]
 
+    @override
     def new_event_loop(self) -> asyncio.AbstractEventLoop:
         """Get the event loop."""
         loop: asyncio.AbstractEventLoop = super().new_event_loop()
