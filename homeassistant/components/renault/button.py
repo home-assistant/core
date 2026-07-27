@@ -72,7 +72,10 @@ BUTTON_TYPES: tuple[RenaultButtonEntityDescription, ...] = (
     RenaultButtonEntityDescription(
         async_press=lambda x: x.vehicle.set_charge_mode("always_charging"),
         key="set_immediate_charging",
-        is_supported=lambda vehicle: vehicle.details.uses_electricity(),
+        is_supported=lambda vehicle: (
+            vehicle.details.supports_endpoint("actions/charge-set-mode")
+            and vehicle.details.uses_electricity()
+        ),
         translation_key="set_immediate_charging",
     ),
     RenaultButtonEntityDescription(
