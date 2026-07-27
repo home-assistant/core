@@ -34,7 +34,7 @@ async def test_user_flow(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
         result["flow_id"],
         USER_INPUT,
     )
-    await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Flow-it Device"
     assert result["data"] == {**USER_INPUT, "host": f"http://{USER_INPUT['host']}"}
@@ -73,7 +73,7 @@ async def test_user_flow_exceptions(
         result["flow_id"],
         USER_INPUT,
     )
-    await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Flow-it Device"
     assert result["data"] == {**USER_INPUT, "host": f"http://{USER_INPUT['host']}"}
@@ -108,7 +108,6 @@ async def test_zeroconf(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
             "password": "test-password",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Flow-it Device"
@@ -170,7 +169,6 @@ async def test_zeroconf_exceptions(
             "password": "test-password",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Flow-it Device"
@@ -251,7 +249,6 @@ async def test_user_flow_with_http(
         result["flow_id"],
         {**USER_INPUT, "host": f"http://{USER_INPUT['host']}"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Flow-it Device"
