@@ -1,9 +1,12 @@
 """Test OTBR Websocket API."""
 
+from http import HTTPStatus
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 import python_otbr_api
+from yarl import URL
 
 from homeassistant.components import otbr, thread
 from homeassistant.components.otbr import DOMAIN
@@ -18,7 +21,7 @@ from . import (
     TEST_BORDER_AGENT_ID,
 )
 
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
@@ -847,6 +850,196 @@ async def test_set_channel_fails_3(
                 "type": "otbr/set_channel",
                 "extended_address": "blah",
                 "channel": 12,
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unknown_router"
+
+
+async def test_create_ephemeral_key(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_multipan: str,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test create ephemeral key activates the key on the border router."""
+    aioclient_mock.put(f"{BASE_URL}/node/ba-epskc/state")
+    aioclient_mock.post(
+        f"{BASE_URL}/node/ba-epskc/key", json={"tap": "700855744", "port": 49154}
+    )
+
+    with patch(
+        "python_otbr_api.OTBR.get_extended_address",
+        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/create_ephemeral_key",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "ephemeral_key": "700855744",
+        "lifetime": 120.0,
+        "port": 49154,
+    }
+    # The border agent API takes the lifetime in milliseconds
+    assert aioclient_mock.mock_calls[-1][2] == {"lifetime": 120000}
+
+
+@pytest.mark.parametrize(
+    ("state_status", "key_status"),
+    [
+        pytest.param(HTTPStatus.NOT_FOUND, HTTPStatus.OK, id="state_not_found"),
+        pytest.param(HTTPStatus.OK, HTTPStatus.NOT_FOUND, id="key_not_found"),
+        # Routers which reject the method before matching the path answer 405
+        pytest.param(
+            HTTPStatus.METHOD_NOT_ALLOWED, HTTPStatus.OK, id="state_not_allowed"
+        ),
+        pytest.param(
+            HTTPStatus.OK, HTTPStatus.METHOD_NOT_ALLOWED, id="key_not_allowed"
+        ),
+    ],
+)
+async def test_create_ephemeral_key_not_supported(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_multipan: str,
+    websocket_client: MockHAClientWebSocket,
+    state_status: HTTPStatus,
+    key_status: HTTPStatus,
+) -> None:
+    """Test a router without ephemeral key support is reported as unsupported."""
+    aioclient_mock.put(f"{BASE_URL}/node/ba-epskc/state", status=state_status)
+    aioclient_mock.post(f"{BASE_URL}/node/ba-epskc/key", status=key_status, json={})
+
+    with patch(
+        "python_otbr_api.OTBR.get_extended_address",
+        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/create_ephemeral_key",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "ephemeral_key_not_supported"
+
+
+async def test_create_ephemeral_key_replaces_active_key(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_multipan: str,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test an already active key is dropped so a new one can be created."""
+    aioclient_mock.put(f"{BASE_URL}/node/ba-epskc/state")
+    aioclient_mock.delete(f"{BASE_URL}/node/ba-epskc/key")
+    # The border router only accepts a new key from the stopped state, so the
+    # first activation conflicts and only the one after the delete succeeds
+    responses = [
+        AiohttpClientMockResponse(
+            "POST", URL(f"{BASE_URL}/node/ba-epskc/key"), status=HTTPStatus.CONFLICT
+        ),
+        AiohttpClientMockResponse(
+            "POST",
+            URL(f"{BASE_URL}/node/ba-epskc/key"),
+            json={"tap": "700855744", "port": 49154},
+        ),
+    ]
+
+    async def activate(method: str, url: URL, data: Any) -> AiohttpClientMockResponse:
+        return responses.pop(0)
+
+    aioclient_mock.post(f"{BASE_URL}/node/ba-epskc/key", side_effect=activate)
+
+    with patch(
+        "python_otbr_api.OTBR.get_extended_address",
+        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/create_ephemeral_key",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["ephemeral_key"] == "700855744"
+    assert any(call[0] == "DELETE" for call in aioclient_mock.mock_calls)
+
+
+async def test_create_ephemeral_key_fails(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_multipan: str,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test create ephemeral key when the border router returns an error."""
+    aioclient_mock.put(
+        f"{BASE_URL}/node/ba-epskc/state", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+
+    with patch(
+        "python_otbr_api.OTBR.get_extended_address",
+        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/create_ephemeral_key",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "create_ephemeral_key_failed"
+
+
+async def test_create_ephemeral_key_no_entry(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test create ephemeral key."""
+    await async_setup_component(hass, DOMAIN, {})
+    websocket_client = await hass_ws_client(hass)
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "otbr/create_ephemeral_key",
+            "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_loaded"
+
+
+async def test_create_ephemeral_key_unknown_router(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_multipan,
+    websocket_client,
+) -> None:
+    """Test create ephemeral key."""
+    with patch(
+        "python_otbr_api.OTBR.get_extended_address",
+        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/create_ephemeral_key",
+                "extended_address": "blah",
             }
         )
         msg = await websocket_client.receive_json()

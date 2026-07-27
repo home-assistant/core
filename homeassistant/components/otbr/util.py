@@ -3,6 +3,7 @@
 from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import wraps
+from http import HTTPStatus
 import logging
 import random
 from typing import TYPE_CHECKING, Any, Concatenate, cast
@@ -22,6 +23,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -46,6 +48,18 @@ INSECURE_PASSPHRASES = (
 
 class GetBorderAgentIdNotSupported(HomeAssistantError):
     """Raised from python_otbr_api.GetBorderAgentIdNotSupportedError."""
+
+
+class EphemeralKeyNotSupported(HomeAssistantError):
+    """Raised when the router does not expose ephemeral key mode."""
+
+
+# A router without the ephemeral key routes answers with 404, or with 405 when
+# it rejects the method before matching the path.
+EPHEMERAL_KEY_UNSUPPORTED_STATUS = (
+    HTTPStatus.NOT_FOUND,
+    HTTPStatus.METHOD_NOT_ALLOWED,
+)
 
 
 def compose_default_network_name(pan_id: int) -> str:
@@ -159,6 +173,56 @@ class OTBRData:
     async def get_coprocessor_version(self) -> str:
         """Get coprocessor firmware version."""
         return await self.api.get_coprocessor_version()
+
+    @_handle_otbr_error
+    async def activate_ephemeral_key(
+        self, hass: HomeAssistant, lifetime: int
+    ) -> tuple[str, int]:
+        """Activate ephemeral key mode, returning the passcode and its UDP port.
+
+        The lifetime is in milliseconds, as the OpenThread border agent API
+        takes it. These endpoints are not in python-otbr-api yet, they are
+        called directly to follow home-assistant-libs/python-otbr-api#267;
+        move this to the library once that is released.
+        """
+        session = async_get_clientsession(hass)
+        timeout = aiohttp.ClientTimeout(total=10)
+
+        # The feature has to be enabled before a key can be activated
+        response = await session.put(
+            f"{self.url}/node/ba-epskc/state",
+            json="enable",
+            timeout=timeout,
+        )
+        if response.status in EPHEMERAL_KEY_UNSUPPORTED_STATUS:
+            raise EphemeralKeyNotSupported
+        if response.status != HTTPStatus.OK:
+            raise python_otbr_api.OTBRError(f"unexpected http status {response.status}")
+
+        async def activate() -> aiohttp.ClientResponse:
+            return await session.post(
+                f"{self.url}/node/ba-epskc/key",
+                json={"lifetime": lifetime},
+                timeout=timeout,
+            )
+
+        response = await activate()
+        if response.status == HTTPStatus.CONFLICT:
+            # A key is already active, and one can only be started from the
+            # stopped state, so drop it and ask for a replacement.
+            await session.delete(f"{self.url}/node/ba-epskc/key", timeout=timeout)
+            response = await activate()
+
+        if response.status in EPHEMERAL_KEY_UNSUPPORTED_STATUS:
+            raise EphemeralKeyNotSupported
+        if response.status != HTTPStatus.OK:
+            raise python_otbr_api.OTBRError(f"unexpected http status {response.status}")
+
+        try:
+            activation = await response.json()
+            return activation["tap"], activation["port"]
+        except (ValueError, KeyError) as exc:
+            raise python_otbr_api.OTBRError("unexpected API response") from exc
 
 
 async def get_allowed_channel(hass: HomeAssistant, otbr_url: str) -> int | None:

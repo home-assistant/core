@@ -17,8 +17,9 @@ from homeassistant.components.thread import async_add_dataset, async_get_dataset
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DEFAULT_CHANNEL, DOMAIN
+from .const import DEFAULT_CHANNEL, DOMAIN, EPHEMERAL_KEY_LIFETIME
 from .util import (
+    EphemeralKeyNotSupported,
     OTBRData,
     compose_default_network_name,
     generate_random_pan_id,
@@ -35,6 +36,7 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the OTBR Websocket API."""
     websocket_api.async_register_command(hass, websocket_info)
     websocket_api.async_register_command(hass, websocket_create_network)
+    websocket_api.async_register_command(hass, websocket_create_ephemeral_key)
     websocket_api.async_register_command(hass, websocket_set_channel)
     websocket_api.async_register_command(hass, websocket_set_network)
 
@@ -197,6 +199,50 @@ async def websocket_create_network(
     await update_issues(hass, data, dataset_tlvs)
 
     connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "otbr/create_ephemeral_key",
+        vol.Required("extended_address"): str,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+@async_get_otbr_data
+async def websocket_create_ephemeral_key(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    data: OTBRData,
+) -> None:
+    """Create an ephemeral key for sharing the Thread network credentials."""
+    # Seconds on the wire, as otbr/set_channel does with its delay
+    lifetime: float = EPHEMERAL_KEY_LIFETIME / 1000
+
+    try:
+        ephemeral_key, port = await data.activate_ephemeral_key(
+            hass, EPHEMERAL_KEY_LIFETIME
+        )
+    except EphemeralKeyNotSupported:
+        connection.send_error(
+            msg["id"],
+            "ephemeral_key_not_supported",
+            "The border router does not support credential sharing",
+        )
+        return
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "create_ephemeral_key_failed", str(exc))
+        return
+
+    connection.send_result(
+        msg["id"],
+        {
+            "ephemeral_key": ephemeral_key,
+            "lifetime": lifetime,
+            "port": port,
+        },
+    )
 
 
 @websocket_api.websocket_command(
