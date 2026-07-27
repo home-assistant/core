@@ -77,7 +77,7 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21,
     }),
     'context': <ANY>,
     'entity_id': 'climate.stove',
