@@ -3,6 +3,8 @@
 from collections.abc import Mapping
 from typing import NotRequired, TypedDict, cast, override
 
+from aiohttp import ClientError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
@@ -78,16 +80,27 @@ class WillowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, WillowDevice]]
         self._oauth_session = oauth_session
 
     @override
-    async def _async_update_data(self) -> dict[str, WillowDevice]:
-        """Fetch Willow profile and devices."""
+    async def _async_setup(self) -> None:
+        """Fetch the Willow profile once."""
+        await self._oauth_session.async_ensure_token_valid()
+        self.client.update_token(self._oauth_session.token[CONF_ACCESS_TOKEN])
         try:
-            await self._oauth_session.async_ensure_token_valid()
-            self.client.update_token(self._oauth_session.token[CONF_ACCESS_TOKEN])
             self.profile = cast(WillowProfile, await self.client.get_profile())
+        except WillowAuthError as err:
+            raise ConfigEntryAuthFailed from err
+        except ClientError as err:
+            raise UpdateFailed(f"Unable to fetch Willow profile: {err}") from err
+
+    @override
+    async def _async_update_data(self) -> dict[str, WillowDevice]:
+        """Fetch Willow devices."""
+        await self._oauth_session.async_ensure_token_valid()
+        self.client.update_token(self._oauth_session.token[CONF_ACCESS_TOKEN])
+        try:
             devices = await self.client.get_devices()
         except WillowAuthError as err:
             raise ConfigEntryAuthFailed from err
-        except Exception as err:
+        except ClientError as err:
             raise UpdateFailed(f"Unable to fetch Willow data: {err}") from err
 
         return {

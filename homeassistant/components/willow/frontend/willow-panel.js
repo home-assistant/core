@@ -16,8 +16,9 @@ class WillowPanel extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this._hass = undefined;
-    this._lastSignature = "";
+    this._lastSignature = null;
     this._renderedShell = false;
+    this._refreshTimer = undefined;
   }
 
   set hass(hass) {
@@ -36,6 +37,17 @@ class WillowPanel extends HTMLElement {
   connectedCallback() {
     this._renderShell();
     this._update();
+    this._refreshTimer = window.setInterval(() => {
+      this._lastSignature = null;
+      this._update();
+    }, 60000);
+  }
+
+  disconnectedCallback() {
+    if (this._refreshTimer !== undefined) {
+      window.clearInterval(this._refreshTimer);
+      this._refreshTimer = undefined;
+    }
   }
 
   _toggleMenu() {

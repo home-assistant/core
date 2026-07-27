@@ -12,11 +12,15 @@ rules:
   docs-actions:
     status: exempt
     comment: This integration does not have any custom actions.
-  docs-conditions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any custom conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  docs-triggers: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any custom triggers.
   entity-event-setup:
     status: exempt
     comment: Entities of this integration do not explicitly subscribe to events.

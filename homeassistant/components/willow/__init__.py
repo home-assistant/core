@@ -9,7 +9,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -53,7 +53,8 @@ async def _async_register_panel(hass: HomeAssistant) -> None:
     )
 
     integration = await async_get_integration(hass, DOMAIN)
-    module_url = f"{PANEL_STATIC_PATH}/{PANEL_FILE}?v={integration.version}"
+    version = integration.version or HA_VERSION
+    module_url = f"{PANEL_STATIC_PATH}/{PANEL_FILE}?v={version}"
 
     await panel_custom.async_register_panel(
         hass,
@@ -93,7 +94,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WillowConfigEntry) -> bo
         ) from err
 
     session = OAuth2Session(hass, entry, implementation)
-    await session.async_ensure_token_valid()
 
     client = WillowClient(
         aiohttp_client.async_get_clientsession(hass),
