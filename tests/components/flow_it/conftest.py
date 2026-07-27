@@ -45,14 +45,15 @@ def mock_flow_it() -> Generator[AsyncMock]:
     with (
         patch(
             "homeassistant.components.flow_it.FlowItVMCMachine",
-            return_value=get_mock_vmc(),
+            autospec=True,
         ) as mock,
         patch(
             "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
             new=mock,
         ),
     ):
-        yield mock
+        instance = mock.return_value
+        yield instance
 
 
 @pytest.fixture
