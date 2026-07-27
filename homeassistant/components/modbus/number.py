@@ -3,13 +3,7 @@
 import struct
 from typing import Any, override
 
-from homeassistant.components.number import (
-    DEFAULT_MAX_VALUE,
-    DEFAULT_MIN_VALUE,
-    DEFAULT_STEP,
-    NumberEntity,
-    RestoreNumber,
-)
+from homeassistant.components.number import NumberEntity, RestoreNumber
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
@@ -55,7 +49,7 @@ async def async_setup_platform(
 
 
 class ModbusNumber(ModbusStructEntity, RestoreNumber, NumberEntity):
-    """Modbus number entity, reads and writes a single Modbus register value."""
+    """Modbus number entity, reads and writes a numeric value stored in one or more holding registers."""
 
     def __init__(
         self, hass: HomeAssistant, hub: ModbusHub, entry: dict[str, Any]
@@ -66,9 +60,9 @@ class ModbusNumber(ModbusStructEntity, RestoreNumber, NumberEntity):
         self._offset = entry.get(CONF_OFFSET, DEFAULT_OFFSET)
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
-        self._attr_native_min_value = entry.get(CONF_MIN_VALUE, DEFAULT_MIN_VALUE)
-        self._attr_native_max_value = entry.get(CONF_MAX_VALUE, DEFAULT_MAX_VALUE)
-        self._attr_native_step = entry.get(CONF_NUMBER_STEP, DEFAULT_STEP)
+        self._attr_native_min_value = entry[CONF_MIN_VALUE]
+        self._attr_native_max_value = entry[CONF_MAX_VALUE]
+        self._attr_native_step = entry[CONF_NUMBER_STEP]
         # Without this, min/max from config would alter the value read from Modbus (sensor behavior).
         # Number entities use min/max only to limit what the user can set in the UI.
         self._min_value = None
