@@ -1028,8 +1028,8 @@ async def test_create_ephemeral_key_no_entry(
 async def test_create_ephemeral_key_unknown_router(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    otbr_config_entry_multipan,
-    websocket_client,
+    otbr_config_entry_multipan: str,
+    websocket_client: MockHAClientWebSocket,
 ) -> None:
     """Test create ephemeral key."""
     with patch(
