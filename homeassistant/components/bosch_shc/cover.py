@@ -24,6 +24,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SHC cover platform."""
     session = config_entry.runtime_data
+    if TYPE_CHECKING:
+        assert session.device_helper is not None
 
     shc_info = session.information
     if TYPE_CHECKING:
@@ -59,9 +61,9 @@ class ShutterControlCover(SHCEntity, CoverEntity):
         return round(self._device.level * 100.0)
 
     @override
-    def stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        self._device.stop()
+        await self._device.async_stop()
 
     @property
     @override
@@ -82,17 +84,17 @@ class ShutterControlCover(SHCEntity, CoverEntity):
         return self._device.operation_state is ShutterControlService.State.CLOSING
 
     @override
-    def open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        self._device.level = 1.0
+        await self._device.async_set_level(1.0)
 
     @override
-    def close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        self._device.level = 0.0
+        await self._device.async_set_level(0.0)
 
     @override
-    def set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
-        self._device.level = position / 100.0
+        await self._device.async_set_level(position / 100.0)

@@ -3,10 +3,10 @@
 import logging
 from typing import TYPE_CHECKING
 
-from boschshcpy import SHCSession
+from boschshcpy import SHCSessionAsync
+from boschshcpy.api_async import build_ssl_context
 from boschshcpy.exceptions import SHCAuthenticationError, SHCConnectionError
 
-from homeassistant.components.zeroconf import async_get_instance
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
@@ -25,23 +25,26 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-type BoschConfigEntry = ConfigEntry[SHCSession]
+type BoschConfigEntry = ConfigEntry[SHCSessionAsync]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> bool:
     """Set up Bosch SHC from a config entry."""
     data = entry.data
 
-    zeroconf = await async_get_instance(hass)
+    # build_ssl_context() reads the cert/key files (blocking I/O), so it must
+    # not run directly on the event loop.
+    ssl_context = await hass.async_add_executor_job(
+        build_ssl_context, data[CONF_SSL_CERTIFICATE], data[CONF_SSL_KEY]
+    )
+    session = SHCSessionAsync(
+        data[CONF_HOST],
+        data[CONF_SSL_CERTIFICATE],
+        data[CONF_SSL_KEY],
+        ssl_context=ssl_context,
+    )
     try:
-        session = await hass.async_add_executor_job(
-            SHCSession,
-            data[CONF_HOST],
-            data[CONF_SSL_CERTIFICATE],
-            data[CONF_SSL_KEY],
-            False,
-            zeroconf,
-        )
+        await session.async_init()
     except SHCAuthenticationError as err:
         raise ConfigEntryAuthFailed from err
     except SHCConnectionError as err:
@@ -70,9 +73,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
 
     async def stop_polling(event):
         """Stop polling service."""
-        await hass.async_add_executor_job(session.stop_polling)
+        await session.stop_polling()
 
-    await hass.async_add_executor_job(session.start_polling)
+    await session.start_polling()
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_polling)
     )
@@ -82,6 +85,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> bool:
     """Unload a config entry."""
-    await hass.async_add_executor_job(entry.runtime_data.stop_polling)
+    await entry.runtime_data.stop_polling()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

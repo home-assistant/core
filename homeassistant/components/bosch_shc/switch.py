@@ -80,6 +80,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SHC switch platform."""
     session = config_entry.runtime_data
+    if TYPE_CHECKING:
+        assert session.device_helper is not None
 
     shc_info = session.information
     if TYPE_CHECKING:
@@ -173,14 +175,16 @@ class SHCSwitch(SHCEntity, SwitchEntity):
         )
 
     @override
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        setattr(self._device, self.entity_description.on_key, True)
+        await getattr(self._device, f"async_set_{self.entity_description.on_key}")(True)
 
     @override
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        setattr(self._device, self.entity_description.on_key, False)
+        await getattr(self._device, f"async_set_{self.entity_description.on_key}")(
+            False
+        )
 
     @property
     @override
@@ -188,9 +192,9 @@ class SHCSwitch(SHCEntity, SwitchEntity):
         """Switch needs polling."""
         return self.entity_description.should_poll
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Trigger an update of the device."""
-        self._device.update()
+        await self._device.async_update()
 
 
 class SHCRoutingSwitch(SHCEntity, SwitchEntity):
@@ -212,11 +216,11 @@ class SHCRoutingSwitch(SHCEntity, SwitchEntity):
         return self._device.routing.name == "ENABLED"
 
     @override
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self._device.routing = True
+        await self._device.async_set_routing(True)
 
     @override
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self._device.routing = False
+        await self._device.async_set_routing(False)

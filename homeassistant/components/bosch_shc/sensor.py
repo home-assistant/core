@@ -203,6 +203,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SHC sensor platform."""
     session = config_entry.runtime_data
+    if TYPE_CHECKING:
+        assert session.device_helper is not None
 
     shc_info = session.information
     if TYPE_CHECKING:
