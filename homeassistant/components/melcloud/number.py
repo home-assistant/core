@@ -48,10 +48,7 @@ ATW_ZONE_NUMBERS: tuple[MelcloudNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda zone: zone.target_flow_temperature,
         set_fn=lambda zone, value: zone.set_target_flow_temperature(value),
-        # The flow temperature only applies while the zone is controlled by it.
         available_fn=lambda zone: zone.operation_mode in FLOW_MODES,
-        # Ranges as shown in the MELCloud app (the library does not expose the
-        # device limits): heating 25-60 °C, cooling 5-25 °C.
         min_value_fn=lambda zone: (
             5 if zone.operation_mode == ZONE_OPERATION_MODE_COOL_FLOW else 25
         ),
