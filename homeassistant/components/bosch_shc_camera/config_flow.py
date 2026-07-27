@@ -489,19 +489,21 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         Returns True when verified reachable, False on a definitive
         account-access denial, or None when the check itself was
-        inconclusive — a 429 (rate limited) or 5xx (Bosch-side outage) says
-        nothing about whether this account can reach the camera API, only
-        that this one request didn't land, so it must not be accepted as
-        "verified" (an unverified entry could immediately fail its first
-        coordinator refresh, contradicting the very rule this check exists
-        to satisfy) — the caller aborts with retry semantics instead
-        (bug-hunt 2026-07-27, Copilot review round 6). A timeout/network
-        error during setup still returns True unconditionally: unlike a
-        definitive Bosch-side HTTP response, it says nothing at all about
-        Bosch's API, and forcing the user to redo the whole OAuth login for
-        a one-off local network blip would be poor UX — the coordinator's
-        own first refresh retries and surfaces a clearer error if the
-        problem persists.
+        inconclusive — a 429 (rate limited), 5xx (Bosch-side outage), or a
+        network-layer timeout/connection error says nothing about whether
+        this account can reach the camera API, only that this one request
+        didn't land, so it must not be accepted as "verified" (an
+        unverified entry could immediately fail its first coordinator
+        refresh, contradicting the very rule this check exists to satisfy)
+        — the caller aborts with retry semantics instead (bug-hunt
+        2026-07-27, Copilot review rounds 6-7). A prior version returned
+        True unconditionally on a timeout/network error, reasoning that
+        forcing the user to redo the whole OAuth login for a one-off local
+        network blip would be poor UX — but that's inconsistent with the
+        429/5xx handling (both are equally "this one request didn't land")
+        and weakens the Bronze test-before-configure guarantee this check
+        exists to provide; both now abort with the same retry-later
+        semantics instead.
         """
         try:
             session = await async_get_bosch_cloud_session(self.hass)
@@ -525,8 +527,11 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     return None
                 return False
         except (TimeoutError, aiohttp.ClientError) as err:
-            _LOGGER.debug("Camera-access verification skipped (%s)", err)
-            return True
+            _LOGGER.debug(
+                "Camera-access verification inconclusive (%s) — aborting with retry semantics",
+                err,
+            )
+            return None
 
     @override
     async def async_oauth_create_entry(

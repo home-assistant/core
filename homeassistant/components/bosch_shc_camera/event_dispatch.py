@@ -3,6 +3,15 @@
 Runs sequentially (must stay ordered — `last_event_ids` bookkeeping depends
 on being processed one camera at a time), unlike the parallel status/events
 gather passes in `camera_status.py`/`event_polling.py`.
+
+Public event API: this integration deliberately exposes no binary_sensor
+(or other) platform in its reduced, snapshot-only scope, so the three HA
+bus events fired by `_dispatch_new_event` — ``bosch_shc_camera_motion``,
+``bosch_shc_camera_person``, ``bosch_shc_camera_audio_alarm`` — are the
+only mechanism by which an automation can react to a motion/person/audio
+event; they are supported, stable functionality (payload:
+``camera_id``/``camera_name``/``timestamp``/``image_url``/``event_id``),
+not incidental internals (Copilot review round 7).
 """
 
 import logging

@@ -5,6 +5,7 @@ from http import HTTPStatus
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
 import pytest
 
 from homeassistant.components.bosch_shc_camera import config_flow as cf_module
@@ -381,6 +382,36 @@ async def test_verify_camera_access_returns_false_on_403() -> None:
         AsyncMock(return_value=session),
     ):
         assert await flow._async_verify_camera_access("tok") is False
+
+
+async def test_verify_camera_access_returns_none_on_timeout() -> None:
+    """A network-layer timeout is inconclusive, same as a 429/5xx response.
+
+    A prior version returned True unconditionally here, but that was
+    inconsistent with the 429/5xx handling and weakened the Bronze
+    test-before-configure guarantee this check exists to provide
+    (Copilot review round 7).
+    """
+    flow = cf_module.BoschCameraConfigFlow.__new__(cf_module.BoschCameraConfigFlow)
+    flow.hass = MagicMock()
+
+    with patch(
+        "homeassistant.components.bosch_shc_camera.config_flow.async_get_bosch_cloud_session",
+        AsyncMock(side_effect=TimeoutError()),
+    ):
+        assert await flow._async_verify_camera_access("tok") is None
+
+
+async def test_verify_camera_access_returns_none_on_client_error() -> None:
+    """A network-layer connection error is inconclusive, same as a timeout."""
+    flow = cf_module.BoschCameraConfigFlow.__new__(cf_module.BoschCameraConfigFlow)
+    flow.hass = MagicMock()
+
+    with patch(
+        "homeassistant.components.bosch_shc_camera.config_flow.async_get_bosch_cloud_session",
+        AsyncMock(side_effect=aiohttp.ClientError("connection reset")),
+    ):
+        assert await flow._async_verify_camera_access("tok") is None
 
 
 async def test_do_refresh_raises_auth_server_outage_on_429() -> None:

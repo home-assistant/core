@@ -11,6 +11,7 @@ from homeassistant.components.bosch_shc_camera.camera_status import (
 from homeassistant.components.bosch_shc_camera.const import DOMAIN
 from homeassistant.components.bosch_shc_camera.coordinator import (
     _is_safe_bosch_host,
+    _is_safe_local_camera_host,
     _parse_safe_rcp_proxy_url,
     get_options,
 )
@@ -154,6 +155,39 @@ def test_parse_safe_rcp_proxy_url_accepts_bosch_host() -> None:
 def test_parse_safe_rcp_proxy_url_rejects_malformed_entry() -> None:
     """An entry with no '/' separator (no hash component) is rejected."""
     assert _parse_safe_rcp_proxy_url("no-slash-here", "cam1") is None
+
+
+def test_is_safe_local_camera_host_accepts_private_lan_address() -> None:
+    """A real LOCAL camera host is a private LAN IP:port."""
+    assert _is_safe_local_camera_host("192.168.1.100:443") is True
+
+
+def test_is_safe_local_camera_host_rejects_public_address() -> None:
+    """A public IP is not a plausible LOCAL camera address — SSRF path.
+
+    (Copilot review round 7): a malicious/compromised PUT /connection
+    response must not redirect the credential-bearing snapshot fetch (made
+    with TLS verification disabled) to an arbitrary host.
+    """
+    assert _is_safe_local_camera_host("8.8.8.8:443") is False
+
+
+def test_is_safe_local_camera_host_rejects_hostname() -> None:
+    """A hostname (not a bare IP) is rejected.
+
+    Only IP literals are valid for a LOCAL camera's own LAN address.
+    """
+    assert _is_safe_local_camera_host("evil.example.com:443") is False
+
+
+def test_is_safe_local_camera_host_rejects_missing_port() -> None:
+    """No `:port` suffix at all must be rejected, not default to any port."""
+    assert _is_safe_local_camera_host("192.168.1.100") is False
+
+
+def test_is_safe_local_camera_host_rejects_out_of_range_port() -> None:
+    """A port outside 1-65535 is malformed, must be rejected."""
+    assert _is_safe_local_camera_host("192.168.1.100:70000") is False
 
 
 async def test_camera_status_preserves_last_known_on_double_probe_failure() -> None:

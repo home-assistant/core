@@ -1,6 +1,7 @@
 """Tests for camera.py's BoschCamera entity behavior."""
 
 import asyncio
+import contextlib
 import time
 from unittest.mock import patch
 
@@ -183,6 +184,37 @@ async def test_unload_cancels_pending_image_refresh_task(hass: HomeAssistant) ->
     await hass.async_block_till_done()
 
     assert task.cancelled()
+
+
+async def test_coordinator_update_does_not_clobber_inflight_refresh_task(
+    hass: HomeAssistant,
+) -> None:
+    """A coordinator update firing while a refresh is in flight must not clobber the tracked task.
+
+    Must not replace the tracked task reference with a new (fast-exiting
+    duplicate) one. `async_trigger_image_refresh` short-circuits a concurrent call via
+    `_refresh_inflight` almost immediately — if `_handle_coordinator_update`
+    unconditionally spawned a new task and overwrote `_image_refresh_task`
+    with it, `async_will_remove_from_hass` would cancel that harmless
+    duplicate instead of the real, still-running network task on entity
+    removal (Copilot review round 7).
+    """
+    entity = await _setup_camera_entity(hass)
+    entity.last_image_fetch = time.monotonic() - 3600  # stale enough to trigger
+
+    real_task = hass.async_create_task(entity.async_trigger_image_refresh(delay=100))
+    entity._image_refresh_task = real_task
+    entity._refresh_inflight = True
+    await asyncio.sleep(0)  # let the real task actually start
+
+    entity._handle_coordinator_update()
+
+    # No new task must have been spawned — the guard skips creation entirely
+    # while `_refresh_inflight` is set, so the tracked reference is untouched.
+    assert entity._image_refresh_task is real_task
+    real_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await real_task
 
 
 async def test_enable_motion_detection_raises_on_write_failure(

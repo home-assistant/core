@@ -228,7 +228,19 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         now = time.monotonic()
         # Fixed cadence — see the async_added_to_hass comment above for why
         # this must not read entry.options["snapshot_interval"] directly.
-        if now - self.last_image_fetch >= IMAGE_REFRESH_INTERVAL:
+        # Also skip while a refresh is already in flight: `_refresh_inflight`
+        # makes a concurrent call exit almost immediately without doing any
+        # work, so unconditionally replacing `_image_refresh_task` here would
+        # overwrite the reference to the real, still-running task with that
+        # fast-exiting duplicate — `async_will_remove_from_hass` cancels
+        # whatever `_image_refresh_task` currently points at, so entity
+        # removal during a long fetch would cancel the harmless duplicate and
+        # leave the real network task running uncancelled (Copilot review
+        # round 7).
+        if (
+            now - self.last_image_fetch >= IMAGE_REFRESH_INTERVAL
+            and not self._refresh_inflight
+        ):
             self._image_refresh_task = self.hass.async_create_task(
                 self.async_trigger_image_refresh(delay=0)
             )

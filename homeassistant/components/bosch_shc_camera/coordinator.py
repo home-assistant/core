@@ -19,6 +19,7 @@ slow_tier, tick_bootstrap, tick_housekeeping, tick_failure, rcp, token_auth.
 import asyncio
 from collections.abc import Coroutine
 from datetime import timedelta
+import ipaddress
 import json as _json
 import logging
 import math
@@ -26,7 +27,7 @@ import re as _re
 import threading
 import time
 from typing import Any, override
-from urllib.parse import unquote as _unquote, urlencode, urlparse
+from urllib.parse import urlparse
 
 import aiohttp
 
@@ -146,58 +147,25 @@ def _parse_safe_rcp_proxy_url(url_entry: str, cam_id: str) -> tuple[str, str] | 
     return parts[0], parts[1]
 
 
-def _parse_onvif_scopes(raw: bytes) -> dict[str, Any]:
-    """Parse ONVIF scope TLV payload from RCP 0x0a98 (ASCII, ~720 bytes).
+def _is_safe_local_camera_host(host_and_port: str) -> bool:
+    """Validate a Bosch-issued LOCAL camera ``host:port`` before use.
 
-    The payload is a series of null-terminated ASCII strings, each of which
-    may be an ONVIF scope URI of the form:
-        onvif://www.onvif.org/name/Bosch%20Smart%20Home%20Camera
-        onvif://www.onvif.org/hardware/HOME_Eyes_Outdoor
-        onvif://www.onvif.org/Profile/Streaming
-
-    Returns a dict with parsed fields and the raw scope list:
-        {
-            "raw_scopes": [...],
-            "name": "Bosch Smart Home Camera",
-            "hardware": "HOME_Eyes_Outdoor",
-            "profiles": ["Streaming", ...],
-            "supported": True,
-        }
-
-    Returns {"supported": True, "raw_scopes": [], "name": "", "hardware": "", "profiles": []}
-    on parse error (non-None raw means camera answered, so ONVIF is supported).
+    Unlike the RCP proxy host (validated against a Bosch-domain allowlist,
+    since that value legitimately points at Bosch's own cloud
+    infrastructure), a LOCAL session's host is expected to be the physical
+    camera's own private LAN address. Accepting an arbitrary/public host
+    here would let a compromised or malicious PUT /connection response
+    redirect the snapshot request — made with TLS verification disabled —
+    to an arbitrary host, and that same host is cached for later outage
+    fallback, extending the exposure window (Copilot review round 7).
     """
-    result: dict[str, Any] = {
-        "supported": True,
-        "raw_scopes": [],
-        "name": "",
-        "hardware": "",
-        "profiles": [],
-    }
+    host, _, port_str = host_and_port.partition(":")
+    if not port_str.isdigit() or not 1 <= int(port_str) <= 65535:
+        return False
     try:
-        # Null-terminated or newline-separated ASCII strings
-        text = raw.decode("ascii", errors="replace")
-        # Split on null bytes, newlines, or whitespace runs
-        scopes = [s.strip() for s in _re.split(r"[\x00\n\r]+", text) if s.strip()]
-        result["raw_scopes"] = scopes
-        for scope in scopes:
-            if not scope.startswith("onvif://www.onvif.org/"):
-                continue
-            path = scope[len("onvif://www.onvif.org/") :]
-            if "/" not in path:
-                continue
-            key, _, val = path.partition("/")
-            val_decoded = _unquote(val).replace("+", " ")
-            if key == "name":
-                result["name"] = val_decoded
-            elif key == "hardware":
-                result["hardware"] = val_decoded
-            elif key == "Profile":
-                profiles: list[str] = result["profiles"]
-                profiles.append(val_decoded)
-    except Exception:  # noqa: BLE001 — pragma: no cover — defensive parse of raw camera bytes of unpredictable/malformed shape; partial result still returned
-        pass
-    return result
+        return ipaddress.ip_address(host).is_private
+    except ValueError:
+        return False
 
 
 # These four keys are fixed per Bronze's appropriate-polling rule — their
@@ -236,12 +204,6 @@ class BoschCameraCoordinator(
     All entity types (camera, sensor, button) read from coordinator.data
     rather than making independent API calls.
     """
-
-    # How long a (cam_id, opcode_hex) entry stays in the RCP-LAN denied cache
-    # after a 401. 24 h is short enough that a real permission grant recovers
-    # the same day, long enough that a wrong CBS user does not respawn log
-    # noise every 5 min.
-    _RCP_LAN_DENIED_TTL: float = 86400.0
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the coordinator for a config entry."""
@@ -359,10 +321,6 @@ class BoschCameraCoordinator(
         self.rcp_iva_catalog_cache: dict[
             str, list[dict[str, Any]]
         ] = {}  # IVA analytics from 0x0b60
-        # F4: ONVIF scopes cache — keyed by cam_id, from RCP 0x0a98 via LAN cbs-auth (300s slow-tier)
-        self.rcp_onvif_scopes_cache: dict[str, dict[str, Any]] = {}
-        # F6: RCP protocol version cache — keyed by cam_id, from RCP 0xff00+0xff04 via LAN (300s slow-tier)
-        self.rcp_version_cache: dict[str, str | None] = {}
         # Commands that consistently return error=0x90 (not supported via proxy).
         # Key: cam_id, value: set of command hex strings. After 3 consecutive
         # failures the command is skipped for the rest of the session.
@@ -626,12 +584,6 @@ class BoschCameraCoordinator(
         self.WRITE_LOCK_SECS = (
             30.0  # seconds to hold write lock (Bosch cloud propagation can take 20s+)
         )
-        # RCP-LAN denied-cache: (cam_id, opcode_hex) → monotonic timestamp when
-        # the 401 was observed. CBS users lack permission for some opcodes
-        # (e.g. 0x0a98 iconLedBrightness); without this throttle, each slow-tier
-        # cycle (~5 min) re-issues the same 401 forever. After 24 h we try
-        # once more in case permissions changed. See _fetch_rcp_lan.
-        self._rcp_lan_denied_until: dict[tuple[str, str], float] = {}
         # Camera hardware version cache — keyed by cam_id, e.g. "CAMERA_360", "CAMERA_EYES"
         # Used for model-specific timing (encoder warm-up) and feature gating.
         self.hw_version: dict[str, str] = {}
@@ -699,38 +651,6 @@ class BoschCameraCoordinator(
         """
         s = str(err)
         return s or repr(err)
-
-    def _is_rcp_lan_denied(self, cam_id: str, opcode_hex: str) -> bool:
-        """Return True if this (cam, opcode) is currently denied (24 h cache).
-
-        Defensive against minimal test-fixture coordinators (no `__init__`)
-        that don't have the `_rcp_lan_denied_until` attribute — treat absence
-        as "not denied" rather than raising.
-        """
-        cache: dict[tuple[str, str], float] | None = getattr(
-            self, "_rcp_lan_denied_until", None
-        )
-        if not cache:
-            return False
-        ts = cache.get((cam_id, opcode_hex))
-        if ts is None:
-            return False
-        return bool((time.monotonic() - ts) < self._RCP_LAN_DENIED_TTL)
-
-    def _mark_rcp_lan_denied(self, cam_id: str, opcode_hex: str) -> None:
-        """Record a 401 for this (cam, opcode). Future calls skip for 24 h."""
-        if not hasattr(self, "_rcp_lan_denied_until"):
-            self._rcp_lan_denied_until = {}
-        self._rcp_lan_denied_until[(cam_id, opcode_hex)] = time.monotonic()
-
-    def _clear_rcp_lan_denied(self, cam_id: str, opcode_hex: str) -> None:
-        """Clear a denied entry after a successful 200.
-
-        Permissions may have changed (firmware upgrade, CBS user re-provision).
-        """
-        cache = getattr(self, "_rcp_lan_denied_until", None)
-        if cache is not None:
-            cache.pop((cam_id, opcode_hex), None)
 
     def _alert_services(self) -> list[str]:
         """Return configured notify service name(s) for system alerts.
@@ -1158,24 +1078,6 @@ class BoschCameraCoordinator(
                             )
                     except Exception as err:  # noqa: BLE001 — per-camera RCP update; one camera's protocol/parsing failure must not abort the slow-tier loop for the rest
                         _LOGGER.debug("RCP update skipped for %s: %s", cam_id_key, err)
-
-                # ── F4/F6 LAN diagnostic sensors (slow tier) ─────────────────
-                # Reads ONVIF scopes (0x0a98) and RCP version (0xff00) directly
-                # from camera HTTPS LAN endpoint using cached cbs Digest creds.
-                # Only runs when LAN IP and cbs creds are available — fully
-                # non-blocking (errors are swallowed, sensor stays unavailable).
-                if (
-                    is_online
-                    and do_slow_cam
-                    and self.get_cam_lan_ip(cam_id_key)
-                    and self.local_creds_cache.get(cam_id_key)
-                ):
-                    try:
-                        await self._async_update_lan_diagnostic_sensors(cam_id_key)
-                    except Exception as err:  # noqa: BLE001 — documented non-blocking: failures are swallowed, sensor just stays unavailable, must not abort the slow-tier loop
-                        _LOGGER.debug(
-                            "LAN diagnostic sensors skipped for %s: %s", cam_id_key, err
-                        )
 
             # ── 7/8. Housekeeping: stale devices, availability notify,
             # LAN-IP/hw-version/local-creds persistence, cloud-state notify ──
@@ -1710,8 +1612,6 @@ class BoschCameraCoordinator(
         "rcp_tls_cert_cache",
         "rcp_network_services_cache",
         "rcp_iva_catalog_cache",
-        "rcp_onvif_scopes_cache",
-        "rcp_version_cache",
         "_rcp_state_cache",
         "_rcp_cmd_failures",
         "_quality_preference",
@@ -1787,8 +1687,6 @@ class BoschCameraCoordinator(
     #   Everything else in __init__ not listed above is a genuinely global/
     #   account-level attribute (counters, constants, locks keyed by
     #   proxy_hash, single Task/Store handles, etc.) — not per-cam.
-    # `_rcp_lan_denied_until` is handled separately below: it is keyed by a
-    # (cam_id, opcode_hex) TUPLE, not a plain cam_id string.
 
     def _purge_cam_id(self, cam_id: str) -> None:
         """Purge every per-cam_id coordinator dict/set entry for `cam_id`.
@@ -1804,12 +1702,6 @@ class BoschCameraCoordinator(
         for attr_name in self._PURGE_CAM_SET_ATTRS:
             attr = getattr(self, attr_name)
             attr.discard(cam_id)
-        # Tuple-keyed by (cam_id, opcode_hex) — filter on the cam_id half.
-        stale_lan_denied_keys = [
-            key for key in self._rcp_lan_denied_until if key[0] == cam_id
-        ]
-        for key in stale_lan_denied_keys:
-            self._rcp_lan_denied_until.pop(key, None)
 
     def cleanup_stale_devices(self, current_cam_ids: set[str]) -> None:
         """Remove devices for cameras no longer in the Bosch cloud account.
@@ -2309,6 +2201,13 @@ class BoschCameraCoordinator(
             return None
 
         camera_host = urls[0]  # e.g. "192.168.x.x:443"
+        if not _is_safe_local_camera_host(camera_host):
+            _LOGGER.warning(
+                "Rejected unsafe/malformed LOCAL camera host for %s: %s",
+                cam_id,
+                camera_host[:60],
+            )
+            return None
         snap_url = (
             f"https://{camera_host}/snap.jpg?JpegSize={jpeg_size or JPEG_SIZE_FULL}"
         )
@@ -2558,124 +2457,6 @@ class BoschCameraCoordinator(
           Phase 2: alarm catalog, motion zones/coords, TLS cert, network services, IVA catalog
         """
         await async_update_rcp_data(self, cam_id, proxy_host, proxy_hash)
-
-    async def _fetch_rcp_lan(
-        self,
-        cam_id: str,
-        opcode_hex: str,
-    ) -> bytes | None:
-        """Read an RCP value directly from the camera's LAN HTTPS endpoint (cbs Digest auth).
-
-        Uses the cached LOCAL session credentials (``local_creds_cache``) which
-        are populated on every successful PUT /connection LOCAL. The camera's
-        ``rcp.xml`` endpoint on port 443 requires HTTP Digest auth with the
-        rotating cbs-XXXXXXXX user/password pair.
-
-        Returns the decoded payload bytes on success, None on any error
-        (no LAN IP, no creds, network error, auth failure, RCP error).
-
-        IMPORTANT: Do NOT call this from the event loop for opcodes that would
-        rotate cbs creds (i.e. never issue PUT /connection LOCAL here — use
-        the existing slow-tier RCP proxy path for writes). This helper is
-        READ-ONLY and purely supplementary to the cloud-proxy path.
-        """
-        if self._is_rcp_lan_denied(cam_id, opcode_hex):
-            return None
-        ip = self.get_cam_lan_ip(cam_id)
-        if not ip:
-            return None
-        creds = self.local_creds_cache.get(cam_id)
-        if not creds:
-            return None
-        user: str = creds.get("user", "")
-        password: str = creds.get("password", "")
-        if not (user and password):
-            return None
-        port: int = creds.get("port", 443)
-        base = f"https://{ip}:{port}/rcp.xml"
-        params: dict[str, str] = {
-            "command": opcode_hex,
-            "direction": "READ",
-            "type": "P_OCTET",
-            "num": "1",
-        }
-        url = f"{base}?{urlencode(params)}"
-        try:
-            async with await async_digest_request(
-                async_get_clientsession(self.hass, verify_ssl=False),
-                "GET",
-                url,
-                user,
-                password,
-                timeout=8.0,
-                ssl=False,
-            ) as resp:
-                if resp.status != 200:
-                    _LOGGER.debug(
-                        "_fetch_rcp_lan: %s@%s HTTP %d", opcode_hex, ip, resp.status
-                    )
-                    if resp.status == 401:
-                        # CBS user lacks permission for this opcode — stop hammering
-                        # the camera every 5 min. Retry once the TTL expires.
-                        self._mark_rcp_lan_denied(cam_id, opcode_hex)
-                    return None
-                self._clear_rcp_lan_denied(cam_id, opcode_hex)
-                raw = await resp.read()
-                # Check for RCP-level error
-                if b"<err>" in raw.lower():
-                    _LOGGER.debug(
-                        "_fetch_rcp_lan: %s@%s RCP error: %s", opcode_hex, ip, raw[:120]
-                    )
-                    return None
-                # Extract payload from <str>HEXDATA</str>
-                m = _re.search(rb"<str>([0-9a-fA-F]+)</str>", raw, _re.IGNORECASE)
-                if m:
-                    return bytes.fromhex(m.group(1).decode("ascii"))
-                # Fallback: raw bytes if not XML envelope
-                if raw and not raw.lstrip(b"\n\r\t ").startswith(b"<"):
-                    return bytes(raw)
-                return None
-        except (TimeoutError, aiohttp.ClientError) as err:
-            _LOGGER.debug("_fetch_rcp_lan: %s@%s %s", opcode_hex, ip, err)
-            return None
-        except Exception as err:  # noqa: BLE001 — pragma: no cover — deliberate last-resort fallback below the specific (TimeoutError, aiohttp.ClientError) catch above; sensor must simply stay unavailable, never crash the LAN diagnostic fetch
-            _LOGGER.debug("_fetch_rcp_lan: %s@%s unexpected: %s", opcode_hex, ip, err)
-            return None
-
-    async def _async_update_lan_diagnostic_sensors(self, cam_id: str) -> None:
-        """Fetch F4 (ONVIF scopes) and F6 (RCP version) for a single camera via LAN.
-
-        Called on slow-tier when the camera is ONLINE, LAN IP is known, and
-        cbs creds are cached. Failures are non-fatal: caches keep their last
-        known value or remain absent (sensor shows unavailable).
-        """
-        # F4: ONVIF scopes via RCP 0x0a98 — ~720 B ASCII TLV
-        try:
-            raw_onvif = await self._fetch_rcp_lan(cam_id, "0x0a98")
-            if raw_onvif:
-                scopes_dict = _parse_onvif_scopes(raw_onvif)
-                self.rcp_onvif_scopes_cache[cam_id] = scopes_dict
-                _LOGGER.debug("ONVIF scopes for %s: %s", cam_id[:8], scopes_dict)
-        except Exception as err:  # noqa: BLE001 — documented non-fatal per docstring: caches keep last known value, sensor shows unavailable on any failure
-            _LOGGER.debug(
-                "ONVIF scopes fetch error for %s: %s",
-                cam_id[:8],
-                BoschCameraCoordinator.err_str(err),
-            )
-
-        # F6: RCP protocol versions via 0xff00 (primary) + 0xff04 (secondary)
-        try:
-            raw_ver = await self._fetch_rcp_lan(cam_id, "0xff00")
-            if raw_ver and len(raw_ver) >= 4:
-                version_str = f"{raw_ver[0]}.{raw_ver[1]}.{raw_ver[2]}.{raw_ver[3]}"
-                self.rcp_version_cache[cam_id] = version_str
-                _LOGGER.debug("RCP version for %s: %s", cam_id[:8], version_str)
-        except Exception as err:  # noqa: BLE001 — documented non-fatal per docstring: caches keep last known value, sensor shows unavailable on any failure
-            _LOGGER.debug(
-                "RCP version fetch error for %s: %s",
-                cam_id[:8],
-                BoschCameraCoordinator.err_str(err),
-            )
 
     def clock_offset(self, cam_id: str) -> float | None:
         """Return clock offset in seconds (camera time - server time), or None."""
