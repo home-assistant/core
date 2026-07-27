@@ -163,6 +163,7 @@ from .validators import (
     duplicate_fan_mode_validator,
     duplicate_swing_mode_validator,
     ensure_and_check_conflicting_scales_and_offsets,
+    finite_float,
     hvac_fixedsize_reglist_validator,
     nan_validator,
     not_zero_value,
@@ -486,10 +487,21 @@ NUMBER_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_DEVICE_CLASS): NUMBER_DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_MIN_VALUE, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
-            vol.Optional(CONF_MAX_VALUE, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
+            vol.Optional(CONF_SCALE): vol.All(
+                vol.Coerce(float),
+                finite_float,
+                lambda v: not_zero_value(v, "Scale cannot be zero."),
+            ),
+            vol.Optional(CONF_OFFSET): vol.All(vol.Coerce(float), finite_float),
+            vol.Optional(CONF_MIN_VALUE, default=DEFAULT_MIN_VALUE): vol.All(
+                vol.Coerce(float), finite_float
+            ),
+            vol.Optional(CONF_MAX_VALUE, default=DEFAULT_MAX_VALUE): vol.All(
+                vol.Coerce(float), finite_float
+            ),
             vol.Optional(CONF_NUMBER_STEP, default=DEFAULT_STEP): vol.All(
                 vol.Coerce(float),
+                finite_float,
                 vol.Range(
                     min=0, min_included=False, msg="Step must be greater than 0."
                 ),

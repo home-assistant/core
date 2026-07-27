@@ -2,6 +2,7 @@
 
 from collections import namedtuple
 import logging
+import math
 import struct
 from typing import Any
 
@@ -304,6 +305,13 @@ def not_zero_value(val: float, errMsg: str) -> float:
     if val == 0:
         raise vol.Invalid(errMsg)
     return val
+
+
+def finite_float(value: float) -> float:
+    """Reject non-finite float values (NaN, inf)."""
+    if not math.isfinite(value):
+        raise vol.Invalid(f"Value must be a finite number, got {value}")
+    return value
 
 
 def ensure_and_check_conflicting_scales_and_offsets(config: dict[str, Any]) -> dict:
