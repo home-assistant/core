@@ -2433,7 +2433,7 @@ async def test_async_get_device_by_connection_normalizes(
 async def test_async_get_device_id_by_identifier(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """The id lookup returns the device id, or None when there is no match."""
+    """The id lookup returns the device id, and raises when there is no match."""
     entry = MockConfigEntry(domain="test")
     entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
@@ -2444,15 +2444,12 @@ async def test_async_get_device_id_by_identifier(
         dr.async_get_device_id_by_identifier(hass, ("test", "1"), entry.entry_id)
         == device.id
     )
-    # Unknown identifier and wrong config entry both resolve to None
-    assert (
+    # A missing via device is treated as an error: an unknown identifier or the
+    # wrong config entry both raise rather than silently returning None.
+    with pytest.raises(ValueError, match="no such device is registered"):
         dr.async_get_device_id_by_identifier(hass, ("test", "missing"), entry.entry_id)
-        is None
-    )
-    assert (
+    with pytest.raises(ValueError, match="no such device is registered"):
         dr.async_get_device_id_by_identifier(hass, ("test", "1"), "unknown_entry_id")
-        is None
-    )
 
 
 @pytest.mark.parametrize(
