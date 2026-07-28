@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from infrared_protocols.commands.samsung import SamsungAC0292Command
+from infrared_protocols.commands.samsung_ac import SamsungAC0292Command
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
