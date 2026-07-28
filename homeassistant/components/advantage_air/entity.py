@@ -5,7 +5,6 @@ from typing import Any
 from advantage_air import ApiError
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -50,11 +49,7 @@ class AdvantageAirAcEntity(AdvantageAirEntity):
         self._attr_unique_id += f"-{ac_key}"
 
         self._attr_device_info = DeviceInfo(
-            via_device_id=dr.async_get_device_id_by_identifier(
-                self.coordinator.hass,
-                (DOMAIN, self.coordinator.data["system"]["rid"]),
-                self.coordinator.config_entry.entry_id,
-            ),
+            via_device=(DOMAIN, self.coordinator.data["system"]["rid"]),
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Advantage Air",
             model=self.coordinator.data["system"]["sysType"],
@@ -110,11 +105,7 @@ class AdvantageAirThingEntity(AdvantageAirEntity):
         self._attr_unique_id += f"-{self._id}"
 
         self._attr_device_info = DeviceInfo(
-            via_device_id=dr.async_get_device_id_by_identifier(
-                self.coordinator.hass,
-                (DOMAIN, self.coordinator.data["system"]["rid"]),
-                self.coordinator.config_entry.entry_id,
-            ),
+            via_device=(DOMAIN, self.coordinator.data["system"]["rid"]),
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Advantage Air",
             model="MyPlace",
