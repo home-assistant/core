@@ -32,7 +32,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, DOMAIN, SCAN_INTERVAL, ObjectClassType
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL, ObjectClassType
 
 type ComelitConfigEntry = ConfigEntry[ComelitBaseCoordinator]
 
@@ -63,7 +63,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
 
         super().__init__(
             hass=hass,
-            logger=_LOGGER,
+            logger=LOGGER,
             config_entry=entry,
             name=f"{DOMAIN}-{host}-coordinator",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
@@ -103,7 +103,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
     @override
     async def _async_update_data(self) -> T:
         """Update device data."""
-        _LOGGER.debug("Polling Comelit %s host: %s", self._device, self._host)
+        LOGGER.debug("Polling Comelit %s host: %s", self._device, self._host)
         try:
             await self.api.login()
             return await self._async_update_system_data()
@@ -139,7 +139,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
 
         for i in previous_list:
             if i not in current_list:
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Detected change in %s devices: index %s removed",
                     dev_type,
                     i,
