@@ -1,6 +1,7 @@
 """Matter event entities from Node events."""
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, override
 
 from chip.clusters import Objects as clusters
@@ -8,6 +9,8 @@ from matter_server.client.models import device_types
 from matter_server.common.models import EventType, MatterNodeEvent
 
 from homeassistant.components.event import (
+    ATTR_MULTI_PRESS_COUNT,
+    ButtonEventType,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -23,7 +26,7 @@ from .models import MatterDiscoverySchema
 SwitchFeature = clusters.Switch.Bitmaps.Feature
 
 EVENT_TYPES_MAP = {
-    # mapping from raw event id's to translation keys
+    # mapping from raw event IDs to translation keys
     0: "switch_latched",  # clusters.Switch.Events.SwitchLatched
     1: "initial_press",  # clusters.Switch.Events.InitialPress
     2: "long_press",  # clusters.Switch.Events.LongPress
@@ -31,6 +34,44 @@ EVENT_TYPES_MAP = {
     4: "long_release",  # clusters.Switch.Events.LongRelease
     5: "multi_press_ongoing",  # clusters.Switch.Events.MultiPressOngoing
     6: "multi_press_complete",  # clusters.Switch.Events.MultiPressComplete
+}
+
+# mapping from raw event IDs to standard button event types
+STANDARD_EVENT_TYPES_MAP: dict[int, str] = {
+    clusters.Switch.Events.SwitchLatched.event_id: "switch_latched",
+    clusters.Switch.Events.InitialPress.event_id: ButtonEventType.PRESS_START,
+    clusters.Switch.Events.LongPress.event_id: ButtonEventType.LONG_PRESS_START,
+    clusters.Switch.Events.ShortRelease.event_id: ButtonEventType.PRESS_END,
+    clusters.Switch.Events.LongRelease.event_id: ButtonEventType.LONG_PRESS_END,
+    clusters.Switch.Events.MultiPressOngoing.event_id: (
+        ButtonEventType.MULTI_PRESS_ONGOING
+    ),
+    clusters.Switch.Events.MultiPressComplete.event_id: (
+        ButtonEventType.MULTI_PRESS_END
+    ),
+}
+
+
+class EncoderType(Enum):
+    """Type of encoder - affects wrap-around behavior."""
+
+    ROTARY = "rotary"
+    LINEAR = "linear"
+    UNKNOWN = "unknown"
+
+
+@dataclass
+class EncoderConfig:
+    """Configuration for a known encoder device."""
+
+    encoder_type: EncoderType
+    positions: int | None = None
+
+
+# Known encoder devices by (vendor_id, product_id)
+KNOWN_ENCODERS: dict[tuple[int, int], EncoderConfig] = {
+    # IKEA BILRESA scroll wheel (E2490)
+    (0x117C, 0x8000): EncoderConfig(EncoderType.ROTARY, 18),
 }
 
 
@@ -49,8 +90,130 @@ class MatterEventEntityDescription(EventEntityDescription, MatterEntityDescripti
     """Describe Matter Event entities."""
 
 
-class MatterEventEntity(MatterEntity, EventEntity):
-    """Representation of a Matter Event entity."""
+class MatterEventEntityBase(MatterEntity, EventEntity):
+    """Base class for Matter Event entities."""
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle being added to Home Assistant."""
+        await super().async_added_to_hass()
+
+        # subscribe to NodeEvent events
+        self._unsubscribes.append(
+            self.matter_client.subscribe_events(
+                callback=self._on_matter_node_event,
+                event_filter=EventType.NODE_EVENT,
+                node_filter=self._endpoint.node.node_id,
+            )
+        )
+
+    @override
+    def _update_from_device(self) -> None:
+        """Call when Node attribute(s) changed."""
+
+    @callback
+    def _on_matter_node_event(
+        self,
+        event: EventType,
+        data: MatterNodeEvent,
+    ) -> None:
+        """Call on NodeEvent."""
+        if (
+            data.endpoint_id != self._endpoint.endpoint_id
+            or data.cluster_id != clusters.Switch.id
+        ):
+            return
+        self._handle_switch_event(data)
+
+    @callback
+    def _handle_switch_event(self, data: MatterNodeEvent) -> None:
+        """Handle a Switch cluster event."""
+        raise NotImplementedError
+
+
+class MatterButtonEventEntity(MatterEventEntityBase):
+    """Matter Event entity using the standard button event types."""
+
+    _map_initial_press_to_press_end: bool = False
+
+    @override
+    @callback
+    def _update_from_device(self) -> None:
+        """Call when Node attribute(s) changed."""
+        # (re)fill the event types based on the features the switch supports,
+        # as the feature map can change during the lifetime of the entity
+        event_types: list[str] = []
+        feature_map = int(
+            self.get_matter_attribute_value(clusters.Switch.Attributes.FeatureMap)
+        )
+        # a momentary switch without release support (and no action switch)
+        # only emits InitialPress, and such single-event interactions
+        # map to the matching end event type
+        self._map_initial_press_to_press_end = bool(
+            feature_map & SwitchFeature.kMomentarySwitch
+        ) and not feature_map & (
+            SwitchFeature.kMomentarySwitchRelease | SwitchFeature.kActionSwitch
+        )
+        if feature_map & SwitchFeature.kLatchingSwitch:
+            # a latching switch only supports the switch_latched event
+            event_types.append("switch_latched")
+        elif feature_map & SwitchFeature.kMomentarySwitch:
+            if self._map_initial_press_to_press_end:
+                event_types.append(ButtonEventType.PRESS_END)
+            else:
+                event_types.append(ButtonEventType.PRESS_START)
+                if feature_map & SwitchFeature.kMomentarySwitchRelease:
+                    event_types.append(ButtonEventType.PRESS_END)
+            if feature_map & SwitchFeature.kMomentarySwitchLongPress:
+                event_types.append(ButtonEventType.LONG_PRESS_START)
+                event_types.append(ButtonEventType.LONG_PRESS_END)
+            if feature_map & SwitchFeature.kMomentarySwitchMultiPress:
+                if not feature_map & SwitchFeature.kActionSwitch:
+                    # an action switch reports only the final result
+                    # of a multi-press sequence
+                    event_types.append(ButtonEventType.MULTI_PRESS_ONGOING)
+                event_types.append(ButtonEventType.MULTI_PRESS_END)
+
+        self._attr_event_types = event_types
+
+    @override
+    @callback
+    def _handle_switch_event(self, data: MatterNodeEvent) -> None:
+        """Handle a Switch cluster event."""
+        if (event_type := STANDARD_EVENT_TYPES_MAP.get(data.event_id)) is None:
+            return
+        if (
+            self._map_initial_press_to_press_end
+            and data.event_id == clusters.Switch.Events.InitialPress.event_id
+        ):
+            event_type = ButtonEventType.PRESS_END
+        if event_type not in self.event_types:
+            # this should not happen, but guard for bad things
+            # some remotes send events that they do not report as supported (sigh...)
+            return
+
+        # pass the event data as-is (such as the advanced Position data)
+        event_data = dict(data.data or {})
+        if data.event_id == clusters.Switch.Events.MultiPressOngoing.event_id:
+            event_data[ATTR_MULTI_PRESS_COUNT] = event_data.get(
+                "currentNumberOfPressesCounted", 2
+            )
+        elif data.event_id == clusters.Switch.Events.MultiPressComplete.event_id:
+            # NOTE: a count of 0 means the multi-press sequence was aborted,
+            # e.g. because the number of presses exceeded MultiPressMax
+            event_data[ATTR_MULTI_PRESS_COUNT] = event_data.get(
+                "totalNumberOfPressesCounted", 1
+            )
+
+        self._trigger_event(event_type, event_data)
+        self.async_write_ha_state()
+
+
+class MatterEventEntity(MatterEventEntityBase):
+    """Legacy Matter Event entity, replaced by MatterButtonEventEntity.
+
+    Deprecated and disabled by default in HA 2026.8, remove in 2027.2.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the entity."""
@@ -91,32 +254,9 @@ class MatterEventEntity(MatterEntity, EventEntity):
         self._attr_event_types = event_types
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Handle being added to Home Assistant."""
-        await super().async_added_to_hass()
-
-        # subscribe to NodeEvent events
-        self._unsubscribes.append(
-            self.matter_client.subscribe_events(
-                callback=self._on_matter_node_event,
-                event_filter=EventType.NODE_EVENT,
-                node_filter=self._endpoint.node.node_id,
-            )
-        )
-
-    @override
-    def _update_from_device(self) -> None:
-        """Call when Node attribute(s) changed."""
-
     @callback
-    def _on_matter_node_event(
-        self,
-        event: EventType,
-        data: MatterNodeEvent,
-    ) -> None:
-        """Call on NodeEvent."""
-        if data.endpoint_id != self._endpoint.endpoint_id:
-            return
+    def _handle_switch_event(self, data: MatterNodeEvent) -> None:
+        """Handle a Switch cluster event."""
         if data.event_id == clusters.Switch.Events.MultiPressComplete.event_id:
             # multi press event
             presses = (data.data or {}).get("totalNumberOfPressesCounted", 1)
@@ -134,14 +274,190 @@ class MatterEventEntity(MatterEntity, EventEntity):
         self.async_write_ha_state()
 
 
+class MatterEncoderEventEntity(MatterEventEntityBase):
+    """Matter Event entity for rotary/linear encoders.
+
+    Devices like IKEA BILRESA use MultiPressComplete to report encoder position.
+    This entity detects such devices and fires rotate_cw/rotate_ccw events with
+    direction and magnitude instead of button presses.
+    """
+
+    _encoder_type: EncoderType
+    _last_position: int | None
+    _max_positions: int
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the entity."""
+        super().__init__(*args, **kwargs)
+
+        self._encoder_type = EncoderType.UNKNOWN
+        self._last_position = None
+        self._max_positions = 2
+
+        vendor_id = self._get_vendor_id()
+        product_id = self._get_product_id()
+
+        if known := KNOWN_ENCODERS.get((vendor_id, product_id)):
+            self._encoder_type = known.encoder_type
+            if known.positions:
+                self._max_positions = known.positions
+        else:
+            feature_map = int(
+                self.get_matter_attribute_value(clusters.Switch.Attributes.FeatureMap)
+            )
+            if feature_map & SwitchFeature.kLatchingSwitch:
+                self._encoder_type = EncoderType.ROTARY
+                self._max_positions = (
+                    self.get_matter_attribute_value(
+                        clusters.Switch.Attributes.NumberOfPositions
+                    )
+                    or 18
+                )
+            elif feature_map & SwitchFeature.kMomentarySwitchMultiPress:
+                self._max_positions = (
+                    self.get_matter_attribute_value(
+                        clusters.Switch.Attributes.MultiPressMax
+                    )
+                    or 18
+                )
+
+        self._attr_event_types = ["rotate_cw", "rotate_ccw"]
+
+    def _get_vendor_id(self) -> int:
+        """Get the vendor ID for this device."""
+        try:
+            return int(self._endpoint.device_info.vendorID or 0)
+        except (TypeError, ValueError, AttributeError):
+            return 0
+
+    def _get_product_id(self) -> int:
+        """Get the product ID for this device."""
+        try:
+            return int(self._endpoint.device_info.productID or 0)
+        except (TypeError, ValueError, AttributeError):
+            return 0
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle being added to Home Assistant."""
+        await super().async_added_to_hass()
+        current_pos = self.get_matter_attribute_value(
+            clusters.Switch.Attributes.CurrentPosition
+        )
+        if current_pos is not None:
+            self._last_position = int(current_pos)
+
+    @override
+    @callback
+    def _handle_switch_event(self, data: MatterNodeEvent) -> None:
+        """Handle encoder position events."""
+        new_position: int | None = None
+
+        if data.event_id == clusters.Switch.Events.MultiPressComplete.event_id:
+            new_position = (data.data or {}).get("totalNumberOfPressesCounted")
+        elif data.event_id == clusters.Switch.Events.SwitchLatched.event_id:
+            new_position = (data.data or {}).get("newPosition")
+        elif data.event_id == clusters.Switch.Events.InitialPress.event_id:
+            new_position = (data.data or {}).get("newPosition")
+
+        if new_position is None:
+            return
+
+        if self._last_position is None:
+            self._last_position = new_position
+            return
+
+        delta = self._calculate_delta(self._last_position, new_position)
+        if delta != 0:
+            direction = "rotate_cw" if delta > 0 else "rotate_ccw"
+            self._trigger_event(
+                direction,
+                {
+                    "magnitude": abs(delta),
+                    "position": new_position,
+                    "previous_position": self._last_position,
+                    "encoder_type": self._encoder_type.value,
+                },
+            )
+            self.async_write_ha_state()
+
+        self._last_position = new_position
+
+    def _calculate_delta(self, old_pos: int, new_pos: int) -> int:
+        """Calculate position delta, handling wrap-around for rotary encoders."""
+        raw_delta = new_pos - old_pos
+        half_max = self._max_positions // 2
+
+        if self._encoder_type == EncoderType.LINEAR:
+            return raw_delta
+
+        if self._encoder_type == EncoderType.ROTARY:
+            if raw_delta > half_max:
+                return raw_delta - self._max_positions
+            if raw_delta < -half_max:
+                return raw_delta + self._max_positions
+            return raw_delta
+
+        # Unknown: infer from delta and assume rotary
+        if abs(raw_delta) > half_max:
+            self._encoder_type = EncoderType.LINEAR
+        return raw_delta
+
+
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
+    # Encoder devices (IKEA BILRESA, etc.) - must be before generic switch schemas
+    MatterDiscoverySchema(
+        platform=Platform.EVENT,
+        entity_description=MatterEventEntityDescription(
+            key="RotaryEncoder",
+            translation_key="encoder",
+        ),
+        entity_class=MatterEncoderEventEntity,
+        required_attributes=(
+            clusters.Switch.Attributes.CurrentPosition,
+            clusters.Switch.Attributes.FeatureMap,
+        ),
+        device_type=(device_types.GenericSwitch,),
+        vendor_id=(0x117C,),  # IKEA
+        product_id=(0x8000,),  # BILRESA E2490
+        optional_attributes=(
+            clusters.Switch.Attributes.NumberOfPositions,
+            clusters.Switch.Attributes.MultiPressMax,
+            clusters.FixedLabel.Attributes.LabelList,
+        ),
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.EVENT,
+        entity_description=MatterEventEntityDescription(
+            key="GenericSwitchButton",
+            device_class=EventDeviceClass.BUTTON,
+            translation_key="button",
+        ),
+        entity_class=MatterButtonEventEntity,
+        required_attributes=(
+            clusters.Switch.Attributes.CurrentPosition,
+            clusters.Switch.Attributes.FeatureMap,
+        ),
+        # the Doorbell device type gets a dedicated doorbell event entity
+        # instead of the standard button event entity
+        device_type=(device_types.GenericSwitch,),
+        not_device_type=(device_types.Doorbell,),
+        optional_attributes=(
+            clusters.Switch.Attributes.NumberOfPositions,
+            clusters.FixedLabel.Attributes.LabelList,
+        ),
+        allow_multi=True,  # also used for the legacy event and sensor entity
+    ),
     MatterDiscoverySchema(
         platform=Platform.EVENT,
         entity_description=MatterEventEntityDescription(
             key="GenericSwitch",
             device_class=EventDeviceClass.BUTTON,
-            translation_key="button",
+            translation_key="button_deprecated",
+            # Deprecated and disabled by default in HA 2026.8, remove in 2027.2
+            entity_registry_enabled_default=False,
         ),
         entity_class=MatterEventEntity,
         required_attributes=(
