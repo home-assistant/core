@@ -56,13 +56,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_lyric_api() -> Generator[MagicMock]:
-    """Mock the aiolyric client, backed by a real Location parsed from a live-shaped fixture.
-
-    Patches Lyric where the integration imports it (autospec, like the
-    mealie client mock) rather than mocking HTTP responses, so tests
-    exercise real aiolyric parsing - the same LyricLocation code reading
-    the actual field names Resideo returns.
-    """
+    """Mock the aiolyric client, backed by a real Location parsed from a live-shaped fixture."""
     with patch("homeassistant.components.lyric.Lyric", autospec=True) as mock_lyric_cls:
         lyric = mock_lyric_cls.return_value
 

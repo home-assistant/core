@@ -1,7 +1,8 @@
 """Tests for the Honeywell Lyric binary sensor platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -13,11 +14,10 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("setup_credentials", "mock_lyric_api")
 async def test_binary_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    setup_credentials: None,
-    mock_lyric_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
