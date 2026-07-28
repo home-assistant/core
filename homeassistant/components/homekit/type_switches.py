@@ -712,7 +712,7 @@ class IrrigationSystem(HomeAccessory):
         self._update_system_state()
 
     @callback
-    @pyhap_callback  # type: ignore[misc]
+    @pyhap_callback  # type: ignore[untyped-decorator]
     @override
     def run(self) -> None:
         """Handle accessory driver start; subscribe to all linked valve entities."""
