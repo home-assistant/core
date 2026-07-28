@@ -1,6 +1,7 @@
 """Tests for Victron GX MQTT sensors."""
 
 import logging
+import math
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -317,12 +318,12 @@ async def test_formula_sensor_none_update_after_restore(
             id="invalid_native_value",
         ),
         pytest.param(
-            (_restore_energy(float("nan")),),
+            (_restore_energy(math.nan),),
             "Could not restore state",
             id="nan_native_value",
         ),
         pytest.param(
-            (_restore_energy(float("inf")),),
+            (_restore_energy(math.inf),),
             "Could not restore state",
             id="inf_native_value",
         ),
