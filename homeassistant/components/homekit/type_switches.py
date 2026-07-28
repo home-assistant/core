@@ -766,6 +766,14 @@ class IrrigationSystem(HomeAccessory):
 
     @callback
     @override
+    def async_stop(self) -> None:
+        """Cancel subscriptions and runtime timers when the accessory stops."""
+        for entity_id in self._valve_entity_ids:
+            self._clear_local_runtime(entity_id)
+        super().async_stop()
+
+    @callback
+    @override
     def async_update_state_callback(self, new_state: State | None) -> None:
         """Handle primary valve state changes, including unavailable/unknown."""
         if new_state is None:
@@ -891,7 +899,7 @@ class IrrigationSystem(HomeAccessory):
             if (raw := state.attributes.get(key)) is not None:
                 try:
                     return max(int(float(raw)), 0)
-                except TypeError, ValueError:
+                except (TypeError, ValueError):
                     continue
         return None
 
@@ -903,7 +911,7 @@ class IrrigationSystem(HomeAccessory):
             if (raw := state.attributes.get(key)) is not None:
                 try:
                     return max(int(float(raw)), 0)
-                except TypeError, ValueError:
+                except (TypeError, ValueError):
                     continue
         if (end_time := self._end_time_from_state(state)) is not None:
             return max(int((end_time - dt_util.utcnow()).total_seconds()), 0)
@@ -997,7 +1005,7 @@ class IrrigationSystem(HomeAccessory):
         self._set_valve_active(entity_id, 0)
 
     @callback
-    def _update_local_remaining(self, entity_id: str) -> None:
+    def _update_local_remaining(self, entity_id: str, now: datetime) -> None:
         """Update local remaining duration countdown."""
         chars = self._valve_chars.get(entity_id)
         if chars is None:
@@ -1005,7 +1013,7 @@ class IrrigationSystem(HomeAccessory):
         chars["update_timer"] = None
         if chars[CHAR_IN_USE].value != 1:
             return
-        remaining = self._remaining_from_local_runtime(entity_id)
+        remaining = self._remaining_from_local_runtime(entity_id, now)
         chars[CHAR_REMAINING_DURATION].set_value(remaining)
         self._update_system_state()
         if remaining > 0:
@@ -1033,16 +1041,18 @@ class IrrigationSystem(HomeAccessory):
 
         @callback
         def _update_runtime(_now: datetime) -> None:
-            self._update_local_remaining(entity_id)
+            self._update_local_remaining(entity_id, _now)
 
         return _update_runtime
 
-    def _remaining_from_local_runtime(self, entity_id: str) -> int:
+    def _remaining_from_local_runtime(
+        self, entity_id: str, now: datetime | None = None
+    ) -> int:
         """Return remaining seconds from local runtime tracking."""
         chars = self._valve_chars.get(entity_id)
         if chars is None or (end_time := chars["end_time"]) is None:
             return 0
-        return max(int((end_time - dt_util.utcnow()).total_seconds()), 0)
+        return max(int((end_time - (now or dt_util.utcnow())).total_seconds()), 0)
 
     def _clear_local_runtime(self, entity_id: str) -> None:
         """Cancel local runtime timers for a zone."""
