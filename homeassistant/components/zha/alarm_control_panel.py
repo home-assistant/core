@@ -4,6 +4,7 @@ import functools
 from typing import override
 
 from zha.application.platforms.alarm_control_panel.const import (
+    AlarmControlPanelEntityFeature as ZHAAlarmControlPanelEntityFeature,
     AlarmState as ZHAAlarmState,
 )
 
@@ -19,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import ZHAEntity
+from .entity import ZHASupportedFeaturesEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     async_add_entities as zha_async_add_entities,
@@ -64,17 +65,36 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class ZHAAlarmControlPanel(ZHAEntity, AlarmControlPanelEntity):
+class ZHAAlarmControlPanel(ZHASupportedFeaturesEntity, AlarmControlPanelEntity):
     """Entity for ZHA alarm control devices."""
 
     _attr_translation_key: str = "alarm_control_panel"
     _attr_code_format = CodeFormat.TEXT
-    _attr_supported_features = (
-        AlarmControlPanelEntityFeature.ARM_HOME
-        | AlarmControlPanelEntityFeature.ARM_AWAY
-        | AlarmControlPanelEntityFeature.ARM_NIGHT
-        | AlarmControlPanelEntityFeature.TRIGGER
-    )
+
+    @staticmethod
+    @functools.cache
+    @override
+    def _convert_supported_features(
+        zha_features: int,
+    ) -> AlarmControlPanelEntityFeature:
+        """Convert ZHA alarm control panel features to HA ones."""
+        zha_flags = ZHAAlarmControlPanelEntityFeature(zha_features)
+        features = AlarmControlPanelEntityFeature(0)
+
+        if ZHAAlarmControlPanelEntityFeature.ARM_HOME in zha_flags:
+            features |= AlarmControlPanelEntityFeature.ARM_HOME
+        if ZHAAlarmControlPanelEntityFeature.ARM_AWAY in zha_flags:
+            features |= AlarmControlPanelEntityFeature.ARM_AWAY
+        if ZHAAlarmControlPanelEntityFeature.ARM_NIGHT in zha_flags:
+            features |= AlarmControlPanelEntityFeature.ARM_NIGHT
+        if ZHAAlarmControlPanelEntityFeature.TRIGGER in zha_flags:
+            features |= AlarmControlPanelEntityFeature.TRIGGER
+        if ZHAAlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS in zha_flags:
+            features |= AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+        if ZHAAlarmControlPanelEntityFeature.ARM_VACATION in zha_flags:
+            features |= AlarmControlPanelEntityFeature.ARM_VACATION
+
+        return features
 
     @property
     @override

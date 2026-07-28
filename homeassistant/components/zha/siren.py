@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import ZHAEntity
+from .entity import ZHASupportedFeaturesEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     async_add_entities as zha_async_add_entities,
@@ -49,7 +49,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class ZHASiren(ZHAEntity, SirenEntity):
+class ZHASiren(ZHASupportedFeaturesEntity, SirenEntity):
     """Representation of a ZHA siren."""
 
     _attr_available_tones: list[int | str] | dict[int, str] | None = {
@@ -61,11 +61,14 @@ class ZHASiren(ZHAEntity, SirenEntity):
         WarningMode.Emergency_Panic: "Emergency Panic",
     }
 
+    @staticmethod
+    @functools.cache
     @override
-    def _update_capability_attrs(self) -> None:
-        """Re-derive capability attributes from the cached state."""
-        features: SirenEntityFeature = SirenEntityFeature(0)
-        zha_features: ZHASirenEntityFeature = self._zha_state.supported_features
+    def _convert_supported_features(
+        zha_features: ZHASirenEntityFeature,
+    ) -> SirenEntityFeature:
+        """Convert ZHA siren features to HA siren features."""
+        features = SirenEntityFeature(0)
 
         if ZHASirenEntityFeature.TURN_ON in zha_features:
             features |= SirenEntityFeature.TURN_ON
@@ -78,7 +81,7 @@ class ZHASiren(ZHAEntity, SirenEntity):
         if ZHASirenEntityFeature.DURATION in zha_features:
             features |= SirenEntityFeature.DURATION
 
-        self._attr_supported_features = features
+        return features
 
     @property
     @override

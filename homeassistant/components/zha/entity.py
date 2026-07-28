@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 import dataclasses
+from enum import IntFlag
 from functools import partial
 import logging
 from typing import Any, override
@@ -240,3 +241,19 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         msg = f"%s: {msg}"
         args = (self.entity_id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)
+
+
+class ZHASupportedFeaturesEntity(ZHAEntity):
+    """ZHA entity whose state carries a `supported_features` flag to translate."""
+
+    @override
+    def _update_capability_attrs(self) -> None:
+        """Re-derive capability `_attr_*` attributes from the cached state."""
+        self._attr_supported_features = self._convert_supported_features(
+            self._zha_state.supported_features
+        )
+
+    @staticmethod
+    def _convert_supported_features(zha_features: IntFlag) -> IntFlag:
+        """Translate ZHA feature flags into their HA equivalents."""
+        raise NotImplementedError

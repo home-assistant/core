@@ -22,10 +22,9 @@ from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import ZHAEntity
+from .entity import ZHASupportedFeaturesEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
-    EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
@@ -53,17 +52,12 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class ZhaCover(ZHAEntity, CoverEntity):
+class ZhaCover(ZHASupportedFeaturesEntity, CoverEntity):
     """Representation of a ZHA cover."""
 
-    def __init__(self, entity_data: EntityData) -> None:
-        """Initialize the ZHA cover."""
-        super().__init__(entity_data)
-
-        if self._zha_state.device_class is not None:
-            self._attr_device_class = CoverDeviceClass(self._zha_state.device_class)
-
     @staticmethod
+    @functools.cache
+    @override
     def _convert_supported_features(
         zha_features: ZHACoverEntityFeature,
     ) -> CoverEntityFeature:
@@ -92,8 +86,11 @@ class ZhaCover(ZHAEntity, CoverEntity):
     @override
     def _update_capability_attrs(self) -> None:
         """Re-derive capability attributes from the cached state."""
-        self._attr_supported_features = self._convert_supported_features(
-            self._zha_state.supported_features
+        super()._update_capability_attrs()
+
+        device_class = self._zha_state.device_class
+        self._attr_device_class = (
+            CoverDeviceClass(device_class) if device_class is not None else None
         )
 
     @property

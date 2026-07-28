@@ -31,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import ZHAEntity
+from .entity import ZHASupportedFeaturesEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     async_add_entities as zha_async_add_entities,
@@ -80,25 +80,21 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class Thermostat(ZHAEntity, ClimateEntity):
+class Thermostat(ZHASupportedFeaturesEntity, ClimateEntity):
     """Representation of a ZHA Thermostat device."""
 
     _attr_precision = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key: str = "thermostat"
 
+    @staticmethod
+    @functools.cache
     @override
-    def _update_capability_attrs(self) -> None:
-        """Re-derive capability attributes from the cached state."""
-        state = self._zha_state
-        self._attr_hvac_modes = [ZHA_TO_HA_HVAC_MODE[mode] for mode in state.hvac_modes]
-        self._attr_fan_modes = state.fan_modes
-        self._attr_preset_modes = state.preset_modes
-        self._attr_min_temp = state.min_temp
-        self._attr_max_temp = state.max_temp
-
-        features: ClimateEntityFeature = ClimateEntityFeature(0)
-        zha_features: ZHAClimateEntityFeature = state.supported_features
+    def _convert_supported_features(
+        zha_features: ZHAClimateEntityFeature,
+    ) -> ClimateEntityFeature:
+        """Convert ZHA climate features to HA climate features."""
+        features = ClimateEntityFeature(0)
 
         if ZHAClimateEntityFeature.TARGET_TEMPERATURE in zha_features:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE
@@ -117,7 +113,19 @@ class Thermostat(ZHAEntity, ClimateEntity):
         if ZHAClimateEntityFeature.TURN_ON in zha_features:
             features |= ClimateEntityFeature.TURN_ON
 
-        self._attr_supported_features = features
+        return features
+
+    @override
+    def _update_capability_attrs(self) -> None:
+        """Re-derive capability attributes from the cached state."""
+        super()._update_capability_attrs()
+
+        state = self._zha_state
+        self._attr_hvac_modes = [ZHA_TO_HA_HVAC_MODE[mode] for mode in state.hvac_modes]
+        self._attr_fan_modes = state.fan_modes
+        self._attr_preset_modes = state.preset_modes
+        self._attr_min_temp = state.min_temp
+        self._attr_max_temp = state.max_temp
 
     @property
     @override

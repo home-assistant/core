@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import ZHAEntity
+from .entity import ZHASupportedFeaturesEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     async_add_entities as zha_async_add_entities,
@@ -40,16 +40,19 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class ZhaFan(FanEntity, ZHAEntity):
+class ZhaFan(FanEntity, ZHASupportedFeaturesEntity):
     """Representation of a ZHA fan."""
 
     _attr_translation_key: str = "fan"
 
+    @staticmethod
+    @functools.cache
     @override
-    def _update_capability_attrs(self) -> None:
-        """Re-derive capability attributes from the cached state."""
+    def _convert_supported_features(
+        zha_features: ZHAFanEntityFeature,
+    ) -> FanEntityFeature:
+        """Convert ZHA fan features to HA fan features."""
         features = FanEntityFeature(0)
-        zha_features: ZHAFanEntityFeature = self._zha_state.supported_features
 
         if ZHAFanEntityFeature.DIRECTION in zha_features:
             features |= FanEntityFeature.DIRECTION
@@ -64,7 +67,7 @@ class ZhaFan(FanEntity, ZHAEntity):
         if ZHAFanEntityFeature.TURN_OFF in zha_features:
             features |= FanEntityFeature.TURN_OFF
 
-        self._attr_supported_features = features
+        return features
 
     @property
     @override

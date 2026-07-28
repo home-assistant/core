@@ -4,6 +4,9 @@ import functools
 import logging
 from typing import Any, override
 
+from zha.application.platforms.update import (
+    UpdateEntityFeature as ZHAUpdateEntityFeature,
+)
 from zha.exceptions import ZHAException
 from zigpy.application import ControllerApplication
 
@@ -23,7 +26,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .entity import ZHAEntity
+from .entity import ZHASupportedFeaturesEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     EntityData,
@@ -99,18 +102,36 @@ class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disa
 
 
 class ZHAFirmwareUpdateEntity(
-    ZHAEntity, CoordinatorEntity[ZHAFirmwareUpdateCoordinator], UpdateEntity
+    ZHASupportedFeaturesEntity,
+    CoordinatorEntity[ZHAFirmwareUpdateCoordinator],
+    UpdateEntity,
 ):
     """Representation of a ZHA firmware update entity."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_supported_features = (
-        UpdateEntityFeature.INSTALL
-        | UpdateEntityFeature.PROGRESS
-        | UpdateEntityFeature.SPECIFIC_VERSION
-        | UpdateEntityFeature.RELEASE_NOTES
-    )
     _attr_display_precision = 2  # 40 byte chunks with ~200KB files increments by 0.02%
+
+    @staticmethod
+    @functools.cache
+    @override
+    def _convert_supported_features(
+        zha_features: ZHAUpdateEntityFeature,
+    ) -> UpdateEntityFeature:
+        """Convert ZHA update features to HA update features."""
+        features = UpdateEntityFeature(0)
+
+        if ZHAUpdateEntityFeature.INSTALL in zha_features:
+            features |= UpdateEntityFeature.INSTALL
+        if ZHAUpdateEntityFeature.SPECIFIC_VERSION in zha_features:
+            features |= UpdateEntityFeature.SPECIFIC_VERSION
+        if ZHAUpdateEntityFeature.PROGRESS in zha_features:
+            features |= UpdateEntityFeature.PROGRESS
+        if ZHAUpdateEntityFeature.BACKUP in zha_features:
+            features |= UpdateEntityFeature.BACKUP
+        if ZHAUpdateEntityFeature.RELEASE_NOTES in zha_features:
+            features |= UpdateEntityFeature.RELEASE_NOTES
+
+        return features
 
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
         """Initialize the ZHA siren."""

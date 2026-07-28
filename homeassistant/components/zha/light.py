@@ -29,7 +29,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
-from .entity import ZHAEntity
+from .entity import ZHASupportedFeaturesEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     async_add_entities as zha_async_add_entities,
@@ -72,12 +72,31 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class Light(LightEntity, ZHAEntity):
+class Light(LightEntity, ZHASupportedFeaturesEntity):
     """Representation of a ZHA or ZLL light."""
+
+    @staticmethod
+    @functools.cache
+    @override
+    def _convert_supported_features(
+        zha_features: ZhaLightEntityFeature,
+    ) -> LightEntityFeature:
+        """Convert ZHA light features to HA light features."""
+        features = LightEntityFeature(0)
+
+        if ZhaLightEntityFeature.EFFECT in zha_features:
+            features |= LightEntityFeature.EFFECT
+        if ZhaLightEntityFeature.FLASH in zha_features:
+            features |= LightEntityFeature.FLASH
+        if ZhaLightEntityFeature.TRANSITION in zha_features:
+            features |= LightEntityFeature.TRANSITION
+
+        return features
 
     @override
     def _update_capability_attrs(self) -> None:
         """Re-derive capability attributes from the cached state."""
+        super()._update_capability_attrs()
         state = self._zha_state
 
         color_modes: set[ColorMode] = set()
@@ -90,18 +109,6 @@ class Light(LightEntity, ZHAEntity):
         if not color_modes:
             color_modes.add(ColorMode.BRIGHTNESS if has_brightness else ColorMode.ONOFF)
         self._attr_supported_color_modes = color_modes
-
-        features = LightEntityFeature(0)
-        zha_features: ZhaLightEntityFeature = state.supported_features
-
-        if ZhaLightEntityFeature.EFFECT in zha_features:
-            features |= LightEntityFeature.EFFECT
-        if ZhaLightEntityFeature.FLASH in zha_features:
-            features |= LightEntityFeature.FLASH
-        if ZhaLightEntityFeature.TRANSITION in zha_features:
-            features |= LightEntityFeature.TRANSITION
-
-        self._attr_supported_features = features
 
         self._attr_max_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
             state.min_mireds
