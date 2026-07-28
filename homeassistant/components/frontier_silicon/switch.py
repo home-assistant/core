@@ -10,11 +10,10 @@ from afsapi import AFSAPI
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FrontierSiliconConfigEntry
-from .const import DOMAIN
+from .entity import FrontierSiliconEntity, fs_command_exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,62 +47,36 @@ async def async_setup_entry(
 
     afsapi = config_entry.runtime_data
     async_add_entities(
-        [
-            AFSAPISwitch(config_entry.entry_id, config_entry.title, afsapi, description)
-            for description in SWITCHES
-        ],
+        [AFSAPISwitch(config_entry, afsapi, description) for description in SWITCHES],
         True,
     )
 
 
-class AFSAPISwitch(SwitchEntity):
+class AFSAPISwitch(FrontierSiliconEntity, SwitchEntity):
     """Representation of a switch on a Frontier Silicon device."""
 
     entity_description: AFSAPISwitchEntityDescription
-    _attr_has_entity_name = True
-    _attr_available = True
 
     def __init__(
         self,
-        unique_id: str,
-        name: str | None,
+        config_entry: FrontierSiliconConfigEntry,
         afsapi: AFSAPI,
         description: AFSAPISwitchEntityDescription,
     ) -> None:
         """Initialize the Frontier Silicon API device."""
-        self.fs_device = afsapi
+        super().__init__(afsapi, config_entry)
         self.entity_description = description
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name=name,
-        )
-        self._attr_unique_id = f"{unique_id}_{description.key}"
 
+    @fs_command_exception_wrap
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.entity_description.turn_off_fn(self.fs_device)()
 
+    @fs_command_exception_wrap
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.entity_description.turn_on_fn(self.fs_device)()
 
-    async def async_update(self) -> None:
-        """Update AdGuard Home entity."""
-
-        if not self.enabled:
-            return
-
-        # try:
-        await self._update()
-        self._attr_available = True
-        # except AdGuardHomeError:
-        #    if self._attr_available:
-        #        LOGGER.debug(
-        #            "An error occurred while updating AdGuard Home sensor",
-        #            exc_info=True,
-        #        )
-        #    self._attr_available = False
-
-    async def _update(self) -> None:
-        """Update AdGuard Home entity."""
+    async def _fs_update(self) -> None:
+        """Update Frontier Silicon entity."""
         self._attr_is_on = await self.entity_description.is_on_fn(self.fs_device)()
