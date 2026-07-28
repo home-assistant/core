@@ -3164,8 +3164,8 @@ def async_get_device_id_by_identifier(
     device = async_get(hass).async_get_device_by_identifier(identifier, config_entry_id)
     if device is None:
         raise ValueError(
-            f"Cannot link to via device with identifier {identifier} in config entry "
-            f"{config_entry_id}: no such device is registered"
+            f"There is no device with identifier {identifier} in config entry "
+            f"{config_entry_id}"
         )
     return device.id
 

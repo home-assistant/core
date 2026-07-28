@@ -2446,9 +2446,9 @@ async def test_async_get_device_id_by_identifier(
     )
     # A missing via device is treated as an error: an unknown identifier or the
     # wrong config entry both raise rather than silently returning None.
-    with pytest.raises(ValueError, match="no such device is registered"):
+    with pytest.raises(ValueError, match="no device with identifier"):
         dr.async_get_device_id_by_identifier(hass, ("test", "missing"), entry.entry_id)
-    with pytest.raises(ValueError, match="no such device is registered"):
+    with pytest.raises(ValueError, match="no device with identifier"):
         dr.async_get_device_id_by_identifier(hass, ("test", "1"), "unknown_entry_id")
 
 
