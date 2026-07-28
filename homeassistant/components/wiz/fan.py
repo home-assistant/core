@@ -70,7 +70,13 @@ class WizFanEntity(WizEntity, FanEntity):
     @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
-        state = self._device.state
+        state = self._state
+        if state is None:
+            self._attr_is_on = None
+            self._attr_percentage = None
+            self._attr_preset_mode = None
+            self._attr_current_direction = None
+            return
 
         self._attr_is_on = state.get_fan_state() > 0
         self._attr_percentage = ranged_value_to_percentage(
