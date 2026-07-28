@@ -5,7 +5,6 @@ from time import time
 from unittest.mock import MagicMock, patch
 
 from aiolyric.objects.location import LyricLocation
-from aiolyric.objects.priority import LyricPriority
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -17,18 +16,13 @@ from homeassistant.components.lyric.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
+from tests.common import MockConfigEntry, load_json_array_fixture
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
-# Matches the values baked into fixtures/locations.json and fixtures/priority.json.
+# Matches the values baked into fixtures/locations.json.
 LOCATION_ID = "35202000168931"
-# LCC-prefixed so the current coordinator fetches room data.
 DEVICE_ID = "LCC-7f86b153-8480-f111-b78f-6045bdb25006"
 MAC_ID = "5CFCE1B67035"
 
@@ -62,12 +56,12 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_lyric_api() -> Generator[MagicMock]:
-    """Mock the aiolyric client, backed by real objects parsed from live-shaped fixtures.
+    """Mock the aiolyric client, backed by a real Location parsed from a live-shaped fixture.
 
     Patches Lyric where the integration imports it (autospec, like the
     mealie client mock) rather than mocking HTTP responses, so tests
-    exercise real aiolyric parsing - the same LyricLocation/LyricPriority
-    code reading the actual field names Resideo returns.
+    exercise real aiolyric parsing - the same LyricLocation code reading
+    the actual field names Resideo returns.
     """
     with patch("homeassistant.components.lyric.Lyric", autospec=True) as mock_lyric_cls:
         lyric = mock_lyric_cls.return_value
@@ -78,14 +72,6 @@ def mock_lyric_api() -> Generator[MagicMock]:
         ]
         lyric.locations_dict = {
             location.location_id: location for location in lyric.locations
-        }
-
-        priority = LyricPriority(load_json_object_fixture("priority.json", DOMAIN))
-        lyric.priorities_dict = {priority.device_id: priority}
-        lyric.rooms_dict = {
-            priority.device_id: {
-                room.id: room for room in priority.current_priority.rooms
-            }
         }
 
         yield lyric
