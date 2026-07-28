@@ -221,7 +221,6 @@ async def test_unload_entry(
         hass, CONFIG_BASIC_2, route_title=ROUTE_TITLE_2
     )
 
-    # Both entries target the same agency and stop and share one coordinator
     assert config_entry1.runtime_data is config_entry2.runtime_data
 
     # Verify the first sensor
