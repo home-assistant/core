@@ -19,7 +19,7 @@ from homeassistant.components.lyric.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -56,22 +56,10 @@ def thermostat_json(
 ) -> dict[str, Any]:
     """Return a raw aiolyric device payload for a single thermostat."""
     return {
-        "deviceClass": "Thermostat",
+        **load_json_object_fixture("thermostat.json", DOMAIN),
         "deviceID": device_id,
         "macID": mac_id,
         "name": name,
-        "units": "Celsius",
-        "indoorTemperature": 21.5,
-        "indoorHumidity": 45,
-        "outdoorTemperature": 10,
-        "displayedOutdoorHumidity": 60,
-        "deviceModel": "T9",
-        "changeableValues": {
-            "mode": "Heat",
-            "heatSetpoint": 20,
-            "coolSetpoint": 24,
-            "thermostatSetpointStatus": "NoHold",
-        },
     }
 
 
