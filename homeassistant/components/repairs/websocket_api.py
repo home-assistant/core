@@ -185,7 +185,7 @@ class RepairsFlowResourceView(FlowManagerResourceView[RepairsFlowManager]):
         try:
             result = await super().post(request, flow_id)
         except UnknownEntry as ex:
-            # Raised by _async_set_next_flow_if_valid in a RepairsFlow's async_abort and async_create_entry
+            # Raised by _async_set_next_flow_if_valid in a RepairsFlow
             return self.json_message(
                 f"Config entry {ex!s} not found in next_flow", HTTPStatus.BAD_REQUEST
             )

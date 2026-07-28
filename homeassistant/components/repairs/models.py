@@ -17,7 +17,7 @@ from .const import FlowType
 class RepairsFlowResult(
     data_entry_flow.FlowResult[data_entry_flow.FlowContext, str], total=False
 ):
-    """Typed result dict."""
+    """Typed result dict for repair flow."""
 
     next_flow: tuple[FlowType, str]
     result: ConfigEntry | None
@@ -95,11 +95,10 @@ class RepairsFlow(
                 self.hass.config_entries.subentries.async_get(flow_id)
             )
             entry_id, _ = subentry_flow["handler"]
-        else:  # flow_type is guaranteed to be FlowType.OPTIONS_FLOW due to the previous check
+        else:  # FlowType.OPTIONS_FLOW
             config_flow = self.hass.config_entries.options.async_get(flow_id)
             entry_id = config_flow["handler"]
-        # entry_id can be None for config_flow["source"] not in [SOURCE_REAUTH, SOURCE_RECONFIGURE]
-        # as these flows have not created a config entry yet and result["result"] is expected to be None
+        # entry_id can be None for config flows creating a new config entry
         result["result"] = (
             self.hass.config_entries.async_get_known_entry(entry_id)
             if entry_id is not None
