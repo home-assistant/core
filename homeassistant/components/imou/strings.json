@@ -50,6 +50,41 @@
         "name": "Live view SD"
       }
     },
+    "select": {
+      "device_volume": {
+        "name": "Volume",
+        "state": {
+          "0": "[%key:common::state::low%]",
+          "1": "[%key:common::state::medium%]",
+          "2": "[%key:common::state::high%]",
+          "99": "Mute"
+        }
+      },
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "0": "[%key:common::state::home%]",
+          "1": "Away",
+          "2": "Disarm"
+        }
+      },
+      "night_vision_mode": {
+        "name": "Night vision mode",
+        "state": {
+          "0": "Smart night vision",
+          "1": "Bright color night vision",
+          "2": "Infrared night vision",
+          "3": "[%key:common::state::off%]",
+          "4": "Custom mode",
+          "fullcolor": "Bright color night vision",
+          "infrared": "Infrared night vision",
+          "intelligent": "Smart night vision",
+          "lowlight": "Low light night vision",
+          "off": "[%key:common::state::off%]",
+          "smartlowlight": "Smart low light night vision"
+        }
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status",
@@ -97,41 +132,6 @@
       },
       "white_light": {
         "name": "White light"
-      }
-    },
-    "select": {
-      "device_volume": {
-        "name": "Volume",
-        "state": {
-          "0": "[%key:common::state::low%]",
-          "1": "[%key:common::state::medium%]",
-          "2": "[%key:common::state::high%]",
-          "99": "Mute"
-        }
-      },
-      "mode": {
-        "name": "Mode",
-        "state": {
-          "0": "[%key:common::state::home%]",
-          "1": "Away",
-          "2": "Disarm"
-        }
-      },
-      "night_vision_mode": {
-        "name": "Night vision mode",
-        "state": {
-          "0": "Smart night vision",
-          "1": "Bright color night vision",
-          "2": "Infrared night vision",
-          "3": "[%key:common::state::off%]",
-          "4": "Custom mode",
-          "intelligent": "Smart night vision",
-          "fullcolor": "Bright color night vision",
-          "infrared": "Infrared night vision",
-          "off": "[%key:common::state::off%]",
-          "lowlight": "Low light night vision",
-          "smartlowlight": "Smart low light night vision"
-        }
       }
     }
   },

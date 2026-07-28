@@ -14,6 +14,28 @@
         "default": "mdi:arrow-up-bold"
       }
     },
+    "select": {
+      "device_volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-low",
+          "1": "mdi:volume-medium",
+          "2": "mdi:volume-high",
+          "99": "mdi:volume-off"
+        }
+      },
+      "mode": {
+        "default": "mdi:auto-mode",
+        "state": {
+          "0": "mdi:home-account",
+          "1": "mdi:exit-run",
+          "2": "mdi:shield-off"
+        }
+      },
+      "night_vision_mode": {
+        "default": "mdi:weather-night"
+      }
+    },
     "sensor": {
       "status": {
         "default": "mdi:lan-connect",
@@ -52,28 +74,6 @@
       },
       "white_light": {
         "default": "mdi:light-flood-down"
-      }
-    },
-    "select": {
-      "device_volume": {
-        "default": "mdi:volume-high",
-        "state": {
-          "0": "mdi:volume-low",
-          "1": "mdi:volume-medium",
-          "2": "mdi:volume-high",
-          "99": "mdi:volume-off"
-        }
-      },
-      "mode": {
-        "default": "mdi:auto-mode",
-        "state": {
-          "0": "mdi:home-account",
-          "1": "mdi:exit-run",
-          "2": "mdi:shield-off"
-        }
-      },
-      "night_vision_mode": {
-        "default": "mdi:weather-night"
       }
     }
   }
