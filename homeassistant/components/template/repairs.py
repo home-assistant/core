@@ -19,7 +19,7 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the flow."""
-        self._entry = entry
+        self._entry_id = entry.entry_id
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -33,7 +33,7 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
         """Handle the device selection step."""
-        entry = self.hass.config_entries.async_get_entry(self._entry.entry_id)
+        entry = self.hass.config_entries.async_get_entry(self._entry_id)
         if entry is None:
             return self.async_abort(reason="entry_removed")
 
