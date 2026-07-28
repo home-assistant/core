@@ -173,3 +173,26 @@ async def test_flow_import_no_name_uses_username_as_title(hass: HomeAssistant) -
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_CONFIG[CONF_USERNAME]
     assert result["data"] == MOCK_CONFIG
+
+
+@pytest.mark.parametrize(
+    "status_code",
+    [
+        pytest.param(HTTPStatus.FORBIDDEN, id="invalid_auth"),
+        pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, id="server_error"),
+    ],
+)
+async def test_flow_import_validation_error_aborts(
+    hass: HomeAssistant,
+    mock_send_sms: MagicMock,
+    status_code: HTTPStatus,
+) -> None:
+    """Test the import flow aborts without creating an entry if credentials fail."""
+    mock_send_sms.return_value = MagicMock(status_code=status_code)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "import_failed"

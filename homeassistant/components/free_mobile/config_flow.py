@@ -102,6 +102,11 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import config from yaml."""
         title = import_info.get(CONF_NAME) or import_info[CONF_USERNAME]
         self._abort_if_title_configured(title)
+        errors = await self._async_validate_credentials(
+            import_info[CONF_USERNAME], import_info[CONF_ACCESS_TOKEN]
+        )
+        if errors:
+            raise AbortFlow("import_failed")
         return self.async_create_entry(
             title=title,
             data={

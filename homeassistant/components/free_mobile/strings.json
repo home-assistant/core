@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "import_failed": "Failed to validate the imported Free Mobile credentials."
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
