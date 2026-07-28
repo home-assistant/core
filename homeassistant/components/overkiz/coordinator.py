@@ -216,7 +216,11 @@ async def on_device_removed(
     if registered_device := registry.async_get_device_by_identifier(
         (DOMAIN, base_device_url), coordinator.config_entry.entry_id
     ):
-        registry.async_remove_device(registered_device.id)
+        # Detach only this entry; the registry deletes the device once none remain.
+        registry.async_update_device(
+            registered_device.id,
+            remove_config_entry_id=coordinator.config_entry.entry_id,
+        )
 
     if event.device_url in coordinator.devices:
         del coordinator.devices[event.device_url]

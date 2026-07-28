@@ -172,9 +172,3 @@ class SteamSensorEntity(SteamEntity, SensorEntity):
             if (fn := self.entity_description.extra_state_attributes_fn) is not None
             else super().extra_state_attributes
         )
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self._steamid in self.coordinator.data
