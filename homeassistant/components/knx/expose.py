@@ -12,7 +12,7 @@ from xknx.core.telegram_queue import TelegramQueue
 from xknx.devices import DateDevice, DateTimeDevice, ExposeSensor, TimeDevice
 from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTNumeric, DPTString
 from xknx.dpt.dpt_1 import DPT1BitEnum, DPTSwitch
-from xknx.exceptions import ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import (
     GroupAddress,
@@ -48,12 +48,19 @@ from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_RESPOND_TO_READ, KNX_ADDRESS
+from .dpt import ha_dpt_class
 from .schema import ExposeSchema
 
 if TYPE_CHECKING:
     from .storage.time_server import KNXTimeServerStoreModel
 
 _LOGGER = logging.getLogger(__name__)
+
+# write-back target per (DPT value kind, entity domain): (service domain, service, field)
+_WRITE_BACK_DISPATCH: dict[tuple[str, str], tuple[str, str, str]] = {
+    ("numeric", "number"): ("number", "set_value", "value"),
+    ("numeric", "input_number"): ("input_number", "set_value", "value"),
+}
 
 
 class _WriteBackCall(NamedTuple):
@@ -338,11 +345,25 @@ class KnxExposeEntity:
             return _WriteBackCall(
                 value, entity_domain, service, {ATTR_ENTITY_ID: self.entity_id}
             )
-        _LOGGER.warning(
-            "KNX expose write_back to %s: unsupported target for the configured DPT",
-            self.entity_id,
-        )
-        return None
+        mapping = _WRITE_BACK_DISPATCH.get((ha_dpt_class(option.dpt), entity_domain))
+        if mapping is None:
+            _LOGGER.warning(
+                "KNX expose write_back to %s: unsupported target for the configured DPT",
+                self.entity_id,
+            )
+            return None
+        try:
+            value = option.dpt.from_knx(payload)
+        except (ConversionError, CouldNotParseTelegram) as err:
+            _LOGGER.warning(
+                "Could not decode incoming telegram for KNX expose %s: %s",
+                self.entity_id,
+                err,
+            )
+            return None
+        service_domain, service, field = mapping
+        data = {ATTR_ENTITY_ID: self.entity_id, field: value}
+        return _WriteBackCall(value, service_domain, service, data)
 
     def _get_expose_value(
         self, state: State | None, option: KnxExposeOptions

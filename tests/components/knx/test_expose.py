@@ -114,6 +114,93 @@ async def test_binary_expose_write_back_source_filter(
     assert len(turn_on) == 0
 
 
+@pytest.mark.parametrize(
+    ("expose_type", "payload", "expected", "domain"),
+    [
+        pytest.param("5.010", (42,), 42, "number", id="number"),
+        pytest.param("5.010", (42,), 42, "input_number", id="input_number"),
+    ],
+)
+async def test_value_expose_write_back(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    expose_type: str,
+    payload: tuple[int, ...],
+    expected: int | str,
+    domain: str,
+) -> None:
+    """Test write_back sets a value helper from a whitelisted incoming write."""
+    entity_id = f"{domain}.fake"
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: expose_type,
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                ExposeSchema.CONF_KNX_EXPOSE_WRITE_BACK: True,
+                ExposeSchema.CONF_KNX_EXPOSE_SOURCE_WHITELIST: ["1.1.5"],
+            }
+        },
+    )
+    set_value = async_mock_service(hass, domain, "set_value")
+
+    await knx.receive_write("1/1/8", payload, source="1.1.5")
+    assert len(set_value) == 1
+    assert set_value[0].data == {"entity_id": entity_id, "value": expected}
+
+    # The write-back must not echo back onto the bus
+    await knx.assert_no_telegram()
+
+
+async def test_numeric_expose_write_back_no_echo(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test a state change resulting from a numeric write-back is not re-sent."""
+    entity_id = "number.fake"
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "5.010",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                ExposeSchema.CONF_KNX_EXPOSE_WRITE_BACK: True,
+                ExposeSchema.CONF_KNX_EXPOSE_SOURCE_WHITELIST: ["1.1.5"],
+            }
+        },
+    )
+    async_mock_service(hass, "number", "set_value")
+
+    await knx.receive_write("1/1/8", (42,), source="1.1.5")
+    hass.states.async_set(entity_id, "42")
+    await hass.async_block_till_done()
+    await knx.assert_no_telegram()
+
+
+async def test_expose_write_back_unsupported_domain(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a numeric write-back to an unsupported domain is skipped with a warning."""
+    entity_id = "sensor.fake"
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "5.010",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                ExposeSchema.CONF_KNX_EXPOSE_WRITE_BACK: True,
+                ExposeSchema.CONF_KNX_EXPOSE_SOURCE_WHITELIST: ["1.1.5"],
+            }
+        },
+    )
+    set_value = async_mock_service(hass, "sensor", "set_value")
+
+    await knx.receive_write("1/1/8", (42,), source="1.1.5")
+    assert len(set_value) == 0
+    assert "unsupported target" in caplog.text
+
+
 def test_expose_write_back_allows_numeric() -> None:
     """Test write_back is allowed for a numeric exposure."""
     ExposeSchema.ENTITY_SCHEMA(
