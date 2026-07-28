@@ -677,7 +677,7 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     }
 
 
-async def test_list_related_devices(
+async def test_list_linked_devices(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
     device_registry: dr.DeviceRegistry,
@@ -713,40 +713,40 @@ async def test_list_related_devices(
     )
     assert len({device_1.id, device_2.id, device_3.id, device_4.id}) == 4
 
-    async def list_related(device_id: str) -> dict:
+    async def list_linked(device_id: str) -> dict:
         await client.send_json_auto_id(
             {
-                "type": "config/device_registry/list_related_devices",
+                "type": "config/device_registry/list_linked_devices",
                 "device_id": device_id,
             }
         )
         return await client.receive_json()
 
-    # device_1 is related to both device_2 (identifier) and device_3 (connection)
-    msg = await list_related(device_1.id)
+    # device_1 is linked to both device_2 (identifier) and device_3 (connection)
+    msg = await list_linked(device_1.id)
     assert msg["success"]
-    assert msg["result"]["related_devices"] == unordered([device_2.id, device_3.id])
+    assert msg["result"]["linked_devices"] == unordered([device_2.id, device_3.id])
 
     # device_2 and device_3 each only share with device_1, not with each other
-    msg = await list_related(device_2.id)
-    assert msg["result"]["related_devices"] == [device_1.id]
+    msg = await list_linked(device_2.id)
+    assert msg["result"]["linked_devices"] == [device_1.id]
 
-    msg = await list_related(device_3.id)
-    assert msg["result"]["related_devices"] == [device_1.id]
+    msg = await list_linked(device_3.id)
+    assert msg["result"]["linked_devices"] == [device_1.id]
 
-    # device_4 has no related devices
-    msg = await list_related(device_4.id)
-    assert msg["result"]["related_devices"] == []
+    # device_4 has no linked devices
+    msg = await list_linked(device_4.id)
+    assert msg["result"]["linked_devices"] == []
 
 
-async def test_list_related_devices_unknown_device(
+async def test_list_linked_devices_unknown_device(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
 ) -> None:
-    """Test listing related devices for an unknown device returns an error."""
+    """Test listing linked devices for an unknown device returns an error."""
     await client.send_json_auto_id(
         {
-            "type": "config/device_registry/list_related_devices",
+            "type": "config/device_registry/list_linked_devices",
             "device_id": "does_not_exist",
         }
     )

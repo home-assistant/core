@@ -19,7 +19,7 @@ def async_setup(hass: HomeAssistant) -> bool:
 
     websocket_api.async_register_command(hass, websocket_list_composite_splits)
     websocket_api.async_register_command(hass, websocket_list_devices)
-    websocket_api.async_register_command(hass, websocket_list_related_devices)
+    websocket_api.async_register_command(hass, websocket_list_linked_devices)
     websocket_api.async_register_command(hass, websocket_update_device)
     websocket_api.async_register_command(
         hass, websocket_remove_config_entry_from_device
@@ -99,20 +99,20 @@ def websocket_list_devices(
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/device_registry/list_related_devices",
+        vol.Required("type"): "config/device_registry/list_linked_devices",
         vol.Required("device_id"): str,
     }
 )
-def websocket_list_related_devices(
+def websocket_list_linked_devices(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Handle list related devices command.
+    """Handle list linked devices command.
 
-    Related devices share at least one connection or identifier with the given
+    Linked devices share at least one connection or identifier with the given
     device. Each such connection or identifier is unique within a config entry, so
-    the related devices belong to other config entries.
+    the linked devices belong to other config entries.
     """
     registry = dr.async_get(hass)
     device_id = msg["device_id"]
@@ -123,7 +123,7 @@ def websocket_list_related_devices(
         )
         return
 
-    related_devices = [
+    linked_devices = [
         entry.id
         for entry in registry.async_get_devices(
             identifiers=device.identifiers, connections=device.connections
@@ -131,7 +131,7 @@ def websocket_list_related_devices(
         if entry.id != device_id
     ]
 
-    connection.send_result(msg["id"], {"related_devices": related_devices})
+    connection.send_result(msg["id"], {"linked_devices": linked_devices})
 
 
 @require_admin
