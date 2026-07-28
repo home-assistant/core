@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 from functools import lru_cache
-from ipaddress import ip_address
 import logging
 import re
 from typing import Final
