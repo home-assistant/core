@@ -1042,11 +1042,19 @@
           "title": "Additional settings"
         },
         "show_raw_values": "Show raw values",
+        "source_whitelist": {
+          "description": "KNX individual addresses (e.g. `1.1.5`) allowed to change the entity through write-back. Leave empty to accept writes from any address.",
+          "label": "Allowed source addresses"
+        },
         "title": "Add exposure",
         "value_template": {
           "description": "Optionally transform the entity state or attribute value before sending it to KNX using a template. The template receives the entity state or attribute value as `value` variable.",
           "label": "Value template"
         },
+        "write_back": {
+          "description": "Update the Home Assistant entity when a write telegram is received on the exposed group address. Supported for binary, numeric and string exposures.",
+          "label": "Write-back"
+	},
         "yaml": {
           "mode_hint": "This is an internal representation of the expose configuration and may change in future Home Assistant versions. YAML mode is intended for debugging, and for sharing or copying configurations — prefer the visual editor for everyday use.",
           "yaml_error": "[%key:component::knx::config_panel::entities::create::yaml::yaml_error%]"
