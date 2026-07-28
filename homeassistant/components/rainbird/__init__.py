@@ -137,8 +137,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
     await data.coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = data
-    _async_migrate_zone_entity_type(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    _async_migrate_zone_entity_type(hass, entry)
 
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
 
@@ -283,20 +283,49 @@ def _async_fix_device_id(
 def _async_migrate_zone_entity_type(
     hass: HomeAssistant, entry: RainbirdConfigEntry
 ) -> None:
-    """Remove entity registry entries for the inactive zone entity type.
+    """Migrate zone entity registry entries when switching between switch and valve.
 
-    When switching between switch and valve modes, a config entry reload
-    preserves the old platform's registry entries as unavailable. This removes
-    those stale entries so only the active platform's entities remain.
+    After platform setup, any active-domain entities already exist. Copy
+    user customizations (name, icon, area, visibility, labels) from the
+    corresponding inactive-domain entry to the new active-domain entry so
+    that switching type back and forth does not lose user settings. Then
+    remove the stale inactive-domain entries.
     """
     zone_type = entry.options.get(CONF_ZONE_TYPE, ZONE_TYPE_SWITCH)
     inactive_domain = (
         Platform.VALVE if zone_type == ZONE_TYPE_SWITCH else Platform.SWITCH
     )
+    active_domain = (
+        Platform.SWITCH if zone_type == ZONE_TYPE_SWITCH else Platform.VALVE
+    )
     entity_reg = er.async_get(hass)
-    for entity_entry in er.async_entries_for_config_entry(entity_reg, entry.entry_id):
-        if entity_entry.domain == inactive_domain:
-            entity_reg.async_remove(entity_entry.entity_id)
+    all_entries = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
+
+    inactive: dict[str | None, er.RegistryEntry] = {
+        e.unique_id: e for e in all_entries if e.domain == inactive_domain
+    }
+    if not inactive:
+        return
+
+    # Copy customizations from old inactive entries to the new active entries.
+    for active_entry in all_entries:
+        if active_entry.domain != active_domain:
+            continue
+        old = inactive.get(active_entry.unique_id)
+        if old is None:
+            continue
+        entity_reg.async_update_entity(
+            active_entry.entity_id,
+            name=old.name,
+            icon=old.icon,
+            area_id=old.area_id,
+            disabled_by=old.disabled_by,
+            hidden_by=old.hidden_by,
+            labels=old.labels,
+        )
+
+    for old_entry in inactive.values():
+        entity_reg.async_remove(old_entry.entity_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> bool:
