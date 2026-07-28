@@ -644,6 +644,13 @@ async def test_zone_type_change(
     assert hass.states.get(initial_entity_id) is not None
     assert hass.states.get(target_entity_id) is None
 
+    # Apply user customizations to the initial entity so the migration can be verified.
+    entity_registry.async_update_entity(
+        initial_entity_id,
+        name="Front Yard Zone",
+        icon="mdi:sprinkler-variant",
+    )
+
     # Change zone type via options flow, which triggers a reload.
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
@@ -659,4 +666,9 @@ async def test_zone_type_change(
     assert hass.states.get(initial_entity_id) is None
     assert hass.states.get(target_entity_id) is not None
     assert entity_registry.async_get(initial_entity_id) is None
-    assert entity_registry.async_get(target_entity_id) is not None
+
+    # Verify customizations were carried over to the replacement entity.
+    target_entry = entity_registry.async_get(target_entity_id)
+    assert target_entry is not None
+    assert target_entry.name == "Front Yard Zone"
+    assert target_entry.icon == "mdi:sprinkler-variant"
