@@ -73,9 +73,9 @@ def setup_security_filter(app: Application) -> None:
                     )
                     raise HTTPBadRequest
                 _LOGGER.warning(
-                    "Filtered a request with an unsafe byte in path from host %s: %s",
-                    request.remote,
+                    "Filtered a request with an unsafe byte in path: %s from host %s",
                     request.raw_path,
+                    request.remote,
                 )
                 raise HTTPBadRequest
 
@@ -85,16 +85,16 @@ def setup_security_filter(app: Application) -> None:
             # specific warning.
             if FILTERS.search(_recursive_unquote(query_string)):
                 _LOGGER.warning(
-                    "Filtered a request with a potential harmful query string from host %s: %s",
-                    request.remote,
+                    "Filtered a request with a potential harmful query string: %s from host %s",
                     request.raw_path,
+                    request.remote,
                 )
                 raise HTTPBadRequest
 
             _LOGGER.warning(
-                "Filtered a potential harmful request from host %s to: %s",
-                request.remote,
+                "Filtered a potential harmful request to: %s from host %s",
                 request.raw_path,
+                request.remote,
             )
             raise HTTPBadRequest
 
