@@ -103,16 +103,16 @@
       "device_volume": {
         "name": "Volume",
         "state": {
-          "0": "Low",
-          "1": "Medium",
-          "2": "High",
+          "0": "[%key:common::state::low%]",
+          "1": "[%key:common::state::medium%]",
+          "2": "[%key:common::state::high%]",
           "99": "Mute"
         }
       },
       "mode": {
         "name": "Mode",
         "state": {
-          "0": "Home",
+          "0": "[%key:common::state::home%]",
           "1": "Away",
           "2": "Disarm"
         }
@@ -123,7 +123,7 @@
           "0": "Smart night vision",
           "1": "Bright color night vision",
           "2": "Infrared night vision",
-          "3": "Off",
+          "3": "[%key:common::state::off%]",
           "4": "Custom mode",
           "intelligent": "Smart night vision",
           "fullcolor": "Bright color night vision",

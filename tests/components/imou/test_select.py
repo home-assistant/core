@@ -89,11 +89,13 @@ async def test_select_entities_snapshot(
 @pytest.mark.usefixtures("init_integration")
 async def test_setup_ignores_unknown_select_types(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Unknown select keys from the API are not turned into entities."""
-    registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    entries = er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
     select_entries = [entry for entry in entries if entry.domain == SELECT_DOMAIN]
     assert len(select_entries) == 1
     assert select_entries[0].translation_key == PARAM_NIGHT_VISION_MODE
@@ -136,18 +138,26 @@ async def test_select_option_via_domain_service(
 @pytest.mark.usefixtures("init_integration")
 async def test_select_option_propagates_api_error(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
     init_integration: MagicMock,
 ) -> None:
     """Imou API errors from async_select_option surface to the service call."""
     init_integration.async_select_option.side_effect = ImouException("cloud failure")
 
-    entity_id = hass.states.async_all("select")[0].entity_id
+    mode_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entry.unique_id == "d1$mode"
+    )
 
     with pytest.raises(HomeAssistantError, match="cloud failure"):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "1"},
+            {ATTR_ENTITY_ID: mode_entry.entity_id, ATTR_OPTION: "1"},
             blocking=True,
         )
 

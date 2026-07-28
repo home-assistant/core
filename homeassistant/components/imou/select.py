@@ -17,7 +17,7 @@ from .const import (
     PARAM_NIGHT_VISION_MODE,
     imou_device_identifier,
 )
-from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
+from .coordinator import ImouConfigEntry
 from .entity import ImouEntity
 
 PARALLEL_UPDATES = 0
@@ -38,18 +38,6 @@ SELECT_TYPES: tuple[SelectEntityDescription, ...] = (
 )
 
 
-def _iter_selects(
-    coordinator: ImouDataUpdateCoordinator,
-) -> list[tuple[SelectEntityDescription, ImouHaDevice]]:
-    """Return (description, device) pairs for supported selects."""
-    return [
-        (description, device)
-        for device in coordinator.devices
-        for description in SELECT_TYPES
-        if description.key in device.selects
-    ]
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ImouConfigEntry,
@@ -62,8 +50,10 @@ async def async_setup_entry(
         device_keys = {imou_device_identifier(device) for device in new_devices}
         async_add_entities(
             ImouSelect(coordinator, description, device)
-            for description, device in _iter_selects(coordinator)
-            if imou_device_identifier(device) in device_keys
+            for device in coordinator.devices
+            for description in SELECT_TYPES
+            if description.key in device.selects
+            and imou_device_identifier(device) in device_keys
         )
 
     entry.async_on_unload(coordinator.register_new_device_callback(_add_selects))
