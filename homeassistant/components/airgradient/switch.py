@@ -43,6 +43,24 @@ POST_DATA_TO_AIRGRADIENT = AirGradientSwitchEntityDescription(
     set_value_fn=lambda client, value: client.enable_sharing_data(enable=value),
 )
 
+BUZZER_ENABLED = AirGradientSwitchEntityDescription(
+    key="buzzer_enabled",
+    translation_key="buzzer_enabled",
+    entity_category=EntityCategory.CONFIG,
+    config_key="buzzer_enabled",
+    value_fn=lambda config: config.buzzer_enabled,
+    set_value_fn=lambda client, value: client.set_buzzer_enabled(value),
+)
+
+CLOUD_CONNECTION = AirGradientSwitchEntityDescription(
+    key="cloud_connection",
+    translation_key="cloud_connection",
+    entity_category=EntityCategory.CONFIG,
+    config_key="cloud_connection",
+    value_fn=lambda config: config.cloud_connection,
+    set_value_fn=lambda client, value: client.set_cloud_connection(value),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -58,21 +76,28 @@ async def async_setup_entry(
     def _async_check_entities() -> None:
         nonlocal added_entities
         config = coordinator.data.config
-        desired_entities: set[str] = set()
-        if (
-            config.configuration_control is ConfigurationControl.LOCAL
+        descriptions = (POST_DATA_TO_AIRGRADIENT, BUZZER_ENABLED, CLOUD_CONNECTION)
+        descriptions_by_key = {
+            description.key: description for description in descriptions
+        }
+        desired_entities = {
+            description.key
+            for description in descriptions
+            if config.configuration_control is ConfigurationControl.LOCAL
             and supports_config(
                 coordinator.data.measures.model,
                 coordinator.client.api_version,
                 config,
-                POST_DATA_TO_AIRGRADIENT.config_key,
+                description.config_key,
             )
-        ):
-            desired_entities.add(POST_DATA_TO_AIRGRADIENT.key)
+        }
 
-        if desired_entities - added_entities:
+        if entities_to_add := desired_entities - added_entities:
             async_add_entities(
-                [AirGradientSwitch(coordinator, POST_DATA_TO_AIRGRADIENT)]
+                [
+                    AirGradientSwitch(coordinator, descriptions_by_key[key])
+                    for key in entities_to_add
+                ]
             )
         if entities_to_remove := added_entities - desired_entities:
             entity_registry = er.async_get(hass)

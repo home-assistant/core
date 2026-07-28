@@ -45,6 +45,9 @@
       }
     },
     "select": {
+      "back_led_brightness": {
+        "name": "Back LED brightness"
+      },
       "co2_automatic_baseline_calibration": {
         "name": "CO2 automatic baseline duration",
         "state": {
@@ -77,12 +80,30 @@
           "f": "Fahrenheit"
         }
       },
+      "front_led_brightness": {
+        "name": "Front LED brightness"
+      },
+      "gps_mode": {
+        "name": "GPS mode"
+      },
       "led_bar_mode": {
         "name": "LED bar mode",
         "state": {
           "co2": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
           "off": "[%key:common::state::off%]",
           "pm": "Particulate matter"
+        }
+      },
+      "measurement_interval": {
+        "name": "Measurement interval",
+        "state": {
+          "3": "3 seconds",
+          "10": "10 seconds",
+          "30": "30 seconds",
+          "60": "1 minute",
+          "300": "5 minutes",
+          "900": "15 minutes",
+          "3600": "1 hour"
         }
       },
       "nox_index_learning_time_offset": {
@@ -94,6 +115,9 @@
           "360": "360 hours",
           "720": "720 hours"
         }
+      },
+      "touch_led_intensity": {
+        "name": "Touch LED intensity"
       },
       "voc_index_learning_time_offset": {
         "name": "VOC index learning offset",
@@ -188,6 +212,12 @@
       }
     },
     "switch": {
+      "buzzer_enabled": {
+        "name": "Buzzer"
+      },
+      "cloud_connection": {
+        "name": "Cloud connection"
+      },
       "post_data_to_airgradient": {
         "name": "Post data to Airgradient"
       }

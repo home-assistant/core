@@ -27,7 +27,6 @@ LED_BAR_BRIGHTNESS = "led_bar_brightness"
 DISPLAY_BRIGHTNESS = "display_brightness"
 MEASUREMENT_INTERVAL = "measurement_interval"
 GPS_MODE = "gps_mode"
-GPS_INTERVAL = "gps_interval"
 FRONT_LED_BRIGHTNESS = "front_led_brightness"
 BACK_LED_BRIGHTNESS = "back_led_brightness"
 TOUCH_LED_INTENSITY = "touch_led_intensity"
@@ -66,7 +65,6 @@ GO_CONFIG = frozenset(
         TEMPERATURE_UNIT,
         MEASUREMENT_INTERVAL,
         GPS_MODE,
-        GPS_INTERVAL,
         FRONT_LED_BRIGHTNESS,
         BACK_LED_BRIGHTNESS,
         TOUCH_LED_INTENSITY,

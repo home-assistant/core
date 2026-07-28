@@ -81,13 +81,16 @@ async def async_setup_entry(
     def _async_check_entities() -> None:
         nonlocal added_entities
         config = coordinator.data.config
-        descriptions = (DISPLAY_BRIGHTNESS, LED_BAR_BRIGHTNESS)
+        descriptions = (
+            DISPLAY_BRIGHTNESS,
+            LED_BAR_BRIGHTNESS,
+        )
         descriptions_by_key = {
             description.key: description for description in descriptions
         }
         desired_entities = {
             description.key
-            for description in (DISPLAY_BRIGHTNESS, LED_BAR_BRIGHTNESS)
+            for description in descriptions
             if config.configuration_control is ConfigurationControl.LOCAL
             and supports_config(
                 model, coordinator.client.api_version, config, description.config_key
