@@ -87,8 +87,9 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, str]:
         """Validate credentials by sending a test SMS."""
         try:
+            client = FreeClient(username, access_token)
             resp = await self.hass.async_add_executor_job(
-                lambda: FreeClient(username, access_token).send_sms(VALIDATION_MESSAGE)
+                client.send_sms, VALIDATION_MESSAGE
             )
         except Exception as err:  # noqa: BLE001
             _LOGGER.error(
