@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 ZONE_ERROR_CODES = {"NoSuchHostedZone", "InvalidInput"}
 
 # Errors that belong on a specific field instead of the form as a whole
-ERROR_FIELDS = {"invalid_zone": CONF_ZONE}
+ERROR_FIELDS = {"invalid_zone": CONF_ZONE, "invalid_domain": CONF_DOMAIN}
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -66,22 +66,28 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
+def _normalize(name: str) -> str:
+    """Normalize a DNS name for comparison; DNS is case-insensitive."""
+    return name.rstrip(".").lower()
+
+
 def _validate_auth(
     aws_access_key_id: str, aws_secret_access_key: str, zone: str
-) -> None:
-    """Validate we can access Route53."""
+) -> str:
+    """Validate we can access Route53, returning the hosted zone name."""
     client = boto3.client(
         "route53",
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key,
     )
-    # Check if we can get the hosted zone to verify auth and zone
-    client.get_hosted_zone(Id=zone)
+    # Fetching the hosted zone verifies both the credentials and the zone ID
+    response = client.get_hosted_zone(Id=zone)
+    return _normalize(response["HostedZone"]["Name"])
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect."""
-    await hass.async_add_executor_job(
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
+    """Validate the user input allows us to connect, returning the zone name."""
+    return await hass.async_add_executor_job(
         _validate_auth,
         data[CONF_ACCESS_KEY_ID],
         data[CONF_SECRET_ACCESS_KEY],
@@ -97,7 +103,7 @@ class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_validate(self, user_input: dict[str, Any]) -> str | None:
         """Validate the input, returning an error key when it fails."""
         try:
-            await validate_input(self.hass, user_input)
+            zone_name = await validate_input(self.hass, user_input)
         except botocore.exceptions.ClientError as err:
             _LOGGER.error("AWS rejected the request: %s", err)
             if err.response["Error"]["Code"] in ZONE_ERROR_CODES:
@@ -109,6 +115,12 @@ class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Unexpected exception")
             return "unknown"
+
+        # Route53 rejects records outside the zone, so catch it before setup
+        domain = _normalize(user_input[CONF_DOMAIN])
+        if domain != zone_name and not domain.endswith(f".{zone_name}"):
+            _LOGGER.error("Domain %s is not inside hosted zone %s", domain, zone_name)
+            return "invalid_domain"
         return None
 
     @override

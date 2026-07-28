@@ -34,7 +34,7 @@ async def test_form(
 
     with patch(
         "homeassistant.components.route53.config_flow.boto3.client",
-        return_value=mock_boto3_client,
+        return_value=mock_boto3_client.return_value,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -60,6 +60,49 @@ async def test_form(
         CONF_TTL: DEFAULT_TTL,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("domain", "expected_type"),
+    [
+        pytest.param("example.com", FlowResultType.CREATE_ENTRY, id="zone_apex"),
+        pytest.param("EXAMPLE.COM.", FlowResultType.CREATE_ENTRY, id="case_and_dot"),
+        pytest.param(
+            "home.example.com", FlowResultType.CREATE_ENTRY, id="subdomain_of_zone"
+        ),
+        pytest.param("notexample.com", FlowResultType.FORM, id="suffix_near_miss"),
+        pytest.param("other.org", FlowResultType.FORM, id="outside_zone"),
+    ],
+)
+async def test_form_domain_must_be_in_zone(
+    hass: HomeAssistant,
+    mock_boto3_client: MagicMock,
+    domain: str,
+    expected_type: FlowResultType,
+) -> None:
+    """Test the domain is validated against the hosted zone name."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.route53.config_flow.boto3.client",
+        return_value=mock_boto3_client.return_value,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ACCESS_KEY_ID: "test-key",
+                CONF_SECRET_ACCESS_KEY: "test-secret",
+                CONF_ZONE: "test-zone",
+                CONF_DOMAIN: domain,
+                CONF_RECORDS: ["test1"],
+                CONF_TTL: DEFAULT_TTL,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is expected_type
 
 
 @pytest.mark.parametrize(
