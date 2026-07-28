@@ -14,8 +14,9 @@ from aiohortos import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
@@ -106,6 +107,7 @@ class HortimaxCoordinator(DataUpdateCoordinator[dict[str, HortimaxDeviceData]]):
                     )
                 device_data.source_names = disambiguate_source_names(sources)
                 data[device.name] = device_data
+                self._rename_changed_sources(device.name, device_data)
         except HortosAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
@@ -117,3 +119,21 @@ class HortimaxCoordinator(DataUpdateCoordinator[dict[str, HortimaxDeviceData]]):
                 translation_placeholders={"error": str(err)},
             ) from err
         return data
+
+    @callback
+    def _rename_changed_sources(
+        self, device_id: str, device_data: HortimaxDeviceData
+    ) -> None:
+        """Follow a source that was renamed, or that now collides with another.
+
+        Entities set the device name when they are first added, so a rename in
+        HortiMaX Pro would otherwise not show until the entry is reloaded. A
+        name the user set themselves takes precedence and is left alone.
+        """
+        registry = dr.async_get(self.hass)
+        for key, name in device_data.source_names.items():
+            device = registry.async_get_device(
+                identifiers={(DOMAIN, f"{device_id}::{key}")}
+            )
+            if device is not None and device.name != name:
+                registry.async_update_device(device.id, name=name)

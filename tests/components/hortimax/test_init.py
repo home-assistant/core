@@ -1,8 +1,11 @@
 """Test setting up and tearing down the Ridder HortiMaX Pro integration."""
 
+from dataclasses import replace
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from aiohortos import HortosAuthenticationError, HortosConnectionError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.hortimax.const import DOMAIN
@@ -11,9 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .conftest import DEVICE, DEVICE_LABEL
+from .conftest import DEVICE, DEVICE_LABEL, load_readouts
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_hortos_client")
@@ -82,6 +85,36 @@ async def test_readout_auth_error_sets_error_state(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.usefixtures("mock_hortos_client")
+async def test_renamed_source_follows(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hortos_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test renaming a source in HortiMaX Pro renames its device."""
+    await setup_integration(hass, mock_config_entry)
+    identifiers = {(DOMAIN, f"{DEVICE}::WeatherStation::Weather station 001")}
+    assert (
+        device_registry.async_get_device(identifiers=identifiers).name == "Weerstation"
+    )
+
+    readouts = load_readouts()
+    mock_hortos_client.get_latest_readouts.return_value = [
+        replace(readout, source=replace(readout.source, user_defined_name="Weerhuisje"))
+        for readout in readouts
+        if readout.source.type == "WeatherStation"
+    ] + [readout for readout in readouts if readout.source.type != "WeatherStation"]
+    freezer.tick(timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device(identifiers=identifiers).name == "Weerhuisje"
+    )
 
 
 @pytest.mark.usefixtures("mock_hortos_client")
