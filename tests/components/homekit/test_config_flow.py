@@ -760,7 +760,13 @@ async def test_options_flow_valves_filters_grouped_default_entities(
         user_input={},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert "entity_config" not in config_entry.options
+    assert config_entry.options["entity_config"] == {
+        "valve.front": {
+            "type": "irrigation_system",
+            "linked_irrigation_valves": ["valve.back"],
+        },
+        "valve.back": {"irrigation_controller": "valve.front"},
+    }
 
 
 async def test_options_flow_exclude_mode_with_cameras(hass: HomeAssistant) -> None:
@@ -1017,7 +1023,6 @@ async def test_options_flow_include_mode_with_cameras(hass: HomeAssistant) -> No
     assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         "devices": [],
-        "entity_config": {},
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old", "camera.excluded"],
@@ -1168,7 +1173,6 @@ async def test_options_flow_with_camera_audio(hass: HomeAssistant) -> None:
     assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         "devices": [],
-        "entity_config": {},
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old", "camera.excluded"],

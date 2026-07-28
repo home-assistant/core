@@ -617,7 +617,7 @@ class IrrigationSystem(HomeAccessory):
 
         serv_irrigation = self.add_preload_service(
             SERV_IRRIGATION_SYSTEM,
-            [CHAR_NAME, CHAR_REMAINING_DURATION],
+            [CHAR_NAME, CHAR_REMAINING_DURATION, CHAR_STATUS_FAULT],
         )
         serv_irrigation.configure_char(CHAR_NAME, value=self.display_name)
         self._char_system_active = serv_irrigation.configure_char(
