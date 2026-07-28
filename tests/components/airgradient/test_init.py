@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from airgradient import AirGradientError
+from airgradient import AirGradientError, ApiVersion
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import setup_integration
+from . import load_config_fixture, setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -28,6 +28,26 @@ async def test_device_info(
     await setup_integration(hass, airgradient_config_entry)
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, airgradient_config_entry.unique_id)}
+    )
+    assert device_entry is not None
+    assert device_entry == snapshot
+
+
+async def test_go_device_info(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test Go device registry entry."""
+    mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
+        "config_v1_local.json", ApiVersion.V1
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.unique_id)}
     )
     assert device_entry is not None
     assert device_entry == snapshot
