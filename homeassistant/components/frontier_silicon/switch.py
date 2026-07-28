@@ -6,7 +6,7 @@ from functools import partial
 import logging
 from typing import Any
 
-from afsapi import AFSAPI
+from afsapi import AFSAPI, FSNotImplementedError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
@@ -46,8 +46,21 @@ async def async_setup_entry(
     """Set up the Frontier Silicon entity."""
 
     afsapi = config_entry.runtime_data
+
+    # only add switch entities for nodes which exist on the target device
+    available_switches = []
+    for description in SWITCHES:
+        try:
+            _ = await description.is_on_fn(afsapi)()
+        except FSNotImplementedError:
+            continue
+        available_switches.append(description)
+
     async_add_entities(
-        [AFSAPISwitch(config_entry, afsapi, description) for description in SWITCHES],
+        [
+            AFSAPISwitch(config_entry, afsapi, description)
+            for description in available_switches
+        ],
         True,
     )
 
