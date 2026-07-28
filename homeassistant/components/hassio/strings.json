@@ -62,14 +62,20 @@
   },
   "issues": {
     "issue_addon_app_port_conflict": {
-      "description": "App {addon} has a port conflict on port {port}.",
       "fix_flow": {
         "abort": {
           "apply_suggestion_fail": "Could not apply the fix. Check the Supervisor logs for more details."
         },
         "step": {
-          "addon_clear_port_config": {
-            "description": "App {addon} has a port conflict on port {port}. Clear the port configuration in the app settings, or manually configure the app to use a different port to resolve this."
+          "fix_menu": {
+            "description": "App {addon} has a port conflict on port {port}. You can clear the port configuration in the app settings to automatically resolve this and start the app, or you can manually unblock the port by stopping or reconfiguring the other service using it.",
+            "menu_options": {
+              "addon_clear_port_config": "Clear port configuration",
+              "addon_execute_start": "Start after manual unblock"
+            }
+          },
+          "addon_execute_start": {
+            "description": "App {addon} has a port conflict on port {port}. The app cannot change this in settings. Please uninstall the app or stop and reconfigure the other service using port {port}. Once unblocked, select this option again to start the app."
           }
         }
       },

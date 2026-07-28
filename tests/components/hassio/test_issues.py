@@ -906,12 +906,12 @@ async def test_system_is_not_ready(
     "all_setup_requests", [{"include_addons": True}], indirect=True
 )
 @pytest.mark.usefixtures("all_setup_requests")
-async def test_supervisor_issues_app_port_conflict(
+async def test_supervisor_issues_app_port_conflict_single(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
     hass_supervisor_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test supervisor issue for app port conflict in an addon."""
+    """Test supervisor issue for app port conflict with single execute_start suggestion."""
     mock_resolution_info(supervisor_client)
 
     result = await async_setup_component(hass, DOMAIN, {})
@@ -934,11 +934,83 @@ async def test_supervisor_issues_app_port_conflict(
                     "suggestions": [
                         {
                             "uuid": uuid4().hex,
-                            "type": "clear_port_config",
+                            "type": "execute_start",
                             "context": "addon",
                             "reference": "test",
                             "reference_extra": {"port": 11443},
                         }
+                    ],
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="addon",
+        type_="app_port_conflict",
+        fixable=True,
+        placeholders={
+            "reference": "test",
+            "addon": "test",
+            "addon_url": "/hassio/addon/test",
+            "port": "11443",
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    "all_setup_requests", [{"include_addons": True}], indirect=True
+)
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_app_port_conflict_menu(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for app port conflict with two suggestions."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "app_port_conflict",
+                    "context": "addon",
+                    "reference": "test",
+                    "reference_extra": {"port": 11443},
+                    "suggestions": [
+                        {
+                            "uuid": uuid4().hex,
+                            "type": "execute_start",
+                            "context": "addon",
+                            "reference": "test",
+                            "reference_extra": {"port": 11443},
+                        },
+                        {
+                            "uuid": uuid4().hex,
+                            "type": "clear_port_config",
+                            "context": "addon",
+                            "reference": "test",
+                            "reference_extra": {"port": 11443},
+                        },
                     ],
                 },
             },
