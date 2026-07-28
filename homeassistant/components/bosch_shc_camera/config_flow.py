@@ -658,15 +658,6 @@ class BoschCameraOptionsFlow(config_entries.OptionsFlow):
                 merged = {**dict(self._config_entry.options), **user_input}
                 return self.async_create_entry(title="", data=merged)
 
-        if errors and user_input is not None:
-            # The schema below is built entirely from `opts` (the PERSISTED
-            # values) — without this, a single invalid field discarded every
-            # other edit in the same submission when the form was
-            # redisplayed with the error. Merge what the user just typed on
-            # top of the persisted values so the redisplayed form shows
-            # their edits, not stale saved state.
-            opts.update(user_input)
-
         has_refresh = bool(self._config_entry.data.get("refresh_token", ""))
 
         # Build per-section voluptuous schemas. OPTIONS_SECTIONS is the single
