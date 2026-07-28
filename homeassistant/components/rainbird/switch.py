@@ -6,12 +6,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTR_DURATION,
-    CONF_IMPORTED_NAMES,
-    CONF_ZONE_TYPE,
-    ZONE_TYPE_VALVE,
-)
+from .const import ATTR_DURATION, CONF_IMPORTED_NAMES, CONF_ZONE_TYPE, ZONE_TYPE_VALVE
 from .entity import RainBirdZoneEntity
 from .types import RainbirdConfigEntry
 
