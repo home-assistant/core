@@ -4,6 +4,13 @@ from http import HTTPStatus
 
 import pytest
 
+from homeassistant.components.rainbird.const import (
+    ATTR_DURATION,
+    CONF_ZONE_TYPE,
+    DEFAULT_TRIGGER_TIME_MINUTES,
+    DOMAIN,
+    ZONE_TYPE_VALVE,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -20,13 +27,6 @@ from .conftest import (
     ZONE_OFF_RESPONSE,
     mock_response,
     mock_response_error,
-)
-from homeassistant.components.rainbird.const import (
-    ATTR_DURATION,
-    CONF_ZONE_TYPE,
-    DEFAULT_TRIGGER_TIME_MINUTES,
-    DOMAIN,
-    ZONE_TYPE_VALVE,
 )
 
 from tests.common import MockConfigEntry
