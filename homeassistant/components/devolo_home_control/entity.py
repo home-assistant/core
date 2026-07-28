@@ -103,8 +103,15 @@ class DevoloDeviceEntity(Entity):
                     ].name,
                 )
             self._attr_available = state
-        elif message[1] == "del" and self.device_entry:
-            dr.async_get(self.hass).async_remove_device(self.device_entry.id)
+        elif message[1] == "del":
+            # A "del" is dispatched to every entity of the device, so look the
+            # device up freshly: whichever entity runs first removes it, and the
+            # rest find it already gone instead of acting on a stale reference.
+            device_registry = dr.async_get(self.hass)
+            if device := device_registry.async_get_device(
+                identifiers={(DOMAIN, self._device_instance.uid)}
+            ):
+                device_registry.async_remove_device(device.id)
         else:
             _LOGGER.debug("No valid message received: %s", message)
 
