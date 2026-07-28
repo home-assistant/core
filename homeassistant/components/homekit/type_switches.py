@@ -756,10 +756,10 @@ class IrrigationSystem(HomeAccessory):
         if new_state is None:
             if old_state := event.data["old_state"]:
                 self._set_valve_unavailable(old_state.entity_id)
-                else:
-                    self._set_valve_unavailable(event.data["entity_id"])
-                self._update_system_state()
-                return
+            else:
+                self._set_valve_unavailable(event.data["entity_id"])
+            self._update_system_state()
+            return
         self._sync_valve_chars(new_state.entity_id, new_state)
         self._update_system_state()
 
