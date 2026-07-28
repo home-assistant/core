@@ -551,10 +551,10 @@ class OptionsFlowHandler(OptionsFlow):
                 included_valves_set = set(self.included_valves)
                 current_grouped = [
                     valve_entity_id
-                    for valve_entity_id in [
+                    for valve_entity_id in (
                         entity_id,
-                        *entity_config.get(CONF_LINKED_IRRIGATION_VALVES, []),
-                    ]
+                        *entity_config.get(CONF_LINKED_IRRIGATION_VALVES, ()),
+                    )
                     if valve_entity_id in included_valves_set
                 ]
                 break
