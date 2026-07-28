@@ -1,7 +1,5 @@
 """Base entity for the Ridder HortiMaX Pro (HortOS) integration."""
 
-from typing import override
-
 from aiohortos import Readout
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -45,11 +43,9 @@ class HortimaxEntity(CoordinatorEntity[HortimaxCoordinator]):
 
     @property
     def readout(self) -> Readout | None:
-        """Return the current readout, or None once the controller drops it."""
-        return self.coordinator.data[self._device_id].readouts.get(self._key)
+        """Return the current readout, or None once the controller drops it.
 
-    @property
-    @override
-    def available(self) -> bool:
-        """Return whether the readout is still being reported."""
-        return super().available and self.readout is not None
+        A reachable controller that stops reporting one readout leaves the
+        entity unknown, not unavailable.
+        """
+        return self.coordinator.data[self._device_id].readouts.get(self._key)

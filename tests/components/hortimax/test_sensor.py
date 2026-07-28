@@ -8,7 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -124,13 +124,13 @@ async def test_update_failure_makes_entities_unavailable(
 
 
 @pytest.mark.usefixtures("mock_hortos_client")
-async def test_disappearing_readout_becomes_unavailable(
+async def test_disappearing_readout_becomes_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hortos_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a readout the controller stops reporting goes unavailable."""
+    """Test a readout the controller stops reporting is unknown, not unavailable."""
     await setup_integration(hass, mock_config_entry)
 
     mock_hortos_client.get_latest_readouts.return_value = [
@@ -143,8 +143,7 @@ async def test_disappearing_readout_becomes_unavailable(
     await hass.async_block_till_done()
 
     assert (
-        hass.states.get("sensor.weerstation_outside_temperature").state
-        == STATE_UNAVAILABLE
+        hass.states.get("sensor.weerstation_outside_temperature").state == STATE_UNKNOWN
     )
 
 
