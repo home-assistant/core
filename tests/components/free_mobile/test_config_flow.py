@@ -123,6 +123,33 @@ async def test_flow_user_validation_unknown_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_flow_user_validation_unknown_error_does_not_log_access_token(
+    hass: HomeAssistant,
+    mock_send_sms: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the access token is never logged when credential validation fails.
+
+    Connection errors from the underlying HTTP client commonly embed the
+    full request URL, which includes the access token as a query parameter.
+    """
+    access_token = MOCK_CONFIG[CONF_ACCESS_TOKEN]
+    mock_send_sms.side_effect = Exception(
+        f"Connection error for url: https://smsapi.free-mobile.fr/sendmsg?pass={access_token}"
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+    assert access_token not in caplog.text
+
+
 async def test_flow_import_dedup_by_title_same_name_is_rejected(
     hass: HomeAssistant,
 ) -> None:
