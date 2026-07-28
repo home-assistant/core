@@ -12,6 +12,8 @@ from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
@@ -129,10 +131,9 @@ async def test_anna_water_heater_mode_change(
     """Test Anna water_heater dhw_mode changes."""
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
+        SERVICE_TURN_OFF,
         {
             ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
-            ATTR_OPERATION_MODE: "off",
         },
         blocking=True,
     )
@@ -150,6 +151,19 @@ async def test_anna_water_heater_mode_change(
 
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
+            },
+            blocking=True,
+        )
+        assert mock_smile_anna.set_dhw_mode.call_count == 2
+        mock_smile_anna.set_dhw_mode.assert_called_with(
+            "dhw_mode", "bfb5ee0a88e14e5f97bfa725a760cc49", "eco", 5
+        )
+
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
             SERVICE_SET_OPERATION_MODE,
             {
                 ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
@@ -157,7 +171,7 @@ async def test_anna_water_heater_mode_change(
             },
             blocking=True,
         )
-        assert mock_smile_anna.set_dhw_mode.call_count == 2
+        assert mock_smile_anna.set_dhw_mode.call_count == 3
         mock_smile_anna.set_dhw_mode.assert_called_with(
             "dhw_mode",
             "bfb5ee0a88e14e5f97bfa725a760cc49",
