@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Final
+from typing import Final, override
 
 from fyta_cli.fyta_models import Plant
 
@@ -86,6 +86,7 @@ class FytaPlantImageEntity(FytaPlantEntity, ImageEntity):
         super().__init__(coordinator, entry, description, plant_id)
         ImageEntity.__init__(self, coordinator.hass)
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
         if self.entity_description.key == "plant_image_user":
@@ -111,11 +112,12 @@ class FytaPlantImageEntity(FytaPlantEntity, ImageEntity):
         return await ImageEntity.async_image(self)
 
     @property
+    @override
     def image_url(self) -> str:
         """Return the image_url for this plant."""
         url = self.entity_description.url_fn(self.plant)
 
         if url != self._attr_image_url:
             self._cached_image = None
-            self._attr_image_last_updated = datetime.now()
+            self._attr_image_last_updated = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         return url

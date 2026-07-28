@@ -21,7 +21,7 @@ def async_bypass_dynamic_config_validation(
     trigger_devices = config.get(ATTR_DEVICE_ID, [])
     trigger_entities = config.get(ATTR_ENTITY_ID, [])
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.state != ConfigEntryState.LOADED and (
+        if entry.state is not ConfigEntryState.LOADED and (
             entry.entry_id == config.get(ATTR_CONFIG_ENTRY_ID)
             or any(
                 device.id in trigger_devices

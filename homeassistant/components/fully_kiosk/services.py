@@ -42,7 +42,7 @@ async def _collect_coordinators(
             raise HomeAssistantError(f"Device '{target}' not found in device registry")
     coordinators = list[FullyKioskDataUpdateCoordinator]()
     for config_entry in config_entries:
-        if config_entry.state != ConfigEntryState.LOADED:
+        if config_entry.state is not ConfigEntryState.LOADED:
             raise HomeAssistantError(f"{config_entry.title} is not loaded")
         coordinators.append(config_entry.runtime_data)
     return coordinators

@@ -59,7 +59,7 @@ async def test_fan_services(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "fan.test_fan"
+    entity_id = "fan.test_area_test_fan"
 
     # Turn on (defaults to medium - 67%)
     await hass.services.async_call(
@@ -102,7 +102,7 @@ async def test_fan_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "fan.test_fan"
+    entity_id = "fan.test_area_test_fan"
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # Simulate update

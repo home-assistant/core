@@ -1,6 +1,7 @@
 """Support for HomeKit binary sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
@@ -34,11 +35,13 @@ class HomeKitMotionSensor(HomeKitEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.MOTION_DETECTED]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Has motion been detected."""
         return self.service.value(CharacteristicsTypes.MOTION_DETECTED) is True
@@ -49,11 +52,13 @@ class HomeKitContactSensor(HomeKitEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.OPENING
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.CONTACT_STATE]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on/open."""
         return self.service.value(CharacteristicsTypes.CONTACT_STATE) == 1
@@ -64,11 +69,13 @@ class HomeKitSmokeSensor(HomeKitEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.SMOKE
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.SMOKE_DETECTED]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if smoke is currently detected."""
         return self.service.value(CharacteristicsTypes.SMOKE_DETECTED) == 1
@@ -79,11 +86,13 @@ class HomeKitCarbonMonoxideSensor(HomeKitEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.CO
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.CARBON_MONOXIDE_DETECTED]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if CO is currently detected."""
         return self.service.value(CharacteristicsTypes.CARBON_MONOXIDE_DETECTED) == 1
@@ -94,11 +103,13 @@ class HomeKitOccupancySensor(HomeKitEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.OCCUPANCY_DETECTED]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if occupancy is currently detected."""
         return self.service.value(CharacteristicsTypes.OCCUPANCY_DETECTED) == 1
@@ -109,11 +120,13 @@ class HomeKitLeakSensor(HomeKitEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.MOISTURE
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.LEAK_DETECTED]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if a leak is detected from the binary sensor."""
         return self.service.value(CharacteristicsTypes.LEAK_DETECTED) == 1
@@ -125,11 +138,13 @@ class HomeKitBatteryLowSensor(HomeKitEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.BATTERY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.STATUS_LO_BATT]
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         if name := self.accessory.name:
@@ -137,6 +152,7 @@ class HomeKitBatteryLowSensor(HomeKitEntity, BinarySensorEntity):
         return "Low Battery"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if low battery is detected from the binary sensor."""
         return self.service.value(CharacteristicsTypes.STATUS_LO_BATT) == 1
@@ -204,11 +220,13 @@ class CharacteristicBinarySensor(CharacteristicEntity, BinarySensorEntity):
             self._attr_translation_key, translation_placeholders = translation
             self._attr_translation_placeholders = translation_placeholders
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [self._char.type]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self._char.value == self.entity_description.on_value

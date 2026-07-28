@@ -3,7 +3,7 @@
 from http import HTTPStatus
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 import requests
 import voluptuous as vol
@@ -14,6 +14,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_LANGUAGE,
     CONF_NAME,
     CONF_RECIPIENT,
     CONF_USERNAME,
@@ -29,7 +30,6 @@ BASE_API_URL = "https://rest.clicksend.com/v3"
 
 HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 
-CONF_LANGUAGE = "language"
 CONF_VOICE = "voice"
 
 MALE_VOICE = "male"
@@ -80,6 +80,7 @@ class ClicksendNotificationService(BaseNotificationService):
         self.language = config[CONF_LANGUAGE]
         self.voice = config[CONF_VOICE]
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a voice call to a user."""
         data = {

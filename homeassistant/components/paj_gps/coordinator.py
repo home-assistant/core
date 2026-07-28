@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from pajgps_api import PajGpsApi
 from pajgps_api.models.device import Device
@@ -72,6 +73,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         """Return the user ID obtained from the login response."""
         return self._user_id
 
+    @override
     async def _async_setup(self) -> None:
         """Perform initial and first data refresh."""
         try:
@@ -82,6 +84,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         except Exception as exc:
             raise ConfigEntryNotReady from exc
 
+    @override
     async def _async_update_data(self) -> PajGpsData:
         """Fetch device list and positions."""
         devices: dict[int, Device] = {}

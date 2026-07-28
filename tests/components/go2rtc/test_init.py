@@ -679,7 +679,7 @@ async def test_setup_with_retryable_setup_entry_error_custom_server(
     await hass.async_block_till_done(wait_background_tasks=True)
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
-    assert config_entries[0].state == expected_config_entry_state
+    assert config_entries[0].state is expected_config_entry_state
     assert expected_log_message in caplog.text
 
 
@@ -716,7 +716,7 @@ async def test_setup_with_retryable_setup_entry_error_default_server(
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == has_go2rtc_entry
     for config_entry in config_entries:
-        assert config_entry.state == expected_config_entry_state
+        assert config_entry.state is expected_config_entry_state
     assert expected_log_message in caplog.text
 
 
@@ -750,7 +750,7 @@ async def test_setup_with_version_error(
     await hass.async_block_till_done(wait_background_tasks=True)
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
-    assert config_entries[0].state == expected_config_entry_state
+    assert config_entries[0].state is expected_config_entry_state
     assert expected_log_message in caplog.text
 
 

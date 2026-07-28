@@ -1,7 +1,7 @@
 """Config flow for Matter integration."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
@@ -194,6 +194,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return addon_info
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -232,6 +233,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="manual", data_schema=get_manual_schema(user_input), errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -244,6 +246,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         return await self._async_step_discovery_without_unique_id()
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -288,10 +291,10 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         addon_info = await self._async_get_addon_info()
 
-        if addon_info.state == AddonState.RUNNING:
+        if addon_info.state is AddonState.RUNNING:
             return await self.async_step_finish_addon_setup()
 
-        if addon_info.state == AddonState.NOT_RUNNING:
+        if addon_info.state is AddonState.NOT_RUNNING:
             return await self.async_step_start_addon()
 
         return await self.async_step_install_addon()

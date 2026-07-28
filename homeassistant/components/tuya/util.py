@@ -3,10 +3,38 @@
 from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_sharing import CustomerDevice
 
+from homeassistant.const import UnitOfTemperature
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, DPCode
+from .const import CELSIUS_ALIASES, DOMAIN, FAHRENHEIT_ALIASES, DPCode
+
+_TEMP_UNIT_CONVERT_MAPPING = {
+    "c": UnitOfTemperature.CELSIUS,
+    "f": UnitOfTemperature.FAHRENHEIT,
+}
+
+
+def get_temperature_unit(
+    device: CustomerDevice, dpcode_uom: str | None
+) -> UnitOfTemperature | None:
+    """Convert the DPCode unit of measurement to a temperature unit."""
+    if not dpcode_uom:
+        return get_device_temp_unit_convert(device)
+
+    dpcode_uom = dpcode_uom.lower()
+    if dpcode_uom in CELSIUS_ALIASES:
+        return UnitOfTemperature.CELSIUS
+    if dpcode_uom in FAHRENHEIT_ALIASES:
+        return UnitOfTemperature.FAHRENHEIT
+    return None
+
+
+def get_device_temp_unit_convert(device: CustomerDevice) -> UnitOfTemperature | None:
+    """Return the temperature unit from TEMP_UNIT_CONVERT, or None if unrecognised."""
+    if temp_unit_convert := device.status.get(DPCode.TEMP_UNIT_CONVERT):
+        return _TEMP_UNIT_CONVERT_MAPPING.get(temp_unit_convert)
+    return None
 
 
 class ActionDPCodeNotFoundError(ServiceValidationError):

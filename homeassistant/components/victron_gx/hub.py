@@ -5,6 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from victron_mqtt import (
+    UPDATE_FREQUENCY_AUTO,
     AuthenticationError,
     CannotConnectError,
     Device as VictronVenusDevice,
@@ -19,6 +20,7 @@ from victron_mqtt import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -29,11 +31,9 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.redact import async_redact_data
 
-from .const import CONF_INSTALLATION_ID, CONF_MODEL, CONF_SERIAL, DOMAIN
+from .const import CONF_INSTALLATION_ID, CONF_SERIAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-UPDATE_INTERVAL_SECONDS = 30
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
@@ -75,7 +75,7 @@ class Hub:
             model_name=config.get(CONF_MODEL) or None,
             serial=config.get(CONF_SERIAL) or None,
             operation_mode=OperationMode.FULL,
-            update_frequency_seconds=UPDATE_INTERVAL_SECONDS,
+            update_frequency_seconds=UPDATE_FREQUENCY_AUTO,
         )
         self._hub.on_new_metric = self._on_new_metric
         self.new_metric_callbacks: dict[MetricKind, NewMetricCallback] = {}
@@ -169,7 +169,7 @@ class Hub:
                     metric.short_id: {
                         "name": metric.name,
                         "value": "**REDACTED**"
-                        if metric.metric_type == MetricType.LOCATION
+                        if metric.metric_type is MetricType.LOCATION
                         else metric.value
                         if not isinstance(metric.value, VictronEnum)
                         else metric.value.id,

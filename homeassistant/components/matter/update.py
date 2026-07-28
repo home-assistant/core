@@ -2,18 +2,18 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from matter_server.common.errors import UpdateCheckError, UpdateError
 from matter_server.common.models import MatterSoftwareVersion, UpdateSource
 
 from homeassistant.components.update import (
-    ATTR_LATEST_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -38,6 +38,7 @@ class MatterUpdateExtraStoredData(ExtraStoredData):
 
     software_update: MatterSoftwareVersion | None = None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the extra data."""
         return {
@@ -87,6 +88,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
     )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
 
@@ -159,6 +161,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         except UpdateCheckError as err:
             raise HomeAssistantError(f"Error finding applicable update: {err}") from err
 
+    @override
     async def async_release_notes(self) -> str | None:
         """Return full release notes.
 
@@ -173,7 +176,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         release_notes = ""
 
         # insert extra heavy warning case the update is not from the main net
-        if self._software_update.update_source != UpdateSource.MAIN_NET_DCL:
+        if self._software_update.update_source is not UpdateSource.MAIN_NET_DCL:
             release_notes += (
                 "\n\n<ha-alert alert-type='warning'>"
                 "Update provided by "
@@ -195,12 +198,15 @@ class MatterUpdate(MatterEntity, UpdateEntity):
             "</ha-alert>\n\n"
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         await super().async_added_to_hass()
 
         if state := await self.async_get_last_state():
-            self._attr_latest_version = state.attributes.get(ATTR_LATEST_VERSION)
+            self._attr_latest_version = state.attributes.get(
+                UpdateEntityStateAttribute.LATEST_VERSION
+            )
 
         if (extra_data := await self.async_get_last_extra_data()) and (
             matter_extra_data := MatterUpdateExtraStoredData.from_dict(
@@ -213,11 +219,13 @@ class MatterUpdate(MatterEntity, UpdateEntity):
             await self.async_update()
 
     @property
+    @override
     def extra_restore_state_data(self) -> MatterUpdateExtraStoredData:
         """Return Matter specific state data to be restored."""
         return MatterUpdateExtraStoredData(self._software_update)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend.
 
@@ -226,6 +234,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         """
         return None
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -276,6 +285,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         """Request update."""
         await self.async_update()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         await super().async_will_remove_from_hass()

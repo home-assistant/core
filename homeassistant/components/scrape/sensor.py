@@ -1,11 +1,11 @@
 """Support for getting data from websites with scraping."""
 
 import logging
-from typing import Any, cast
+from typing import Any, override
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import CONF_STATE_CLASS
+from homeassistant.components.sensor import CONF_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
@@ -21,6 +21,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.template import _SENTINEL, Template
 from homeassistant.helpers.trigger_template_entity import (
@@ -59,7 +60,17 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Web scrape sensor."""
-    discovery_info = cast(DiscoveryInfoType, discovery_info)
+    if discovery_info is None:
+        async_create_platform_config_not_supported_issue(
+            hass,
+            DOMAIN,
+            SENSOR_DOMAIN,
+            yaml_config_under_integration_supported=True,
+            learn_more_url="https://www.home-assistant.io/integrations/scrape/",
+            logger=_LOGGER,
+        )
+        return
+
     coordinator: ScrapeCoordinator = discovery_info["coordinator"]
     sensors_config: list[ConfigType] = discovery_info["configs"]
 
@@ -100,7 +111,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     for subentry in entry.subentries.values():
         sensor = dict(subentry.data)
-        sensor.update(sensor.pop("advanced", {}))
+        sensor.update(sensor.pop("additional", {}))
         sensor[CONF_UNIQUE_ID] = subentry.subentry_id
         sensor[CONF_NAME] = subentry.title
 
@@ -177,6 +188,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
             self._sensor_name = self._rendered.get(CONF_NAME)
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the sensor.
 
@@ -210,6 +222,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         _LOGGER.debug("Parsed value: %s", value)
         return value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Ensure the data from the initial update is reflected in the state."""
         await super().async_added_to_hass()
@@ -236,6 +249,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         self._process_manual_data(variables)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         available1 = CoordinatorEntity.available.fget(self)  # type: ignore[attr-defined]
@@ -243,6 +257,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         return bool(available1 and available2 and self._attr_available)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_from_rest_data()

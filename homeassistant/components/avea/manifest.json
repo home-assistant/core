@@ -14,5 +14,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["avea"],
-  "requirements": ["avea==1.6.1"]
+  "requirements": ["avea==1.8.0"]
 }

@@ -1,7 +1,7 @@
 """Config flow to configure LinkPlay component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientSession
 from linkplay.bridge import LinkPlayBridge
@@ -27,6 +27,7 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the LinkPlay config flow."""
         self.data: dict[str, Any] = {}
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -34,6 +35,17 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Do not probe the device if the host is already configured
         self._async_abort_entries_match({CONF_HOST: discovery_info.host})
+
+        # Do not probe the device if the UUID advertised over mDNS matches
+        # an existing (or ignored) entry
+        if uuid := discovery_info.properties.get("uuid"):
+            # The advertised UUID is prefixed and dashed
+            # (uuid:FF31F09E-5001-...), while the device API (and therefore
+            # the stored unique id) uses the dashless form
+            await self.async_set_unique_id(uuid.removeprefix("uuid:").replace("-", ""))
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: discovery_info.host}
+            )
 
         session: ClientSession = await async_get_client_session(self.hass)
         bridge: LinkPlayBridge | None = None
@@ -78,6 +90,7 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

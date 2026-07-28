@@ -501,7 +501,7 @@ async def test_lamp_with_switch(
         ),
         (
             "da_ks_microwave_0101x",
-            "light.microwave_light",
+            "light.theater_microwave_light",
             "2bad3237-4886-e699-1b90-4a51a3d55c8a",
             "hood",
         ),

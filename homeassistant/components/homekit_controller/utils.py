@@ -10,7 +10,7 @@ from aiohomekit import Controller
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.components import bluetooth, zeroconf
+from homeassistant.components import zeroconf
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 
@@ -136,11 +136,8 @@ async def async_get_controller(hass: HomeAssistant) -> Controller:
     if existing := hass.data.get(CONTROLLER):
         return cast(Controller, existing)
 
-    bleak_scanner_instance = bluetooth.async_get_scanner(hass)
-
     controller = Controller(
         async_zeroconf_instance=async_zeroconf_instance,
-        bleak_scanner_instance=bleak_scanner_instance,
         char_cache=char_cache,
     )
 

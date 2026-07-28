@@ -3,7 +3,7 @@
 from datetime import datetime
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, override
 
 import caldav
 from caldav.lib.error import DAVError
@@ -38,6 +38,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CalDavConfigEntry
 from .api import async_get_calendars
+from .const import TIMEOUT
 from .coordinator import CalDavUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,7 +92,12 @@ async def async_setup_platform(
     days = config[CONF_DAYS]
 
     client = caldav.DAVClient(
-        url, None, username, password, ssl_verify_cert=config[CONF_VERIFY_SSL]
+        url,
+        None,
+        username,
+        password,
+        ssl_verify_cert=config[CONF_VERIFY_SSL],
+        timeout=TIMEOUT,
     )
 
     calendars = await async_get_calendars(hass, client, SUPPORTED_COMPONENT)
@@ -199,16 +205,19 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         self._supports_offset = supports_offset
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._event
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         return await self.coordinator.async_get_events(hass, start_date, end_date)
 
+    @override
     async def async_create_event(self, **kwargs: Any) -> None:
         """Create a new event in the calendar."""
         _LOGGER.debug("Event: %s", kwargs)
@@ -231,10 +240,11 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
             await self.hass.async_add_executor_job(
                 partial(self.coordinator.calendar.add_event, **item_data),
             )
-        except (requests.ConnectionError, DAVError) as err:
+        except (requests.ConnectionError, requests.Timeout, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update event data."""
         self._event = self.coordinator.data
@@ -249,6 +259,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
             }
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass update state from existing coordinator data."""
         await super().async_added_to_hass()

@@ -1,6 +1,6 @@
 """Config flow for Marantz IR integration."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -9,6 +9,7 @@ from homeassistant.components.infrared import (
     async_get_emitters,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_MODEL
 from homeassistant.helpers.selector import (
     EntitySelector,
     EntitySelectorConfig,
@@ -18,7 +19,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_INFRARED_EMITTER_ENTITY_ID, CONF_MODEL, DOMAIN, MODELS
+from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN, MODELS
 
 
 class MarantzIrConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -26,6 +27,7 @@ class MarantzIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,6 +1,7 @@
 """Volvo device tracker."""
 
 from dataclasses import dataclass
+from typing import override
 
 from volvocarsapi.models import VolvoCarsApiBaseModel, VolvoCarsLocation
 
@@ -51,6 +52,7 @@ class VolvoDeviceTracker(VolvoEntity, TrackerEntity):
 
     entity_description: VolvoTrackerDescription
 
+    @override
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
         assert isinstance(api_field, VolvoCarsLocation)
 

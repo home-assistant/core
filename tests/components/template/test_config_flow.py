@@ -321,7 +321,7 @@ async def test_config_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
 
-    availability = {"advanced_options": {"availability": "{{ True }}"}}
+    availability = {"additional_options": {"availability": "{{ True }}"}}
 
     with patch(
         "homeassistant.components.template.async_setup_entry", wraps=async_setup_entry
@@ -655,7 +655,9 @@ async def test_config_flow_device(
             "event",
             {"event_type": "{{ states('event.one') }}"},
             {"event_type": "{{ states('event.two') }}"},
-            ["2024-07-09T00:00:00.000+00:00", "2024-07-09T00:00:00.000+00:00"],
+            # The reloaded entity restores the first timestamp, so the second
+            # event is bumped by 1ms to stay a distinct state change.
+            ["2024-07-09T00:00:00.000+00:00", "2024-07-09T00:00:00.001+00:00"],
             {"one": "single", "two": "double"},
             {"event_types": "{{ ['single', 'double'] }}"},
             {"event_types": "{{ ['single', 'double'] }}"},
@@ -1103,7 +1105,7 @@ async def test_config_flow_preview(
     assert result["preview"] == "template"
 
     availability = {
-        "advanced_options": {
+        "additional_options": {
             "availability": "{{ is_state('binary_sensor.available', 'on') }}"
         }
     }
@@ -1131,6 +1133,7 @@ async def test_config_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My template"} | extra_attributes[0],
+        "domain": template_type,
         "listeners": {
             "all": False,
             "domains": [],
@@ -1155,6 +1158,7 @@ async def test_config_flow_preview(
             "attributes": {"friendly_name": "My template"}
             | extra_attributes[0]
             | extra_attributes[1],
+            "domain": template_type,
             "listeners": {
                 "all": False,
                 "domains": [],
@@ -1174,6 +1178,7 @@ async def test_config_flow_preview(
         "attributes": {"friendly_name": "My template"}
         | extra_attributes[0]
         | extra_attributes[1],
+        "domain": template_type,
         "listeners": {
             "all": False,
             "domains": [],
@@ -1617,6 +1622,7 @@ async def test_option_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My template"} | extra_attributes,
+        "domain": template_type,
         "listeners": {
             "all": False,
             "domains": [],

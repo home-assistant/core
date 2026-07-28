@@ -48,7 +48,6 @@ TEST_AVAILABILITY_ENTITY_ID = "binary_sensor.test_availability"
 
 TEST_SELECT = TemplatePlatformSetup(
     select.DOMAIN,
-    None,
     "template_select",
     make_test_trigger(TEST_STATE_ENTITY_ID, TEST_AVAILABILITY_ENTITY_ID),
 )
@@ -124,7 +123,7 @@ async def test_multiple_configs(hass: HomeAssistant) -> None:
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": {
                     "select": [

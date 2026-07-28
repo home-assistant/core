@@ -6,7 +6,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.energyid.const import (
-    CONF_DEVICE_ID,
     CONF_ENERGYID_KEY,
     CONF_HA_ENTITY_UUID,
     CONF_PROVISIONING_KEY,
@@ -19,6 +18,7 @@ from homeassistant.components.energyid.energyid_sensor_mapping_flow import (
     _validate_mapping_input,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import InvalidData
 from homeassistant.helpers import entity_registry as er

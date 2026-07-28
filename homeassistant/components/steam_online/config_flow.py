@@ -1,26 +1,46 @@
 """Config flow for Steam integration."""
 
-from collections.abc import Iterator, Mapping
-from typing import Any
+from collections.abc import Mapping
+from itertools import batched
+import logging
+from typing import TYPE_CHECKING, Any, override
 
-import steam
+import steam.api
 import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+)
 
-from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DOMAIN, LOGGER, PLACEHOLDERS
+from .const import CONF_ACCOUNT, DOMAIN, PLACEHOLDERS, SUBENTRY_TYPE_FRIEND
 from .coordinator import SteamConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
+
 
 # To avoid too long request URIs, the amount of ids to request is limited
 MAX_IDS_TO_REQUEST = 275
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_ACCOUNT): str,
+    }
+)
+STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 
 
 def validate_input(user_input: dict[str, str]) -> dict[str, str | int]:
@@ -34,59 +54,56 @@ def validate_input(user_input: dict[str, str]) -> dict[str, str | int]:
 class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Steam."""
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: SteamConfigEntry,
-    ) -> SteamOptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return SteamOptionsFlowHandler(config_entry)
+    VERSION = 3
 
+    @classmethod
+    @callback
+    @override
+    def async_get_supported_subentry_types(
+        cls, config_entry: SteamConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {SUBENTRY_TYPE_FRIEND: FriendSubentryFlowHandler}
+
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
-        if user_input is None and self.source == SOURCE_REAUTH:
-            user_input = {CONF_ACCOUNT: self._get_reauth_entry().data[CONF_ACCOUNT]}
-        elif user_input is not None:
+        if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_ACCOUNT])
+            self._abort_if_unique_id_configured()
+
+            config_entries = self.hass.config_entries.async_entries(DOMAIN)
+            for entry in config_entries:
+                if user_input[CONF_ACCOUNT] in {
+                    subentry.unique_id for subentry in entry.subentries.values()
+                }:
+                    return self.async_abort(reason="already_configured_as_subentry")
+
             try:
                 res = await self.hass.async_add_executor_job(validate_input, user_input)
                 if res is not None:
                     name = str(res["personaname"])
                 else:
                     errors["base"] = "invalid_account"
-            except (steam.api.HTTPError, steam.api.HTTPTimeoutError) as ex:
-                errors["base"] = "cannot_connect"
-                if "403" in str(ex):
-                    errors["base"] = "invalid_auth"
-            except Exception as ex:  # noqa: BLE001
-                LOGGER.exception("Unknown exception: %s", ex)
+            except steam.api.HTTPTimeoutError:
+                errors["base"] = "timeout_connect"
+            except steam.api.HTTPError as ex:
+                errors["base"] = (
+                    "invalid_auth" if "403" in str(ex) else "cannot_connect"
+                )
+            except Exception:
+                _LOGGER.exception("Unknown exception")
                 errors["base"] = "unknown"
             if not errors:
-                entry = await self.async_set_unique_id(user_input[CONF_ACCOUNT])
-                if entry and self.source == SOURCE_REAUTH:
-                    self.hass.config_entries.async_update_entry(entry, data=user_input)
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=name,
-                    data=user_input,
-                    options={CONF_ACCOUNTS: {user_input[CONF_ACCOUNT]: name}},
-                )
+                return self.async_create_entry(title=name, data=user_input)
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_API_KEY, default=user_input.get(CONF_API_KEY) or ""
-                    ): str,
-                    vol.Required(
-                        CONF_ACCOUNT, default=user_input.get(CONF_ACCOUNT) or ""
-                    ): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_DATA_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
             description_placeholders=PLACEHOLDERS,
@@ -98,92 +115,166 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a reauthorization flow request."""
         return await self.async_step_reauth_confirm()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfigure flow."""
+        return await self.async_step_reauth_confirm(user_input)
+
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
-        if user_input is not None:
-            return await self.async_step_user()
-
-        self._set_confirm_only()
-        return self.async_show_form(
-            step_id="reauth_confirm", description_placeholders=PLACEHOLDERS
+        errors: dict[str, str] = {}
+        entry = (
+            self._get_reauth_entry()
+            if self.source == SOURCE_REAUTH
+            else self._get_reconfigure_entry()
         )
 
-
-def _batch_ids(ids: list[str]) -> Iterator[list[str]]:
-    for i in range(0, len(ids), MAX_IDS_TO_REQUEST):
-        yield ids[i : i + MAX_IDS_TO_REQUEST]
-
-
-class SteamOptionsFlowHandler(OptionsFlow):
-    """Handle Steam client options."""
-
-    def __init__(self, entry: SteamConfigEntry) -> None:
-        """Initialize options flow."""
-        self.options = dict(entry.options)
-
-    async def async_step_init(
-        self, user_input: dict[str, dict[str, str]] | None = None
-    ) -> ConfigFlowResult:
-        """Manage Steam options."""
         if user_input is not None:
-            await self.hass.config_entries.async_unload(self.config_entry.entry_id)
-            for _id in self.options[CONF_ACCOUNTS]:
-                if _id not in user_input[CONF_ACCOUNTS] and (
-                    entity_id := er.async_get(self.hass).async_get_entity_id(
-                        Platform.SENSOR, DOMAIN, f"sensor.steam_{_id}"
-                    )
+            try:
+                if not await self.hass.async_add_executor_job(
+                    validate_input, {**entry.data, **user_input}
                 ):
-                    er.async_get(self.hass).async_remove(entity_id)
-            channel_data = {
-                CONF_ACCOUNTS: {
-                    _id: name
-                    for _id, name in self.options[CONF_ACCOUNTS].items()
-                    if _id in user_input[CONF_ACCOUNTS]
-                }
-            }
-            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-            return self.async_create_entry(title="", data=channel_data)
-        error = None
-        try:
-            users = {
-                name["steamid"]: name["personaname"]
-                for name in await self.hass.async_add_executor_job(self.get_accounts)
-            }
-            if not users:
-                error = {"base": "unauthorized"}
+                    errors["base"] = "invalid_account"
+            except steam.api.HTTPTimeoutError:
+                errors["base"] = "timeout_connect"
+            except steam.api.HTTPError as ex:
+                errors["base"] = (
+                    "invalid_auth" if "403" in str(ex) else "cannot_connect"
+                )
+            except Exception:
+                _LOGGER.exception("Unknown exception")
+                errors["base"] = "unknown"
 
-        except steam.api.HTTPTimeoutError:
-            users = self.options[CONF_ACCOUNTS]
-
-        options = {
-            vol.Required(
-                CONF_ACCOUNTS,
-                default=set(self.options[CONF_ACCOUNTS]),
-            ): cv.multi_select(users | self.options[CONF_ACCOUNTS]),
-        }
-        self.options[CONF_ACCOUNTS] = users | self.options[CONF_ACCOUNTS]
-
+            if not errors:
+                return self.async_update_and_abort(entry, data_updates=user_input)
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(options), errors=error
+            step_id=(
+                "reauth_confirm" if self.source == SOURCE_REAUTH else SOURCE_RECONFIGURE
+            ),
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_REAUTH_DATA_SCHEMA, suggested_values=user_input
+            ),
+            errors=errors,
+            description_placeholders={CONF_NAME: entry.title, **PLACEHOLDERS},
         )
 
-    def get_accounts(self) -> list[dict[str, str | int]]:
-        """Get accounts."""
-        interface = steam.api.interface("ISteamUser")
+
+class FriendSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding a friend."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Subentry user flow."""
+        errors: dict[str, str] = {}
+        config_entry: SteamConfigEntry = self._get_entry()
+
+        if config_entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="config_entry_not_loaded")
+
+        client = config_entry.runtime_data.user_interface
+        if TYPE_CHECKING:
+            assert config_entry.unique_id
+
+        if user_input is not None:
+            config_entries = self.hass.config_entries.async_entries(DOMAIN)
+            if user_input[CONF_ACCOUNT] in {
+                entry.unique_id for entry in config_entries
+            }:
+                return self.async_abort(reason="already_configured_as_entry")
+            for entry in config_entries:
+                if user_input[CONF_ACCOUNT] in {
+                    subentry.unique_id
+                    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_FRIEND)
+                }:
+                    return self.async_abort(reason="already_configured")
+
+            try:
+                title = await self.hass.async_add_executor_job(
+                    lambda: client.GetPlayerSummaries(
+                        steamids=[user_input[CONF_ACCOUNT]]
+                    )["response"]["players"]["player"][0]["personaname"]
+                )
+            except steam.api.HTTPTimeoutError:
+                errors["base"] = "timeout_connect"
+            except steam.api.HTTPError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unknown exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=title,
+                    data={},
+                    unique_id=user_input[CONF_ACCOUNT],
+                )
+
+        def get_accounts() -> list[dict[str, Any]]:
+            friends = client.GetFriendList(steamid=config_entry.unique_id)[
+                "friendslist"
+            ]["friends"]
+            accounts = []
+            for steamids in batched(
+                [friend["steamid"] for friend in friends],
+                MAX_IDS_TO_REQUEST,
+                strict=False,
+            ):
+                accounts.extend(
+                    client.GetPlayerSummaries(steamids=list(steamids))["response"][
+                        "players"
+                    ]["player"]
+                )
+            return accounts
+
         try:
-            friends = interface.GetFriendList(
-                steamid=self.config_entry.data[CONF_ACCOUNT]
+            accounts = await self.hass.async_add_executor_job(get_accounts)
+        except steam.api.HTTPTimeoutError:
+            return self.async_abort(reason="timeout_connect")
+        except steam.api.HTTPError as e:
+            if "401" in str(e):
+                me = config_entry.runtime_data.data[config_entry.unique_id]
+                return self.async_abort(
+                    reason="friendlist_private",
+                    description_placeholders={
+                        CONF_NAME: me.personaname,
+                        "privacy_settings_url": f"{me.profileurl}edit/settings",
+                    },
+                )
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unknown exception")
+            return self.async_abort(reason="unknown")
+
+        existing_subentries = {
+            subentry.unique_id
+            for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_FRIEND)
+        }
+        options = [
+            SelectOptionDict(
+                value=account["steamid"],
+                label=account["personaname"],
             )
-            _users_str = [user["steamid"] for user in friends["friendslist"]["friends"]]
-        except steam.api.HTTPError:
-            return []
-        names = []
-        for id_batch in _batch_ids(_users_str):
-            names.extend(
-                interface.GetPlayerSummaries(steamids=id_batch)["response"]["players"][
-                    "player"
-                ]
-            )
-        return names
+            for account in accounts
+            if account["steamid"] not in existing_subentries
+        ]
+
+        if not options:
+            return self.async_abort(reason="no_more_friends")
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_ACCOUNT): SelectSelector(
+                            SelectSelectorConfig(options=options, sort=True)
+                        )
+                    }
+                ),
+                user_input,
+            ),
+            errors=errors,
+        )

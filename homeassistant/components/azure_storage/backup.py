@@ -4,7 +4,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import json
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from azure.core.exceptions import AzureError, HttpResponseError, ServiceRequestError
 from azure.storage.blob import BlobProperties
@@ -75,11 +75,13 @@ def handle_backup_errors[_R, **P](
                 err.message,
                 exc_info=True,
             )
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(
                 f"Error during backup operation in {func.__name__}:"
                 f" Status {err.status_code}, message: {err.message}"
             ) from err
         except ServiceRequestError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(
                 f"Timeout during backup operation in {func.__name__}"
             ) from err
@@ -90,6 +92,7 @@ def handle_backup_errors[_R, **P](
                 err,
                 exc_info=True,
             )
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(
                 f"Error during backup operation in {func.__name__}: {err}"
             ) from err
@@ -110,6 +113,7 @@ class AzureStorageBackupAgent(BackupAgent):
         self.unique_id = entry.entry_id
 
     @handle_backup_errors
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -118,11 +122,13 @@ class AzureStorageBackupAgent(BackupAgent):
         """Download a backup file."""
         blob = await self._find_blob_by_backup_id(backup_id)
         if blob is None:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupNotFound(f"Backup {backup_id} not found")
         download_stream = await self._client.download_blob(blob.name)
         return download_stream.chunks()
 
     @handle_backup_errors
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -147,6 +153,7 @@ class AzureStorageBackupAgent(BackupAgent):
         )
 
     @handle_backup_errors
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -155,10 +162,12 @@ class AzureStorageBackupAgent(BackupAgent):
         """Delete a backup file."""
         blob = await self._find_blob_by_backup_id(backup_id)
         if blob is None:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupNotFound(f"Backup {backup_id} not found")
         await self._client.delete_blob(blob.name)
 
     @handle_backup_errors
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         backups: list[AgentBackup] = []
@@ -173,6 +182,7 @@ class AzureStorageBackupAgent(BackupAgent):
         return backups
 
     @handle_backup_errors
+    @override
     async def async_get_backup(
         self,
         backup_id: str,
@@ -181,6 +191,7 @@ class AzureStorageBackupAgent(BackupAgent):
         """Return a backup."""
         blob = await self._find_blob_by_backup_id(backup_id)
         if blob is None:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupNotFound(f"Backup {backup_id} not found")
 
         return AgentBackup.from_dict(json.loads(blob.metadata["backup_metadata"]))

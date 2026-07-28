@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_CLOSE,
+    EntityStateAttribute,
     UnitOfLength,
     __version__,
 )
@@ -45,8 +46,6 @@ HA_USER_AGENT = (
 )
 
 ATTR_UID = "uid"
-ATTR_LATITUDE = "latitude"
-ATTR_LONGITUDE = "longitude"
 ATTR_EMPTY_SLOTS = "empty_slots"
 ATTR_FREE_EBIKES = "free_ebikes"
 ATTR_TIMESTAMP = "timestamp"
@@ -235,8 +234,8 @@ class CityBikesStation(SensorEntity):
         self._attr_native_value = station.free_bikes
         self._attr_extra_state_attributes = {
             ATTR_UID: station.extra.get(ATTR_UID),
-            ATTR_LATITUDE: station.latitude,
-            ATTR_LONGITUDE: station.longitude,
+            EntityStateAttribute.LATITUDE: station.latitude,
+            EntityStateAttribute.LONGITUDE: station.longitude,
             ATTR_EMPTY_SLOTS: station.empty_slots,
             ATTR_FREE_EBIKES: station.extra.get(EXTRA_EBIKES),
             ATTR_TIMESTAMP: station.timestamp,

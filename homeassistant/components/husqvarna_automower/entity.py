@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, Concatenate, overload
+from typing import TYPE_CHECKING, Any, Concatenate, overload, override
 
 from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates, WorkArea
@@ -136,6 +136,7 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         return self.coordinator.data[self.mower_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the device is available."""
         return super().available and self.mower_id in self.coordinator.data
@@ -145,6 +146,7 @@ class AutomowerControlEntity(AutomowerBaseEntity):
     """Replies available when the mower is connected."""
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the device is available."""
         return (
@@ -180,6 +182,7 @@ class WorkAreaAvailableEntity(AutomowerControlEntity):
         return self.work_areas[self.work_area_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the work area is available and the mower has no errors."""
         return super().available and self.work_area_id in self.work_areas

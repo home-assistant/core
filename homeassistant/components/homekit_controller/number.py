@@ -4,6 +4,8 @@ These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.
 """
 
+from typing import override
+
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
 from homeassistant.components.number import (
@@ -130,6 +132,7 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
             self._attr_translation_placeholders = translation_placeholders
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the device if any."""
         if (translated_name := self._get_translated_name()) is not UNDEFINED:
@@ -142,30 +145,36 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
             return f"{name} {self.entity_description.name}"
         return f"{self.entity_description.name}"
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [self._char.type]
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum value."""
         return self._char.minValue or DEFAULT_MIN_VALUE
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
         return self._char.maxValue or DEFAULT_MAX_VALUE
 
     @property
+    @override
     def native_step(self) -> float:
         """Return the increment/decrement step."""
         return self._char.minStep or DEFAULT_STEP
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the current characteristic value."""
         return self._char.value
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the characteristic to this value."""
         await self.async_put_characteristics(

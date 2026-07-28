@@ -1,8 +1,9 @@
 """Light platform for Avea."""
 
+from collections.abc import Callable
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 
 import avea
 from bleak.exc import BleakError
@@ -19,6 +20,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -27,7 +29,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
 from . import AveaConfigEntry
-from .const import DOMAIN, INTEGRATION_TITLE, UNKNOWN_NAME
+from .const import DOMAIN, INTEGRATION_TITLE, MODEL, UNKNOWN_NAME
 
 _LOGGER = logging.getLogger(__name__)
 UPDATE_EXCEPTIONS = (BleakError, OSError, RuntimeError)
@@ -40,6 +42,13 @@ def _normalize_name(name: str | None) -> str | None:
     if not name or name == UNKNOWN_NAME:
         return None
     return name
+
+
+def _read_device_info_value(read: Callable[[], str | None]) -> str | None:
+    """Read a device information value from an Avea bulb."""
+    with suppress(*UPDATE_EXCEPTIONS):
+        return _normalize_name(read())
+    return None
 
 
 def _ha_brightness_to_avea(brightness: int) -> int:
@@ -96,7 +105,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Avea light platform."""
     async_add_entities(
-        [AveaLight(entry.runtime_data, entry.title)], update_before_add=True
+        [AveaLight(entry.runtime_data, entry.data[CONF_ADDRESS])],
+        update_before_add=True,
     )
 
 
@@ -180,15 +190,44 @@ class AveaLight(LightEntity):
     """Representation of an Avea."""
 
     _attr_color_mode = ColorMode.HS
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_color_modes = {ColorMode.HS}
 
-    def __init__(self, light: avea.Bulb, entry_title: str) -> None:
+    def __init__(self, light: avea.Bulb, address: str) -> None:
         """Initialize an AveaLight."""
         self._light = light
-        self._attr_name = entry_title
+        self._attr_unique_id = address
         self._attr_brightness = light.brightness
         self._last_brightness = 255
+        self._device_info_updated = False
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_BLUETOOTH, address)},
+            model=MODEL,
+        )
 
+    def _update_device_info(self) -> None:
+        """Fetch device information from the Avea bulb."""
+        device_info = self._attr_device_info
+        assert device_info is not None
+
+        manufacturer = _read_device_info_value(self._light.get_manufacturer_name)
+        hardware_revision = _read_device_info_value(self._light.get_hardware_revision)
+        firmware_version = _read_device_info_value(self._light.get_fw_version)
+        serial_number = _read_device_info_value(self._light.get_serial_number)
+
+        if manufacturer:
+            device_info["manufacturer"] = manufacturer
+        if hardware_revision:
+            device_info["hw_version"] = hardware_revision
+        if firmware_version:
+            device_info["sw_version"] = firmware_version
+        if serial_number:
+            device_info["serial_number"] = serial_number
+
+        self._device_info_updated = True
+
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if not kwargs:
@@ -203,17 +242,20 @@ class AveaLight(LightEntity):
                 rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
                 self._light.set_rgb(rgb[0], rgb[1], rgb[2])
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        if self._attr_brightness:
-            self._last_brightness = self._attr_brightness
         self._light.set_brightness(0)
+        self._attr_is_on = False
+        self._attr_brightness = 0
 
     def update(self) -> None:
         """Fetch new state data for this light."""
         connected = self._light.connect()
 
         try:
+            if not self._device_info_updated:
+                self._update_device_info()
             brightness = self._light.get_brightness()
             rgb_color = self._light.get_rgb()
         finally:

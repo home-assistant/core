@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_VARIABLES,
+    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -27,17 +28,17 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    _LOGGER,
     CONF_IGNORE_STRING,
     CONF_NETWORK,
     CONF_SENSOR_STRING,
-    CONF_TLS_VER,
     DEFAULT_IGNORE_STRING,
     DEFAULT_SENSOR_STRING,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
     ISY_CONF_FIRMWARE,
     ISY_CONF_MODEL,
     ISY_CONF_NAME,
+    LOGGER,
     MANUFACTURER,
     PLATFORMS,
     SCHEME_HTTP,
@@ -62,6 +63,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
+    """Migrate old config entries."""
+    if entry.version == 1 and entry.minor_version == 1:
+        new_data = {key: value for key, value in entry.data.items() if key != "tls"}
+        new_data.setdefault(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+        hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
     """Set up the ISY 994 integration."""
     isy_config = entry.data
@@ -71,9 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
     user = isy_config[CONF_USERNAME]
     password = isy_config[CONF_PASSWORD]
     host = urlparse(isy_config[CONF_HOST])
-
-    # Optional
-    tls_version = isy_config.get(CONF_TLS_VER)
+    verify_ssl = isy_config[CONF_VERIFY_SSL]
     ignore_identifier = isy_options.get(CONF_IGNORE_STRING, DEFAULT_IGNORE_STRING)
     sensor_identifier = isy_options.get(CONF_SENSOR_STRING, DEFAULT_SENSOR_STRING)
 
@@ -86,9 +95,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
     elif host.scheme == SCHEME_HTTPS:
         https = True
         port = host.port or 443
-        session = aiohttp_client.async_get_clientsession(hass)
+        session = aiohttp_client.async_get_clientsession(hass, verify_ssl=verify_ssl)
     else:
-        _LOGGER.error("The ISY/IoX host value in configuration is invalid")
+        LOGGER.error("The ISY/IoX host value in configuration is invalid")
         return False
 
     # Connect to ISY controller.
@@ -98,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
         username=user,
         password=password,
         use_https=https,
-        tls_ver=tls_version,
+        verify_ssl=verify_ssl,
         webroot=host.path,
         websession=session,
         use_websocket=True,
@@ -149,7 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
             isy_data.net_resources.append(resource)
 
     # Dump ISY Clock Information. Future: Add ISY as sensor to Hass with attrs
-    _LOGGER.debug(repr(isy.clock))
+    LOGGER.debug(repr(isy.clock))
 
     isy_data.root = isy
     _async_get_or_create_isy_device_in_registry(hass, entry, isy)
@@ -163,10 +172,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
     @callback
     def _async_stop_auto_update(event: Event) -> None:
         """Stop the isy auto update on Home Assistant Shutdown."""
-        _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
+        LOGGER.debug("ISY Stopping Event Stream and automatic updates")
         isy.websocket.stop()
 
-    _LOGGER.debug("ISY Starting Event Stream and automatic updates")
+    LOGGER.debug("ISY Starting Event Stream and automatic updates")
     isy.websocket.start()
 
     entry.async_on_unload(
@@ -216,7 +225,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
+    LOGGER.debug("ISY Stopping Event Stream and automatic updates")
     entry.runtime_data.root.websocket.stop()
 
     return unload_ok
