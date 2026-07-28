@@ -44,7 +44,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: todo
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done
@@ -78,10 +78,7 @@ rules:
     comment: |
       Entities do not require different icons.
   reconfiguration-flow: todo
-  repair-issues:
-    status: exempt
-    comment: |
-      Read-only integration and no repairs are possible.
+  repair-issues: done
   stale-devices: todo
   # Platinum
   async-dependency: done

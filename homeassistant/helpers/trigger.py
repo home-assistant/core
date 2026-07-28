@@ -2067,6 +2067,15 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
                 entity_ids.append(at_time[CONF_ENTITY_ID])
         return entity_ids
 
+    if trigger_conf[CONF_PLATFORM] == "device":
+        # Only extract the entity if it has been resolved to an entity id
+        # during validation; unvalidated configs hold an entity registry id.
+        if isinstance(
+            entity_id := trigger_conf.get(CONF_ENTITY_ID), str
+        ) and valid_entity_id(entity_id):
+            return [entity_id]
+        return []
+
     if trigger_conf[CONF_PLATFORM] == "calendar":
         return [trigger_conf[CONF_OPTIONS][CONF_ENTITY_ID]]
 

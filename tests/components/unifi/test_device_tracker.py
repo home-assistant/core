@@ -15,6 +15,7 @@ from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_CLIENT_SOURCE,
+    CONF_IGNORE_LOCAL_MAC,
     CONF_IGNORE_WIRED_BUG,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -69,6 +70,24 @@ UNSEEN_CLIENT = {
     "is_wired": True,
     "last_seen": None,
     "mac": "00:00:00:00:00:04",
+}
+
+LOCAL_MAC_CLIENT = {
+    "essid": "ssid",
+    "hostname": "local_mac_client",
+    "ip": "10.0.0.5",
+    "is_wired": False,
+    "last_seen": 1562600145,
+    "mac": "02:00:00:00:00:01",  # U/L bit set in first octet -> locally administered
+}
+
+# Wired locally-administered MAC (e.g. a Docker container) - not a randomized Wi-Fi MAC
+WIRED_LOCAL_MAC_CLIENT = {
+    "hostname": "wired_local_mac_client",
+    "ip": "10.0.0.6",
+    "is_wired": True,
+    "last_seen": 1562600145,
+    "mac": "02:00:00:00:00:02",
 }
 
 SWITCH_1 = {
@@ -552,6 +571,60 @@ async def test_option_ignore_wired_bug(
 
     # Client is wireless and still connected
     assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
+
+
+@pytest.mark.parametrize("config_entry_options", [{CONF_TRACK_WIRED_CLIENTS: True}])
+@pytest.mark.parametrize(
+    "client_payload", [[WIRELESS_CLIENT_1, LOCAL_MAC_CLIENT, WIRED_LOCAL_MAC_CLIENT]]
+)
+@pytest.mark.usefixtures("mock_device_registry")
+async def test_option_ignore_local_mac(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Test the option only ignores Wi-Fi clients with locally-administered MACs."""
+    # Register device entries so the locally-administered MAC trackers are enabled by default
+    for client in (LOCAL_MAC_CLIENT, WIRED_LOCAL_MAC_CLIENT):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, client["mac"])},
+        )
+    await config_entry_factory()
+
+    # Default: the universal, the Wi-Fi private-MAC and the wired private-MAC clients
+    # are all tracked
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
+    assert hass.states.get("device_tracker.ws_client_1")
+    assert hass.states.get("device_tracker.local_mac_client")
+    assert hass.states.get("device_tracker.wired_local_mac_client")
+
+    # Enable the option: only the Wi-Fi private-MAC client is dropped; the wired one stays
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={CONF_TRACK_WIRED_CLIENTS: True, CONF_IGNORE_LOCAL_MAC: True},
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+    assert hass.states.get("device_tracker.ws_client_1")
+    assert not hass.states.get("device_tracker.local_mac_client")
+    assert hass.states.get("device_tracker.wired_local_mac_client")
+
+    # The allowlist takes precedence over the ignore option
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            CONF_TRACK_WIRED_CLIENTS: True,
+            CONF_IGNORE_LOCAL_MAC: True,
+            CONF_CLIENT_SOURCE: [LOCAL_MAC_CLIENT["mac"]],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
+    assert hass.states.get("device_tracker.local_mac_client")
 
 
 @pytest.mark.parametrize(
