@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from boschshcpy import SHCShutterControl
+from boschshcpy import ShutterControlService
 import pytest
 
 from homeassistant.components.bosch_shc.const import (
@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-STOPPED = SHCShutterControl.ShutterControlService.State.STOPPED
+STOPPED = ShutterControlService.State.STOPPED
 
 
 @pytest.fixture(autouse=True)
@@ -101,7 +101,7 @@ async def setup_integration(
 def cover_device(
     device_id: str = "hdm:HomeMaticIP:cover1",
     level: float = 0.5,
-    operation_state: SHCShutterControl.ShutterControlService.State = STOPPED,
+    operation_state: ShutterControlService.State = STOPPED,
 ) -> SimpleNamespace:
     """Build a minimal shutter-control device double."""
     return SimpleNamespace(

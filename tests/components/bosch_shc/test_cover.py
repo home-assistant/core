@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
-from boschshcpy import SHCShutterControl
+from boschshcpy import ShutterControlService
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -31,8 +31,8 @@ from .conftest import cover_device, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-OPENING = SHCShutterControl.ShutterControlService.State.OPENING
-CLOSING = SHCShutterControl.ShutterControlService.State.CLOSING
+OPENING = ShutterControlService.State.OPENING
+CLOSING = ShutterControlService.State.CLOSING
 
 COVER_ENTITY_ID = "cover.cover"
 
@@ -94,7 +94,7 @@ async def test_current_cover_position_open(
     """A fully-open shutter (level=1.0) reports state open and position 100."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(COVER_ENTITY_ID)
+    assert (state := hass.states.get(COVER_ENTITY_ID)) is not None
     assert state.state == STATE_OPEN
     assert state.attributes["current_position"] == 100
 
@@ -111,7 +111,7 @@ async def test_current_cover_position_closed(
     """A fully-closed shutter (level=0.0) reports state closed and position 0."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(COVER_ENTITY_ID)
+    assert (state := hass.states.get(COVER_ENTITY_ID)) is not None
     assert state.state == STATE_CLOSED
     assert state.attributes["current_position"] == 0
 
@@ -128,7 +128,7 @@ async def test_current_cover_position_partially_open(
     """A partially-open shutter is reported as open, not closed."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(COVER_ENTITY_ID)
+    assert (state := hass.states.get(COVER_ENTITY_ID)) is not None
     assert state.state == STATE_OPEN
     assert state.attributes["current_position"] == 10
 
@@ -158,7 +158,7 @@ async def test_is_opening_and_is_closing(
     """The entity state reflects the device's ShutterControlService.State."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(COVER_ENTITY_ID)
+    assert (state := hass.states.get(COVER_ENTITY_ID)) is not None
     assert state.state == expected_cover_state
 
 
