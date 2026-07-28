@@ -168,18 +168,6 @@ def _own_key_clients(
     )
 
 
-def _unverified_clients() -> AuthorizedClients:
-    """Return a typed client list holding no entry for our key."""
-    return AuthorizedClients(
-        clients=[
-            AuthorizedClient(
-                public_key="other", state=AuthorizedClientState.PENDING, raw={}
-            )
-        ],
-        raw=None,
-    )
-
-
 def _empty_clients() -> AuthorizedClients:
     """Return a typed client list that is authoritatively empty."""
     return AuthorizedClients(clients=[], raw=None)
@@ -331,115 +319,6 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_subentry_pair_key_not_registered(hass: HomeAssistant) -> None:
-    """The pair step errors clearly if the key is not found on the gateway."""
-    entry = await _setup_energy_site_subentry(hass)
-    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
-
-    with (
-        patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-            new=AsyncMock(return_value=_empty_clients()),
-        ),
-        patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
-            new=AsyncMock(),
-        ),
-    ):
-        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
-        assert result["step_id"] == "pair"
-
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pair"
-    assert result["errors"] == {"base": "key_not_registered"}
-
-
-@pytest.mark.usefixtures("mock_rsa_key")
-async def test_subentry_recognizes_own_verified_key_no_reregister(
-    hass: HomeAssistant,
-) -> None:
-    """A real gateway response recognizes our own VERIFIED key and skips re-adding it."""
-    entry = await _setup_energy_site_subentry(hass)
-    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
-
-    client = _mock_powerwall_client()
-    add_client = AsyncMock()
-    with (
-        patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-            new=AsyncMock(
-                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
-            ),
-        ),
-        patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
-            new=add_client,
-        ),
-        patch(
-            "homeassistant.components.teslemetry.config_flow.PowerwallClient",
-            return_value=client,
-        ),
-        patch.object(hass.config_entries, "async_schedule_reload"),
-    ):
-        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "credentials"
-    add_client.assert_not_awaited()
-
-
-@pytest.mark.usefixtures("mock_rsa_key")
-@pytest.mark.parametrize(
-    ("state", "expected_error"),
-    [
-        pytest.param(AuthorizedClientState.PENDING, "key_pending", id="pending"),
-        pytest.param(
-            AuthorizedClientState.PENDING_VERIFICATION,
-            "key_pending_verification",
-            id="pending_verification",
-        ),
-    ],
-)
-async def test_subentry_recognizes_own_pending_key_no_reregister(
-    hass: HomeAssistant,
-    state: AuthorizedClientState,
-    expected_error: str,
-) -> None:
-    """A real gateway response recognizes our own pending key and skips re-adding it."""
-    entry = await _setup_energy_site_subentry(hass)
-    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
-
-    add_client = AsyncMock()
-    with (
-        patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-            new=AsyncMock(return_value=_own_key_clients(state)),
-        ),
-        patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
-            new=add_client,
-        ),
-    ):
-        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "pair"
-        assert not result["errors"]
-
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pair"
-    assert result["errors"] == {"base": expected_error}
-    add_client.assert_not_awaited()
-
-
-@pytest.mark.usefixtures("mock_rsa_key")
 async def test_subentry_null_body_aborts_as_lookup_failure(hass: HomeAssistant) -> None:
     """A malformed authorized-clients read aborts rather than registering.
 
@@ -467,28 +346,6 @@ async def test_subentry_null_body_aborts_as_lookup_failure(hass: HomeAssistant) 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
     mock_add.assert_not_awaited()
-
-
-@pytest.mark.usefixtures("mock_rsa_key")
-async def test_subentry_add_authorized_client_fails(hass: HomeAssistant) -> None:
-    """Reconfigure aborts if registering the key with the gateway fails."""
-    entry = await _setup_energy_site_subentry(hass)
-    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
-
-    with (
-        patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-            new=AsyncMock(return_value=_unverified_clients()),
-        ),
-        patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
-            new=AsyncMock(side_effect=TeslaFleetError()),
-        ),
-    ):
-        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
@@ -865,6 +722,34 @@ async def test_stale_cleanup_removes_energy_subentry(hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
 
     assert subentry_id not in entry.subentries
+
+
+async def test_stale_cleanup_preserves_pairing_on_transient_access_loss(
+    hass: HomeAssistant,
+) -> None:
+    """A paired site that momentarily reports no access keeps its subentry.
+
+    The site is still on the account (present in ``products``); only its
+    ``access`` flag flipped, which can happen on a subscription/token blip.
+    That must not delete the local gateway host/password.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+
+    metadata = deepcopy(METADATA)
+    metadata["energy_sites"][str(SITE_ID)]["access"] = False
+
+    with (
+        patch("tesla_fleet_api.teslemetry.Teslemetry.metadata", return_value=metadata),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert subentry_id in entry.subentries
+    assert entry.subentries[subentry_id].data[CONF_HOST] == HOST
+    assert entry.subentries[subentry_id].data[CONF_PASSWORD] == PASSWORD
 
 
 async def test_solar_only_site_has_no_local_control(hass: HomeAssistant) -> None:

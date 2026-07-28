@@ -313,25 +313,36 @@ def _prune_energy_subentries(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
     scopes: list[Scope],
-    energysites: list[TeslemetryEnergyData],
+    products: list[dict[str, Any]],
 ) -> None:
-    """Remove energy-site subentries whose site is no longer present.
+    """Remove energy-site subentries whose site is no longer on the account.
 
     Skipped without the energy scope: setup then skips every energy product, so
     an empty site list means the inventory was never resolved rather than that
     the sites are gone. Pruning against it would delete the local gateway
     credentials a user paired.
+
+    Kept against the raw product inventory rather than the access-filtered
+    energysites list: a site can report ``access: false`` transiently (a
+    subscription/token blip) while still being on the account, and pruning on
+    that flag alone would delete its paired gateway credentials.
     """
     if Scope.ENERGY_DEVICE_DATA not in scopes:
         return
+    product_site_ids = {
+        str(product["energy_site_id"])
+        for product in products
+        if "energy_site_id" in product
+    }
     _remove_stale_subentries(
         hass,
         entry,
         SUBENTRY_TYPE_ENERGY_SITE,
         {
-            energysite.subentry_id
-            for energysite in energysites
-            if energysite.subentry_id is not None
+            subentry.subentry_id
+            for subentry in entry.subentries.values()
+            if subentry.subentry_type == SUBENTRY_TYPE_ENERGY_SITE
+            and subentry.unique_id in product_site_ids
         },
     )
 
@@ -666,7 +677,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             LOGGER.debug("Removing stale device %s", device_entry.id)
             device_registry.async_remove_device(device_entry.id)
 
-    _prune_energy_subentries(hass, entry, scopes, energysites)
+    _prune_energy_subentries(hass, entry, scopes, products)
 
     entry.runtime_data = TeslemetryData(
         vehicles=vehicles,

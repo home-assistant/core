@@ -226,13 +226,6 @@ class OAuth2FlowHandler(
 class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
     """Pair a local Powerwall gateway for TEDAPI v1r command routing.
 
-    Reconfiguring an energy site subentry registers the integration's RSA key
-    as an authorized client on the gateway (via the cloud API), walks the user
-    through approving it on the Powerwall, then collects the local gateway host
-    and password. Once paired, the host/password are stored on the subentry,
-    which enables Powerwall-first command routing for that site on the next
-    reload.
-
     The authorized-client key this flow registers is intentionally left on
     the gateway when the Home Assistant config entry/subentry is later
     removed. The same gateway-side authorization may be relied on by other
