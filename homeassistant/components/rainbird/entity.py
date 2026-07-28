@@ -17,12 +17,8 @@ from .const import ATTR_DURATION, DOMAIN, MANUFACTURER
 from .coordinator import RainbirdUpdateCoordinator
 
 
-class RainBirdValve(CoordinatorEntity[RainbirdUpdateCoordinator], ValveEntity):
-    """Representation of a Rain Bird valve."""
-
-    _attr_device_class = ValveDeviceClass.WATER
-    _attr_reports_position = False
-    _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+class RainBirdZoneEntity(CoordinatorEntity[RainbirdUpdateCoordinator]):
+    """Base entity for a Rain Bird irrigation zone."""
 
     def __init__(
         self,
@@ -31,7 +27,7 @@ class RainBirdValve(CoordinatorEntity[RainbirdUpdateCoordinator], ValveEntity):
         duration_minutes: int,
         imported_name: str | None,
     ) -> None:
-        """Initialize a Rain Bird Valve Device."""
+        """Initialize a Rain Bird zone entity."""
         super().__init__(coordinator)
         self._zone = zone
         if coordinator.unique_id is not None:
@@ -58,9 +54,8 @@ class RainBirdValve(CoordinatorEntity[RainbirdUpdateCoordinator], ValveEntity):
         """Return state attributes."""
         return {"zone": self._zone}
 
-    @override
-    async def async_open_valve(self, **kwargs: Any) -> None:
-        """Open the valve."""
+    async def _async_irrigate(self, **kwargs: Any) -> None:
+        """Start irrigation for this zone."""
         try:
             await self.coordinator.controller.irrigate_zone(
                 int(self._zone),
@@ -77,9 +72,8 @@ class RainBirdValve(CoordinatorEntity[RainbirdUpdateCoordinator], ValveEntity):
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
-    @override
-    async def async_close_valve(self) -> None:
-        """Close the valve."""
+    async def _async_stop_irrigation(self) -> None:
+        """Stop irrigation for this zone."""
         try:
             await self.coordinator.controller.stop_irrigation()
         except RainbirdDeviceBusyException as err:
@@ -89,10 +83,28 @@ class RainBirdValve(CoordinatorEntity[RainbirdUpdateCoordinator], ValveEntity):
         except RainbirdApiException as err:
             raise HomeAssistantError("Rain Bird device failure") from err
 
-        if self.is_closed is False:
+        if self._zone in self.coordinator.data.active_zones:
             self.coordinator.data.active_zones.remove(self._zone)
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
+
+
+class RainBirdValve(RainBirdZoneEntity, ValveEntity):
+    """Representation of a Rain Bird valve."""
+
+    _attr_device_class = ValveDeviceClass.WATER
+    _attr_reports_position = False
+    _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+
+    @override
+    async def async_open_valve(self, **kwargs: Any) -> None:
+        """Open the valve."""
+        await self._async_irrigate(**kwargs)
+
+    @override
+    async def async_close_valve(self) -> None:
+        """Close the valve."""
+        await self._async_stop_irrigation()
 
     @property
     @override
