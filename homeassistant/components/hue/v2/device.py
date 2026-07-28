@@ -18,6 +18,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
+    ATTR_VIA_DEVICE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -39,9 +40,6 @@ async def async_setup_devices(bridge: HueBridge):
     @callback
     def add_device(hue_resource: Device | Room | Zone | ServiceGroup) -> dr.DeviceEntry:
         """Register a Hue device in device registry."""
-        bridge_device_id = dr.async_get_device_id_by_identifier(
-            hass, (DOMAIN, api.config.bridge_device.id), entry.entry_id
-        )
         if isinstance(hue_resource, (Room, Zone, ServiceGroup)):
             # Register a Hue Room/Zone as service in HA device registry.
             return dev_reg.async_get_or_create(
@@ -51,7 +49,7 @@ async def async_setup_devices(bridge: HueBridge):
                 name=hue_resource.metadata.name,
                 model=hue_resource.type.value.replace("_", " ").title(),
                 manufacturer=api.config.bridge_device.product_data.manufacturer_name,
-                via_device_id=bridge_device_id,
+                via_device=(DOMAIN, api.config.bridge_device.id),
                 suggested_area=hue_resource.metadata.name
                 if hue_resource.type == ResourceTypes.ROOM
                 else None,
@@ -70,7 +68,7 @@ async def async_setup_devices(bridge: HueBridge):
         if hue_resource.id == api.config.bridge_device.id:
             params[ATTR_IDENTIFIERS].add((DOMAIN, api.config.bridge_id))
         else:
-            params["via_device_id"] = bridge_device_id
+            params[ATTR_VIA_DEVICE] = (DOMAIN, api.config.bridge_device.id)
         zigbee = dev_controller.get_zigbee_connectivity(hue_resource.id)
         if zigbee and zigbee.mac_address:
             params[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, zigbee.mac_address)}
