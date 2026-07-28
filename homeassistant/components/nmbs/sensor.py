@@ -8,7 +8,6 @@ from pyrail import iRail
 from pyrail.models import ConnectionDetails, LiveboardDeparture, StationDetails
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_SHOW_ON_MAP,
@@ -20,6 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from . import NMBSConfigEntry
 from .const import (  # noqa: F401
     CONF_EXCLUDE_VIAS,
     CONF_STATION_FROM,
@@ -60,7 +60,7 @@ def get_ride_duration(departure_time: datetime, arrival_time: datetime, delay=0)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NMBSConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NMBS sensor entities based on a config entry."""
@@ -70,8 +70,9 @@ async def async_setup_entry(
     show_on_map = config_entry.data.get(CONF_SHOW_ON_MAP, False)
     excl_vias = config_entry.data.get(CONF_EXCLUDE_VIAS, False)
 
-    station_from = find_station(hass, config_entry.data[CONF_STATION_FROM])
-    station_to = find_station(hass, config_entry.data[CONF_STATION_TO])
+    stations = config_entry.runtime_data
+    station_from = find_station(stations, config_entry.data[CONF_STATION_FROM])
+    station_to = find_station(stations, config_entry.data[CONF_STATION_TO])
 
     # setup the connection from station to station
     # setup a disabled liveboard for both from and to station
