@@ -1580,6 +1580,7 @@ async def test_irrigation_system_end_time_remaining_counts_down_without_state_ev
         async_fire_time_changed(hass, now + timedelta(seconds=1))
         await hass.async_block_till_done()
         assert front_chars[CHAR_REMAINING_DURATION].value == 119
+        acc.async_stop()
 
 
 async def test_irrigation_system_ignores_invalid_duration_attribute(
