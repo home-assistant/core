@@ -611,9 +611,10 @@ class IrrigationSystem(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
         assert state
 
-        self._valve_entity_ids: list[str] = [self.entity_id] + list(
-            self.config.get(CONF_LINKED_IRRIGATION_VALVES, [])
-        )
+        self._valve_entity_ids: list[str] = [
+            self.entity_id,
+            *self.config.get(CONF_LINKED_IRRIGATION_VALVES, []),
+        ]
         self._valve_chars: dict[str, dict[str, Any]] = {}
 
         serv_irrigation = self.add_preload_service(
