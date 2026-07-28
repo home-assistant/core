@@ -612,13 +612,22 @@ class HomeAssistantHTTP:
 
     async def _async_stop_legacy_redirect(self) -> None:
         """Stop the legacy redirect server and free its port."""
-        if self._legacy_redirect_server is not None:
-            self._legacy_redirect_server.close()
-            await self._legacy_redirect_server.wait_closed()
-            self._legacy_redirect_server = None
-        if self._legacy_redirect_runner is not None:
-            await self._legacy_redirect_runner.cleanup()
-            self._legacy_redirect_runner = None
+        server = self._legacy_redirect_server
+        runner = self._legacy_redirect_runner
+        # Drop the references up front: both the onboarding listener and the
+        # stop event tear the redirect down, so a second call must not wait on
+        # a teardown that is already in flight.
+        self._legacy_redirect_server = None
+        self._legacy_redirect_runner = None
+        if server is not None:
+            # Stop accepting new connections, but do not await wait_closed()
+            # yet: it only returns once every open connection is done, and the
+            # runner cleanup below is what actually closes them.
+            server.close()
+        if runner is not None:
+            await runner.cleanup()
+        if server is not None:
+            await server.wait_closed()
 
     async def stop(self) -> None:
         """Stop the aiohttp server."""
