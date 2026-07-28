@@ -81,19 +81,19 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations:
-    status: exempt
+    status: todo
     comment: |
-      Entity names are derived at runtime from the readout identifiers a
-      controller reports. Growers define their own readouts, so the vocabulary
-      is installation-specific and there is no fixed set of keys to translate.
-      Ridder is the right place for translated readout names.
+      Entity names are derived at runtime from the readout identifier. The
+      identifiers are Ridder's rather than the grower's, since custom sensors
+      are not exposed through the API, so a translation key per readout subject
+      is possible. The derived name stays as the fallback for readouts a later
+      firmware adds.
   exception-translations: done
   icon-translations:
-    status: exempt
+    status: todo
     comment: |
-      Icons are chosen per readout at runtime, for the same reason entity
-      translations are exempt: the readout vocabulary is installation-specific,
-      so there are no fixed translation keys to hang them on.
+      Icons are chosen per readout subject at runtime, on the same fixed set of
+      subjects as entity-translations, so they can move to icons.json with it.
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
