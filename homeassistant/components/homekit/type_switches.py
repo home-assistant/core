@@ -1,8 +1,8 @@
 """Class to hold all switch accessories."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
-from typing import Any, Final, NamedTuple, override
+from typing import Any, Callable, Final, NamedTuple, override
 
 from pyhap.characteristic import Characteristic
 from pyhap.const import (
@@ -938,12 +938,12 @@ class IrrigationSystem(HomeAccessory):
         chars["close_timer"] = async_call_later(
             self.hass,
             seconds,
-            lambda _now, eid=entity_id: self._async_local_runtime_close(eid),
+            self._make_close_runtime_callback(entity_id),
         )
         chars["update_timer"] = async_call_later(
             self.hass,
             1,
-            lambda _now, eid=entity_id: self._update_local_remaining(eid),
+            self._make_update_runtime_callback(entity_id),
         )
 
     @callback
@@ -969,8 +969,30 @@ class IrrigationSystem(HomeAccessory):
             chars["update_timer"] = async_call_later(
                 self.hass,
                 1,
-                lambda _now, eid=entity_id: self._update_local_remaining(eid),
+                self._make_update_runtime_callback(entity_id),
             )
+
+    def _make_close_runtime_callback(
+        self, entity_id: str
+    ) -> Callable[[datetime], None]:
+        """Create close-timer callback for a specific zone."""
+
+        @callback
+        def _close_runtime(_now: datetime) -> None:
+            self._async_local_runtime_close(entity_id)
+
+        return _close_runtime
+
+    def _make_update_runtime_callback(
+        self, entity_id: str
+    ) -> Callable[[datetime], None]:
+        """Create remaining-duration update callback for a specific zone."""
+
+        @callback
+        def _update_runtime(_now: datetime) -> None:
+            self._update_local_remaining(entity_id)
+
+        return _update_runtime
 
     def _remaining_from_local_runtime(self, entity_id: str) -> int:
         """Return remaining seconds from local runtime tracking."""
