@@ -550,7 +550,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             default_model="FRITZ!Box Tracked device",
             default_name=device.hostname,
             via_device_id=dr.async_get_device_id_by_identifier(
-                self.hass, (DOMAIN, self.unique_id), self.config_entry.entry_id
+                self.hass,
+                (DOMAIN, self.unique_id),
+                config_entry_id=self.config_entry.entry_id,
             ),
         )
         return True

@@ -96,7 +96,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
             via_device_id=dr.async_get_device_id_by_identifier(
                 self.hass,
                 (DOMAIN, self.config_entry.entry_id),
-                self.config_entry.entry_id,
+                config_entry_id=self.config_entry.entry_id,
             ),
             name=object_class.name,
             model=f"{self._device} {object_type}",

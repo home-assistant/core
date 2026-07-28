@@ -100,7 +100,7 @@ class BryantEvolutionClimate(ClimateEntity):
             via_device_id=dr.async_get_device_id_by_identifier(
                 hass,
                 (DOMAIN, names.system_device_uid(sam_uid, system_id)),
-                sam_uid,  # This is the config entry id
+                config_entry_id=sam_uid,  # This is the config entry id
             ),
             name=f"System {system_id} Zone {zone_id}",
         )

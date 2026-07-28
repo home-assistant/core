@@ -33,6 +33,6 @@ class EgaugeEntity(CoordinatorEntity[EgaugeDataCoordinator]):
             via_device_id=dr.async_get_device_id_by_identifier(
                 coordinator.hass,
                 (DOMAIN, coordinator.serial_number),
-                coordinator.config_entry.entry_id,
+                config_entry_id=coordinator.config_entry.entry_id,
             ),
         )

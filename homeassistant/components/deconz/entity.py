@@ -68,7 +68,7 @@ class DeconzBase[_DeviceT: _DeviceType]:
             via_device_id=dr.async_get_device_id_by_identifier(
                 self.hub.hass,
                 (DOMAIN, self.hub.api.config.bridge_id),
-                self.hub.config_entry.entry_id,
+                config_entry_id=self.hub.config_entry.entry_id,
             ),
         )
 
@@ -193,6 +193,6 @@ class DeconzSceneMixin(DeconzDevice[PydeconzScene]):
             via_device_id=dr.async_get_device_id_by_identifier(
                 self.hub.hass,
                 (DOMAIN, self.hub.api.config.bridge_id),
-                self.hub.config_entry.entry_id,
+                config_entry_id=self.hub.config_entry.entry_id,
             ),
         )

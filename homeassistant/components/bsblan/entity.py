@@ -55,7 +55,9 @@ class BSBLanCircuitEntity(BSBLanEntity):
             translation_key="heating_circuit",
             translation_placeholders={"circuit": str(circuit)},
             via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass, (DOMAIN, mac), coordinator.config_entry.entry_id
+                coordinator.hass,
+                (DOMAIN, mac),
+                config_entry_id=coordinator.config_entry.entry_id,
             ),
             manufacturer=main_info["manufacturer"],
             model=main_info.get("model"),
@@ -107,7 +109,7 @@ class BSBLanWaterHeaterDeviceEntity(BSBLanDualCoordinatorEntity):
             via_device_id=dr.async_get_device_id_by_identifier(
                 fast_coordinator.hass,
                 (DOMAIN, mac),
-                fast_coordinator.config_entry.entry_id,
+                config_entry_id=fast_coordinator.config_entry.entry_id,
             ),
             manufacturer=main_info["manufacturer"],
             model=main_info.get("model"),

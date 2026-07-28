@@ -38,7 +38,7 @@ class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](
             via_device_id=dr.async_get_device_id_by_identifier(
                 coordinator.hass,
                 (DOMAIN, dev.system.serial),
-                coordinator.config_entry.entry_id,
+                config_entry_id=coordinator.config_entry.entry_id,
             ),
             manufacturer=dev.manufacturer,
             model=dev.model,

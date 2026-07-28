@@ -93,7 +93,7 @@ class ShadeEntity(HDEntity):
             via_device_id=dr.async_get_device_id_by_identifier(
                 self.coordinator.hass,
                 (DOMAIN, self._device_info.serial_number),
-                self.coordinator.config_entry.entry_id,
+                config_entry_id=self.coordinator.config_entry.entry_id,
             ),
             configuration_url=self._configuration_url,
         )

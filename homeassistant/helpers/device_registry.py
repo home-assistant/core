@@ -136,7 +136,7 @@ class DeviceInfo(TypedDict, total=False):
     translation_key: str | None
     translation_placeholders: Mapping[str, str] | None
     via_device: tuple[str, str]  # Deprecated, use via_device_id instead
-    via_device_id: str | None
+    via_device_id: str
 
 
 DEVICE_INFO_TYPES = {
@@ -3151,7 +3151,7 @@ def async_get(hass: HomeAssistant) -> DeviceRegistry:
 
 @callback
 def async_get_device_id_by_identifier(
-    hass: HomeAssistant, identifier: tuple[str, str], config_entry_id: str
+    hass: HomeAssistant, identifier: tuple[str, str], *, config_entry_id: str
 ) -> str:
     """Get the id of the device with the identifier, owned by the config entry.
 

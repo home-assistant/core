@@ -863,7 +863,7 @@ class MeterSensor(_FroniusSensorEntity):
             via_device_id=dr.async_get_device_id_by_identifier(
                 coordinator.hass,
                 (DOMAIN, coordinator.solar_net.solar_net_device_id),
-                coordinator.config_entry.entry_id,
+                config_entry_id=coordinator.config_entry.entry_id,
             ),
         )
         self._attr_unique_id = f"{meter_uid}-{description.key}"
@@ -891,7 +891,7 @@ class OhmpilotSensor(_FroniusSensorEntity):
             via_device_id=dr.async_get_device_id_by_identifier(
                 coordinator.hass,
                 (DOMAIN, coordinator.solar_net.solar_net_device_id),
-                coordinator.config_entry.entry_id,
+                config_entry_id=coordinator.config_entry.entry_id,
             ),
         )
         self._attr_unique_id = f"{device_data['serial']['value']}-{description.key}"
@@ -937,6 +937,6 @@ class StorageSensor(_FroniusSensorEntity):
             via_device_id=dr.async_get_device_id_by_identifier(
                 coordinator.hass,
                 (DOMAIN, coordinator.solar_net.solar_net_device_id),
-                coordinator.config_entry.entry_id,
+                config_entry_id=coordinator.config_entry.entry_id,
             ),
         )
