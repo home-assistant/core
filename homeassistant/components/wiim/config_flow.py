@@ -83,7 +83,6 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle user initiated reconfiguration."""
         errors: dict[str, str] = {}
-        reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
             try:
@@ -96,7 +95,7 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(device_info.udn)
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
-                    reconfigure_entry,
+                    self._get_reconfigure_entry(),
                     data_updates={CONF_HOST: device_info.host},
                 )
 
@@ -104,7 +103,10 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA,
-                user_input or {CONF_HOST: reconfigure_entry.data[CONF_HOST]},
+                user_input
+                or {
+                    CONF_HOST: self._get_reconfigure_entry().data[CONF_HOST],
+                },
             ),
             errors=errors,
         )
