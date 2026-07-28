@@ -364,3 +364,43 @@ async def test_door_lock_operating_mode_select(
         ),
         value=clusters.DoorLock.Enums.OperatingModeEnum.kNoRemoteLockUnlock,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_chime"])
+async def test_chime_select(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test select entity for the Chime cluster's SelectedChime attribute."""
+    entity_id = "select.mock_chime_chime_sound"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Classic Ding Dong"
+    assert state.attributes["options"] == [
+        "Classic Ding Dong",
+        "Merry Melodies",
+        "Digital Alert",
+    ]
+
+    set_node_attribute(matter_node, 1, 1366, 1, 2)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "Merry Melodies"
+
+    matter_client.write_attribute.reset_mock()
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "Classic Ding Dong"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.Chime.Attributes.SelectedChime,
+        ),
+        value=1,
+    )

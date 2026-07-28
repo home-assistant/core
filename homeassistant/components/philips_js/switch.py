@@ -1,6 +1,6 @@
 """Philips TV menu switches."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -43,6 +43,7 @@ class PhilipsTVScreenSwitch(PhilipsJsEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.unique_id}_screenstate"
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if entity is available."""
         if not super().available:
@@ -52,14 +53,17 @@ class PhilipsTVScreenSwitch(PhilipsJsEntity, SwitchEntity):
         return self.coordinator.api.powerstate == "On"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self.coordinator.api.screenstate == "On"
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.coordinator.api.setScreenState("On")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.api.setScreenState("Off")
@@ -81,6 +85,7 @@ class PhilipsTVAmbilightHueSwitch(PhilipsJsEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.unique_id}_ambi_hue"
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if entity is available."""
         if not super().available:
@@ -90,15 +95,18 @@ class PhilipsTVAmbilightHueSwitch(PhilipsJsEntity, SwitchEntity):
         return self.coordinator.api.powerstate == "On"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self.coordinator.api.huelamp_power == HUE_POWER_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.coordinator.api.setHueLampPower(HUE_POWER_ON)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.api.setHueLampPower(HUE_POWER_OFF)

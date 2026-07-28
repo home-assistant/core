@@ -16,9 +16,15 @@ rules:
   docs-actions:
     status: exempt
     comment: No actions are implemented
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: the integration does not subscribe to events
@@ -30,7 +36,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: This integration does not register custom actions.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -43,13 +51,13 @@ rules:
   log-when-unavailable:
     status: exempt
     comment: the integration only integrates stateless entities
-  parallel-updates: todo
-  reauthentication-flow: todo
+  parallel-updates: done
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Service can't be discovered
@@ -80,7 +88,7 @@ rules:
     comment: conversation entity name comes from subentry title
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: the integration has no repairs

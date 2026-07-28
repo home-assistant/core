@@ -3,6 +3,7 @@
 import asyncio
 from datetime import datetime
 import logging
+from typing import override
 
 from aioaquacell import (
     AquacellApi,
@@ -14,7 +15,7 @@ from aioaquacell import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -57,6 +58,7 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
         self.password = self.config_entry.data[CONF_PASSWORD]
         self.aquacell_api = aquacell_api
 
+    @override
     async def _async_update_data(self) -> dict[str, Softener]:
         """Fetch data from API endpoint.
 
@@ -71,7 +73,7 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
                 + REFRESH_TOKEN_EXPIRY_TIME.total_seconds()
             )
             try:
-                if datetime.now().timestamp() >= expiry_time:
+                if datetime.now().timestamp() >= expiry_time:  # pylint: disable=home-assistant-enforce-naive-now
                     await self._reauthenticate()
                 else:
                     await self.aquacell_api.authenticate_refresh(self.refresh_token)
@@ -79,7 +81,7 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
 
                 softeners = await self.aquacell_api.get_all_softeners()
             except AuthenticationFailed as err:
-                raise ConfigEntryError from err
+                raise ConfigEntryAuthFailed from err
             except (AquacellApiException, TimeoutError) as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
@@ -92,7 +94,7 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
         data = {
             **self.config_entry.data,
             CONF_REFRESH_TOKEN: self.refresh_token,
-            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
         }
 
         self.hass.config_entries.async_update_entry(self.config_entry, data=data)

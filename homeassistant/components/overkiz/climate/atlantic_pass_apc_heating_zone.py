@@ -1,6 +1,6 @@
 """Support for Atlantic Pass APC Heating Control."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -98,25 +98,33 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
         super().__init__(device_url, coordinator)
 
         # Temperature sensor use the same base_device_url and use the n+1 index
-        self.temperature_device = self.executor.linked_device(
-            int(self.index_device_url) + 1
+        self.temperature_device = (
+            self.executor.linked_device(subsystem_id + 1)
+            if (subsystem_id := self.device.identifier.subsystem_id) is not None
+            else None
         )
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
-            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+            temperature := self.temperature_device.states.get(
+                OverkizState.CORE_TEMPERATURE
+            )
         ):
             return cast(float, temperature.value)
 
         return None
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         return OVERKIZ_TO_HVAC_MODE[
-            cast(str, self.executor.select_state(OverkizState.IO_PASS_APC_HEATING_MODE))
+            cast(
+                str, self.device.states.get_value(OverkizState.IO_PASS_APC_HEATING_MODE)
+            )
         ]
 
     @property
@@ -124,7 +132,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
         """Return current heating profile."""
         return cast(
             str,
-            self.executor.select_state(OverkizState.IO_PASS_APC_HEATING_PROFILE),
+            self.device.states.get_value(OverkizState.IO_PASS_APC_HEATING_PROFILE),
         )
 
     async def async_set_heating_mode(self, mode: str) -> None:
@@ -147,19 +155,22 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
             OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE
         )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.async_set_heating_mode(HVAC_MODE_TO_OVERKIZ[hvac_mode])
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.async_set_heating_mode(PRESET_MODES_TO_OVERKIZ[preset_mode])
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         heating_mode = cast(
-            str, self.executor.select_state(OverkizState.IO_PASS_APC_HEATING_MODE)
+            str, self.device.states.get_value(OverkizState.IO_PASS_APC_HEATING_MODE)
         )
 
         if heating_mode == OverkizCommandParam.INTERNAL_SCHEDULING:
@@ -167,7 +178,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
             return OVERKIZ_TO_PROFILE_MODES[
                 cast(
                     str,
-                    self.executor.select_state(
+                    self.device.states.get_value(
                         OverkizState.IO_PASS_APC_HEATING_PROFILE
                     ),
                 )
@@ -176,20 +187,22 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
         return OVERKIZ_TO_PRESET_MODES[heating_mode]
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return hvac target temperature."""
         current_heating_profile = self.current_heating_profile
         if current_heating_profile in OVERKIZ_TEMPERATURE_STATE_BY_PROFILE:
             return cast(
                 float,
-                self.executor.select_state(
+                self.device.states.get_value(
                     OVERKIZ_TEMPERATURE_STATE_BY_PROFILE[current_heating_profile]
                 ),
             )
         return cast(
-            float, self.executor.select_state(OverkizState.CORE_TARGET_TEMPERATURE)
+            float, self.device.states.get_value(OverkizState.CORE_TARGET_TEMPERATURE)
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]

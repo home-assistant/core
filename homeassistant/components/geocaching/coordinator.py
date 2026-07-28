@@ -1,5 +1,7 @@
 """Provides the Geocaching DataUpdateCoordinator."""
 
+from typing import override
+
 from geocachingapi.exceptions import GeocachingApiError, GeocachingInvalidSettingsError
 from geocachingapi.geocachingapi import GeocachingApi
 from geocachingapi.models import GeocachingStatus
@@ -53,6 +55,7 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> GeocachingStatus:
         """Fetch the latest Geocaching status."""
         try:

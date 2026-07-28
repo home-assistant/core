@@ -1,6 +1,7 @@
 """The Radio Thermostat integration base entity."""
 
 from abc import abstractmethod
+from typing import override
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -41,6 +42,7 @@ class RadioThermostatEntity(CoordinatorEntity[RadioThermUpdateCoordinator]):
         """Update and validate the data from the thermostat."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         self._process_data()
         return super()._handle_coordinator_update()

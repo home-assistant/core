@@ -39,7 +39,7 @@
 # name: test_all_entities[switch.vodafone_station_m123456789_guest_5ghz_network-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Vodafone Station (m123456789) Guest 5GHz network',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vodafone Station (m123456789) Guest 5GHz network',
     }),
     'context': <ANY>,
     'entity_id': 'switch.vodafone_station_m123456789_guest_5ghz_network',
@@ -89,7 +89,7 @@
 # name: test_all_entities[switch.vodafone_station_m123456789_guest_network-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Vodafone Station (m123456789) Guest network',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vodafone Station (m123456789) Guest network',
     }),
     'context': <ANY>,
     'entity_id': 'switch.vodafone_station_m123456789_guest_network',

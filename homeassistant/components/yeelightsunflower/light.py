@@ -1,7 +1,7 @@
 """Support for Yeelight Sunflower color bulbs (not Yeelight Blue or WiFi)."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 import yeelightsunflower
@@ -59,15 +59,18 @@ class SunflowerBulb(LightEntity):
         self._attr_name = f"sunflower_{self._light.zid}"
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness is 0-255; Yeelight's brightness is 0-100."""
         return int(self._brightness / 100 * 255)
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float]:
         """Return the color property."""
         return color_util.color_RGB_to_hs(*self._rgb_color)
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on, optionally set colour/brightness."""
         # when no arguments, just turn light on (full brightness)
@@ -84,6 +87,7 @@ class SunflowerBulb(LightEntity):
             bright = int(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
             self._light.set_brightness(bright)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._light.turn_off()

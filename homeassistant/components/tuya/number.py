@@ -1,5 +1,7 @@
 """Support for Tuya number."""
 
+from typing import override
+
 from tuya_device_handlers.definition.number import (
     NumberDefinition,
     get_default_definition,
@@ -12,7 +14,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -326,13 +328,13 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.ARM_DOWN_PERCENT,
             translation_key="move_down",
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.ARM_UP_PERCENT,
             translation_key="move_up",
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
@@ -596,10 +598,12 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         return self._read_wrapper(self._dpcode_wrapper)
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],
@@ -614,6 +618,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             self.device, updated_status_properties, dp_timestamps
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, value)

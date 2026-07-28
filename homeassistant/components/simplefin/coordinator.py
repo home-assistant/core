@@ -1,7 +1,7 @@
 """Data update coordinator for the SimpleFIN integration."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from simplefin4py import FinancialData, SimpleFin
 from simplefin4py.exceptions import SimpleFinAuthError, SimpleFinPaymentRequiredError
@@ -34,6 +34,7 @@ class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[FinancialData]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> Any:
         """Fetch data for all accounts."""
         try:

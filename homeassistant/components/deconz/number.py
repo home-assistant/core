@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pydeconz.gateway import DeconzSession
 from pydeconz.interfaces.sensors import SensorResources
@@ -114,10 +114,12 @@ class DeconzNumber(DeconzDevice[SensorResources], NumberEntity):
         super().__init__(device, hub)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the value of the sensor property."""
         return self.entity_description.value_fn(self._device)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set sensor config."""
         await self.entity_description.set_fn(

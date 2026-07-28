@@ -1,6 +1,6 @@
 """Config flow for Elexa Guardian integration."""
 
-from typing import Any
+from typing import Any, override
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -73,6 +73,7 @@ class GuardianConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             self._abort_if_unique_id_configured()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -99,6 +100,7 @@ class GuardianConfigFlow(ConfigFlow, domain=DOMAIN):
             title=info[CONF_UID], data={CONF_UID: info["uid"], **user_input}
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -112,6 +114,7 @@ class GuardianConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_discovery_confirm()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

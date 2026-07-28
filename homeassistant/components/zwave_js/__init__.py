@@ -17,6 +17,7 @@ from zwave_js_server.exceptions import (
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import (
+    BatteryNotification,
     EntryControlNotification,
     MultilevelSwitchNotification,
     NotificationNotification,
@@ -79,6 +80,7 @@ from .const import (
     ATTR_STATUS,
     ATTR_TEST_NODE_ID,
     ATTR_TYPE,
+    ATTR_URGENCY,
     ATTR_VALUE,
     ATTR_VALUE_RAW,
     CONF_ADDON_DEVICE,
@@ -965,7 +967,8 @@ class NodeEvents:
 
         driver = self.controller_events.driver_events.driver
         notification: (
-            EntryControlNotification
+            BatteryNotification
+            | EntryControlNotification
             | NotificationNotification
             | PowerLevelNotification
             | MultilevelSwitchNotification
@@ -985,7 +988,15 @@ class NodeEvents:
             ATTR_COMMAND_CLASS: notification.command_class,
         }
 
-        if isinstance(notification, EntryControlNotification):
+        if isinstance(notification, BatteryNotification):
+            event_data.update(
+                {
+                    ATTR_COMMAND_CLASS_NAME: "Battery",
+                    ATTR_EVENT_TYPE: notification.event_type,
+                    ATTR_URGENCY: notification.urgency,
+                }
+            )
+        elif isinstance(notification, EntryControlNotification):
             event_data.update(
                 {
                     ATTR_COMMAND_CLASS_NAME: "Entry Control",

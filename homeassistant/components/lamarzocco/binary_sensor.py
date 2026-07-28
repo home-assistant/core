@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pylamarzocco import LaMarzoccoMachine
 from pylamarzocco.const import BackFlushStatus, MachineState, ModelName, WidgetType
@@ -119,6 +119,7 @@ class LaMarzoccoBinarySensorEntity(LaMarzoccoEntity, BinarySensorEntity):
     entity_description: LaMarzoccoBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.is_on_fn(self.coordinator.device)
