@@ -3149,6 +3149,27 @@ def async_get(hass: HomeAssistant) -> DeviceRegistry:
         raise RuntimeError("Device registry not set up") from ex
 
 
+@callback
+def async_get_device_id_by_identifier(
+    hass: HomeAssistant, identifier: tuple[str, str], *, config_entry_id: str
+) -> str:
+    """Get the id of the device with the identifier, owned by the config entry.
+
+    Convenience wrapper for linking a device to its via device through
+    via_device_id. Identifiers are unique within a config entry, so the lookup
+    cannot be ambiguous.
+
+    Raises ValueError if no such device exists.
+    """
+    device = async_get(hass).async_get_device_by_identifier(identifier, config_entry_id)
+    if device is None:
+        raise ValueError(
+            f"There is no device with identifier {identifier} in config entry "
+            f"{config_entry_id}"
+        )
+    return device.id
+
+
 def async_setup(hass: HomeAssistant) -> None:
     """Set up device registry."""
     if DATA_REGISTRY in hass.data:
