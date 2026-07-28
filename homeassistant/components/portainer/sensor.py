@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import chain
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from pyportainer import StackType
 from pyportainer.models.docker import DockerContainerState, DockerSystemDF
@@ -376,7 +376,8 @@ async def async_setup_entry(
     """Set up Portainer sensors based on a config entry."""
     coordinator = entry.runtime_data
     ds_coordinator = coordinator.docker_disk_space
-    assert ds_coordinator is not None
+    if TYPE_CHECKING:
+        assert ds_coordinator is not None
 
     def _async_add_new_endpoints(endpoints: list[PortainerCoordinatorData]) -> None:
         """Add new endpoint sensors."""
