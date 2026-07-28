@@ -1054,7 +1054,7 @@
         "write_back": {
           "description": "Update the Home Assistant entity when a write telegram is received on the exposed group address. Supported for binary, numeric and string exposures.",
           "label": "Write-back"
-	},
+        },
         "yaml": {
           "mode_hint": "This is an internal representation of the expose configuration and may change in future Home Assistant versions. YAML mode is intended for debugging, and for sharing or copying configurations — prefer the visual editor for everyday use.",
           "yaml_error": "[%key:component::knx::config_panel::entities::create::yaml::yaml_error%]"
