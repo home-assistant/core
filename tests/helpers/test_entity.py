@@ -1658,9 +1658,7 @@ async def test_device_entry_cleared_when_detached_from_device(
 
     When the device is removed, the entity registry detaches the cross-entry
     entity (a device_id=None update) instead of removing it; the detach must
-    clear the cached device_entry, which the device registry listener cannot
-    do - processing the detach unsubscribes it before the removal event
-    reaches it.
+    clear the cached device_entry.
     """
     other_entry = MockConfigEntry(domain="other")
     other_entry.add_to_hass(hass)
