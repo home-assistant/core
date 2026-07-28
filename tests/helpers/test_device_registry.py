@@ -267,7 +267,9 @@ async def test_multiple_config_entries(
 
 
 async def test_multiple_config_subentries(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test re-registering a device under different subentries of one config entry."""
     config_entry = MockConfigEntry(
@@ -298,29 +300,35 @@ async def test_multiple_config_subentries(
         manufacturer="manufacturer",
         model="model",
     )
+    # Re-registering under the same subentry is idempotent
     entry2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        config_subentry_id="mock-subentry-id-2",
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        identifiers={("bridgeid", "0123")},
-        manufacturer="manufacturer",
-        model="model",
-    )
-    entry3 = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         config_subentry_id="mock-subentry-id-1",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
-        manufacturer="manufacturer",
-        model="model",
     )
+    assert entry2.id == entry.id
+    assert entry2.config_subentry_id == "mock-subentry-id-1"
+    # The idempotent re-registration must not emit the deprecation warning
+    assert "A device belongs to one subentry" not in caplog.text
 
     # A device belongs to a single subentry; re-registering the same identifiers under
-    # another subentry of the same config entry moves the device rather than duplicating
+    # another subentry of the same config entry is deprecated. For now it warns and moves
+    # the existing device (rather than duplicating); from HA Core 2027.8 it will raise.
+    entry3 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        config_subentry_id="mock-subentry-id-2",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+    )
+    assert "A device belongs to one subentry" in caplog.text
+
+    # Still one device, now moved to the new subentry
+    assert entry3.id == entry.id
     assert len(device_registry.devices) == 1
-    assert entry.id == entry2.id == entry3.id
-    assert entry2.config_subentry_id == "mock-subentry-id-2"
-    assert entry3.config_subentry_id == "mock-subentry-id-1"
+    assert (
+        device_registry.async_get(entry.id).config_subentry_id == "mock-subentry-id-2"
+    )
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -2209,15 +2217,18 @@ async def test_migration_collapses_multi_subentry_device(
     )
 
 
-async def test_async_get_or_create_moves_device_between_subentries(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+async def test_async_get_or_create_warns_on_subentry_reassignment(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Re-registering under a different subentry moves the device, not duplicates it.
+    """Re-registering under a different subentry warns and moves the device.
 
     Identifiers and connections are unique per config entry (not per subentry), so a
     second async_get_or_create with the same identifier/connection but a different
-    subentry of the same config entry moves the existing device - it neither creates a
-    duplicate nor raises.
+    subentry of the same config entry can neither create a duplicate nor keep two
+    devices - it moves the existing device to the new subentry. This implicit move is
+    deprecated (logs a warning now, will raise in HA Core 2027.8).
     """
     entry = MockConfigEntry(
         subentries_data=[
@@ -2239,7 +2250,7 @@ async def test_async_get_or_create_moves_device_between_subentries(
     )
     entry.add_to_hass(hass)
 
-    # Same identifier, different subentry -> the existing device is moved
+    # Same identifier, different subentry -> warns and moves the existing device
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         config_subentry_id="sub-1",
@@ -2251,23 +2262,23 @@ async def test_async_get_or_create_moves_device_between_subentries(
         config_subentry_id="sub-2",
         identifiers={("test", "1")},
     )
+    assert "A device belongs to one subentry" in caplog.text
     assert moved.id == device.id
-    assert moved.config_subentry_id == "sub-2"
+    assert device_registry.async_get(device.id).config_subentry_id == "sub-2"
     assert len(device_registry.devices) == 1
 
-    # Same connection, different subentry -> also moved, not duplicated
+    # Same connection, different subentry -> also moves
     device_2 = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         config_subentry_id="sub-1",
         connections={("mac", "12:34:56:ab:cd:ef")},
     )
-    moved_2 = device_registry.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         config_subentry_id="sub-2",
         connections={("mac", "12:34:56:ab:cd:ef")},
     )
-    assert moved_2.id == device_2.id
-    assert moved_2.config_subentry_id == "sub-2"
+    assert device_registry.async_get(device_2.id).config_subentry_id == "sub-2"
     assert len(device_registry.devices) == 2
 
 
@@ -8966,6 +8977,50 @@ async def test_restored_composite_preserves_primary_config_entry(
     assert composite.primary_config_entry != splits[0].config_entry_id
     # It is a valid member of the merged config entries
     assert composite.primary_config_entry in composite.config_entries
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_get_composite_splits(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test getting the mapping of composite device ids to their split devices."""
+    entry_a = MockConfigEntry(domain="domain_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="domain_b")
+    entry_b.add_to_hass(hass)
+    hass_storage[dr.STORAGE_KEY] = _composite_device_storage(entry_a, entry_b)
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    device_registry = dr.async_get(hass)
+
+    split_a = _get_device_for_config_entry(
+        device_registry, entry_a.entry_id, identifiers={("domain_a", "1")}
+    )
+    split_b = _get_device_for_config_entry(
+        device_registry, entry_b.entry_id, identifiers={("domain_b", "1")}
+    )
+
+    splits = device_registry.devices.get_composite_splits()
+    assert set(splits) == {COMPOSITE_ID}
+    assert {device.id for device in splits[COMPOSITE_ID]} == {split_a.id, split_b.id}
+
+    # A device which is not split from a composite is not included
+    device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id, identifiers={("domain_a", "2")}
+    )
+    splits = device_registry.devices.get_composite_splits()
+    assert set(splits) == {COMPOSITE_ID}
+    assert {device.id for device in splits[COMPOSITE_ID]} == {split_a.id, split_b.id}
+
+    # A removed split is dropped from the mapping
+    device_registry.async_remove_device(split_a.id)
+    splits = device_registry.devices.get_composite_splits()
+    assert {device.id for device in splits[COMPOSITE_ID]} == {split_b.id}
+
+    # Removing the last split drops the composite id from the mapping
+    device_registry.async_remove_device(split_b.id)
+    assert device_registry.devices.get_composite_splits() == {}
 
 
 @pytest.mark.parametrize("load_registries", [False])
