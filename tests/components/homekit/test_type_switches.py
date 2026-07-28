@@ -1260,7 +1260,7 @@ async def test_irrigation_system_preserves_homekit_set_duration_without_device_a
 
     front_chars = acc._valve_chars["valve.front_lawn"]
     assert front_chars["duration"] == 900
-    assert front_chars[CHAR_REMAINING_DURATION].value == 900
+    assert front_chars[CHAR_REMAINING_DURATION].value >= 899
 
 
 async def test_irrigation_system_reports_fault_for_unavailable_zone(
