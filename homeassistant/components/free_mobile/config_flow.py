@@ -90,9 +90,10 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
             resp = await self.hass.async_add_executor_job(
                 lambda: FreeClient(username, access_token).send_sms(VALIDATION_MESSAGE)
             )
-        except Exception:
-            _LOGGER.exception(
-                "Unexpected error while validating Free Mobile credentials"
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error(
+                "Unexpected error while validating Free Mobile credentials: %s",
+                type(err).__name__,
             )
             return {"base": "unknown"}
         if resp.status_code == HTTPStatus.BAD_REQUEST:
