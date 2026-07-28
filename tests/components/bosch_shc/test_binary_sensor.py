@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import patch
 
-from boschshcpy import SHCBatteryDevice, SHCShutterContact
+from boschshcpy import BatteryLevelService, ShutterContactService
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -21,10 +21,10 @@ from .conftest import battery_only_device, setup_integration, shutter_contact_de
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-OPEN = SHCShutterContact.ShutterContactService.State.OPEN
-CLOSED = SHCShutterContact.ShutterContactService.State.CLOSED
-BATTERY_OK = SHCBatteryDevice.BatteryLevelService.State.OK
-BATTERY_LOW = SHCBatteryDevice.BatteryLevelService.State.LOW_BATTERY
+OPEN = ShutterContactService.State.OPEN
+CLOSED = ShutterContactService.State.CLOSED
+BATTERY_OK = BatteryLevelService.State.OK
+BATTERY_LOW = BatteryLevelService.State.LOW_BATTERY
 
 CONTACT_ENTITY_ID = "binary_sensor.contact"
 MOTION_BATTERY_ENTITY_ID = "binary_sensor.motion_battery"

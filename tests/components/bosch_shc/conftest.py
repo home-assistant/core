@@ -7,7 +7,12 @@ from types import SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock, create_autospec, patch
 
-from boschshcpy import SHCBatteryDevice, SHCShutterContact
+from boschshcpy import (
+    BatteryLevelService,
+    SHCBatteryDevice,
+    SHCShutterContact,
+    ShutterContactService,
+)
 import pytest
 
 from homeassistant.components.bosch_shc.const import (
@@ -20,7 +25,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-BATTERY_OK = SHCBatteryDevice.BatteryLevelService.State.OK
+BATTERY_OK = BatteryLevelService.State.OK
 
 
 @pytest.fixture(autouse=True)
@@ -102,10 +107,8 @@ def shutter_contact_device(
     device_id: str = "hdm:HomeMaticIP:contact1",
     name: str = "Contact",
     device_class: str = "ENTRANCE_DOOR",
-    state: SHCShutterContact.ShutterContactService.State = (
-        SHCShutterContact.ShutterContactService.State.CLOSED
-    ),
-    batterylevel: SHCBatteryDevice.BatteryLevelService.State = BATTERY_OK,
+    state: ShutterContactService.State = (ShutterContactService.State.CLOSED),
+    batterylevel: BatteryLevelService.State = BATTERY_OK,
 ) -> SHCShutterContact:
     """Build a minimal shutter-contact device double.
 
@@ -131,7 +134,7 @@ def shutter_contact_device(
 def battery_only_device(
     device_id: str = "hdm:HomeMaticIP:motion1",
     name: str = "Motion",
-    batterylevel: SHCBatteryDevice.BatteryLevelService.State = BATTERY_OK,
+    batterylevel: BatteryLevelService.State = BATTERY_OK,
 ) -> SHCBatteryDevice:
     """Build a minimal device double for a battery-only bucket.
 
