@@ -7,7 +7,14 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.rainbird.const import DOMAIN
+from homeassistant.components.rainbird.const import (
+    ATTR_DURATION,
+    CONF_ZONE_TYPE,
+    DEFAULT_TRIGGER_TIME_MINUTES,
+    DOMAIN,
+    ZONE_TYPE_SWITCH,
+    ZONE_TYPE_VALVE,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
@@ -577,3 +584,80 @@ async def test_options_listener(
 
     # The entry should have been reloaded
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("config_entry_data", "config_entry_unique_id"),
+    [(None, None)],
+    ids=["no_default_entry"],
+)
+@pytest.mark.parametrize(
+    ("initial_zone_type", "target_zone_type", "initial_entity_id", "target_entity_id"),
+    [
+        pytest.param(
+            ZONE_TYPE_SWITCH,
+            ZONE_TYPE_VALVE,
+            "switch.rain_bird_sprinkler_1",
+            "valve.rain_bird_sprinkler_1",
+            id="switch_to_valve",
+        ),
+        pytest.param(
+            ZONE_TYPE_VALVE,
+            ZONE_TYPE_SWITCH,
+            "valve.rain_bird_sprinkler_1",
+            "switch.rain_bird_sprinkler_1",
+            id="valve_to_switch",
+        ),
+    ],
+)
+@pytest.mark.parametrize("platforms", [[Platform.SWITCH, Platform.VALVE]])
+async def test_zone_type_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    responses: list[AiohttpClientMockResponse],
+    api_responses: list[str],
+    initial_zone_type: str,
+    target_zone_type: str,
+    initial_entity_id: str,
+    target_entity_id: str,
+) -> None:
+    """Test that changing zone type migrates entity registry entries."""
+    config_entry = MockConfigEntry(
+        unique_id=MAC_ADDRESS_UNIQUE_ID,
+        domain=DOMAIN,
+        data=CONFIG_ENTRY_DATA,
+        options={
+            ATTR_DURATION: DEFAULT_TRIGGER_TIME_MINUTES,
+            CONF_ZONE_TYPE: initial_zone_type,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    # Provide responses for both the initial setup and the reload.
+    responses.extend([mock_response(r) for r in api_responses])
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Only the initial entity type is present.
+    assert hass.states.get(initial_entity_id) is not None
+    assert hass.states.get(target_entity_id) is None
+
+    # Change zone type via options flow, which triggers a reload.
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            ATTR_DURATION: DEFAULT_TRIGGER_TIME_MINUTES,
+            CONF_ZONE_TYPE: target_zone_type,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # After reload: target entity exists, initial entity removed from state and registry.
+    assert hass.states.get(initial_entity_id) is None
+    assert hass.states.get(target_entity_id) is not None
+    assert entity_registry.async_get(initial_entity_id) is None
+    assert entity_registry.async_get(target_entity_id) is not None
+
