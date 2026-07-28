@@ -26,7 +26,6 @@ from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, Platform
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import (
-    _LOGGER,
     DEFAULT_PROGRAM_STRING,
     DOMAIN,
     FILTER_INSTEON_TYPE,
@@ -37,6 +36,7 @@ from .const import (
     ISY_GROUP_PLATFORM,
     KEY_ACTIONS,
     KEY_STATUS,
+    LOGGER,
     NODE_AUX_FILTERS,
     NODE_FILTERS,
     NODE_PLATFORMS,
@@ -403,7 +403,7 @@ def _categorize_programs(isy_data: IsyData, programs: Programs) -> None:
             actions = None
             status = entity_folder.get_by_name(KEY_STATUS)
             if not status or status.protocol != PROTO_PROGRAM:
-                _LOGGER.warning(
+                LOGGER.warning(
                     "Program %s entity '%s' not loaded, invalid/missing status program",
                     platform,
                     entity_folder.name,
@@ -413,7 +413,7 @@ def _categorize_programs(isy_data: IsyData, programs: Programs) -> None:
             if platform != Platform.BINARY_SENSOR:
                 actions = entity_folder.get_by_name(KEY_ACTIONS)
                 if not actions or actions.protocol != PROTO_PROGRAM:
-                    _LOGGER.warning(
+                    LOGGER.warning(
                         (
                             "Program %s entity '%s' not loaded, invalid/missing actions"
                             " program"

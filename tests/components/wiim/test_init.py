@@ -32,10 +32,18 @@ async def test_load_unload_entry(
 
 
 @pytest.mark.parametrize(
-    ("exc", "state"),
+    ("exc", "translation_key"),
     [
-        (WiimDeviceException("device init failed"), ConfigEntryState.SETUP_RETRY),
-        (WiimRequestException("http failure"), ConfigEntryState.SETUP_RETRY),
+        pytest.param(
+            WiimDeviceException("device init failed"),
+            "device_setup_failed",
+            id="device-error",
+        ),
+        pytest.param(
+            WiimRequestException("http failure"),
+            "http_api_request_failed",
+            id="request-error",
+        ),
     ],
 )
 async def test_setup_raises_config_entry_not_ready(
@@ -43,31 +51,35 @@ async def test_setup_raises_config_entry_not_ready(
     mock_config_entry: MockConfigEntry,
     mock_wiim_controller: AsyncMock,
     exc: Exception,
-    state: ConfigEntryState,
+    translation_key: str,
 ) -> None:
-    """Test that setup raises ConfigEntryNotReady on device/request exceptions."""
+    """Test setup errors raise ConfigEntryNotReady with translation metadata."""
     with patch(
         "homeassistant.components.wiim.async_create_wiim_device",
         side_effect=exc,
     ):
         await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is state
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == translation_key
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "host": "192.168.1.100"
+    }
 
 
 async def test_setup_raises_config_entry_not_ready_when_no_url(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_wiim_device: AsyncMock,
     mock_wiim_controller: AsyncMock,
 ) -> None:
-    """Test setup raises ConfigEntryNotReady when no internal URL is configured."""
-    # Do NOT call async_process_ha_core_config so get_url raises NoURLAvailableError.
+    """Test a missing internal URL raises a translated ConfigEntryNotReady."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "missing_homeassistant_url"
+    assert mock_config_entry.error_reason_translation_placeholders is None
 
 
 async def test_setup_no_url_after_core_config(
