@@ -19,7 +19,7 @@
         "data_description": {
           "code": "The security code sent to your email."
         },
-        "description": "Two-factor authentication is enabled on your account. Check your email for the security code, this will come from `no-reply@anglianwater.co.uk`."
+        "description": "Two-factor authentication is enabled on your account. Check your email for the security code. It will come from `no-reply@anglianwater.co.uk`."
       },
       "select_account": {
         "data": {

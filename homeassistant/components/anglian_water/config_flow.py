@@ -144,6 +144,9 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.authenticator.send_mfa_request(user_input[CONF_CODE])
             except MFARequiredError:
                 errors["base"] = "invalid_code"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
             else:
                 self.accounts = await get_accounts(self.authenticator)
                 return await self.async_step_select_account()
