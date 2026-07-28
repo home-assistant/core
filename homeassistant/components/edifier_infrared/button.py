@@ -9,6 +9,7 @@ from infrared_protocols.codes.edifier.r1700bt_2017 import EdifierR1700BT2017Code
 from infrared_protocols.codes.edifier.r1700bt_pre_2017 import EdifierR1700BTPre2017Code
 from infrared_protocols.codes.edifier.r1700bts import EdifierR1700BTsCode
 from infrared_protocols.codes.edifier.r2000db import EdifierR2000DBCode
+from infrared_protocols.codes.edifier.r2730db import EdifierR2730DBCode
 from infrared_protocols.codes.edifier.rc20g import EdifierRC20GCode
 from infrared_protocols.codes.edifier.s360db import EdifierS360DBCode
 from infrared_protocols.codes.edifier.s3000pro import EdifierS3000ProCode
@@ -145,6 +146,33 @@ COMMAND_SET_BUTTONS: dict[
             key="eq_dynamic",
             translation_key="eq_dynamic",
             command_code=EdifierR2000DBCode.EQ_DYNAMIC,
+        ),
+    ),
+    EdifierCommandSet.R2730DB: (
+        EdifierIrButtonEntityDescription(
+            key="bluetooth",
+            translation_key="bluetooth",
+            command_code=EdifierR2730DBCode.BLUETOOTH,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="line_1",
+            translation_key="line_1",
+            command_code=EdifierR2730DBCode.LINE_1,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="line_2",
+            translation_key="line_2",
+            command_code=EdifierR2730DBCode.LINE_2,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="optical",
+            translation_key="optical",
+            command_code=EdifierR2730DBCode.OPTICAL,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="coax",
+            translation_key="coax",
+            command_code=EdifierR2730DBCode.COAX,
         ),
     ),
     EdifierCommandSet.S360DB: (

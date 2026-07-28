@@ -40,8 +40,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if entry.version == 2:
         data = {**entry.data}
-        # The R2000DB model got its own command set, split from the R1280DB
-        # one, which it was incorrectly grouped with.
+        # The R2000DB and R2730DB/RC10D1 models got their own command sets,
+        # split from the R1280DB one, which they were incorrectly grouped with.
         command_set = MODEL_TO_COMMAND_SET[EdifierModel(data[CONF_MODEL])]
         data[CONF_COMMAND_SET] = command_set.value
         hass.config_entries.async_update_entry(

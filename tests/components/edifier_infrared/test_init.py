@@ -80,6 +80,8 @@ async def test_migrate_entry_from_v1(
     ("model", "old_command_set", "expected_command_set"),
     [
         pytest.param("R2000DB", "r1280db", "r2000db", id="r2000db-split"),
+        pytest.param("R2730DB", "r1280db", "r2730db", id="r2730db-split"),
+        pytest.param("RC10D1", "r1280db", "r2730db", id="rc10d1-split"),
         pytest.param("R1280DB", "r1280db", "r1280db", id="unchanged-model"),
     ],
 )
