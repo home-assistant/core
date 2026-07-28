@@ -17,13 +17,17 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_TYPE,
     CONF_VALUE_TEMPLATE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, async_mock_service
 from tests.typing import WebSocketGenerator
+
+_SWITCH_ENTITY = "switch.fake"
 
 
 async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -53,6 +57,61 @@ async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
     hass.states.async_set(entity_id, "off", {"brightness": 0})
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", False)
+
+
+async def test_binary_expose_write_back(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test write_back updates the entity from a whitelisted incoming write."""
+    entity_id = _SWITCH_ENTITY
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "binary",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                ExposeSchema.CONF_KNX_EXPOSE_WRITE_BACK: True,
+                ExposeSchema.CONF_KNX_EXPOSE_SOURCE_WHITELIST: ["1.1.5"],
+            }
+        },
+    )
+    turn_on = async_mock_service(hass, "switch", SERVICE_TURN_ON)
+    turn_off = async_mock_service(hass, "switch", SERVICE_TURN_OFF)
+
+    # Whitelisted source turns the entity on, then off
+    await knx.receive_write("1/1/8", 1, source="1.1.5")
+    assert len(turn_on) == 1
+    assert turn_on[0].data == {"entity_id": entity_id}
+    await knx.receive_write("1/1/8", 0, source="1.1.5")
+    assert len(turn_off) == 1
+
+    # The write-back must not echo back onto the bus
+    await knx.assert_no_telegram()
+
+    # A resulting state change matching the received value is not re-sent
+    await knx.receive_write("1/1/8", 1, source="1.1.5")
+    hass.states.async_set(entity_id, "on", {})
+    await hass.async_block_till_done()
+    await knx.assert_no_telegram()
+
+
+async def test_binary_expose_write_back_source_filter(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test that only whitelisted source addresses may change the state."""
+    entity_id = _SWITCH_ENTITY
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "binary",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                ExposeSchema.CONF_KNX_EXPOSE_WRITE_BACK: True,
+                ExposeSchema.CONF_KNX_EXPOSE_SOURCE_WHITELIST: ["1.1.5"],
+            }
+        },
+    )
+    turn_on = async_mock_service(hass, "switch", SERVICE_TURN_ON)
+    await knx.receive_write("1/1/8", 1, source="1.1.99")
+    assert len(turn_on) == 0
 
 
 def test_expose_write_back_allows_numeric() -> None:

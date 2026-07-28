@@ -2,24 +2,32 @@
 
 from asyncio import TaskGroup
 from collections.abc import Callable, Iterable
+from contextlib import suppress
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from xknx import XKNX
+from xknx.core.telegram_queue import TelegramQueue
 from xknx.devices import DateDevice, DateTimeDevice, ExposeSensor, TimeDevice
-from xknx.dpt import DPTBase, DPTNumeric, DPTString
+from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTNumeric, DPTString
 from xknx.dpt.dpt_1 import DPT1BitEnum, DPTSwitch
 from xknx.exceptions import ConversionError
+from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import (
     GroupAddress,
+    IndividualAddress,
     InternalGroupAddress,
     parse_device_group_address,
 )
+from xknx.telegram.apci import GroupValueWrite
 
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
     CONF_VALUE_TEMPLATE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -31,6 +39,7 @@ from homeassistant.core import (
     HomeAssistant,
     State,
     callback,
+    split_entity_id,
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.event import async_track_state_change_event
@@ -45,6 +54,15 @@ if TYPE_CHECKING:
     from .storage.time_server import KNXTimeServerStoreModel
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class _WriteBackCall(NamedTuple):
+    """Resolved write-back for an incoming telegram: value + service to call."""
+
+    echo_value: bool | int | float | str
+    domain: str
+    service: str
+    data: dict[str, Any]
 
 
 @callback
@@ -120,6 +138,8 @@ class KnxExposeOptions:
     periodic_send: float
     default: Any | None
     value_template: Template | None
+    write_back: bool = False
+    source_whitelist: frozenset[str] = frozenset()
 
 
 def _yaml_config_to_expose_options(config: ConfigType) -> KnxExposeOptions:
@@ -148,6 +168,11 @@ def _yaml_config_to_expose_options(config: ConfigType) -> KnxExposeOptions:
         periodic_send=periodic_send_seconds,
         default=config.get(ExposeSchema.CONF_KNX_EXPOSE_DEFAULT),
         value_template=config.get(CONF_VALUE_TEMPLATE),
+        write_back=config[ExposeSchema.CONF_KNX_EXPOSE_WRITE_BACK],
+        source_whitelist=frozenset(
+            str(IndividualAddress(ia))
+            for ia in config[ExposeSchema.CONF_KNX_EXPOSE_SOURCE_WHITELIST]
+        ),
     )
 
 
@@ -167,6 +192,7 @@ class KnxExposeEntity:
         self.entity_id = entity_id
 
         self._remove_listener: Callable[[], None] | None = None
+        self._telegram_cb_handle: TelegramQueue.Callback | None = None
         self._exposures = tuple(
             (
                 option,
@@ -197,6 +223,25 @@ class KnxExposeEntity:
         )
         for _option, xknx_expose in self._exposures:
             self.xknx.devices.async_add(xknx_expose)
+        write_back_addresses: list[GroupAddress | InternalGroupAddress] = []
+        for option, _xknx_expose in self._exposures:
+            if not option.write_back:
+                continue
+            write_back_addresses.append(option.group_address)
+            if not option.source_whitelist:
+                _LOGGER.warning(
+                    "KNX expose %s has write_back enabled without a source_whitelist; "
+                    "any KNX device may change its state",
+                    self.entity_id,
+                )
+        if write_back_addresses:
+            self._telegram_cb_handle = (
+                self.xknx.telegram_queue.register_telegram_received_cb(
+                    self._telegram_received_cb,
+                    group_addresses=write_back_addresses,
+                    match_for_outgoing=False,
+                )
+            )
         self._init_expose_state()
 
     @callback
@@ -220,8 +265,84 @@ class KnxExposeEntity:
         if self._remove_listener is not None:
             self._remove_listener()
             self._remove_listener = None
+        if self._telegram_cb_handle is not None:
+            self.xknx.telegram_queue.unregister_telegram_received_cb(
+                self._telegram_cb_handle
+            )
+            self._telegram_cb_handle = None
         for _option, xknx_expose in self._exposures:
             self.xknx.devices.async_remove(xknx_expose)
+
+    def _telegram_received_cb(self, telegram: Telegram) -> None:
+        """Change the exposed entity from a whitelisted incoming GroupValueWrite."""
+        if telegram.direction is not TelegramDirection.INCOMING:
+            return
+        if (
+            not isinstance(telegram.payload, GroupValueWrite)
+            or telegram.payload.value is None
+        ):
+            return
+        for option, xknx_expose in self._exposures:
+            if (
+                not option.write_back
+                or option.group_address != telegram.destination_address
+            ):
+                continue
+            if (
+                option.source_whitelist
+                and str(telegram.source_address) not in option.source_whitelist
+            ):
+                return
+            call = self._write_back_service_call(option, telegram.payload.value)
+            if call is None:
+                return
+            # Reflect the received value and pre-seed the ExposeSensor's last-sent
+            # payload so the entity state change we trigger re-encodes identically
+            # and is skipped by skip_unchanged. xknx exposes no public API for this;
+            # guard the private attribute so a future xknx change surfaces as a
+            # warning instead of silently echoing the value back onto the bus.
+            with suppress(ConversionError):
+                xknx_expose.sensor_value.value = call.echo_value
+            if hasattr(xknx_expose, "_payload_after_cooldown"):
+                xknx_expose._payload_after_cooldown = telegram.payload.value  # noqa: SLF001
+            else:
+                _LOGGER.warning(
+                    "KNX expose %s: cannot suppress write_back echo (unexpected xknx "
+                    "internals); the value may be re-sent to the bus",
+                    self.entity_id,
+                )
+            self.hass.async_create_task(
+                self.hass.services.async_call(
+                    call.domain, call.service, call.data, blocking=False
+                ),
+                f"KNX expose write_back {self.entity_id}",
+            )
+            return
+
+    def _write_back_service_call(
+        self, option: KnxExposeOptions, payload: DPTBinary | DPTArray
+    ) -> _WriteBackCall | None:
+        """Map an incoming payload to the write-back service call, or None."""
+        entity_domain = split_entity_id(self.entity_id)[0]
+        if issubclass(option.dpt, DPT1BitEnum):
+            value = bool(payload.value)
+            service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
+            if not self.hass.services.has_service(entity_domain, service):
+                _LOGGER.warning(
+                    "KNX expose write_back to %s: %s does not support %s",
+                    self.entity_id,
+                    entity_domain,
+                    service,
+                )
+                return None
+            return _WriteBackCall(
+                value, entity_domain, service, {ATTR_ENTITY_ID: self.entity_id}
+            )
+        _LOGGER.warning(
+            "KNX expose write_back to %s: unsupported target for the configured DPT",
+            self.entity_id,
+        )
+        return None
 
     def _get_expose_value(
         self, state: State | None, option: KnxExposeOptions
