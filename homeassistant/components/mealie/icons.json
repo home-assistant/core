@@ -24,6 +24,9 @@
     }
   },
   "services": {
+    "delete_mealplan": {
+      "service": "mdi:food-off"
+    },
     "get_mealplan": {
       "service": "mdi:food"
     },

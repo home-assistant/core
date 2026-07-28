@@ -180,6 +180,20 @@
     }
   },
   "services": {
+    "delete_mealplan": {
+      "description": "Deletes a mealplan",
+      "fields": {
+        "config_entry_id": {
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]",
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]"
+        },
+        "mealplan_id": {
+          "description": "The mealplan ID to delete.",
+          "name": "Mealplan ID"
+        }
+      },
+      "name": "Delete a mealplan"
+    },
     "get_mealplan": {
       "description": "Gets a mealplan from Mealie",
       "fields": {

@@ -28,6 +28,7 @@ from .const import (
     ATTR_END_DATE,
     ATTR_ENTRY_TYPE,
     ATTR_INCLUDE_TAGS,
+    ATTR_MEALPLAN_ID,
     ATTR_NOTE_TEXT,
     ATTR_NOTE_TITLE,
     ATTR_RECIPE_ID,
@@ -108,6 +109,13 @@ SERVICE_SET_MEALPLAN_SCHEMA = vol.Any(
             vol.Optional(ATTR_NOTE_TEXT): str,
         }
     ),
+)
+SERVICE_DELETE_MEALPLAN = "delete_mealplan"
+SERVICE_DELETE_MEALPLAN_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Required(ATTR_MEALPLAN_ID): str,
+    }
 )
 
 
@@ -278,6 +286,26 @@ async def _async_set_mealplan(call: ServiceCall) -> ServiceResponse:
     return None
 
 
+async def _async_delete_mealplan(call: ServiceCall) -> ServiceResponse:
+    """Delete a mealplan."""
+    entry: MealieConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
+    mealplan_id = call.data[ATTR_MEALPLAN_ID]
+    client = entry.runtime_data.client
+
+    try:
+        await client.delete_mealplan(
+            mealplan_id,
+        )
+    except MealieConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+        ) from err
+    return None
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Mealie integration."""
@@ -323,6 +351,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _async_set_mealplan,
         schema=SERVICE_SET_MEALPLAN_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DELETE_MEALPLAN,
+        _async_delete_mealplan,
+        schema=SERVICE_DELETE_MEALPLAN_SCHEMA,
     )
     service.async_register_platform_entity_service(
         hass,

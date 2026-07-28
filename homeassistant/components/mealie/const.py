@@ -10,6 +10,7 @@ LOGGER = logging.getLogger(__package__)
 
 ATTR_START_DATE = "start_date"
 ATTR_END_DATE = "end_date"
+ATTR_MEALPLAN_ID = "mealplan_id"
 ATTR_RECIPE_ID = "recipe_id"
 ATTR_URL = "url"
 ATTR_INCLUDE_TAGS = "include_tags"

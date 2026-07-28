@@ -1,3 +1,15 @@
+delete_mealplan:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mealie
+    mealplan_id:
+      required: true
+      selector:
+        text:
+
 get_mealplan:
   fields:
     config_entry_id:
