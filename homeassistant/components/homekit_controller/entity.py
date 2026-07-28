@@ -231,13 +231,30 @@ class HomeKitEntity(Entity):
                 return f"{accessory_name} {device_name}"
         return accessory_name
 
-    def _get_translated_name(self) -> str | UndefinedType:
+    @property
+    @override
+    def suggested_object_id(self) -> str | None:
+        """Return suggested object id."""
+        if (
+            translated_name := self._get_translated_name(object_id=True)
+        ) is not UNDEFINED:
+            return translated_name
+        return self.name
+
+    def _get_translated_name(self, *, object_id: bool = False) -> str | UndefinedType:
         """Return the translated entity name."""
         if not self.has_entity_name or not self.platform_data:
             return UNDEFINED
-        translated_name = self._name_internal(
-            self._device_class_name, self.platform_data.platform_translations
+        platform_data = self.platform_data
+        device_class_name, platform_translations = (
+            (
+                self._object_id_device_class_name,
+                platform_data.object_id_platform_translations,
+            )
+            if object_id
+            else (self._device_class_name, platform_data.platform_translations)
         )
+        translated_name = self._name_internal(device_class_name, platform_translations)
         return UNDEFINED if translated_name is None else translated_name
 
     @property

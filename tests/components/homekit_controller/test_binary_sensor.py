@@ -1,6 +1,7 @@
 """Basic checks for HomeKit motion sensors and contact sensors."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
+from unittest.mock import patch
 
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
@@ -247,6 +248,19 @@ def create_sensor_with_named_low_battery_characteristic(accessory: Accessory) ->
     low_battery.value = 0
 
 
+def create_prefixed_named_fault_characteristic(accessory: Accessory) -> None:
+    """Define a service whose name includes the accessory name."""
+    service = accessory.add_service(
+        ServicesTypes.OCCUPANCY_SENSOR, name=f"{accessory.name} Occupancy"
+    )
+
+    occupancy = service.add_char(CharacteristicsTypes.OCCUPANCY_DETECTED)
+    occupancy.value = 0
+
+    fault = service.add_char(CharacteristicsTypes.STATUS_FAULT)
+    fault.value = 0
+
+
 def create_labeled_valves_with_low_battery_characteristics(
     accessory: Accessory,
 ) -> None:
@@ -400,6 +414,49 @@ async def test_named_low_battery_characteristic_creates_binary_sensor(
 
     low_battery = hass.states.get("binary_sensor.outdoor_sensor_temperature_battery")
     assert low_battery
+
+
+async def test_scoped_name_and_entity_id_translations(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+) -> None:
+    """Test scoped names strip device prefixes and entity IDs use English."""
+    translations = {
+        "en": {
+            "component.homekit_controller.entity.binary_sensor"
+            ".problem_with_service_name.name": "{service_name} Problem"
+        },
+        "ja": {
+            "component.homekit_controller.entity.binary_sensor"
+            ".problem_with_service_name.name": "{service_name} 問題"
+        },
+    }
+    hass.config.language = "ja"
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, str]:
+        """Return test translations."""
+        return translations.get(language, {})
+
+    accessory = Accessory.create_with_info(
+        get_next_aid(), "My ecobee", "example.com", "Test", "0001", "0.1"
+    )
+    create_prefixed_named_fault_characteristic(accessory)
+
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await setup_test_accessories(hass, [accessory])
+
+    fault = hass.states.get("binary_sensor.my_ecobee_occupancy_problem")
+    assert fault
+    assert fault.attributes["friendly_name"] == "My ecobee Occupancy 問題"
 
 
 async def test_labeled_low_battery_characteristics_create_scoped_binary_sensors(

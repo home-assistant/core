@@ -86,6 +86,7 @@ def service_feature_scope(service: Service) -> ServiceFeatureScope | None:
     if service_name and folded_name(service_name) != folded_name(
         service.accessory.name
     ):
+        service_name = service_name.removeprefix(service.accessory.name).strip()
         return ServiceFeatureScope(
             key=f"name:{folded_name(service_name)}",
             translation_suffix="with_service_name",
