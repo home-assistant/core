@@ -8,7 +8,6 @@ from aiomelcloudhome import (
     ATAUnit,
     ATAVaneHorizontal,
     ATAVaneVertical,
-    ATWUnit,
     ATWZoneMode,
 )
 
@@ -21,6 +20,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .common import async_setup_unit_entities
 from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWZoneEntity
 
@@ -99,14 +99,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MELCloud Home climate entities from a config entry."""
-    coordinator = entry.runtime_data
 
-    def _async_add_new_ata_units(units: list[ATAUnit]) -> None:
-        async_add_entities(ATAClimateEntity(coordinator, unit) for unit in units)
-
-    def _async_add_new_atw_units(units: list[ATWUnit]) -> None:
-        async_add_entities(
-            ATWZoneClimateEntity(coordinator, unit, zone_number)
+    async_setup_unit_entities(
+        entry.runtime_data,
+        async_add_entities,
+        lambda units: (ATAClimateEntity(entry.runtime_data, unit) for unit in units),
+        lambda units: (
+            ATWZoneClimateEntity(entry.runtime_data, unit, zone_number)
             for unit in units
             for zone_number in (
                 [1, 2]
@@ -114,13 +113,8 @@ async def async_setup_entry(
                 or (unit.capabilities is None and unit.has_zone2)
                 else [1]
             )
-        )
-
-    coordinator.new_ata_callbacks.append(_async_add_new_ata_units)
-    coordinator.new_atw_callbacks.append(_async_add_new_atw_units)
-
-    _async_add_new_ata_units(list(coordinator.ata_units.values()))
-    _async_add_new_atw_units(list(coordinator.atw_units.values()))
+        ),
+    )
 
 
 class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):

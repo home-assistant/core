@@ -63,8 +63,8 @@
 # name: test_select_entity_snapshots[HWE-P1-select.device_battery_group_charging_strategy].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -89,7 +89,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,

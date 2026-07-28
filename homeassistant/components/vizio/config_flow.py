@@ -2,7 +2,6 @@
 
 import copy
 import logging
-import socket
 from typing import Any, override
 
 from pyvizio import VizioAsync, async_guess_device_type
@@ -29,7 +28,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-from homeassistant.util.network import is_ip_address
 
 from . import DATA_APPS
 from .const import (
@@ -93,15 +91,6 @@ def _get_pairing_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
     return vol.Schema(
         {vol.Required(CONF_PIN, default=input_dict.get(CONF_PIN, "")): str}
     )
-
-
-def _host_is_same(host1: str, host2: str) -> bool:
-    """Check if host1 and host2 are the same."""
-    host1 = host1.split(":", maxsplit=1)[0]
-    host1 = host1 if is_ip_address(host1) else socket.gethostbyname(host1)
-    host2 = host2.split(":", maxsplit=1)[0]
-    host2 = host2 if is_ip_address(host2) else socket.gethostbyname(host2)
-    return host1 == host2
 
 
 class VizioOptionsConfigFlow(OptionsFlow):
@@ -294,7 +283,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(unique_id=unique_id, raise_on_progress=True)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         # Form must be shown after discovery so user can confirm/update configuration
         # before ConfigEntry creation.

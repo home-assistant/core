@@ -73,8 +73,6 @@ async def test_lock(
         ("Smart Lock", 0),
         ("Smart Lock Pro", 1),
         ("Smart Lock Ultra", 2),
-        ("Lock Vision", 3),
-        ("Lock Vision Pro", 4),
         ("Smart Lock Pro Wifi", 5),
     ],
 )

@@ -97,13 +97,9 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
 
             device_registry = dr.async_get(self.hass)
             for plant_id in removed_plants:
-                if device := device_registry.async_get_device(
-                    identifiers={
-                        (
-                            DOMAIN,
-                            f"{self.config_entry.entry_id}-{plant_id}",
-                        )
-                    }
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, f"{self.config_entry.entry_id}-{plant_id}"),
+                    self.config_entry.entry_id,
                 ):
                     device_registry.async_update_device(
                         device_id=device.id,
