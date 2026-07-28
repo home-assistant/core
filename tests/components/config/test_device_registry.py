@@ -235,6 +235,7 @@ async def test_list_composite_splits(
 
     dr.async_setup(hass)
     await dr.async_load(hass)
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
     registry = dr.async_get(hass)
 
     splits_a = registry.async_get_devices_for_composite_device_id(
