@@ -120,8 +120,8 @@ async def test_anna_max_boiler_temp_change(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.opentherm_maximum_boiler_temperature_setpoint",
-            ATTR_VALUE: 65,
+            ATTR_ENTITY_ID: "number.anna_temperature_offset",
+            ATTR_VALUE: 1.0,
         },
         blocking=True,
     )
