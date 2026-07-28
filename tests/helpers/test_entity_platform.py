@@ -810,6 +810,10 @@ async def test_registry_respect_entity_id_prefix(hass: HomeAssistant) -> None:
     await platform.async_add_entities([entity])
     assert entity.entity_id == "test_domain.integration_device_name"
 
+    unnamed_entity = EntityWithIdPrefix(unique_id="5678")
+    await platform.async_add_entities([unnamed_entity])
+    assert unnamed_entity.entity_id == "test_domain.integration_test_platform_5678"
+
 
 async def test_registry_respect_entity_disabled(hass: HomeAssistant) -> None:
     """Test that the registry respects entity disabled."""

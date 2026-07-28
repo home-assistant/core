@@ -66,6 +66,7 @@ async def test_existing_entity_id_is_preserved(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get("sensor.monitor_1_certificate_expiry")
+    assert hass.states.get("sensor.monitor_1_certificate_expiry")
     assert not entity_registry.async_get(
         "sensor.uptime_kuma_monitor_1_certificate_expiry"
     )
