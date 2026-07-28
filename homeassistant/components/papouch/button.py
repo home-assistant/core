@@ -47,4 +47,4 @@ class PapouchCommandButton(PapouchEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Execute the command."""
         await self.coordinator.device.execute_button_command(self.cmd_type)
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_set_updated_data(self.coordinator.data)

@@ -56,4 +56,4 @@ class PapouchSelectEntity(PapouchEntity, SelectEntity):
         await self.coordinator.device.set_select_option(
             self.category, self.item_id, option
         )
-        self.async_write_ha_state()
+        self.coordinator.async_set_updated_data(self.coordinator.data)

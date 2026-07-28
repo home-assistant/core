@@ -7,9 +7,11 @@ import xml.etree.ElementTree as ET
 import defusedxml.ElementTree as defused_ET
 
 from ..client import PapouchApiClient
+from ..exceptions import DeviceResponseError
 from .base import PapouchDevice, find_tag
 
 _LOGGER = logging.getLogger(__name__)
+ERROR_STATUS = "0"
 
 
 class Quido(PapouchDevice):
@@ -204,11 +206,11 @@ class Quido(PapouchDevice):
     async def execute_button_command(self, cmd_type: str) -> None:
         """Route the button press to the correct method."""
         if cmd_type == "connect_all_coils":
-            await self.connect_all_coils()
+            await self._connect_all_coils()
         elif cmd_type == "disconnect_all_coils":
-            await self.disconnect_all_coils()
+            await self._disconnect_all_coils()
         elif cmd_type == "reset_all_counters":
-            await self.reset_all_counters()
+            await self._reset_all_counters()
         else:
             _LOGGER.error("Unsupported command: %s", cmd_type)
 
@@ -225,7 +227,7 @@ class Quido(PapouchDevice):
     @override
     async def set_number_value(self, category: str, item_id: str, value: float) -> None:
         if category == "decrease_counter":
-            await self.decrease_value_counter(item_id, int(value))
+            await self._decrease_value_counter(item_id, int(value))
         elif category == "output_on_time":
             time_units = max(1, min(255, int(value * 2)))
             await self._send_command("s", item_id=item_id, time=str(time_units))
@@ -237,14 +239,14 @@ class Quido(PapouchDevice):
     def get_select_option(self, category: str, item_id: str) -> str | None:
         """Return selected option by its id."""
         if category == "counter_mode":
-            return self.get_counter_mode(item_id)
+            return self._get_counter_mode(item_id)
         return None
 
     @override
     async def set_select_option(self, category: str, item_id: str, option: str) -> None:
         """Set selected option by its id."""
         if category == "counter_mode":
-            await self.set_counter_mode(item_id, option)
+            await self._set_counter_mode(item_id, option)
 
     @override
     async def switch_to_web_mode(self) -> None:
@@ -278,29 +280,32 @@ class Quido(PapouchDevice):
         )
 
         xml_payload = ET.tostring(save_root, encoding="unicode")
-        await self.api_client.send_command_POST(xml_payload)
+        response = await self.api_client.send_command_POST(
+            xml_payload, f"{self.name} ({self.location})"
+        )
+        self._check_response(response)
 
-    async def connect_all_coils(self) -> None:
+    async def _connect_all_coils(self) -> None:
         """Command for connecting all the coils."""
         await self._send_command("S")
 
-    async def disconnect_all_coils(self) -> None:
+    async def _disconnect_all_coils(self) -> None:
         """Command for disconnecting all the coils."""
         await self._send_command("R")
 
-    async def reset_all_counters(self) -> None:
+    async def _reset_all_counters(self) -> None:
         """Command for resetting all the counters."""
         await self._send_command("C")
 
-    async def decrease_value_counter(self, item_id: str, value: int) -> None:
+    async def _decrease_value_counter(self, item_id: str, value: int) -> None:
         """Command for decreasing specific counter."""
         await self._send_command("c", item_id, value)
 
-    def get_counter_mode(self, item_id: str) -> str:
+    def _get_counter_mode(self, item_id: str) -> str:
         """Get the current mode of the counter."""
         return self.counter_states.get(item_id, self.COUNTER_MODES[0])
 
-    async def set_counter_mode(self, item_id: str, mode: str) -> str | None:
+    async def _set_counter_mode(self, item_id: str, mode: str) -> str | None:
         """Set the new mode of the counter."""
         current_settings = await self.api_client.fetch_settings()
 
@@ -345,7 +350,10 @@ class Quido(PapouchDevice):
 
         xml_payload = ET.tostring(save_root, encoding="unicode")
 
-        await self.api_client.send_command_POST(xml_payload)
+        response = await self.api_client.send_command_POST(
+            xml_payload, f"{self.name} ({self.location})"
+        )
+        self._check_response(response)
 
         self.counter_states[item_id] = mode
 
@@ -435,4 +443,24 @@ class Quido(PapouchDevice):
         }
         params = {key: value for key, value in raw_params.items() if value is not None}
 
-        await self.api_client.send_command_GET(params)
+        response = await self.api_client.send_command_GET(
+            params, f"{self.name} ({self.location})"
+        )
+
+        self._check_response(response)
+
+    def _check_response(self, response_text: str) -> None:
+        """Checks the response of the requests."""
+
+        root = defused_ET.fromstring(response_text)
+        result_tag = find_tag(root, "result")
+
+        if result_tag is not None:
+            status = result_tag.attrib.get("status")
+
+            if status == ERROR_STATUS:
+                raise DeviceResponseError(
+                    f"{self.name} ({self.location}) - {self.ip_address} returned an error, whole response: {response_text}"
+                )
+        else:
+            raise DeviceResponseError("Response doesn't have result tag!")

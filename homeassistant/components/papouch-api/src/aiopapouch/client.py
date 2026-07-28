@@ -5,6 +5,8 @@ import logging
 import aiohttp
 import defusedxml.ElementTree as defused_ET
 
+from .exceptions import DeviceConnectionError
+
 INFO_URL = "is.xml"
 DATA_URL = "fresh.xml"
 SETTINGS_URL = "settings.xml"
@@ -13,6 +15,7 @@ SAVE_URL = "save.xml"
 
 ENCODING = "iso-8859-2"
 WEB_MODE_INDEX = "3"
+TIMEOUT_REQUEST = 10
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +27,7 @@ class PapouchApiClient:
         """Constructor for API client."""
         self.base_url = f"http://{ip_address}/"
         self.session = session
+        self.ip_address = ip_address
 
     async def _fetch(self, endpoint: str) -> str:
         async with self.session.get(self.base_url + endpoint) as response:
@@ -42,48 +46,44 @@ class PapouchApiClient:
         """Fetching settings about a device."""
         return await self._fetch(SETTINGS_URL)
 
-    async def send_command_GET(self, params: dict) -> None:
+    async def _send_request(
+        self, method: str, endpoint: str, device: str, **kwargs
+    ) -> str:
+
+        timeout = aiohttp.ClientTimeout(total=TIMEOUT_REQUEST)
+
+        try:
+            async with self.session.request(
+                method, self.base_url + endpoint, timeout=timeout, **kwargs
+            ) as response:
+                if response.status != 200:
+                    raise DeviceConnectionError(
+                        f"Failed to send command: {response.status}"
+                    )
+                return await response.text(encoding=ENCODING)
+
+        except (aiohttp.ClientError, TimeoutError) as exception:
+            raise DeviceConnectionError(
+                f"Failed to connect to {device} - {self.ip_address}: {exception}"
+            ) from exception
+
+    async def send_command_GET(self, params: dict, device: str) -> str:
         """Command for communicating with any device by using GET request.
 
         Parameters are queries that will be added to the request.
+        Device string is used for error message.
         """
 
-        async with self.session.get(self.base_url + SET_URL, params=params) as response:
-            if response.status != 200:
-                _LOGGER.error("Failed to send command: %s", response.status)
+        return await self._send_request("GET", SET_URL, device, params=params)
 
-            self._check_response(await response.text(encoding=ENCODING))
-
-    async def send_command_POST(self, data: str) -> None:
+    async def send_command_POST(self, data: str, device: str) -> str:
         """Command for communicating with any device by using POST request.
 
         Data contains the payload that will be sent in the request body.
+        Device string is used for error message.
         """
-        async with self.session.post(self.base_url + SAVE_URL, data=data) as response:
-            if response.status != 200:
-                _LOGGER.error("Failed to send command: %s", response.status)
 
-            self._check_response(await response.text(encoding=ENCODING))
-
-    def _check_response(self, raw_xml):
-        """Check if the response of the sending a command contains status 1 (ok).
-
-        Supposedly every device will use same response status.
-        """
-        root = defused_ET.fromstring(raw_xml)
-
-        result_tag = root.find("result")
-
-        if result_tag is not None:
-            status = result_tag.attrib.get("status")
-
-            # binary status
-            if status == "0":
-                # TODO: maybe it would be better to specify what device
-                _LOGGER.error("Device returned an error: %s", raw_xml)
-                return
-        else:
-            _LOGGER.error("Response doesn't have result tag!")
+        return await self._send_request("POST", SAVE_URL, device, data=data)
 
     async def get_device_mode(self):
         """Function is used for the resolving the mode of the device."""

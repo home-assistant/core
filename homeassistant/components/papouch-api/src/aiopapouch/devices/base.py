@@ -2,9 +2,10 @@
 
 from abc import ABC, abstractmethod
 from typing import Any
+import xml.etree.ElementTree as ET
 
 
-def find_tag(root, tag_name):
+def find_tag(root: ET.Element, tag_name: str) -> ET.Element | None:
     """Find element and ignore the namespace."""
     for element in root.iter():
         if element.tag.endswith(tag_name):
