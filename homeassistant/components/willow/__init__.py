@@ -8,7 +8,6 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -21,7 +20,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 
-from . import api
 from .client import WillowClient
 from .const import (
     DOMAIN,
@@ -34,43 +32,10 @@ from .const import (
     PANEL_TITLE,
     PANEL_URL_PATH,
 )
-from .coordinator import WillowDataUpdateCoordinator
+from .coordinator import WillowConfigEntry, WillowDataUpdateCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-type WillowConfigEntry = ConfigEntry[api.WillowRuntimeData]
-
-
-async def _async_register_panel(hass: HomeAssistant) -> None:
-    """Register the Willow sidebar panel and its frontend assets."""
-    if frontend.async_panel_exists(hass, PANEL_URL_PATH):
-        return
-
-    frontend_dir = Path(__file__).parent / "frontend"
-    await hass.http.async_register_static_paths(
-        [StaticPathConfig(PANEL_STATIC_PATH, str(frontend_dir), True)]
-    )
-
-    integration = await async_get_integration(hass, DOMAIN)
-    version = integration.version or HA_VERSION
-    module_url = f"{PANEL_STATIC_PATH}/{PANEL_FILE}?v={version}"
-
-    await panel_custom.async_register_panel(
-        hass,
-        frontend_url_path=PANEL_URL_PATH,
-        webcomponent_name=PANEL_NAME,
-        sidebar_title=PANEL_TITLE,
-        sidebar_icon=PANEL_ICON,
-        module_url=module_url,
-        embed_iframe=False,
-        require_admin=False,
-    )
-
-
-def _async_unregister_panel(hass: HomeAssistant) -> None:
-    """Remove the Willow sidebar panel."""
-    frontend.async_remove_panel(hass, PANEL_URL_PATH, warn_if_unknown=False)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -107,16 +72,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: WillowConfigEntry) -> bo
     )
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = api.WillowRuntimeData(
-        coordinator=coordinator,
-        profile=coordinator.profile,
-    )
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
     await _async_register_panel(hass)
 
     return True
+
+
+async def _async_register_panel(hass: HomeAssistant) -> None:
+    """Register the Willow sidebar panel and its frontend assets."""
+    if frontend.async_panel_exists(hass, PANEL_URL_PATH):
+        return
+
+    frontend_dir = Path(__file__).parent / "frontend"
+    await hass.http.async_register_static_paths(
+        [StaticPathConfig(PANEL_STATIC_PATH, str(frontend_dir), True)]
+    )
+
+    integration = await async_get_integration(hass, DOMAIN)
+    version = integration.version or HA_VERSION
+    module_url = f"{PANEL_STATIC_PATH}/{PANEL_FILE}?v={version}"
+
+    await panel_custom.async_register_panel(
+        hass,
+        frontend_url_path=PANEL_URL_PATH,
+        webcomponent_name=PANEL_NAME,
+        sidebar_title=PANEL_TITLE,
+        sidebar_icon=PANEL_ICON,
+        module_url=module_url,
+        embed_iframe=False,
+        require_admin=False,
+    )
+
+
+def _async_unregister_panel(hass: HomeAssistant) -> None:
+    """Remove the Willow sidebar panel."""
+    frontend.async_remove_panel(hass, PANEL_URL_PATH, warn_if_unknown=False)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: WillowConfigEntry) -> bool:

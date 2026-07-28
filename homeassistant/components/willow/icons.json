@@ -7,9 +7,6 @@
       "humidity": {
         "default": "mdi:water-percent"
       },
-      "last_reading": {
-        "default": "mdi:clock-outline"
-      },
       "light": {
         "default": "mdi:white-balance-sunny"
       },

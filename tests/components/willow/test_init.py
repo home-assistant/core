@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components import frontend
 from homeassistant.components.willow.const import PANEL_URL_PATH, SCAN_INTERVAL
 from homeassistant.components.willow.exceptions import WillowAuthError
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -49,21 +49,17 @@ async def test_setup_retries_on_api_failure(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_reauth_on_authentication_error(
+async def test_setup_error_on_authentication_error(
     hass: HomeAssistant,
     mock_willow_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """A rejected access token at setup starts a reauth flow."""
+    """A rejected access token at setup puts the entry in an error state."""
     mock_willow_client.get_profile.side_effect = WillowAuthError
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert any(
-        flow["context"]["source"] == SOURCE_REAUTH
-        for flow in hass.config_entries.flow.async_progress()
-    )
 
 
 @pytest.mark.usefixtures("mock_willow_client")
@@ -81,13 +77,13 @@ async def test_setup_retries_when_implementation_missing(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_poll_reauth_on_authentication_error(
+async def test_poll_fails_on_authentication_error(
     hass: HomeAssistant,
     mock_willow_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A rejected access token during the poll starts a reauth flow."""
+    """A rejected access token during the poll marks the coordinator failed."""
     await setup_integration(hass, mock_config_entry)
     mock_willow_client.get_devices.side_effect = WillowAuthError
 
@@ -95,10 +91,8 @@ async def test_poll_reauth_on_authentication_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert any(
-        flow["context"]["source"] == SOURCE_REAUTH
-        for flow in hass.config_entries.flow.async_progress()
-    )
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.last_update_success is False
 
 
 async def test_periodic_poll_fails_on_api_error(
@@ -115,5 +109,5 @@ async def test_periodic_poll_fails_on_api_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    coordinator = mock_config_entry.runtime_data.coordinator
+    coordinator = mock_config_entry.runtime_data
     assert coordinator.last_update_success is False

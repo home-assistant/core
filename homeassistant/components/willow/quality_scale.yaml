@@ -44,18 +44,14 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold
   devices: done
   diagnostics: todo
-  discovery:
-    status: exempt
-    comment: Cloud polling integration configured through OAuth2.
-  discovery-update-info:
-    status: exempt
-    comment: Cloud polling integration has no discovery flow.
+  discovery: todo
+  discovery-update-info: todo
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: todo

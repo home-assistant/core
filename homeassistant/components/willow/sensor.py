@@ -1,8 +1,8 @@
 """Support for Willow sensors."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
-from typing import cast, override
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,11 +16,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
-from . import WillowConfigEntry
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import WillowDataUpdateCoordinator, WillowDevice
+from .coordinator import WillowConfigEntry, WillowDataUpdateCoordinator, WillowDevice
 
 PARALLEL_UPDATES = 0
 
@@ -29,7 +27,7 @@ PARALLEL_UPDATES = 0
 class WillowSensorEntityDescription(SensorEntityDescription):
     """Describe a Willow sensor entity."""
 
-    reading_key: str | None = None
+    value_fn: Callable[[WillowDevice], StateType]
 
 
 SENSOR_DESCRIPTIONS: tuple[WillowSensorEntityDescription, ...] = (
@@ -39,42 +37,53 @@ SENSOR_DESCRIPTIONS: tuple[WillowSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="battery_life",
+        value_fn=lambda device: device["battery_life"],
     ),
     WillowSensorEntityDescription(
         key="temperature",
-        reading_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=(
+            lambda device: (
+                reading["temperature"]
+                if (reading := device["latest_reading"])
+                else None
+            )
+        ),
     ),
     WillowSensorEntityDescription(
         key="humidity",
-        reading_key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=(
+            lambda device: (
+                reading["humidity"] if (reading := device["latest_reading"]) else None
+            )
+        ),
     ),
     WillowSensorEntityDescription(
         key="moisture",
-        reading_key="moisture",
         device_class=SensorDeviceClass.MOISTURE,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=(
+            lambda device: (
+                reading["moisture"] if (reading := device["latest_reading"]) else None
+            )
+        ),
     ),
     WillowSensorEntityDescription(
         key="light",
-        reading_key="light",
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
-    ),
-    WillowSensorEntityDescription(
-        key="timestamp",
-        reading_key="timestamp",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        translation_key="last_reading",
+        value_fn=(
+            lambda device: (
+                reading["light"] if (reading := device["latest_reading"]) else None
+            )
+        ),
     ),
 )
 
@@ -85,7 +94,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Willow sensor entities."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     async_add_entities(
         WillowSensor(coordinator, device, description)
         for device in coordinator.data.values()
@@ -110,49 +119,28 @@ class WillowSensor(CoordinatorEntity[WillowDataUpdateCoordinator], SensorEntity)
         self.entity_description = description
         self._sensor_id = str(device["sensor_id"])
         self._attr_unique_id = f"{self._sensor_id}_{description.key}"
-        self._attr_device_info = self._device_info(device)
+        plant = device["user_plant"]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._sensor_id)},
+            manufacturer=MANUFACTURER,
+            model="Willow Sensor",
+            name=plant["name"],
+            sw_version=device["version"],
+            suggested_area=plant["location"],
+        )
 
     @property
     @override
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> StateType:
         """Return the native value."""
-        device = self.coordinator.data.get(self._sensor_id)
-        if device is None:
-            return None
-
-        if self.entity_description.key == "battery_life":
-            return device.get("battery_life")
-
-        reading = device.get("latest_reading")
-        if reading is None or self.entity_description.reading_key is None:
-            return None
-
-        value = cast(StateType, reading.get(self.entity_description.reading_key))
-        if self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
-            return dt_util.parse_datetime(value) if isinstance(value, str) else None
-
-        return value
+        return self.entity_description.value_fn(self.coordinator.data[self._sensor_id])
 
     @property
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.native_value is not None
-
-    def _device_info(self, device: WillowDevice) -> DeviceInfo:
-        """Return device information."""
-        plant = device["user_plant"]
-        info = DeviceInfo(
-            identifiers={(DOMAIN, self._sensor_id)},
-            manufacturer=MANUFACTURER,
-            model="Willow Sensor",
-            name=plant["name"],
+        return (
+            super().available
+            and (device := self.coordinator.data.get(self._sensor_id)) is not None
+            and self.entity_description.value_fn(device) is not None
         )
-
-        if version := device.get("version"):
-            info["sw_version"] = version
-
-        if location := plant.get("location"):
-            info["suggested_area"] = location
-
-        return info

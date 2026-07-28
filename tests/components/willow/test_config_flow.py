@@ -41,9 +41,6 @@ async def _complete_oauth(
     result: dict,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    *,
-    access_token: str = ACCESS_TOKEN,
-    refresh_token: str = REFRESH_TOKEN,
 ) -> None:
     """Drive the OAuth2 callback through the token exchange."""
     state = config_entry_oauth2_flow._encode_jwt(
@@ -58,8 +55,8 @@ async def _complete_oauth(
     aioclient_mock.post(
         OAUTH2_TOKEN,
         json={
-            "refresh_token": refresh_token,
-            "access_token": access_token,
+            "refresh_token": REFRESH_TOKEN,
+            "access_token": ACCESS_TOKEN,
             "token_type": "Bearer",
             "expires_in": 60,
         },
@@ -143,60 +140,3 @@ async def test_profile_errors_abort(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
-
-
-async def test_reauth_flow(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_willow_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry,
-) -> None:
-    """Reauthorizing the same account updates the existing entry's token."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] is FlowResultType.EXTERNAL_STEP
-
-    await _complete_oauth(
-        hass,
-        result,
-        hass_client_no_auth,
-        aioclient_mock,
-        refresh_token="new-refresh-token",
-    )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data["token"]["refresh_token"] == "new-refresh-token"
-
-
-async def test_reauth_wrong_account(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_willow_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry,
-) -> None:
-    """Reauthorizing with a different account aborts."""
-    mock_config_entry.add_to_hass(hass)
-    mock_willow_client.get_profile.return_value = {
-        "id": 99,
-        "username": "other@example.com",
-        "profile_image": None,
-    }
-
-    result = await mock_config_entry.start_reauth_flow(hass)
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    await _complete_oauth(hass, result, hass_client_no_auth, aioclient_mock)
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "wrong_account"

@@ -33,7 +33,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'battery_life',
+    'translation_key': None,
     'unique_id': 'SENSOR123_battery_life',
     'unit_of_measurement': '%',
   })
@@ -162,57 +162,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1200.0',
-  })
-# ---
-# name: test_all_entities[sensor.kitchen_basil_last_reading-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.kitchen_basil_last_reading',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Last reading',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Last reading',
-    'platform': 'willow',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'last_reading',
-    'unique_id': 'SENSOR123_timestamp',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.kitchen_basil_last_reading-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basil Last reading',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.kitchen_basil_last_reading',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2026-05-08T12:00:00+00:00',
   })
 # ---
 # name: test_all_entities[sensor.kitchen_basil_moisture-entry]

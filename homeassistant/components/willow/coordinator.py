@@ -16,6 +16,8 @@ from .client import WillowClient
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 from .exceptions import WillowAuthError
 
+type WillowConfigEntry = ConfigEntry[WillowDataUpdateCoordinator]
+
 
 class WillowProfile(TypedDict):
     """Willow profile response."""
@@ -58,13 +60,13 @@ class WillowDevice(TypedDict):
 class WillowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, WillowDevice]]):
     """Coordinator for Willow data updates."""
 
-    config_entry: ConfigEntry
+    config_entry: WillowConfigEntry
     profile: WillowProfile
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: WillowConfigEntry,
         client: WillowClient,
         oauth_session: OAuth2Session,
     ) -> None:
