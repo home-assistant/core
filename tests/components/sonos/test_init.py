@@ -8,6 +8,7 @@ import logging
 from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
+from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from requests import Response
@@ -18,7 +19,6 @@ from homeassistant.components import sonos
 from homeassistant.components.sonos.const import (
     DISCOVERY_INTERVAL,
     SONOS_SPEAKER_ACTIVITY,
-    SONOS_VANISHED,
     UPNP_ISSUE_ID,
 )
 from homeassistant.components.sonos.exception import SonosUpdateError
@@ -29,10 +29,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -629,13 +626,18 @@ async def test_async_poll_manual_hosts_skips_ping_for_disabled_device(
         disabled_by=dr.DeviceEntryDisabler.USER,
     )
 
-    # Mark the speaker unavailable through its dispatcher signal.
-    async_dispatcher_send(hass, f"{SONOS_VANISHED}-{soco.uid}", "test")
+    config_entry = hass.config_entries.async_entries(sonos.DOMAIN)[0]
+    speaker = config_entry.runtime_data.discovered[soco.uid]
+
+    # Mark the speaker unavailable before the next manual-host heartbeat.
+    await speaker.async_vanished("test")
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # SonosSpeaker.ping uses RenderingControl.GetVolume under the hood.
     soco.renderingControl.GetVolume.reset_mock()
-    async_fire_time_changed(hass, dt_util.utcnow() + DISCOVERY_INTERVAL)
+    with freeze_time(dt_util.utcnow()) as freezer:
+        freezer.tick(DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     soco.renderingControl.GetVolume.assert_not_called()
