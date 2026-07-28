@@ -1,5 +1,6 @@
 """Sensor platform: one sensor per HortOS readout."""
 
+from dataclasses import replace
 from datetime import datetime, timedelta
 from math import isfinite
 from typing import override
@@ -15,6 +16,7 @@ from aiohortos import (
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -32,9 +34,8 @@ from .const import (
     DIMENSIONLESS_UNITS,
     READOUT_ICONS,
     TIME_OF_DAY_READOUTS,
-    UNIT_DEVICE_CLASS,
+    UNIT_DESCRIPTIONS,
     UNIT_MAP,
-    UNIT_PRECISION,
     WIND_DIRECTION_SUBJECT,
 )
 from .coordinator import HortimaxConfigEntry, HortimaxCoordinator
@@ -68,64 +69,64 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_add_new_entities))
 
 
-def _describe(
-    readout: Readout,
-) -> tuple[str | None, SensorDeviceClass | None, SensorStateClass | None, int | None]:
-    """Derive (unit, device class, state class, display precision).
+def _describe(readout: Readout) -> SensorEntityDescription:
+    """Derive the description of the sensor for a readout.
 
     A device class is only assigned to a mapped unit: Home Assistant rejects
     values whose unit does not match the class. Dimensionless readouts are
     status codes, so they get no state class and integer display.
     """
+    key = readout.identifier
     if readout.value_type is not ReadoutValueType.DOUBLE:
-        return None, None, None, None
+        return SensorEntityDescription(key=key)
 
     subject = readout_subject(readout.identifier)
     if subject in TIME_OF_DAY_READOUTS:
-        return None, SensorDeviceClass.TIMESTAMP, None, None
+        return SensorEntityDescription(
+            key=key, device_class=SensorDeviceClass.TIMESTAMP
+        )
     # MEASUREMENT_ANGLE gives statistics the circular mean.
     if subject == WIND_DIRECTION_SUBJECT:
-        return (
-            DEGREE,
-            SensorDeviceClass.WIND_DIRECTION,
-            SensorStateClass.MEASUREMENT_ANGLE,
-            None,
+        return SensorEntityDescription(
+            key=key,
+            native_unit_of_measurement=DEGREE,
+            device_class=SensorDeviceClass.WIND_DIRECTION,
+            state_class=SensorStateClass.MEASUREMENT_ANGLE,
         )
 
     raw_unit = readout.unit
     if not raw_unit or raw_unit in DIMENSIONLESS_UNITS:
-        return None, None, None, 0
+        return SensorEntityDescription(key=key, suggested_display_precision=0)
 
     unit = UNIT_MAP.get(raw_unit)
-    mapped = unit is not None
     if unit is None:
-        unit = raw_unit  # truthful, but rules out a device class
-    # An unmapped unit gives no basis for choosing a precision.
-    precision = UNIT_PRECISION.get(unit) if mapped else None
+        # Truthful, but rules out a device class and any basis for a precision.
+        return SensorEntityDescription(
+            key=key,
+            native_unit_of_measurement=raw_unit,
+            state_class=SensorStateClass.MEASUREMENT,
+        )
 
+    description = UNIT_DESCRIPTIONS[unit]
     identifier = readout.identifier.lower()
-    device_class: SensorDeviceClass | None = None
-    if mapped:
-        device_class = UNIT_DEVICE_CLASS.get(unit)
-        if device_class is None:
-            if unit == "%" and "relativehumidity" in identifier:
-                device_class = SensorDeviceClass.HUMIDITY
-            elif unit == UnitOfRatio.PARTS_PER_MILLION and (
-                "co2" in identifier or "carbondioxide" in identifier
-            ):
-                # ppm is a generic concentration; only claim CO2 when the
-                # readout says so, since growers define their own.
-                device_class = SensorDeviceClass.CO2
-            elif unit == UnitOfSpeed.METERS_PER_SECOND:
-                device_class = (
-                    SensorDeviceClass.WIND_SPEED
-                    if "wind" in identifier
-                    else SensorDeviceClass.SPEED
-                )
-            elif (
-                unit == UnitOfVolume.CUBIC_METERS and readout.source.type == "GasMeter"
-            ):
-                device_class = SensorDeviceClass.GAS
+    device_class = description.device_class
+    if device_class is None:
+        if unit == "%" and "relativehumidity" in identifier:
+            device_class = SensorDeviceClass.HUMIDITY
+        elif unit == UnitOfRatio.PARTS_PER_MILLION and (
+            "co2" in identifier or "carbondioxide" in identifier
+        ):
+            # ppm is a generic concentration; only claim CO2 when the
+            # readout says so, since growers define their own.
+            device_class = SensorDeviceClass.CO2
+        elif unit == UnitOfSpeed.METERS_PER_SECOND:
+            device_class = (
+                SensorDeviceClass.WIND_SPEED
+                if "wind" in identifier
+                else SensorDeviceClass.SPEED
+            )
+        elif unit == UnitOfVolume.CUBIC_METERS and readout.source.type == "GasMeter":
+            device_class = SensorDeviceClass.GAS
 
     state_class: SensorStateClass | None
     if device_class in (SensorDeviceClass.ENERGY, SensorDeviceClass.GAS):
@@ -140,7 +141,9 @@ def _describe(
     else:
         state_class = SensorStateClass.MEASUREMENT
 
-    return unit, device_class, state_class, precision
+    return replace(
+        description, key=key, device_class=device_class, state_class=state_class
+    )
 
 
 class HortimaxReadoutSensor(HortimaxEntity, SensorEntity):
@@ -158,20 +161,15 @@ class HortimaxReadoutSensor(HortimaxEntity, SensorEntity):
         if readout.identifier.lower().endswith("-actualsetting"):
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
-        (
-            self._attr_native_unit_of_measurement,
-            self._attr_device_class,
-            self._attr_state_class,
-            self._attr_suggested_display_precision,
-        ) = _describe(readout)
+        self.entity_description = _describe(readout)
 
         # A controller reports hundreds of unclassifiable status codes, so
         # those start disabled. A state class means a real measurement, which
         # stays enabled even without a device class for its unit.
         if (
-            self._attr_device_class is None
+            self.entity_description.device_class is None
             and self._attr_icon is None
-            and self._attr_state_class is None
+            and self.entity_description.state_class is None
         ):
             self._attr_entity_registry_enabled_default = False
 
