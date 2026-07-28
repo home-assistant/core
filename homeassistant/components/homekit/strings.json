@@ -70,6 +70,13 @@
       "yaml": {
         "description": "This entry is controlled via YAML",
         "title": "Adjust HomeKit options"
+      },
+      "valves": {
+        "data": {
+          "irrigation_grouped_valves": "Valves to group as Irrigation System"
+        },
+        "description": "Select two or more valve entities to group them as a single HomeKit Irrigation System accessory. Leave empty to expose each valve individually.",
+        "title": "Valve configuration"
       }
     }
   },

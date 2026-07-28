@@ -11,6 +11,7 @@ from pyhap.const import (
     CATEGORY_SPRINKLER,
     CATEGORY_SWITCH,
 )
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import button, input_button
 from homeassistant.components.input_number import (
@@ -36,8 +37,10 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     CONF_TYPE,
     SERVICE_CLOSE_VALVE,
@@ -48,9 +51,19 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
-from homeassistant.helpers.event import async_call_later
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HassJobType,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
+from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 from homeassistant.util import dt as dt_util
 
 from .accessories import TYPES, HomeAccessory, HomeDriver
@@ -61,18 +74,23 @@ from .const import (
     CHAR_NAME,
     CHAR_ON,
     CHAR_OUTLET_IN_USE,
+    CHAR_PROGRAM_MODE,
     CHAR_REMAINING_DURATION,
     CHAR_SET_DURATION,
     CHAR_VALVE_TYPE,
+    CONF_IRRIGATION_CONTROLLER,
+    CONF_LINKED_IRRIGATION_VALVES,
     CONF_LINKED_VALVE_DURATION,
     CONF_LINKED_VALVE_END_TIME,
     PROP_MAX_VALUE,
     PROP_MIN_STEP,
     PROP_MIN_VALUE,
+    SERV_IRRIGATION_SYSTEM,
     SERV_OUTLET,
     SERV_SWITCH,
     SERV_VALVE,
     TYPE_FAUCET,
+    TYPE_IRRIGATION_SYSTEM,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_VALVE,
@@ -559,3 +577,180 @@ class SelectSwitch(HomeAccessory):
         current_option = new_state.state
         for option, char in self.select_chars.items():
             char.set_value(option == current_option)
+
+
+HK_VALVE_TYPE_IRRIGATION = 1
+HK_PROGRAM_MODE_NO_SCHEDULE_ACTIVE = 1
+
+IRRIGATION_DEFAULT_DURATION = 300
+IRRIGATION_DURATION_MAX = 86400
+
+IRRIGATION_DURATION_PROPERTIES = {
+    PROP_MIN_VALUE: 0,
+    PROP_MAX_VALUE: IRRIGATION_DURATION_MAX,
+    PROP_MIN_STEP: 1,
+}
+
+
+@TYPES.register("IrrigationSystem")
+class IrrigationSystem(HomeAccessory):
+    """Generate an IrrigationSystem accessory grouping multiple valve entities."""
+
+    def __init__(self, *args: Any) -> None:
+        """Initialize an IrrigationSystem accessory."""
+        super().__init__(*args, category=CATEGORY_SPRINKLER)
+        state = self.hass.states.get(self.entity_id)
+        assert state
+
+        self._valve_entity_ids: list[str] = [self.entity_id] + list(
+            self.config.get(CONF_LINKED_IRRIGATION_VALVES, [])
+        )
+        self._valve_chars: dict[str, dict[str, Any]] = {}
+
+        serv_irrigation = self.add_preload_service(
+            SERV_IRRIGATION_SYSTEM,
+            [CHAR_NAME, CHAR_REMAINING_DURATION],
+        )
+        serv_irrigation.configure_char(CHAR_NAME, value=self.display_name)
+        self._char_system_active = serv_irrigation.configure_char(
+            CHAR_ACTIVE,
+            value=False,
+            setter_callback=self._set_system_active,
+        )
+        self._char_system_in_use = serv_irrigation.configure_char(CHAR_IN_USE, value=False)
+        self._char_program_mode = serv_irrigation.configure_char(
+            CHAR_PROGRAM_MODE,
+            value=HK_PROGRAM_MODE_NO_SCHEDULE_ACTIVE,
+        )
+        self._char_system_remaining = serv_irrigation.configure_char(
+            CHAR_REMAINING_DURATION,
+            value=0,
+            properties=IRRIGATION_DURATION_PROPERTIES,
+        )
+
+        for entity_id in self._valve_entity_ids:
+            valve_state = self.hass.states.get(entity_id)
+            friendly = (
+                valve_state.attributes.get(ATTR_FRIENDLY_NAME) if valve_state else None
+            )
+            name = cleanup_name_for_homekit(friendly or entity_id)
+            serv_valve = self.add_preload_service(
+                SERV_VALVE,
+                [CHAR_NAME, CHAR_CONFIGURED_NAME, CHAR_SET_DURATION, CHAR_REMAINING_DURATION],
+                unique_id=entity_id,
+            )
+            serv_valve.configure_char(CHAR_NAME, value=name)
+            serv_valve.configure_char(CHAR_CONFIGURED_NAME, value=name)
+            char_active = serv_valve.configure_char(
+                CHAR_ACTIVE,
+                value=False,
+                setter_callback=lambda v, eid=entity_id: self._set_valve_active(eid, v),
+            )
+            char_in_use = serv_valve.configure_char(CHAR_IN_USE, value=False)
+            serv_valve.configure_char(CHAR_VALVE_TYPE, value=HK_VALVE_TYPE_IRRIGATION)
+            char_set_duration = serv_valve.configure_char(
+                CHAR_SET_DURATION,
+                value=IRRIGATION_DEFAULT_DURATION,
+                properties=IRRIGATION_DURATION_PROPERTIES,
+                setter_callback=lambda v, eid=entity_id: self._set_valve_duration(eid, v),
+            )
+            char_remaining = serv_valve.configure_char(
+                CHAR_REMAINING_DURATION,
+                value=0,
+                properties=IRRIGATION_DURATION_PROPERTIES,
+            )
+            self._valve_chars[entity_id] = {
+                CHAR_ACTIVE: char_active,
+                CHAR_IN_USE: char_in_use,
+                CHAR_SET_DURATION: char_set_duration,
+                CHAR_REMAINING_DURATION: char_remaining,
+                "duration": IRRIGATION_DEFAULT_DURATION,
+            }
+            serv_irrigation.add_linked_service(serv_valve)
+
+        for entity_id in self._valve_entity_ids:
+            if valve_state := self.hass.states.get(entity_id):
+                if valve_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+                    self._sync_valve_chars(entity_id, valve_state)
+        self._update_system_state()
+
+    @callback
+    @pyhap_callback  # type: ignore[misc]
+    @override
+    def run(self) -> None:
+        """Handle accessory driver start; subscribe to all linked valve entities."""
+        super().run()
+        linked_valve_ids = self._valve_entity_ids[1:]
+        if linked_valve_ids:
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    linked_valve_ids,
+                    self._async_linked_valve_state_changed,
+                    job_type=HassJobType.Callback,
+                )
+            )
+            for entity_id in linked_valve_ids:
+                if valve_state := self.hass.states.get(entity_id):
+                    if valve_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+                        self._sync_valve_chars(entity_id, valve_state)
+        self._update_system_state()
+
+    @callback
+    def _async_linked_valve_state_changed(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
+        """Handle state changes for linked (non-primary) valve entities."""
+        new_state = event.data["new_state"]
+        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return
+        self._sync_valve_chars(new_state.entity_id, new_state)
+        self._update_system_state()
+
+    @callback
+    @override
+    def async_update_state(self, new_state: State) -> None:
+        """Update primary valve entity state from HA."""
+        self._sync_valve_chars(self.entity_id, new_state)
+        self._update_system_state()
+
+    def _sync_valve_chars(self, entity_id: str, state: State) -> None:
+        """Sync HomeKit characteristics from HA state for one valve."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None:
+            return
+        is_open = state.state in VALVE_OPEN_STATES
+        chars[CHAR_ACTIVE].set_value(int(is_open))
+        chars[CHAR_IN_USE].set_value(int(is_open))
+
+    def _update_system_state(self) -> None:
+        """Update IrrigationSystem-level Active/InUse from child valve states."""
+        any_active = any(
+            chars[CHAR_IN_USE].value for chars in self._valve_chars.values()
+        )
+        self._char_system_active.set_value(int(any_active))
+        self._char_system_in_use.set_value(int(any_active))
+
+    def _set_system_active(self, value: int) -> None:
+        """Close all valves when HomeKit deactivates the irrigation system."""
+        if not value:
+            for entity_id in self._valve_entity_ids:
+                self.async_call_service(
+                    VALVE_DOMAIN, SERVICE_CLOSE_VALVE, {ATTR_ENTITY_ID: entity_id}
+                )
+        self._update_system_state()
+
+    def _set_valve_active(self, entity_id: str, value: int) -> None:
+        """Open or close a specific valve when HomeKit commands it."""
+        service = SERVICE_OPEN_VALVE if value else SERVICE_CLOSE_VALVE
+        self.async_call_service(VALVE_DOMAIN, service, {ATTR_ENTITY_ID: entity_id})
+        chars = self._valve_chars.get(entity_id)
+        if chars:
+            chars[CHAR_IN_USE].set_value(int(value))
+        self._update_system_state()
+
+    def _set_valve_duration(self, entity_id: str, value: int) -> None:
+        """Store the HomeKit-requested run duration for a valve."""
+        chars = self._valve_chars.get(entity_id)
+        if chars:
+            chars["duration"] = max(int(value), 0)

@@ -77,6 +77,7 @@ from .const import (
     CHAR_HARDWARE_REVISION,
     CHAR_STATUS_LOW_BATTERY,
     CONF_FEATURE_LIST,
+    CONF_IRRIGATION_CONTROLLER,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
@@ -98,6 +99,7 @@ from .const import (
     TYPE_FAN,
     TYPE_FAUCET,
     TYPE_HEATER_COOLER,
+    TYPE_IRRIGATION_SYSTEM,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
@@ -379,7 +381,12 @@ def get_accessory(  # noqa: C901
             a_type = "Switch"
 
     elif state.domain == "valve":
-        a_type = "Valve"
+        if config.get(CONF_TYPE) == TYPE_IRRIGATION_SYSTEM:
+            a_type = "IrrigationSystem"
+        elif CONF_IRRIGATION_CONTROLLER in config:
+            return None
+        else:
+            a_type = "Valve"
 
     elif state.domain == "vacuum":
         a_type = "Vacuum"

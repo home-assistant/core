@@ -48,6 +48,8 @@ from .const import (
     CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
+    CONF_IRRIGATION_CONTROLLER,
+    CONF_LINKED_IRRIGATION_VALVES,
     CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
     DEFAULT_CONFIG_FLOW_PORT,
@@ -58,6 +60,7 @@ from .const import (
     HOMEKIT_MODES,
     SHORT_BRIDGE_NAME,
     TYPE_HEATER_COOLER,
+    TYPE_IRRIGATION_SYSTEM,
     TYPE_THERMOSTAT,
     VIDEO_CODEC_COPY,
 )
@@ -67,6 +70,7 @@ from .util import async_find_next_available_port, state_needs_accessory_mode
 CONF_CAMERA_AUDIO = "camera_audio"
 CONF_CAMERA_COPY = "camera_copy"
 CONF_INCLUDE_EXCLUDE_MODE = "include_exclude_mode"
+CONF_IRRIGATION_GROUPED_VALVES = "irrigation_grouped_valves"
 
 CLIMATE_TYPE_AUTOMATIC = "automatic"
 # Display names for the accessory classes a climate entity can use
@@ -402,6 +406,7 @@ class OptionsFlowHandler(OptionsFlow):
         self.hk_options: dict[str, Any] = {}
         self.included_cameras: list[str] = []
         self.included_climates: list[str] = []
+        self.included_valves: list[str] = []
         # Maps the displayed climate field label back to its entity id.
         self._climate_choices: dict[str, str] = {}
 
@@ -410,7 +415,7 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Choose the accessory type for climate entities."""
         if not self.included_climates:
-            return await self.async_step_bridged_device_triggers()
+            return await self.async_step_valves()
 
         hk_options = self.hk_options
         all_entity_config: dict[str, dict[str, Any]]
@@ -431,7 +436,7 @@ class OptionsFlowHandler(OptionsFlow):
             if not all_entity_config:
                 del hk_options[CONF_ENTITY_CONFIG]
 
-            return await self.async_step_bridged_device_triggers()
+            return await self.async_step_valves()
 
         # Field labels come from the schema keys, so key the form by the
         # friendly name and map back to the entity id on submit. The
@@ -503,6 +508,69 @@ class OptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(title="", data=self.config_entry.options)
 
         return self.async_show_form(step_id="yaml")
+
+    async def async_step_valves(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Optionally group valve entities into an Irrigation System accessory."""
+        if not self.included_valves:
+            return await self.async_step_bridged_device_triggers()
+
+        hk_options = self.hk_options
+
+        if user_input is not None:
+            grouped: list[str] = user_input.get(CONF_IRRIGATION_GROUPED_VALVES, [])
+            all_entity_config: dict[str, dict[str, Any]] = hk_options.setdefault(
+                CONF_ENTITY_CONFIG, {}
+            )
+            for entity_id in self.included_valves:
+                entity_config = all_entity_config.get(entity_id, {})
+                entity_config.pop(CONF_TYPE, None)
+                entity_config.pop(CONF_LINKED_IRRIGATION_VALVES, None)
+                entity_config.pop(CONF_IRRIGATION_CONTROLLER, None)
+                if not entity_config:
+                    all_entity_config.pop(entity_id, None)
+
+            if len(grouped) >= 2:
+                primary = grouped[0]
+                linked = grouped[1:]
+                all_entity_config.setdefault(primary, {})[CONF_TYPE] = TYPE_IRRIGATION_SYSTEM
+                all_entity_config[primary][CONF_LINKED_IRRIGATION_VALVES] = linked
+                for entity_id in linked:
+                    all_entity_config.setdefault(entity_id, {})[CONF_IRRIGATION_CONTROLLER] = primary
+
+            if not hk_options.get(CONF_ENTITY_CONFIG):
+                hk_options.pop(CONF_ENTITY_CONFIG, None)
+            return await self.async_step_bridged_device_triggers()
+
+        all_entity_config = hk_options.get(CONF_ENTITY_CONFIG, {})
+        current_grouped: list[str] = []
+        for entity_id in self.included_valves:
+            entity_config = all_entity_config.get(entity_id, {})
+            if entity_config.get(CONF_TYPE) == TYPE_IRRIGATION_SYSTEM:
+                current_grouped = [entity_id] + list(
+                    entity_config.get(CONF_LINKED_IRRIGATION_VALVES, [])
+                )
+                break
+
+        return self.async_show_form(
+            step_id="valves",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_IRRIGATION_GROUPED_VALVES, default=current_grouped
+                    ): selector.EntitySelector(
+                        selector.EntitySelectorConfig(
+                            multiple=True,
+                            include_entities=self.included_valves,
+                        )
+                    ),
+                }
+            ),
+            description_placeholders={
+                "valve_count": str(len(self.included_valves))
+            },
+        )
 
     async def async_step_bridged_device_triggers(
         self, user_input: dict[str, Any] | None = None
@@ -615,6 +683,7 @@ class OptionsFlowHandler(OptionsFlow):
             entity_filter = _async_build_entities_filter(domains, entities)
             self.included_cameras = _async_entities_in_domain(entities, CAMERA_DOMAIN)
             self.included_climates = _async_entities_in_domain(entities, CLIMATE_DOMAIN)
+            self.included_valves = _async_entities_in_domain(entities, VALVE_DOMAIN)
             hk_options[CONF_FILTER] = entity_filter
             return await self.async_step_cameras()
 
@@ -662,6 +731,9 @@ class OptionsFlowHandler(OptionsFlow):
             )
             self.included_climates = _async_included_domain_entities(
                 self.hass, entity_filter, entities, CLIMATE_DOMAIN
+            )
+            self.included_valves = _async_included_domain_entities(
+                self.hass, entity_filter, entities, VALVE_DOMAIN
             )
             hk_options[CONF_FILTER] = entity_filter
             return await self.async_step_cameras()
@@ -716,6 +788,7 @@ class OptionsFlowHandler(OptionsFlow):
 
             self.included_cameras = _remaining_in_domain(CAMERA_DOMAIN)
             self.included_climates = _remaining_in_domain(CLIMATE_DOMAIN)
+            self.included_valves = _remaining_in_domain(VALVE_DOMAIN)
             hk_options[CONF_FILTER] = _make_entity_filter(
                 include_domains=domains, exclude_entities=entities
             )
