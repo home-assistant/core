@@ -1592,9 +1592,7 @@ async def test_irrigation_system_zero_duration_skips_timers(
     acc.run()
     await hass.async_block_till_done()
 
-    with patch.object(
-        acc, "async_call_service_and_wait", AsyncMock(return_value=True)
-    ):
+    with patch.object(acc, "async_call_service_and_wait", AsyncMock(return_value=True)):
         acc._set_valve_duration("valve.front_lawn", 0)
         acc._set_valve_active("valve.front_lawn", 1)
         await hass.async_block_till_done()
