@@ -1,7 +1,7 @@
 """Tests for the Honeywell Lyric sensor platform."""
 
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -32,12 +32,11 @@ def test_get_datetime_from_future_time_valid() -> None:
     assert isinstance(result, datetime)
 
 
-@pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.usefixtures("setup_credentials", "mock_lyric_mixed_devices")
 async def test_room_sensors_created_regardless_of_device_id_prefix(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_lyric_mixed_devices: MagicMock,
 ) -> None:
     """Room/accessory sensors are created for supported devices whether or not their ID starts with LCC.
 

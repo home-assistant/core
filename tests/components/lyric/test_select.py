@@ -1,6 +1,6 @@
 """Tests for the Honeywell Lyric select platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -14,12 +14,11 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.usefixtures("setup_credentials", "mock_lyric_mixed_devices")
 async def test_room_priority_select_created_regardless_of_device_id_prefix(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_lyric_mixed_devices: MagicMock,
 ) -> None:
     """The room priority select is created for supported devices whether or not their ID starts with LCC.
 

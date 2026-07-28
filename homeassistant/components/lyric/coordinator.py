@@ -87,7 +87,7 @@ class LyricDataUpdateCoordinator(DataUpdateCoordinator[Lyric]):
             raise UpdateFailed(exception) from exception
         return self.lyric
 
-    async def _get_thermostat_rooms(self, location_id: str, device_id: str) -> None:
+    async def _get_thermostat_rooms(self, location_id: int, device_id: str) -> None:
         """Fetch room/priority data for a single thermostat.
 
         Devices that don't support this endpoint return a GetPriorityFailed
