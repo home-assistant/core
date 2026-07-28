@@ -1,7 +1,7 @@
 """Provides the DataUpdateCoordinator."""
 
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from automower_ble.mower import Mower
 from automower_ble.protocol import ResponseResult
@@ -45,6 +45,7 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, str | int]]):
         self.model = model
         self.mower = mower
 
+    @override
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and any connection."""
         LOGGER.debug("Shutdown")
@@ -67,6 +68,7 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, str | int]]):
             await close_stale_connections_by_address(self.address)
             raise UpdateFailed("Failed to connect") from err
 
+    @override
     async def _async_update_data(self) -> dict[str, str | int]:
         """Poll the device."""
         LOGGER.debug("Polling device")

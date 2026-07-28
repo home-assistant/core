@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Mapping
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 import voluptuous as vol
 
@@ -200,6 +200,7 @@ class ThresholdSensor(BinarySensorEntity):
         self._state_position = POSITION_UNKNOWN
         self.sensor_value: float | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self._async_setup_sensor()
@@ -250,6 +251,7 @@ class ThresholdSensor(BinarySensorEntity):
         _update_sensor_state()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         return {

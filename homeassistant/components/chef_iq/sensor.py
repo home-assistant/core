@@ -1,5 +1,7 @@
 """Support for Chef iQ sensors."""
 
+from typing import override
+
 from chefiq_ble import ChefIqSensor, SensorUpdate
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -143,11 +145,13 @@ class ChefIqBluetoothSensorEntity(
     """Representation of a Chef iQ sensor."""
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available.
 
@@ -160,6 +164,7 @@ class ChefIqBluetoothSensorEntity(
         return True
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return True if the device is no longer broadcasting."""
         return not self.processor.available

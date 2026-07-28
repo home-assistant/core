@@ -1,6 +1,6 @@
 """Support for events."""
 
-from typing import Final
+from typing import Final, override
 
 from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
 
@@ -12,7 +12,7 @@ from homeassistant.components.event import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import _LOGGER
+from .const import LOGGER
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonEntity
 from .utils import async_remove_entity_from_virtual_group
@@ -69,6 +69,7 @@ class AlexaVoiceEvent(AmazonEntity, EventEntity):
     _last_seen_timestamp: int = 0  #  January 1, 1970 at 12:00:00 AM
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
@@ -77,7 +78,7 @@ class AlexaVoiceEvent(AmazonEntity, EventEntity):
                 self.device.serial_number
             )
         ):
-            _LOGGER.debug(
+            LOGGER.debug(
                 "No vocal record found for device %s [%s]",
                 self.device.account_name,
                 self.device.serial_number,

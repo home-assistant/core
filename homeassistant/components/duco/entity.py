@@ -1,5 +1,7 @@
 """Base entity for the Duco integration."""
 
+from typing import TYPE_CHECKING, override
+
 from duco_connectivity.models import Node, NodeType
 
 from homeassistant.const import ATTR_VIA_DEVICE
@@ -20,7 +22,8 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         super().__init__(coordinator)
         self._node_id = node.node_id
         mac = coordinator.config_entry.unique_id
-        assert mac is not None
+        if TYPE_CHECKING:
+            assert mac is not None
         device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{mac}_{node.node_id}")},
             manufacturer="Duco",
@@ -40,6 +43,7 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         self._attr_device_info = device_info
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._node_id in self.coordinator.data.nodes

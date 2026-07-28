@@ -1,5 +1,7 @@
 """Define the Google Drive entity."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -13,6 +15,7 @@ class GoogleDriveEntity(CoordinatorEntity[GoogleDriveDataUpdateCoordinator]):
     _attr_has_entity_name = True
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this Google Drive device."""
         return DeviceInfo(

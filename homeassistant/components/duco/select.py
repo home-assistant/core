@@ -1,6 +1,7 @@
 """Select platform for the Duco integration."""
 
 import logging
+from typing import override
 
 from duco_connectivity import (
     ActionItem,
@@ -9,7 +10,6 @@ from duco_connectivity import (
     KnownActionName,
     Node,
     NodeListActionItemList,
-    NodeType,
     VentilationState,
 )
 
@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, VENTILATION_CAPABLE_NODE_TYPES
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
 
@@ -70,7 +70,9 @@ async def async_setup_entry(
             if node.node_id in known_nodes:
                 continue
 
-            if node.general.node_type is not NodeType.BOX:
+            # Duco advertises SetVentilationState broadly, so keep the select
+            # limited to the box and known valve node families.
+            if node.general.node_type not in VENTILATION_CAPABLE_NODE_TYPES:
                 continue
 
             options = options_by_node.get(node.node_id)
@@ -106,6 +108,7 @@ class DucoVentilationStateSelect(DucoEntity, SelectEntity):
         self._attr_options = list(options)
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current ventilation state when it is selectable."""
         if (ventilation := self._node.ventilation) is None:
@@ -120,6 +123,7 @@ class DucoVentilationStateSelect(DucoEntity, SelectEntity):
 
         return state
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set a new ventilation state on the node."""
         try:

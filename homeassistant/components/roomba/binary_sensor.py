@@ -1,5 +1,7 @@
 """Roomba binary sensor entities."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -34,15 +36,18 @@ class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
     _attr_translation_key = "bin_full"
 
     @property
+    @override
     def unique_id(self):
         """Return the ID of this sensor."""
         return f"bin_{self._blid}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return roomba_reported_state(self.vacuum).get("bin", {}).get("full", False)
 
+    @override
     def new_state_filter(self, new_state):
         """Filter the new state."""
         return "bin" in new_state
@@ -54,11 +59,13 @@ class RoombaCharging(IRobotEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the ID of this sensor."""
         return f"charging_{self._blid}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return (
@@ -68,6 +75,7 @@ class RoombaCharging(IRobotEntity, BinarySensorEntity):
             == "charge"
         )
 
+    @override
     def new_state_filter(self, new_state):
         """Filter the new state."""
         return "cleanMissionStatus" in new_state

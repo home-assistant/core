@@ -1,7 +1,7 @@
 """Support for Overkiz fans."""
 
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizState
 from pyoverkiz.enums.ui import UIWidget
@@ -48,6 +48,9 @@ FAN_DESCRIPTIONS: list[OverkizFanDescription] = [
 SUPPORTED_DEVICES = {description.key: description for description in FAN_DESCRIPTIONS}
 
 
+PARALLEL_UPDATES = 0
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OverkizDataConfigEntry,
@@ -82,6 +85,7 @@ class OverkizFan(OverkizDescriptiveEntity, FanEntity):
     )
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current air flow level as a percentage."""
         air_flow = self.device.states.get_value(self.entity_description.percentage)
@@ -92,6 +96,7 @@ class OverkizFan(OverkizDescriptiveEntity, FanEntity):
         return cast(int, air_flow)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return whether the fan is running."""
         if (percentage := self.percentage) is None:
@@ -99,6 +104,7 @@ class OverkizFan(OverkizDescriptiveEntity, FanEntity):
 
         return percentage > 0
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the air flow level."""
         if percentage == 0:
@@ -109,6 +115,7 @@ class OverkizFan(OverkizDescriptiveEntity, FanEntity):
             self.entity_description.set_percentage, percentage
         )
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -122,6 +129,7 @@ class OverkizFan(OverkizDescriptiveEntity, FanEntity):
 
         await self.executor.async_execute_command(OverkizCommand.ON)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self.executor.async_execute_command(OverkizCommand.OFF)

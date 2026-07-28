@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -76,6 +77,7 @@ class NordpoolPriceBinarySensor(NordpoolBaseEntity, BinarySensorEntity):
         super().__init__(coordinator, entity_description, area)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self)

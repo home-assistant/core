@@ -1,6 +1,6 @@
 """Support for P1 Monitor sensors."""
 
-from typing import Literal
+from typing import Literal, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -314,6 +314,7 @@ class P1MonitorSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         value = getattr(

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from nice_go import (
     BARRIER_STATUS,
@@ -139,9 +139,11 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             vacation_mode=vacation_mode,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, NiceGODevice]:
         return self.data
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         async with asyncio.timeout(10):

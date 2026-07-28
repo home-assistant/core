@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import json
-from typing import Any
+from typing import Any, override
 
 from jsonpath import ExprSyntaxError, JSONPathTypeError, search
 
@@ -109,10 +109,12 @@ class CommandSensor(ManualTriggerSensorEntity):
         self._process_updates: asyncio.Lock | None = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
         return self._attr_extra_state_attributes
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()

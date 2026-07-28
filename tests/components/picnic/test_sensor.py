@@ -409,7 +409,8 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
             "eta_window": {
                 "start": "2021-03-05T10:19:20.452+00:00",
                 "end": "2021-03-05T10:39:20.452+00:00",
-            }
+            },
+            "eta": 1614941090000,
         }
         await self._coordinator.async_refresh()
 
@@ -424,6 +425,20 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         self._assert_sensor(
             "sensor.mock_title_expected_end_of_next_delivery",
             "2021-03-05T10:39:20+00:00",
+        )
+        self._assert_sensor(
+            "sensor.mock_title_estimated_arrival_of_next_delivery",
+            "2021-03-05T10:44:50+00:00",
+        )
+
+        # The live estimate is cleared again once position data disappears
+        self.picnic_mock().get_delivery_position.return_value = {}
+        async_fire_time_changed(self.hass, dt_util.utcnow() + timedelta(minutes=31))
+        await self.hass.async_block_till_done(wait_background_tasks=True)
+
+        self._assert_sensor(
+            "sensor.mock_title_estimated_arrival_of_next_delivery",
+            STATE_UNKNOWN,
         )
 
     async def test_sensors_no_data(self):
@@ -570,7 +585,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         # Setup platform and default mock responses
         await self._setup_platform(use_default_responses=True)
 
-        device_registry = dr.async_get(self.hass)
+        device_registry = dr.async_get(self.hass)  # pylint: disable=home-assistant-tests-registry-fixtures
         picnic_service = device_registry.async_get_device(
             identifiers={(const.DOMAIN, DEFAULT_USER_RESPONSE["user_id"])}
         )

@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from aioimmich import Immich
 from aioimmich.const import CONNECT_ERRORS
@@ -78,6 +79,7 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
             update_interval=timedelta(seconds=60),
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Handle setup of the coordinator."""
         try:
@@ -96,6 +98,7 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
 
         self.is_admin = user_info.is_admin
 
+    @override
     async def _async_update_data(self) -> ImmichData:
         """Update data via internal method."""
         try:

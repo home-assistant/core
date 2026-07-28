@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from visionpluspython.client import WattsVisionClient
 from visionpluspython.exceptions import (
@@ -64,6 +64,7 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.last_discovery: datetime | None = None
         self.previous_devices: set[str] = set()
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch data and periodic device discovery."""
         now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
@@ -147,7 +148,9 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         for device_id in stale_device_ids:
             _LOGGER.info("Removing stale device: %s", device_id)
 
-            device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+            device = device_registry.async_get_device_by_identifier(
+                (DOMAIN, device_id), self.config_entry.entry_id
+            )
             if device:
                 device_registry.async_update_device(
                     device_id=device.id,
@@ -202,6 +205,7 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
             self.last_update_success = True
             self.async_update_listeners()
 
+    @override
     async def _async_update_data(self) -> WattsVisionDeviceData:
         """Refresh specific device."""
         if self.fast_polling_until and datetime.now() > self.fast_polling_until:  # pylint: disable=home-assistant-enforce-naive-now

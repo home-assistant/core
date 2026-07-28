@@ -3,7 +3,7 @@
 from datetime import timedelta
 import itertools
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohttp import ClientError
 from indevolt_api import (
@@ -70,6 +70,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.device_model: str = entry.data[CONF_MODEL]
         self.generation: int = entry.data[CONF_GENERATION]
 
+    @override
     async def _async_setup(self) -> None:
         """Fetch device info once on boot."""
         try:
@@ -87,6 +88,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         raw_mac = device_data.get("mac")
         self.mac_address = format_mac(raw_mac) if raw_mac else None
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch raw JSON data from the device."""
         data: dict[str, Any] = {}

@@ -1,6 +1,6 @@
 """Support for Atlantic Electrical Towel Dryer."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -73,6 +73,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
             ]
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if OverkizState.CORE_OPERATING_MODE in self.device.states:
@@ -84,6 +85,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
         return HVACMode.OFF
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.executor.async_execute_command(
@@ -92,6 +94,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
         )
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         state = (
@@ -103,6 +106,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
         return cast(float, self.device.states.get_value(state))
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
@@ -114,6 +118,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
@@ -128,6 +133,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
             )
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if (
@@ -151,6 +157,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
         return PRESET_NONE
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         # If the preset mode is set to prog, we need to set

@@ -1,12 +1,16 @@
 """Button platform for Edifier infrared integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierModel
 from infrared_protocols.codes.edifier.r1280db import EdifierR1280DBCode
-from infrared_protocols.codes.edifier.r1700bt import EdifierR1700BTCode
+from infrared_protocols.codes.edifier.r1700bt_2017 import EdifierR1700BT2017Code
+from infrared_protocols.codes.edifier.r1700bt_pre_2017 import EdifierR1700BTPre2017Code
+from infrared_protocols.codes.edifier.r1700bts import EdifierR1700BTsCode
 from infrared_protocols.codes.edifier.rc20g import EdifierRC20GCode
 from infrared_protocols.codes.edifier.s360db import EdifierS360DBCode
+from infrared_protocols.codes.edifier.s3000pro import EdifierS3000ProCode
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
@@ -32,31 +36,55 @@ COMMAND_SET_BUTTONS: dict[
     EdifierCommandSet,
     tuple[EdifierIrButtonEntityDescription, ...],
 ] = {
-    EdifierCommandSet.R1700BT: (
+    EdifierCommandSet.R1700BT_PRE_2017: (
         EdifierIrButtonEntityDescription(
             key="bluetooth",
             translation_key="bluetooth",
-            command_code=EdifierR1700BTCode.BLUETOOTH,
+            command_code=EdifierR1700BTPre2017Code.BLUETOOTH,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="line",
+            translation_key="line",
+            command_code=EdifierR1700BTPre2017Code.LINE,
+        ),
+    ),
+    EdifierCommandSet.R1700BT_2017: (
+        EdifierIrButtonEntityDescription(
+            key="bluetooth",
+            translation_key="bluetooth",
+            command_code=EdifierR1700BT2017Code.BLUETOOTH,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="line",
+            translation_key="line",
+            command_code=EdifierR1700BT2017Code.LINE,
+        ),
+    ),
+    EdifierCommandSet.R1700BTS: (
+        EdifierIrButtonEntityDescription(
+            key="bluetooth",
+            translation_key="bluetooth",
+            command_code=EdifierR1700BTsCode.BLUETOOTH,
         ),
         EdifierIrButtonEntityDescription(
             key="line_1",
             translation_key="line_1",
-            command_code=EdifierR1700BTCode.LINE_1,
+            command_code=EdifierR1700BTsCode.LINE_1,
         ),
         EdifierIrButtonEntityDescription(
             key="line_2",
             translation_key="line_2",
-            command_code=EdifierR1700BTCode.LINE_2,
+            command_code=EdifierR1700BTsCode.LINE_2,
         ),
         EdifierIrButtonEntityDescription(
             key="fx_on",
             translation_key="fx_on",
-            command_code=EdifierR1700BTCode.FX_ON,
+            command_code=EdifierR1700BTsCode.FX_ON,
         ),
         EdifierIrButtonEntityDescription(
             key="fx_off",
             translation_key="fx_off",
-            command_code=EdifierR1700BTCode.FX_OFF,
+            command_code=EdifierR1700BTsCode.FX_OFF,
         ),
     ),
     EdifierCommandSet.R1280DB: (
@@ -140,6 +168,48 @@ COMMAND_SET_BUTTONS: dict[
             command_code=EdifierRC20GCode.COAX,
         ),
     ),
+    EdifierCommandSet.S3000PRO: (
+        EdifierIrButtonEntityDescription(
+            key="usb",
+            translation_key="usb",
+            command_code=EdifierS3000ProCode.USB,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="bluetooth",
+            translation_key="bluetooth",
+            command_code=EdifierS3000ProCode.BLUETOOTH,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="line_bal",
+            translation_key="line_bal",
+            command_code=EdifierS3000ProCode.LINE_BAL,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="opt_coax",
+            translation_key="opt_coax",
+            command_code=EdifierS3000ProCode.OPT_COAX,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="eq_monitor",
+            translation_key="eq_monitor",
+            command_code=EdifierS3000ProCode.EQ_MONITOR,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="eq_dynamic",
+            translation_key="eq_dynamic",
+            command_code=EdifierS3000ProCode.EQ_DYNAMIC,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="eq_classic",
+            translation_key="eq_classic",
+            command_code=EdifierS3000ProCode.EQ_CLASSIC,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="eq_vocal",
+            translation_key="eq_vocal",
+            command_code=EdifierS3000ProCode.EQ_VOCAL,
+        ),
+    ),
 }
 
 
@@ -175,6 +245,7 @@ class EdifierIrButton(EdifierIrEntity, InfraredEmitterConsumerEntity, ButtonEnti
         self._infrared_emitter_entity_id = infrared_entity_id
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._send_command(self.entity_description.command_code.to_command())

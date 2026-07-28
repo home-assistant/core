@@ -10,7 +10,7 @@ from functools import partial, wraps
 import logging
 from random import randint
 import time
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, override
 
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
@@ -975,6 +975,7 @@ class TrackTemplateResultInfo:
         self._track_state_changes: _TrackStateChangeFiltered | None = None
         self._time_listeners: dict[Template, Callable[[], None]] = {}
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<TrackTemplateResultInfo {self._info}>"

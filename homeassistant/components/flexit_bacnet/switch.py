@@ -3,7 +3,7 @@
 import asyncio.exceptions
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from flexit_bacnet import FlexitBACnet
 from flexit_bacnet.bacnet import DecodingError
@@ -130,10 +130,12 @@ class FlexitSwitch(FlexitEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return value of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         try:
@@ -149,6 +151,7 @@ class FlexitSwitch(FlexitEntity, SwitchEntity):
         finally:
             await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         try:

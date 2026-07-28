@@ -39,7 +39,7 @@
 # name: test_all_entities[switch.backyard_backyard_loudness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Backyard Loudness',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Backyard Loudness',
     }),
     'context': <ANY>,
     'entity_id': 'switch.backyard_backyard_loudness',
@@ -89,7 +89,7 @@
 # name: test_all_entities[switch.bedroom_bedroom_loudness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Loudness',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Loudness',
     }),
     'context': <ANY>,
     'entity_id': 'switch.bedroom_bedroom_loudness',
@@ -139,7 +139,7 @@
 # name: test_all_entities[switch.kitchen_loudness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Loudness',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Loudness',
     }),
     'context': <ANY>,
     'entity_id': 'switch.kitchen_loudness',
@@ -189,7 +189,7 @@
 # name: test_all_entities[switch.living_room_living_room_loudness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Loudness',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Loudness',
     }),
     'context': <ANY>,
     'entity_id': 'switch.living_room_living_room_loudness',

@@ -1,7 +1,7 @@
 """Support for UK Met Office weather service."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -229,6 +229,7 @@ class MetOfficeCurrentSensor(
         self._attr_unique_id = f"{description.key}_{hass_data.coordinates}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         native_attr = self.entity_description.native_attr_name
@@ -243,6 +244,7 @@ class MetOfficeCurrentSensor(
         return value
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon for the entity card."""
         value = self.entity_description.icon
@@ -257,6 +259,7 @@ class MetOfficeCurrentSensor(
         return value
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         return {

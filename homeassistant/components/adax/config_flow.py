@@ -1,7 +1,7 @@
 """Config flow for Adax integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import adax
 import adax_local
@@ -39,6 +39,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
