@@ -476,7 +476,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2_automatic_baseline_calibration',
-    'unique_id': '84fce612f5b8-co2_automatic_baseline_calibration',
+    'unique_id': '84fce60bec38-co2_automatic_baseline_calibration',
     'unit_of_measurement': None,
   })
 # ---
@@ -539,7 +539,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'configuration_control',
-    'unique_id': '84fce612f5b8-configuration_control',
+    'unique_id': '84fce60bec38-configuration_control',
     'unit_of_measurement': None,
   })
 # ---
@@ -601,7 +601,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nox_index_learning_time_offset',
-    'unique_id': '84fce612f5b8-nox_index_learning_time_offset',
+    'unique_id': '84fce60bec38-nox_index_learning_time_offset',
     'unit_of_measurement': None,
   })
 # ---
@@ -666,7 +666,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voc_index_learning_time_offset',
-    'unique_id': '84fce612f5b8-voc_index_learning_time_offset',
+    'unique_id': '84fce60bec38-voc_index_learning_time_offset',
     'unit_of_measurement': None,
   })
 # ---

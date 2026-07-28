@@ -52,20 +52,33 @@ class AirGradientCoordinator(DataUpdateCoordinator[AirGradientData]):
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
-            self._current_version = (
-                await self.client.get_current_measures()
-            ).firmware_version
+            measures = await self.client.get_current_measures()
         except AirGradientError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
                 translation_placeholders={"error": str(error)},
             ) from error
+        self._validate_measures_identity(measures)
+        self._current_version = measures.firmware_version
+
+    def _validate_measures_identity(self, measures: Measures) -> None:
+        """Validate that measures are from the configured device."""
+        if measures.serial_number != self.serial_number:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="identity_error",
+                translation_placeholders={
+                    "expected_serial_number": self.serial_number,
+                    "serial_number": measures.serial_number,
+                },
+            )
 
     @override
     async def _async_update_data(self) -> AirGradientData:
         try:
             measures = await self.client.get_current_measures()
+            self._validate_measures_identity(measures)
             config = await self.client.get_config()
         except AirGradientError as error:
             raise UpdateFailed(

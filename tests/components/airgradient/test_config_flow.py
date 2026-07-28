@@ -1,11 +1,13 @@
 """Tests for the AirGradient config flow."""
 
+from dataclasses import replace
 from ipaddress import ip_address
-from unittest.mock import AsyncMock
+from unittest.mock import ANY, AsyncMock, patch
 
 from airgradient import (
     AirGradientConnectionError,
     AirGradientParseError,
+    ApiVersion,
     ConfigurationControl,
 )
 import pytest
@@ -16,6 +18,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
+from . import load_measures_fixture
 
 from tests.common import MockConfigEntry
 
@@ -239,13 +243,174 @@ async def test_zeroconf_flow_cloud_device(
     mock_cloud_airgradient_client.set_configuration_control.assert_not_called()
 
 
-async def test_zeroconf_flow_abort_old_firmware(hass: HomeAssistant) -> None:
+async def test_zeroconf_flow_abort_old_firmware(
+    hass: HomeAssistant, mock_airgradient_client: AsyncMock
+) -> None:
     """Test zeroconf flow aborts with old firmware."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=OLD_ZEROCONF_DISCOVERY,
     )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_version"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_flow_v1_hint(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf V1 hint seeds the client and skips the legacy gate."""
+    discovery_info = replace(
+        ZEROCONF_DISCOVERY,
+        properties={
+            **ZEROCONF_DISCOVERY.properties,
+            "api": "1",
+            "fw_ver": "1.0.0",
+            "model": "P-1PSG",
+        },
+    )
+    with patch(
+        "homeassistant.components.airgradient.config_flow.AirGradientClient",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
+        client.api_version = ApiVersion.V1
+        client.get_current_measures.return_value = load_measures_fixture(
+            "measures_v1_full.json", ApiVersion.V1
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=discovery_info,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    mock_client.assert_called_once_with(
+        "10.0.0.131", session=ANY, api_version=ApiVersion.V1
+    )
+
+
+@pytest.mark.parametrize("api", [None, "2"])
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_flow_probes_for_missing_or_unknown_api_hint(
+    hass: HomeAssistant, api: str | None
+) -> None:
+    """Test missing and unknown API hints leave the client unseeded."""
+    properties = dict(ZEROCONF_DISCOVERY.properties)
+    if api is None:
+        properties.pop("api", None)
+    else:
+        properties["api"] = api
+    discovery_info = replace(ZEROCONF_DISCOVERY, properties=properties)
+    with patch(
+        "homeassistant.components.airgradient.config_flow.AirGradientClient",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
+        client.api_version = ApiVersion.LEGACY
+        client.get_current_measures.return_value = load_measures_fixture(
+            "current_measures_indoor.json"
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=discovery_info,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    mock_client.assert_called_once_with("10.0.0.131", session=ANY)
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_flow_stale_v1_hint_applies_legacy_gate(
+    hass: HomeAssistant,
+) -> None:
+    """Test a stale V1 hint still enforces the legacy minimum firmware."""
+    discovery_info = replace(
+        OLD_ZEROCONF_DISCOVERY,
+        properties={**OLD_ZEROCONF_DISCOVERY.properties, "api": "1"},
+    )
+    with patch(
+        "homeassistant.components.airgradient.config_flow.AirGradientClient",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
+        client.api_version = ApiVersion.LEGACY
+        client.get_current_measures.return_value = load_measures_fixture(
+            "current_measures_indoor.json"
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=discovery_info,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_version"
+    mock_client.assert_called_once_with(
+        "10.0.0.131", session=ANY, api_version=ApiVersion.V1
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_flow_aborts_on_serial_mismatch(
+    hass: HomeAssistant, mock_airgradient_client: AsyncMock
+) -> None:
+    """Test zeroconf serial must match the measures serial."""
+    discovery_info = replace(
+        ZEROCONF_DISCOVERY,
+        properties={
+            **ZEROCONF_DISCOVERY.properties,
+            "serialno": "84fce612f5b9",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "device_mismatch"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_v1_skips_legacy_firmware_gate(
+    hass: HomeAssistant, mock_v1_airgradient_client: AsyncMock
+) -> None:
+    """Test manual V1 setup accepts a Go firmware version below 3.1.1."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "10.0.0.131"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_legacy_firmware_gate(
+    hass: HomeAssistant, mock_airgradient_client: AsyncMock
+) -> None:
+    """Test manual legacy setup enforces the minimum firmware version."""
+    mock_airgradient_client.get_current_measures.return_value.firmware_version = "3.0.8"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "10.0.0.131"}
+    )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_version"
 

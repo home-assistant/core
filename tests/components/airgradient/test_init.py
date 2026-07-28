@@ -21,13 +21,13 @@ async def test_device_info(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     airgradient_devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    airgradient_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test device registry integration."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, airgradient_config_entry)
     device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+        identifiers={(DOMAIN, airgradient_config_entry.unique_id)}
     )
     assert device_entry is not None
     assert device_entry == snapshot
@@ -69,3 +69,39 @@ async def test_setup_retry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_retry_on_serial_mismatch(
+    hass: HomeAssistant,
+    mock_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup retries when the configured host serves another device."""
+    mock_airgradient_client.get_current_measures.return_value.serial_number = (
+        "84fce612f5b9"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_serial_mismatch_marks_update_failed(
+    hass: HomeAssistant,
+    mock_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a host serving another device fails the coordinator update."""
+    await setup_integration(hass, mock_config_entry)
+    config_calls = mock_airgradient_client.get_config.call_count
+    mock_airgradient_client.get_current_measures.return_value.serial_number = (
+        "84fce612f5b9"
+    )
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.runtime_data.last_update_success is False
+    assert mock_airgradient_client.get_config.call_count == config_calls

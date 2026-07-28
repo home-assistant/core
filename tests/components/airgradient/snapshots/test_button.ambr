@@ -132,7 +132,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2_calibration',
-    'unique_id': '84fce612f5b8-co2_calibration',
+    'unique_id': '84fce60bec38-co2_calibration',
     'unit_of_measurement': None,
   })
 # ---

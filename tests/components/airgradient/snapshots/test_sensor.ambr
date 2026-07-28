@@ -1195,7 +1195,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2_automatic_baseline_calibration_days',
-    'unique_id': '84fce612f5b8-co2_automatic_baseline_calibration_days',
+    'unique_id': '84fce60bec38-co2_automatic_baseline_calibration_days',
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
@@ -1249,7 +1249,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nitrogen_index',
-    'unique_id': '84fce612f5b8-nitrogen_index',
+    'unique_id': '84fce60bec38-nitrogen_index',
     'unit_of_measurement': None,
   })
 # ---
@@ -1303,7 +1303,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nox_learning_offset',
-    'unique_id': '84fce612f5b8-nox_learning_offset',
+    'unique_id': '84fce60bec38-nox_learning_offset',
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
@@ -1357,7 +1357,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'raw_nitrogen',
-    'unique_id': '84fce612f5b8-nox_raw',
+    'unique_id': '84fce60bec38-nox_raw',
     'unit_of_measurement': 'ticks',
   })
 # ---
@@ -1411,7 +1411,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'raw_total_volatile_organic_component',
-    'unique_id': '84fce612f5b8-tvoc_raw',
+    'unique_id': '84fce60bec38-tvoc_raw',
     'unit_of_measurement': 'ticks',
   })
 # ---
@@ -1465,7 +1465,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '84fce612f5b8-signal_strength',
+    'unique_id': '84fce60bec38-signal_strength',
     'unit_of_measurement': 'dBm',
   })
 # ---
@@ -1520,7 +1520,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_volatile_organic_component_index',
-    'unique_id': '84fce612f5b8-tvoc',
+    'unique_id': '84fce60bec38-tvoc',
     'unit_of_measurement': None,
   })
 # ---
@@ -1574,7 +1574,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tvoc_learning_offset',
-    'unique_id': '84fce612f5b8-tvoc_learning_offset',
+    'unique_id': '84fce60bec38-tvoc_learning_offset',
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---

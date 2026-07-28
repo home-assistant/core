@@ -39,6 +39,7 @@ def mock_airgradient_client() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.host = "10.0.0.131"
+        client.api_version = ApiVersion.LEGACY
         client.get_current_measures.return_value = load_measures_fixture(
             "current_measures_indoor.json"
         )
@@ -49,7 +50,8 @@ def mock_airgradient_client() -> Generator[AsyncMock]:
 
 @pytest.fixture(params=["indoor", "outdoor"])
 def airgradient_devices(
-    mock_airgradient_client: AsyncMock, request: pytest.FixtureRequest
+    mock_airgradient_client: AsyncMock,
+    request: pytest.FixtureRequest,
 ) -> Generator[AsyncMock]:
     """Return a list of AirGradient devices."""
     mock_airgradient_client.get_current_measures.return_value = load_measures_fixture(
@@ -103,4 +105,15 @@ def mock_config_entry() -> MockConfigEntry:
         title="Airgradient",
         data={CONF_HOST: "10.0.0.131"},
         unique_id="84fce612f5b8",
+    )
+
+
+@pytest.fixture
+def airgradient_config_entry(airgradient_devices: AsyncMock) -> MockConfigEntry:
+    """Return a config entry for the parametrized AirGradient device."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Airgradient",
+        data={CONF_HOST: "10.0.0.131"},
+        unique_id=airgradient_devices.get_current_measures.return_value.serial_number,
     )

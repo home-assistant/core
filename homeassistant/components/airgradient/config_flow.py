@@ -7,6 +7,7 @@ from airgradient import (
     AirGradientClient,
     AirGradientError,
     AirGradientParseError,
+    ApiVersion,
     ConfigurationControl,
 )
 from awesomeversion import AwesomeVersion
@@ -39,26 +40,58 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
         """Set configuration source to local if it hasn't been set yet."""
         assert self.client
         config = await self.client.get_config()
-        if config.configuration_control is ConfigurationControl.NOT_INITIALIZED:
+        if config.configuration_control is ConfigurationControl.BOTH:
             await self.client.set_configuration_control(ConfigurationControl.LOCAL)
+
+    def _has_supported_firmware(self, firmware_version: str) -> bool:
+        """Return whether the detected device has supported firmware."""
+        assert self.client
+        return (
+            self.client.api_version is not ApiVersion.LEGACY
+            or AwesomeVersion(firmware_version) >= MIN_VERSION
+        )
 
     @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
+        properties = discovery_info.properties
         self.data[CONF_HOST] = host = discovery_info.host
-        self.data[CONF_MODEL] = discovery_info.properties["model"]
+        model = properties.get("model")
+        serial_number = properties.get("serialno")
+        firmware_version = properties.get("fw_ver")
 
-        await self.async_set_unique_id(discovery_info.properties["serialno"])
+        if not isinstance(model, str) or not isinstance(serial_number, str):
+            return self.async_abort(reason="cannot_connect")
+
+        self.data[CONF_MODEL] = model
+        await self.async_set_unique_id(serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
-        if AwesomeVersion(discovery_info.properties["fw_ver"]) < MIN_VERSION:
-            return self.async_abort(reason="invalid_version")
-
         session = async_get_clientsession(self.hass)
-        self.client = AirGradientClient(host, session=session)
-        await self.client.get_current_measures()
+        if properties.get("api") == "1":
+            self.client = AirGradientClient(
+                host, session=session, api_version=ApiVersion.V1
+            )
+        else:
+            self.client = AirGradientClient(host, session=session)
+        try:
+            measures = await self.client.get_current_measures()
+        except AirGradientParseError:
+            return self.async_abort(reason="invalid_version")
+        except AirGradientError:
+            return self.async_abort(reason="cannot_connect")
+
+        if measures.serial_number != serial_number:
+            return self.async_abort(reason="device_mismatch")
+
+        if not self._has_supported_firmware(
+            firmware_version
+            if isinstance(firmware_version, str)
+            else measures.firmware_version
+        ):
+            return self.async_abort(reason="invalid_version")
 
         self.context["title_placeholders"] = {
             "model": self.data[CONF_MODEL],
@@ -100,6 +133,8 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
             except AirGradientError:
                 errors["base"] = "cannot_connect"
             else:
+                if not self._has_supported_firmware(current_measures.firmware_version):
+                    return self.async_abort(reason="invalid_version")
                 await self.async_set_unique_id(
                     current_measures.serial_number, raise_on_progress=False
                 )
