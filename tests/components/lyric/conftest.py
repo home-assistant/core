@@ -61,23 +61,12 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_lyric_api() -> Generator[MagicMock]:
     """Mock the aiolyric client, backed by a real Location and directly-set priority data.
 
-    Patches Lyric where the integration imports it (autospec, like the
-    mealie client mock). Location/device data comes from a real
-    LyricLocation parsed from a live-shaped fixture, so field-name
-    parsing is still exercised for real.
-
-    rooms_dict/priorities_dict are set directly with lightweight stand-ins
-    rather than real LyricPriority objects: LyricPriority.status/
-    current_priority currently read the wrong JSON keys (tracked upstream
-    in aiolyric#165), and that parsing bug belongs to aiolyric's own test
-    suite, not this integration's. This fixture tests that Home
-    Assistant's own gating/display logic is correct once priority data
-    exists, independent of whether the currently-pinned aiolyric can
-    actually produce it.
-
-    The fixture's second device has room data but no priority entry, so
-    both branches of LyricPriorityStatusSensor.native_value get exercised
-    through real entity state rather than a direct unit test.
+    rooms_dict/priorities_dict are set directly rather than parsed from
+    real LyricPriority objects: LyricPriority.status/current_priority
+    currently read the wrong JSON keys (aiolyric#165), and that parsing
+    bug is aiolyric's own test suite's concern, not this integration's.
+    The second device has room data but no priority entry, exercising
+    both branches of LyricPriorityStatusSensor.native_value.
     """
     with patch("homeassistant.components.lyric.Lyric", autospec=True) as mock_lyric_cls:
         lyric = mock_lyric_cls.return_value
