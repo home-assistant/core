@@ -434,7 +434,7 @@ async def test_matter_exception_on_door_lock_write_attribute(
 
 @pytest.mark.parametrize("node_fixture", ["mock_valve"])
 async def test_valve_default_open_duration_nullable(
-    hass: HomeAssistant,
+   hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
@@ -451,6 +451,27 @@ async def test_valve_default_open_duration_nullable(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "30"
+
+    # Setting a concrete (non-zero) value writes it as-is to the device.
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": entity_id,
+            "value": 45,
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.ValveConfigurationAndControl.Attributes.DefaultOpenDuration,
+        ),
+        value=45,
+    )
+    matter_client.write_attribute.reset_mock()
 
     # Setting the value back to 0 in HA clears the default duration
     # (null) on the device.
