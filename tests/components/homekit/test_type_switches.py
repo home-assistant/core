@@ -23,6 +23,7 @@ from homeassistant.components.homekit.const import (
     TYPE_VALVE,
 )
 from homeassistant.components.homekit.type_switches import (
+    IRRIGATION_DEFAULT_DURATION,
     IrrigationSystem,
     LawnMower,
     Outlet,
@@ -58,6 +59,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_TYPE,
+    EVENT_STATE_CHANGED,
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     SERVICE_SELECT_OPTION,
@@ -1489,8 +1491,6 @@ async def test_irrigation_system_linked_zone_fault_on_no_old_state(
     hass: HomeAssistant, hk_driver
 ) -> None:
     """Test linked zone fault when state event has no old_state or new_state."""
-    from homeassistant.const import EVENT_STATE_CHANGED
-
     hass.states.async_set("valve.front_lawn", STATE_CLOSED)
     hass.states.async_set("valve.back_lawn", STATE_CLOSED)
     await hass.async_block_till_done()
@@ -1552,8 +1552,6 @@ async def test_irrigation_system_ignores_invalid_duration_attribute(
     hass: HomeAssistant, hk_driver
 ) -> None:
     """Test IrrigationSystem falls back to default when duration attribute is invalid."""
-    from homeassistant.components.homekit.type_switches import IRRIGATION_DEFAULT_DURATION
-
     hass.states.async_set(
         "valve.front_lawn",
         STATE_CLOSED,
