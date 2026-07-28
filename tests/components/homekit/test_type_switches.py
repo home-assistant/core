@@ -1392,3 +1392,31 @@ async def test_irrigation_system_applies_set_duration_for_auto_close(
     assert any(
         args.args[1] == SERVICE_CLOSE_VALVE for args in service_mock.await_args_list
     )
+
+
+async def test_irrigation_system_marks_missing_linked_zone_fault_on_startup(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test missing linked zone state is faulted during startup sync."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        15,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    back_chars = acc._valve_chars["valve.back_lawn"]
+    assert back_chars[CHAR_ACTIVE].value == 0
+    assert back_chars[CHAR_IN_USE].value == 0
+    assert back_chars[CHAR_STATUS_FAULT].value == 1
+    assert acc._char_system_status_fault.value == 1

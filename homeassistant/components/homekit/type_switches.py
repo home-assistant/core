@@ -715,10 +715,13 @@ class IrrigationSystem(HomeAccessory):
                 "update_timer": None,
             }
             serv_irrigation.add_linked_service(serv_valve)
+            serv_valve.add_linked_service(serv_service_label)
 
         for entity_id in self._valve_entity_ids:
             if valve_state := self.hass.states.get(entity_id):
                 self._sync_valve_chars(entity_id, valve_state)
+            else:
+                self._set_valve_unavailable(entity_id)
         self._update_system_state()
 
     @callback
@@ -740,6 +743,8 @@ class IrrigationSystem(HomeAccessory):
             for entity_id in linked_valve_ids:
                 if valve_state := self.hass.states.get(entity_id):
                     self._sync_valve_chars(entity_id, valve_state)
+                else:
+                    self._set_valve_unavailable(entity_id)
         self._update_system_state()
 
     @callback
@@ -751,8 +756,10 @@ class IrrigationSystem(HomeAccessory):
         if new_state is None:
             if old_state := event.data["old_state"]:
                 self._set_valve_unavailable(old_state.entity_id)
+                else:
+                    self._set_valve_unavailable(event.data["entity_id"])
                 self._update_system_state()
-            return
+                return
         self._sync_valve_chars(new_state.entity_id, new_state)
         self._update_system_state()
 
@@ -761,6 +768,8 @@ class IrrigationSystem(HomeAccessory):
     def async_update_state_callback(self, new_state: State | None) -> None:
         """Handle primary valve state changes, including unavailable/unknown."""
         if new_state is None:
+            self._set_valve_unavailable(self.entity_id)
+            self._update_system_state()
             return
         if new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             self._sync_valve_chars(self.entity_id, new_state)
@@ -908,6 +917,8 @@ class IrrigationSystem(HomeAccessory):
         self._clear_local_runtime(entity_id)
         if state := self.hass.states.get(entity_id):
             self._sync_valve_chars(entity_id, state)
+        else:
+            self._set_valve_unavailable(entity_id)
         self._update_system_state()
 
     def _set_valve_unavailable(self, entity_id: str) -> None:
