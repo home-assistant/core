@@ -1,8 +1,9 @@
 """Class to hold all switch accessories."""
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable, Final, NamedTuple, override
+from typing import Any, Final, NamedTuple, override
 
 from pyhap.characteristic import Characteristic
 from pyhap.const import (
