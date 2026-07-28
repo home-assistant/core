@@ -534,10 +534,14 @@ class OptionsFlowHandler(OptionsFlow):
             if len(grouped) >= 2:
                 primary = grouped[0]
                 linked = grouped[1:]
-                all_entity_config.setdefault(primary, {})[CONF_TYPE] = TYPE_IRRIGATION_SYSTEM
+                all_entity_config.setdefault(primary, {})[CONF_TYPE] = (
+                    TYPE_IRRIGATION_SYSTEM
+                )
                 all_entity_config[primary][CONF_LINKED_IRRIGATION_VALVES] = linked
                 for entity_id in linked:
-                    all_entity_config.setdefault(entity_id, {})[CONF_IRRIGATION_CONTROLLER] = primary
+                    all_entity_config.setdefault(entity_id, {})[
+                        CONF_IRRIGATION_CONTROLLER
+                    ] = primary
 
             if not hk_options.get(CONF_ENTITY_CONFIG):
                 hk_options.pop(CONF_ENTITY_CONFIG, None)
@@ -573,9 +577,7 @@ class OptionsFlowHandler(OptionsFlow):
                     ),
                 }
             ),
-            description_placeholders={
-                "valve_count": str(len(self.included_valves))
-            },
+            description_placeholders={"valve_count": str(len(self.included_valves))},
         )
 
     async def async_step_bridged_device_triggers(

@@ -82,7 +82,6 @@ from .const import (
     CHAR_SET_DURATION,
     CHAR_STATUS_FAULT,
     CHAR_VALVE_TYPE,
-    CONF_IRRIGATION_CONTROLLER,
     CONF_LINKED_IRRIGATION_VALVES,
     CONF_LINKED_VALVE_DURATION,
     CONF_LINKED_VALVE_END_TIME,
@@ -95,7 +94,6 @@ from .const import (
     SERV_SWITCH,
     SERV_VALVE,
     TYPE_FAUCET,
-    TYPE_IRRIGATION_SYSTEM,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_VALVE,
@@ -627,7 +625,9 @@ class IrrigationSystem(HomeAccessory):
             value=False,
             setter_callback=self._set_system_active,
         )
-        self._char_system_in_use = serv_irrigation.configure_char(CHAR_IN_USE, value=False)
+        self._char_system_in_use = serv_irrigation.configure_char(
+            CHAR_IN_USE, value=False
+        )
         self._char_program_mode = serv_irrigation.configure_char(
             CHAR_PROGRAM_MODE,
             value=HK_PROGRAM_MODE_NO_SCHEDULE_ACTIVE,
@@ -690,7 +690,9 @@ class IrrigationSystem(HomeAccessory):
                 CHAR_SET_DURATION,
                 value=initial_duration,
                 properties=IRRIGATION_DURATION_PROPERTIES,
-                setter_callback=lambda v, eid=entity_id: self._set_valve_duration(eid, v),
+                setter_callback=lambda v, eid=entity_id: self._set_valve_duration(
+                    eid, v
+                ),
             )
             char_remaining = serv_valve.configure_char(
                 CHAR_REMAINING_DURATION,
@@ -837,7 +839,7 @@ class IrrigationSystem(HomeAccessory):
             if (raw := state.attributes.get(key)) is not None:
                 try:
                     return max(int(float(raw)), 0)
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     continue
         return IRRIGATION_DEFAULT_DURATION
 
@@ -849,7 +851,7 @@ class IrrigationSystem(HomeAccessory):
             if (raw := state.attributes.get(key)) is not None:
                 try:
                     return max(int(float(raw)), 0)
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     continue
         if (end_time_raw := state.attributes.get("end_time")) is not None:
             if (end_time := dt_util.parse_datetime(str(end_time_raw))) is not None:

@@ -15,8 +15,8 @@ from homeassistant.components.homekit.const import (
     CHAR_NAME,
     CHAR_REMAINING_DURATION,
     SERV_OUTLET,
-    TYPE_IRRIGATION_SYSTEM,
     TYPE_FAUCET,
+    TYPE_IRRIGATION_SYSTEM,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_VALVE,
@@ -1222,7 +1222,9 @@ async def test_irrigation_system_resyncs_linked_zone_on_service_failure(
     acc.run()
     await hass.async_block_till_done()
 
-    with patch.object(acc, "async_call_service_and_wait", AsyncMock(return_value=False)):
+    with patch.object(
+        acc, "async_call_service_and_wait", AsyncMock(return_value=False)
+    ):
         acc._set_valve_active("valve.back_lawn", 1)
         await hass.async_block_till_done()
 
