@@ -224,14 +224,23 @@
     }
   },
   "exceptions": {
+    "busy_error": {
+      "message": "The Airgradient device is busy. Retry the operation later: {error}"
+    },
     "communication_error": {
       "message": "An error occurred while communicating with the Airgradient device: {error}"
+    },
+    "forbidden_error": {
+      "message": "The Airgradient device currently rejects local changes: {error}"
     },
     "identity_error": {
       "message": "Expected Airgradient device serial number {expected_serial_number}, but the device at this address has serial number {serial_number}."
     },
     "unknown_error": {
       "message": "An unknown error occurred while communicating with the Airgradient device: {error}"
+    },
+    "unsupported_error": {
+      "message": "The Airgradient device does not support this operation: {error}"
     },
     "update_error": {
       "message": "An error occurred while communicating with the Airgradient device: {error}"

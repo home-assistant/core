@@ -4,7 +4,14 @@ from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from airgradient import AirGradientConnectionError, AirGradientError, ApiVersion
+from airgradient import (
+    AirGradientBusyError,
+    AirGradientConnectionError,
+    AirGradientError,
+    AirGradientForbiddenError,
+    AirGradientNotSupportedError,
+    ApiVersion,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -158,6 +165,18 @@ async def test_go_measurement_interval_select(
             "An unknown error occurred while communicating"
             " with the Airgradient device:"
             " Something else happened",
+        ),
+        (
+            AirGradientForbiddenError(status=403, message="forbidden"),
+            "The Airgradient device currently rejects local changes: forbidden",
+        ),
+        (
+            AirGradientBusyError(status=503, message="busy"),
+            "The Airgradient device is busy. Retry the operation later: busy",
+        ),
+        (
+            AirGradientNotSupportedError(status=404, message="unsupported"),
+            "The Airgradient device does not support this operation: unsupported",
         ),
     ],
 )
