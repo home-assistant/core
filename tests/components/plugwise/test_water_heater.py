@@ -99,7 +99,7 @@ async def test_adam_water_heater_setpoint_change(
     )
     assert mock_smile_adam_jip.set_dhw_mode.call_count == 1
     mock_smile_adam_jip.set_dhw_mode.assert_called_with(
-        "dhw_mode", "e4684553153b44afbef2200885f379dc", 2, "eco"
+        "dhw_mode", "e4684553153b44afbef2200885f379dc", "eco", 2
     )
 
 
@@ -138,7 +138,7 @@ async def test_anna_water_heater_mode_change(
     )
     assert mock_smile_anna.set_dhw_mode.call_count == 1
     mock_smile_anna.set_dhw_mode.assert_called_with(
-        "dhw_mode", "bfb5ee0a88e14e5f97bfa725a760cc49", 5, "off"
+        "dhw_mode", "bfb5ee0a88e14e5f97bfa725a760cc49", "off", 5
     )
 
     data = mock_smile_anna.async_update.return_value
@@ -159,5 +159,5 @@ async def test_anna_water_heater_mode_change(
         )
         assert mock_smile_anna.set_dhw_mode.call_count == 2
         mock_smile_anna.set_dhw_mode.assert_called_with(
-            "dhw_mode", "bfb5ee0a88e14e5f97bfa725a760cc49", 5, "boost"
+            "dhw_mode", "bfb5ee0a88e14e5f97bfa725a760cc49", "boost", 5,
         )
