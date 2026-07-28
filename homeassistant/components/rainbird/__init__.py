@@ -295,9 +295,7 @@ def _async_migrate_zone_entity_type(
     inactive_domain = (
         Platform.VALVE if zone_type == ZONE_TYPE_SWITCH else Platform.SWITCH
     )
-    active_domain = (
-        Platform.SWITCH if zone_type == ZONE_TYPE_SWITCH else Platform.VALVE
-    )
+    active_domain = Platform.SWITCH if zone_type == ZONE_TYPE_SWITCH else Platform.VALVE
     entity_reg = er.async_get(hass)
     all_entries = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
 
