@@ -1,5 +1,135 @@
 {
+  "common": {
+    "availability": "Availability Template",
+    "availability_description": "Defines a template to get the `available` state of the entity, see [Template integration documentation]({docs_url_availability}). If omitted will default to `available` if the last resource update was successful.",
+    "availability_section": "Availability Options",
+    "device_class": "Device Class",
+    "force_update": "Force Update",
+    "force_update_description": "If enabled, state changes will be reported even if the value is the same as the previous value.",
+    "icon": "Icon",
+    "icon_description": "Defines a template for the icon of the entity.",
+    "picture": "Picture",
+    "picture_description": "Defines a template for the picture of the entity.",
+    "value_template": "Template",
+    "value_template_description": "Defines a [template]({docs_url_template_data_processing}) to extract the value. `value` or `value_json` can be used."
+  },
+  "config": {
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "already_configured": "This resource is already configured as {entry_title}.",
+      "codec not found": "Encoding not supported",
+      "credentials_missing": "Username and password are both required",
+      "endpoint_error": "Error communicating with resource: {error_message}",
+      "expected a dictionary": "Expected a yaml dictionary",
+      "invalid url": "Invalid URL",
+      "template_err_1": "Invalid template {template_err_msg_1}",
+      "template_err_2": "Invalid template {template_err_msg_2}",
+      "template_err_3": "Invalid template {template_err_msg_3}",
+      "template_err_4": "Invalid template {template_err_msg_4}"
+    },
+    "initiate_flow": {
+      "user": "Add RESTful Resource"
+    },
+    "step": {
+      "create_entry": {
+        "data": {
+          "initial_subentry_type": "Select entity type to create"
+        }
+      },
+      "user": {
+        "data": {
+          "encoding": "Encoding",
+          "headers": "HTTP Headers",
+          "method": "HTTP Method",
+          "name": "[%key:common::config_flow::data::name%]",
+          "params": "Query Parameters",
+          "payload": "Request Payload",
+          "resource": "Resource",
+          "timeout": "Timeout (seconds)"
+        },
+        "data_description": {
+          "encoding": "The character encoding to use if none provided in the header of the response.",
+          "headers": "Rquest headers as a yaml dictionary (`key: value`) to be sent with the request, supports templates.",
+          "name": "The title of the resource entity.",
+          "params": "Query parameters as a yaml dictionary (`key: value`) to be sent with the request, supports templates.",
+          "payload": "The request body payload to send with the request, typically json, supports templates.",
+          "resource": "A resource or endpoint that contains the value, supports templates."
+        },
+        "description": "Configure a RESTful resource to be used in Home Assistant.",
+        "sections": {
+          "authentication": {
+            "data": {
+              "authentication": "Authentication",
+              "password": "[%key:common::config_flow::data::password%]",
+              "username": "[%key:common::config_flow::data::username%]"
+            },
+            "name": "Authentication Options"
+          },
+          "ssl_section": {
+            "data": {
+              "ssl_cipher_list": "SSL Cipher List",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "data_description": {
+              "ssl_cipher_list": "A list of SSL ciphers to accept from this endpoint."
+            },
+            "name": "SSL Options"
+          }
+        },
+        "title": "RESTful Resource"
+      }
+    }
+  },
+  "config_subentries": {
+    "binary_sensor": {
+      "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Binary Sensor",
+      "initiate_flow": {
+        "user": "Add Binary Sensor"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "availability": "[%key:component::rest::common::availability%]",
+            "device_class": "[%key:component::rest::common::device_class%]",
+            "force_update": "[%key:component::rest::common::force_update%]",
+            "icon": "[%key:component::rest::common::icon%]",
+            "name": "[%key:common::config_flow::data::name%]",
+            "picture": "[%key:component::rest::common::picture%]",
+            "value_template": "[%key:component::rest::common::value_template%]"
+          },
+          "data_description": {
+            "availability": "[%key:component::rest::common::availability_description%]",
+            "force_update": "[%key:component::rest::common::force_update_description%]",
+            "icon": "[%key:component::rest::common::icon_description%]",
+            "name": "Name of the RESTful binary sensor, supports templates.",
+            "picture": "[%key:component::rest::common::picture_description%]",
+            "value_template": "[%key:component::rest::common::value_template_description%]"
+          },
+          "sections": {
+            "availability": {
+              "data": {
+                "availability": "[%key:component::rest::common::availability%]"
+              },
+              "data_description": {
+                "availability": "[%key:component::rest::common::availability_description%]"
+              },
+              "name": "[%key:component::rest::common::availability_section%]"
+            }
+          },
+          "title": "RESTful Binary Sensor"
+        }
+      }
+    }
+  },
   "exceptions": {
+    "endpoint_error": {
+      "message": "Error communicating with resource: {error_message}"
+    },
     "error_communicating": {
       "message": "Error communicating with {resource}"
     },
@@ -8,6 +138,63 @@
     },
     "turn_on_failed": {
       "message": "Failed to turn on {resource}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Poll Interval"
+        },
+        "data_description": {
+          "scan_interval": "Minimun interval is {min_interval}s."
+        }
+      }
+    }
+  },
+  "selector": {
+    "authentication": {
+      "options": {
+        "basic": "Basic",
+        "digest": "Digest"
+      }
+    },
+    "binary_sensor_device_class": {
+      "options": {
+        "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",
+        "battery_charging": "[%key:component::binary_sensor::entity_component::battery_charging::name%]",
+        "carbon_monoxide": "[%key:component::binary_sensor::entity_component::carbon_monoxide::name%]",
+        "cold": "[%key:component::binary_sensor::entity_component::cold::name%]",
+        "connectivity": "[%key:component::binary_sensor::entity_component::connectivity::name%]",
+        "door": "[%key:component::binary_sensor::entity_component::door::name%]",
+        "garage_door": "[%key:component::binary_sensor::entity_component::garage_door::name%]",
+        "gas": "[%key:component::binary_sensor::entity_component::gas::name%]",
+        "heat": "[%key:component::binary_sensor::entity_component::heat::name%]",
+        "light": "[%key:component::binary_sensor::entity_component::light::name%]",
+        "lock": "[%key:component::binary_sensor::entity_component::lock::name%]",
+        "moisture": "[%key:component::binary_sensor::entity_component::moisture::name%]",
+        "motion": "[%key:component::binary_sensor::entity_component::motion::name%]",
+        "moving": "[%key:component::binary_sensor::entity_component::moving::name%]",
+        "occupancy": "[%key:component::binary_sensor::entity_component::occupancy::name%]",
+        "opening": "[%key:component::binary_sensor::entity_component::opening::name%]",
+        "plug": "[%key:component::binary_sensor::entity_component::plug::name%]",
+        "power": "[%key:component::binary_sensor::entity_component::power::name%]",
+        "presence": "[%key:component::binary_sensor::entity_component::presence::name%]",
+        "problem": "[%key:component::binary_sensor::entity_component::problem::name%]",
+        "running": "[%key:component::binary_sensor::entity_component::running::name%]",
+        "safety": "[%key:component::binary_sensor::entity_component::safety::name%]",
+        "smoke": "[%key:component::binary_sensor::entity_component::smoke::name%]",
+        "sound": "[%key:component::binary_sensor::entity_component::sound::name%]",
+        "tamper": "[%key:component::binary_sensor::entity_component::tamper::name%]",
+        "update": "[%key:component::binary_sensor::entity_component::update::name%]",
+        "vibration": "[%key:component::binary_sensor::entity_component::vibration::name%]",
+        "window": "[%key:component::binary_sensor::entity_component::window::name%]"
+      }
+    },
+    "entity_platforms": {
+      "options": {
+        "binary_sensor": "[%key:component::binary_sensor::title%]"
+      }
     }
   },
   "services": {

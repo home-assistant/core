@@ -21,11 +21,15 @@ from homeassistant.const import (
     CONF_RESOURCE_TEMPLATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
@@ -36,8 +40,12 @@ from homeassistant.helpers.trigger_template_entity import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import async_get_config_and_coordinator, create_rest_data_from_config
-from .const import DEFAULT_BINARY_SENSOR_NAME
+from . import (
+    RestConfigEntry,
+    async_get_config_and_coordinator,
+    create_rest_data_from_config,
+)
+from .const import DEFAULT_BINARY_SENSOR_NAME, DOMAIN
 from .data import RestData
 from .entity import RestEntity
 from .schema import BINARY_SENSOR_SCHEMA, RESOURCE_SCHEMA
@@ -89,15 +97,6 @@ async def async_setup_platform(
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 
-    name = conf.get(CONF_NAME) or Template(DEFAULT_BINARY_SENSOR_NAME, hass)
-
-    trigger_entity_config = {CONF_NAME: name}
-
-    for key in TRIGGER_ENTITY_OPTIONS:
-        if key not in conf:
-            continue
-        trigger_entity_config[key] = conf[key]
-
     async_add_entities(
         [
             RestBinarySensor(
@@ -105,10 +104,35 @@ async def async_setup_platform(
                 coordinator,
                 rest,
                 conf,
-                trigger_entity_config,
             )
         ],
     )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: RestConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Setup entities from Config Entry."""
+
+    for subentry_id, subentry in config_entry.subentries.items():
+        if subentry.subentry_type != Platform.BINARY_SENSOR:
+            continue
+
+        async_add_entities(
+            [
+                RestBinarySensor(
+                    hass,
+                    config_entry.runtime_data.coordinator,
+                    config_entry.runtime_data.rest,
+                    vol.Schema(BINARY_SENSOR_SCHEMA)(
+                        {**subentry.data, CONF_UNIQUE_ID: f"{DOMAIN}_{subentry_id}"}
+                    ),
+                )
+            ],
+            config_subentry_id=subentry_id,
+        )
 
 
 class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
@@ -120,9 +144,17 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
         coordinator: DataUpdateCoordinator[None] | None,
         rest: RestData,
         config: ConfigType,
-        trigger_entity_config: ConfigType,
     ) -> None:
         """Initialize a REST binary sensor."""
+        name = config.get(CONF_NAME, Template(DEFAULT_BINARY_SENSOR_NAME, hass))
+
+        trigger_entity_config = {CONF_NAME: name}
+
+        for key in TRIGGER_ENTITY_OPTIONS:
+            if key not in config:
+                continue
+            trigger_entity_config[key] = config[key]
+
         ManualTriggerEntity.__init__(self, hass, trigger_entity_config)
         RestEntity.__init__(
             self,
