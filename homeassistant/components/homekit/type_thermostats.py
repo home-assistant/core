@@ -189,7 +189,6 @@ class Thermostat(HomeKitClimateAccessory):
             self.chars.append(CHAR_TARGET_HUMIDITY)
 
         serv_thermostat = self.add_preload_service(SERV_THERMOSTAT, self.chars)
-        self.set_primary_service(serv_thermostat)
 
         # Current mode characteristics
         self.char_current_heat_cool = serv_thermostat.configure_char(
@@ -275,6 +274,10 @@ class Thermostat(HomeKitClimateAccessory):
             if attributes.get(ATTR_HVAC_ACTION) is not None:
                 self.fan_chars.append(CHAR_CURRENT_FAN_STATE)
             self._configure_fan_service(serv_thermostat)
+
+        # Every service exists now, so they all get an explicit primary
+        # flag; without one the Home app can pick its own tile service.
+        self.set_primary_service(serv_thermostat)
 
         self.async_update_state(state)
 
