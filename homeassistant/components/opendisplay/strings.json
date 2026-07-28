@@ -53,7 +53,15 @@
   "entity": {
     "event": {
       "button": {
-        "name": "Button {number}"
+        "name": "Button {number}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "button_down": "Button down",
+              "button_up": "Button up"
+            }
+          }
+        }
       }
     },
     "sensor": {
