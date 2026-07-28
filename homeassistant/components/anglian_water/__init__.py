@@ -7,6 +7,7 @@ from pyanglianwater.exceptions import (
     ConsentRequiredError,
     ExpiredAccessTokenError,
     InvalidGrantError,
+    MFARequiredError,
     SelfAssertedError,
     SmartMeterUnavailableError,
 )
@@ -53,7 +54,12 @@ async def async_setup_entry(
             translation_domain=DOMAIN,
             translation_key="consent_required",
         ) from err
-    except (ExpiredAccessTokenError, InvalidGrantError, SelfAssertedError) as err:
+    except (
+        ExpiredAccessTokenError,
+        InvalidGrantError,
+        MFARequiredError,
+        SelfAssertedError,
+    ) as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="auth_expired",

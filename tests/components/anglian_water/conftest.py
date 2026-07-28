@@ -66,6 +66,7 @@ def mock_anglian_water_authenticator() -> Generator[MagicMock]:
         mock_instance.refresh_token = ACCESS_TOKEN
         mock_instance.send_login_request.return_value = None
         mock_instance.send_refresh_request.return_value = None
+        mock_instance.send_mfa_request.return_value = None
         yield mock_instance
 
 
