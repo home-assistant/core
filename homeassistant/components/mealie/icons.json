@@ -47,6 +47,9 @@
     },
     "set_random_mealplan": {
       "service": "mdi:dice-multiple"
+    },
+    "update_mealplan": {
+      "service": "mdi:food"
     }
   }
 }
