@@ -677,6 +677,18 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "papouch",
+        "macaddress": "0080A3*",
+    },
+    {
+        "domain": "papouch",
+        "macaddress": "00204A*",
+    },
+    {
+        "domain": "papouch",
+        "macaddress": "049162*",
+    },
+    {
         "domain": "playstation_network",
         "macaddress": "AC8995*",
     },

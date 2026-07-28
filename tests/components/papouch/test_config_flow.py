@@ -16,6 +16,7 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture
 def mock_setup_entry():
+    """Fixture to mock the integration entry setup."""
     with patch(
         "homeassistant.components.papouch.async_setup_entry", return_value=True
     ) as mock_setup:
@@ -24,6 +25,7 @@ def mock_setup_entry():
 
 @pytest.fixture
 def mock_discover_none():
+    """Fixture to mock device discovery returning no devices."""
     with patch(
         "homeassistant.components.papouch.config_flow.async_discover_papouch_devices",
         return_value={},
@@ -33,6 +35,7 @@ def mock_discover_none():
 
 @pytest.fixture
 def mock_discover_found():
+    """Fixture to mock device discovery returning a discovered device."""
     with patch(
         "homeassistant.components.papouch.config_flow.async_discover_papouch_devices",
         return_value={"192.168.1.50": ("Lab", "Quido")},
@@ -42,6 +45,7 @@ def mock_discover_found():
 
 @pytest.fixture
 def mock_api_client():
+    """Fixture to mock API client fetch info and device mode methods."""
     with (
         patch(
             "homeassistant.components.papouch.config_flow.PapouchApiClient.fetch_info"
@@ -56,9 +60,10 @@ def mock_api_client():
 
 @pytest.fixture
 def mock_create_device():
+    """Fixture to mock device creation and return a mock device instance."""
     mock_device = MagicMock()
-    mock_device.get_name.return_value = "Quido"
-    mock_device.get_location.return_value = "Lab"
+    mock_device.name = "Quido"
+    mock_device.location = "Lab"
     mock_device.switch_to_web_mode = AsyncMock()
 
     with patch(
@@ -70,6 +75,7 @@ def mock_create_device():
 
 @pytest.fixture
 def dhcp_info():
+    """Fixture providing sample DHCP service information for testing."""
     return DhcpServiceInfo(
         ip="192.168.1.100", macaddress="aabbccddeeff", hostname="papouch_device"
     )
@@ -88,7 +94,7 @@ async def test_manual_success(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "scan_interval": 60},
+        {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
@@ -110,7 +116,7 @@ async def test_manual_connection_error(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "scan_interval": 60},
+        {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
@@ -133,7 +139,7 @@ async def test_dhcp_discovery_success(
 async def test_dhcp_already_configured(hass: HomeAssistant, dhcp_info) -> None:
     """Test DHCP discovery aborts if the IP is already configured."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data={"ip_address": "192.168.1.100", "scan_interval": 60}
+        domain=DOMAIN, data={"ip_address": "192.168.1.100", "refresh_rate": 60}
     )
     entry.add_to_hass(hass)
 
@@ -162,7 +168,7 @@ async def test_web_mode_switch(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "scan_interval": 60},
+        {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.MENU
@@ -185,7 +191,7 @@ async def test_invalid_ip_format(hass: HomeAssistant, mock_discover_none) -> Non
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "999.invalid.ip", "scan_interval": 60},
+        {"ip_address": "999.invalid.ip", "refresh_rate": 60},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
@@ -220,7 +226,7 @@ async def test_discovery_confirm_success(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"scan_interval": 60},
+        {"refresh_rate": 60},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
@@ -240,7 +246,7 @@ async def test_user_udp_discovery_and_manual_choice(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "manual", "scan_interval": 120},
+        {"ip_address": "manual", "refresh_rate": 120},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
@@ -260,7 +266,7 @@ async def test_mode_missing_abort(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "scan_interval": 60},
+        {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.ABORT
@@ -280,7 +286,7 @@ async def test_web_mode_abort_switch(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "scan_interval": 60},
+        {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
     result_cancel = await hass.config_entries.flow.async_configure(
@@ -304,7 +310,7 @@ async def test_web_mode_unsupported_device(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "scan_interval": 60},
+        {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
     mock_create_device.return_value = None
@@ -329,7 +335,7 @@ async def test_web_mode_client_error(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "scan_interval": 60},
+        {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
     mock_create_device.side_effect = aiohttp.ClientError
@@ -368,7 +374,7 @@ async def test_discovery_confirm_mode_missing(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"scan_interval": 60},
+        {"refresh_rate": 60},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.ABORT
@@ -388,7 +394,7 @@ async def test_discovery_confirm_web_mode_redirect(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"scan_interval": 60},
+        {"refresh_rate": 60},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.MENU
@@ -417,14 +423,14 @@ async def test_manual_fallback_defaults_from_saved_input(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "manual", "scan_interval": 123},
+        {"ip_address": "manual", "refresh_rate": 123},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["step_id"] == "manual"
 
     result3 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"ip_address": "999.invalid.ip", "scan_interval": 123}
+        result["flow_id"], {"ip_address": "999.invalid.ip", "refresh_rate": 123}
     )
 
     assert result3["type"] == data_entry_flow.FlowResultType.FORM
@@ -455,7 +461,7 @@ async def test_user_step_connection_success(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "scan_interval": 60},
+        {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
@@ -475,7 +481,7 @@ async def test_user_step_mode_missing(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "scan_interval": 60},
+        {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.ABORT
@@ -495,7 +501,7 @@ async def test_user_step_web_mode_redirect(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "scan_interval": 60},
+        {"ip_address": "192.168.1.50", "refresh_rate": 60},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.MENU

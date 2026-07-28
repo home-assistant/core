@@ -1,50 +1,50 @@
 {
-    "config": {
-        "flow_title": "{name}",
-        "step": {
-            "user": {
-                "title": "Papouch",
-                "data": {
-                    "ip_address": "IPv4 address",
-                    "scan_interval": "Scan interval (seconds)"
-                }
-            },
-            "manual": {
-                "title": "Manual Setup",
-                "data": {
-                    "ip_address": "IPv4 address",
-                    "scan_interval": "Scan interval (seconds)"
-                }
-            },
-            "web_mode": {
-                "title": "Enable Web Mode",
-                "description": "The device is currently not in web mode. Do you want to switch it to web mode?",
-                "menu_options": {
-                    "execute_switch": "Change mode to WEB",
-                    "abort_switch": "Cancel"
-                }
-            },
-            "discovery_confirm": {
-                "title": "Add {name}",
-                "description": "Do you want to add {name} to Home Assistant?",
-                "data": {
-                    "scan_interval": "Scan Interval (seconds)"
-                }
-            }
+  "config": {
+    "abort": {
+      "cannot_connect": "Home Assistant can't connect to the device.",
+      "mode_is_missing": "The device didn't provide its current mode",
+      "unsupported_device": "This device is unsupported.",
+      "web_mode_required": "The integration requires the device to be in web mode to function."
+    },
+    "create_entry": {
+      "default": "The Papouch device has been successfully configured.",
+      "web_mode_success": "The device was successfully switched to WEB mode. Please wait 10 seconds while the device restarts."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the device.",
+      "invalid_ip_format": "Invalid IP address format."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "discovery_confirm": {
+        "data": {
+          "refresh_rate": "Scan Interval (seconds)"
         },
-        "abort": {
-            "mode_is_missing": "The device didn't provide its current mode",
-            "web_mode_required": "The integration requires the device to be in web mode to function.",
-            "cannot_connect": "Home Assistant can't connect to the device.",
-            "unsupported_device": "This device is unsupported."
+        "description": "Do you want to add {name} to Home Assistant?",
+        "title": "Add {name}"
+      },
+      "manual": {
+        "data": {
+          "ip_address": "IPv4 address",
+          "refresh_rate": "Scan interval (seconds)"
         },
-        "create_entry": {
-            "default": "The Papouch device has been successfully configured.",
-            "web_mode_success": "The device was successfully switched to WEB mode. Please wait 10 seconds while the device restarts."
+        "title": "Manual Setup"
+      },
+      "user": {
+        "data": {
+          "ip_address": "IPv4 address",
+          "refresh_rate": "Scan interval (seconds)"
         },
-        "error": {
-            "cannot_connect": "Failed to connect to the device.",
-            "invalid_ip_format": "Invalid IP address format."
-        }
+        "title": "Add a new device"
+      },
+      "web_mode": {
+        "description": "The device is currently not in web mode. Do you want to switch it to web mode?",
+        "menu_options": {
+          "abort_switch": "Cancel",
+          "execute_switch": "Change mode to WEB"
+        },
+        "title": "Enable Web Mode"
+      }
     }
+  }
 }

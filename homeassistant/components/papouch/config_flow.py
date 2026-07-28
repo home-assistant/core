@@ -4,6 +4,7 @@ import asyncio
 import ipaddress
 import logging
 import re
+from typing import override
 
 import aiohttp
 from aiopapouch import PapouchApiClient, create_device
@@ -70,6 +71,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors, None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -112,7 +114,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(self, user_input=None) -> ConfigFlowResult:
         """Step after adding the device via DHCP."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             user_input["ip_address"] = self.discovered_ip
@@ -128,6 +130,8 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
+        assert self.discovered_name is not None
+
         return self.async_show_form(
             step_id="discovery_confirm",
             data_schema=schema,
@@ -135,9 +139,10 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"name": self.discovered_name},
         )
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step featuring active UDP discovery."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             if user_input["ip_address"] == "manual":
@@ -168,7 +173,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         options["manual"] = "Enter IP manually"
 
         default_interval = (
-            user_input.get("scan_interval", DEFAULT_SCAN_INTERVAL)
+            user_input.get("refresh_rate", DEFAULT_SCAN_INTERVAL)
             if user_input
             else DEFAULT_SCAN_INTERVAL
         )
@@ -186,7 +191,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual(self, user_input=None) -> ConfigFlowResult:
         """Handle manual IP entry when discovery fails or is bypassed."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             errors, result = await self._async_process_user_input(user_input)
@@ -196,10 +201,10 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         default_ip = self.discovered_ip or ""
         default_interval = DEFAULT_SCAN_INTERVAL
 
-        if self._saved_input and "scan_interval" in self._saved_input:
-            default_interval = self._saved_input["scan_interval"]
-        if user_input and "scan_interval" in user_input:
-            default_interval = user_input["scan_interval"]
+        if self._saved_input and "refresh_rate" in self._saved_input:
+            default_interval = self._saved_input["refresh_rate"]
+        if user_input and "refresh_rate" in user_input:
+            default_interval = user_input["refresh_rate"]
         if user_input and "ip_address" in user_input:
             default_ip = user_input["ip_address"]
 
@@ -222,6 +227,9 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_execute_switch(self, user_input=None) -> ConfigFlowResult:
         """Action when user clicks the switch button."""
+
+        assert self._saved_input is not None
+
         session = async_get_clientsession(self.hass)
         client = PapouchApiClient(self._saved_input["ip_address"], session)
 
