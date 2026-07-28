@@ -64,7 +64,7 @@
         "name": "Mode",
         "state": {
           "0": "[%key:common::state::home%]",
-          "1": "Away",
+          "1": "[%key:common::state::not_home%]",
           "2": "Disarm"
         }
       },

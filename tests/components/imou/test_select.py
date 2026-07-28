@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .const import DEFAULT_SELECTS, UNKNOWN_SELECT_KEY, create_online_device
+from .const import UNKNOWN_SELECT_KEY, create_online_device, select_mock_devices
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -40,18 +40,8 @@ async def _apply_select_option(
     device.selects[select_type][PARAM_CURRENT_OPTION] = option
 
 
-SELECT_MOCK_DEVICES = [
-    create_online_device(
-        "d1",
-        "Device 1",
-        button_keys=(),
-        selects=DEFAULT_SELECTS,
-    ),
-]
-
-
 @pytest.mark.parametrize("platforms", [[Platform.SELECT]], indirect=True)
-@pytest.mark.parametrize("imou_mock_devices", [SELECT_MOCK_DEVICES], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [select_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_select_entities_snapshot(
     hass: HomeAssistant,
@@ -101,7 +91,7 @@ async def test_setup_ignores_unknown_select_types(
     assert select_entries[0].translation_key == PARAM_NIGHT_VISION_MODE
 
 
-@pytest.mark.parametrize("imou_mock_devices", [SELECT_MOCK_DEVICES], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [select_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_select_option_via_domain_service(
     hass: HomeAssistant,
@@ -134,7 +124,7 @@ async def test_select_option_via_domain_service(
     assert hass.states.get(mode_entry.entity_id).state == "1"
 
 
-@pytest.mark.parametrize("imou_mock_devices", [SELECT_MOCK_DEVICES], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [select_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_select_option_propagates_api_error(
     hass: HomeAssistant,
@@ -221,7 +211,7 @@ async def test_select_option_unavailable_offline_device(
     init_integration.async_select_option.assert_not_called()
 
 
-@pytest.mark.parametrize("imou_mock_devices", [SELECT_MOCK_DEVICES], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [select_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_entities_removed_when_device_leaves_account(
     hass: HomeAssistant,

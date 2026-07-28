@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_select_entities_snapshot[imou_mock_devices0-platforms0][select.device_1_mode-entry]
+# name: test_select_entities_snapshot[select_mock_devices-platforms0][select.device_1_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -42,7 +42,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_entities_snapshot[imou_mock_devices0-platforms0][select.device_1_mode-state]
+# name: test_select_entities_snapshot[select_mock_devices-platforms0][select.device_1_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Mode',
@@ -60,7 +60,7 @@
     'state': '0',
   })
 # ---
-# name: test_select_entities_snapshot[imou_mock_devices0-platforms0][select.device_1_night_vision_mode-entry]
+# name: test_select_entities_snapshot[select_mock_devices-platforms0][select.device_1_night_vision_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -104,7 +104,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_entities_snapshot[imou_mock_devices0-platforms0][select.device_1_night_vision_mode-state]
+# name: test_select_entities_snapshot[select_mock_devices-platforms0][select.device_1_night_vision_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Night vision mode',
@@ -123,7 +123,7 @@
     'state': '0',
   })
 # ---
-# name: test_select_entities_snapshot[imou_mock_devices0-platforms0][select.device_1_volume-entry]
+# name: test_select_entities_snapshot[select_mock_devices-platforms0][select.device_1_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -167,7 +167,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_entities_snapshot[imou_mock_devices0-platforms0][select.device_1_volume-state]
+# name: test_select_entities_snapshot[select_mock_devices-platforms0][select.device_1_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Volume',

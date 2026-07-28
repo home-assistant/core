@@ -185,3 +185,15 @@ def sensor_mock_devices() -> list[ImouHaDevice]:
             sensors=DEFAULT_SENSORS,
         ),
     ]
+
+
+def select_mock_devices() -> list[ImouHaDevice]:
+    """Return a fresh select-focused device list for tests."""
+    return [
+        create_online_device(
+            "d1",
+            "Device 1",
+            button_keys=(),
+            selects=DEFAULT_SELECTS,
+        ),
+    ]
