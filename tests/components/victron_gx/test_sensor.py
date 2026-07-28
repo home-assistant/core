@@ -1,5 +1,6 @@
 """Tests for Victron GX MQTT sensors."""
 
+import pytest
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
@@ -121,6 +122,7 @@ async def test_victron_enum_sensor(
     assert device.via_device_id is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_victron_main_topic_sensor(
     hass: HomeAssistant,
     init_integration: tuple[VictronVenusHub, MockConfigEntry],

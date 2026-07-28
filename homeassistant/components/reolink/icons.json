@@ -596,6 +596,12 @@
           "on": "mdi:eye-off"
         }
       },
+      "privacy_mask_lens": {
+        "default": "mdi:eye",
+        "state": {
+          "on": "mdi:eye-off"
+        }
+      },
       "privacy_mode": {
         "default": "mdi:eye",
         "state": {

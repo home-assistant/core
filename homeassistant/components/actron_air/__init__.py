@@ -7,7 +7,7 @@ from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import (
     ActronAirConfigEntry,
     ActronAirRuntimeData,
@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) ->
     system_coordinators: dict[str, ActronAirSystemCoordinator] = {}
     for system in systems:
         coordinator = ActronAirSystemCoordinator(hass, entry, api, system)
-        _LOGGER.debug("Setting up coordinator for system: %s", system.serial)
+        LOGGER.debug("Setting up coordinator for system: %s", system.serial)
         await coordinator.async_config_entry_first_refresh()
         system_coordinators[system.serial] = coordinator
 

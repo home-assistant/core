@@ -18,24 +18,24 @@ _LOGGER = logging.getLogger(__name__)
 AVG_KM_PER_DEGREE = 111.0
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 MAX_RADIUS_IN_KM = 50
-NUMBER_OF_DEMO_DEVICES = 5
+NUMBER_OF_DEMO_DEVICES = 2
 
-EVENT_NAMES = [
-    "Bushfire",
-    "Hazard Reduction",
-    "Grass Fire",
-    "Burn off",
-    "Structure Fire",
-    "Fire Alarm",
-    "Thunderstorm",
-    "Tornado",
-    "Cyclone",
-    "Waterspout",
-    "Dust Storm",
-    "Blizzard",
-    "Ice Storm",
-    "Earthquake",
-    "Tsunami",
+EVENTS = [
+    {"name": "Bushfire", "icon": "mdi:fire"},
+    {"name": "Hazard Reduction", "icon": "mdi:alarm-light"},
+    {"name": "Grass Fire", "icon": "mdi:fire"},
+    {"name": "Burn off", "icon": "mdi:fire"},
+    {"name": "Structure Fire", "icon": "mdi:wall-fire"},
+    {"name": "Fire Alarm", "icon": "mdi:fire-truck"},
+    {"name": "Thunderstorm", "icon": "mdi:weather-lightning-rainy"},
+    {"name": "Tornado", "icon": "mdi:weather-tornado"},
+    {"name": "Cyclone", "icon": "mdi:weather-tornado"},
+    {"name": "Waterspout", "icon": "mdi:weather-tornado"},
+    {"name": "Dust Storm", "icon": "mdi:weather-dust"},
+    {"name": "Blizzard", "icon": "mdi:weather-snowy-heavy"},
+    {"name": "Ice Storm", "icon": "mdi:snowflake-alert"},
+    {"name": "Earthquake", "icon": "mdi:earth"},
+    {"name": "Tsunami", "icon": "mdi:waves-arrow-right"},
 ]
 
 SOURCE = "demo"
@@ -78,9 +78,14 @@ class DemoManager:
             radians(home_latitude)
         )
 
-        event_name = random.choice(EVENT_NAMES)
+        event = random.choice(EVENTS)
         return DemoGeolocationEvent(
-            event_name, radius_in_km, latitude, longitude, UnitOfLength.KILOMETERS
+            event["name"],
+            event["icon"],
+            radius_in_km,
+            latitude,
+            longitude,
+            UnitOfLength.KILOMETERS,
         )
 
     def _init_regular_updates(self) -> None:
@@ -120,6 +125,7 @@ class DemoGeolocationEvent(GeolocationEvent):
     def __init__(
         self,
         name: str,
+        icon: str,
         distance: float,
         latitude: float,
         longitude: float,
@@ -131,6 +137,7 @@ class DemoGeolocationEvent(GeolocationEvent):
         self._latitude = latitude
         self._longitude = longitude
         self._unit_of_measurement = unit_of_measurement
+        self._attr_icon = icon
 
     @property
     @override
