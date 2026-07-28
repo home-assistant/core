@@ -4,10 +4,8 @@ from functools import partial
 
 import voluptuous as vol
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
-from homeassistant.components.valve import ValveEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN, ValveEntity
 from homeassistant.core import HassJob, HassJobType, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity

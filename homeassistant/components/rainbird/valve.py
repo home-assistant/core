@@ -1,15 +1,11 @@
 """Support for Rain Bird Irrigation system LNK Wi-Fi Module."""
 
-import logging
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_DURATION, CONF_IMPORTED_NAMES, CONF_ZONE_TYPE, ZONE_TYPE_VALVE
 from .entity import RainBirdValve
 from .types import RainbirdConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
