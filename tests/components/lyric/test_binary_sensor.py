@@ -12,7 +12,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MAC_ID, async_setup_lyric_entry
+from . import setup_integration
+from .conftest import MAC_ID
 
 from tests.common import MockConfigEntry
 
@@ -43,11 +44,11 @@ async def test_device_pairing_enabled_created(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_credentials: None,
-    mock_lyric_api: None,
+    mock_lyric_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Device Pairing Enabled is created via a real config entry setup."""
-    await async_setup_lyric_entry(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     entity_id = entity_registry.async_get_entity_id(
         "binary_sensor", "lyric", f"{MAC_ID}_device_pairing_enabled"
@@ -72,11 +73,11 @@ async def test_vacation_hold_created(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_credentials: None,
-    mock_lyric_api: None,
+    mock_lyric_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Vacation Hold should read "on" via a real config entry setup."""
-    await async_setup_lyric_entry(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     entity_id = entity_registry.async_get_entity_id(
         "binary_sensor", "lyric", f"{MAC_ID}_vacation_hold"
@@ -102,11 +103,11 @@ async def test_room_motion_created(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_credentials: None,
-    mock_lyric_api: None,
+    mock_lyric_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Room Motion should be created via a real config entry setup."""
-    await async_setup_lyric_entry(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     entity_id = entity_registry.async_get_entity_id(
         "binary_sensor", "lyric", f"{MAC_ID}_room1_acc1_room_motion"

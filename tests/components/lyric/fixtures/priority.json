@@ -1,0 +1,26 @@
+{
+  "deviceId": "5CFCE1B67035",
+  "priorityStatus": "NoHold",
+  "priority": {
+    "priorityType": "PickARoom",
+    "selectedRooms": [1],
+    "rooms": [
+      {
+        "id": 1,
+        "name": "Primary Bedroom",
+        "avgTemperature": 79,
+        "avgHumidity": 54,
+        "overallMotion": false,
+        "accessories": [
+          {
+            "id": 1,
+            "sensorType": "IndoorAirSensor",
+            "temperature": 79,
+            "status": "Ok",
+            "detectMotion": true
+          }
+        ]
+      }
+    ]
+  }
+}
