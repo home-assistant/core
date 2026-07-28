@@ -2430,6 +2430,31 @@ async def test_async_get_device_by_connection_normalizes(
     )
 
 
+async def test_async_get_device_id_by_identifier(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """The id lookup returns the device id, or None when there is no match."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "1")}
+    )
+
+    assert (
+        dr.async_get_device_id_by_identifier(hass, ("test", "1"), entry.entry_id)
+        == device.id
+    )
+    # Unknown identifier and wrong config entry both resolve to None
+    assert (
+        dr.async_get_device_id_by_identifier(hass, ("test", "missing"), entry.entry_id)
+        is None
+    )
+    assert (
+        dr.async_get_device_id_by_identifier(hass, ("test", "1"), "unknown_entry_id")
+        is None
+    )
+
+
 @pytest.mark.parametrize(
     ("create_kwargs", "lookup_kwargs", "miss_kwargs"),
     [

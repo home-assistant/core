@@ -136,7 +136,7 @@ class DeviceInfo(TypedDict, total=False):
     translation_key: str | None
     translation_placeholders: Mapping[str, str] | None
     via_device: tuple[str, str]  # Deprecated, use via_device_id instead
-    via_device_id: str
+    via_device_id: str | None
 
 
 DEVICE_INFO_TYPES = {
@@ -3147,6 +3147,20 @@ def async_get(hass: HomeAssistant) -> DeviceRegistry:
         return hass.data[DATA_REGISTRY]
     except KeyError as ex:
         raise RuntimeError("Device registry not set up") from ex
+
+
+@callback
+def async_get_device_id_by_identifier(
+    hass: HomeAssistant, identifier: tuple[str, str], config_entry_id: str
+) -> str | None:
+    """Get the id of the device with the identifier, owned by the config entry.
+
+    Convenience wrapper for linking a device to its via device through
+    via_device_id. Identifiers are unique within a config entry, so the lookup
+    cannot be ambiguous. Returns None if no such device exists.
+    """
+    device = async_get(hass).async_get_device_by_identifier(identifier, config_entry_id)
+    return device.id if device else None
 
 
 def async_setup(hass: HomeAssistant) -> None:
