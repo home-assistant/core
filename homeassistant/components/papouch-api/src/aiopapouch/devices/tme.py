@@ -116,13 +116,13 @@ class TME(PapouchDevice):
             return []
 
         unit_map = {"0": "°C", "1": "°F", "2": "K"}
-
-        item_id = str(ITEM_ID)
-        unit_code = self.units_sensor[0].get("unit", "0")
+        unit_code = "0"
+        if self.units_sensor:
+            unit_code = self.units_sensor[0].get("unit", "0")
 
         return [
             {
-                "item_id": item_id,
+                "item_id": ITEM_ID,
                 "type": "sensor",
                 "name": "Temperature",
                 "device_class": "temperature",
