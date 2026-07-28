@@ -8,11 +8,14 @@ import pytest
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
+    SERVICE_SET_PRESET_MODE,
+    FanEntityFeature,
 )
 from homeassistant.components.modern_forms.const import (
     ATTR_SLEEP_TIME,
@@ -20,8 +23,13 @@ from homeassistant.components.modern_forms.const import (
     SERVICE_CLEAR_FAN_SLEEP_TIMER,
     SERVICE_SET_FAN_SLEEP_TIMER,
 )
+from homeassistant.components.modern_forms.fan import (
+    PRESET_MODE_BREEZE,
+    PRESET_MODE_NORMAL,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
@@ -31,7 +39,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration
+from . import init_integration, modern_forms_breeze_call_mock
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -236,3 +244,92 @@ async def test_fan_connection_error(
 
     state = hass.states.get("fan.modernformsfan_fan")
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_breeze_preset_mode_unsupported(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test fans without breeze hardware expose no preset mode."""
+    await init_integration(hass, aioclient_mock)
+
+    state = hass.states.get("fan.modernformsfan_fan")
+    assert state
+    assert not (
+        state.attributes[ATTR_SUPPORTED_FEATURES] & FanEntityFeature.PRESET_MODE
+    )
+    assert state.attributes.get(ATTR_PRESET_MODE) is None
+
+
+async def test_breeze_preset_mode_state(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the breeze preset mode is exposed and reflects device state."""
+    await init_integration(
+        hass, aioclient_mock, mock_type=modern_forms_breeze_call_mock
+    )
+
+    state = hass.states.get("fan.modernformsfan_fan")
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & FanEntityFeature.PRESET_MODE
+    assert state.attributes.get(ATTR_PRESET_MODE) == PRESET_MODE_NORMAL
+
+
+async def test_set_breeze_preset_mode(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test setting the breeze preset mode."""
+    await init_integration(
+        hass, aioclient_mock, mock_type=modern_forms_breeze_call_mock
+    )
+
+    with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {
+                ATTR_ENTITY_ID: "fan.modernformsfan_fan",
+                ATTR_PRESET_MODE: PRESET_MODE_BREEZE,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        fan_mock.assert_called_once_with(wind=True)
+
+    with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {
+                ATTR_ENTITY_ID: "fan.modernformsfan_fan",
+                ATTR_PRESET_MODE: PRESET_MODE_NORMAL,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        fan_mock.assert_called_once_with(wind=False)
+
+
+async def test_turn_on_with_breeze_preset_mode(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test turning on the fan with a breeze preset mode."""
+    await init_integration(
+        hass, aioclient_mock, mock_type=modern_forms_breeze_call_mock
+    )
+
+    with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "fan.modernformsfan_fan",
+                ATTR_PRESET_MODE: PRESET_MODE_BREEZE,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        fan_mock.assert_called_once_with(on=True, wind=True)
