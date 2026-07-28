@@ -329,6 +329,23 @@ async def test_notification_sensor(
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
+@pytest.mark.usefixtures("ring_keypad", "integration")
+async def test_power_management_notification_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test Power Management notification sensors are diagnostic."""
+    entity_id = "binary_sensor.keypad_v2_power_has_been_applied"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
 async def test_notification_off_state(
     hass: HomeAssistant,
     lock_popp_electric_strike_lock_control: Node,
