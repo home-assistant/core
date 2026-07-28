@@ -33,6 +33,11 @@ if TYPE_CHECKING:
 type SubscriptionType = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
 
+def is_locally_administered_mac(mac: str) -> bool:
+    """Return True if the MAC has the locally-administered (U/L) bit set."""
+    return bool(int(mac.split(":", 1)[0], 16) & 0x02)
+
+
 @callback
 def async_device_available_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if device is available."""

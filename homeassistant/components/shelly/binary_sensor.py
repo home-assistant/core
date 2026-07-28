@@ -239,6 +239,21 @@ RPC_SENSORS: Final = {
         device_class=BinarySensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "cb_output": RpcBinarySensorDescription(
+        key="cb",
+        sub_key="output",
+        translation_key="output",
+        device_class=BinarySensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "cb_safety": RpcBinarySensorDescription(
+        key="cb",
+        sub_key="safety",
+        translation_key="safety_switch",
+        device_class=BinarySensorDeviceClass.LOCK,
+        value=lambda status, _: not status,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     "overtemp": RpcBinarySensorDescription(
         key="switch",
         sub_key="errors",
