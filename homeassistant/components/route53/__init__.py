@@ -9,6 +9,7 @@ from typing import Any
 
 import aiohttp
 import boto3
+import botocore.exceptions
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -209,9 +210,15 @@ def _update_route53_records(
     _LOGGER.debug("Submitting the following changes to Route53")
     _LOGGER.debug(changes)
 
-    response = client.change_resource_record_sets(
-        HostedZoneId=zone, ChangeBatch={"Changes": changes}
-    )
+    try:
+        response = client.change_resource_record_sets(
+            HostedZoneId=zone, ChangeBatch={"Changes": changes}
+        )
+    except (
+        botocore.exceptions.BotoCoreError,
+        botocore.exceptions.ClientError,
+    ) as err:
+        raise HomeAssistantError(f"Error updating Route53 records: {err}") from err
     _LOGGER.debug("Response is %s", response)
 
     if response["ResponseMetadata"]["HTTPStatusCode"] != HTTPStatus.OK:
@@ -238,7 +245,7 @@ async def _async_update_route53(
             resp.raise_for_status()
             ipaddress = await resp.text()
 
-    except aiohttp.ClientError as err:
+    except (aiohttp.ClientError, TimeoutError) as err:
         raise HomeAssistantError("Unable to reach the ipify service") from err
 
     changes = []

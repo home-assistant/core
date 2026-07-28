@@ -29,6 +29,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# AWS error codes that mean the hosted zone ID is wrong rather than the credentials
+ZONE_ERROR_CODES = {"NoSuchHostedZone", "InvalidInput"}
+
+# Errors that belong on a specific field instead of the form as a whole
+ERROR_FIELDS = {"invalid_zone": CONF_ZONE}
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ACCESS_KEY_ID): TextSelector(
@@ -93,11 +99,13 @@ class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await validate_input(self.hass, user_input)
         except botocore.exceptions.ClientError as err:
-            _LOGGER.error("Failed to connect to AWS: %s", err)
+            _LOGGER.error("AWS rejected the request: %s", err)
+            if err.response["Error"]["Code"] in ZONE_ERROR_CODES:
+                return "invalid_zone"
             return "invalid_auth"
         except botocore.exceptions.BotoCoreError as err:
-            _LOGGER.error("BotoCore error: %s", err)
-            return "invalid_auth"
+            _LOGGER.error("Failed to reach AWS: %s", err)
+            return "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
             return "unknown"
@@ -118,7 +126,7 @@ class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if error := await self._async_validate(user_input):
-                errors["base"] = error
+                errors[ERROR_FIELDS.get(error, "base")] = error
             else:
                 return self.async_create_entry(
                     title=user_input[CONF_DOMAIN], data=user_input
@@ -144,7 +152,7 @@ class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if error := await self._async_validate(user_input):
-                errors["base"] = error
+                errors[ERROR_FIELDS.get(error, "base")] = error
             else:
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,

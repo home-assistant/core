@@ -63,26 +63,42 @@ async def test_form(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "error"),
+    ("side_effect", "expected_errors"),
     [
         pytest.param(
             botocore.exceptions.ClientError(
                 {"Error": {"Code": "InvalidClientTokenId"}}, "Operation"
             ),
-            "invalid_auth",
+            {"base": "invalid_auth"},
             id="client_error",
         ),
         pytest.param(
-            botocore.exceptions.BotoCoreError(), "invalid_auth", id="botocore_error"
+            botocore.exceptions.ClientError(
+                {"Error": {"Code": "NoSuchHostedZone"}}, "GetHostedZone"
+            ),
+            {CONF_ZONE: "invalid_zone"},
+            id="no_such_hosted_zone",
         ),
-        pytest.param(Exception, "unknown", id="unknown_error"),
+        pytest.param(
+            botocore.exceptions.ClientError(
+                {"Error": {"Code": "InvalidInput"}}, "GetHostedZone"
+            ),
+            {CONF_ZONE: "invalid_zone"},
+            id="invalid_input",
+        ),
+        pytest.param(
+            botocore.exceptions.BotoCoreError(),
+            {"base": "cannot_connect"},
+            id="botocore_error",
+        ),
+        pytest.param(Exception, {"base": "unknown"}, id="unknown_error"),
     ],
 )
 async def test_form_errors(
     hass: HomeAssistant,
     mock_boto3_client: MagicMock,
     side_effect: Exception,
-    error: str,
+    expected_errors: dict[str, str],
 ) -> None:
     """Test the user flow surfaces errors from AWS."""
     result = await hass.config_entries.flow.async_init(
@@ -108,7 +124,7 @@ async def test_form_errors(
         )
 
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": error}
+    assert result2["errors"] == expected_errors
 
 
 async def test_import_flow_success(
@@ -197,7 +213,21 @@ async def test_import_flow_already_configured(
             id="client_error",
         ),
         pytest.param(
-            botocore.exceptions.BotoCoreError(), "invalid_auth", id="botocore_error"
+            botocore.exceptions.ClientError(
+                {"Error": {"Code": "NoSuchHostedZone"}}, "GetHostedZone"
+            ),
+            "invalid_zone",
+            id="no_such_hosted_zone",
+        ),
+        pytest.param(
+            botocore.exceptions.ClientError(
+                {"Error": {"Code": "InvalidInput"}}, "GetHostedZone"
+            ),
+            "invalid_zone",
+            id="invalid_input",
+        ),
+        pytest.param(
+            botocore.exceptions.BotoCoreError(), "cannot_connect", id="botocore_error"
         ),
         pytest.param(Exception, "unknown", id="unknown_error"),
     ],
@@ -286,26 +316,42 @@ async def test_reconfigure_flow(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "error"),
+    ("side_effect", "expected_errors"),
     [
         pytest.param(
             botocore.exceptions.ClientError(
                 {"Error": {"Code": "InvalidClientTokenId"}}, "Operation"
             ),
-            "invalid_auth",
+            {"base": "invalid_auth"},
             id="client_error",
         ),
         pytest.param(
-            botocore.exceptions.BotoCoreError(), "invalid_auth", id="botocore_error"
+            botocore.exceptions.ClientError(
+                {"Error": {"Code": "NoSuchHostedZone"}}, "GetHostedZone"
+            ),
+            {CONF_ZONE: "invalid_zone"},
+            id="no_such_hosted_zone",
         ),
-        pytest.param(Exception, "unknown", id="unknown_error"),
+        pytest.param(
+            botocore.exceptions.ClientError(
+                {"Error": {"Code": "InvalidInput"}}, "GetHostedZone"
+            ),
+            {CONF_ZONE: "invalid_zone"},
+            id="invalid_input",
+        ),
+        pytest.param(
+            botocore.exceptions.BotoCoreError(),
+            {"base": "cannot_connect"},
+            id="botocore_error",
+        ),
+        pytest.param(Exception, {"base": "unknown"}, id="unknown_error"),
     ],
 )
 async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
     mock_boto3_client: MagicMock,
     side_effect: Exception,
-    error: str,
+    expected_errors: dict[str, str],
 ) -> None:
     """Test the reconfigure flow surfaces errors and leaves the entry unchanged."""
     entry = MockConfigEntry(
@@ -343,7 +389,7 @@ async def test_reconfigure_flow_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": error}
+    assert result["errors"] == expected_errors
     assert entry.data[CONF_ZONE] == "test-zone"
 
 
