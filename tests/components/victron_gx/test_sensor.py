@@ -316,6 +316,16 @@ async def test_formula_sensor_none_update_after_restore(
             "Could not restore state",
             id="invalid_native_value",
         ),
+        pytest.param(
+            (_restore_energy(float("nan")),),
+            "Could not restore state",
+            id="nan_native_value",
+        ),
+        pytest.param(
+            (_restore_energy(float("inf")),),
+            "Could not restore state",
+            id="inf_native_value",
+        ),
     ],
 )
 async def test_formula_sensor_no_baseline(

@@ -1,6 +1,7 @@
 """Support for Victron GX sensors."""
 
 import logging
+import math
 from typing import Any, override
 
 from victron_mqtt import (
@@ -164,17 +165,19 @@ class VictronSensor(VictronBaseEntity, RestoreSensor):
             await super().async_added_to_hass()
             return
 
-        if not isinstance(last_sensor_data.native_value, int | float):
+        native_value = last_sensor_data.native_value
+        # float() accepts nan/inf, but SensorEntity rejects non-finite values.
+        if not isinstance(native_value, int | float) or not math.isfinite(native_value):
             _LOGGER.warning(
                 "Could not restore state for %s: invalid value '%s' (type: %s)",
                 self.entity_id,
-                last_sensor_data.native_value,
-                type(last_sensor_data.native_value).__name__,
+                native_value,
+                type(native_value).__name__,
             )
             await super().async_added_to_hass()
             return
 
-        self._baseline = float(last_sensor_data.native_value)
+        self._baseline = float(native_value)
         self._attr_native_value += self._baseline
         _LOGGER.debug(
             "Restored baseline of %.3f for %s", self._baseline, self.entity_id
