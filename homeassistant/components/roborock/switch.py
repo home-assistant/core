@@ -100,8 +100,6 @@ class RoborockDockSwitchDescription(SwitchEntityDescription):
     turn_off_params: dict[str, Any] | None = None
 
     value_fn: Callable[[DeviceState], bool | None]
-    """Function to read whether the action is currently running."""
-
     is_supported: Callable[[RoborockDockFeatures], bool]
 
 

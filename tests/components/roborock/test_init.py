@@ -857,6 +857,9 @@ async def test_legacy_mop_drying_sensor_removed(
     mock_roborock_entry: MockConfigEntry,
 ) -> None:
     """Test the mop drying binary sensor is removed in favor of the switch."""
+    hass.config_entries.async_update_entry(
+        mock_roborock_entry, version=1, minor_version=2
+    )
     legacy_entity = entity_registry.async_get_or_create(
         Platform.BINARY_SENSOR,
         DOMAIN,
@@ -869,3 +872,4 @@ async def test_legacy_mop_drying_sensor_removed(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get(legacy_entity.entity_id) is None
+    assert mock_roborock_entry.minor_version == 3

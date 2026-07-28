@@ -148,28 +148,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     devices = await device_manager.get_devices()
     _LOGGER.debug("Device manager found %d devices", len(devices))
 
-    _remove_legacy_mop_drying_sensor(hass, entry)
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     _remove_stale_devices(hass, entry, devices)
 
     return True
-
-
-def _remove_legacy_mop_drying_sensor(
-    hass: HomeAssistant, entry: RoborockConfigEntry
-) -> None:
-    """Remove the mop drying binary sensor replaced by a switch.
-
-    Can be removed in HA Core 2027.8.
-    """
-    entity_registry = er.async_get(hass)
-    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
-        if entity.domain == Platform.BINARY_SENSOR and entity.unique_id.startswith(
-            "dry_status_"
-        ):
-            entity_registry.async_remove(entity.entity_id)
 
 
 def _is_device_disabled(
@@ -228,6 +211,18 @@ async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -
             version=1,
             minor_version=2,
         )
+
+    # 2->3: The mop drying binary sensor was replaced by a switch
+    if entry.minor_version == 2:
+        entity_registry = er.async_get(hass)
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        ):
+            if entity.domain == Platform.BINARY_SENSOR and entity.unique_id.startswith(
+                "dry_status_"
+            ):
+                entity_registry.async_remove(entity.entity_id)
+        hass.config_entries.async_update_entry(entry, version=1, minor_version=3)
 
     return True
 
