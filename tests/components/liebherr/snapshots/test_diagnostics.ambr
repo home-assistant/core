@@ -73,6 +73,7 @@
               'name': 'hydrobreeze',
               'type': 'HydroBreezeControl',
               'zone_id': 1,
+              'zone_position': 'top',
             }),
             dict({
               'current_mode': 'zero_zero',
@@ -86,6 +87,7 @@
               'temperature_unit': None,
               'type': 'BioFreshPlusControl',
               'zone_id': 1,
+              'zone_position': 'top',
             }),
             dict({
               'max': 5,

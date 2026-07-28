@@ -64,8 +64,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TwinklyConfigEntry) ->
                 entity_entry.entity_id, new_unique_id=device_info["mac"]
             )
         device_registry = dr.async_get(hass)
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, identifier)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, identifier), entry.entry_id
         )
         if device_entry:
             device_registry.async_update_device(

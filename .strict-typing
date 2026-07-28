@@ -350,6 +350,7 @@ homeassistant.components.lifx.*
 homeassistant.components.light.*
 homeassistant.components.linkplay.*
 homeassistant.components.litejet.*
+homeassistant.components.litellm.*
 homeassistant.components.litterrobot.*
 homeassistant.components.llama_cpp.*
 homeassistant.components.local_ip.*

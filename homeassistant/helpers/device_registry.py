@@ -64,7 +64,7 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
 )
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 3
-STORAGE_VERSION_MINOR = 1
+STORAGE_VERSION_MINOR = 2
 
 CLEANUP_DELAY = 10
 
@@ -682,10 +682,10 @@ class DeletedDeviceEntry:
             config_entry_id=config_entry.entry_id,
             config_subentry_id=config_subentry_id,
             # type ignores: likely https://github.com/python/mypy/issues/8625
-            connections=self.connections & connections,  # type: ignore[arg-type]
+            connections=connections,  # type: ignore[arg-type]
             created_at=self.created_at,
             disabled_by=disabled_by,
-            identifiers=self.identifiers & identifiers,  # type: ignore[arg-type]
+            identifiers=identifiers,  # type: ignore[arg-type]
             id=self.id,
             labels=self.labels,  # type: ignore[arg-type]
             name_by_user=self.name_by_user,
@@ -836,12 +836,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
             # the registries are loaded.
             migrated_at = utcnow().isoformat()
             devices: list[dict[str, Any]] = []
-            # Ids of active devices dropped for lacking a config entry; a retained
-            # child's via_device_id pointing at one is detached below.
-            dropped_device_ids: set[str] = set()
-            # old composite id -> {config entry id -> new split id}, to rewrite
-            # via_device_id links pointing at a split parent
-            composite_splits: dict[str, dict[str, str]] = {}
             # Active splits whose copied disabled_by must be reconciled against their
             # single config entry once the config entries are loaded
             migrated_active_splits: list[dict[str, Any]] = []
@@ -866,7 +860,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 ]
                 if not pairs:
                     # Drop devices that have no config entry / subentry pairs
-                    dropped_device_ids.add(device["id"])
                     continue
                 if len(pairs) == 1:
                     config_entry_id, subentry_id = pairs[0]
@@ -892,25 +885,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     split["has_composite_identifiers"] = True
                     devices.append(split)
                     migrated_active_splits.append(split)
-                    composite_splits.setdefault(old_id, {})[config_entry_id] = split[
-                        "id"
-                    ]
-            # Rewrite via_device_id links that pointed at a now-split composite parent
-            # to a live split: the parent's split in the child's own config entry when
-            # there is one, otherwise any of the parent's splits, so the link never
-            # dangles on the removed composite id. A link to a retained unsplit parent is
-            # left unchanged; a link to a dropped parent is detached below.
-            for device in devices:
-                if (
-                    splits := composite_splits.get(device["via_device_id"])
-                ) is not None:
-                    device["via_device_id"] = splits.get(
-                        device["config_entry_id"], next(iter(splits.values()))
-                    )
-                elif device["via_device_id"] in dropped_device_ids:
-                    # The parent was dropped (no config entries); detach the link as
-                    # async_remove_device would, so it does not dangle on a removed id.
-                    device["via_device_id"] = None
             old_data["devices"] = devices
             # A split inherited the composite's disabled_by, which may not match its
             # single config entry (e.g. a split owned by an enabled entry must not stay
@@ -926,6 +900,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         _migrate_device_disabled_by(
                             split, config_entry.disabled_by is not None
                         )
+
             deleted_devices: list[dict[str, Any]] = []
             for device in old_data["deleted_devices"]:
                 # One target per config entry. config_entries_subentries was a set, so
@@ -974,6 +949,61 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
             for migrated in (*devices, *deleted_devices):
                 migrated.pop("config_entries", None)
                 migrated.pop("config_entries_subentries", None)
+
+        if old_major_version < 3 or (old_major_version == 3 and old_minor_version < 2):
+            # Version 3.2, introduced in 2026.8, rewrites via_device_id links that do
+            # not reference a live device. A link to a composite parent split by the
+            # version 3 migration is remapped to one of the splits; any other stale
+            # link is detached.
+            device_ids = {device["id"] for device in old_data["devices"]}
+            # old composite id -> {config entry id -> split id}
+            composite_splits: dict[str, dict[str, str]] = {}
+            for device in old_data["devices"]:
+                if (composite_id := device["composite_device_id"]) is not None:
+                    composite_splits.setdefault(composite_id, {})[
+                        device["config_entry_id"]
+                    ] = device["id"]
+
+            def _split_for_via_device(
+                config_entry_id: str, splits: dict[str, str]
+            ) -> str:
+                """Pick the split for via device: same entry, same domain, any."""
+                if (split_id := splits.get(config_entry_id)) is not None:
+                    return split_id
+                config_entries = self.hass.config_entries
+                self_entry = config_entries.async_get_entry(config_entry_id)
+                if self_entry is not None:
+                    for split_entry_id, split_id in splits.items():
+                        split_entry = config_entries.async_get_entry(split_entry_id)
+                        if (
+                            split_entry is not None
+                            and split_entry.domain == self_entry.domain
+                        ):
+                            return split_id
+                return next(iter(splits.values()))
+
+            stale_via_devices = [
+                device
+                for device in old_data["devices"]
+                if device["via_device_id"] is not None
+                and device["via_device_id"] not in device_ids
+            ]
+            # The domain rung of the split resolution needs the config entries, which
+            # load concurrently, so wait for them only when a link must be remapped
+            if any(
+                device["via_device_id"] in composite_splits
+                for device in stale_via_devices
+            ):
+                await self.hass.config_entries.async_wait_initialized()
+            for device in stale_via_devices:
+                if (
+                    splits := composite_splits.get(device["via_device_id"])
+                ) is not None:
+                    device["via_device_id"] = _split_for_via_device(
+                        device["config_entry_id"], splits
+                    )
+                else:
+                    device["via_device_id"] = None
 
         if old_major_version > 3:
             raise NotImplementedError
@@ -1083,19 +1113,31 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
         self,
         identifiers: AbstractSet[tuple[str, str]] | None = None,
         connections: AbstractSet[tuple[str, str]] | None = None,
+        *,
+        config_entry_id: str | None = None,
     ) -> list[_EntryTypeT]:
-        """Get all entries matching identifiers or connections, across config entries."""
+        """Get all entries matching identifiers or connections.
+
+        Matches across all config entries, or only within one if config_entry_id
+        is given.
+        """
         entries: dict[str, _EntryTypeT] = {}
         if identifiers:
             for identifier in identifiers:
                 if (by_config_entry := self._identifiers.get(identifier)) is not None:
-                    for entry in by_config_entry.values():
-                        entries[entry.id] = entry
+                    if config_entry_id is None:
+                        for entry in by_config_entry.values():
+                            entries[entry.id] = entry
+                    elif (scoped := by_config_entry.get(config_entry_id)) is not None:
+                        entries[scoped.id] = scoped
         if connections:
             for connection in _normalize_connections(connections):
                 if (by_config_entry := self._connections.get(connection)) is not None:
-                    for entry in by_config_entry.values():
-                        entries[entry.id] = entry
+                    if config_entry_id is None:
+                        for entry in by_config_entry.values():
+                            entries[entry.id] = entry
+                    elif (scoped := by_config_entry.get(config_entry_id)) is not None:
+                        entries[scoped.id] = scoped
         return list(entries.values())
 
 
@@ -1370,6 +1412,49 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             return device
         return matches[0]
 
+    @callback
+    def async_get_device_by_identifier(
+        self, identifier: tuple[str, str], config_entry_id: str
+    ) -> DeviceEntry | None:
+        """Get the device with the identifier, owned by the config entry.
+
+        Identifiers are unique within a config entry, so unlike async_get_device
+        the lookup cannot be ambiguous.
+        """
+        return self.devices.get_entry(
+            identifiers={identifier}, config_entry_id=config_entry_id
+        )
+
+    @callback
+    def async_get_device_by_connection(
+        self, connection: tuple[str, str], config_entry_id: str
+    ) -> DeviceEntry | None:
+        """Get the device with the connection, owned by the config entry.
+
+        Connections are unique within a config entry, so unlike async_get_device
+        the lookup cannot be ambiguous.
+        """
+        return self.devices.get_entry(
+            connections={connection}, config_entry_id=config_entry_id
+        )
+
+    @callback
+    def async_get_devices(
+        self,
+        *,
+        identifiers: set[tuple[str, str]] | None = None,
+        connections: set[tuple[str, str]] | None = None,
+        config_entry_id: str | None = None,
+    ) -> list[DeviceEntry]:
+        """Get all devices matching any of the identifiers or connections.
+
+        If config_entry_id is given, only devices owned by that config entry are
+        returned.
+        """
+        return self.devices.get_entries(
+            identifiers, connections, config_entry_id=config_entry_id
+        )
+
     def _first_device_in_domain(
         self, devices: Iterable[DeviceEntry], domain: str
     ) -> DeviceEntry | None:
@@ -1430,6 +1515,54 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         empty list for a device id which is not a composite device id.
         """
         return self.devices.get_devices_for_composite_device_id(composite_device_id)
+
+    @callback
+    def async_is_composite_device_id(self, device_id: str) -> bool:
+        """Return True if device_id is a pre-migration composite device id.
+
+        A composite device was split into one device per config entry; the
+        composite device id no longer refers to a registered device.
+        """
+        return device_id not in self.devices and bool(
+            self.devices.get_devices_for_composite_device_id(device_id)
+        )
+
+    @callback
+    def _resolve_via_device_id(
+        self, via_device_id: str, config_entry_id: str
+    ) -> str | None:
+        """Resolve a via_device_id to the id of a registered device.
+
+        The id of a pre-migration composite device is resolved to one of the devices
+        it was split into - preferring the split owned by config_entry_id, then one
+        owned by the same domain, then any of them. Returns None for an unknown id.
+        """
+        if via_device_id in self.devices:
+            return via_device_id
+        if splits := self.devices.get_devices_for_composite_device_id(via_device_id):
+            # The composite resolution can be removed in HA Core 2027.8
+            report_usage(
+                f"passes the id of a pre-migration composite device {via_device_id} "
+                "as `via_device_id`; pass the id of a single device instead, e.g. "
+                "one returned by async_get_device_by_identifier",
+                core_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2027.8",
+            )
+            for split in splits:
+                if split.config_entry_id == config_entry_id:
+                    return split.id
+            if (
+                config_entry := self.hass.config_entries.async_get_entry(
+                    config_entry_id
+                )
+            ) is not None and (
+                split_in_domain := self._first_device_in_domain(
+                    splits, config_entry.domain
+                )
+            ) is not None:
+                return split_in_domain.id
+            return splits[0].id
+        return None
 
     def _substitute_name_placeholders(
         self,
@@ -1575,6 +1708,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             identifiers=identifiers,
             config_entry_id=config_entry_id,
         )
+
+        if via_device_id is not UNDEFINED and via_device_id is not None:
+            resolved_via_device_id = self._resolve_via_device_id(
+                via_device_id, config_entry_id
+            )
+            if resolved_via_device_id is None:
+                raise DeviceInfoError(
+                    config_entry.domain,
+                    device_info,
+                    f"via_device_id {via_device_id} is not a registered device id",
+                )
+            via_device_id = resolved_via_device_id
 
         is_new = False
 
@@ -1835,6 +1980,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "Cannot define both merge_identifiers and new_identifiers"
             )
 
+        if (
+            via_device_id is not UNDEFINED
+            and via_device_id is not None
+            and via_device_id not in self.devices
+            and not self.devices.get_devices_for_composite_device_id(via_device_id)
+        ):
+            raise HomeAssistantError(
+                f"Can't link device to unknown via device {via_device_id}"
+            )
+
         # A device belongs to exactly one config entry and subentry:
         # - add_config_entry_id (with an optional add_config_subentry_id) records a
         #   transient pending move to that config entry and subentry; on its own it does
@@ -1955,13 +2110,21 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if pending_move is not UNDEFINED and pending_move != old._pending_move:  # noqa: SLF001
             new_values["pending_move"] = pending_move
 
-        # Identifiers and connections are unique per config entry, so when the device is
-        # moved to another config entry they are validated against the new one
+        # The config entry owning the device after the update. Identifiers and
+        # connections are unique per config entry, so they are validated against the
+        # owning entry, as is the disabled state.
         effective_config_entry_id = (
             target_config_entry_id
             if target_config_entry_id is not UNDEFINED
             else old.config_entry_id
         )
+        is_move = effective_config_entry_id != old.config_entry_id
+
+        if via_device_id is not UNDEFINED and via_device_id is not None:
+            # Existence was already validated, so this cannot be None
+            via_device_id = self._resolve_via_device_id(
+                via_device_id, effective_config_entry_id
+            )
 
         added_connections: set[tuple[str, str]] | None = None
         added_identifiers: set[tuple[str, str]] | None = None
@@ -2009,7 +2172,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # overwrite the index slot of a device that already has the same identity there.
         # A full new_identifiers / new_connections replacement is validated above;
         # merge_* only adds, so the retained old values still need checking here.
-        if effective_config_entry_id != old.config_entry_id:
+        if is_move:
             if new_identifiers is UNDEFINED:
                 self._validate_identifiers(
                     device_id, effective_config_entry_id, old.identifiers, False
@@ -2019,26 +2182,53 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     device_id, effective_config_entry_id, old.connections, False
                 )
 
-        # On a move, reflect the new owning config entry's disabled state (as restoring a
-        # deleted device does) unless disabled_by was passed explicitly: disable an
-        # enabled device moved onto a disabled entry, and clear a CONFIG_ENTRY disable
-        # when moved onto an enabled entry. A USER disable is preserved.
-        if (
-            disabled_by is UNDEFINED
-            and target_config_entry_id is not UNDEFINED
-            and target_config_entry_id != old.config_entry_id
-            and (
-                target_entry := self.hass.config_entries.async_get_entry(
-                    target_config_entry_id
-                )
+        # An explicit disabled_by must be consistent with the disabled state of the
+        # config entry owning the device after the update: a device can't be enabled
+        # when the owning config entry is disabled, and can't be disabled by
+        # CONFIG_ENTRY when the owning config entry is enabled. An inconsistent
+        # disabled_by is ignored; this will raise in HA Core 2027.8.
+        # On a move, reflect the new owning config entry's disabled state (as restoring
+        # a deleted device does) unless a consistent disabled_by was passed explicitly:
+        # disable an enabled device moved onto a disabled entry, and clear a
+        # CONFIG_ENTRY disable when moved onto an enabled entry. A USER disable is
+        # preserved. A new device is reconciled the same way, so a create can't
+        # leave the device's disabled state contradicting the owning entry's.
+        if (disabled_by is not UNDEFINED or is_move or is_new) and (
+            owning_entry := self.hass.config_entries.async_get_entry(
+                effective_config_entry_id
             )
-            is not None
-        ):
-            if target_entry.disabled_by:
-                if old.disabled_by is None:
-                    disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
-            elif old.disabled_by is DeviceEntryDisabler.CONFIG_ENTRY:
-                disabled_by = None
+        ) is not None:
+            if is_move:
+                context = "when moving a device to"
+            elif is_new:
+                context = "when creating a device attached to"
+            else:
+                context = "on a device belonging to"
+            if disabled_by is None and owning_entry.disabled_by:
+                report_usage(
+                    f"sets disabled_by to None {context} the disabled "
+                    f"config entry {effective_config_entry_id}",
+                    core_behavior=ReportBehavior.LOG,
+                    breaks_in_ha_version="2027.8",
+                )
+                disabled_by = UNDEFINED
+            elif (
+                disabled_by is DeviceEntryDisabler.CONFIG_ENTRY
+                and not owning_entry.disabled_by
+            ):
+                report_usage(
+                    f"sets disabled_by to DeviceEntryDisabler.CONFIG_ENTRY {context} "
+                    f"the enabled config entry {effective_config_entry_id}",
+                    core_behavior=ReportBehavior.LOG,
+                    breaks_in_ha_version="2027.8",
+                )
+                disabled_by = UNDEFINED
+            if (is_move or is_new) and disabled_by is UNDEFINED:
+                if owning_entry.disabled_by:
+                    if old.disabled_by is None:
+                        disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
+                elif old.disabled_by is DeviceEntryDisabler.CONFIG_ENTRY:
+                    disabled_by = None
 
         for attr_name, value in (
             ("area_id", area_id),
@@ -2083,7 +2273,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # identity move, so match the target entry's deleted device by the full identity.
         match_identifiers: set[tuple[str, str]] | None
         match_connections: set[tuple[str, str]] | None
-        if effective_config_entry_id != old.config_entry_id:
+        if is_move:
             match_identifiers = new.identifiers
             match_connections = new.connections
         else:
@@ -2165,7 +2355,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             moves the device; on its own it does nothing.
         :param add_config_subentry_id: Deprecated. Combined with remove_config_subentry_id
             it moves the device to another subentry; on its own it does nothing.
-        :param new_config_entry_id: Move the device to this config entry.
+        :param disabled_by: Disable or enable the device. Must be consistent with the
+            disabled state of the config entry owning the device after the update:
+            a device can't be enabled when the owning config entry is disabled, and
+            can't be disabled by CONFIG_ENTRY when the owning config entry is enabled.
+            An inconsistent disabled_by is deprecated and ignored; this will raise in
+            HA Core 2027.8.
+        :param new_config_entry_id: Move the device to this config entry. Unless a
+            disabled_by consistent with the new config entry's disabled state is
+            passed explicitly, the device's disabled state is updated to reflect the
+            new config entry's disabled state.
         :param new_config_subentry_id: Move the device to this subentry.
         :param remove_config_entry_id: Remove the device if it is the device's config
             entry, unless combined with add_config_entry_id to move the device.

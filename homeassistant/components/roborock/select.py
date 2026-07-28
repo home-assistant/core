@@ -268,6 +268,8 @@ async def async_setup_entry(
                 if (options := description.options_lambda(coordinator.properties_api))
                 is not None
             )
+            if coordinator.properties_api.status.cleaning_mode_options:
+                entities.append(RoborockCleaningModeSelectEntity(coordinator))
             if (
                 coordinator.properties_api.home is not None
                 and coordinator.properties_api.maps is not None
@@ -384,6 +386,47 @@ class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device props."""
         return self.entity_description.value_fn(self.coordinator.properties_api)
+
+
+class RoborockCleaningModeSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
+    """A class to let you set the high-level cleaning mode on a Roborock vacuum.
+
+    This bundles the fan speed, water flow, and mop route settings into a
+    single choice, e.g. vacuum only, mop only, or vacuum and mop.
+    """
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "cleaning_mode"
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinator,
+    ) -> None:
+        """Create a select entity for the high-level cleaning mode."""
+        super().__init__(f"cleaning_mode_{coordinator.duid_slug}", coordinator)
+        self._status_trait = coordinator.properties_api.status
+        self._attr_options = [
+            mode.value for mode in self._status_trait.cleaning_mode_options
+        ]
+
+    @property
+    @override
+    def current_option(self) -> str | None:
+        """Get the current high-level cleaning mode."""
+        return self._status_trait.current_cleaning_mode_name
+
+    @override
+    async def async_select_option(self, option: str) -> None:
+        """Set the high-level cleaning mode."""
+        try:
+            await self._status_trait.set_cleaning_mode(option)
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"command": "cleaning_mode"},
+            ) from err
+        await self.coordinator.async_refresh()
 
 
 class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
