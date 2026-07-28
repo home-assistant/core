@@ -71,12 +71,16 @@ from .const import (
     CHAR_ACTIVE,
     CHAR_CONFIGURED_NAME,
     CHAR_IN_USE,
+    CHAR_IS_CONFIGURED,
     CHAR_NAME,
     CHAR_ON,
     CHAR_OUTLET_IN_USE,
     CHAR_PROGRAM_MODE,
     CHAR_REMAINING_DURATION,
+    CHAR_SERVICE_LABEL_INDEX,
+    CHAR_SERVICE_LABEL_NAMESPACE,
     CHAR_SET_DURATION,
+    CHAR_STATUS_FAULT,
     CHAR_VALVE_TYPE,
     CONF_IRRIGATION_CONTROLLER,
     CONF_LINKED_IRRIGATION_VALVES,
@@ -87,6 +91,7 @@ from .const import (
     PROP_MIN_VALUE,
     SERV_IRRIGATION_SYSTEM,
     SERV_OUTLET,
+    SERV_SERVICE_LABEL,
     SERV_SWITCH,
     SERV_VALVE,
     TYPE_FAUCET,
@@ -581,6 +586,10 @@ class SelectSwitch(HomeAccessory):
 
 HK_VALVE_TYPE_IRRIGATION = 1
 HK_PROGRAM_MODE_NO_SCHEDULE_ACTIVE = 1
+HK_IS_CONFIGURED = 1
+HK_STATUS_FAULT_NO_FAULT = 0
+HK_STATUS_FAULT_GENERAL_FAULT = 1
+HK_SERVICE_LABEL_NAMESPACE_ARABIC_NUMERALS = 1
 
 IRRIGATION_DEFAULT_DURATION = 300
 IRRIGATION_DURATION_MAX = 86400
@@ -627,20 +636,44 @@ class IrrigationSystem(HomeAccessory):
             value=0,
             properties=IRRIGATION_DURATION_PROPERTIES,
         )
+        self._char_system_status_fault = serv_irrigation.configure_char(
+            CHAR_STATUS_FAULT,
+            value=HK_STATUS_FAULT_NO_FAULT,
+        )
+        serv_service_label = self.add_preload_service(
+            SERV_SERVICE_LABEL,
+            [CHAR_SERVICE_LABEL_NAMESPACE],
+        )
+        serv_service_label.configure_char(
+            CHAR_SERVICE_LABEL_NAMESPACE,
+            value=HK_SERVICE_LABEL_NAMESPACE_ARABIC_NUMERALS,
+        )
 
-        for entity_id in self._valve_entity_ids:
+        for index, entity_id in enumerate(self._valve_entity_ids, start=1):
             valve_state = self.hass.states.get(entity_id)
             friendly = (
                 valve_state.attributes.get(ATTR_FRIENDLY_NAME) if valve_state else None
             )
             name = cleanup_name_for_homekit(friendly or entity_id)
+            initial_duration = self._duration_from_state(valve_state)
+            initial_remaining = self._remaining_from_state(valve_state)
             serv_valve = self.add_preload_service(
                 SERV_VALVE,
-                [CHAR_NAME, CHAR_CONFIGURED_NAME, CHAR_SET_DURATION, CHAR_REMAINING_DURATION],
+                [
+                    CHAR_NAME,
+                    CHAR_CONFIGURED_NAME,
+                    CHAR_SET_DURATION,
+                    CHAR_REMAINING_DURATION,
+                    CHAR_IS_CONFIGURED,
+                    CHAR_SERVICE_LABEL_INDEX,
+                    CHAR_STATUS_FAULT,
+                ],
                 unique_id=entity_id,
             )
             serv_valve.configure_char(CHAR_NAME, value=name)
             serv_valve.configure_char(CHAR_CONFIGURED_NAME, value=name)
+            serv_valve.configure_char(CHAR_IS_CONFIGURED, value=HK_IS_CONFIGURED)
+            serv_valve.configure_char(CHAR_SERVICE_LABEL_INDEX, value=index)
             char_active = serv_valve.configure_char(
                 CHAR_ACTIVE,
                 value=False,
@@ -648,15 +681,19 @@ class IrrigationSystem(HomeAccessory):
             )
             char_in_use = serv_valve.configure_char(CHAR_IN_USE, value=False)
             serv_valve.configure_char(CHAR_VALVE_TYPE, value=HK_VALVE_TYPE_IRRIGATION)
+            char_status_fault = serv_valve.configure_char(
+                CHAR_STATUS_FAULT,
+                value=HK_STATUS_FAULT_NO_FAULT,
+            )
             char_set_duration = serv_valve.configure_char(
                 CHAR_SET_DURATION,
-                value=IRRIGATION_DEFAULT_DURATION,
+                value=initial_duration,
                 properties=IRRIGATION_DURATION_PROPERTIES,
                 setter_callback=lambda v, eid=entity_id: self._set_valve_duration(eid, v),
             )
             char_remaining = serv_valve.configure_char(
                 CHAR_REMAINING_DURATION,
-                value=0,
+                value=initial_remaining,
                 properties=IRRIGATION_DURATION_PROPERTIES,
             )
             self._valve_chars[entity_id] = {
@@ -664,14 +701,14 @@ class IrrigationSystem(HomeAccessory):
                 CHAR_IN_USE: char_in_use,
                 CHAR_SET_DURATION: char_set_duration,
                 CHAR_REMAINING_DURATION: char_remaining,
-                "duration": IRRIGATION_DEFAULT_DURATION,
+                CHAR_STATUS_FAULT: char_status_fault,
+                "duration": initial_duration,
             }
             serv_irrigation.add_linked_service(serv_valve)
 
         for entity_id in self._valve_entity_ids:
             if valve_state := self.hass.states.get(entity_id):
-                if valve_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-                    self._sync_valve_chars(entity_id, valve_state)
+                self._sync_valve_chars(entity_id, valve_state)
         self._update_system_state()
 
     @callback
@@ -692,8 +729,7 @@ class IrrigationSystem(HomeAccessory):
             )
             for entity_id in linked_valve_ids:
                 if valve_state := self.hass.states.get(entity_id):
-                    if valve_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-                        self._sync_valve_chars(entity_id, valve_state)
+                    self._sync_valve_chars(entity_id, valve_state)
         self._update_system_state()
 
     @callback
@@ -702,7 +738,7 @@ class IrrigationSystem(HomeAccessory):
     ) -> None:
         """Handle state changes for linked (non-primary) valve entities."""
         new_state = event.data["new_state"]
-        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        if new_state is None:
             return
         self._sync_valve_chars(new_state.entity_id, new_state)
         self._update_system_state()
@@ -719,34 +755,70 @@ class IrrigationSystem(HomeAccessory):
         chars = self._valve_chars.get(entity_id)
         if chars is None:
             return
+        has_fault = state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+        chars[CHAR_STATUS_FAULT].set_value(
+            HK_STATUS_FAULT_GENERAL_FAULT if has_fault else HK_STATUS_FAULT_NO_FAULT
+        )
+        if has_fault:
+            chars[CHAR_ACTIVE].set_value(0)
+            chars[CHAR_IN_USE].set_value(0)
+            chars[CHAR_REMAINING_DURATION].set_value(0)
+            return
         is_open = state.state in VALVE_OPEN_STATES
         chars[CHAR_ACTIVE].set_value(int(is_open))
         chars[CHAR_IN_USE].set_value(int(is_open))
+        if (device_duration := self._duration_from_state(state)) != chars["duration"]:
+            chars["duration"] = device_duration
+            chars[CHAR_SET_DURATION].set_value(device_duration)
+        remaining = self._remaining_from_state(state)
+        if remaining == 0 and is_open:
+            remaining = chars["duration"]
+        chars[CHAR_REMAINING_DURATION].set_value(remaining)
 
     def _update_system_state(self) -> None:
         """Update IrrigationSystem-level Active/InUse from child valve states."""
         any_active = any(
             chars[CHAR_IN_USE].value for chars in self._valve_chars.values()
         )
+        remaining = max(
+            int(chars[CHAR_REMAINING_DURATION].value or 0)
+            for chars in self._valve_chars.values()
+        )
+        any_fault = any(
+            chars[CHAR_STATUS_FAULT].value == HK_STATUS_FAULT_GENERAL_FAULT
+            for chars in self._valve_chars.values()
+        )
         self._char_system_active.set_value(int(any_active))
         self._char_system_in_use.set_value(int(any_active))
+        self._char_system_remaining.set_value(remaining)
+        self._char_system_status_fault.set_value(
+            HK_STATUS_FAULT_GENERAL_FAULT if any_fault else HK_STATUS_FAULT_NO_FAULT
+        )
 
     def _set_system_active(self, value: int) -> None:
         """Close all valves when HomeKit deactivates the irrigation system."""
         if not value:
             for entity_id in self._valve_entity_ids:
-                self.async_call_service(
-                    VALVE_DOMAIN, SERVICE_CLOSE_VALVE, {ATTR_ENTITY_ID: entity_id}
+                self.hass.async_create_task(
+                    self._async_call_valve_service_and_resync(
+                        entity_id, SERVICE_CLOSE_VALVE, value
+                    ),
+                    eager_start=True,
                 )
         self._update_system_state()
 
     def _set_valve_active(self, entity_id: str, value: int) -> None:
         """Open or close a specific valve when HomeKit commands it."""
         service = SERVICE_OPEN_VALVE if value else SERVICE_CLOSE_VALVE
-        self.async_call_service(VALVE_DOMAIN, service, {ATTR_ENTITY_ID: entity_id})
         chars = self._valve_chars.get(entity_id)
         if chars:
             chars[CHAR_IN_USE].set_value(int(value))
+            chars[CHAR_ACTIVE].set_value(int(value))
+            chars[CHAR_REMAINING_DURATION].set_value(chars["duration"] if value else 0)
+        self.hass.async_create_task(
+            self._async_call_valve_service_and_resync(entity_id, service, value),
+            eager_start=True,
+        )
         self._update_system_state()
 
     def _set_valve_duration(self, entity_id: str, value: int) -> None:
@@ -754,3 +826,47 @@ class IrrigationSystem(HomeAccessory):
         chars = self._valve_chars.get(entity_id)
         if chars:
             chars["duration"] = max(int(value), 0)
+            chars[CHAR_SET_DURATION].set_value(chars["duration"])
+
+    def _duration_from_state(self, state: State | None) -> int:
+        """Get a valve duration from state attributes when provided by the device."""
+        if state is None:
+            return IRRIGATION_DEFAULT_DURATION
+        for key in ("set_duration", "duration", "default_duration"):
+            if (raw := state.attributes.get(key)) is not None:
+                try:
+                    return max(int(float(raw)), 0)
+                except (TypeError, ValueError):
+                    continue
+        return IRRIGATION_DEFAULT_DURATION
+
+    def _remaining_from_state(self, state: State | None) -> int:
+        """Get remaining duration from state attributes when provided by the device."""
+        if state is None:
+            return 0
+        for key in ("remaining_duration", "remaining", "remaining_time"):
+            if (raw := state.attributes.get(key)) is not None:
+                try:
+                    return max(int(float(raw)), 0)
+                except (TypeError, ValueError):
+                    continue
+        if (end_time_raw := state.attributes.get("end_time")) is not None:
+            if (end_time := dt_util.parse_datetime(str(end_time_raw))) is not None:
+                return max(int((end_time - dt_util.utcnow()).total_seconds()), 0)
+        return 0
+
+    async def _async_call_valve_service_and_resync(
+        self, entity_id: str, service: str, value: int
+    ) -> None:
+        """Call valve service and re-sync the commanded valve on failure."""
+        success = await self.async_call_service_and_wait(
+            VALVE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id},
+            value,
+        )
+        if success:
+            return
+        if state := self.hass.states.get(entity_id):
+            self._sync_valve_chars(entity_id, state)
+        self._update_system_state()

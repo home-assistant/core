@@ -1,6 +1,7 @@
 """Test different accessory types: Switches."""
 
 from datetime import timedelta
+from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
 import pytest
@@ -8,15 +9,20 @@ import pytest
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
+    CHAR_ACTIVE,
     CHAR_CONFIGURED_NAME,
+    CHAR_IN_USE,
     CHAR_NAME,
+    CHAR_REMAINING_DURATION,
     SERV_OUTLET,
+    TYPE_IRRIGATION_SYSTEM,
     TYPE_FAUCET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_VALVE,
 )
 from homeassistant.components.homekit.type_switches import (
+    IrrigationSystem,
     LawnMower,
     Outlet,
     SelectSwitch,
@@ -58,6 +64,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import Event, HomeAssistant, split_entity_id
 from homeassistant.util import dt as dt_util
@@ -1159,3 +1166,94 @@ async def test_remaining_duration_characteristic_fallback(
         await hass.async_block_till_done()
         assert acc.char_in_use.value == 0
         assert acc.get_remaining_duration() == 0
+
+
+async def test_irrigation_system_reads_valve_duration_attributes(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test IrrigationSystem reads duration/remaining attributes from valve state."""
+    hass.states.async_set(
+        "valve.front_lawn",
+        STATE_OPEN,
+        {"duration": 1800, "remaining_duration": 600},
+    )
+    hass.states.async_set("valve.back_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        9,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars[CHAR_IN_USE].value == 1
+    assert front_chars["duration"] == 1800
+    assert front_chars[CHAR_REMAINING_DURATION].value == 600
+
+
+async def test_irrigation_system_resyncs_linked_zone_on_service_failure(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test failed linked valve command re-syncs from Home Assistant state."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    hass.states.async_set("valve.back_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        10,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    with patch.object(acc, "async_call_service_and_wait", AsyncMock(return_value=False)):
+        acc._set_valve_active("valve.back_lawn", 1)
+        await hass.async_block_till_done()
+
+    back_chars = acc._valve_chars["valve.back_lawn"]
+    assert back_chars[CHAR_ACTIVE].value == 0
+    assert back_chars[CHAR_IN_USE].value == 0
+    assert back_chars[CHAR_REMAINING_DURATION].value == 0
+
+
+async def test_irrigation_system_reports_fault_for_unavailable_zone(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test unavailable linked valves are marked unavailable in HomeKit."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    hass.states.async_set("valve.back_lawn", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        11,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    back_chars = acc._valve_chars["valve.back_lawn"]
+    assert back_chars[CHAR_ACTIVE].value == 0
+    assert back_chars[CHAR_IN_USE].value == 0

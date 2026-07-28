@@ -548,9 +548,15 @@ class OptionsFlowHandler(OptionsFlow):
         for entity_id in self.included_valves:
             entity_config = all_entity_config.get(entity_id, {})
             if entity_config.get(CONF_TYPE) == TYPE_IRRIGATION_SYSTEM:
-                current_grouped = [entity_id] + list(
-                    entity_config.get(CONF_LINKED_IRRIGATION_VALVES, [])
-                )
+                included_valves_set = set(self.included_valves)
+                current_grouped = [
+                    valve_entity_id
+                    for valve_entity_id in [
+                        entity_id,
+                        *entity_config.get(CONF_LINKED_IRRIGATION_VALVES, []),
+                    ]
+                    if valve_entity_id in included_valves_set
+                ]
                 break
 
         return self.async_show_form(

@@ -15,10 +15,12 @@ from homeassistant.components.homekit.accessories import (
 from homeassistant.components.homekit.const import (
     ATTR_INTEGRATION,
     CONF_FEATURE_LIST,
+    CONF_IRRIGATION_CONTROLLER,
     FEATURE_ON_OFF,
     TYPE_FAN,
     TYPE_FAUCET,
     TYPE_HEATER_COOLER,
+    TYPE_IRRIGATION_SYSTEM,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
@@ -422,6 +424,34 @@ def test_type_valve(type_name, entity_id, state, attrs) -> None:
         entity_state = State(entity_id, state, attrs)
         get_accessory(None, None, entity_state, 2, {})
     assert mock_type.called
+
+
+def test_type_irrigation_system() -> None:
+    """Test valve can be mapped to the irrigation system type."""
+    mock_type = Mock()
+    with patch.dict(TYPES, {"IrrigationSystem": mock_type}):
+        entity_state = State("valve.test", "on")
+        get_accessory(
+            None,
+            None,
+            entity_state,
+            2,
+            {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+        )
+    assert mock_type.called
+
+
+def test_type_irrigation_linked_valve_skipped() -> None:
+    """Test linked irrigation member valves are not exposed independently."""
+    entity_state = State("valve.test", "on")
+    accessory = get_accessory(
+        None,
+        None,
+        entity_state,
+        2,
+        {CONF_IRRIGATION_CONTROLLER: "valve.controller"},
+    )
+    assert accessory is None
 
 
 @pytest.mark.parametrize(

@@ -10,11 +10,14 @@ from homeassistant import config_entries
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import (
     CONF_FILTER,
+    CONF_IRRIGATION_CONTROLLER,
+    CONF_LINKED_IRRIGATION_VALVES,
     DOMAIN,
     SHORT_BRIDGE_NAME,
+    TYPE_IRRIGATION_SYSTEM,
 )
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
-from homeassistant.const import CONF_NAME, CONF_PORT, EntityCategory
+from homeassistant.const import CONF_NAME, CONF_PORT, CONF_TYPE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
@@ -689,6 +692,69 @@ async def test_options_flow_include_mode_basic(hass: HomeAssistant) -> None:
         },
     }
     await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+async def test_options_flow_valves_filters_grouped_default_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test valve grouping default only includes currently included valves."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        options={
+            CONF_FILTER: {
+                "include_domains": ["valve"],
+                "include_entities": ["valve.front", "valve.back"],
+                "exclude_domains": [],
+                "exclude_entities": [],
+            },
+            "entity_config": {
+                "valve.front": {
+                    CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                    CONF_LINKED_IRRIGATION_VALVES: ["valve.removed", "valve.back"],
+                },
+                "valve.back": {
+                    CONF_IRRIGATION_CONTROLLER: "valve.front",
+                },
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+    hass.states.async_set("valve.front", "open")
+    hass.states.async_set("valve.back", "closed")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["valve"],
+            "include_exclude_mode": "include",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "include"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"entities": ["valve.front", "valve.back"]},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "valves"
+    assert result["data_schema"]({})["irrigation_grouped_valves"] == [
+        "valve.front",
+        "valve.back",
+    ]
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bridged_device_triggers"
 
 
 async def test_options_flow_exclude_mode_with_cameras(hass: HomeAssistant) -> None:
