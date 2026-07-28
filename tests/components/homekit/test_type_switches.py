@@ -1524,27 +1524,28 @@ async def test_irrigation_system_reads_remaining_via_end_time(
     hass: HomeAssistant, hk_driver
 ) -> None:
     """Test IrrigationSystem reads remaining duration from end_time attribute."""
-    future_end = (dt_util.utcnow() + timedelta(seconds=120)).isoformat()
-    hass.states.async_set(
-        "valve.front_lawn",
-        STATE_OPEN,
-        {"end_time": future_end},
-    )
-    await hass.async_block_till_done()
+    with freeze_time(dt_util.utcnow()):
+        future_end = (dt_util.utcnow() + timedelta(seconds=120)).isoformat()
+        hass.states.async_set(
+            "valve.front_lawn",
+            STATE_OPEN,
+            {"end_time": future_end},
+        )
+        await hass.async_block_till_done()
 
-    acc = IrrigationSystem(
-        hass,
-        hk_driver,
-        "Irrigation",
-        "valve.front_lawn",
-        19,
-        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
-    )
-    acc.run()
-    await hass.async_block_till_done()
+        acc = IrrigationSystem(
+            hass,
+            hk_driver,
+            "Irrigation",
+            "valve.front_lawn",
+            19,
+            {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+        )
+        acc.run()
+        await hass.async_block_till_done()
 
-    front_chars = acc._valve_chars["valve.front_lawn"]
-    assert front_chars[CHAR_REMAINING_DURATION].value >= 119
+        front_chars = acc._valve_chars["valve.front_lawn"]
+        assert front_chars[CHAR_REMAINING_DURATION].value == 120
 
 
 async def test_irrigation_system_ignores_invalid_duration_attribute(
