@@ -395,9 +395,31 @@ async def test_power_management_battery_charging_sensor(
         == BinarySensorDeviceClass.BATTERY_CHARGING
     )
 
+
+@pytest.mark.usefixtures("zooz_zac36_titan_valve_actuator", "integration")
+async def test_water_valve_notification_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test Water Valve notification sensors."""
+    # Valve jammed is a diagnostic problem sensor.
+    entity_id = "binary_sensor.titan_water_valve_actuator_valve_jammed"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.PROBLEM
+
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+    # Valve operation stays a primary sensor.
+    entity_id = "binary_sensor.titan_water_valve_actuator_on_open"
+    state = hass.states.get(entity_id)
+    assert state
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is None
 
 
 @pytest.mark.parametrize(

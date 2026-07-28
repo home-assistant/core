@@ -14,6 +14,7 @@ from zwave_js_server.const.command_class.notification import (
     NotificationType,
     PowerManagementNotificationEvent,
     SmokeAlarmNotificationEvent,
+    WaterValveNotificationEvent,
 )
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
@@ -228,6 +229,7 @@ MIGRATED_NOTIFICATION_TYPES = {
     NotificationType.SMOKE_ALARM,
     NotificationType.ACCESS_CONTROL,
     NotificationType.POWER_MANAGEMENT,
+    NotificationType.WATER_VALVE,
 }
 
 NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] = (
@@ -1594,6 +1596,64 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
                 PowerManagementNotificationEvent.BATTERY_LEVEL_STATUS_CHARGE_BATTERY_NOW,
                 PowerManagementNotificationEvent.BATTERY_LOAD_STATUS_BATTERY_IS_CHARGING,
             },
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                WaterValveNotificationEvent.VALVE_OPERATION,
+                WaterValveNotificationEvent.MASTER_VALVE_OPERATION,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_VALVE)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 15: Water Valve - State Id's 1, 2
+            # (valve/master valve operation) stay primary
+            key=NOTIFICATION_WATER_VALVE,
+            states={
+                WaterValveNotificationEvent.VALVE_OPERATION,
+                WaterValveNotificationEvent.MASTER_VALVE_OPERATION,
+            },
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                WaterValveNotificationEvent.VALVE_SHORT_CIRCUIT,
+                WaterValveNotificationEvent.MASTER_VALVE_SHORT_CIRCUIT,
+                WaterValveNotificationEvent.VALVE_CURRENT_ALARM,
+                WaterValveNotificationEvent.MASTER_VALVE_CURRENT_ALARM,
+                WaterValveNotificationEvent.VALVE_JAMMED,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_VALVE)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 15: Water Valve - State Id's 3, 4, 5, 6, 7
+            # (short circuit, current alarm, valve jammed)
+            key=NOTIFICATION_WATER_VALVE,
+            states={
+                WaterValveNotificationEvent.VALVE_SHORT_CIRCUIT,
+                WaterValveNotificationEvent.MASTER_VALVE_SHORT_CIRCUIT,
+                WaterValveNotificationEvent.VALVE_CURRENT_ALARM,
+                WaterValveNotificationEvent.MASTER_VALVE_CURRENT_ALARM,
+                WaterValveNotificationEvent.VALVE_JAMMED,
+            },
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         entity_class=ZWaveNotificationBinarySensor,
     ),
