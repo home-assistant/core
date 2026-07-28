@@ -346,6 +346,45 @@ async def test_power_management_notification_sensor(
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
+@pytest.mark.usefixtures("zooz_zac36_titan_valve_actuator", "integration")
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "binary_sensor.titan_water_valve_actuator_overheat_detected",
+        "binary_sensor.titan_water_valve_actuator_underheat_detected",
+    ],
+)
+async def test_heat_notification_sensor_diagnostic(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+) -> None:
+    """Test overheat/underheat is diagnostic for non-heat-relevant device classes."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.HEAT
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.usefixtures("climate_heatit_z_trm6", "integration")
+async def test_heat_notification_sensor_primary(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test overheat/underheat is primary for heat-relevant generic device classes."""
+    entity_id = "binary_sensor.floor_thermostat_overheat_detected"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.HEAT
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is None
+
+
 async def test_notification_off_state(
     hass: HomeAssistant,
     lock_popp_electric_strike_lock_control: Node,

@@ -212,6 +212,14 @@ def ring_keypad_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("ring_keypad_state.json", DOMAIN)
 
 
+@pytest.fixture(name="zooz_zac36_titan_valve_actuator_state")
+def zooz_zac36_titan_valve_actuator_state_fixture() -> dict[str, Any]:
+    """Load the Zooz ZAC36 Titan valve actuator node state fixture data."""
+    return load_json_object_fixture(
+        "zooz_zac36_titan_valve_actuator_state.json", DOMAIN
+    )
+
+
 @pytest.fixture(name="nortek_thermostat_state", scope="package")
 def nortek_thermostat_state_fixture() -> dict[str, Any]:
     """Load the nortek thermostat node state fixture data."""
@@ -974,6 +982,16 @@ def nortek_thermostat_removed_event_fixture(client) -> Node:
 def ring_keypad_fixture(client: MagicMock, ring_keypad_state: NodeDataType) -> Node:
     """Mock a Ring keypad node."""
     node = Node(client, copy.deepcopy(ring_keypad_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="zooz_zac36_titan_valve_actuator")
+def zooz_zac36_titan_valve_actuator_fixture(
+    client: MagicMock, zooz_zac36_titan_valve_actuator_state: NodeDataType
+) -> Node:
+    """Mock a Zooz ZAC36 Titan valve actuator node."""
+    node = Node(client, zooz_zac36_titan_valve_actuator_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 

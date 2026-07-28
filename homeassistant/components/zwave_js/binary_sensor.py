@@ -10,6 +10,7 @@ from zwave_js_server.const.command_class.lock import DOOR_STATUS_PROPERTY
 from zwave_js_server.const.command_class.notification import (
     CC_SPECIFIC_NOTIFICATION_TYPE,
     AccessControlNotificationEvent,
+    HeatAlarmNotificationEvent,
     NotificationEvent,
     NotificationType,
     SmokeAlarmNotificationEvent,
@@ -264,12 +265,6 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         # NotificationType 3: Carbon Dioxide - All other State Id's
         key=NOTIFICATION_CARBON_DIOXIDE,
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 4: Heat - State Id's 1, 2, 5, 6 (heat/underheat)
-        key=NOTIFICATION_HEAT,
-        states={1, 2, 5, 6},
-        device_class=BinarySensorDeviceClass.HEAT,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 4: Heat - State ID's 8, A, B
@@ -1475,6 +1470,77 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
                 SmokeAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
                 SmokeAlarmNotificationEvent.DUST_IN_DEVICE_STATUS_MAINTENANCE_REQUIRED_DUST_IN_DEVICE,
             },
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HEAT_ALARM)
+            },
+        ),
+        # Generic device classes where overheat/underheat is primary
+        # functionality rather than diagnostic.
+        # https://github.com/zwave-js/backlog/issues/119#issuecomment-3096168116
+        device_class_generic={
+            "Appliance",
+            "Notification Sensor",
+            "Thermostat",
+            "Multilevel Sensor",
+            "Alarm Sensor",
+        },
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 4: Heat - overheat/underheat detected (primary)
+            key=NOTIFICATION_HEAT,
+            states={
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED,
+            },
+            device_class=BinarySensorDeviceClass.HEAT,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HEAT_ALARM)
+            },
+        ),
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 4: Heat - overheat/underheat detected (diagnostic)
+            key=NOTIFICATION_HEAT,
+            states={
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED,
+            },
+            device_class=BinarySensorDeviceClass.HEAT,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         entity_class=ZWaveNotificationBinarySensor,
     ),
