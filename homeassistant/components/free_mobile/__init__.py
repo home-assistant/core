@@ -35,5 +35,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeMobileConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: FreeMobileConfigEntry) -> bool:
     """Unload a config entry."""
-    await hass_notify.async_reload(hass, DOMAIN)
     return True
