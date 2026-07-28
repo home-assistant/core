@@ -26,8 +26,6 @@ DOMAIN: Final = "hortimax"
 LOGGER: Final = logging.getLogger(__package__)
 MANUFACTURER: Final = "Ridder"
 
-CONF_BASE_URL: Final = "base_url"
-
 # Changed readouts are published about once a minute; unchanged ones keep a
 # stale timestamp for up to five. One request per controller, limit 100/15s.
 SCAN_INTERVAL: Final = 60  # seconds

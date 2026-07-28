@@ -8,13 +8,12 @@ from unittest.mock import AsyncMock, patch
 from aiohortos import Device, Organisation, Readout, TokenPair
 import pytest
 
-from homeassistant.components.hortimax.const import CONF_BASE_URL, DOMAIN
+from homeassistant.components.hortimax.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 
 from tests.common import MockConfigEntry, load_fixture
 
 API_KEY = "test-api-key"
-BASE_URL = "https://hortos.ridder.com/api/process-control"
 DEVICE = "HOR00000000.000"
 DEVICE_LABEL = "Greenhouse Multima"
 ORGANISATION_ID = "9006"
@@ -44,7 +43,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Ridder HortiMaX Pro",
-        data={CONF_API_KEY: API_KEY, CONF_BASE_URL: BASE_URL},
+        data={CONF_API_KEY: API_KEY},
         unique_id=ORGANISATION_ID,
     )
 

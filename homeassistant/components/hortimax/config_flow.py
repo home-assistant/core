@@ -2,12 +2,7 @@
 
 from typing import Any, override
 
-from aiohortos import (
-    DEFAULT_BASE_URL,
-    HortosAuthenticationError,
-    HortosClient,
-    HortosError,
-)
+from aiohortos import HortosAuthenticationError, HortosClient, HortosError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -19,15 +14,12 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_BASE_URL, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD, autocomplete="api_key")
-        ),
-        vol.Required(CONF_BASE_URL, default=DEFAULT_BASE_URL): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.URL)
         ),
     }
 )
@@ -36,15 +28,9 @@ USER_SCHEMA = vol.Schema(
 class HortimaxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ridder HortiMaX Pro."""
 
-    async def _async_validate(
-        self, api_key: str, base_url: str, errors: dict[str, str]
-    ) -> str | None:
+    async def _async_validate(self, api_key: str, errors: dict[str, str]) -> str | None:
         """Authenticate and list controllers, returning the organisation id."""
-        client = HortosClient(
-            api_key,
-            session=async_get_clientsession(self.hass),
-            base_url=base_url,
-        )
+        client = HortosClient(api_key, session=async_get_clientsession(self.hass))
         try:
             tokens = await client.authenticate()
             devices = await client.get_device_names()
@@ -75,7 +61,7 @@ class HortimaxConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             organisation_id = await self._async_validate(
-                user_input[CONF_API_KEY], user_input[CONF_BASE_URL], errors
+                user_input[CONF_API_KEY], errors
             )
             if not errors:
                 await self.async_set_unique_id(organisation_id)
