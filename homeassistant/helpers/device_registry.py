@@ -1706,11 +1706,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             and device.config_subentry_id != config_subentry_id
         ):
             # A device belongs to a single config subentry. Re-registering an existing
-            # device under a different subentry of the same config entry silently moves it
-            # (e.g. entities from several subentries sharing one device_info identity),
-            # rather than being an explicit move via
-            # async_update_device(new_config_subentry_id=...). This is deprecated; for now
-            # warn and fall through to the move below, but it will raise in HA Core 2027.8.
+            # device under a different subentry of the same config entry (e.g. entities
+            # from several subentries sharing one device_info identity) silently moves
+            # it. This is deprecated since moves should be explicit via
+            # async_update_device(new_config_subentry_id=...).
+            # For now warn and fall through to the move below, but it will raise in HA
+            # Core 2027.8.
             report_usage(
                 "assigns an existing device to a different config subentry, by calling "
                 "`async_get_or_create` or by adding entities from several subentries that "
@@ -1787,9 +1788,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             is_new=is_new,
             name=name,
             has_composite_identifiers=has_composite_identifiers,
-            # Validates the subentry and, for a new device, sets it. For an existing device
-            # a differing subentry moves it (deprecated, warned above); UNDEFINED or a
-            # matching subentry leaves it unchanged.
             new_config_subentry_id=config_subentry_id,
             suggested_area=suggested_area,
             via_device_id=via_device_id,

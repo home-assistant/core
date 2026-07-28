@@ -276,6 +276,8 @@ async def test_multiple_config_subentries(
     )
     assert entry2.id == entry.id
     assert entry2.config_subentry_id == "mock-subentry-id-1"
+    # The idempotent re-registration must not emit the deprecation warning
+    assert "A device belongs to one subentry" not in caplog.text
 
     # A device belongs to a single subentry; re-registering the same identifiers under
     # another subentry of the same config entry is deprecated. For now it warns and moves
