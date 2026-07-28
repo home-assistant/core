@@ -13,7 +13,7 @@ def test_entity_initialization() -> None:
     device_info = DeviceInfo(identifiers={("watercryst", "1234567890")})
     client = MagicMock()
     runtime_data = SimpleNamespace(
-        bsn="1234567890",
+        biocat_serial_number="1234567890",
         device_info=device_info,
         client=client,
     )

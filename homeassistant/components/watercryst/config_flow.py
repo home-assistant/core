@@ -4,7 +4,14 @@ import logging
 from typing import Any, override
 
 from httpx import HTTPStatusError, RequestError
-from pyocat import AsyncApiClient, AsyncAuth
+from pyocat import (
+    AsyncApiClient,
+    AsyncAuth,
+    WTCApiDisabledError,
+    WTCApiTemporaryError,
+    WTCApiUnauthorizedError,
+)
+from pyocat.models import DeviceResponse
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -25,13 +32,13 @@ _STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> DeviceResponse:
     """Validate that the credentials work against the target device.
 
     Load additional device info and check if the device is online.
     """
 
-    bsn: str = data[CONF_BSN]
+    biocat_serial_number: str = data[CONF_BSN]
     key: str = data[CONF_API_KEY]
 
     auth = AsyncAuth(client=get_async_client(hass), api_key=key)
@@ -40,25 +47,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
     try:
         info = await client.get_device_info()
 
-        if info.biocat_serial != bsn:
+        if info.biocat_serial != biocat_serial_number:
             raise WrongDeviceSerial
-
-        state = await client.get_state()
-
-        if not state.online:
-            raise DeviceOffline
-
-    except HTTPStatusError as err:
-        match err.response.status_code:
-            case 401:
-                raise InvalidAuth from err
-            case 403:
-                raise ApiDisabled from err
-            case _:
-                raise
-    except RequestError:
-        raise
-
+    except WTCApiUnauthorizedError as err:
+        raise InvalidAuth from err
+    except WTCApiDisabledError as err:
+        raise ApiDisabled from err
     return info
 
 
@@ -83,12 +77,12 @@ class WatercrystConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except ApiDisabled:
                 errors["base"] = "api_disabled"
-            except DeviceOffline:
-                errors["base"] = "device_offline"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except WrongDeviceSerial:
                 errors["base"] = "wrong_device_serial"
+            except WTCApiTemporaryError:
+                errors["base"] = "cannot_connect"
             except HTTPStatusError:
                 errors["base"] = "cannot_connect"
             except RequestError:
@@ -110,10 +104,6 @@ class WatercrystConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class ApiDisabled(HomeAssistantError):
     """Error to indicate a disabled API endpoint."""
-
-
-class DeviceOffline(HomeAssistantError):
-    """Error to indicate an offline device."""
 
 
 class InvalidAuth(HomeAssistantError):

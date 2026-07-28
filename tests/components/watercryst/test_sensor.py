@@ -16,7 +16,6 @@ from homeassistant.components.watercryst.sensor import (
     PRESSURE_SENSORS,
     STATE_SENSORS,
     TEMPERATURE_SENSORS,
-    WatercrystEventSensorEntity,
     WatercrystStateSensorEntity,
 )
 from homeassistant.const import CONF_API_KEY
@@ -245,23 +244,6 @@ def test_native_value(
     assert entity.native_value == expected
 
 
-def test_event_extra_state_attributes() -> None:
-    """Test exposing all event properties as attributes."""
-    attributes = {
-        "event_id": "leakage_detected",
-        "category": "warning",
-        "message": "Leakage protection activated",
-    }
-    event = MagicMock()
-    event.model_dump.return_value = attributes
-
-    entity = object.__new__(WatercrystEventSensorEntity)
-    entity.coordinator = SimpleNamespace(data=SimpleNamespace(event=event))
-
-    assert entity.extra_state_attributes == attributes
-    event.model_dump.assert_called_once_with(by_alias=False)
-
-
 @pytest.mark.parametrize(
     "data",
     [
@@ -273,7 +255,7 @@ def test_event_extra_state_attributes_without_event(
     data: SimpleNamespace | None,
 ) -> None:
     """Test attributes are absent without event data."""
-    entity = object.__new__(WatercrystEventSensorEntity)
+    entity = object.__new__(WatercrystStateSensorEntity)
     entity.coordinator = SimpleNamespace(data=data)
 
     assert entity.extra_state_attributes is None
@@ -303,7 +285,7 @@ def test_sensor_entity_initialization() -> None:
 
     config_entry = MagicMock()
     config_entry.runtime_data = SimpleNamespace(
-        bsn=MOCK_BSN,
+        biocat_serial_number=MOCK_BSN,
         device_info=device_info,
         client=client,
         measurements=measurements,

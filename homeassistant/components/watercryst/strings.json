@@ -6,7 +6,6 @@
     "error": {
       "api_disabled": "API endpoint disabled",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "device_offline": "The device is offline",
       "invalid_auth": "Invalid authentication",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "wrong_device_serial": "The entered BIOCAT serial number is not correct"
@@ -15,11 +14,11 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "bsn": "BIOCAT Serial Number"
+          "biocat_serial_number": "BIOCAT Serial Number"
         },
         "data_description": {
           "api_key": "BIOCAT Smart Home API Key",
-          "bsn": "BIOCAT Serial Number"
+          "biocat_serial_number": "BIOCAT Serial Number"
         }
       }
     }

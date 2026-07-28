@@ -133,35 +133,42 @@ async def async_setup_entry(
     """Set up the sensor entities."""
     data = config_entry.runtime_data
 
-    async_add_entities(
-        WatercrystStateSensorEntity(config_entry, description)
-        for description in STATE_SENSORS
-    )
-    async_add_entities(
-        WatercrystEventSensorEntity(config_entry, description)
-        for description in EVENT_SENSORS
-    )
+    entities: list[SensorEntity] = [
+        *(
+            WatercrystStateSensorEntity(config_entry, description)
+            for description in STATE_SENSORS
+        ),
+        *(
+            WatercrystStateSensorEntity(config_entry, description)
+            for description in EVENT_SENSORS
+        ),
+    ]
 
     if data.has_leakage_protection_system:
-        async_add_entities(
+        entities.extend(
             WatercrystStateSensorEntity(config_entry, description)
             for description in LEAKAGE_PROTECTION_SENSORS
         )
+
     if data.has_temperature_sensor:
-        async_add_entities(
+        entities.extend(
             WatercrystMeasurementSensorEntity(config_entry, description)
             for description in TEMPERATURE_SENSORS
         )
+
     if data.has_pressure_sensor:
-        async_add_entities(
+        entities.extend(
             WatercrystMeasurementSensorEntity(config_entry, description)
             for description in PRESSURE_SENSORS
         )
+
     if data.has_flow_rate_sensor:
-        async_add_entities(
+        entities.extend(
             WatercrystMeasurementSensorEntity(config_entry, description)
             for description in FLOWRATE_SENSORS
         )
+
+    async_add_entities(entities)
 
 
 class WatercrystSensorEntity[_T: DataUpdateCoordinator[Any]](
@@ -190,6 +197,18 @@ class WatercrystSensorEntity[_T: DataUpdateCoordinator[Any]](
             return getter(self.coordinator.data)
         except AttributeError:
             return None
+
+    @override
+    @property
+    def available(self) -> bool:
+        """Return whether the device is available."""
+        state = self.runtime_data.state
+        return (
+            super().available
+            and state.last_update_success
+            and state.data is not None
+            and state.data.online
+        )
 
 
 class WatercrystMeasurementSensorEntity(
@@ -224,17 +243,3 @@ class WatercrystStateSensorEntity(WatercrystSensorEntity[StateUpdateCoordinator]
             coordinator=config_entry.runtime_data.state,
             entity_description=entity_description,
         )
-
-
-class WatercrystEventSensorEntity(WatercrystStateSensorEntity):
-    """Event sensor entity."""
-
-    @override
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Provide all event properties as extra state attributes."""
-        if not self.coordinator.data:
-            return None
-        if not self.coordinator.data.event:
-            return None
-        return self.coordinator.data.event.model_dump(by_alias=False)

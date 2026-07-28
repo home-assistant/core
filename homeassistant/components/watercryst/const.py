@@ -3,4 +3,4 @@
 DOMAIN = "watercryst"
 DEFAULT_NAME = "BIOCAT Device"
 
-CONF_BSN = "bsn"
+CONF_BSN = "biocat_serial_number"

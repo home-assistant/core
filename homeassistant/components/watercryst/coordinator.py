@@ -3,47 +3,25 @@
 from asyncio import CancelledError, timeout
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
-from pyocat import AsyncApiClient
+from httpx import HTTPStatusError, RequestError
+from pyocat import (
+    AsyncApiClient,
+    WTCApiDisabledError,
+    WTCApiTemporaryError,
+    WTCApiUnauthorizedError,
+)
 from pyocat.models import MeasurementResponse, StateResponse
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+if TYPE_CHECKING:
+    from . import WatercrystConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
-
-
-class MeasurementsUpdateCoordinator(DataUpdateCoordinator[MeasurementResponse]):
-    """Measurements data updater coordinator."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: ConfigEntry,
-        client: AsyncApiClient,
-    ) -> None:
-        """Initializes the measurement data updater."""
-        super().__init__(
-            hass=hass,
-            logger=_LOGGER,
-            name="Measurements update coordinator",
-            config_entry=entry,
-            update_interval=timedelta(seconds=60),
-            always_update=False,
-        )
-        self._client = client
-
-    @override
-    async def _async_update_data(self):
-        try:
-            async with timeout(10):
-                return await self._client.get_measurements()
-        except CancelledError:
-            raise
-        except Exception as err:
-            raise UpdateFailed("Failed to update measurements", retry_after=60) from err
 
 
 class StateUpdateCoordinator(DataUpdateCoordinator[StateResponse]):
@@ -52,7 +30,7 @@ class StateUpdateCoordinator(DataUpdateCoordinator[StateResponse]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: WatercrystConfigEntry,
         client: AsyncApiClient,
     ) -> None:
         """Initializes the state data updater."""
@@ -75,5 +53,54 @@ class StateUpdateCoordinator(DataUpdateCoordinator[StateResponse]):
                 return await self._client.get_state(locale=locale)
         except CancelledError:
             raise
-        except Exception as err:
+        except (
+            WTCApiDisabledError,
+            WTCApiTemporaryError,
+            HTTPStatusError,
+            RequestError,
+        ) as err:
             raise UpdateFailed("Failed to update state", retry_after=60) from err
+        except WTCApiUnauthorizedError as err:
+            raise ConfigEntryAuthFailed("Failed to update state, unauthorized") from err
+
+
+class MeasurementsUpdateCoordinator(DataUpdateCoordinator[MeasurementResponse]):
+    """Measurements data updater coordinator."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: WatercrystConfigEntry,
+        client: AsyncApiClient,
+        state: StateUpdateCoordinator,
+    ) -> None:
+        """Initializes the measurement data updater."""
+        super().__init__(
+            hass=hass,
+            logger=_LOGGER,
+            name="Measurements update coordinator",
+            config_entry=entry,
+            update_interval=timedelta(seconds=60),
+            always_update=False,
+        )
+        self._client = client
+        self._state = state
+
+    @override
+    async def _async_update_data(self) -> MeasurementResponse | None:
+        if self._state.data is None or not self._state.data.online:
+            return self.data
+        try:
+            async with timeout(10):
+                return await self._client.get_measurements()
+        except (
+            WTCApiDisabledError,
+            WTCApiTemporaryError,
+            HTTPStatusError,
+            RequestError,
+        ) as err:
+            raise UpdateFailed("Failed to update measurements", retry_after=60) from err
+        except WTCApiUnauthorizedError as err:
+            raise ConfigEntryAuthFailed(
+                "Failed to update measurements, unauthorized"
+            ) from err

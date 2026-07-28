@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from httpx import HTTPStatusError, Request, RequestError, Response
+from pyocat import WTCApiDisabledError, WTCApiTemporaryError, WTCApiUnauthorizedError
 import pytest
 
 from homeassistant.components.watercryst.const import CONF_BSN, DOMAIN
@@ -120,7 +121,7 @@ async def test_setup_and_unload_entry(
         assert config_entry.state is ConfigEntryState.LOADED
 
         runtime_data = config_entry.runtime_data
-        assert runtime_data.bsn == MOCK_BSN
+        assert runtime_data.biocat_serial_number == MOCK_BSN
         assert runtime_data.has_flow_rate_sensor
         assert runtime_data.has_leakage_protection_system
         assert runtime_data.has_pressure_sensor
@@ -147,7 +148,9 @@ async def test_setup_and_unload_entry(
         mock_watercryst_client.get_device_info.assert_awaited_once_with()
         mock_watercryst_client.get_state.assert_awaited_once_with()
         measurements.async_config_entry_first_refresh.assert_awaited_once_with()
-        state.async_config_entry_first_refresh.assert_awaited_once_with()
+        state.async_set_updated_data.assert_called_once_with(
+            mock_watercryst_client.get_state.return_value
+        )
         forward_setups.assert_awaited_once_with(config_entry, [Platform.SENSOR])
 
         assert await hass.config_entries.async_unload(config_entry.entry_id)
@@ -161,24 +164,11 @@ async def test_setup_invalid_authentication(
     mock_watercryst_client: MagicMock,
 ) -> None:
     """Test a 401 response fails setup as an authentication error."""
-    mock_watercryst_client.get_device_info.side_effect = _http_status_error(401)
+    mock_watercryst_client.get_device_info.side_effect = WTCApiUnauthorizedError
 
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert config_entry.reason == "Invalid authentication"
-
-
-async def test_setup_offline_device(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_watercryst_client: MagicMock,
-) -> None:
-    """Test an offline device schedules a setup retry."""
-    mock_watercryst_client.get_state.return_value = _state(online=False)
-
-    assert not await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert config_entry.reason == "Device is offline"
 
 
 async def test_setup_transport_error(
@@ -197,19 +187,20 @@ async def test_setup_transport_error(
     assert config_entry.reason == "Temporary API error"
 
 
-@pytest.mark.parametrize("status_code", [500, 503])
-async def test_setup_server_error(
+async def test_setup_temporary_api_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_watercryst_client: MagicMock,
-    status_code: int,
 ) -> None:
-    """Test server errors schedule a setup retry."""
-    mock_watercryst_client.get_device_info.side_effect = _http_status_error(status_code)
+    """Test that temporary API errors schedule a setup retry."""
+    mock_watercryst_client.get_device_info.side_effect = WTCApiTemporaryError
 
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert config_entry.reason == "Temporary API error"
+
+    mock_watercryst_client.get_device_info.assert_awaited_once_with()
+    mock_watercryst_client.get_state.assert_not_awaited()
 
 
 async def test_setup_serial_number_mismatch(
@@ -234,7 +225,7 @@ async def test_setup_api_disabled(
     mock_watercryst_client: MagicMock,
 ) -> None:
     """Test a disabled API fails setup without retrying."""
-    mock_watercryst_client.get_device_info.side_effect = _http_status_error(403)
+    mock_watercryst_client.get_device_info.side_effect = WTCApiDisabledError
 
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_ERROR

@@ -2,8 +2,10 @@
 
 from asyncio import CancelledError
 from datetime import timedelta
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
+from pyocat import WTCApiDisabledError
 import pytest
 
 from homeassistant.components.watercryst.coordinator import (
@@ -20,15 +22,20 @@ async def test_measurements_update_success(hass: HomeAssistant) -> None:
     client = MagicMock()
     client.get_measurements = AsyncMock(return_value=measurements)
 
+    state = MagicMock(spec=StateUpdateCoordinator)
+    state.data = SimpleNamespace(online=True)
+
     coordinator = MeasurementsUpdateCoordinator(
         hass=hass,
         entry=MagicMock(),
         client=client,
+        state=state,
     )
 
-    assert coordinator.name == "Measurements update coordinator"
-    assert coordinator.update_interval == timedelta(seconds=60)
-    assert await coordinator._async_update_data() is measurements
+    await coordinator.async_refresh()
+
+    assert coordinator.last_update_success
+    assert coordinator.data is measurements
     client.get_measurements.assert_awaited_once_with()
 
 
@@ -77,15 +84,24 @@ async def test_update_error(
     message: str,
 ) -> None:
     """Test coordinator exceptions become update failures."""
-    error = RuntimeError("API unavailable")
+    error = WTCApiDisabledError()
     client = MagicMock()
+    state = MagicMock(spec=StateUpdateCoordinator)
+    state.data = SimpleNamespace(online=True)
     setattr(client, client_method, AsyncMock(side_effect=error))
-    coordinator = coordinator_class(
-        hass=hass,
-        entry=MagicMock(),
-        client=client,
-    )
-
+    if coordinator_class is MeasurementsUpdateCoordinator:
+        coordinator = coordinator_class(
+            hass=hass,
+            entry=MagicMock(),
+            client=client,
+            state=state,
+        )
+    else:
+        coordinator = coordinator_class(
+            hass=hass,
+            entry=MagicMock(),
+            client=client,
+        )
     with pytest.raises(UpdateFailed, match=message) as exc_info:
         await coordinator._async_update_data()
 
@@ -106,12 +122,22 @@ async def test_update_cancelled(
 ) -> None:
     """Test task cancellation is propagated unchanged."""
     client = MagicMock()
-    setattr(client, client_method, AsyncMock(side_effect=CancelledError))
-    coordinator = coordinator_class(
-        hass=hass,
-        entry=MagicMock(),
-        client=client,
-    )
 
+    state = MagicMock(spec=StateUpdateCoordinator)
+    state.data = SimpleNamespace(online=True)
+    setattr(client, client_method, AsyncMock(side_effect=CancelledError))
+    if coordinator_class is MeasurementsUpdateCoordinator:
+        coordinator = coordinator_class(
+            hass=hass,
+            entry=MagicMock(),
+            client=client,
+            state=state,
+        )
+    else:
+        coordinator = coordinator_class(
+            hass=hass,
+            entry=MagicMock(),
+            client=client,
+        )
     with pytest.raises(CancelledError):
         await coordinator._async_update_data()

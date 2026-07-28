@@ -3,7 +3,13 @@
 from dataclasses import dataclass
 
 from httpx import HTTPStatusError, RequestError
-from pyocat import AsyncApiClient, AsyncAuth
+from pyocat import (
+    AsyncApiClient,
+    AsyncAuth,
+    WTCApiDisabledError,
+    WTCApiTemporaryError,
+    WTCApiUnauthorizedError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
@@ -33,7 +39,7 @@ _PLATFORMS: list[Platform] = [
 class RuntimeData:
     """Strongly typed runtime data container."""
 
-    bsn: str
+    biocat_serial_number: str
     has_flow_rate_sensor: bool
     has_leakage_protection_system: bool
     has_pressure_sensor: bool
@@ -50,7 +56,7 @@ type WatercrystConfigEntry = ConfigEntry[RuntimeData]
 async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -> bool:
     """Set up a WATERCryst BIOCAT device from a config entry."""
 
-    bsn: str = entry.data[CONF_BSN]
+    biocat_serial_number: str = entry.data[CONF_BSN]
     key: str = entry.data[CONF_API_KEY]
 
     auth = AsyncAuth(client=get_async_client(hass), api_key=key)
@@ -59,26 +65,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
     try:
         info = await client.get_device_info()
 
-        if info.biocat_serial != bsn:
+        if info.biocat_serial != biocat_serial_number:
             raise ConfigEntryAuthFailed("BIOCAT serial number mismatch")
 
-        state = await client.get_state()
+        initial_state = await client.get_state()
 
-        if not state.online:
-            raise ConfigEntryNotReady("Device is offline")
-
-    except HTTPStatusError as err:
-        match err.response.status_code:
-            case 401:
-                raise ConfigEntryAuthFailed("Invalid authentication") from err
-            case 403:
-                raise ConfigEntryError("API disabled") from err
-            case status if status == 429 or status >= 500:
-                raise ConfigEntryNotReady("Temporary API error") from err
-            case _:
-                raise ConfigEntryError("Unexpected error") from err
+    except WTCApiUnauthorizedError as err:
+        raise ConfigEntryAuthFailed("Invalid authentication") from err
+    except WTCApiDisabledError as err:
+        raise ConfigEntryError("API disabled") from err
+    except WTCApiTemporaryError as err:
+        raise ConfigEntryNotReady("Temporary API error") from err
     except RequestError as err:
         raise ConfigEntryNotReady("Temporary API error") from err
+    except HTTPStatusError as err:
+        raise ConfigEntryError("Unexpected error") from err
 
     connections: set[tuple[str, str]] = set()
 
@@ -89,26 +90,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
         connections.add((CONNECTION_BLUETOOTH, format_mac(info.ble_mac_address)))
 
     device_info = DeviceInfo(
-        identifiers={(DOMAIN, bsn)},
+        identifiers={(DOMAIN, biocat_serial_number)},
         connections=connections,
         manufacturer="WATERCryst",
         model=" ".join(part for part in (info.line, info.series) if part) or None,
         model_id=info.device_type_number,
         name=info.name,
-        serial_number=bsn,
+        serial_number=biocat_serial_number,
         sw_version=info.current_firmware_version,
         hw_version=info.current_hardware_version,
-        configuration_url=f"https://app.watercryst.com/devices/{bsn}",
+        configuration_url=f"https://app.watercryst.com/devices/{biocat_serial_number}",
     )
 
-    measurements = MeasurementsUpdateCoordinator(hass=hass, entry=entry, client=client)
     state = StateUpdateCoordinator(hass=hass, entry=entry, client=client)
+    state.async_set_updated_data(initial_state)
+    measurements = MeasurementsUpdateCoordinator(
+        hass=hass, entry=entry, client=client, state=state
+    )
 
     await measurements.async_config_entry_first_refresh()
-    await state.async_config_entry_first_refresh()
 
     entry.runtime_data = RuntimeData(
-        bsn=bsn,
+        biocat_serial_number=biocat_serial_number,
         has_flow_rate_sensor=info.has_flow_rate_sensor,
         has_leakage_protection_system=info.has_leakage_protection_system,
         has_pressure_sensor=info.has_pressure_sensor,

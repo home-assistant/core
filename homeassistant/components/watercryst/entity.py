@@ -20,7 +20,7 @@ class WatercrystEntity(Entity):
         data = config_entry.runtime_data
 
         self._attr_device_info = data.device_info
-        self._attr_unique_id = f"{data.bsn}_{entity_description.key}"
+        self._attr_unique_id = f"{data.biocat_serial_number}_{entity_description.key}"
 
         self.entity_description = entity_description
         self.runtime_data = data
