@@ -19,11 +19,13 @@
   offset:
     required: true
     default:
+      days: 0
       hours: 0
       minutes: 0
       seconds: 0
     selector:
       duration:
+        enable_day: true
   offset_type:
     required: true
     default: before
