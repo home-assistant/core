@@ -163,12 +163,14 @@
             "auto": "[%key:common::state::auto%]",
             "diffuse": "Diffuse",
             "focus": "Focus",
+            "full": "Full",
             "high": "[%key:common::state::high%]",
             "low": "[%key:common::state::low%]",
             "medium": "[%key:common::state::medium%]",
             "middle": "Middle",
             "off": "[%key:common::state::off%]",
             "on": "[%key:common::state::on%]",
+            "silent": "Silent",
             "top": "Top"
           }
         },

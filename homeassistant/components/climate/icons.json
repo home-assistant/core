@@ -35,12 +35,14 @@
             "auto": "mdi:fan-auto",
             "diffuse": "mdi:weather-windy",
             "focus": "mdi:target",
+            "full": "mdi:fan-alert",
             "high": "mdi:speedometer",
             "low": "mdi:speedometer-slow",
             "medium": "mdi:speedometer-medium",
             "middle": "mdi:speedometer-medium",
             "off": "mdi:fan-off",
-            "on": "mdi:fan"
+            "on": "mdi:fan",
+            "silent": "mdi:fan-clock"
           }
         },
         "hvac_action": {
