@@ -116,6 +116,31 @@ async def test_binary_expose_write_back_source_filter(
     assert len(turn_on) == 0
 
 
+async def test_binary_expose_write_back_invalid_payload(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test a malformed 1-bit payload does not change the entity state."""
+    entity_id = _SWITCH_ENTITY
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "binary",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                ExposeSchema.CONF_KNX_EXPOSE_WRITE_BACK: True,
+                ExposeSchema.CONF_KNX_EXPOSE_SOURCE_WHITELIST: ["1.1.5"],
+            }
+        },
+    )
+    turn_on = async_mock_service(hass, "switch", SERVICE_TURN_ON)
+    turn_off = async_mock_service(hass, "switch", SERVICE_TURN_OFF)
+
+    # a DPTBinary carrying a value other than 0/1 is not a valid 1-bit payload
+    await knx.receive_write("1/1/8", 2, source="1.1.5")
+    assert len(turn_on) == 0
+    assert len(turn_off) == 0
+
+
 @pytest.mark.parametrize(
     ("expose_type", "payload", "expected", "domain"),
     [

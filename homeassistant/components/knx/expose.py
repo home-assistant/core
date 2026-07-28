@@ -341,7 +341,15 @@ class KnxExposeEntity:
         """Map an incoming payload to the write-back service call, or None."""
         entity_domain = split_entity_id(self.entity_id)[0]
         if issubclass(option.dpt, DPT1BitEnum):
-            value = bool(payload.value)
+            try:
+                value = bool(option.dpt.from_knx(payload).value)
+            except (ConversionError, CouldNotParseTelegram) as err:
+                _LOGGER.warning(
+                    "Could not decode incoming telegram for KNX expose %s: %s",
+                    self.entity_id,
+                    err,
+                )
+                return None
             service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
             if not self.hass.services.has_service(entity_domain, service):
                 _LOGGER.warning(
