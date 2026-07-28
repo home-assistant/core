@@ -155,15 +155,16 @@ async def test_scan_source_callback_forwards_advertisement(
 @pytest.mark.parametrize(
     ("advert_time", "expected_count"),
     [
-        pytest.param(999.0, 0, id="stale-before-scan-start-dropped"),
-        pytest.param(1000.0, 1, id="equal-scan-start-forwarded"),
-        pytest.param(1001.0, 1, id="fresh-after-scan-start-forwarded"),
+        pytest.param(969.0, 0, id="stale-31s-old-dropped"),
+        pytest.param(970.0, 1, id="boundary-30s-old-forwarded"),
+        pytest.param(990.0, 1, id="recent-10s-old-forwarded"),
+        pytest.param(1001.0, 1, id="live-after-scan-start-forwarded"),
     ],
 )
 async def test_scan_source_drops_replayed_history(
     hass: HomeAssistant, advert_time: float, expected_count: int
 ) -> None:
-    """Adverts older than the registration instant (HA history replay) are dropped."""
+    """History older than _MAX_STALE_ADVERTISEMENT_SECONDS is dropped; fresher entries pass."""
     forwarded: list[AdvertisementData] = []
     captured: dict[str, object] = {}
 

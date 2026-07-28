@@ -6,15 +6,8 @@ from typing import Final
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONCENTRATION_GRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     LIGHT_LUX,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
@@ -22,6 +15,7 @@ from homeassistant.const import (
     UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -34,6 +28,8 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
+    UnitOfRatio,
     UnitOfReactiveEnergy,
     UnitOfReactivePower,
     UnitOfSoundPressure,
@@ -67,6 +63,7 @@ from homeassistant.util.unit_conversion import (
     OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
+    RadiationConcentrationConverter,
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
@@ -90,6 +87,15 @@ DEFAULT_STEP = 1.0
 DOMAIN = "number"
 
 SERVICE_SET_VALUE = "set_value"
+
+
+class NumberEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for number entities."""
+
+    MIN = "min"
+    MAX = "max"
+    STEP = "step"
+    MODE = "mode"
 
 
 class NumberMode(StrEnum):
@@ -369,6 +375,14 @@ class NumberDeviceClass(StrEnum):
     - `inH₂O`
     """
 
+    RADON = "radon"
+    """Radon.
+
+    Unit of measurement: UnitOfRadiationConcentration
+    - SI / metric: `Bq/m³`
+    - USCS / imperial: `pCi/L`
+    """
+
     REACTIVE_ENERGY = "reactive_energy"
     """Reactive energy.
 
@@ -507,22 +521,22 @@ class NumberDeviceClass(StrEnum):
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
 DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.ABSOLUTE_HUMIDITY: {
-        CONCENTRATION_GRAMS_PER_CUBIC_METER,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.GRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     NumberDeviceClass.AQI: {None},
     NumberDeviceClass.AREA: set(UnitOfArea),
     NumberDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
-    NumberDeviceClass.BATTERY: {PERCENTAGE},
+    NumberDeviceClass.BATTERY: {UnitOfRatio.PERCENTAGE},
     NumberDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: set(UnitOfBloodGlucoseConcentration),
     NumberDeviceClass.CO: {
-        CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_PARTS_PER_MILLION,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfRatio.PARTS_PER_BILLION,
+        UnitOfRatio.PARTS_PER_MILLION,
+        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     },
-    NumberDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
+    NumberDeviceClass.CO2: {UnitOfRatio.PARTS_PER_MILLION},
     NumberDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
     NumberDeviceClass.CURRENT: set(UnitOfElectricCurrent),
     NumberDeviceClass.DATA_RATE: set(UnitOfDataRate),
@@ -547,31 +561,31 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfVolume.LITERS,
         UnitOfVolume.MILLE_CUBIC_FEET,
     },
-    NumberDeviceClass.HUMIDITY: {PERCENTAGE},
+    NumberDeviceClass.HUMIDITY: {UnitOfRatio.PERCENTAGE},
     NumberDeviceClass.ILLUMINANCE: {LIGHT_LUX},
     NumberDeviceClass.IRRADIANCE: set(UnitOfIrradiance),
-    NumberDeviceClass.MOISTURE: {PERCENTAGE},
+    NumberDeviceClass.MOISTURE: {UnitOfRatio.PERCENTAGE},
     NumberDeviceClass.NITROGEN_DIOXIDE: {
-        CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_PARTS_PER_MILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfRatio.PARTS_PER_BILLION,
+        UnitOfRatio.PARTS_PER_MILLION,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.NITROGEN_MONOXIDE: {
-        CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfRatio.PARTS_PER_BILLION,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     },
-    NumberDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.NITROUS_OXIDE: {UnitOfDensity.MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.OZONE: {
-        CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_PARTS_PER_MILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfRatio.PARTS_PER_BILLION,
+        UnitOfRatio.PARTS_PER_MILLION,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.PH: {None},
-    NumberDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    NumberDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    NumberDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    NumberDeviceClass.PM4: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    NumberDeviceClass.POWER_FACTOR: {PERCENTAGE, None},
+    NumberDeviceClass.PM1: {UnitOfDensity.MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.PM10: {UnitOfDensity.MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.PM25: {UnitOfDensity.MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.PM4: {UnitOfDensity.MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.POWER_FACTOR: {UnitOfRatio.PERCENTAGE, None},
     NumberDeviceClass.POWER: {
         UnitOfPower.MILLIWATT,
         UnitOfPower.WATT,
@@ -583,6 +597,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     NumberDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     NumberDeviceClass.PRESSURE: set(UnitOfPressure),
+    NumberDeviceClass.RADON: set(UnitOfRadiationConcentration),
     NumberDeviceClass.REACTIVE_ENERGY: set(UnitOfReactiveEnergy),
     NumberDeviceClass.REACTIVE_POWER: set(UnitOfReactivePower),
     NumberDeviceClass.SIGNAL_STRENGTH: {
@@ -592,18 +607,18 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.SOUND_PRESSURE: set(UnitOfSoundPressure),
     NumberDeviceClass.SPEED: {*UnitOfSpeed, *UnitOfVolumetricFlux},
     NumberDeviceClass.SULPHUR_DIOXIDE: {
-        CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfRatio.PARTS_PER_BILLION,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.TEMPERATURE: set(UnitOfTemperature),
     NumberDeviceClass.TEMPERATURE_DELTA: set(UnitOfTemperature),
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: {
-        CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_PARTS_PER_MILLION,
+        UnitOfRatio.PARTS_PER_BILLION,
+        UnitOfRatio.PARTS_PER_MILLION,
     },
     NumberDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     NumberDeviceClass.VOLUME: set(UnitOfVolume),
@@ -648,6 +663,7 @@ UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
     NumberDeviceClass.PRECIPITATION: DistanceConverter,
     NumberDeviceClass.PRECIPITATION_INTENSITY: SpeedConverter,
     NumberDeviceClass.PRESSURE: PressureConverter,
+    NumberDeviceClass.RADON: RadiationConcentrationConverter,
     NumberDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
     NumberDeviceClass.REACTIVE_POWER: ReactivePowerConverter,
     NumberDeviceClass.SULPHUR_DIOXIDE: SulphurDioxideConcentrationConverter,
@@ -672,8 +688,8 @@ AMBIGUOUS_UNITS: dict[str | None, str] = {
     "\u00b5Sv/h": "μSv/h",  # aranet: radiation rate
     "\u00b5S/cm": UnitOfConductivity.MICROSIEMENS_PER_CM,
     "\u00b5V": UnitOfElectricPotential.MICROVOLT,
-    "\u00b5g/ft³": CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
-    "\u00b5g/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "\u00b5g/ft³": UnitOfDensity.MICROGRAMS_PER_CUBIC_FOOT,
+    "\u00b5g/m³": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     "\u00b5mol/s⋅m²": "μmol/s⋅m²",  # fyta: light
     "\u00b5g": UnitOfMass.MICROGRAMS,
     "\u00b5s": UnitOfTime.MICROSECONDS,

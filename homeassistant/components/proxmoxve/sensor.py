@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .const import ProxmoxPermission
 from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import (
     ProxmoxContainerEntity,
@@ -25,6 +26,7 @@ from .entity import (
     ProxmoxStorageEntity,
     ProxmoxVMEntity,
 )
+from .helpers import is_granted
 
 PARALLEL_UPDATES = 0
 
@@ -34,6 +36,8 @@ class ProxmoxNodeSensorEntityDescription(SensorEntityDescription):
     """Class to hold Proxmox node sensor description."""
 
     value_fn: Callable[[ProxmoxNodeData], StateType | datetime]
+    permission: ProxmoxPermission = ProxmoxPermission.SYSAUDIT
+    permission_target: str = "nodes"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -71,6 +75,9 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         key="node_max_cpu",
         translation_key="node_max_cpu",
         value_fn=lambda data: data.node["maxcpu"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_disk",
@@ -82,6 +89,7 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_max_disk",
@@ -93,6 +101,7 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_memory",
@@ -104,6 +113,7 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_max_memory",
@@ -141,6 +151,8 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         value_fn=lambda data: data.node["status"],
         device_class=SensorDeviceClass.ENUM,
         options=["online", "offline"],
+        permission=ProxmoxPermission.VMAUDIT,
+        permission_target="vms",
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_backup_last_backup",
@@ -152,6 +164,7 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         ),
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_backup_duration",
@@ -166,6 +179,7 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -174,6 +188,9 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
         key="vm_max_cpu",
         translation_key="vm_max_cpu",
         value_fn=lambda data: data["cpus"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxVMSensorEntityDescription(
         key="vm_cpu",
@@ -194,6 +211,7 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxVMSensorEntityDescription(
         key="vm_max_memory",
@@ -218,7 +236,7 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
     ProxmoxVMSensorEntityDescription(
         key="vm_uptime",
         translation_key="vm_uptime",
-        value_fn=lambda data: data["uptime"],
+        value_fn=lambda data: data.get("uptime"),
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
@@ -235,6 +253,7 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxVMSensorEntityDescription(
         key="vm_max_disk",
@@ -246,6 +265,7 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxVMSensorEntityDescription(
         key="vm_status",
@@ -264,6 +284,7 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxVMSensorEntityDescription(
         key="vm_netout",
@@ -275,6 +296,7 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -283,6 +305,9 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
         key="container_max_cpu",
         translation_key="container_max_cpu",
         value_fn=lambda data: data["cpus"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxContainerSensorEntityDescription(
         key="container_cpu",
@@ -303,6 +328,7 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxContainerSensorEntityDescription(
         key="container_max_memory",
@@ -327,7 +353,7 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
     ProxmoxContainerSensorEntityDescription(
         key="container_uptime",
         translation_key="container_uptime",
-        value_fn=lambda data: data["uptime"],
+        value_fn=lambda data: data.get("uptime"),
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
@@ -344,6 +370,7 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxContainerSensorEntityDescription(
         key="container_max_disk",
@@ -355,6 +382,7 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxContainerSensorEntityDescription(
         key="container_status",
@@ -373,6 +401,7 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxContainerSensorEntityDescription(
         key="container_netout",
@@ -384,6 +413,7 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -450,6 +480,12 @@ async def async_setup_entry(
             ProxmoxNodeSensor(coordinator, entity_description, node)
             for node in nodes
             for entity_description in NODE_SENSORS
+            if is_granted(
+                coordinator.permissions,
+                p_type=entity_description.permission_target,
+                p_id=node.node["node"],
+                permission=entity_description.permission,
+            )
         )
 
     def _async_add_new_vms(

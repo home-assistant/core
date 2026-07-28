@@ -6,28 +6,13 @@ from typing import Any, override
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    ATTR_APP_ID,
-    ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_ALBUM_ARTIST,
-    ATTR_MEDIA_ALBUM_NAME,
-    ATTR_MEDIA_ARTIST,
-    ATTR_MEDIA_CHANNEL,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_EPISODE,
-    ATTR_MEDIA_PLAYLIST,
-    ATTR_MEDIA_POSITION,
-    ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_REPEAT,
-    ATTR_MEDIA_SEASON,
     ATTR_MEDIA_SEEK_POSITION,
-    ATTR_MEDIA_SERIES_TITLE,
     ATTR_MEDIA_SHUFFLE,
-    ATTR_MEDIA_TITLE,
-    ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
@@ -41,16 +26,15 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE,
     BrowseMedia,
     MediaPlayerEntity,
+    MediaPlayerEntityCapabilityAttribute,
     MediaPlayerEntityFeature,
+    MediaPlayerEntityStateAttribute,
     MediaPlayerState,
     MediaType,
     RepeatMode,
 )
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
-    ATTR_ENTITY_PICTURE,
-    ATTR_SUPPORTED_FEATURES,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_STATE,
@@ -76,6 +60,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     Platform,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
@@ -318,7 +303,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     @override
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
-        return self._child_attr(ATTR_ASSUMED_STATE)
+        return self._child_attr(EntityStateAttribute.ASSUMED_STATE)
 
     @property
     @override
@@ -343,7 +328,11 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     def volume_level(self):
         """Volume level of entity specified in attributes or active child."""
         try:
-            return float(self._override_or_child_attr(ATTR_MEDIA_VOLUME_LEVEL))
+            return float(
+                self._override_or_child_attr(
+                    MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL
+                )
+            )
         except TypeError, ValueError:
             return None
 
@@ -351,31 +340,33 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     @override
     def is_volume_muted(self):
         """Boolean if volume is muted."""
-        return self._override_or_child_attr(ATTR_MEDIA_VOLUME_MUTED) in [True, STATE_ON]
+        return self._override_or_child_attr(
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED
+        ) in [True, STATE_ON]
 
     @property
     @override
     def media_content_id(self):
         """Return the content ID of current playing media."""
-        return self._child_attr(ATTR_MEDIA_CONTENT_ID)
+        return self._child_attr(MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID)
 
     @property
     @override
     def media_content_type(self):
         """Return the content type of current playing media."""
-        return self._child_attr(ATTR_MEDIA_CONTENT_TYPE)
+        return self._child_attr(MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE)
 
     @property
     @override
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
-        return self._child_attr(ATTR_MEDIA_DURATION)
+        return self._child_attr(MediaPlayerEntityStateAttribute.MEDIA_DURATION)
 
     @property
     @override
     def media_image_url(self):
         """Image url of current playing media."""
-        return self._override_or_child_attr(ATTR_ENTITY_PICTURE)
+        return self._override_or_child_attr(EntityStateAttribute.ENTITY_PICTURE)
 
     @property
     @override
@@ -392,116 +383,126 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     @override
     def media_title(self):
         """Title of current playing media."""
-        return self._child_attr(ATTR_MEDIA_TITLE)
+        return self._child_attr(MediaPlayerEntityStateAttribute.MEDIA_TITLE)
 
     @property
     @override
     def media_artist(self):
         """Artist of current playing media (Music track only)."""
-        return self._child_attr(ATTR_MEDIA_ARTIST)
+        return self._child_attr(MediaPlayerEntityStateAttribute.MEDIA_ARTIST)
 
     @property
     @override
     def media_album_name(self):
         """Album name of current playing media (Music track only)."""
-        return self._child_attr(ATTR_MEDIA_ALBUM_NAME)
+        return self._child_attr(MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME)
 
     @property
     @override
     def media_album_artist(self):
         """Album artist of current playing media (Music track only)."""
-        return self._child_attr(ATTR_MEDIA_ALBUM_ARTIST)
+        return self._child_attr(MediaPlayerEntityStateAttribute.MEDIA_ALBUM_ARTIST)
 
     @property
     @override
     def media_track(self):
         """Track number of current playing media (Music track only)."""
-        return self._child_attr(ATTR_MEDIA_TRACK)
+        return self._child_attr(MediaPlayerEntityStateAttribute.MEDIA_TRACK)
 
     @property
     @override
     def media_series_title(self):
         """Return the title of the series of current playing media (TV)."""
-        return self._child_attr(ATTR_MEDIA_SERIES_TITLE)
+        return self._child_attr(MediaPlayerEntityStateAttribute.MEDIA_SERIES_TITLE)
 
     @property
     @override
     def media_season(self):
         """Season of current playing media (TV Show only)."""
-        return self._child_attr(ATTR_MEDIA_SEASON)
+        return self._child_attr(MediaPlayerEntityStateAttribute.MEDIA_SEASON)
 
     @property
     @override
     def media_episode(self):
         """Episode of current playing media (TV Show only)."""
-        return self._child_attr(ATTR_MEDIA_EPISODE)
+        return self._child_attr(MediaPlayerEntityStateAttribute.MEDIA_EPISODE)
 
     @property
     @override
     def media_channel(self):
         """Channel currently playing."""
-        return self._child_attr(ATTR_MEDIA_CHANNEL)
+        return self._child_attr(MediaPlayerEntityStateAttribute.MEDIA_CHANNEL)
 
     @property
     @override
     def media_playlist(self):
         """Title of Playlist currently playing."""
-        return self._child_attr(ATTR_MEDIA_PLAYLIST)
+        return self._child_attr(MediaPlayerEntityStateAttribute.MEDIA_PLAYLIST)
 
     @property
     @override
     def app_id(self):
         """ID of the current running app."""
-        return self._child_attr(ATTR_APP_ID)
+        return self._child_attr(MediaPlayerEntityStateAttribute.APP_ID)
 
     @property
     @override
     def app_name(self):
         """Name of the current running app."""
-        return self._child_attr(ATTR_APP_NAME)
+        return self._child_attr(MediaPlayerEntityStateAttribute.APP_NAME)
 
     @property
     @override
     def sound_mode(self):
         """Return the current sound mode of the device."""
-        return self._override_or_child_attr(ATTR_SOUND_MODE)
+        return self._override_or_child_attr(MediaPlayerEntityStateAttribute.SOUND_MODE)
 
     @property
     @override
     def sound_mode_list(self):
         """List of available sound modes."""
-        return self._override_or_child_attr(ATTR_SOUND_MODE_LIST)
+        return self._override_or_child_attr(
+            MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST
+        )
 
     @property
     @override
     def source(self):
         """Return the current input source of the device."""
-        return self._override_or_child_attr(ATTR_INPUT_SOURCE)
+        return self._override_or_child_attr(
+            MediaPlayerEntityStateAttribute.INPUT_SOURCE
+        )
 
     @property
     @override
     def source_list(self):
         """List of available input sources."""
-        return self._override_or_child_attr(ATTR_INPUT_SOURCE_LIST)
+        return self._override_or_child_attr(
+            MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST
+        )
 
     @property
     @override
     def repeat(self):
         """Boolean if repeating is enabled."""
-        return self._override_or_child_attr(ATTR_MEDIA_REPEAT)
+        return self._override_or_child_attr(
+            MediaPlayerEntityStateAttribute.MEDIA_REPEAT
+        )
 
     @property
     @override
     def shuffle(self):
         """Boolean if shuffling is enabled."""
-        return self._override_or_child_attr(ATTR_MEDIA_SHUFFLE)
+        return self._override_or_child_attr(
+            MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE
+        )
 
     @property
     @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         flags: MediaPlayerEntityFeature = self._child_attr(
-            ATTR_SUPPORTED_FEATURES
+            EntityStateAttribute.SUPPORTED_FEATURES
         ) or MediaPlayerEntityFeature(0)
 
         if SERVICE_TURN_ON in self._cmds:
@@ -573,13 +574,15 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     @override
     def media_position(self):
         """Position of current playing media in seconds."""
-        return self._child_attr(ATTR_MEDIA_POSITION)
+        return self._child_attr(MediaPlayerEntityStateAttribute.MEDIA_POSITION)
 
     @property
     @override
     def media_position_updated_at(self):
         """When was the position of the current playing media valid."""
-        return self._child_attr(ATTR_MEDIA_POSITION_UPDATED_AT)
+        return self._child_attr(
+            MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT
+        )
 
     @override
     async def async_turn_on(self) -> None:

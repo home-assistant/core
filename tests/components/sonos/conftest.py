@@ -8,8 +8,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-from soco import SoCo
-from soco.alarms import Alarms
+from soco import SoCo, soco_reset
 from soco.data_structures import (
     DidlFavorite,
     DidlMusicTrack,
@@ -167,15 +166,12 @@ async def async_autosetup_sonos(async_setup_sonos):
     await async_setup_sonos()
 
 
-def reset_sonos_alarms(alarm_event: SonosMockEvent) -> None:
-    """Reset the Sonos alarms to a known state."""
-    sonos_alarms = Alarms()
-    sonos_alarms.alarms = {}
-    sonos_alarms._last_zone_used = None
-    sonos_alarms._last_alarm_list_version = None
-    sonos_alarms.last_uid = None
-    sonos_alarms.last_id = 0
-    alarm_event.variables["alarm_list_version"] = "RINCON_test:0"
+@pytest.fixture(autouse=True)
+def reset_sonos():
+    """Reset soco state before and after each test."""
+    soco_reset()
+    yield
+    soco_reset()
 
 
 @pytest.fixture
@@ -186,7 +182,6 @@ def async_setup_sonos(
 
     async def _wrapper():
         config_entry.add_to_hass(hass)
-        reset_sonos_alarms(alarm_event)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
         await fire_zgs_event()
@@ -953,7 +948,6 @@ async def sonos_setup_two_speakers(
     """Set up home assistant with two Sonos Speakers."""
     soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
     soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
-    reset_sonos_alarms(alarm_event)
 
     await async_setup_component(
         hass,

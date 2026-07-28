@@ -20,6 +20,7 @@ def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
 
 
 @pytest.mark.usefixtures("mock_melcloud_client")
+@pytest.mark.freeze_time("2026-06-08 12:00:00+00:00")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

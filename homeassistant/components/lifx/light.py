@@ -27,7 +27,6 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    _LOGGER,
     ATTR_DURATION,
     ATTR_INFRARED,
     ATTR_POWER,
@@ -36,6 +35,7 @@ from .const import (
     DOMAIN,
     INFRARED_BRIGHTNESS,
     LIFX_CEILING_PRODUCT_IDS,
+    LOGGER,
 )
 from .coordinator import FirmwareEffect, LIFXConfigEntry, LIFXUpdateCoordinator
 from .entity import LIFXEntity
@@ -66,7 +66,7 @@ LIFX_SET_STATE_SCHEMA: VolDictType = {
 SERVICE_LIFX_SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
 
 LIFX_SET_HEV_CYCLE_STATE_SCHEMA: VolDictType = {
-    ATTR_POWER: vol.Required(cv.boolean),
+    vol.Required(ATTR_POWER): cv.boolean,
     ATTR_DURATION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=86400)),
 }
 
@@ -227,7 +227,7 @@ class LIFXLight(LIFXEntity, LightEntity):
             infrared_entity_id = self.coordinator.async_get_entity_id(
                 Platform.SELECT, INFRARED_BRIGHTNESS
             )
-            _LOGGER.warning(
+            LOGGER.warning(
                 (
                     "The 'infrared' attribute of 'lifx.set_state' is deprecated:"
                     " call 'select.select_option' targeting '%s' instead"

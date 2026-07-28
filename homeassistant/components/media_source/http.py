@@ -7,20 +7,25 @@ import voluptuous as vol
 from homeassistant.components import frontend, websocket_api
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_FILTER_CLASSES,
+    ATTR_MEDIA_SEARCH_QUERY,
     CONTENT_AUTH_EXPIRY_TIME,
     BrowseError,
+    MediaClass,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant
 
 from .error import Unresolvable
-from .helper import async_browse_media, async_resolve_media
+from .helper import async_browse_media, async_resolve_media, async_search_media
 
 
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the HTTP views and WebSocket commands for media sources."""
     websocket_api.async_register_command(hass, websocket_browse_media)
+    websocket_api.async_register_command(hass, websocket_search_media)
     websocket_api.async_register_command(hass, websocket_resolve_media)
     frontend.async_register_built_in_panel(
         hass, "media-browser", "media_browser", "mdi:play-box-multiple"
@@ -46,6 +51,35 @@ async def websocket_browse_media(
         )
     except BrowseError as err:
         connection.send_error(msg["id"], "browse_media_failed", str(err))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "media_source/search_media",
+        vol.Optional(ATTR_MEDIA_CONTENT_ID, default=""): str,
+        vol.Required(ATTR_MEDIA_SEARCH_QUERY): str,
+        vol.Optional(ATTR_MEDIA_FILTER_CLASSES): [vol.Coerce(MediaClass)],
+    }
+)
+@websocket_api.async_response
+async def websocket_search_media(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Search available media."""
+    try:
+        result = await async_search_media(
+            hass,
+            msg["media_content_id"],
+            SearchMediaQuery(
+                search_query=msg[ATTR_MEDIA_SEARCH_QUERY],
+                media_filter_classes=msg.get(ATTR_MEDIA_FILTER_CLASSES),
+            ),
+        )
+    except BrowseError as err:
+        connection.send_error(msg["id"], "search_media_failed", str(err))
+        return
+
+    connection.send_result(msg["id"], result.as_dict())
 
 
 @websocket_api.websocket_command(

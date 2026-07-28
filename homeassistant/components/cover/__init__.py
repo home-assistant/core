@@ -41,6 +41,7 @@ from .const import (
     INTENT_OPEN_COVER,
     CoverDeviceClass,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
     CoverState,
 )
 from .trigger import make_cover_closed_trigger, make_cover_opened_trigger
@@ -76,6 +77,7 @@ __all__ = [
     "CoverEntity",
     "CoverEntityDescription",
     "CoverEntityFeature",
+    "CoverEntityStateAttribute",
     "CoverState",
     "make_cover_closed_trigger",
     "make_cover_is_closed_condition",
@@ -260,13 +262,13 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the state attributes."""
         data: dict[str, Any] = {}
 
-        data[ATTR_IS_CLOSED] = self.is_closed
+        data[CoverEntityStateAttribute.IS_CLOSED] = self.is_closed
 
         if (current := self.current_cover_position) is not None:
-            data[ATTR_CURRENT_POSITION] = current
+            data[CoverEntityStateAttribute.CURRENT_POSITION] = current
 
         if (current_tilt := self.current_cover_tilt_position) is not None:
-            data[ATTR_CURRENT_TILT_POSITION] = current_tilt
+            data[CoverEntityStateAttribute.CURRENT_TILT_POSITION] = current_tilt
 
         return data
 

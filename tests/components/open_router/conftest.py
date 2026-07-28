@@ -48,7 +48,7 @@ def web_search() -> bool:
 
 
 @pytest.fixture
-def conversation_subentry_data(enable_assist: bool, web_search: bool) -> dict[str, Any]:
+def conversation_subentry_data(enable_assist: bool, web_search: str) -> dict[str, Any]:
     """Mock conversation subentry data."""
     res: dict[str, Any] = {
         CONF_MODEL: "openai/gpt-3.5-turbo",
@@ -81,6 +81,8 @@ def mock_config_entry(
         data={
             CONF_API_KEY: "bla",
         },
+        version=1,
+        minor_version=3,
         subentries_data=[
             ConfigSubentryData(
                 data=conversation_subentry_data,

@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 import logging
-import re
 from typing import Any, cast, override
 
 import httpx
@@ -24,6 +23,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
+from .auth import AuthenticateHeader
 from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_TOKEN_URL, DOMAIN
 from .coordinator import TokenManager, mcp_client
 
@@ -35,35 +35,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-# Headers and regex for WWW-Authenticate parsing for rfc9728
-WWW_AUTHENTICATE_HEADER = "WWW-Authenticate"
-RESOURCE_METADATA_REGEXP = r'resource_metadata="([^"]+)"'
 OAUTH_PROTECTED_RESOURCE_ENDPOINT = "/.well-known/oauth-protected-resource"
-SCOPES_REGEXP = r'scope="([^"]+)"'
-
-
-@dataclass
-class AuthenticateHeader:
-    """Class to hold info from the WWW-Authenticate header for supporting rfc9728."""
-
-    resource_metadata_url: str
-    scopes: list[str] | None = None
-
-    @classmethod
-    def from_header(
-        cls, url: str, error_response: httpx.Response
-    ) -> AuthenticateHeader | None:
-        """Create AuthenticateHeader from WWW-Authenticate header."""
-        if not (header := error_response.headers.get(WWW_AUTHENTICATE_HEADER)) or not (
-            match := re.search(RESOURCE_METADATA_REGEXP, header)
-        ):
-            return None
-        resource_metadata_url = str(URL(url).join(URL(match.group(1))))
-        scope_match = re.search(SCOPES_REGEXP, header)
-        return cls(
-            resource_metadata_url=resource_metadata_url,
-            scopes=scope_match.group(1).split(" ") if scope_match else None,
-        )
 
 
 @dataclass
@@ -369,6 +341,8 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
+        if entry_data and "auth_header" in entry_data:
+            self.auth_header = entry_data["auth_header"]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -379,6 +353,13 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_show_form(step_id="reauth_confirm")
         config_entry = self._get_reauth_entry()
         self.data = {**config_entry.data}
+        if "auth_implementation" not in self.data:
+            # For entries configured without authentication (no-auth), any authentication
+            # failure (from a tool call or coordinator update) requires upgrading to OAuth.
+            # We bypass validate_input connection handshake (which might succeed if the server
+            # doesn't restrict the connection handshake itself) and proceed directly to OAuth discovery.
+            return await self.async_step_auth_discovery()
+
         self.flow_impl = await async_get_config_entry_implementation(  # type: ignore[assignment]
             self.hass, config_entry
         )

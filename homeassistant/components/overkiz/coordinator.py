@@ -76,7 +76,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.data = {}
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
-        self.executions: dict[str, dict[str, str]] = {}
+        self.executions: dict[str, list[dict[str, str]]] = {}
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
 
@@ -213,10 +213,14 @@ async def on_device_removed(
     base_device_url = event.device_url.split("#")[0]
     registry = dr.async_get(coordinator.hass)
 
-    if registered_device := registry.async_get_device(
-        identifiers={(DOMAIN, base_device_url)}
+    if registered_device := registry.async_get_device_by_identifier(
+        (DOMAIN, base_device_url), coordinator.config_entry.entry_id
     ):
-        registry.async_remove_device(registered_device.id)
+        # Detach only this entry; the registry deletes the device once none remain.
+        registry.async_update_device(
+            registered_device.id,
+            remove_config_entry_id=coordinator.config_entry.entry_id,
+        )
 
     if event.device_url in coordinator.devices:
         del coordinator.devices[event.device_url]
@@ -228,7 +232,7 @@ async def on_execution_registered(
 ) -> None:
     """Handle execution registered event."""
     if event.exec_id not in coordinator.executions:
-        coordinator.executions[event.exec_id] = {}
+        coordinator.executions[event.exec_id] = []
 
     if not coordinator.is_stateless:
         coordinator.update_interval = timedelta(seconds=1)
