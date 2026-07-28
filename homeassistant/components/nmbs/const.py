@@ -16,7 +16,9 @@ CONF_STATION_LIVE = "station_live"
 CONF_EXCLUDE_VIAS = "exclude_vias"
 
 
-def find_station_by_name(stations: list[StationDetails], station_name: str):
+def find_station_by_name(
+    stations: list[StationDetails], station_name: str
+) -> StationDetails | None:
     """Find given station_name in the station list."""
     return next(
         (s for s in stations if station_name in (s.standard_name, s.name)),
@@ -24,7 +26,9 @@ def find_station_by_name(stations: list[StationDetails], station_name: str):
     )
 
 
-def find_station(stations: list[StationDetails], station_name: str):
+def find_station(
+    stations: list[StationDetails], station_name: str
+) -> StationDetails | None:
     """Find given station_id in the station list."""
     return next(
         (s for s in stations if station_name in s.id),
