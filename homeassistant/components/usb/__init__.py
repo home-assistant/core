@@ -32,7 +32,8 @@ from homeassistant.loader import USBMatcher, async_get_usb
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .models import SerialDevice, USBDevice
+from .consumers import async_get_serial_port_consumers
+from .models import SerialDevice, SerialPortConsumer, USBDevice
 from .serial_proxy_stub import register_serialx_transport
 from .utils import (
     scan_serial_ports,
@@ -54,8 +55,10 @@ ADD_REMOVE_SCAN_COOLDOWN = 5  # 5 second cooldown to give devices a chance to re
 
 __all__ = [
     "SerialDevice",
+    "SerialPortConsumer",
     "USBCallbackMatcher",
     "USBDevice",
+    "async_get_serial_port_consumers",
     "async_register_port_event_callback",
     "async_register_scan_request_callback",
     "async_register_serial_port_scanner",
@@ -185,6 +188,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[_USB_DATA] = usb_discovery
     websocket_api.async_register_command(hass, websocket_usb_scan)
     websocket_api.async_register_command(hass, websocket_usb_list_serial_ports)
+    websocket_api.async_register_command(hass, websocket_usb_serial_ports)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, register_serialx_transport())
 
@@ -565,6 +569,66 @@ async def websocket_usb_list_serial_ports(
             )
         else:
             entry["matching_integrations"] = []
+
+        result.append(entry)
+
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "usb/serial_ports"})
+@websocket_api.async_response
+async def websocket_usb_serial_ports(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List serial ports along with the integrations and apps using them."""
+    try:
+        ports = await async_scan_serial_ports(hass)
+    except OSError as err:
+        connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
+        return
+
+    consumers = await async_get_serial_port_consumers(hass, ports)
+    scanned_devices = {port.device for port in ports}
+    result = []
+
+    for port in ports:
+        entry = dataclasses.asdict(port)
+        entry["present"] = True
+
+        if isinstance(port, USBDevice):
+            matchers = async_get_usb_matchers_for_device(hass, port)
+            entry["matching_integrations"] = list(
+                dict.fromkeys(matcher["domain"] for matcher in matchers)
+            )
+        else:
+            entry["matching_integrations"] = []
+
+        entry["consumers"] = [
+            dataclasses.asdict(consumer) for consumer in consumers.get(port.device, [])
+        ]
+
+        result.append(entry)
+
+    for device, device_consumers in consumers.items():
+        if device in scanned_devices:
+            continue
+
+        entry = dataclasses.asdict(
+            SerialDevice(
+                device=device,
+                serial_number=None,
+                manufacturer=None,
+                description=None,
+            )
+        )
+        entry["present"] = False
+        entry["matching_integrations"] = []
+        entry["consumers"] = [
+            dataclasses.asdict(consumer) for consumer in device_consumers
+        ]
 
         result.append(entry)
 
