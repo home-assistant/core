@@ -227,4 +227,7 @@ async def test_error_when_remote_is_gone_after_config_entry_loads(
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert "when setting up triggers for automation 0" in caplog.text
+    assert (
+        f"Got error 'Device {gone_device.id} is not available on the Hue bridge' "
+        "when setting up triggers for automation 0" in caplog.text
+    )
