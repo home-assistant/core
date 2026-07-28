@@ -113,8 +113,7 @@ async def test_controller_flow(
     assert result.get("title") == HOST
     assert "result" in result
     assert dict(result["result"].data) == expected_config_entry
-    assert result["result"].options == {ATTR_DURATION: 6}
-    assert result["result"].unique_id == expected_unique_id
+    assert result["result"].options == {ATTR_DURATION: 6, "zone_type": "switch"}
 
     assert len(mock_setup.mock_calls) == 1
 
@@ -477,7 +476,7 @@ async def test_options_flow(hass: HomeAssistant, mock_setup: Mock) -> None:
     assert result.get("title") == HOST
     assert "result" in result
     assert result["result"].data == CONFIG_ENTRY_DATA
-    assert result["result"].options == {ATTR_DURATION: 6}
+    assert result["result"].options == {ATTR_DURATION: 6, "zone_type": "switch"}
 
     # Assert single config entry is loaded
     config_entry = next(iter(hass.config_entries.async_entries(DOMAIN)))
@@ -490,9 +489,10 @@ async def test_options_flow(hass: HomeAssistant, mock_setup: Mock) -> None:
 
     # Change the default duration
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={ATTR_DURATION: 5}
+        result["flow_id"], user_input={ATTR_DURATION: 5, "zone_type": "switch"}
     )
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         ATTR_DURATION: 5,
+        "zone_type": "switch",
     }

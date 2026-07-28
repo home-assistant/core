@@ -25,6 +25,7 @@ from homeassistant.components.rainbird.const import (
     ATTR_DURATION,
     CONF_ZONE_TYPE,
     DEFAULT_TRIGGER_TIME_MINUTES,
+    DOMAIN,
     ZONE_TYPE_VALVE,
 )
 
@@ -46,7 +47,7 @@ async def config_entry(
     """Fixture for MockConfigEntry with valve zone type."""
     return MockConfigEntry(
         unique_id=config_entry_unique_id,
-        domain="rainbird",
+        domain=DOMAIN,
         data=config_entry_data,
         options={
             ATTR_DURATION: DEFAULT_TRIGGER_TIME_MINUTES,
@@ -206,3 +207,35 @@ async def test_valve_error(
             {ATTR_ENTITY_ID: "valve.rain_bird_sprinkler_3"},
             blocking=True,
         )
+
+
+async def test_irrigation_service(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    responses: list[AiohttpClientMockResponse],
+) -> None:
+    """Test calling the start_irrigation service in valve mode."""
+    zone = hass.states.get("valve.rain_bird_sprinkler_3")
+    assert zone is not None
+    assert zone.state == "closed"
+
+    aioclient_mock.mock_calls.clear()
+    responses.extend(
+        [
+            mock_response(ACK_ECHO),
+            mock_response(ZONE_3_ON_RESPONSE),
+            mock_response(RAIN_SENSOR_OFF),
+            mock_response(RAIN_DELAY_OFF),
+        ]
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        "start_irrigation",
+        {ATTR_ENTITY_ID: "valve.rain_bird_sprinkler_3", "duration": 30},
+        blocking=True,
+    )
+
+    zone = hass.states.get("valve.rain_bird_sprinkler_3")
+    assert zone is not None
+    assert zone.state == "open"
