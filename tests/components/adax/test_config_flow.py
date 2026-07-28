@@ -98,7 +98,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     """Test user input for config_entry that already exists."""
 
     first_entry = MockConfigEntry(
-        domain="adax",
+        domain=DOMAIN,
         data=TEST_DATA,
         unique_id=str(TEST_DATA[ACCOUNT_ID]),
     )
@@ -192,7 +192,7 @@ async def test_local_flow_entry_already_exists(hass: HomeAssistant) -> None:
     }
 
     first_entry = MockConfigEntry(
-        domain="adax",
+        domain=DOMAIN,
         data=test_data,
         unique_id="8383838",
     )

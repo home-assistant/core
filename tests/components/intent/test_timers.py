@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components import conversation
+from homeassistant.components.intent import DOMAIN
 from homeassistant.components.intent.timers import (
     TIMER_DATA,
     MultipleTimersMatchedError,
@@ -37,7 +38,7 @@ async def init_components(hass: HomeAssistant) -> None:
     """Initialize required components for tests."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
 
 async def test_start_finish_timer(hass: HomeAssistant, init_components) -> None:
@@ -1682,7 +1683,7 @@ async def test_async_device_supports_timers(hass: HomeAssistant) -> None:
     assert not async_device_supports_timers(hass, device_id)
 
     # After intent initialization
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert not async_device_supports_timers(hass, device_id)
 
     @callback

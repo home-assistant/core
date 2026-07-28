@@ -29,6 +29,7 @@ pytestmark = [
             "HWE-P1",
             [
                 "sensor.device_average_demand",
+                "sensor.device_battery_group_power",
                 "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
@@ -79,6 +80,7 @@ pytestmark = [
             "HWE-P1-predictive",
             [
                 "sensor.device_average_demand",
+                "sensor.device_battery_group_power",
                 "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
@@ -397,6 +399,7 @@ async def test_sensors(
         (
             "HWE-P1",
             [
+                "sensor.device_battery_group_power",
                 "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
@@ -411,6 +414,7 @@ async def test_sensors(
         (
             "HWE-P1-predictive",
             [
+                "sensor.device_battery_group_power",
                 "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
@@ -425,6 +429,7 @@ async def test_sensors(
         (
             "HWE-P1-no-batteries",
             [
+                "sensor.device_battery_group_power",
                 "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
@@ -610,6 +615,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_apparent_power",
                 "sensor.device_average_demand",
                 "sensor.device_battery_cycles",
+                "sensor.device_battery_group_power",
                 "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
@@ -666,6 +672,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_apparent_power_phase_3",
                 "sensor.device_average_demand",
                 "sensor.device_battery_cycles",
+                "sensor.device_battery_group_power",
                 "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
@@ -718,6 +725,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_apparent_power",
                 "sensor.device_average_demand",
                 "sensor.device_battery_cycles",
+                "sensor.device_battery_group_power",
                 "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
@@ -777,6 +785,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_average_demand",
                 "sensor.device_average_demand",
                 "sensor.device_battery_cycles",
+                "sensor.device_battery_group_power",
                 "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
@@ -826,6 +835,7 @@ async def test_external_sensors_unreachable(
             [
                 "sensor.device_average_demand",
                 "sensor.device_battery_cycles",
+                "sensor.device_battery_group_power",
                 "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
@@ -872,6 +882,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_average_demand",
                 "sensor.device_average_demand",
                 "sensor.device_battery_cycles",
+                "sensor.device_battery_group_power",
                 "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
@@ -920,6 +931,7 @@ async def test_external_sensors_unreachable(
             "HWE-KWH3",
             [
                 "sensor.device_average_demand",
+                "sensor.device_battery_group_power",
                 "sensor.device_battery_group_target_power",
                 "sensor.device_battery_cycles",
                 "sensor.device_current_phase_1",
@@ -966,6 +978,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_apparent_power_phase_3",
                 "sensor.device_apparent_power",
                 "sensor.device_average_demand",
+                "sensor.device_battery_group_power",
                 "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",

@@ -14,9 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platforms,
-)
+from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 
 from . import home_assistant_cast
 from .const import DOMAIN
@@ -30,7 +28,7 @@ type CastConfigEntry = ConfigEntry[CastRuntimeData]
 class CastRuntimeData:
     """Runtime data for the Cast integration."""
 
-    cast_platforms: dict[str, CastProtocol] = field(default_factory=dict)
+    cast_platforms: LazyIntegrationPlatforms[CastProtocol]
     unknown_models: dict[str | None, tuple[str | None, str | None]] = field(
         default_factory=dict
     )
@@ -39,26 +37,27 @@ class CastRuntimeData:
     multizone_manager: MultizoneManager | None = None
 
 
+@callback
+def _process_cast_platform(
+    hass: HomeAssistant, integration_domain: str, platform: CastProtocol
+) -> CastProtocol:
+    """Process a cast platform."""
+    if (
+        not hasattr(platform, "async_get_media_browser_root_object")
+        or not hasattr(platform, "async_browse_media")
+        or not hasattr(platform, "async_play_media")
+    ):
+        raise HomeAssistantError(f"Invalid cast platform {platform}")
+    return platform
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: CastConfigEntry) -> bool:
     """Set up Cast from a config entry."""
-    entry.runtime_data = CastRuntimeData()
+    entry.runtime_data = CastRuntimeData(
+        cast_platforms=LazyIntegrationPlatforms(hass, DOMAIN, _process_cast_platform)
+    )
     await home_assistant_cast.async_setup_ha_cast(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    @callback
-    def _register_cast_platform(
-        hass: HomeAssistant, integration_domain: str, platform: CastProtocol
-    ) -> None:
-        """Register a cast platform."""
-        if (
-            not hasattr(platform, "async_get_media_browser_root_object")
-            or not hasattr(platform, "async_browse_media")
-            or not hasattr(platform, "async_play_media")
-        ):
-            raise HomeAssistantError(f"Invalid cast platform {platform}")
-        entry.runtime_data.cast_platforms[integration_domain] = platform
-
-    await async_process_integration_platforms(hass, DOMAIN, _register_cast_platform)
     return True
 
 

@@ -85,6 +85,7 @@ async def test_sensors_aranet_radiation(
     assert device.model == "Aranet Radiation"
     assert device.sw_version == "v1.4.38"
     assert device.manufacturer == "SAF Tehnika"
+    assert device.connections == {(dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ff")}
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -146,6 +147,7 @@ async def test_sensors_aranet2(
     assert device.model == "Aranet2"
     assert device.sw_version == "v1.4.4"
     assert device.manufacturer == "SAF Tehnika"
+    assert device.connections == {(dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ff")}
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -227,6 +229,7 @@ async def test_sensors_aranet4(
     assert device.model == "Aranet4"
     assert device.sw_version == "v1.2.0"
     assert device.manufacturer == "SAF Tehnika"
+    assert device.connections == {(dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ff")}
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -310,6 +313,7 @@ async def test_sensors_aranetrn(
     assert device.model == "Aranet Radon"
     assert device.sw_version == "v1.6.4"
     assert device.manufacturer == "SAF Tehnika"
+    assert device.connections == {(dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ff")}
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

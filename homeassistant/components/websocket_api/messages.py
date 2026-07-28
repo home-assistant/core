@@ -131,7 +131,7 @@ def cached_event_message(message_id_as_bytes: bytes, event: Event) -> bytes:
     """
     return b"".join(
         (
-            _partial_cached_event_message(event)[:-1],
+            _partial_cached_event_message(event),
             b',"id":',
             message_id_as_bytes,
             b"}",
@@ -143,13 +143,14 @@ def cached_event_message(message_id_as_bytes: bytes, event: Event) -> bytes:
 def _partial_cached_event_message(event: Event) -> bytes:
     """Cache and serialize the event to json.
 
-    The message is constructed without the id which appended
-    in cached_event_message.
+    The message is cached without the trailing "}" and without the id, both of
+    which are appended in cached_event_message. Trimming here means the slice
+    happens once per event instead of once per subscriber.
     """
     return (
         _message_to_json_bytes_or_none({"type": "event", "event": event.json_fragment})
         or INVALID_JSON_PARTIAL_MESSAGE
-    )
+    )[:-1]
 
 
 def cached_state_diff_message(
@@ -165,7 +166,7 @@ def cached_state_diff_message(
     """
     return b"".join(
         (
-            _partial_cached_state_diff_message(event)[:-1],
+            _partial_cached_state_diff_message(event),
             b',"id":',
             message_id_as_bytes,
             b"}",
@@ -177,15 +178,16 @@ def cached_state_diff_message(
 def _partial_cached_state_diff_message(event: Event[EventStateChangedData]) -> bytes:
     """Cache and serialize the event to json.
 
-    The message is constructed without the id which
-    will be appended in cached_state_diff_message
+    The message is cached without the trailing "}" and without the id, both of
+    which are appended in cached_state_diff_message. Trimming here means the
+    slice happens once per event instead of once per subscriber.
     """
     return (
         _message_to_json_bytes_or_none(
             {"type": "event", "event": _state_diff_event(event)}
         )
         or INVALID_JSON_PARTIAL_MESSAGE
-    )
+    )[:-1]
 
 
 def _state_diff_event(

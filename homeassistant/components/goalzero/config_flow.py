@@ -1,7 +1,7 @@
 """Config flow for Goal Zero Yeti integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from goalzero import Yeti, exceptions
 import voluptuous as vol
@@ -24,6 +24,7 @@ class GoalZeroFlowHandler(ConfigFlow, domain=DOMAIN):
 
     _discovered_ip: str
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -61,6 +62,7 @@ class GoalZeroFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -988,6 +988,15 @@
       "water_filter_usage": {
         "name": "Water filter usage"
       },
+      "water_usage_current": {
+        "name": "Current water usage"
+      },
+      "water_usage_day": {
+        "name": "Water usage today"
+      },
+      "water_usage_month": {
+        "name": "Water usage this month"
+      },
       "x_coordinate": {
         "name": "X coordinate"
       },

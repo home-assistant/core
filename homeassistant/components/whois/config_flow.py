@@ -1,6 +1,6 @@
 """Config flow to configure the Whois integration."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 import whois
@@ -26,6 +26,7 @@ class WhoisFlowHandler(ConfigFlow, domain=DOMAIN):
 
     imported_name: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

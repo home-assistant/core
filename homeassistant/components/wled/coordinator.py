@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for WLED."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from wled import (
     WLED,
@@ -142,6 +142,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             self.hass, listen(), "wled-listen"
         )
 
+    @override
     async def _async_update_data(self) -> WLEDDevice:
         """Fetch data from WLED."""
         try:
@@ -197,6 +198,7 @@ class WLEDReleasesDataUpdateCoordinator(DataUpdateCoordinator[Releases]):
             update_interval=RELEASES_SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> Releases:
         """Fetch release data from WLED."""
         try:

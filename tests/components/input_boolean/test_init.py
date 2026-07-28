@@ -179,14 +179,14 @@ async def test_input_boolean_context(
 ) -> None:
     """Test that input_boolean context works."""
     assert await async_setup_component(
-        hass, "input_boolean", {"input_boolean": {"ac": {CONF_INITIAL: True}}}
+        hass, DOMAIN, {"input_boolean": {"ac": {CONF_INITIAL: True}}}
     )
 
     state = hass.states.get("input_boolean.ac")
     assert state is not None
 
     await hass.services.async_call(
-        "input_boolean",
+        DOMAIN,
         "turn_off",
         {"entity_id": state.entity_id},
         True,

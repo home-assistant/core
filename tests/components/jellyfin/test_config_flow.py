@@ -59,6 +59,35 @@ async def test_form(
     assert len(mock_client.jellyfin.get_user_settings.mock_calls) == 1
 
 
+async def test_form_strips_trailing_slash_from_url(
+    hass: HomeAssistant,
+    mock_jellyfin: MagicMock,
+    mock_client: MagicMock,
+    mock_client_device_id: MagicMock,
+    mock_setup_entry: MagicMock,
+) -> None:
+    """Test a trailing slash is stripped from the configured URL.
+
+    A trailing slash would otherwise be joined into a double-slashed request
+    path (e.g. //system/info/public) that some Jellyfin versions reject.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**USER_INPUT, CONF_URL: f"{TEST_URL}/"},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    # The persisted URL has no trailing slash...
+    assert result2["data"][CONF_URL] == TEST_URL
+    # ...and the connection was attempted against the normalized URL.
+    mock_client.auth.connect_to_address.assert_called_once_with(TEST_URL)
+
+
 async def test_form_cannot_connect(
     hass: HomeAssistant,
     mock_jellyfin: MagicMock,

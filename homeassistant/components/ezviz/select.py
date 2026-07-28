@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pyezvizapi.constants import (
     BatteryCameraWorkMode,
@@ -124,11 +124,11 @@ async def async_setup_entry(
 
     for camera in coordinator.data:
         device_category = coordinator.data[camera].get("device_category")
-        supportExt = coordinator.data[camera].get("supportExt")
+        support_ext = coordinator.data[camera].get("supportExt")
         if (
             device_category == DeviceCatagories.BATTERY_CAMERA_DEVICE_CATEGORY.value
-            and supportExt
-            and str(SupportExt.SupportBatteryManage.value) in supportExt
+            and support_ext
+            and str(SupportExt.SupportBatteryManage.value) in support_ext
         ):
             entities.append(
                 EzvizSelect(coordinator, camera, BATTERY_WORK_MODE_SELECT_TYPE)
@@ -152,11 +152,13 @@ class EzvizSelect(EzvizEntity, SelectEntity):
         self.entity_description = description
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         desc = cast(EzvizSelectEntityDescription, self.entity_description)
         return desc.current_option(self)
 
+    @override
     def select_option(self, option: str) -> None:
         """Change the selected option."""
         desc = cast(EzvizSelectEntityDescription, self.entity_description)

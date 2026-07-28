@@ -41,6 +41,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
 
         # Existing device update device data
         if coordinator := coordinators.get(device.device_id):
+            if coordinator.data.ip_address != device.ip_address:
+                _LOGGER.info(
+                    "Switcher device %s changed ip from %s to %s",
+                    device.device_id,
+                    coordinator.data.ip_address,
+                    device.ip_address,
+                )
             coordinator.async_set_updated_data(device)
             return
 

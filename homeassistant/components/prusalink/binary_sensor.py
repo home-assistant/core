@@ -2,8 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import cast, override
 
-from pyprusalink.types import JobInfo, PrinterInfo, PrinterStatus
+from pyprusalink.types import JobInfo, PrinterInfo, PrinterStatus, StatusInfo
 from pyprusalink.types_legacy import LegacyPrinterStatus
 
 from homeassistant.components.binary_sensor import (
@@ -35,7 +36,9 @@ BINARY_SENSORS: dict[str, tuple[PrusaLinkBinarySensorEntityDescription, ...]] = 
         PrusaLinkBinarySensorEntityDescription[PrinterStatus](
             key="printer.status_connect",
             device_class=BinarySensorDeviceClass.CONNECTIVITY,
-            value_fn=lambda data: data["printer"]["status_connect"]["ok"],
+            value_fn=lambda data: cast(
+                bool, cast(StatusInfo, data["printer"]["status_connect"])["ok"]
+            ),
             supported_fn=lambda data: (
                 data["printer"].get("status_connect") is not None
                 and data["printer"]["status_connect"].get("ok") is not None
@@ -103,6 +106,7 @@ class PrusaLinkBinarySensorEntity(PrusaLinkEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

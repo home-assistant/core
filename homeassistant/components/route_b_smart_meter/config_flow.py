@@ -1,7 +1,7 @@
 """Config flow for Smart Meter B Route integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from momonga import Momonga, MomongaSkJoinFailure, MomongaSkScanFailure
 import voluptuous as vol
@@ -65,6 +65,7 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
         devices = await async_scan_serial_ports(self.hass)
         return {port.device: port for port in devices if isinstance(port, USBDevice)}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

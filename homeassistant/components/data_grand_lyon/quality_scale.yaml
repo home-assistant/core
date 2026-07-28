@@ -12,9 +12,15 @@ rules:
   docs-actions:
     status: exempt
     comment: This integration does not register custom actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: Entities use the coordinator pattern and do not subscribe to events.
@@ -49,13 +55,15 @@ rules:
     status: exempt
     comment: This is a service integration; there are no discoverable devices.
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: done
+  dynamic-devices:
+    status: exempt
+    comment: This is a service integration; devices are added and removed manually by the user.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -66,7 +74,9 @@ rules:
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet
-  stale-devices: done
+  stale-devices:
+    status: exempt
+    comment: This is a service integration; devices are added and removed manually by the user.
 
   # Platinum
   async-dependency: done

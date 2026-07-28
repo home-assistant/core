@@ -1488,11 +1488,6 @@
         'infrared': False,
         'matrix': False,
         'max_kelvin': 9000,
-        'min_ext_mz_firmware': 1532997580,
-        'min_ext_mz_firmware_components': list([
-          2,
-          77,
-        ]),
         'min_kelvin': 1500,
         'multizone': True,
         'relays': False,

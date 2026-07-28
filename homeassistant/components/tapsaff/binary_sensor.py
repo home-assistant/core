@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from tapsaff import TapsAff
 import voluptuous as vol
@@ -54,11 +55,13 @@ class TapsAffSensor(BinarySensorEntity):
         self._name = name
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return f"{self._name}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if taps aff."""
         return self.data.is_taps_aff

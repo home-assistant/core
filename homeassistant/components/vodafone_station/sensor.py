@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, LINE_TYPES
+from .const import LINE_TYPES, LOGGER
 from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
 
 # Coordinator is used to centralize the data updates
@@ -152,7 +152,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    _LOGGER.debug("Setting up Vodafone Station sensors")
+    LOGGER.debug("Setting up Vodafone Station sensors")
 
     coordinator = entry.runtime_data
 
@@ -186,6 +186,7 @@ class VodafoneStationSensorEntity(
         self._old_state: str | datetime | float | None = None
 
     @property
+    @override
     def native_value(self) -> str | datetime | float | None:
         """Sensor value."""
         self._old_state = self.entity_description.value(

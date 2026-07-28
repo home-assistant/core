@@ -134,9 +134,6 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TedeeConfigEntry
 ) -> bool:
     """Migrate old entry."""
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     version = config_entry.version
     minor_version = config_entry.minor_version

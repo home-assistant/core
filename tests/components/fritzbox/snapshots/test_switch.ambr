@@ -39,7 +39,7 @@
 # name: test_setup[switch.fake_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'fake_name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake_name',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_name',
@@ -89,7 +89,7 @@
 # name: test_setup[switch.fake_trigger-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'fake_trigger',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake_trigger',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_trigger',

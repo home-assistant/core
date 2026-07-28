@@ -4,13 +4,14 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from homeassistant.components.indevolt.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from . import setup_integration
-from .conftest import DEVICE_MAPPING
+from .conftest import DEVICE_MAPPING, TEST_DEVICE_SN_GEN2
 
 from tests.common import MockConfigEntry
 
@@ -72,3 +73,35 @@ async def test_load_failure(
 
     # Verify the config entry enters retry state due to failure
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("generation", [2], indirect=True)
+async def test_migrate_main_heating_state_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_indevolt: AsyncMock,
+    mock_config_entry_v1_1: MockConfigEntry,
+) -> None:
+    """Test migration of MAIN_HEATING_STATE unique ID from 9079 to 9080."""
+    mock_config_entry_v1_1.add_to_hass(hass)
+
+    old_unique_id = f"{TEST_DEVICE_SN_GEN2}_9079"
+    new_unique_id = f"{TEST_DEVICE_SN_GEN2}_9080"
+
+    entity_registry.async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        old_unique_id,
+        config_entry=mock_config_entry_v1_1,
+    )
+
+    assert mock_config_entry_v1_1.minor_version == 1
+
+    await hass.config_entries.async_setup(mock_config_entry_v1_1.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry_v1_1.minor_version == 2
+    assert entity_registry.async_get_entity_id("binary_sensor", DOMAIN, new_unique_id)
+    assert not entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, old_unique_id
+    )

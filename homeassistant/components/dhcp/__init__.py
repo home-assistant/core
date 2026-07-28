@@ -9,7 +9,7 @@ from ipaddress import IPv4Address
 import itertools
 import logging
 import re
-from typing import Any, Final
+from typing import Any, Final, override
 
 import aiodhcpwatcher
 from aiodiscover import DiscoverHosts
@@ -61,7 +61,12 @@ from homeassistant.loader import DHCPMatcher, async_get_dhcp
 
 from . import websocket_api
 from .const import DOMAIN, HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from .helpers import async_discovered_service_info
 from .models import DATA_DHCP, DHCPAddressData, DHCPData, DhcpMatchers
+
+__all__ = [
+    "async_discovered_service_info",
+]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -298,6 +303,7 @@ class NetworkWatcher(WatcherBase):
         self._discover_task: asyncio.Task | None = None
 
     @callback
+    @override
     def async_stop(self) -> None:
         """Stop scanning for new devices on the network."""
         super().async_stop()

@@ -2,7 +2,7 @@
 
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from subarulink import (
     Controller as SubaruAPI,
@@ -43,6 +43,7 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
         self.config_data: dict[str, Any] = {CONF_PIN: None}
         self.controller: SubaruAPI | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -96,6 +97,7 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: SubaruConfigEntry,
     ) -> OptionsFlowHandler:
@@ -108,7 +110,7 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
         data: contains values provided by the user.
         """
         websession = aiohttp_client.async_get_clientsession(self.hass)
-        now = datetime.now()
+        now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         if not data.get(CONF_DEVICE_ID):
             data[CONF_DEVICE_ID] = int(now.timestamp())
         date = now.strftime("%Y-%m-%d")

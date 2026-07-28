@@ -1,7 +1,7 @@
 """API for Neato Botvac bound to Home Assistant OAuth."""
 
 from asyncio import run_coroutine_threadsafe
-from typing import Any
+from typing import Any, override
 
 import pybotvac
 
@@ -43,10 +43,12 @@ class NeatoImplementation(AuthImplementation):
     """
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"client_secret": self.client_secret}
 
+    @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize.
 
