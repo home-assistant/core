@@ -2,11 +2,14 @@
 
 import voluptuous as vol
 
-from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowResult,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.selector import DeviceSelector
 
@@ -82,4 +85,4 @@ async def async_create_fix_flow(
         is not None
     ):
         return CompositeDeviceIdRepairFlow(entry)
-    raise HomeAssistantError(f"Unknown issue {issue_id}")
+    return ConfirmRepairFlow()
