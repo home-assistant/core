@@ -63,7 +63,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category:
     status: exempt
     comment: All entities are user-facing primary sensors.
