@@ -50,6 +50,19 @@ SELECT_MOCK_DEVICES = [
 ]
 
 
+@pytest.mark.parametrize("platforms", [[Platform.SELECT]], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [SELECT_MOCK_DEVICES], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_select_entities_snapshot(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Snapshot select entities created from the mock device list."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
 @pytest.mark.parametrize(
     "imou_mock_devices",
     [
