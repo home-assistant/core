@@ -34,7 +34,7 @@ async def test_adam_number_entities(
 async def test_adam_temperature_offset_change(
     hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
 ) -> None:
-    """Test changing of the temperature_offset number."""
+    """Test changing an Adam temperature_offset number."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -54,7 +54,7 @@ async def test_adam_temperature_offset_change(
 async def test_adam_temperature_offset_out_of_bounds_change(
     hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
 ) -> None:
-    """Test changing of the temperature_offset number beyond limits."""
+    """Test changing of an Adam temperature_offset number beyond limits."""
     with pytest.raises(ServiceValidationError, match="valid range"):
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -115,7 +115,7 @@ async def test_anna_number_entities(
 async def test_anna_max_boiler_temp_change(
     hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry
 ) -> None:
-    """Test changing of number entities."""
+    """Test changing an Anna temperature_offset number."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
