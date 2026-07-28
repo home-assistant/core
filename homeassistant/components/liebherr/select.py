@@ -184,14 +184,13 @@ class LiebherrSelectEntity(LiebherrEntity, SelectEntity):
             self._attr_options = description.options_fn(control)
 
         # Add zone suffix only for multi-zone devices
-        if has_multiple_zones:
-            temp_controls = coordinator.data.get_temperature_controls()
-            if (
-                (tc := temp_controls.get(zone_id))
-                and isinstance(tc.zone_position, ZonePosition)
-                and (zone_key := ZONE_POSITION_MAP.get(tc.zone_position))
-            ):
-                self._attr_translation_key = f"{description.translation_key}_{zone_key}"
+        if (
+            has_multiple_zones
+            and control is not None
+            and isinstance(control.zone_position, ZonePosition)
+            and (zone_key := ZONE_POSITION_MAP.get(control.zone_position))
+        ):
+            self._attr_translation_key = f"{description.translation_key}_{zone_key}"
 
     @property
     def _select_control(self) -> SelectControl | None:
