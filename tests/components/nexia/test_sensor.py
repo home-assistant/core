@@ -1,20 +1,27 @@
 """Tests for the nexia sensor platform."""
 
+from datetime import timedelta
+import inspect
 from unittest.mock import NonCallableMock
 
+from freezegun.api import FrozenDateTimeFactory
 from nexia.home import NexiaHome
+from nexia.sensor import NexiaSensor
 import pytest
 
-from homeassistant.components.nexia import DOMAIN
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.nexia.coordinator import (
+    DEFAULT_UPDATE_RATE as COORDINATOR_UPDATE_RATE,
+)
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .conftest import setup_integration
+
+from tests.common import async_fire_time_changed
 
 
 async def test_create_sensors(hass: HomeAssistant, patch_nexia_home: NexiaHome) -> None:
@@ -257,10 +264,11 @@ async def test_any_room_iq_monitors(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_room_iq_sensor_no_longer_present(
-    hass: HomeAssistant, patch_nexia_home: NexiaHome
+    hass: HomeAssistant, patch_nexia_home: NexiaHome, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test RoomIQ sensor no longer present."""
     zone = patch_nexia_home.get_thermostat_by_id(2000004).get_zone_by_id(500)
+    get_item = zone.get_sensor_by_id.side_effect
     zone.get_sensor_by_id.side_effect = KeyError
 
     await setup_integration(hass, patch_nexia_home)
@@ -269,16 +277,26 @@ async def test_room_iq_sensor_no_longer_present(
     assert state is not None
     assert state.state == "unavailable"
 
-    platforms = entity_platform.async_get_platforms(hass, DOMAIN)
-    entity: SensorEntity | None = None
-    for platform in platforms:
-        if state.entity_id in platform.entities:
-            entity = platform.entities[state.entity_id]
-            break
+    def get_sensor_raise_from_native_value(sensor_id: int) -> NexiaSensor:
+        caller_frame = inspect.stack()[4]
 
-    assert isinstance(entity, SensorEntity) is True
-    # call entity directly since state machine seems to guard against this case
-    assert entity.native_value is None
+        if caller_frame.function == "native_value":
+            raise KeyError
+
+        return get_item(sensor_id)
+
+    # The state machine won't call NexiaRoomIQSensor.native_value() when unavailable, so only
+    # raise when called from native_value() & return something new to coordinator so it updates
+    zone.get_sensor_by_id.side_effect = get_sensor_raise_from_native_value
+    patch_nexia_home.update.return_value = {"key": "different value"}
+
+    freezer.tick(timedelta(seconds=COORDINATOR_UPDATE_RATE))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_humidity")
+    assert state is not None
+    assert state.state == "unknown"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
