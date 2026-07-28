@@ -22,7 +22,7 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
 )
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, MeshRoles
 from .coordinator import FritzConfigEntry
 
 SERVICE_SET_GUEST_WIFI_PW = "set_guest_wifi_password"
@@ -145,9 +145,33 @@ async def _async_get_mesh_info(service_call: ServiceCall) -> ServiceResponse:
         )
 
     target_entry = target_entries[0]
+    avm_wrapper = target_entry.runtime_data
+
+    if (mesh_topology := avm_wrapper.mesh_topology_raw) is None:
+        if not avm_wrapper.fritz_status.device_has_mesh_support:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_mesh_info_no_mesh_support",
+            )
+        if avm_wrapper.mesh_role == MeshRoles.SLAVE:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_mesh_info_slave_node",
+            )
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="service_mesh_info_fetch_failed",
+        )
+
+    if (hosts_attributes := avm_wrapper.hosts_attributes_raw) is None:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="service_hosts_info_fetch_failed",
+        )
+
     return {
-        "mesh_topology": target_entry.runtime_data.mesh_topology_raw,
-        "hosts_attributes": target_entry.runtime_data.hosts_attributes_raw,
+        "mesh_topology": mesh_topology,
+        "hosts_attributes": hosts_attributes,
     }
 
 

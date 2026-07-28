@@ -1,6 +1,6 @@
 """Tests for Fritz!Tools services."""
 
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from fritzconnection.core.exceptions import (
     FritzActionFailedError,
@@ -10,7 +10,7 @@ from fritzconnection.core.exceptions import (
 import pytest
 from voluptuous import MultipleInvalid
 
-from homeassistant.components.fritz.const import DOMAIN
+from homeassistant.components.fritz.const import DOMAIN, MeshRoles
 from homeassistant.components.fritz.services import (
     SERVICE_DIAL,
     SERVICE_GET_MESH_INFO,
@@ -18,7 +18,7 @@ from homeassistant.components.fritz.services import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -384,6 +384,7 @@ async def test_get_mesh_info_service_returns_stored_values(
     )
     assert device
 
+    # No context / no user_id simulates an automation or internal call.
     result = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_MESH_INFO,
@@ -413,3 +414,94 @@ async def test_get_mesh_info_service_raises_on_invalid_entry(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.parametrize(
+    (
+        "mesh_topology",
+        "hosts_attributes",
+        "has_mesh_support",
+        "mesh_role",
+        "expected_key",
+    ),
+    [
+        pytest.param(
+            None,
+            MOCK_HOST_ATTRIBUTES_DATA,
+            False,
+            MeshRoles.NONE,
+            "service_mesh_info_no_mesh_support",
+            id="no_mesh_support",
+        ),
+        pytest.param(
+            None,
+            MOCK_HOST_ATTRIBUTES_DATA,
+            True,
+            MeshRoles.SLAVE,
+            "service_mesh_info_slave_node",
+            id="slave_node",
+        ),
+        pytest.param(
+            None,
+            MOCK_HOST_ATTRIBUTES_DATA,
+            True,
+            MeshRoles.NONE,
+            "service_mesh_info_fetch_failed",
+            id="fetch_failed",
+        ),
+        pytest.param(
+            MOCK_MESH_DATA,
+            None,
+            True,
+            MeshRoles.MASTER,
+            "service_hosts_info_fetch_failed",
+            id="hosts_fetch_failed",
+        ),
+    ],
+)
+async def test_get_mesh_info_raises_on_missing_data(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+    mesh_topology: dict | None,
+    hosts_attributes: list | None,
+    has_mesh_support: bool,
+    mesh_role: MeshRoles,
+    expected_key: str,
+) -> None:
+    """Test that missing mesh topology or host attributes raise a proper error."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+    avm_wrapper = entry.runtime_data
+    avm_wrapper._mesh_topology_raw = mesh_topology
+    avm_wrapper._hosts_attributes_raw = hosts_attributes
+    avm_wrapper.mesh_role = mesh_role
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    )
+    assert device
+
+    with (
+        patch.object(
+            type(avm_wrapper.fritz_status),
+            "device_has_mesh_support",
+            new_callable=PropertyMock,
+            return_value=has_mesh_support,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_MESH_INFO,
+            {"device_id": device.id},
+            blocking=True,
+            return_response=True,
+        )
+    assert exc_info.value.translation_key == expected_key

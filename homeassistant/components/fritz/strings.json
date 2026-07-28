@@ -200,6 +200,18 @@
     "service_dial_failed": {
       "message": "Failed to dial, check if the click to dial service of the FRITZ!Box is activated"
     },
+    "service_hosts_info_fetch_failed": {
+      "message": "Host attributes are not available. An error may have occurred during data retrieval."
+    },
+    "service_mesh_info_fetch_failed": {
+      "message": "Mesh topology data is not available. An error may have occurred during data retrieval."
+    },
+    "service_mesh_info_no_mesh_support": {
+      "message": "The device does not support mesh networking."
+    },
+    "service_mesh_info_slave_node": {
+      "message": "This device is a mesh satellite and cannot provide the mesh topology."
+    },
     "service_not_supported": {
       "message": "Action not supported"
     },

@@ -387,14 +387,14 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         return self._release_url
 
     @property
-    def hosts_attributes_raw(self) -> JsonArrayType:
+    def hosts_attributes_raw(self) -> JsonArrayType | None:
         """Return the hosts attributes, as received from the device."""
-        return self._hosts_attributes_raw or []
+        return self._hosts_attributes_raw
 
     @property
-    def mesh_topology_raw(self) -> JsonObjectType:
+    def mesh_topology_raw(self) -> JsonObjectType | None:
         """Return mesh topology, as received from the device."""
-        return self._mesh_topology_raw or {}
+        return self._mesh_topology_raw
 
     @property
     def mac(self) -> str:
