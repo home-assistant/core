@@ -112,7 +112,7 @@ async def test_anna_number_entities(
 
 @pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
-async def test_anna_max_boiler_temp_change(
+async def test_anna_temperature_offset_change(
     hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry
 ) -> None:
     """Test changing an Anna temperature_offset number."""
