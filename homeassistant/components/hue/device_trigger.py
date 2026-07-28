@@ -151,7 +151,6 @@ def _async_attach_on_entry_load(
     """
     remove_trigger: CALLBACK_TYPE | None = None
     attach_scheduled = False
-    detached = False
 
     async def _async_attach() -> None:
         nonlocal remove_trigger
@@ -165,9 +164,6 @@ def _async_attach_on_entry_load(
                 err,
                 trigger_info["name"],
             )
-            return
-        if detached:
-            remove_trigger()
 
     @callback
     def _handle_entry_state_change() -> None:
@@ -183,8 +179,6 @@ def _async_attach_on_entry_load(
 
     @callback
     def _remove() -> None:
-        nonlocal detached
-        detached = True
         unsub_state_change()
         if remove_trigger is not None:
             remove_trigger()
