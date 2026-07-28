@@ -660,4 +660,3 @@ async def test_zone_type_change(
     assert hass.states.get(target_entity_id) is not None
     assert entity_registry.async_get(initial_entity_id) is None
     assert entity_registry.async_get(target_entity_id) is not None
-
