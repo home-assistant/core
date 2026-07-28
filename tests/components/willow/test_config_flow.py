@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from urllib.parse import parse_qs, urlparse
 
 import pytest
+from pywillow import WillowAuthError
 
 from homeassistant.components.willow.const import (
     DOMAIN,
@@ -12,7 +13,6 @@ from homeassistant.components.willow.const import (
     OAUTH2_CLIENT_ID,
     OAUTH2_TOKEN,
 )
-from homeassistant.components.willow.exceptions import WillowAuthError
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

@@ -6,11 +6,12 @@
   "dependencies": [
     "application_credentials",
     "frontend",
-    "panel_custom",
-    "http"
+    "http",
+    "panel_custom"
   ],
   "documentation": "https://www.home-assistant.io/integrations/willow",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "quality_scale": "bronze"
+  "quality_scale": "bronze",
+  "requirements": ["pywillow==0.1.2"]
 }

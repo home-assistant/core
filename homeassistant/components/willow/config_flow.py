@@ -3,6 +3,8 @@
 import logging
 from typing import Any, override
 
+from pywillow import WillowAuthError, WillowClient
+
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
@@ -11,9 +13,7 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
-from .client import WillowClient
 from .const import DOMAIN, OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET
-from .exceptions import WillowAuthError
 
 
 class OAuth2FlowHandler(

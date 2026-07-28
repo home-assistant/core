@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from pywillow import WillowClient
+
 from homeassistant.components import frontend, panel_custom
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -20,7 +22,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 
-from .client import WillowClient
 from .const import (
     DOMAIN,
     OAUTH2_CLIENT_ID,

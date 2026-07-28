@@ -4,10 +4,10 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pywillow import WillowAuthError
 
 from homeassistant.components import frontend
 from homeassistant.components.willow.const import PANEL_URL_PATH, SCAN_INTERVAL
-from homeassistant.components.willow.exceptions import WillowAuthError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (

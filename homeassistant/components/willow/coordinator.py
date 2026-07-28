@@ -1,9 +1,9 @@
 """Coordinator for the Willow integration."""
 
-from collections.abc import Mapping
-from typing import NotRequired, TypedDict, cast, override
+from typing import override
 
 from aiohttp import ClientError
+from pywillow import WillowAuthError, WillowClient, WillowDevice, WillowProfile
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -12,49 +12,9 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .client import WillowClient
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
-from .exceptions import WillowAuthError
 
 type WillowConfigEntry = ConfigEntry[WillowDataUpdateCoordinator]
-
-
-class WillowProfile(TypedDict):
-    """Willow profile response."""
-
-    id: int
-    username: str
-    profile_image: str | None
-
-
-class WillowUserPlant(TypedDict):
-    """Willow user plant data."""
-
-    id: int
-    name: str
-    location: str | None
-
-
-class WillowReading(TypedDict):
-    """Willow latest reading data."""
-
-    timestamp: str
-    temperature: float
-    humidity: float
-    moisture: float
-    light: float
-
-
-class WillowDevice(TypedDict):
-    """Willow paired sensor data."""
-
-    id: int
-    sensor_id: str
-    battery_life: int | float | None
-    version: str | None
-    user_plant: WillowUserPlant
-    latest_reading: WillowReading | None
-    profile_image: NotRequired[str | None]
 
 
 class WillowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, WillowDevice]]):
@@ -87,7 +47,7 @@ class WillowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, WillowDevice]]
         await self._oauth_session.async_ensure_token_valid()
         self.client.update_token(self._oauth_session.token[CONF_ACCESS_TOKEN])
         try:
-            self.profile = cast(WillowProfile, await self.client.get_profile())
+            self.profile = await self.client.get_profile()
         except WillowAuthError as err:
             raise ConfigEntryAuthFailed from err
         except ClientError as err:
@@ -105,8 +65,4 @@ class WillowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, WillowDevice]]
         except ClientError as err:
             raise UpdateFailed(f"Unable to fetch Willow data: {err}") from err
 
-        return {
-            str(device["sensor_id"]): cast(WillowDevice, device)
-            for device in devices
-            if isinstance(device, Mapping) and device.get("sensor_id")
-        }
+        return {device["sensor_id"]: device for device in devices}

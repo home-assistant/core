@@ -4,6 +4,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
+from pywillow import WillowDevice
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -18,7 +20,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import WillowConfigEntry, WillowDataUpdateCoordinator, WillowDevice
+from .coordinator import WillowConfigEntry, WillowDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
 
