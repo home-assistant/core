@@ -860,6 +860,15 @@
             }
           }
         },
+        "notify": {
+          "description": "The KNX notify platform allows you to send text messages to the KNX bus.",
+          "knx": {
+            "ga_send": {
+              "description": "The group address messages are sent to.",
+              "label": "Address"
+            }
+          }
+        },
         "number": {
           "description": "Entity for numeric datapoints. Temperature, percent, etc.",
           "knx": {

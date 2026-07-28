@@ -5,7 +5,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.russound_rio.const import DOMAIN, TYPE_SERIAL, TYPE_TCP
+from homeassistant.components.russound_rio.const import (
+    CONF_ZONE_SOURCE_EXCLUSION,
+    DOMAIN,
+    TYPE_SERIAL,
+    TYPE_TCP,
+)
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
@@ -527,3 +532,41 @@ async def test_reconfigure_serial_unique_id_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_device"
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_russound_client: AsyncMock,
+) -> None:
+    """Test the options flow and automatic reload."""
+    mock_config_entry.runtime_data = mock_russound_client
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_setup_entry.call_count == 1
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_ZONE_SOURCE_EXCLUSION: True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        result["data"]
+        == mock_config_entry.options
+        == {
+            CONF_ZONE_SOURCE_EXCLUSION: True,
+        }
+    )
+    assert mock_russound_client.disconnect.await_count == 1
+    assert mock_setup_entry.call_count == 2
