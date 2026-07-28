@@ -139,7 +139,9 @@
       "cleaning_mode": {
         "name": "Cleaning mode",
         "state": {
+          "custom": "Custom",
           "mop": "Mop only",
+          "smart_mode": "Smart",
           "vac_and_mop": "Vacuum and mop",
           "vacuum": "Vacuum only"
         }

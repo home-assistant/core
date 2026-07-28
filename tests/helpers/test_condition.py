@@ -2135,6 +2135,25 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
                     "below": 110,
                 },
                 {
+                    "condition": "zone",
+                    "options": {
+                        "entity_id": [
+                            "device_tracker.paulus",
+                            "device_tracker.anne_therese",
+                        ],
+                        "zone": ["zone.home"],
+                    },
+                },
+                {
+                    "condition": "zone.in_zone",
+                    "target": {"entity_id": "person.paulus"},
+                    "options": {"zone": "zone.work", "behavior": "any"},
+                },
+                {
+                    "condition": "zone.occupancy_is_detected",
+                    "options": {"zone": "zone.school"},
+                },
+                {
                     "condition": "time",
                     "after": "input_datetime.start",
                     "before": "sensor.end",
@@ -2147,7 +2166,10 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
             ],
         }
     ) == {
+        "device_tracker.anne_therese",
+        "device_tracker.paulus",
         "input_datetime.start",
+        "person.paulus",
         "sensor.end",
         "sensor.temperature",
         "sensor.temperature_2",
@@ -2159,6 +2181,29 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
         "sensor.temperature_8",
         "sensor.temperature_9",
         "sensor.temperature_10",
+        "zone.home",
+        "zone.school",
+        "zone.work",
+    }
+
+
+async def test_extract_entities_zone_condition_validated(hass: HomeAssistant) -> None:
+    """Test extracting entities from a validated legacy zone condition.
+
+    Validation moves the top level entity_id and zone fields into options.
+    """
+    assert await async_setup_component(hass, "zone", {})
+    config = await condition.async_validate_condition_config(
+        hass,
+        {
+            "condition": "zone",
+            "entity_id": "device_tracker.paulus",
+            "zone": "zone.home",
+        },
+    )
+    assert condition.async_extract_entities(config) == {
+        "device_tracker.paulus",
+        "zone.home",
     }
 
 

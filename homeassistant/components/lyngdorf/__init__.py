@@ -1,0 +1,130 @@
+"""The Lyngdorf integration."""
+
+import logging
+
+from lyngdorf.device import async_create_receiver, lookup_receiver_model
+
+from homeassistant.const import CONF_HOST, CONF_MODEL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
+
+from .const import CONF_SERIAL_NUMBER, DOMAIN, PLATFORMS
+from .models import LyngdorfConfigEntry, LyngdorfRuntimeData
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def _serial_as_mac(serial: str) -> str | None:
+    """Return a normalized MAC if the serial is one, otherwise None.
+
+    Lyngdorf reports the device MAC in the UPnP serialNumber field, but this is
+    not formally guaranteed — fall back gracefully if the value is not a MAC.
+    """
+    cleaned = serial.replace(":", "").replace("-", "").replace(".", "")
+    if len(cleaned) != 12 or not all(c in "0123456789abcdefABCDEF" for c in cleaned):
+        return None
+    return format_mac(cleaned)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: LyngdorfConfigEntry
+) -> bool:
+    """Set up Lyngdorf from a config entry."""
+    lyngdorf_model = lookup_receiver_model(config_entry.data[CONF_MODEL])
+    assert lyngdorf_model is not None
+
+    try:
+        receiver = await async_create_receiver(
+            config_entry.data[CONF_HOST], lyngdorf_model
+        )
+        await receiver.async_connect()
+    except TimeoutError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="setup_timeout",
+            translation_placeholders={"host": config_entry.data[CONF_HOST]},
+        ) from err
+    except (ConnectionError, OSError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="setup_connection_error",
+            translation_placeholders={"host": config_entry.data[CONF_HOST]},
+        ) from err
+
+    assert config_entry.unique_id
+    serial = config_entry.data[CONF_SERIAL_NUMBER]
+    mac = _serial_as_mac(serial)
+    connections = {(CONNECTION_NETWORK_MAC, mac)} if mac else set()
+
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, config_entry.unique_id)},
+        connections=connections,
+        manufacturer=lyngdorf_model.manufacturer,
+        serial_number=serial,
+        model=lyngdorf_model.model_name,
+    )
+
+    zone_b_device_info = DeviceInfo(
+        identifiers={(DOMAIN, f"{config_entry.unique_id}_zone_b")},
+        manufacturer=lyngdorf_model.manufacturer,
+        serial_number=serial,
+        model=lyngdorf_model.model_name,
+        translation_key="zone_b",
+        translation_placeholders={"device_name": config_entry.title},
+        via_device=(DOMAIN, config_entry.unique_id),
+    )
+
+    config_entry.runtime_data = LyngdorfRuntimeData(
+        receiver=receiver,
+        device_info=device_info,
+        zone_b_device_info=zone_b_device_info,
+    )
+
+    host = config_entry.data[CONF_HOST]
+    last_connected = receiver.connected
+
+    @callback
+    def _log_availability_change() -> None:
+        nonlocal last_connected
+        connected = receiver.connected
+        if connected == last_connected:
+            return
+        last_connected = connected
+        if connected:
+            _LOGGER.info("Lyngdorf %s is back online", host)
+        else:
+            _LOGGER.info("Lyngdorf %s is unavailable", host)
+
+    receiver.register_notification_callback(_log_availability_change)
+    config_entry.async_on_unload(
+        lambda: receiver.un_register_notification_callback(_log_availability_change)
+    )
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    async def _async_disconnect(event: Event) -> None:
+        """Disconnect from receiver."""
+        await receiver.async_disconnect()
+
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect)
+    )
+
+    return True
+
+
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: LyngdorfConfigEntry
+) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+    if unload_ok:
+        await config_entry.runtime_data.receiver.async_disconnect()
+    return unload_ok
