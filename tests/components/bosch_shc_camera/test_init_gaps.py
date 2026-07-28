@@ -100,6 +100,8 @@ async def _setup_healthy_entry(hass: HomeAssistant, entry: MockConfigEntry) -> N
 
 async def test_rehydrate_name_by_user_wins_and_repairs_uuid_placeholder(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """`name_by_user` wins over a UUID-placeholder `device.name`, which gets repaired.
 
@@ -110,7 +112,7 @@ async def test_rehydrate_name_by_user_wins_and_repairs_uuid_placeholder(
     entry = _mock_config_entry()
     entry.add_to_hass(hass)
 
-    dreg = dr.async_get(hass)
+    dreg = device_registry
     device = dreg.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, CAM_ID)},
@@ -118,7 +120,7 @@ async def test_rehydrate_name_by_user_wins_and_repairs_uuid_placeholder(
     )
     dreg.async_update_device(device.id, name_by_user="Bosch Terrasse")
 
-    ereg = er.async_get(hass)
+    ereg = entity_registry
     ereg.async_get_or_create(
         domain="camera",
         platform=DOMAIN,
@@ -155,12 +157,13 @@ async def test_rehydrate_name_by_user_wins_and_repairs_uuid_placeholder(
 
 async def test_rehydrate_derives_title_from_camera_entity_slug(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """No device exists — title falls back to the camera entity_id's slug."""
     entry = _mock_config_entry()
     entry.add_to_hass(hass)
 
-    ereg = er.async_get(hass)
+    ereg = entity_registry
     ereg.async_get_or_create(
         domain="camera",
         platform=DOMAIN,
@@ -214,6 +217,8 @@ async def test_first_install_reraises_when_no_registry_to_fall_back_to(
 
 async def test_doubled_prefix_migration_renames_and_skips_collision(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """The v11.0.0 doubled-prefix migration renames a clean match.
 
@@ -224,7 +229,7 @@ async def test_doubled_prefix_migration_renames_and_skips_collision(
     entry = _mock_config_entry()
     entry.add_to_hass(hass)
 
-    ereg = er.async_get(hass)
+    ereg = entity_registry
     ereg.async_get_or_create(
         domain="light",
         platform=DOMAIN,
@@ -257,20 +262,20 @@ async def test_doubled_prefix_migration_renames_and_skips_collision(
     # Collision case: buggy entity survives untouched.
     assert ereg.async_get("button.bosch_est_bosch_est_refresh_snapshot") is not None
 
-    issue = ir.async_get(hass).async_get_issue(
-        DOMAIN, "doubled_prefix_entity_ids_migrated"
-    )
+    issue = issue_registry.async_get_issue(DOMAIN, "doubled_prefix_entity_ids_migrated")
     assert issue is not None
 
 
 async def test_doubled_prefix_migration_truncates_examples_beyond_five(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """More than 5 renamed entities truncate the issue's example list with an ellipsis."""
     entry = _mock_config_entry()
     entry.add_to_hass(hass)
 
-    ereg = er.async_get(hass)
+    ereg = entity_registry
     for i in range(6):
         ereg.async_get_or_create(
             domain="button",
@@ -284,9 +289,7 @@ async def test_doubled_prefix_migration_truncates_examples_beyond_five(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    issue = ir.async_get(hass).async_get_issue(
-        DOMAIN, "doubled_prefix_entity_ids_migrated"
-    )
+    issue = issue_registry.async_get_issue(DOMAIN, "doubled_prefix_entity_ids_migrated")
     assert issue is not None
     assert issue.translation_placeholders is not None
     assert issue.translation_placeholders["count"] == "6"
@@ -328,6 +331,7 @@ async def test_persisted_caches_loaded_and_malformed_local_creds_skipped(
 
 async def test_indoor_ii_orphan_entities_removed_only_for_indoor_cams(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """v12.5.1 migration removes Indoor-II-only orphan entities, scoped per camera.
 
@@ -341,7 +345,7 @@ async def test_indoor_ii_orphan_entities_removed_only_for_indoor_cams(
         {CAM_ID: "HOME_Eyes_Indoor"}
     )
 
-    ereg = er.async_get(hass)
+    ereg = entity_registry
     ereg.async_get_or_create(
         domain="light",
         platform=DOMAIN,
@@ -363,12 +367,15 @@ async def test_indoor_ii_orphan_entities_removed_only_for_indoor_cams(
     assert ereg.async_get("number.bosch_outdoor_top_led_brightness") is not None
 
 
-async def test_stale_doubled_lan_reachable_entity_removed(hass: HomeAssistant) -> None:
+async def test_stale_doubled_lan_reachable_entity_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """v12.4.10 migration removes a stale doubled-prefix `_lan_reachable` entity."""
     entry = _mock_config_entry()
     entry.add_to_hass(hass)
 
-    ereg = er.async_get(hass)
+    ereg = entity_registry
     ereg.async_get_or_create(
         domain="binary_sensor",
         platform=DOMAIN,
@@ -387,6 +394,7 @@ async def test_stale_doubled_lan_reachable_entity_removed(hass: HomeAssistant) -
 
 async def test_hw_rehydrate_skips_foreign_domain_and_already_populated_cam(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """`_async_rehydrate_hw_from_registry` skips foreign-domain identifiers.
 
@@ -400,7 +408,7 @@ async def test_hw_rehydrate_skips_foreign_domain_and_already_populated_cam(
         {CAM_ID: "HOME_Eyes_Outdoor"}
     )
 
-    dreg = dr.async_get(hass)
+    dreg = device_registry
     dreg.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, CAM_ID), ("other_domain", "unrelated-id")},

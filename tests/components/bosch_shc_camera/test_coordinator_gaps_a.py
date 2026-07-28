@@ -367,6 +367,7 @@ def test_should_check_status(
 
 async def test_refresh_notifications_disabled_issues_creates_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """A camera with movement/person notifications disabled gets a Repairs issue."""
     coord = await _make_coordinator(hass)
@@ -375,9 +376,7 @@ async def test_refresh_notifications_disabled_issues_creates_issue(
 
     coord._refresh_notifications_disabled_issues()
 
-    issue = ir.async_get(hass).async_get_issue(
-        DOMAIN, f"notifications_disabled_{CAM_ID}"
-    )
+    issue = issue_registry.async_get_issue(DOMAIN, f"notifications_disabled_{CAM_ID}")
     assert issue is not None
     assert CAM_ID in coord._notif_disabled_logged
 
@@ -410,6 +409,7 @@ async def test_refresh_notifications_disabled_issues_log_message_matches_camera_
 
 async def test_refresh_notifications_disabled_issues_clears_when_reenabled(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Re-enabling notifications deletes the issue and clears the logged-set entry."""
     coord = await _make_coordinator(hass)
@@ -430,7 +430,7 @@ async def test_refresh_notifications_disabled_issues_clears_when_reenabled(
     coord._refresh_notifications_disabled_issues()
 
     assert (
-        ir.async_get(hass).async_get_issue(DOMAIN, f"notifications_disabled_{CAM_ID}")
+        issue_registry.async_get_issue(DOMAIN, f"notifications_disabled_{CAM_ID}")
         is None
     )
     assert CAM_ID not in coord._notif_disabled_logged

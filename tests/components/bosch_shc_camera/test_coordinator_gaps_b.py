@@ -100,7 +100,7 @@ class TestPurgeCamIdAndCleanupStaleDevices:
         coord._purge_cam_id("never-seen-cam")  # must not raise
 
     async def test_cleanup_stale_devices_removes_device_no_longer_in_account(
-        self, hass: HomeAssistant
+        self, hass: HomeAssistant, device_registry: dr.DeviceRegistry
     ) -> None:
         """A device whose cam_id vanished from the cloud account gets removed."""
         entry = _mock_entry()
@@ -108,7 +108,7 @@ class TestPurgeCamIdAndCleanupStaleDevices:
         coord = BoschCameraCoordinator(hass, entry)
         coord.local_creds_cache[CAM_ID] = {"user": "u"}
 
-        dev_reg = dr.async_get(hass)
+        dev_reg = device_registry
         device = dev_reg.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, CAM_ID)},
@@ -121,7 +121,7 @@ class TestPurgeCamIdAndCleanupStaleDevices:
         assert CAM_ID not in coord.local_creds_cache
 
     async def test_cleanup_stale_devices_keeps_device_still_in_account(
-        self, hass: HomeAssistant
+        self, hass: HomeAssistant, device_registry: dr.DeviceRegistry
     ) -> None:
         """A device whose cam_id is still current must survive untouched."""
         entry = _mock_entry()
@@ -129,7 +129,7 @@ class TestPurgeCamIdAndCleanupStaleDevices:
         coord = BoschCameraCoordinator(hass, entry)
         coord.local_creds_cache[CAM_ID] = {"user": "u"}
 
-        dev_reg = dr.async_get(hass)
+        dev_reg = device_registry
         device = dev_reg.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, CAM_ID)},
