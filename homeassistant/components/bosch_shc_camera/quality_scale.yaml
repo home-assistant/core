@@ -72,7 +72,13 @@ rules:
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
-  docs-supported-functions: done
+  docs-supported-functions:
+    status: done
+    comment: |
+      2026-07-28: docs page updated to also mention motion-detection control
+      (camera.enable_motion_detection / camera.disable_motion_detection,
+      camera.py) — previously listed only snapshot viewing, understating the
+      entity's actual supported functionality (Copilot review round 16).
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: todo

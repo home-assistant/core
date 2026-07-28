@@ -268,42 +268,51 @@ class BoschOAuth2Implementation(AbstractOAuth2Implementation):
         code = external_data["code"]
         redirect_uri = external_data["state"]["redirect_uri"]
         session = await async_get_bosch_cloud_session(self.hass)
-        async with session.post(
-            f"{KEYCLOAK_BASE}/token",
-            data={
-                "client_id": self._client_id,
-                "client_secret": self._client_secret,
-                "grant_type": "authorization_code",
-                "code": code,
-                "redirect_uri": redirect_uri,
-                "code_verifier": self._last_verifier,
-            },
-        ) as resp:
-            if resp.status >= 400:
-                # Do not log the response body — Keycloak error responses can
-                # echo token material back in the payload (see token_auth.py).
-                _LOGGER.error("Token exchange failed: HTTP %d", resp.status)
-            resp.raise_for_status()
-            return await resp.json()  # type: ignore[no-any-return]
+        # Same 15s budget as _do_refresh's identical Keycloak /token POST —
+        # without it this shared session falls back to aiohttp's 300s
+        # default, so an unavailable Keycloak endpoint could stall the
+        # config flow for five minutes instead of failing fast (Copilot
+        # review round 16).
+        async with asyncio.timeout(15):
+            async with session.post(
+                f"{KEYCLOAK_BASE}/token",
+                data={
+                    "client_id": self._client_id,
+                    "client_secret": self._client_secret,
+                    "grant_type": "authorization_code",
+                    "code": code,
+                    "redirect_uri": redirect_uri,
+                    "code_verifier": self._last_verifier,
+                },
+            ) as resp:
+                if resp.status >= 400:
+                    # Do not log the response body — Keycloak error responses
+                    # can echo token material back in the payload (see
+                    # token_auth.py).
+                    _LOGGER.error("Token exchange failed: HTTP %d", resp.status)
+                resp.raise_for_status()
+                return await resp.json()  # type: ignore[no-any-return]
 
     @override
     async def _async_refresh_token(self, token: dict[str, Any]) -> dict[str, Any]:
         """Refresh access token via Keycloak."""
         session = await async_get_bosch_cloud_session(self.hass)
-        async with session.post(
-            f"{KEYCLOAK_BASE}/token",
-            data={
-                "client_id": self._client_id,
-                "client_secret": self._client_secret,
-                "grant_type": "refresh_token",
-                "refresh_token": token["refresh_token"],
-            },
-        ) as resp:
-            if resp.status >= 400:
-                _LOGGER.error("Token refresh failed: HTTP %d", resp.status)
-            resp.raise_for_status()
-            new_token = await resp.json()
-            return {**token, **new_token}
+        # See async_resolve_external_data above — same timeout budget.
+        async with asyncio.timeout(15):
+            async with session.post(
+                f"{KEYCLOAK_BASE}/token",
+                data={
+                    "client_id": self._client_id,
+                    "client_secret": self._client_secret,
+                    "grant_type": "refresh_token",
+                    "refresh_token": token["refresh_token"],
+                },
+            ) as resp:
+                if resp.status >= 400:
+                    _LOGGER.error("Token refresh failed: HTTP %d", resp.status)
+                resp.raise_for_status()
+                new_token = await resp.json()
+                return {**token, **new_token}
 
 
 def _detect_token_client_id(bearer_token: str) -> str | None:

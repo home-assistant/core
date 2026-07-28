@@ -8,6 +8,7 @@ Targets specific branches missed by ``tests/test_config_flow.py``: the
 that only renders for a legacy-client token).
 """
 
+import asyncio
 import base64
 import json
 from typing import Any
@@ -111,6 +112,102 @@ async def test_refresh_token_error_status_logs_before_raising(
         pytest.raises(RuntimeError, match="HTTP 401"),
     ):
         await impl._async_refresh_token({"refresh_token": "old-refresh"})
+
+
+def _spy_timeout(calls: list[float]) -> Any:
+    """Return an ``asyncio.timeout`` stand-in that records the requested delay.
+
+    Records the delay the caller asked for (so a test can assert it matches
+    the adjacent access-check/refresh-helper budget) but substitutes a tiny
+    real timeout underneath, so a stalled ``session.post()`` still raises
+    promptly instead of the test itself hanging for the real budget.
+
+    Captures the *real* ``asyncio.timeout`` before this factory is installed
+    as the patch target — ``config_flow``'s ``asyncio`` is the same module
+    object our own ``import asyncio`` refers to, so calling ``asyncio.timeout``
+    from inside the factory after patching would recurse into the mock
+    itself.
+    """
+    real_timeout = asyncio.timeout
+
+    def _factory(delay: float) -> Any:
+        calls.append(delay)
+        return real_timeout(0.01)
+
+    return _factory
+
+
+def _make_hanging_response() -> MagicMock:
+    """Build a mock response whose ``__aenter__`` never returns."""
+    resp = MagicMock()
+
+    async def _hang(*_args: Any, **_kwargs: Any) -> None:
+        await asyncio.sleep(100)
+
+    resp.__aenter__ = _hang
+    resp.__aexit__ = AsyncMock(return_value=None)
+    return resp
+
+
+async def test_resolve_external_data_bounded_by_15s_timeout(
+    hass: HomeAssistant,
+) -> None:
+    """Authorization-code exchange is bounded by the same budget as refresh.
+
+    Same 15s budget as ``_do_refresh``'s identical Keycloak /token POST,
+    instead of falling back to aiohttp's 300s default — a stalled Keycloak
+    endpoint raises instead of stalling the whole config flow (Copilot
+    review round 16).
+    """
+    session = MagicMock()
+    session.post = MagicMock(return_value=_make_hanging_response())
+    impl = BoschOAuth2Implementation(hass)
+    calls: list[float] = []
+
+    with (
+        patch(
+            "homeassistant.components.bosch_shc_camera.config_flow.async_get_bosch_cloud_session",
+            AsyncMock(return_value=session),
+        ),
+        patch(
+            "homeassistant.components.bosch_shc_camera.config_flow.asyncio.timeout",
+            side_effect=_spy_timeout(calls),
+        ),
+        pytest.raises(TimeoutError),
+    ):
+        await impl.async_resolve_external_data(
+            {"code": "abcd", "state": {"redirect_uri": "https://example.invalid"}}
+        )
+
+    assert calls == [15]
+
+
+async def test_refresh_token_bounded_by_15s_timeout(hass: HomeAssistant) -> None:
+    """Token-refresh POST is likewise bounded by the 15s budget.
+
+    Instead of aiohttp's 300s default (Copilot review round 16).
+    """
+    session = MagicMock()
+    session.post = MagicMock(return_value=_make_hanging_response())
+    impl = BoschOAuth2Implementation(hass)
+    calls: list[float] = []
+
+    with (
+        patch(
+            "homeassistant.components.bosch_shc_camera.config_flow.async_get_bosch_cloud_session",
+            AsyncMock(return_value=session),
+        ),
+        patch(
+            "homeassistant.components.bosch_shc_camera.config_flow.asyncio.timeout",
+            side_effect=_spy_timeout(calls),
+        ),
+        pytest.raises(TimeoutError),
+    ):
+        await impl._async_refresh_token(
+            {"refresh_token": "old-refresh", "access_token": "old-access-token"}
+        )
+
+    assert calls == [15]
 
 
 async def test_do_refresh_returns_token_on_200() -> None:
