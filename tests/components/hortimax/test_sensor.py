@@ -1,6 +1,7 @@
 """Test the Ridder HortiMaX Pro sensor platform."""
 
 from datetime import timedelta
+from math import inf, nan
 from unittest.mock import AsyncMock
 
 from aiohortos import HortosConnectionError, Readout, Source
@@ -195,8 +196,8 @@ async def test_wind_direction_codes(
     "value",
     [
         pytest.param("n/a", id="text"),
-        pytest.param(float("nan"), id="nan"),
-        pytest.param(float("inf"), id="infinity"),
+        pytest.param(nan, id="nan"),
+        pytest.param(inf, id="infinity"),
         pytest.param("NaN", id="nan_as_text"),
     ],
 )
@@ -236,7 +237,7 @@ async def test_non_finite_time_of_day_is_unknown(
             name="Sunrise today",
             unit="Second",
             source=Source(name="Weather station 001", type="WeatherStation"),
-            value=float("nan"),
+            value=nan,
         )
     ]
     await setup_integration(hass, mock_config_entry)
