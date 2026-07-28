@@ -231,6 +231,20 @@ def test_expose_write_back_rejects_attribute() -> None:
         )
 
 
+def test_expose_write_back_rejects_value_template() -> None:
+    """Test write_back is rejected together with a value_template."""
+    with pytest.raises(vol.Invalid):
+        ExposeSchema.ENTITY_SCHEMA(
+            {
+                CONF_TYPE: "5.010",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: "number.fake",
+                CONF_VALUE_TEMPLATE: "{{ value }}",
+                ExposeSchema.CONF_KNX_EXPOSE_WRITE_BACK: True,
+            }
+        )
+
+
 async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test an expose to only send telegrams on attribute change."""
     entity_id = "fake.entity"
@@ -732,34 +746,46 @@ async def test_ui_expose_write_back(
 
 
 @pytest.mark.parametrize(
-    ("option", "expected_success"),
+    ("entity_id", "option", "expected_success"),
     [
         pytest.param(
+            "switch.test",
             {"ga": {"write": "1/1/1", "dpt": "1.001"}, "write_back": True},
             True,
             id="binary",
         ),
         pytest.param(
+            "number.test",
             {"ga": {"write": "1/1/1", "dpt": "5.001"}, "write_back": True},
             True,
             id="numeric",
         ),
         pytest.param(
+            "text.test",
             {"ga": {"write": "1/1/1", "dpt": "16.000"}, "write_back": True},
             True,
             id="string",
         ),
         pytest.param(
+            "switch.test",
+            {"ga": {"write": "1/1/1", "dpt": "5.001"}, "write_back": True},
+            False,
+            id="numeric_wrong_domain",
+        ),
+        pytest.param(
+            "number.test",
             {"ga": {"write": "1/1/1", "dpt": "232.600"}, "write_back": True},
             False,
             id="complex",
         ),
         pytest.param(
+            "number.test",
             {"ga": {"write": "1/1/1", "dpt": "20.102"}, "write_back": True},
             False,
             id="enum",
         ),
         pytest.param(
+            "number.test",
             {
                 "ga": {"write": "1/1/1", "dpt": "5.001"},
                 "write_back": True,
@@ -768,23 +794,34 @@ async def test_ui_expose_write_back(
             False,
             id="attribute",
         ),
+        pytest.param(
+            "number.test",
+            {
+                "ga": {"write": "1/1/1", "dpt": "5.001"},
+                "write_back": True,
+                "value_template": "{{ value }}",
+            },
+            False,
+            id="value_template",
+        ),
     ],
 )
 async def test_ui_expose_validate_write_back(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
+    entity_id: str,
     option: dict[str, Any],
     expected_success: bool,
 ) -> None:
-    """Test write-back validation against the configured DPT and attribute."""
+    """Test write-back validation against DPT, target domain, attribute and template."""
     await knx.setup_integration()
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json_auto_id(
         {
             "type": "knx/validate_expose",
-            "entity_id": "switch.test",
+            "entity_id": entity_id,
             "data": {"options": [option]},
         }
     )

@@ -8,7 +8,7 @@ from xknx.dpt import DPTBase
 from xknx.dpt.dpt_1 import DPT1BitEnum
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import (
     config_validation as cv,
     selector,
@@ -16,7 +16,7 @@ from homeassistant.helpers import (
 )
 
 from ..dpt import ha_dpt_class
-from ..expose import KnxExposeEntity, KnxExposeOptions
+from ..expose import KnxExposeEntity, KnxExposeOptions, write_back_target_supported
 from ..validation import ia_validator
 from .entity_store_validation import validate_config_store_data
 from .knx_selector import GASelector
@@ -73,6 +73,12 @@ def _validate_expose_option_write_back(
         return config
     if config.get("attribute") is not None:
         raise vol.Invalid("`write_back` is not supported together with `attribute`")
+    # a value_template only transforms outgoing values, so a write-back-triggered
+    # state change would re-encode to a different payload and echo back to the bus
+    if config.get("value_template") is not None:
+        raise vol.Invalid(
+            "`write_back` is not supported together with `value_template`"
+        )
     transcoder = DPTBase.parse_transcoder(config["ga"]["dpt"])
     # DPT1 binary classifies as "enum", so match it explicitly before numeric/string
     if transcoder is None or not (
@@ -107,17 +113,38 @@ EXPOSE_OPTION_SCHEMA = vol.All(
     _validate_expose_option_write_back,
 )
 
-EXPOSE_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required("entity_id"): selector.EntitySelector(),
-        vol.Required("data"): vol.Schema(
-            {
-                vol.Required("options"): [EXPOSE_OPTION_SCHEMA],
-                vol.Optional("notes"): str,
-            }
-        ),
-    },
-    extra=vol.REMOVE_EXTRA,
+
+def _validate_expose_write_back_targets(config: dict[str, Any]) -> dict[str, Any]:
+    """Reject write-back options whose target entity domain cannot be updated."""
+    entity_domain = split_entity_id(config["entity_id"])[0]
+    for option in config["data"]["options"]:
+        if not option.get("write_back"):
+            continue
+        transcoder = DPTBase.parse_transcoder(option["ga"]["dpt"])
+        if transcoder is not None and not write_back_target_supported(
+            transcoder, entity_domain
+        ):
+            raise vol.Invalid(
+                f"`write_back` is not supported for `{entity_domain}` entities"
+                " with the configured DPT"
+            )
+    return config
+
+
+EXPOSE_CONFIG_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required("entity_id"): selector.EntitySelector(),
+            vol.Required("data"): vol.Schema(
+                {
+                    vol.Required("options"): [EXPOSE_OPTION_SCHEMA],
+                    vol.Optional("notes"): str,
+                }
+            ),
+        },
+        extra=vol.REMOVE_EXTRA,
+    ),
+    _validate_expose_write_back_targets,
 )
 
 

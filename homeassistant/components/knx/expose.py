@@ -74,6 +74,13 @@ class _WriteBackCall(NamedTuple):
     data: dict[str, Any]
 
 
+def write_back_target_supported(dpt: type[DPTBase], entity_domain: str) -> bool:
+    """Return whether write-back can reach the given entity domain for this DPT."""
+    if issubclass(dpt, DPT1BitEnum):
+        return True  # binary targets are checked at runtime via has_service
+    return (ha_dpt_class(dpt), entity_domain) in _WRITE_BACK_DISPATCH
+
+
 @callback
 def create_knx_exposure(
     hass: HomeAssistant, xknx: XKNX, config: ConfigType

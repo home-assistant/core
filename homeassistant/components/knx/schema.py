@@ -512,12 +512,17 @@ class DateTimeSchema(KNXPlatformSchema):
 
 
 def _validate_expose_write_back(config: dict[str, Any]) -> dict[str, Any]:
-    """`write_back` is not supported for exposures targeting an attribute."""
-    if (
-        config.get(ExposeSchema.CONF_KNX_EXPOSE_WRITE_BACK)
-        and config.get(ExposeSchema.CONF_KNX_EXPOSE_ATTRIBUTE) is not None
-    ):
+    """`write_back` cannot be combined with `attribute` or `value_template`."""
+    if not config.get(ExposeSchema.CONF_KNX_EXPOSE_WRITE_BACK):
+        return config
+    if config.get(ExposeSchema.CONF_KNX_EXPOSE_ATTRIBUTE) is not None:
         raise vol.Invalid("`write_back` is not supported together with `attribute`")
+    # a value_template only transforms outgoing values, so a write-back-triggered
+    # state change would re-encode to a different payload and echo back to the bus
+    if config.get(CONF_VALUE_TEMPLATE) is not None:
+        raise vol.Invalid(
+            "`write_back` is not supported together with `value_template`"
+        )
     return config
 
 
