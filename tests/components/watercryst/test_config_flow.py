@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from httpx import Request, RequestError
+from httpx import HTTPStatusError, Request, RequestError, Response
 from pyocat import WTCApiDisabledError, WTCApiTemporaryError, WTCApiUnauthorizedError
 import pytest
 
@@ -73,16 +73,28 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+def _http_status_error(status_code: int) -> HTTPStatusError:
+    """Create an HTTP status error."""
+    request = Request("GET", "https://example.com/v1/device")
+    response = Response(status_code, request=request)
+    return HTTPStatusError(
+        "Unexpected HTTP status",
+        request=request,
+        response=response,
+    )
+
+
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
         (WTCApiUnauthorizedError(), "invalid_auth"),
         (WTCApiDisabledError(), "api_disabled"),
         (WTCApiTemporaryError(), "cannot_connect"),
+        (_http_status_error(404), "cannot_connect"),
         (
             RequestError(
                 message="",
-                request=Request(method="GET", url="v1/device-info"),
+                request=Request("GET", "https://example.com/v1/device"),
             ),
             "cannot_connect",
         ),
@@ -137,3 +149,27 @@ async def test_form_raise_error(
 
     mock_setup_entry.assert_awaited_once()
     mock_api_client.get_state.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_api_client")
+async def test_form_wrong_device_serial(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test an incorrect BIOCAT serial number."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_BSN: "<wrong-bsn>",
+            CONF_API_KEY: "<api-key>",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "wrong_device_serial"}
+    mock_setup_entry.assert_not_awaited()
