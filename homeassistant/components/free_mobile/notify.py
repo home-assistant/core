@@ -47,9 +47,10 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
+    entry_id: str = discovery_info["entry_id"]
     entry: FreeMobileConfigEntry = hass.config_entries.async_get_entry(
-        discovery_info["entry_id"]
-    )  # type: ignore[assignment]
+        entry_id
+    ) 
     return FreeSMSNotificationService(entry.runtime_data)
 
 
