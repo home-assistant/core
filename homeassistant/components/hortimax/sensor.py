@@ -33,6 +33,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     DIMENSIONLESS_UNITS,
     READOUT_ICONS,
+    SECONDS_PER_DAY,
     TIME_OF_DAY_READOUTS,
     UNIT_DESCRIPTIONS,
     UNIT_MAP,
@@ -192,7 +193,11 @@ class HortimaxReadoutSensor(HortimaxEntity, SensorEntity):
         subject = readout_subject(readout.identifier)
         if subject in TIME_OF_DAY_READOUTS:
             # Seconds since midnight at the controller. HortOS reports no
-            # timezone, so this assumes it shares Home Assistant's.
+            # timezone, so this assumes it shares Home Assistant's. Anything
+            # outside the day is not a time of day, and would either land on
+            # another date or overflow timedelta().
+            if not 0 <= number < SECONDS_PER_DAY:
+                return None
             return dt_util.start_of_local_day() + timedelta(seconds=number)
         if subject == WIND_DIRECTION_SUBJECT:
             # Returns None for ids outside the known enumeration block.

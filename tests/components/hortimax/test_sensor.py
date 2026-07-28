@@ -1,6 +1,6 @@
 """Test the Ridder HortiMaX Pro sensor platform."""
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from math import inf, nan
 from unittest.mock import AsyncMock
 
@@ -17,6 +17,18 @@ from . import setup_integration
 from .conftest import load_readouts
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+def _sunrise_readout(value: float, sampled_at: datetime | None = None) -> Readout:
+    """Build a SunriseToday readout, whose value is seconds since midnight."""
+    return Readout(
+        identifier="SunriseToday-Measured",
+        name="Sunrise today",
+        unit="Second",
+        source=Source(name="Weather station 001", type="WeatherStation"),
+        value=value,
+        timestamp=sampled_at,
+    )
 
 
 @pytest.mark.freeze_time("2026-06-12 12:00:00+00:00")
@@ -225,26 +237,71 @@ async def test_unusable_double_is_unknown(
 
 
 @pytest.mark.usefixtures("mock_hortos_client")
-async def test_non_finite_time_of_day_is_unknown(
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(nan, id="nan"),
+        pytest.param(inf, id="infinity"),
+        pytest.param(-1.0, id="before_midnight"),
+        pytest.param(86400.0, id="end_of_day"),
+        pytest.param(1e20, id="beyond_timedelta"),
+    ],
+)
+async def test_time_of_day_outside_the_day_is_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hortos_client: AsyncMock,
+    value: float,
 ) -> None:
-    """Test a non-finite time-of-day readout never reaches timedelta()."""
+    """Test a time-of-day readout that is not a time of day never reaches timedelta()."""
+    mock_hortos_client.get_latest_readouts.return_value = [_sunrise_readout(value)]
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.weather_station_001_sunrise_today")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("mock_hortos_client")
+@pytest.mark.parametrize(
+    ("now", "expected"),
+    [
+        pytest.param(
+            "2026-06-18 21:59:00+00:00",
+            "2026-06-18T03:19:05+00:00",
+            id="before_midnight",
+        ),
+        pytest.param(
+            "2026-06-18 22:01:00+00:00",
+            "2026-06-19T03:19:05+00:00",
+            id="after_midnight",
+        ),
+    ],
+)
+async def test_time_of_day_follows_the_local_day(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hortos_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    now: str,
+    expected: str,
+) -> None:
+    """Test the timestamp tracks the current local day, not when it was sampled.
+
+    SunriseToday describes the controller's current day, so an unchanged value
+    read either side of local midnight belongs to whichever day it is now. The
+    readout is sampled well before midnight in both cases.
+    """
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to(now)
     mock_hortos_client.get_latest_readouts.return_value = [
-        Readout(
-            identifier="SunriseToday-Measured",
-            name="Sunrise today",
-            unit="Second",
-            source=Source(name="Weather station 001", type="WeatherStation"),
-            value=nan,
-        )
+        _sunrise_readout(19145.0, sampled_at=datetime(2026, 6, 18, 12, 0, tzinfo=UTC))
     ]
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.weather_station_001_sunrise_today")
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == expected
 
 
 @pytest.mark.usefixtures("mock_hortos_client")

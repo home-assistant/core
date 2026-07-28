@@ -39,6 +39,7 @@ DIMENSIONLESS_UNITS: Final = {"Scalar", "None"}
 # Seconds since local midnight (SunriseToday = 19145 -> 05:19), rendered as a
 # timestamp. Keyed by the lowercased subject from `readout_subject()`.
 TIME_OF_DAY_READOUTS: Final[frozenset[str]] = frozenset({"sunrisetoday", "sunsettoday"})
+SECONDS_PER_DAY: Final = 24 * 60 * 60
 
 # Icons for readouts that have no device class, and so no automatic icon.
 READOUT_ICONS: Final[dict[str, str]] = {
