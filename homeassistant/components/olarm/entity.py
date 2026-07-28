@@ -1,7 +1,5 @@
 """Base entity class for Olarm entities."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.helpers.device_registry import DeviceInfo

@@ -1,7 +1,5 @@
 """MQTT client wrapper for the Olarm integration."""
 
-from __future__ import annotations
-
 import asyncio
 import functools
 import logging

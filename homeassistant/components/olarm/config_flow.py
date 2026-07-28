@@ -1,9 +1,7 @@
 """Config flow for olarm integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from olarmflowclient import DevicesNotFound, OlarmFlowClient, OlarmFlowClientApiError
 import voluptuous as vol
@@ -36,18 +34,18 @@ class OlarmOauth2FlowHandler(
     _oauth_data: dict[str, Any] | None = None
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
-    def extra_authorize_params(self) -> dict[str, str]:
-        """Extra parameters for authorize. PKCE is handled automatically."""
-        return {
-            "scope": "email",
-            "client_id": OAUTH2_CLIENT_ID,
-        }
+    @override
+    def extra_authorize_data(self) -> dict[str, str]:
+        """Extra data appended to the authorize URL. PKCE is handled automatically."""
+        return {"scope": "email"}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -60,6 +58,7 @@ class OlarmOauth2FlowHandler(
         )
         return await super().async_step_user(user_input)
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
         errors: dict[str, str] = {}

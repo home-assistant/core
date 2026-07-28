@@ -1,10 +1,8 @@
 """The coordinator for the olarm integration to handle API and MQTT connections."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientResponseError
 from olarmflowclient import OlarmFlowClient, OlarmFlowClientApiError
@@ -102,6 +100,7 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         """Public method to ensure token is valid before sending commands."""
         await self._ensure_valid_token()
 
+    @override
     async def _async_update_data(self) -> OlarmDeviceData:
         """Fetch initial device information from the Olarm HTTP API."""
         try:

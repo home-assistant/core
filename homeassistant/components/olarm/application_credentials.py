@@ -28,4 +28,5 @@ async def async_get_auth_implementation(
         credential.client_id,
         OAUTH2_AUTHORIZE,
         OAUTH2_TOKEN,
+        client_secret=credential.client_secret,
     )

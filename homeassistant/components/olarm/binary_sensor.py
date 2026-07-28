@@ -9,11 +9,10 @@ additional binary sensors are added for this. Alarm systems also monitor AC powe
 as they have battery backup so this is added as a binary sensor as well.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from olarmflowclient import ZonesTypes
 
@@ -185,6 +184,7 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if not self.coordinator.data:
