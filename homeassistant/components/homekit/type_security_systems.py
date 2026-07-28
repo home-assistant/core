@@ -177,7 +177,7 @@ class SecuritySystem(HomeAccessory):
 
         Returns True if the value was pushed, False if it was skipped.
         """
-        if value in char.properties.get(PROP_VALID_VALUES, {}).values():
+        if value in char.properties[PROP_VALID_VALUES].values():
             char.set_value(value)
             return True
         _LOGGER.debug(

@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State
+from homeassistant.core import Event, HomeAssistant
 
 from tests.common import async_mock_service
 
@@ -345,74 +345,53 @@ async def test_handle_non_alarm_states(
 
 
 @pytest.mark.parametrize(
-    "updated_features",
+    ("build_features", "value_is_valid", "expected_current", "expected_target"),
     [
         pytest.param(
-            AlarmControlPanelEntityFeature.ARM_AWAY
-            | AlarmControlPanelEntityFeature.ARM_HOME,
-            id="features_grew",
+            AlarmControlPanelEntityFeature.ARM_AWAY, False, 3, 3, id="outside_valid"
         ),
-        pytest.param(AlarmControlPanelEntityFeature.ARM_AWAY, id="never_advertised"),
+        pytest.param(
+            AlarmControlPanelEntityFeature.ARM_HOME, True, 0, 0, id="inside_valid"
+        ),
     ],
 )
-async def test_skip_state_outside_valid_values(
+async def test_set_if_valid_guards_frozen_valid_values(
     hass: HomeAssistant,
     hk_driver,
-    updated_features: AlarmControlPanelEntityFeature,
+    build_features: AlarmControlPanelEntityFeature,
+    value_is_valid: bool,
+    expected_current: int,
+    expected_target: int,
 ) -> None:
-    """Test a state outside the frozen valid values is skipped, not raised.
+    """Test armed_home is pushed only when it is in the frozen valid values.
 
-    The valid values are frozen from supported_features at build time. If the
-    entity reports a state mapping to a value that isn't in that frozen set
-    (whether supported_features later grew or the entity simply never
-    advertised it), pushing it would raise ValueError inside set_value. We skip
-    and leave the characteristic unchanged instead. Reconciling the valid
-    values in place is a separate follow-up.
+    The valid values are frozen from supported_features at build time. Pushing
+    a value outside that set would raise ValueError inside set_value, so we skip
+    and leave the characteristic unchanged instead. armed_home maps to StayArm
+    (0) for both the current and target characteristics, so a build without
+    ARM_HOME must skip both (leaving them at the disarmed default 3), and a
+    build with ARM_HOME must push both to 0. Reconciling the valid values in
+    place is a separate follow-up.
     """
     entity_id = "alarm_control_panel.test"
 
-    # Build with ARM_AWAY only -> StayArm (0, i.e. armed_home) is not valid.
-    away_only = {"supported_features": AlarmControlPanelEntityFeature.ARM_AWAY}
-    hass.states.async_set(
-        entity_id, AlarmControlPanelState.DISARMED, attributes=away_only
-    )
-    await hass.async_block_till_done()
-    acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, None)
-    acc.run()
-    await hass.async_block_till_done()
-
-    assert 0 not in acc.char_current_state.properties["ValidValues"].values()
-    before = acc.char_current_state.value
-
-    # armed_home maps to 0, which the frozen ValidValues doesn't contain. Push
-    # it directly to model the change reaching the accessory without the
-    # RELOAD_ON_CHANGE_ATTRS guard in async_update_event_state_callback firing.
-    stale = State(
-        entity_id,
-        AlarmControlPanelState.ARMED_HOME,
-        {"supported_features": updated_features},
-    )
-    acc.async_update_state(stale)
-    await hass.async_block_till_done()
-
-    # No ValueError raised; characteristic left unchanged.
-    assert acc.char_current_state.value == before
-
-
-async def test_set_state_in_valid_values(hass: HomeAssistant, hk_driver) -> None:
-    """Test the normal path pushes a valid value through."""
-    entity_id = "alarm_control_panel.test"
-
-    attrs = {"supported_features": AlarmControlPanelEntityFeature.ARM_HOME}
+    attrs = {"supported_features": build_features}
     hass.states.async_set(entity_id, AlarmControlPanelState.DISARMED, attributes=attrs)
     await hass.async_block_till_done()
     acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, None)
     acc.run()
     await hass.async_block_till_done()
 
+    assert (0 in acc.char_current_state.properties["ValidValues"].values()) is (
+        value_is_valid
+    )
+
     hass.states.async_set(
         entity_id, AlarmControlPanelState.ARMED_HOME, attributes=attrs
     )
     await hass.async_block_till_done()
 
-    assert acc.char_current_state.value == 0
+    # No ValueError raised. Both characteristics move to 0 when it is valid, and
+    # stay at the disarmed default 3 when it is skipped.
+    assert acc.char_current_state.value == expected_current
+    assert acc.char_target_state.value == expected_target
