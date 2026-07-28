@@ -415,7 +415,7 @@ class _HaltScript(Exception):
 class _AbortScript(_HaltScript):
     """Throw if script needs to abort because of an unexpected error."""
 
-    def __init__(self, message: str, throws: bool = False) -> None:
+    def __init__(self, message: str = "", throws: bool = False) -> None:
         super().__init__(message)
         self.throws = throws
 
