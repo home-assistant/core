@@ -21,12 +21,7 @@ from deebot_client.util import md5
 from deebot_client.util.continents import get_continent
 from sucks import EcoVacsAPI, VacBot
 
-from homeassistant.const import (
-    CONF_COUNTRY,
-    CONF_DEVICE_ID,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -55,9 +50,7 @@ class EcovacsController:
         self._devices: list[Device] = []
         self._legacy_devices: list[VacBot] = []
         rest_url = config.get(CONF_OVERRIDE_REST_URL)
-        self._device_id = get_client_device_id(
-            hass, rest_url is not None, config.get(CONF_DEVICE_ID)
-        )
+        self._device_id = get_client_device_id(hass, rest_url is not None, config)
         country = config[CONF_COUNTRY]
         self._continent = get_continent(country)
 

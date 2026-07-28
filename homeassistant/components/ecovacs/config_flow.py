@@ -20,7 +20,7 @@ from deebot_client.mqtt_client import MqttClient, create_mqtt_config
 from deebot_client.util import md5
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_COUNTRY,
     CONF_DEVICE_ID,
@@ -36,6 +36,7 @@ from homeassistant.util.ssl import get_default_no_verify_context
 from .const import (
     CONF_OVERRIDE_MQTT_URL,
     CONF_OVERRIDE_REST_URL,
+    CONF_VERIFICATION_CODE,
     CONF_VERIFY_MQTT_CERTIFICATE,
     DOMAIN,
     InstanceMode,
@@ -61,7 +62,10 @@ def _validate_url(
 
 
 async def _validate_input(
-    hass: HomeAssistant, user_input: dict[str, Any], device_id: str
+    hass: HomeAssistant,
+    user_input: dict[str, Any],
+    device_id: str,
+    authenticator: Authenticator,
 ) -> dict[str, str]:
     """Validate user input."""
     errors: dict[str, str] = {}
@@ -77,20 +81,6 @@ async def _validate_input(
 
     if errors:
         return errors
-
-    country = user_input[CONF_COUNTRY]
-    rest_config = create_rest_config(
-        aiohttp_client.async_get_clientsession(hass),
-        device_id=device_id,
-        alpha_2_country=country,
-        override_rest_url=rest_url,
-    )
-
-    authenticator = Authenticator(
-        rest_config,
-        user_input[CONF_USERNAME],
-        md5(user_input[CONF_PASSWORD]),
-    )
 
     try:
         await authenticator.authenticate()
@@ -108,6 +98,19 @@ async def _validate_input(
     if errors:
         return errors
 
+    return await _validate_mqtt(hass, user_input, device_id, authenticator)
+
+
+async def _validate_mqtt(
+    hass: HomeAssistant,
+    user_input: dict[str, Any],
+    device_id: str,
+    authenticator: Authenticator,
+) -> dict[str, str]:
+    """Validate the MQTT connection."""
+    errors: dict[str, str] = {}
+    country = user_input[CONF_COUNTRY]
+    mqtt_url = user_input.get(CONF_OVERRIDE_MQTT_URL)
     ssl_context: UndefinedType | ssl.SSLContext = UNDEFINED
     if not user_input.get(CONF_VERIFY_MQTT_CERTIFICATE, True) and mqtt_url:
         ssl_context = get_default_no_verify_context()
@@ -145,19 +148,19 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _mode: InstanceMode = InstanceMode.CLOUD
-    _pending_input: dict[str, Any]
-    _verification_authenticator: Authenticator
-    _verification_device_id: str
-    _reauth = False
+    _input: dict[str, Any]
+    _authenticator: Authenticator
+    _device_id: str
 
-    def _create_authenticator(
-        self, user_input: dict[str, Any], device_id: str
-    ) -> Authenticator:
-        """Create an authenticator for a stable client device ID."""
-        return Authenticator(
+    def _set_input(self, user_input: dict[str, Any]) -> None:
+        """Set the input and create its authenticator."""
+        self._input = user_input
+        self_hosted = CONF_OVERRIDE_REST_URL in user_input
+        self._device_id = get_client_device_id(self.hass, self_hosted, user_input)
+        self._authenticator = Authenticator(
             create_rest_config(
                 aiohttp_client.async_get_clientsession(self.hass),
-                device_id=device_id,
+                device_id=self._device_id,
                 alpha_2_country=user_input[CONF_COUNTRY],
                 override_rest_url=user_input.get(CONF_OVERRIDE_REST_URL),
             ),
@@ -165,60 +168,29 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             md5(user_input[CONF_PASSWORD]),
         )
 
-    async def _async_validate_or_verify(
-        self, user_input: dict[str, Any]
-    ) -> tuple[dict[str, str], ConfigFlowResult | None]:
-        """Validate credentials, starting device verification when required."""
-        self_hosted = CONF_OVERRIDE_REST_URL in user_input
-        device_id = get_client_device_id(
-            self.hass, self_hosted, user_input.get(CONF_DEVICE_ID)
-        )
+    async def _async_request_device_verification_code(self) -> dict[str, str]:
+        """Request a device verification code."""
         try:
-            errors = await _validate_input(self.hass, user_input, device_id)
-        except DeviceVerificationRequiredError:
-            self._pending_input = user_input
-            self._verification_device_id = device_id
-            self._verification_authenticator = self._create_authenticator(
-                user_input, device_id
-            )
-            try:
-                await (
-                    self._verification_authenticator.request_device_verification_code()
-                )
-            except ClientError:
-                _LOGGER.debug("Cannot request Ecovacs verification code", exc_info=True)
-                return {"base": "cannot_connect"}, None
-            except Exception:
-                _LOGGER.exception("Unexpected exception requesting verification code")
-                return {"base": "unknown"}, None
-            return {}, await self.async_step_device_verification()
+            await self._authenticator.request_device_verification_code()
+        except ClientError:
+            _LOGGER.debug("Cannot request Ecovacs verification code", exc_info=True)
+            return {"base": "cannot_connect"}
+        except Exception:
+            _LOGGER.exception("Unexpected exception requesting verification code")
+            return {"base": "unknown"}
+        return {}
 
-        if not errors and not self_hosted:
-            user_input[CONF_DEVICE_ID] = device_id
-        return errors, None
-
-    async def _async_finish_device_verification(self) -> ConfigFlowResult:
-        """Validate the connection after device verification succeeds."""
-        errors = await _validate_input(
-            self.hass,
-            self._pending_input,
-            self._verification_device_id,
-        )
-        if errors:
-            return self.async_show_form(
-                step_id="device_validation",
-                data_schema=vol.Schema({}),
-                errors=errors,
-            )
-
-        data = self._pending_input | {CONF_DEVICE_ID: self._verification_device_id}
-        if self._reauth:
+    def _finish_flow(self) -> ConfigFlowResult:
+        """Create or update the config entry."""
+        if CONF_OVERRIDE_REST_URL not in self._input:
+            self._input[CONF_DEVICE_ID] = self._device_id
+        if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data_updates=data
+                self._get_reauth_entry(), data_updates=self._input
             )
         return self.async_create_entry(
-            title=data[CONF_USERNAME],
-            data=data,
+            title=self._input[CONF_USERNAME],
+            data=self._input,
         )
 
     @override
@@ -230,6 +202,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             self._mode = user_input[CONF_MODE]
             return await self.async_step_auth()
 
+        self._input = {}
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -248,24 +221,12 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             last_step=False,
         )
 
-    async def async_step_auth(
-        self, user_input: dict[str, Any] | None = None
+    def _show_auth_form(
+        self,
+        user_input: dict[str, Any] | None,
+        errors: dict[str, str],
     ) -> ConfigFlowResult:
-        """Handle the auth step."""
-        errors: dict[str, str] = {}
-
-        if user_input:
-            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
-
-            errors, result = await self._async_validate_or_verify(user_input)
-            if result is not None:
-                return result
-
-            if not errors:
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=user_input
-                )
-
+        """Show the authentication form."""
         schema: VolDictType = {
             vol.Required(CONF_USERNAME): selector.TextSelector(
                 selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
@@ -303,6 +264,33 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             last_step=True,
         )
 
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the auth step."""
+        errors: dict[str, str] = {}
+
+        if user_input:
+            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
+            if CONF_DEVICE_ID in self._input and CONF_DEVICE_ID not in user_input:
+                user_input[CONF_DEVICE_ID] = self._input[CONF_DEVICE_ID]
+            self._set_input(user_input)
+            try:
+                errors = await _validate_input(
+                    self.hass,
+                    self._input,
+                    self._device_id,
+                    self._authenticator,
+                )
+            except DeviceVerificationRequiredError:
+                errors = await self._async_request_device_verification_code()
+                if not errors:
+                    return await self.async_step_device_verification()
+            if not errors:
+                return self._finish_flow()
+
+        return self._show_auth_form(user_input, errors)
+
     async def async_step_device_verification(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -310,8 +298,8 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input:
             try:
-                await self._verification_authenticator.verify_device(
-                    user_input["verification_code"]
+                await self._authenticator.verify_device(
+                    user_input[CONF_VERIFICATION_CODE]
                 )
             except InvalidVerificationCodeError:
                 errors["base"] = "invalid_verification_code"
@@ -322,38 +310,64 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception verifying Ecovacs device")
                 errors["base"] = "unknown"
             else:
-                await self._verification_authenticator.teardown()
-                return await self._async_finish_device_verification()
+                self._input[CONF_DEVICE_ID] = self._device_id
+                errors = await _validate_mqtt(
+                    self.hass,
+                    self._input,
+                    self._device_id,
+                    self._authenticator,
+                )
+                if not errors:
+                    return self._finish_flow()
+                if self.source == SOURCE_REAUTH:
+                    return self._show_reauth_form(user_input=None, errors=errors)
+                return self._show_auth_form(self._input, errors)
 
         return self.async_show_form(
             step_id="device_verification",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("verification_code"): selector.TextSelector(
-                        selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-                    )
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_VERIFICATION_CODE): selector.TextSelector(
+                            selector.TextSelectorConfig(
+                                type=selector.TextSelectorType.TEXT
+                            )
+                        )
+                    }
+                ),
+                suggested_values=user_input,
             ),
             errors=errors,
         )
 
-    async def async_step_device_validation(
-        self, user_input: dict[str, Any] | None = None
+    def _show_reauth_form(
+        self,
+        user_input: dict[str, Any] | None,
+        errors: dict[str, str],
     ) -> ConfigFlowResult:
-        """Retry connection validation without reusing a verification code."""
-        if user_input is not None:
-            return await self._async_finish_device_verification()
+        """Show the reauthentication form."""
         return self.async_show_form(
-            step_id="device_validation",
-            data_schema=vol.Schema({}),
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_PASSWORD): selector.TextSelector(
+                            selector.TextSelectorConfig(
+                                type=selector.TextSelectorType.PASSWORD
+                            )
+                        )
+                    }
+                ),
+                suggested_values=user_input,
+            ),
+            errors=errors,
         )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthentication."""
-        self._reauth = True
-        self._pending_input = dict(entry_data)
+        self._input = dict(entry_data)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -362,25 +376,19 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm credentials and verify a new device ID if required."""
         errors: dict[str, str] = {}
         if user_input:
-            data = self._pending_input | {CONF_PASSWORD: user_input[CONF_PASSWORD]}
-            errors, result = await self._async_validate_or_verify(data)
-            if result is not None:
-                return result
-            if not errors:
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(), data_updates=data
+            self._set_input(self._input | user_input)
+            try:
+                errors = await _validate_input(
+                    self.hass,
+                    self._input,
+                    self._device_id,
+                    self._authenticator,
                 )
+            except DeviceVerificationRequiredError:
+                errors = await self._async_request_device_verification_code()
+                if not errors:
+                    return await self.async_step_device_verification()
+            if not errors:
+                return self._finish_flow()
 
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_PASSWORD): selector.TextSelector(
-                        selector.TextSelectorConfig(
-                            type=selector.TextSelectorType.PASSWORD
-                        )
-                    )
-                }
-            ),
-            errors=errors,
-        )
+        return self._show_reauth_form(user_input, errors)

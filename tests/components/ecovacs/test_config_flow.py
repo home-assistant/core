@@ -19,11 +19,12 @@ import pytest
 from homeassistant.components.ecovacs.const import (
     CONF_OVERRIDE_MQTT_URL,
     CONF_OVERRIDE_REST_URL,
+    CONF_VERIFICATION_CODE,
     CONF_VERIFY_MQTT_CERTIFICATE,
     DOMAIN,
     InstanceMode,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE_ID, CONF_MODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -47,19 +48,19 @@ class _TestFnUserInput:
 
 
 @pytest.fixture
-def mock_device_id() -> Generator[None]:
+def mock_device_id() -> Generator[Mock]:
     """Return a deterministic cloud device ID."""
     with patch(
         "homeassistant.components.ecovacs.util.random.choice",
         return_value=_CLOUD_DEVICE_ID[0],
-    ):
-        yield
+    ) as mock_choice:
+        yield mock_choice
 
 
 async def _test_user_flow(
     hass: HomeAssistant,
     user_input: _TestFnUserInput,
-) -> dict[str, Any]:
+) -> ConfigFlowResult:
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -245,6 +246,7 @@ async def test_user_flow_self_hosted_error(
     mock_setup_entry.assert_not_called()
 
     # Check that the schema includes select box to disable ssl verification of mqtt
+    assert result["data_schema"] is not None
     assert CONF_VERIFY_MQTT_CERTIFICATE in result["data_schema"].schema
 
     data = VALID_ENTRY_DATA_SELF_HOSTED | {CONF_VERIFY_MQTT_CERTIFICATE: False}
@@ -295,6 +297,7 @@ async def test_already_exists(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_device_id")
 async def test_cloud_device_verification(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -302,10 +305,7 @@ async def test_cloud_device_verification(
     mock_mqtt_client: Mock,
 ) -> None:
     """Test verifying and persisting a stable Ecovacs client device ID."""
-    mock_authenticator.authenticate.side_effect = [
-        DeviceVerificationRequiredError,
-        None,
-    ]
+    mock_authenticator.authenticate.side_effect = DeviceVerificationRequiredError
 
     result = await _test_user_flow(hass, _TestFnUserInput(VALID_ENTRY_DATA_CLOUD))
 
@@ -314,19 +314,17 @@ async def test_cloud_device_verification(
     mock_authenticator.request_device_verification_code.assert_awaited_once()
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"verification_code": "123456"}
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "123456"}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == VALID_ENTRY_DATA_CLOUD | {
-        CONF_DEVICE_ID: result["data"][CONF_DEVICE_ID]
-    }
-    assert len(result["data"][CONF_DEVICE_ID]) == 8
+    assert result["data"] == VALID_ENTRY_DATA_CLOUD | {CONF_DEVICE_ID: _CLOUD_DEVICE_ID}
     mock_authenticator.verify_device.assert_awaited_once_with("123456")
     mock_mqtt_client.verify_config.assert_called_once()
     mock_setup_entry.assert_called_once()
 
 
+@pytest.mark.usefixtures("mock_device_id")
 async def test_cloud_invalid_device_verification_code(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -340,7 +338,7 @@ async def test_cloud_invalid_device_verification_code(
     mock_authenticator.verify_device.side_effect = InvalidVerificationCodeError
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"verification_code": "expired"}
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "expired"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -350,44 +348,43 @@ async def test_cloud_invalid_device_verification_code(
     mock_setup_entry.assert_not_called()
 
 
-async def test_cloud_device_validation_retry(
+async def test_cloud_mqtt_retry_after_device_verification(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_authenticator: Mock,
     mock_mqtt_client: Mock,
+    mock_device_id: Mock,
 ) -> None:
     """Test retrying connection validation without reusing the email code."""
     mock_authenticator.authenticate.side_effect = [
         DeviceVerificationRequiredError,
-        None,
         None,
     ]
     mock_mqtt_client.verify_config.side_effect = [MqttError, None]
 
     result = await _test_user_flow(hass, _TestFnUserInput(VALID_ENTRY_DATA_CLOUD))
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"verification_code": "123456"}
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "123456"}
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "device_validation"
+    assert result["step_id"] == "auth"
     assert result["errors"] == {"base": "cannot_connect"}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
+        result["flow_id"], user_input=VALID_ENTRY_DATA_CLOUD
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == VALID_ENTRY_DATA_CLOUD | {
-        CONF_DEVICE_ID: result["data"][CONF_DEVICE_ID]
-    }
+    assert result["data"] == VALID_ENTRY_DATA_CLOUD | {CONF_DEVICE_ID: _CLOUD_DEVICE_ID}
     mock_authenticator.request_device_verification_code.assert_awaited_once()
     mock_authenticator.verify_device.assert_awaited_once_with("123456")
-    mock_authenticator.teardown.assert_awaited_once()
+    assert mock_device_id.call_count == 8
     assert mock_mqtt_client.verify_config.call_count == 2
     mock_setup_entry.assert_called_once()
 
 
+@pytest.mark.usefixtures("mock_device_id")
 async def test_reauth_device_verification(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -397,10 +394,7 @@ async def test_reauth_device_verification(
 ) -> None:
     """Test device verification for an existing config entry."""
     mock_config_entry.add_to_hass(hass)
-    mock_authenticator.authenticate.side_effect = [
-        DeviceVerificationRequiredError,
-        None,
-    ]
+    mock_authenticator.authenticate.side_effect = DeviceVerificationRequiredError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -422,13 +416,12 @@ async def test_reauth_device_verification(
     mock_authenticator.request_device_verification_code.assert_awaited_once()
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"verification_code": "123456"}
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "123456"}
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert len(mock_config_entry.data[CONF_DEVICE_ID]) == 8
+    assert mock_config_entry.data[CONF_DEVICE_ID] == _CLOUD_DEVICE_ID
     mock_authenticator.verify_device.assert_awaited_once_with("123456")
-    mock_authenticator.teardown.assert_awaited_once()
     mock_mqtt_client.verify_config.assert_called_once()
     mock_setup_entry.assert_called_once()
