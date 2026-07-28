@@ -14,17 +14,17 @@ from unittest.mock import MagicMock, patch
 from boschshcpy import BatteryLevelService
 import pytest
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.bosch_shc.const import DOMAIN
 from homeassistant.components.bosch_shc.entity import SHCDomainEntity
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import battery_only_device, setup_integration
 
 from tests.common import MockConfigEntry
 
-BATTERY_ENTITY_ID = "binary_sensor.motion"
 MOTION_IDENTIFIER = (DOMAIN, "hdm:HomeMaticIP:motion1")
 
 
@@ -39,8 +39,19 @@ def platforms() -> Generator[None]:
 
 @pytest.fixture
 def motion_device(mock_session: MagicMock) -> MagicMock:
-    """The mock device backing binary_sensor.motion."""
+    """The mock device backing the motion detector's battery sensor."""
     return mock_session.device_helper.motion_detectors[0]
+
+
+def _battery_entity_id(
+    entity_registry: er.EntityRegistry, motion_device: MagicMock
+) -> str:
+    """Look up the real entity_id, without assuming a specific naming slug."""
+    entity_id = entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{motion_device.serial}_battery"
+    )
+    assert entity_id is not None
+    return entity_id
 
 
 @pytest.mark.parametrize(
@@ -51,6 +62,7 @@ def motion_device(mock_session: MagicMock) -> MagicMock:
 @pytest.mark.usefixtures("mock_session")
 async def test_async_added_to_hass_subscribes_device_and_services(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     motion_device: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -60,12 +72,13 @@ async def test_async_added_to_hass_subscribes_device_and_services(
     motion_device.device_services = [service_a, service_b]
 
     await setup_integration(hass, mock_config_entry)
+    entity_id = _battery_entity_id(entity_registry, motion_device)
 
     motion_device.subscribe_callback.assert_called_once_with(
-        BATTERY_ENTITY_ID, motion_device.subscribe_callback.call_args.args[1]
+        entity_id, motion_device.subscribe_callback.call_args.args[1]
     )
     service_a.subscribe_callback.assert_called_once_with(
-        BATTERY_ENTITY_ID, service_a.subscribe_callback.call_args.args[1]
+        entity_id, service_a.subscribe_callback.call_args.args[1]
     )
     service_b.subscribe_callback.assert_called_once()
 
@@ -74,7 +87,7 @@ async def test_async_added_to_hass_subscribes_device_and_services(
     service_a_on_state_changed()
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(BATTERY_ENTITY_ID)) is not None
+    assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_ON
 
 
@@ -86,18 +99,20 @@ async def test_async_added_to_hass_subscribes_device_and_services(
 @pytest.mark.usefixtures("mock_session")
 async def test_on_state_changed_updates_state(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     motion_device: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """The device-level callback refreshes the entity's state."""
     await setup_integration(hass, mock_config_entry)
+    entity_id = _battery_entity_id(entity_registry, motion_device)
     on_state_changed = motion_device.subscribe_callback.call_args.args[1]
     motion_device.batterylevel = BatteryLevelService.State.LOW_BATTERY
 
     on_state_changed()
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(BATTERY_ENTITY_ID)) is not None
+    assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_ON
 
 
@@ -132,6 +147,7 @@ async def test_on_state_changed_removes_deleted_device(
 @pytest.mark.usefixtures("mock_session")
 async def test_async_will_remove_from_hass_unsubscribes_device_and_services(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     motion_device: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -139,12 +155,13 @@ async def test_async_will_remove_from_hass_unsubscribes_device_and_services(
     service = MagicMock()
     motion_device.device_services = [service]
     await setup_integration(hass, mock_config_entry)
+    entity_id = _battery_entity_id(entity_registry, motion_device)
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    motion_device.unsubscribe_callback.assert_called_once_with(BATTERY_ENTITY_ID)
-    service.unsubscribe_callback.assert_called_once_with(BATTERY_ENTITY_ID)
+    motion_device.unsubscribe_callback.assert_called_once_with(entity_id)
+    service.unsubscribe_callback.assert_called_once_with(entity_id)
 
 
 @pytest.mark.parametrize(
@@ -155,18 +172,20 @@ async def test_async_will_remove_from_hass_unsubscribes_device_and_services(
 @pytest.mark.usefixtures("mock_session")
 async def test_shc_entity_available_reflects_device_status(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     motion_device: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """The entity becomes unavailable once the device status is no longer AVAILABLE."""
     await setup_integration(hass, mock_config_entry)
+    entity_id = _battery_entity_id(entity_registry, motion_device)
     on_state_changed = motion_device.subscribe_callback.call_args.args[1]
     motion_device.status = "UNAVAILABLE"
 
     on_state_changed()
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(BATTERY_ENTITY_ID)) is not None
+    assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_UNAVAILABLE
 
 
