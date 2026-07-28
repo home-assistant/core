@@ -1,8 +1,9 @@
 """Tests for the Honeywell Lyric sensor platform."""
 
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lyric.sensor import get_datetime_from_future_time
@@ -31,11 +32,10 @@ def test_get_datetime_from_future_time_valid() -> None:
     assert isinstance(result, datetime)
 
 
+@pytest.mark.usefixtures("setup_credentials", "mock_lyric_api")
 async def test_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    setup_credentials: None,
-    mock_lyric_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
