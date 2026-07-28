@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 import defusedxml.ElementTree as defused_ET
 
 from ..client import PapouchApiClient
-from ..exceptions import DeviceResponseError
+from ..exceptions import DeviceLogicError, DeviceParseError, DeviceResponseError
 from .base import PapouchDevice, find_tag
 
 _LOGGER = logging.getLogger(__name__)
@@ -212,7 +212,9 @@ class Quido(PapouchDevice):
         elif cmd_type == "reset_all_counters":
             await self._reset_all_counters()
         else:
-            _LOGGER.error("Unsupported command: %s", cmd_type)
+            raise DeviceLogicError(
+                f"Unsupported command: {cmd_type}. in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            )
 
     @override
     async def turn_on_switch(self, item_id: str) -> None:
@@ -316,14 +318,16 @@ class Quido(PapouchDevice):
 
         item = root.find(f".//set[@box='10']/item[@id='{item_id}']")
         if item is None:
-            _LOGGER.error("Item %s not found in settings", item_id)
-            return
+            raise DeviceParseError(
+                f"Item {item_id} not found in settings in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            )
 
         try:
             mode_index = self.COUNTER_MODES.index(mode)
-        except ValueError:
-            _LOGGER.error("Invalid counter mode: %s", mode)
-            return
+        except ValueError as err:
+            raise DeviceLogicError(
+                f"Invalid counter mode: {mode}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            ) from err
 
         on_val = item.get("on", "0")
         off_val = item.get("off", "0")
@@ -388,10 +392,10 @@ class Quido(PapouchDevice):
                     mode_index = int(mode_index_str)
                     if 0 <= mode_index < len(self.COUNTER_MODES):
                         self.counter_states[item_id] = self.COUNTER_MODES[mode_index]
-                except ValueError:
-                    _LOGGER.error(
-                        "Invalid mode index for item %s: %s", item_id, mode_index_str
-                    )
+                except ValueError as err:
+                    raise DeviceLogicError(
+                        f"Invalid mode index for item {item_id}: {mode_index_str}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+                    ) from err
 
             box_elem = root.find(".//set[@box='8']")
             if box_elem is not None:
@@ -404,7 +408,9 @@ class Quido(PapouchDevice):
                     self.temperature_unit = "K"
 
         except (defused_ET.ParseError, ValueError, TypeError) as err:
-            _LOGGER.error("Failed to parse initial settings: %s", err)
+            raise DeviceParseError(
+                f"Failed to parse initial settings: {err}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            ) from err
 
     @override
     def get_location(self) -> str:
@@ -463,4 +469,6 @@ class Quido(PapouchDevice):
                     f"{self.name} ({self.location}) - {self.ip_address} returned an error, whole response: {response_text}"
                 )
         else:
-            raise DeviceResponseError("Response doesn't have result tag!")
+            raise DeviceResponseError(
+                f"Response doesn't have the result tag! In the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            )

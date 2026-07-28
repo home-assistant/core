@@ -15,3 +15,7 @@ class DeviceResponseError(DeviceError):
 
 class DeviceLogicError(DeviceError):
     """Logic error."""
+
+
+class DeviceParseError(DeviceError):
+    """Logic error."""

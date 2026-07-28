@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 import defusedxml.ElementTree as defused_ET
 
 from ..client import PapouchApiClient
-from ..exceptions import DeviceLogicError, DeviceResponseError
+from ..exceptions import DeviceLogicError, DeviceParseError, DeviceResponseError
 from .base import PapouchDevice, find_tag
 
 _LOGGER = logging.getLogger(__name__)
@@ -181,7 +181,9 @@ class TH2E(PapouchDevice):
     @override
     async def execute_button_command(self, cmd_type: str) -> None:
         if cmd_type != "set_sensor":
-            raise DeviceLogicError("Unreachable code.")
+            raise DeviceLogicError(
+                f"Unsupported command: {cmd_type}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            )
 
         self.type_sensor = await self._get_sensor_type()
         await self._set_sensor_type(self.type_sensor)
@@ -200,8 +202,8 @@ class TH2E(PapouchDevice):
         try:
             settings_root = defused_ET.fromstring(settings)
         except defused_ET.ParseError as exception:
-            raise DeviceResponseError(
-                f"Invalid settings XML: {exception}"
+            raise DeviceParseError(
+                f"Invalid settings XML: {exception}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
             ) from exception
 
         def format_str_val(val: str) -> str:
@@ -270,7 +272,9 @@ class TH2E(PapouchDevice):
             result_tag = find_tag(root, "result")
 
             if result_tag is None:
-                raise DeviceResponseError("Response doesn't have result tag!")
+                raise DeviceParseError(
+                    f"Response doesn't have result tag!, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+                )
 
             if result_tag.attrib.get("status") != "4":
                 raise DeviceResponseError(
@@ -280,8 +284,8 @@ class TH2E(PapouchDevice):
             return int(result_tag.attrib.get("typesens", "0"))
 
         except defused_ET.ParseError as exception:
-            raise DeviceResponseError(
-                f"Invalid XML response from device: {exception}"
+            raise DeviceParseError(
+                f"Invalid XML response from device: {exception}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
             ) from exception
 
     def _check_response_post_sens(self, response_text: str) -> None:
@@ -290,7 +294,9 @@ class TH2E(PapouchDevice):
             result_tag = find_tag(root, "result")
 
             if result_tag is None:
-                raise DeviceResponseError("Response doesn't have result tag!")
+                raise DeviceParseError(
+                    f"Response doesn't have result tag!, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+                )
 
             if result_tag.attrib.get("status") != "2":
                 raise DeviceResponseError(
@@ -298,8 +304,8 @@ class TH2E(PapouchDevice):
                 )
 
         except defused_ET.ParseError as exception:
-            raise DeviceResponseError(
-                f"Invalid XML response from device: {exception}"
+            raise DeviceParseError(
+                f"Invalid XML response from device: {exception}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
             ) from exception
 
     @override

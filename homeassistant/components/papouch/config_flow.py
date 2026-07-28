@@ -18,7 +18,7 @@ from .discovery import async_discover_papouch_devices
 
 _LOGGER = logging.getLogger(__name__)
 
-WEB_MODE_INDEX = "3"
+WEB_MODE_INDEX = 3
 DHCP_TIMEOUT = 5
 
 
@@ -122,7 +122,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema(
             {
-                vol.Required("scan_interval", default=DEFAULT_SCAN_INTERVAL): vol.All(
+                vol.Required("refresh_rate", default=DEFAULT_SCAN_INTERVAL): vol.All(
                     int, vol.Range(min=1, max=3600)
                 ),
             }
@@ -176,7 +176,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required("ip_address"): vol.In(options),
-                vol.Required("scan_interval", default=default_interval): vol.All(
+                vol.Required("refresh_rate", default=default_interval): vol.All(
                     int, vol.Range(min=1, max=3600)
                 ),
             }
@@ -206,7 +206,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required("ip_address", default=default_ip): str,
-                vol.Required("scan_interval", default=default_interval): vol.All(
+                vol.Required("refresh_rate", default=default_interval): vol.All(
                     int, vol.Range(min=1, max=3600)
                 ),
             }

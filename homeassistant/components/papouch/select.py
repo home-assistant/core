@@ -23,7 +23,7 @@ async def async_setup_entry(
     entities = []
 
     for select_data in device.get_supported_selects():
-        entities.append(PapouchSelectEntity(coordinator, entry, select_data))
+        entities.append(PapouchSelectEntity(coordinator, entry, select_data))  # noqa: PERF401
 
     async_add_entities(entities)
 

@@ -14,7 +14,7 @@ SET_URL = "set.xml"
 SAVE_URL = "save.xml"
 
 ENCODING = "iso-8859-2"
-WEB_MODE_INDEX = "3"
+WEB_MODE_INDEX = 3
 TIMEOUT_REQUEST = 10
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,7 +85,7 @@ class PapouchApiClient:
 
         return await self._send_request("POST", SAVE_URL, device, data=data)
 
-    async def get_device_mode(self):
+    async def get_device_mode(self) -> int:
         """Function is used for the resolving the mode of the device."""
         info_xml = await self.fetch_info()
         root = defused_ET.fromstring(info_xml)
