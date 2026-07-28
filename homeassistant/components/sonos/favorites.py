@@ -132,7 +132,7 @@ class SonosFavorites(SonosHouseholdCoordinator):
                 # exclude non-playable favorites with no linked resources
                 if fav.reference.resources:
                     self._favorites.append(fav)
-            except SoCoException as ex:
+            except (SoCoException, TypeError) as ex:
                 # Skip unknown types
                 _LOGGER.error("Unhandled favorite '%s': %s", fav.title, ex)
         for playlist in new_playlists:
