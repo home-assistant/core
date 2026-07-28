@@ -251,7 +251,7 @@ def create_sensor_with_named_low_battery_characteristic(accessory: Accessory) ->
 def create_prefixed_named_fault_characteristic(accessory: Accessory) -> None:
     """Define a service whose name includes the accessory name."""
     service = accessory.add_service(
-        ServicesTypes.OCCUPANCY_SENSOR, name=f"{accessory.name} Occupancy"
+        ServicesTypes.OCCUPANCY_SENSOR, name=f"{accessory.name.upper()} Occupancy"
     )
 
     occupancy = service.add_char(CharacteristicsTypes.OCCUPANCY_DETECTED)
@@ -266,7 +266,7 @@ def create_labeled_valves_with_low_battery_characteristics(
 ) -> None:
     """Define labeled valve services with low battery status."""
     for label_index in (1.0, 2.0):
-        service = accessory.add_service(ServicesTypes.VALVE)
+        service = accessory.add_service(ServicesTypes.VALVE, name="Valve")
 
         service_label_index = service.add_char(CharacteristicsTypes.SERVICE_LABEL_INDEX)
         service_label_index.value = label_index

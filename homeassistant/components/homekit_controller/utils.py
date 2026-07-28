@@ -78,22 +78,41 @@ def normalized_service_label_index(service: Service) -> str | None:
     return str(service_label_index)
 
 
+def _service_name_is_repeated(service: Service, service_name: str) -> bool:
+    """Return whether a same-type sibling has the same service name."""
+    return any(
+        other_service.iid != service.iid
+        and other_service.type == service.type
+        and (other_name := other_service.value(CharacteristicsTypes.NAME)) is not None
+        and folded_name(str(other_name)) == folded_name(service_name)
+        for other_service in service.accessory.services
+    )
+
+
 def service_feature_scope(service: Service) -> ServiceFeatureScope | None:
     """Return scope metadata for a feature associated with a HomeKit service."""
     service_name = service.value(CharacteristicsTypes.NAME)
     if service_name is not None:
         service_name = str(service_name)
-    if service_name and folded_name(service_name) != folded_name(
-        service.accessory.name
+    service_label_index = normalized_service_label_index(service)
+    accessory_name = service.accessory.name
+    if (
+        service_name
+        and folded_name(service_name) != folded_name(accessory_name)
+        and (
+            service_label_index is None
+            or not _service_name_is_repeated(service, service_name)
+        )
     ):
-        service_name = service_name.removeprefix(service.accessory.name).strip()
+        if service_name[: len(accessory_name)].casefold() == accessory_name.casefold():
+            service_name = service_name[len(accessory_name) :].strip()
         return ServiceFeatureScope(
             key=f"name:{folded_name(service_name)}",
             translation_suffix="with_service_name",
             translation_placeholders={"service_name": service_name},
         )
 
-    if (service_label_index := normalized_service_label_index(service)) is not None:
+    if service_label_index is not None:
         suffix = SERVICE_LABEL_TRANSLATION_SUFFIXES.get(
             service.type, "with_service_label"
         )
