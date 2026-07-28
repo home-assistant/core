@@ -67,6 +67,13 @@
         "description": "HomeKit can be configured to expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV or RECEIVER device class to function properly. Entities in the “Domains to include” will be included to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
         "title": "Select mode and domains."
       },
+      "valves": {
+        "data": {
+          "irrigation_grouped_valves": "Valves to group as an Irrigation System"
+        },
+        "description": "Select two or more valve entities to group them as a single HomeKit Irrigation System accessory. Leave empty to expose each valve individually.",
+        "title": "Valve configuration"
+      },
       "yaml": {
         "description": "This entry is controlled via YAML",
         "title": "Adjust HomeKit options"

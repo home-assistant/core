@@ -12,8 +12,10 @@ from homeassistant.components.homekit.const import (
     CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
+    CONF_IRRIGATION_CONTROLLER,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
+    CONF_LINKED_IRRIGATION_VALVES,
     CONF_LINKED_MOTION_SENSOR,
     CONF_LINKED_VALVE_DURATION,
     CONF_LINKED_VALVE_END_TIME,
@@ -48,6 +50,7 @@ from homeassistant.components.homekit.const import (
     FEATURE_PLAY_PAUSE,
     TYPE_FAUCET,
     TYPE_HEATER_COOLER,
+    TYPE_IRRIGATION_SYSTEM,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
@@ -156,6 +159,47 @@ def test_validate_entity_config() -> None:
                 CONF_TYPE: "sprinkler",  # Extra keys not allowed
             }
         },
+        {
+            "valve.primary": {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                CONF_LINKED_IRRIGATION_VALVES: [],
+            }
+        },
+        {
+            "valve.primary": {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                CONF_LINKED_IRRIGATION_VALVES: ["valve.primary"],
+            }
+        },
+        {
+            "valve.primary": {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                CONF_LINKED_IRRIGATION_VALVES: ["valve.zone", "valve.zone"],
+            },
+            "valve.zone": {CONF_IRRIGATION_CONTROLLER: "valve.primary"},
+        },
+        {
+            "valve.primary": {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                CONF_LINKED_IRRIGATION_VALVES: ["valve.zone"],
+            },
+            "valve.zone": {CONF_IRRIGATION_CONTROLLER: "valve.other"},
+        },
+        {
+            "valve.zone": {CONF_IRRIGATION_CONTROLLER: "valve.primary"},
+        },
+        {
+            "valve.primary": {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                CONF_LINKED_IRRIGATION_VALVES: ["valve.zone"],
+            },
+            "valve.zone": {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                CONF_LINKED_IRRIGATION_VALVES: ["valve.other"],
+                CONF_IRRIGATION_CONTROLLER: "valve.primary",
+            },
+            "valve.other": {CONF_IRRIGATION_CONTROLLER: "valve.zone"},
+        },
     ]
 
     for conf in configs:
@@ -207,6 +251,26 @@ def test_validate_entity_config() -> None:
 
     assert vec({"media_player.demo": {}}) == {
         "media_player.demo": {CONF_FEATURE_LIST: {}, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+
+    assert vec(
+        {
+            "valve.primary": {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                CONF_LINKED_IRRIGATION_VALVES: ["valve.zone"],
+            },
+            "valve.zone": {CONF_IRRIGATION_CONTROLLER: "valve.primary"},
+        }
+    ) == {
+        "valve.primary": {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            CONF_LINKED_IRRIGATION_VALVES: ["valve.zone"],
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+        },
+        "valve.zone": {
+            CONF_IRRIGATION_CONTROLLER: "valve.primary",
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+        },
     }
     config = {
         CONF_FEATURE_LIST: [

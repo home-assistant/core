@@ -58,12 +58,14 @@ from .const import (
     CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
+    CONF_IRRIGATION_CONTROLLER,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_FILTER_CHANGE_INDICATION,
     CONF_LINKED_FILTER_LIFE_LEVEL,
     CONF_LINKED_HUMIDITY_SENSOR,
+    CONF_LINKED_IRRIGATION_VALVES,
     CONF_LINKED_MOTION_SENSOR,
     CONF_LINKED_OBSTRUCTION_SENSOR,
     CONF_LINKED_PM25_SENSOR,
@@ -107,6 +109,7 @@ from .const import (
     TYPE_FAN,
     TYPE_FAUCET,
     TYPE_HEATER_COOLER,
+    TYPE_IRRIGATION_SYSTEM,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
@@ -299,6 +302,15 @@ SENSOR_SCHEMA = BASIC_INFO_SCHEMA.extend(
 
 VALVE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
+        vol.Optional(CONF_TYPE): vol.All(
+            cv.string,
+            vol.In((TYPE_IRRIGATION_SYSTEM,)),
+        ),
+        vol.Optional(CONF_LINKED_IRRIGATION_VALVES): vol.All(
+            cv.ensure_list,
+            [cv.entity_domain("valve")],
+        ),
+        vol.Optional(CONF_IRRIGATION_CONTROLLER): cv.entity_domain("valve"),
         vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(input_number.DOMAIN),
         vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(sensor.DOMAIN),
     }
@@ -338,6 +350,106 @@ HOMEKIT_CHAR_TRANSLATIONS = {
 }
 
 
+def _validate_entity_domain_config(
+    entity: str, domain: str, config: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate one entity config according to its domain schema."""
+    if domain == "alarm_control_panel":
+        return cast(dict[str, Any], CODE_SCHEMA(config))
+
+    if domain == media_player.const.DOMAIN:
+        media_player_config = cast(dict[str, Any], FEATURE_SCHEMA(config))
+        feature_list: dict[str, dict[str, Any]] = {}
+        for feature in media_player_config[CONF_FEATURE_LIST]:
+            params = cast(dict[str, Any], MEDIA_PLAYER_SCHEMA(feature))
+            key = params.pop(CONF_FEATURE)
+            if key in feature_list:
+                raise vol.Invalid(f"A feature can be added only once for {entity}")
+            feature_list[str(key)] = params
+        media_player_config[CONF_FEATURE_LIST] = feature_list
+        return media_player_config
+
+    if domain == "camera":
+        return cast(dict[str, Any], CAMERA_SCHEMA(config))
+    if domain == "lock":
+        return cast(dict[str, Any], LOCK_SCHEMA(config))
+    if domain == "switch":
+        return cast(dict[str, Any], SWITCH_TYPE_SCHEMA(config))
+    if domain == "humidifier":
+        return cast(dict[str, Any], HUMIDIFIER_SCHEMA(config))
+    if domain == "climate":
+        return cast(dict[str, Any], CLIMATE_SCHEMA(config))
+    if domain == "cover":
+        return cast(dict[str, Any], COVER_SCHEMA(config))
+    if domain == "fan":
+        return cast(dict[str, Any], FAN_SCHEMA(config))
+    if domain == "sensor":
+        return cast(dict[str, Any], SENSOR_SCHEMA(config))
+    if domain == "valve":
+        return cast(dict[str, Any], VALVE_SCHEMA(config))
+
+    return cast(dict[str, Any], BASIC_INFO_SCHEMA(config))
+
+
+def _validate_irrigation_relationships(entities: dict[str, dict]) -> None:
+    """Validate irrigation system/controller relationships for valve entities."""
+    irrigation_primaries: dict[str, set[str]] = {}
+    irrigation_children: dict[str, str] = {}
+    irrigation_controllers: dict[str, str] = {}
+
+    for entity_id, config in entities.items():
+        if split_entity_id(entity_id)[0] != "valve":
+            continue
+
+        if config.get(CONF_TYPE) == TYPE_IRRIGATION_SYSTEM:
+            linked_valves = config.get(CONF_LINKED_IRRIGATION_VALVES, [])
+            linked_list = [cv.entity_id(valve_id) for valve_id in linked_valves]
+            if not linked_list:
+                raise vol.Invalid(
+                    f"{entity_id} must include at least one linked irrigation valve"
+                )
+            if len(linked_list) != len(set(linked_list)):
+                raise vol.Invalid(f"{entity_id} has duplicate linked irrigation valves")
+            if entity_id in linked_list:
+                raise vol.Invalid(
+                    f"{entity_id} cannot include itself as a linked irrigation valve"
+                )
+            irrigation_primaries[entity_id] = set(linked_list)
+            for linked_entity_id in linked_list:
+                if linked_entity_id in irrigation_children:
+                    raise vol.Invalid(
+                        f"{linked_entity_id} is linked to multiple irrigation controllers"
+                    )
+                irrigation_children[linked_entity_id] = entity_id
+
+        if controller := config.get(CONF_IRRIGATION_CONTROLLER):
+            irrigation_controllers[entity_id] = cv.entity_id(controller)
+
+    for primary, linked_entities in irrigation_primaries.items():
+        if primary in irrigation_controllers:
+            raise vol.Invalid(
+                f"{primary} cannot be both an irrigation controller and a linked irrigation valve"
+            )
+        for linked_entity_id in linked_entities:
+            if irrigation_controllers.get(linked_entity_id) != primary:
+                raise vol.Invalid(
+                    f"{linked_entity_id} must declare {primary} as irrigation_controller"
+                )
+
+    for child_entity_id, controller_entity_id in irrigation_controllers.items():
+        if child_entity_id == controller_entity_id:
+            raise vol.Invalid(
+                f"{child_entity_id} cannot be its own irrigation_controller"
+            )
+        if (
+            controller_entity_id not in irrigation_primaries
+            or child_entity_id not in irrigation_primaries[controller_entity_id]
+        ):
+            raise vol.Invalid(
+                f"{child_entity_id} references irrigation_controller {controller_entity_id} without a matching primary group"
+            )
+
+
 def validate_entity_config(values: dict) -> dict[str, dict]:
     """Validate config entry for CONF_ENTITY."""
     if not isinstance(values, dict):
@@ -351,51 +463,12 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
         if not isinstance(config, dict):
             raise vol.Invalid(f"The configuration for {entity} must be a dictionary.")
 
-        if domain == "alarm_control_panel":
-            config = CODE_SCHEMA(config)
-
-        elif domain == media_player.const.DOMAIN:
-            config = FEATURE_SCHEMA(config)
-            feature_list = {}
-            for feature in config[CONF_FEATURE_LIST]:
-                params = MEDIA_PLAYER_SCHEMA(feature)
-                key = params.pop(CONF_FEATURE)
-                if key in feature_list:
-                    raise vol.Invalid(f"A feature can be added only once for {entity}")
-                feature_list[key] = params
-            config[CONF_FEATURE_LIST] = feature_list
-
-        elif domain == "camera":
-            config = CAMERA_SCHEMA(config)
-
-        elif domain == "lock":
-            config = LOCK_SCHEMA(config)
-
-        elif domain == "switch":
-            config = SWITCH_TYPE_SCHEMA(config)
-
-        elif domain == "humidifier":
-            config = HUMIDIFIER_SCHEMA(config)
-
-        elif domain == "climate":
-            config = CLIMATE_SCHEMA(config)
-
-        elif domain == "cover":
-            config = COVER_SCHEMA(config)
-
-        elif domain == "fan":
-            config = FAN_SCHEMA(config)
-
-        elif domain == "sensor":
-            config = SENSOR_SCHEMA(config)
-
-        elif domain == "valve":
-            config = VALVE_SCHEMA(config)
-
-        else:
-            config = BASIC_INFO_SCHEMA(config)
+        config = _validate_entity_domain_config(entity, domain, config)
 
         entities[entity] = config
+
+    _validate_irrigation_relationships(entities)
+
     return entities
 
 

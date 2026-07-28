@@ -9,12 +9,18 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import (
+    CONF_FEATURE_LIST,
     CONF_FILTER,
+    CONF_IRRIGATION_CONTROLLER,
+    CONF_LINKED_IRRIGATION_VALVES,
+    CONF_LOW_BATTERY_THRESHOLD,
     DOMAIN,
+    FEATURE_ON_OFF,
     SHORT_BRIDGE_NAME,
+    TYPE_IRRIGATION_SYSTEM,
 )
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
-from homeassistant.const import CONF_NAME, CONF_PORT, EntityCategory
+from homeassistant.const import CONF_NAME, CONF_PORT, CONF_TYPE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
@@ -691,6 +697,345 @@ async def test_options_flow_include_mode_basic(hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
+async def test_options_flow_valves_filters_grouped_default_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test valve grouping default only includes currently included valves."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        options={
+            CONF_FILTER: {
+                "include_domains": ["valve"],
+                "include_entities": ["valve.front", "valve.back"],
+                "exclude_domains": [],
+                "exclude_entities": [],
+            },
+            "entity_config": {
+                "valve.front": {
+                    CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                    CONF_LINKED_IRRIGATION_VALVES: ["valve.removed", "valve.back"],
+                },
+                "valve.back": {
+                    CONF_IRRIGATION_CONTROLLER: "valve.front",
+                },
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+    hass.states.async_set("valve.front", "open")
+    hass.states.async_set("valve.back", "closed")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["valve"],
+            "include_exclude_mode": "include",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "include"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"entities": ["valve.front", "valve.back"]},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "valves"
+    assert result["data_schema"]({})["irrigation_grouped_valves"] == [
+        "valve.front",
+        "valve.back",
+    ]
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bridged_device_triggers"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options["entity_config"] == {
+        "valve.front": {
+            "type": "irrigation_system",
+            "linked_irrigation_valves": ["valve.back"],
+            "low_battery_threshold": 20,
+        },
+        "valve.back": {
+            "irrigation_controller": "valve.front",
+            "low_battery_threshold": 20,
+        },
+    }
+
+
+async def test_options_flow_valves_creates_irrigation_grouping(
+    hass: HomeAssistant,
+) -> None:
+    """Test valve grouping submission persists primary/linked relationships."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        options={
+            CONF_FILTER: {
+                "include_domains": ["valve"],
+                "include_entities": ["valve.front", "valve.back"],
+                "exclude_domains": [],
+                "exclude_entities": [],
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+    hass.states.async_set("valve.front", "closed")
+    hass.states.async_set("valve.back", "closed")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["valve"],
+            "include_exclude_mode": "include",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "include"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"entities": ["valve.front", "valve.back"]},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "valves"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"irrigation_grouped_valves": ["valve.front", "valve.back"]},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bridged_device_triggers"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options["entity_config"] == {
+        "valve.front": {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            CONF_LINKED_IRRIGATION_VALVES: ["valve.back"],
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+        },
+        "valve.back": {
+            CONF_IRRIGATION_CONTROLLER: "valve.front",
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+        },
+    }
+
+
+async def test_options_flow_valves_does_not_revalidate_media_player_feature_mapping(
+    hass: HomeAssistant,
+) -> None:
+    """Test valve step only validates generated irrigation subset config."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        options={
+            CONF_FILTER: {
+                "include_domains": ["valve", "media_player"],
+                "include_entities": [
+                    "valve.front",
+                    "valve.back",
+                    "media_player.tv",
+                ],
+                "exclude_domains": [],
+                "exclude_entities": [],
+            },
+            "entity_config": {
+                "media_player.tv": {
+                    CONF_FEATURE_LIST: {FEATURE_ON_OFF: {}},
+                }
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+    hass.states.async_set("valve.front", "closed")
+    hass.states.async_set("valve.back", "closed")
+    hass.states.async_set("media_player.tv", "off")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["valve", "media_player"],
+            "include_exclude_mode": "include",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "include"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"entities": ["valve.front", "valve.back", "media_player.tv"]},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "valves"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"irrigation_grouped_valves": ["valve.front", "valve.back"]},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bridged_device_triggers"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options["entity_config"]["media_player.tv"][
+        CONF_FEATURE_LIST
+    ] == {FEATURE_ON_OFF: {}}
+
+
+async def test_options_flow_valves_drops_grouped_entity_missing_from_validated_subset(
+    hass: HomeAssistant,
+) -> None:
+    """Test valve step removes grouped entities missing after subset validation."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        options={
+            CONF_FILTER: {
+                "include_domains": ["valve"],
+                "include_entities": ["valve.front", "valve.back"],
+                "exclude_domains": [],
+                "exclude_entities": [],
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+    hass.states.async_set("valve.front", "closed")
+    hass.states.async_set("valve.back", "closed")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["valve"],
+            "include_exclude_mode": "include",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "include"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"entities": ["valve.front", "valve.back"]},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "valves"
+
+    validated_subset = {
+        "valve.front": {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            CONF_LINKED_IRRIGATION_VALVES: ["valve.back"],
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+        }
+    }
+    with patch(
+        "homeassistant.components.homekit.config_flow.validate_entity_config",
+        return_value=validated_subset,
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={"irrigation_grouped_valves": ["valve.front", "valve.back"]},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bridged_device_triggers"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert "valve.back" not in config_entry.options["entity_config"]
+
+
+async def test_options_flow_valves_single_selection_removes_empty_entity_config(
+    hass: HomeAssistant,
+) -> None:
+    """Test valve step removes empty entity_config when no group is created."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        options={
+            CONF_FILTER: {
+                "include_domains": ["valve"],
+                "include_entities": ["valve.front"],
+                "exclude_domains": [],
+                "exclude_entities": [],
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+    hass.states.async_set("valve.front", "closed")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["valve"],
+            "include_exclude_mode": "include",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "include"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"entities": ["valve.front"]},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "valves"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"irrigation_grouped_valves": ["valve.front"]},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bridged_device_triggers"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert "entity_config" not in config_entry.options
+
+
 async def test_options_flow_exclude_mode_with_cameras(hass: HomeAssistant) -> None:
     """Test config flow options in exclude mode with cameras."""
 
@@ -945,7 +1290,6 @@ async def test_options_flow_include_mode_with_cameras(hass: HomeAssistant) -> No
     assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         "devices": [],
-        "entity_config": {},
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old", "camera.excluded"],
@@ -1096,7 +1440,6 @@ async def test_options_flow_with_camera_audio(hass: HomeAssistant) -> None:
     assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         "devices": [],
-        "entity_config": {},
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old", "camera.excluded"],

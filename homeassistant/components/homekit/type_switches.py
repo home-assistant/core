@@ -1,6 +1,11 @@
 """Class to hold all switch accessories."""
 
+import asyncio
+from collections.abc import Callable
+from datetime import datetime, timedelta
+import hashlib
 import logging
+import math
 from typing import Any, Final, NamedTuple, override
 
 from pyhap.characteristic import Characteristic
@@ -11,6 +16,7 @@ from pyhap.const import (
     CATEGORY_SPRINKLER,
     CATEGORY_SWITCH,
 )
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import button, input_button
 from homeassistant.components.input_number import (
@@ -36,8 +42,10 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     CONF_TYPE,
     SERVICE_CLOSE_VALVE,
@@ -48,9 +56,20 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
-from homeassistant.helpers.event import async_call_later
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HassJobType,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
+from homeassistant.helpers.event import async_call_later, async_track_state_change_event
+from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from .accessories import TYPES, HomeAccessory, HomeDriver
@@ -58,18 +77,26 @@ from .const import (
     CHAR_ACTIVE,
     CHAR_CONFIGURED_NAME,
     CHAR_IN_USE,
+    CHAR_IS_CONFIGURED,
     CHAR_NAME,
     CHAR_ON,
     CHAR_OUTLET_IN_USE,
+    CHAR_PROGRAM_MODE,
     CHAR_REMAINING_DURATION,
+    CHAR_SERVICE_LABEL_INDEX,
+    CHAR_SERVICE_LABEL_NAMESPACE,
     CHAR_SET_DURATION,
+    CHAR_STATUS_FAULT,
     CHAR_VALVE_TYPE,
+    CONF_LINKED_IRRIGATION_VALVES,
     CONF_LINKED_VALVE_DURATION,
     CONF_LINKED_VALVE_END_TIME,
     PROP_MAX_VALUE,
     PROP_MIN_STEP,
     PROP_MIN_VALUE,
+    SERV_IRRIGATION_SYSTEM,
     SERV_OUTLET,
+    SERV_SERVICE_LABEL,
     SERV_SWITCH,
     SERV_VALVE,
     TYPE_FAUCET,
@@ -559,3 +586,884 @@ class SelectSwitch(HomeAccessory):
         current_option = new_state.state
         for option, char in self.select_chars.items():
             char.set_value(option == current_option)
+
+
+HK_VALVE_TYPE_IRRIGATION = 1
+HK_PROGRAM_MODE_NO_PROGRAM_SCHEDULED = 0
+HK_IS_CONFIGURED = 1
+HK_STATUS_FAULT_NO_FAULT = 0
+HK_STATUS_FAULT_GENERAL_FAULT = 1
+HK_SERVICE_LABEL_NAMESPACE_ARABIC_NUMERALS = 1
+
+IRRIGATION_DEFAULT_DURATION = 300
+IRRIGATION_DURATION_MAX = 86400
+
+IRRIGATION_DURATION_PROPERTIES = {
+    PROP_MIN_VALUE: 0,
+    PROP_MAX_VALUE: IRRIGATION_DURATION_MAX,
+    PROP_MIN_STEP: 1,
+}
+
+IRRIGATION_RUNTIME_STORAGE_VERSION = 1
+IRRIGATION_RUNTIME_STORAGE_KEY = "homekit.irrigation_runtime.{}.{}"
+IRRIGATION_EXPIRED_CLOSE_MAX_RETRIES = 5
+IRRIGATION_EXPIRED_CLOSE_MAX_RETRY_DELAY = 60
+
+
+def _irrigation_runtime_storage_group_id(valve_entity_ids: list[str]) -> str:
+    """Return a stable storage identifier for one irrigation valve group."""
+    return hashlib.blake2s(
+        ",".join(sorted(valve_entity_ids)).encode(), digest_size=8
+    ).hexdigest()
+
+
+def _irrigation_runtime_storage_key(entry_id: str, group_id: str) -> str:
+    """Build the storage key for persisted irrigation runtime deadlines."""
+    return IRRIGATION_RUNTIME_STORAGE_KEY.format(entry_id, group_id)
+
+
+def _remaining_seconds_until(end_time: datetime, now: datetime | None = None) -> int:
+    """Return remaining whole seconds, rounding partial seconds up."""
+    return max(math.ceil((end_time - (now or dt_util.utcnow())).total_seconds()), 0)
+
+
+@TYPES.register("IrrigationSystem")
+class IrrigationSystem(HomeAccessory):
+    """Generate an IrrigationSystem accessory grouping multiple valve entities."""
+
+    def __init__(self, *args: Any) -> None:
+        """Initialize an IrrigationSystem accessory."""
+        super().__init__(*args, category=CATEGORY_SPRINKLER)
+        state = self.hass.states.get(self.entity_id)
+        assert state
+
+        self._valve_entity_ids: list[str] = [
+            self.entity_id,
+            *self.config.get(CONF_LINKED_IRRIGATION_VALVES, []),
+        ]
+
+        self._runtime_deadline_store: Store[dict[str, str]] = Store(
+            self.hass,
+            IRRIGATION_RUNTIME_STORAGE_VERSION,
+            _irrigation_runtime_storage_key(
+                self.driver.entry_id,
+                _irrigation_runtime_storage_group_id(self._valve_entity_ids),
+            ),
+        )
+        self._runtime_deadlines: dict[str, str] = {}
+        self._runtime_deadlines_loaded = False
+        self._runtime_deadlines_load_lock = asyncio.Lock()
+        self._legacy_runtime_deadline_stores: dict[str, Store[dict[str, str]]] = {}
+        self._restore_runtime_deadlines_task: asyncio.Task[None] | None = None
+        self._valve_chars: dict[str, dict[str, Any]] = {}
+
+        serv_irrigation = self.add_preload_service(
+            SERV_IRRIGATION_SYSTEM,
+            [CHAR_NAME, CHAR_REMAINING_DURATION, CHAR_STATUS_FAULT],
+        )
+        serv_irrigation.configure_char(CHAR_NAME, value=self.display_name)
+        self._char_system_active = serv_irrigation.configure_char(
+            CHAR_ACTIVE,
+            value=False,
+            setter_callback=self._set_system_active,
+        )
+        self._char_system_in_use = serv_irrigation.configure_char(
+            CHAR_IN_USE, value=False
+        )
+        self._char_program_mode = serv_irrigation.configure_char(
+            CHAR_PROGRAM_MODE,
+            value=HK_PROGRAM_MODE_NO_PROGRAM_SCHEDULED,
+        )
+        self._char_system_remaining = serv_irrigation.configure_char(
+            CHAR_REMAINING_DURATION,
+            value=0,
+            properties=IRRIGATION_DURATION_PROPERTIES,
+        )
+        self._char_system_status_fault = serv_irrigation.configure_char(
+            CHAR_STATUS_FAULT,
+            value=HK_STATUS_FAULT_NO_FAULT,
+        )
+        serv_service_label = self.add_preload_service(
+            SERV_SERVICE_LABEL,
+            [CHAR_SERVICE_LABEL_NAMESPACE],
+        )
+        serv_service_label.configure_char(
+            CHAR_SERVICE_LABEL_NAMESPACE,
+            value=HK_SERVICE_LABEL_NAMESPACE_ARABIC_NUMERALS,
+        )
+
+        for index, entity_id in enumerate(self._valve_entity_ids, start=1):
+            valve_state = self.hass.states.get(entity_id)
+            friendly = (
+                valve_state.attributes.get(ATTR_FRIENDLY_NAME) if valve_state else None
+            )
+            name = cleanup_name_for_homekit(
+                friendly or (valve_state.name if valve_state else entity_id)
+            )
+            initial_duration = self._duration_from_state(valve_state)
+            if initial_duration is None:
+                initial_duration = IRRIGATION_DEFAULT_DURATION
+            initial_remaining = self._remaining_from_state(valve_state)
+            serv_valve = self.add_preload_service(
+                SERV_VALVE,
+                [
+                    CHAR_NAME,
+                    CHAR_CONFIGURED_NAME,
+                    CHAR_SET_DURATION,
+                    CHAR_REMAINING_DURATION,
+                    CHAR_IS_CONFIGURED,
+                    CHAR_SERVICE_LABEL_INDEX,
+                    CHAR_STATUS_FAULT,
+                ],
+                unique_id=entity_id,
+            )
+            serv_valve.configure_char(CHAR_NAME, value=name)
+            serv_valve.configure_char(CHAR_CONFIGURED_NAME, value=name)
+            serv_valve.configure_char(CHAR_IS_CONFIGURED, value=HK_IS_CONFIGURED)
+            serv_valve.configure_char(CHAR_SERVICE_LABEL_INDEX, value=index)
+            char_active = serv_valve.configure_char(
+                CHAR_ACTIVE,
+                value=False,
+                setter_callback=lambda v, eid=entity_id: self._set_valve_active(eid, v),
+            )
+            char_in_use = serv_valve.configure_char(CHAR_IN_USE, value=False)
+            serv_valve.configure_char(CHAR_VALVE_TYPE, value=HK_VALVE_TYPE_IRRIGATION)
+            char_status_fault = serv_valve.configure_char(
+                CHAR_STATUS_FAULT,
+                value=HK_STATUS_FAULT_NO_FAULT,
+            )
+            char_set_duration = serv_valve.configure_char(
+                CHAR_SET_DURATION,
+                value=initial_duration,
+                properties=IRRIGATION_DURATION_PROPERTIES,
+                setter_callback=lambda v, eid=entity_id: self._set_valve_duration(
+                    eid, v
+                ),
+            )
+            char_remaining = serv_valve.configure_char(
+                CHAR_REMAINING_DURATION,
+                value=initial_remaining,
+                properties=IRRIGATION_DURATION_PROPERTIES,
+            )
+            self._valve_chars[entity_id] = {
+                CHAR_ACTIVE: char_active,
+                CHAR_IN_USE: char_in_use,
+                CHAR_SET_DURATION: char_set_duration,
+                CHAR_REMAINING_DURATION: char_remaining,
+                CHAR_STATUS_FAULT: char_status_fault,
+                "duration": initial_duration,
+                "end_time": None,
+                "close_timer": None,
+                "update_timer": None,
+                "expired_close_retry_timer": None,
+                "expired_close_retry_count": 0,
+                "expired_close_retry_after": None,
+            }
+            serv_irrigation.add_linked_service(serv_valve)
+            serv_valve.add_linked_service(serv_service_label)
+
+        self.set_primary_service(serv_irrigation)
+        for entity_id in self._valve_entity_ids:
+            if valve_state := self.hass.states.get(entity_id):
+                self._sync_valve_chars(entity_id, valve_state)
+            else:
+                self._set_valve_unavailable(entity_id)
+        self._update_system_state()
+
+    @callback
+    @pyhap_callback  # type: ignore[untyped-decorator]
+    @override
+    def run(self) -> None:
+        """Handle accessory driver start; subscribe to all linked valve entities."""
+        super().run()
+        linked_valve_ids = self._valve_entity_ids[1:]
+        if linked_valve_ids:
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    linked_valve_ids,
+                    self._async_linked_valve_state_changed,
+                    job_type=HassJobType.Callback,
+                )
+            )
+            for entity_id in linked_valve_ids:
+                if valve_state := self.hass.states.get(entity_id):
+                    self._sync_valve_chars(entity_id, valve_state)
+                else:
+                    self._set_valve_unavailable(entity_id)
+        if self._restore_runtime_deadlines_task is not None:
+            self._restore_runtime_deadlines_task.cancel()
+        self._restore_runtime_deadlines_task = self.hass.async_create_task(
+            self._async_restore_local_runtime_deadlines(),
+            eager_start=True,
+        )
+        self._update_system_state()
+
+    @callback
+    def _async_linked_valve_state_changed(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
+        """Handle state changes for linked (non-primary) valve entities."""
+        new_state = event.data["new_state"]
+        if new_state is None:
+            if old_state := event.data["old_state"]:
+                self._set_valve_unavailable(old_state.entity_id)
+            else:
+                self._set_valve_unavailable(event.data["entity_id"])
+            self._update_available_from_state(None)
+            self._update_system_state()
+            return
+        self._sync_valve_chars(new_state.entity_id, new_state)
+        self._update_available_from_state(new_state)
+        self._update_system_state()
+
+    @override
+    def _update_available_from_state(self, _new_state: State | None) -> None:
+        """Compute composite availability across all grouped valves."""
+        if not hasattr(self, "_valve_entity_ids"):
+            super()._update_available_from_state(_new_state)
+            return
+        self._available = any(
+            (state := self.hass.states.get(entity_id)) is not None
+            and state.state != STATE_UNAVAILABLE
+            for entity_id in self._valve_entity_ids
+        )
+
+    @callback
+    @override
+    def async_stop(self) -> None:
+        """Cancel subscriptions and runtime timers when the accessory stops."""
+        if self._restore_runtime_deadlines_task is not None:
+            self._restore_runtime_deadlines_task.cancel()
+            self._restore_runtime_deadlines_task = None
+        for entity_id in self._valve_entity_ids:
+            if (chars := self._valve_chars.get(entity_id)) is not None and (
+                chars["close_timer"] is not None
+            ):
+                self.hass.async_create_task(
+                    self._async_call_local_runtime_close_and_resync(entity_id),
+                    eager_start=True,
+                )
+            self._clear_local_runtime(entity_id, clear_persisted=False)
+            self._reset_expired_close_retry(entity_id)
+        super().async_stop()
+
+    @callback
+    @override
+    def async_update_state_callback(self, new_state: State | None) -> None:
+        """Handle primary valve state changes, including unavailable/unknown."""
+        if new_state is None:
+            self._set_valve_unavailable(self.entity_id)
+            self._update_system_state()
+            return
+        if new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            self._sync_valve_chars(self.entity_id, new_state)
+            self._update_system_state()
+            return
+        super().async_update_state_callback(new_state)
+
+    @callback
+    @override
+    def async_update_state(self, new_state: State) -> None:
+        """Update primary valve entity state from HA."""
+        self._sync_valve_chars(self.entity_id, new_state)
+        self._update_system_state()
+
+    def _sync_valve_chars(self, entity_id: str, state: State) -> None:
+        """Sync HomeKit characteristics from HA state for one valve."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None:
+            return
+        has_fault = state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+        chars[CHAR_STATUS_FAULT].set_value(
+            HK_STATUS_FAULT_GENERAL_FAULT if has_fault else HK_STATUS_FAULT_NO_FAULT
+        )
+        if has_fault:
+            self._set_valve_inactive(entity_id)
+            self._clear_local_runtime(entity_id, clear_persisted=False)
+            self._reset_expired_close_retry(entity_id)
+            return
+        is_open = state.state in VALVE_OPEN_STATES
+        chars[CHAR_ACTIVE].set_value(int(is_open))
+        chars[CHAR_IN_USE].set_value(int(is_open))
+        if (device_duration := self._duration_from_state(state)) is not None and (
+            device_duration != chars["duration"]
+        ):
+            chars["duration"] = device_duration
+            chars[CHAR_SET_DURATION].set_value(device_duration)
+        remaining = self._remaining_from_state(state)
+        if is_open:
+            if remaining > 0:
+                self._reset_expired_close_retry(entity_id)
+                self._clear_local_runtime(entity_id)
+                if (end_time := self._end_time_from_state(state)) is not None:
+                    self._start_runtime_updates(entity_id, end_time)
+                else:
+                    self._start_runtime_updates(
+                        entity_id,
+                        dt_util.utcnow() + timedelta(seconds=remaining),
+                    )
+            elif (local_remaining := self._remaining_from_local_runtime(entity_id)) > 0:
+                self._reset_expired_close_retry(entity_id)
+                remaining = local_remaining
+            elif (
+                end_time := self._end_time_from_persisted_runtime(entity_id)
+            ) is not None:
+                self._reset_expired_close_retry(entity_id)
+                if self._start_local_runtime_from_deadline(entity_id, end_time):
+                    remaining = self._remaining_from_local_runtime(entity_id)
+                else:
+                    remaining = chars["duration"]
+            elif self._persisted_runtime_is_expired(entity_id):
+                self._schedule_expired_close_retry(entity_id)
+                remaining = 0
+            else:
+                self._reset_expired_close_retry(entity_id)
+                remaining = chars["duration"]
+        else:
+            remaining = 0
+            self._clear_local_runtime(entity_id)
+            self._reset_expired_close_retry(entity_id)
+        chars[CHAR_REMAINING_DURATION].set_value(remaining)
+
+    def _reset_expired_close_retry(self, entity_id: str) -> None:
+        """Reset retry state for persisted expired close attempts."""
+        if chars := self._valve_chars.get(entity_id):
+            if retry_timer := chars["expired_close_retry_timer"]:
+                retry_timer()
+                chars["expired_close_retry_timer"] = None
+            chars["expired_close_retry_count"] = 0
+            chars["expired_close_retry_after"] = None
+
+    def _schedule_expired_close_retry(self, entity_id: str) -> None:
+        """Retry closing persisted expired runtime with bounded backoff."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None:
+            return
+        now = dt_util.utcnow()
+        if chars["expired_close_retry_timer"] is not None:
+            return
+        if (
+            retry_after := chars["expired_close_retry_after"]
+        ) is not None and now < retry_after:
+            return
+        retry_count = int(chars["expired_close_retry_count"])
+        if retry_count >= IRRIGATION_EXPIRED_CLOSE_MAX_RETRIES:
+            return
+
+        delay_seconds = min(
+            2**retry_count,
+            IRRIGATION_EXPIRED_CLOSE_MAX_RETRY_DELAY,
+        )
+        chars["expired_close_retry_count"] = retry_count + 1
+        chars["expired_close_retry_after"] = now + timedelta(seconds=delay_seconds)
+        chars["expired_close_retry_timer"] = async_call_later(
+            self.hass,
+            delay_seconds,
+            self._make_expired_close_retry_callback(entity_id),
+        )
+
+    def _make_expired_close_retry_callback(
+        self, entity_id: str
+    ) -> Callable[[datetime], None]:
+        """Create delayed retry callback for expired local runtime closes."""
+
+        @callback
+        def _retry_close(_now: datetime) -> None:
+            if chars := self._valve_chars.get(entity_id):
+                chars["expired_close_retry_timer"] = None
+            self.hass.async_create_task(
+                self._async_call_local_runtime_close_and_resync(entity_id),
+                eager_start=True,
+            )
+
+        return _retry_close
+
+    def _update_system_state(self) -> None:
+        """Update IrrigationSystem-level Active/InUse from child valve states."""
+        any_active = any(
+            chars[CHAR_IN_USE].value for chars in self._valve_chars.values()
+        )
+        remaining = max(
+            int(chars[CHAR_REMAINING_DURATION].value or 0)
+            for chars in self._valve_chars.values()
+        )
+        any_fault = any(
+            chars[CHAR_STATUS_FAULT].value == HK_STATUS_FAULT_GENERAL_FAULT
+            for chars in self._valve_chars.values()
+        )
+        self._char_system_active.set_value(int(any_active))
+        self._char_system_in_use.set_value(int(any_active))
+        self._char_system_remaining.set_value(remaining)
+        self._char_system_status_fault.set_value(
+            HK_STATUS_FAULT_GENERAL_FAULT if any_fault else HK_STATUS_FAULT_NO_FAULT
+        )
+
+    def _set_system_active(self, value: int) -> None:
+        """Close all valves when HomeKit deactivates the irrigation system."""
+        if not value:
+            for entity_id in self._valve_entity_ids:
+                self.hass.async_create_task(
+                    self._async_call_valve_service_and_resync(
+                        entity_id, SERVICE_CLOSE_VALVE, value
+                    ),
+                    eager_start=True,
+                )
+        self._update_system_state()
+
+    def _set_valve_active(self, entity_id: str, value: int) -> None:
+        """Open or close a specific valve when HomeKit commands it."""
+        service = SERVICE_OPEN_VALVE if value else SERVICE_CLOSE_VALVE
+        chars = self._valve_chars.get(entity_id)
+        if chars:
+            chars[CHAR_IN_USE].set_value(int(value))
+            chars[CHAR_ACTIVE].set_value(int(value))
+            chars[CHAR_REMAINING_DURATION].set_value(chars["duration"] if value else 0)
+        if value:
+            self._start_local_runtime(entity_id, chars["duration"] if chars else 0)
+        else:
+            self._clear_local_runtime(entity_id)
+        self.hass.async_create_task(
+            self._async_call_valve_service_and_resync(entity_id, service, value),
+            eager_start=True,
+        )
+        self._update_system_state()
+
+    def _set_valve_duration(self, entity_id: str, value: int) -> None:
+        """Store the HomeKit-requested run duration for a valve."""
+        chars = self._valve_chars.get(entity_id)
+        if chars:
+            chars["duration"] = max(int(value), 0)
+            chars[CHAR_SET_DURATION].set_value(chars["duration"])
+
+    def _duration_from_state(self, state: State | None) -> int | None:
+        """Get a valve duration from state attributes when provided by the device."""
+        if state is None:
+            return None
+        for key in ("set_duration", "duration", "default_duration"):
+            if (raw := state.attributes.get(key)) is not None:
+                try:
+                    return min(
+                        max(int(float(raw)), 0),
+                        IRRIGATION_DURATION_MAX,
+                    )
+                except TypeError, ValueError, OverflowError:
+                    continue
+        return None
+
+    def _remaining_from_state(self, state: State | None) -> int:
+        """Get remaining duration from state attributes when provided by the device."""
+        if state is None:
+            return 0
+        for key in ("remaining_duration", "remaining", "remaining_time"):
+            if (raw := state.attributes.get(key)) is not None:
+                try:
+                    return max(int(float(raw)), 0)
+                except TypeError, ValueError, OverflowError:
+                    continue
+        if (end_time := self._end_time_from_state(state)) is not None:
+            return _remaining_seconds_until(end_time)
+        return 0
+
+    def _end_time_from_state(self, state: State | None) -> datetime | None:
+        """Get normalized UTC end_time from valve state attributes."""
+        if state is None:
+            return None
+        if (end_time_raw := state.attributes.get("end_time")) is None:
+            return None
+        try:
+            end_time = dt_util.parse_datetime(str(end_time_raw))
+        except ValueError:
+            return None
+        if end_time is None:
+            return None
+        return dt_util.as_utc(end_time)
+
+    async def _async_call_valve_service_and_resync(
+        self, entity_id: str, service: str, value: int
+    ) -> None:
+        """Call valve service and re-sync the commanded valve on failure."""
+        success = await self.async_call_service_and_wait(
+            VALVE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id},
+            value,
+        )
+        if success:
+            return
+        self._clear_local_runtime(entity_id, clear_persisted=False)
+        if state := self.hass.states.get(entity_id):
+            self._sync_valve_chars(entity_id, state)
+        else:
+            self._set_valve_unavailable(entity_id)
+        self._update_system_state()
+
+    def _set_valve_unavailable(self, entity_id: str) -> None:
+        """Set zone characteristics to faulted/unavailable."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None:
+            return
+        chars[CHAR_STATUS_FAULT].set_value(HK_STATUS_FAULT_GENERAL_FAULT)
+        self._set_valve_inactive(entity_id)
+        self._clear_local_runtime(entity_id, clear_persisted=False)
+
+    def _set_valve_inactive(self, entity_id: str) -> None:
+        """Set zone active/in-use/remaining to inactive values."""
+        if chars := self._valve_chars.get(entity_id):
+            chars[CHAR_ACTIVE].set_value(0)
+            chars[CHAR_IN_USE].set_value(0)
+            chars[CHAR_REMAINING_DURATION].set_value(0)
+
+    def _start_local_runtime(self, entity_id: str, duration: int) -> None:
+        """Start local countdown/auto-close for a zone."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None:
+            return
+        self._clear_local_runtime(entity_id)
+        seconds = max(int(duration), 0)
+        if seconds <= 0:
+            return
+        end_time = dt_util.utcnow() + timedelta(seconds=seconds)
+        chars["end_time"] = end_time
+        self.hass.async_create_task(
+            self._async_set_runtime_deadline(entity_id, end_time),
+            eager_start=True,
+        )
+        chars["close_timer"] = async_call_later(
+            self.hass,
+            seconds,
+            self._make_close_runtime_callback(entity_id),
+        )
+        chars["update_timer"] = async_call_later(
+            self.hass,
+            1,
+            self._make_update_runtime_callback(entity_id),
+        )
+
+    def _start_runtime_updates(self, entity_id: str, end_time: datetime) -> None:
+        """Track remaining runtime locally without scheduling auto-close calls."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None:
+            return
+        if _remaining_seconds_until(end_time) <= 0:
+            return
+        chars["end_time"] = end_time
+        chars["update_timer"] = async_call_later(
+            self.hass,
+            1,
+            self._make_update_runtime_callback(entity_id),
+        )
+
+    @callback
+    def _async_local_runtime_close(self, entity_id: str) -> None:
+        """Close a zone when local runtime reaches zero."""
+        if chars := self._valve_chars.get(entity_id):
+            chars["close_timer"] = None
+            if chars["update_timer"] is not None:
+                chars["update_timer"]()
+                chars["update_timer"] = None
+        self._set_valve_inactive(entity_id)
+        self.hass.async_create_task(
+            self._async_call_local_runtime_close_and_resync(entity_id),
+            eager_start=True,
+        )
+        self._update_system_state()
+
+    async def _async_call_local_runtime_close_and_resync(self, entity_id: str) -> None:
+        """Close an expired local runtime zone without clearing persistence early."""
+        success = await self.async_call_service_and_wait(
+            VALVE_DOMAIN,
+            SERVICE_CLOSE_VALVE,
+            {ATTR_ENTITY_ID: entity_id},
+            0,
+        )
+        if success:
+            self._reset_expired_close_retry(entity_id)
+            self._clear_local_runtime(entity_id)
+            return
+        self._clear_local_runtime(entity_id, clear_persisted=False)
+        if state := self.hass.states.get(entity_id):
+            self._sync_valve_chars(entity_id, state)
+        else:
+            self._set_valve_unavailable(entity_id)
+        self._update_system_state()
+
+    @callback
+    def _update_local_remaining(self, entity_id: str, now: datetime) -> None:
+        """Update local remaining duration countdown."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None:
+            return
+        chars["update_timer"] = None
+        if chars[CHAR_IN_USE].value != 1:
+            return
+        remaining = self._remaining_from_local_runtime(entity_id, now)
+        chars[CHAR_REMAINING_DURATION].set_value(remaining)
+        self._update_system_state()
+        if remaining > 0:
+            chars["update_timer"] = async_call_later(
+                self.hass,
+                1,
+                self._make_update_runtime_callback(entity_id),
+            )
+
+    def _make_close_runtime_callback(
+        self, entity_id: str
+    ) -> Callable[[datetime], None]:
+        """Create close-timer callback for a specific zone."""
+
+        @callback
+        def _close_runtime(_now: datetime) -> None:
+            self._async_local_runtime_close(entity_id)
+
+        return _close_runtime
+
+    def _make_update_runtime_callback(
+        self, entity_id: str
+    ) -> Callable[[datetime], None]:
+        """Create remaining-duration update callback for a specific zone."""
+
+        @callback
+        def _update_runtime(_now: datetime) -> None:
+            self._update_local_remaining(entity_id, _now)
+
+        return _update_runtime
+
+    def _remaining_from_local_runtime(
+        self, entity_id: str, now: datetime | None = None
+    ) -> int:
+        """Return remaining seconds from local runtime tracking."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None or (end_time := chars["end_time"]) is None:
+            return 0
+        return _remaining_seconds_until(end_time, now)
+
+    def _start_local_runtime_from_deadline(
+        self, entity_id: str, end_time: datetime
+    ) -> bool:
+        """Start local close/update timers from an existing deadline."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None:
+            return False
+        remaining = _remaining_seconds_until(end_time)
+        if remaining <= 0:
+            return False
+        self._clear_local_runtime(entity_id, clear_persisted=False)
+        chars["end_time"] = end_time
+        chars["close_timer"] = async_call_later(
+            self.hass,
+            remaining,
+            self._make_close_runtime_callback(entity_id),
+        )
+        chars["update_timer"] = async_call_later(
+            self.hass,
+            1,
+            self._make_update_runtime_callback(entity_id),
+        )
+        return True
+
+    def _end_time_from_persisted_runtime(self, entity_id: str) -> datetime | None:
+        """Get a valid persisted local runtime deadline for a zone."""
+        if not self._runtime_deadlines_loaded:
+            return None
+        if not (persisted_end_time := self._runtime_deadlines.get(entity_id)):
+            return None
+        try:
+            parsed_end_time = dt_util.parse_datetime(persisted_end_time)
+        except ValueError:
+            parsed_end_time = None
+        if parsed_end_time is None:
+            self.hass.async_create_task(
+                self._async_clear_runtime_deadline(entity_id),
+                eager_start=True,
+            )
+            return None
+        end_time = dt_util.as_utc(parsed_end_time)
+        if _remaining_seconds_until(end_time) <= 0:
+            return None
+        return end_time
+
+    def _persisted_runtime_is_expired(self, entity_id: str) -> bool:
+        """Return True if a persisted local runtime deadline has passed."""
+        if not self._runtime_deadlines_loaded:
+            return False
+        if not (persisted_end_time := self._runtime_deadlines.get(entity_id)):
+            return False
+        try:
+            parsed_end_time = dt_util.parse_datetime(persisted_end_time)
+        except ValueError:
+            parsed_end_time = None
+        if parsed_end_time is None:
+            return False
+        end_time = dt_util.as_utc(parsed_end_time)
+        return _remaining_seconds_until(end_time) <= 0
+
+    def _clear_local_runtime(
+        self, entity_id: str, *, clear_persisted: bool = True
+    ) -> None:
+        """Cancel local runtime timers for a zone."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None:
+            return
+        if chars["close_timer"] is not None:
+            chars["close_timer"]()
+            chars["close_timer"] = None
+        if chars["update_timer"] is not None:
+            chars["update_timer"]()
+            chars["update_timer"] = None
+        chars["end_time"] = None
+        if clear_persisted:
+            self.hass.async_create_task(
+                self._async_clear_runtime_deadline(entity_id),
+                eager_start=True,
+            )
+
+    def _legacy_runtime_deadline_store(self, entity_id: str) -> Store[dict[str, str]]:
+        """Return the legacy per-primary runtime deadline store for a valve."""
+        if entity_id not in self._legacy_runtime_deadline_stores:
+            self._legacy_runtime_deadline_stores[entity_id] = Store(
+                self.hass,
+                IRRIGATION_RUNTIME_STORAGE_VERSION,
+                _irrigation_runtime_storage_key(self.driver.entry_id, entity_id),
+            )
+        return self._legacy_runtime_deadline_stores[entity_id]
+
+    async def _async_load_legacy_runtime_deadlines(self) -> dict[str, str]:
+        """Load deadlines from legacy per-primary irrigation storage keys."""
+        deadlines: dict[str, str] = {}
+
+        for entity_id in self._valve_entity_ids:
+            data = await self._legacy_runtime_deadline_store(entity_id).async_load()
+            if not isinstance(data, dict):
+                continue
+            for deadline_entity_id, deadline in data.items():
+                previous_deadline = deadlines.get(deadline_entity_id)
+                if previous_deadline is None:
+                    deadlines[deadline_entity_id] = deadline
+                    continue
+                try:
+                    previous_parsed = dt_util.parse_datetime(previous_deadline)
+                    deadline_parsed = dt_util.parse_datetime(deadline)
+                except ValueError:
+                    continue
+                if previous_parsed is None or deadline_parsed is None:
+                    continue
+                if dt_util.as_utc(deadline_parsed) > dt_util.as_utc(previous_parsed):
+                    deadlines[deadline_entity_id] = deadline
+
+        return deadlines
+
+    async def _async_ensure_runtime_deadlines_loaded(self) -> None:
+        """Load persisted local runtime deadlines from storage once."""
+        async with self._runtime_deadlines_load_lock:
+            if self._runtime_deadlines_loaded:
+                return
+            data = await self._runtime_deadline_store.async_load()
+            if data is None:
+                data = await self._async_load_legacy_runtime_deadlines()
+                if data:
+                    self._runtime_deadline_store.async_delay_save(
+                        lambda: data,
+                        1,
+                    )
+            self._runtime_deadlines = {
+                entity_id: value
+                for entity_id, value in (data or {}).items()
+                if isinstance(entity_id, str) and isinstance(value, str)
+            }
+            self._runtime_deadlines_loaded = True
+
+    async def _async_set_runtime_deadline(
+        self, entity_id: str, end_time: datetime
+    ) -> None:
+        """Persist local auto-close deadline for a zone."""
+        await self._async_ensure_runtime_deadlines_loaded()
+        self._runtime_deadlines[entity_id] = end_time.isoformat()
+        self._runtime_deadline_store.async_delay_save(
+            lambda: self._runtime_deadlines,
+            1,
+        )
+
+        legacy_store = self._legacy_runtime_deadline_store(entity_id)
+        legacy_data = await legacy_store.async_load()
+        if not isinstance(legacy_data, dict):
+            legacy_data = {}
+        legacy_data[entity_id] = end_time.isoformat()
+        legacy_store.async_delay_save(
+            lambda: legacy_data,
+            1,
+        )
+
+    async def _async_clear_runtime_deadline(self, entity_id: str) -> None:
+        """Remove persisted local auto-close deadline for a zone."""
+        await self._async_ensure_runtime_deadlines_loaded()
+        if self._runtime_deadlines.pop(entity_id, None) is None:
+            return
+        self._runtime_deadline_store.async_delay_save(
+            lambda: self._runtime_deadlines,
+            1,
+        )
+
+        legacy_store = self._legacy_runtime_deadline_store(entity_id)
+        legacy_data = await legacy_store.async_load()
+        if not isinstance(legacy_data, dict):
+            return
+        if legacy_data.pop(entity_id, None) is None:
+            return
+        legacy_store.async_delay_save(
+            lambda: legacy_data,
+            1,
+        )
+
+    async def _async_restore_local_runtime_deadlines(self) -> None:
+        """Restore persisted local auto-close timers after restart."""
+        await self._async_ensure_runtime_deadlines_loaded()
+        now = dt_util.utcnow()
+        deadlines_changed = False
+
+        for entity_id in self._valve_entity_ids:
+            if not (persisted_end_time := self._runtime_deadlines.get(entity_id)):
+                continue
+            if (state := self.hass.states.get(entity_id)) is None:
+                # Preserve deadline for transient state gaps.
+                continue
+            if state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+                continue
+            if state.state not in VALVE_OPEN_STATES:
+                await self._async_clear_runtime_deadline(entity_id)
+                continue
+
+            # Device-provided timing is authoritative; do not overlay local
+            # persisted runtime in that case.
+            if self._remaining_from_state(state) > 0:
+                continue
+
+            if (chars := self._valve_chars.get(entity_id)) is None:
+                continue
+            if chars["end_time"] is not None or chars["update_timer"] is not None:
+                continue
+            try:
+                parsed_end_time = dt_util.parse_datetime(persisted_end_time)
+            except ValueError:
+                parsed_end_time = None
+            if parsed_end_time is None:
+                self._runtime_deadlines.pop(entity_id, None)
+                deadlines_changed = True
+                continue
+
+            end_time = dt_util.as_utc(parsed_end_time)
+            remaining = max(int((end_time - now).total_seconds()), 0)
+            if remaining <= 0:
+                self.hass.async_create_task(
+                    self._async_call_local_runtime_close_and_resync(entity_id),
+                    eager_start=True,
+                )
+                continue
+
+            self._start_local_runtime_from_deadline(entity_id, end_time)
+
+        if deadlines_changed:
+            self._runtime_deadline_store.async_delay_save(
+                lambda: self._runtime_deadlines,
+                1,
+            )

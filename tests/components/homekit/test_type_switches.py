@@ -1,6 +1,8 @@
 """Test different accessory types: Switches."""
 
+from collections.abc import Callable
 from datetime import timedelta
+from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
 import pytest
@@ -8,15 +10,24 @@ import pytest
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
+    CHAR_ACTIVE,
     CHAR_CONFIGURED_NAME,
+    CHAR_IN_USE,
     CHAR_NAME,
+    CHAR_REMAINING_DURATION,
+    CHAR_STATUS_FAULT,
     SERV_OUTLET,
     TYPE_FAUCET,
+    TYPE_IRRIGATION_SYSTEM,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_VALVE,
 )
 from homeassistant.components.homekit.type_switches import (
+    IRRIGATION_DEFAULT_DURATION,
+    IRRIGATION_DURATION_MAX,
+    IRRIGATION_EXPIRED_CLOSE_MAX_RETRIES,
+    IrrigationSystem,
     LawnMower,
     Outlet,
     SelectSwitch,
@@ -51,6 +62,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_TYPE,
+    EVENT_STATE_CHANGED,
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     SERVICE_SELECT_OPTION,
@@ -58,8 +70,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import Event, HomeAssistant, split_entity_id
+from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, async_mock_service
@@ -1159,3 +1173,1387 @@ async def test_remaining_duration_characteristic_fallback(
         await hass.async_block_till_done()
         assert acc.char_in_use.value == 0
         assert acc.get_remaining_duration() == 0
+
+
+async def test_irrigation_system_reads_valve_duration_attributes(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test IrrigationSystem reads duration/remaining attributes from valve state."""
+    hass.states.async_set(
+        "valve.front_lawn",
+        STATE_OPEN,
+        {"duration": 1800, "remaining_duration": 600},
+    )
+    hass.states.async_set("valve.back_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        9,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert acc._char_program_mode.value == 0
+    assert front_chars[CHAR_IN_USE].value == 1
+    assert front_chars["duration"] == 1800
+    assert front_chars[CHAR_REMAINING_DURATION].value == 600
+
+
+async def test_irrigation_system_resyncs_linked_zone_on_service_failure(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test failed linked valve command re-syncs from Home Assistant state."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    hass.states.async_set("valve.back_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        10,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    with patch.object(
+        acc, "async_call_service_and_wait", AsyncMock(return_value=False)
+    ):
+        acc._set_valve_active("valve.back_lawn", 1)
+        await hass.async_block_till_done()
+
+    back_chars = acc._valve_chars["valve.back_lawn"]
+    assert back_chars[CHAR_ACTIVE].value == 0
+    assert back_chars[CHAR_IN_USE].value == 0
+    assert back_chars[CHAR_REMAINING_DURATION].value == 0
+
+
+async def test_irrigation_system_failed_expiry_close_preserves_deadline(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test failed auto-close expiry keeps the persisted deadline for retry."""
+    hass.states.async_set("valve.front_lawn", STATE_OPEN)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        10,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    acc._start_local_runtime("valve.front_lawn", 1)
+    await hass.async_block_till_done()
+
+    with (
+        patch.object(acc, "async_call_service_and_wait", AsyncMock(return_value=False)),
+        patch.object(acc, "_sync_valve_chars"),
+    ):
+        await acc._async_call_local_runtime_close_and_resync("valve.front_lawn")
+
+    assert "valve.front_lawn" in acc._runtime_deadlines
+
+
+async def test_irrigation_system_preserves_homekit_set_duration_without_device_attr(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test HomeKit-selected duration persists when valve lacks duration attrs."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        11,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    acc._set_valve_duration("valve.front_lawn", 900)
+    hass.states.async_set("valve.front_lawn", STATE_OPEN)
+    await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars["duration"] == 900
+    assert front_chars[CHAR_REMAINING_DURATION].value >= 899
+
+
+async def test_irrigation_system_reports_fault_for_unavailable_zone(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test unavailable linked valves are marked unavailable in HomeKit."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    hass.states.async_set("valve.back_lawn", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        11,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    back_chars = acc._valve_chars["valve.back_lawn"]
+    assert back_chars[CHAR_ACTIVE].value == 0
+    assert back_chars[CHAR_IN_USE].value == 0
+    assert back_chars[CHAR_STATUS_FAULT].value == 1
+    assert acc._char_system_status_fault.value == 1
+
+
+async def test_irrigation_system_primary_unavailable_sets_fault(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test primary valve unavailable update sets zone/system status fault."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        12,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("valve.front_lawn", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars[CHAR_ACTIVE].value == 0
+    assert front_chars[CHAR_IN_USE].value == 0
+    assert front_chars[CHAR_STATUS_FAULT].value == 1
+    assert acc._char_system_status_fault.value == 1
+
+
+async def test_irrigation_system_primary_unavailable_keeps_composite_available(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test grouped irrigation stays available when a linked valve is available."""
+    hass.states.async_set("valve.front_lawn", STATE_UNAVAILABLE)
+    hass.states.async_set("valve.back_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        12,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.available is True
+
+    hass.states.async_set("valve.back_lawn", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    assert acc.available is False
+
+
+async def test_irrigation_system_marks_linked_zone_fault_on_state_remove(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test linked zone state removal marks the zone and system as faulted."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    hass.states.async_set("valve.back_lawn", STATE_OPEN)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        13,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    hass.states.async_remove("valve.back_lawn")
+    await hass.async_block_till_done()
+
+    back_chars = acc._valve_chars["valve.back_lawn"]
+    assert back_chars[CHAR_ACTIVE].value == 0
+    assert back_chars[CHAR_IN_USE].value == 0
+    assert back_chars[CHAR_STATUS_FAULT].value == 1
+    assert acc._char_system_status_fault.value == 1
+
+
+async def test_irrigation_system_applies_set_duration_for_auto_close(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test zone auto-closes after HomeKit set duration when no device timing exists."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        14,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    with patch.object(
+        acc, "async_call_service_and_wait", AsyncMock(return_value=True)
+    ) as service_mock:
+        acc._set_valve_duration("valve.front_lawn", 2)
+        acc._set_valve_active("valve.front_lawn", 1)
+        await hass.async_block_till_done()
+
+        front_chars = acc._valve_chars["valve.front_lawn"]
+        assert front_chars[CHAR_REMAINING_DURATION].value == 2
+
+        now = dt_util.utcnow()
+        async_fire_time_changed(hass, now + timedelta(seconds=1))
+        await hass.async_block_till_done()
+        assert front_chars[CHAR_REMAINING_DURATION].value == 1
+
+        async_fire_time_changed(hass, now + timedelta(seconds=3))
+        await hass.async_block_till_done()
+
+    assert front_chars[CHAR_IN_USE].value == 0
+    assert any(
+        args.args[1] == SERVICE_CLOSE_VALVE for args in service_mock.await_args_list
+    )
+
+
+async def test_irrigation_system_zone_active_characteristic_calls_valve_services(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test zone Active characteristic routes open/close valve services."""
+    entity_id = "valve.front_lawn"
+    hass.states.async_set(entity_id, STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        entity_id,
+        26,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_open = async_mock_service(hass, "valve", SERVICE_OPEN_VALVE)
+    call_close = async_mock_service(hass, "valve", SERVICE_CLOSE_VALVE)
+
+    front_chars = acc._valve_chars[entity_id]
+    front_chars[CHAR_ACTIVE].client_update_value(1)
+    await hass.async_block_till_done()
+    assert call_open
+    assert call_open[0].data[ATTR_ENTITY_ID] == entity_id
+
+    front_chars[CHAR_ACTIVE].client_update_value(0)
+    await hass.async_block_till_done()
+    assert call_close
+    assert call_close[0].data[ATTR_ENTITY_ID] == entity_id
+
+
+async def test_irrigation_system_restores_local_runtime_deadline_on_startup(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test persisted local runtime deadlines are restored on startup."""
+    with freeze_time(dt_util.utcnow()):
+        now = dt_util.utcnow()
+        persisted_end_time = now + timedelta(seconds=5)
+        hass.states.async_set("valve.front_lawn", STATE_OPEN)
+        await hass.async_block_till_done()
+
+        acc = IrrigationSystem(
+            hass,
+            hk_driver,
+            "Irrigation",
+            "valve.front_lawn",
+            25,
+            {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+        )
+
+        with patch.object(
+            acc._runtime_deadline_store,
+            "async_load",
+            AsyncMock(
+                return_value={"valve.front_lawn": persisted_end_time.isoformat()}
+            ),
+        ):
+            acc.run()
+            await hass.async_block_till_done()
+
+        front_chars = acc._valve_chars["valve.front_lawn"]
+        assert front_chars["close_timer"] is not None
+        assert front_chars["update_timer"] is not None
+        assert front_chars["end_time"] == persisted_end_time
+        acc.async_stop()
+
+
+async def test_irrigation_system_startup_expired_deadline_kept_on_close_failure(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test startup close failure keeps expired persisted deadline for retry."""
+    with freeze_time(dt_util.utcnow()):
+        now = dt_util.utcnow()
+        expired_end_time = now - timedelta(seconds=1)
+        hass.states.async_set("valve.front_lawn", STATE_OPEN)
+        await hass.async_block_till_done()
+
+        acc = IrrigationSystem(
+            hass,
+            hk_driver,
+            "Irrigation",
+            "valve.front_lawn",
+            30,
+            {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+        )
+
+        with (
+            patch.object(
+                acc._runtime_deadline_store,
+                "async_load",
+                AsyncMock(
+                    return_value={"valve.front_lawn": expired_end_time.isoformat()}
+                ),
+            ),
+            patch.object(acc, "_sync_valve_chars"),
+            patch.object(
+                acc,
+                "async_call_service_and_wait",
+                AsyncMock(return_value=False),
+            ) as service_mock,
+        ):
+            acc.run()
+            await hass.async_block_till_done()
+
+        assert "valve.front_lawn" in acc._runtime_deadlines
+        assert any(
+            args.args[1] == SERVICE_CLOSE_VALVE for args in service_mock.await_args_list
+        )
+        acc.async_stop()
+
+
+async def test_irrigation_system_startup_expired_deadline_cleared_on_close_success(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test startup close success clears expired persisted deadline."""
+    with freeze_time(dt_util.utcnow()):
+        now = dt_util.utcnow()
+        expired_end_time = now - timedelta(seconds=1)
+        hass.states.async_set("valve.front_lawn", STATE_OPEN)
+        await hass.async_block_till_done()
+
+        acc = IrrigationSystem(
+            hass,
+            hk_driver,
+            "Irrigation",
+            "valve.front_lawn",
+            31,
+            {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+        )
+
+        with (
+            patch.object(
+                acc._runtime_deadline_store,
+                "async_load",
+                AsyncMock(
+                    return_value={"valve.front_lawn": expired_end_time.isoformat()}
+                ),
+            ),
+            patch.object(
+                acc,
+                "async_call_service_and_wait",
+                AsyncMock(return_value=True),
+            ) as service_mock,
+        ):
+            acc.run()
+            await hass.async_block_till_done()
+
+        assert "valve.front_lawn" not in acc._runtime_deadlines
+        assert any(
+            args.args[1] == SERVICE_CLOSE_VALVE for args in service_mock.await_args_list
+        )
+        acc.async_stop()
+
+
+async def test_irrigation_system_expired_deadline_retry_is_rate_limited(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test expired deadline close retries are rate limited between resyncs."""
+    with freeze_time(dt_util.utcnow()):
+        now = dt_util.utcnow()
+        hass.states.async_set("valve.front_lawn", STATE_OPEN)
+        await hass.async_block_till_done()
+
+        acc = IrrigationSystem(
+            hass,
+            hk_driver,
+            "Irrigation",
+            "valve.front_lawn",
+            32,
+            {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+        )
+        acc.run()
+        await hass.async_block_till_done()
+
+        acc._runtime_deadlines_loaded = True
+        acc._runtime_deadlines["valve.front_lawn"] = (
+            dt_util.utcnow() - timedelta(seconds=1)
+        ).isoformat()
+
+        with patch.object(
+            acc,
+            "async_call_service_and_wait",
+            AsyncMock(return_value=False),
+        ) as service_mock:
+            state = hass.states.get("valve.front_lawn")
+            assert state is not None
+
+            acc._sync_valve_chars("valve.front_lawn", state)
+            await hass.async_block_till_done()
+            assert service_mock.await_count == 0
+
+            async_fire_time_changed(hass, now + timedelta(seconds=1))
+            await hass.async_block_till_done()
+            assert service_mock.await_count == 1
+
+            async_fire_time_changed(hass, now + timedelta(seconds=2))
+            await hass.async_block_till_done()
+            assert service_mock.await_count == 1
+
+        acc.async_stop()
+
+
+async def test_irrigation_system_expired_deadline_retry_stops_at_max_retries(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test expired deadline retries stop once max retries are reached."""
+    hass.states.async_set("valve.front_lawn", STATE_OPEN)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        35,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    acc._runtime_deadlines_loaded = True
+    acc._runtime_deadlines["valve.front_lawn"] = (
+        dt_util.utcnow() - timedelta(seconds=1)
+    ).isoformat()
+    acc._valve_chars["valve.front_lawn"]["expired_close_retry_count"] = (
+        IRRIGATION_EXPIRED_CLOSE_MAX_RETRIES
+    )
+
+    with patch.object(
+        acc,
+        "async_call_service_and_wait",
+        AsyncMock(return_value=False),
+    ) as service_mock:
+        state = hass.states.get("valve.front_lawn")
+        assert state is not None
+        acc._sync_valve_chars("valve.front_lawn", state)
+        await hass.async_block_till_done()
+
+    assert service_mock.await_count == 0
+    acc.async_stop()
+
+
+async def test_irrigation_system_mirrors_runtime_deadline_to_legacy_store(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test local runtime deadlines are mirrored into per-zone legacy storage."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        36,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc._runtime_deadlines_loaded = True
+
+    legacy_key = acc._legacy_runtime_deadline_store("valve.front_lawn").key
+    persisted: dict[str, dict[str, str]] = {}
+    end_time = dt_util.utcnow() + timedelta(seconds=10)
+
+    async def mock_async_load(self: Store[dict[str, str]]) -> dict[str, str] | None:
+        if self.key == legacy_key:
+            return None
+        return {}
+
+    def mock_async_delay_save(
+        self: Store[dict[str, str]],
+        save_func: Callable[[], dict[str, str]],
+        _delay: int,
+    ) -> None:
+        persisted[self.key] = save_func()
+
+    with (
+        patch.object(Store, "async_load", mock_async_load),
+        patch.object(Store, "async_delay_save", mock_async_delay_save),
+    ):
+        await acc._async_set_runtime_deadline("valve.front_lawn", end_time)
+
+    assert persisted[legacy_key]["valve.front_lawn"] == end_time.isoformat()
+
+
+async def test_irrigation_system_clears_runtime_deadline_in_legacy_store(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test clearing local runtime also clears per-zone legacy storage."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        37,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc._runtime_deadlines_loaded = True
+    acc._runtime_deadlines["valve.front_lawn"] = dt_util.utcnow().isoformat()
+
+    legacy_key = acc._legacy_runtime_deadline_store("valve.front_lawn").key
+    persisted: dict[str, dict[str, str]] = {}
+
+    async def mock_async_load(self: Store[dict[str, str]]) -> dict[str, str] | None:
+        if self.key == legacy_key:
+            return {"valve.front_lawn": "2026-01-01T00:00:00+00:00"}
+        return {}
+
+    def mock_async_delay_save(
+        self: Store[dict[str, str]],
+        save_func: Callable[[], dict[str, str]],
+        _delay: int,
+    ) -> None:
+        persisted[self.key] = save_func()
+
+    with (
+        patch.object(Store, "async_load", mock_async_load),
+        patch.object(Store, "async_delay_save", mock_async_delay_save),
+    ):
+        await acc._async_clear_runtime_deadline("valve.front_lawn")
+
+    assert "valve.front_lawn" not in acc._runtime_deadlines
+    assert "valve.front_lawn" not in persisted[legacy_key]
+
+
+async def test_irrigation_system_clear_runtime_deadline_legacy_not_dict(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test clearing runtime skips legacy save when legacy data is not a dict."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        38,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc._runtime_deadlines_loaded = True
+    acc._runtime_deadlines["valve.front_lawn"] = dt_util.utcnow().isoformat()
+
+    legacy_key = acc._legacy_runtime_deadline_store("valve.front_lawn").key
+    saved_keys: list[str] = []
+
+    async def mock_async_load(self: Store[dict[str, str]]) -> dict[str, str] | None:
+        if self.key == legacy_key:
+            return None
+        return {}
+
+    def mock_async_delay_save(
+        self: Store[dict[str, str]],
+        _save_func: Callable[[], dict[str, str]],
+        _delay: int,
+    ) -> None:
+        saved_keys.append(self.key)
+
+    with (
+        patch.object(Store, "async_load", mock_async_load),
+        patch.object(Store, "async_delay_save", mock_async_delay_save),
+    ):
+        await acc._async_clear_runtime_deadline("valve.front_lawn")
+
+    assert "valve.front_lawn" not in acc._runtime_deadlines
+    assert saved_keys.count(legacy_key) == 0
+
+
+async def test_irrigation_system_clear_runtime_deadline_legacy_missing_entity(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test clearing runtime skips legacy save when entity key is absent."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        39,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc._runtime_deadlines_loaded = True
+    acc._runtime_deadlines["valve.front_lawn"] = dt_util.utcnow().isoformat()
+
+    legacy_key = acc._legacy_runtime_deadline_store("valve.front_lawn").key
+    saved_keys: list[str] = []
+
+    async def mock_async_load(self: Store[dict[str, str]]) -> dict[str, str] | None:
+        if self.key == legacy_key:
+            return {"valve.back_lawn": "2026-01-01T00:00:00+00:00"}
+        return {}
+
+    def mock_async_delay_save(
+        self: Store[dict[str, str]],
+        _save_func: Callable[[], dict[str, str]],
+        _delay: int,
+    ) -> None:
+        saved_keys.append(self.key)
+
+    with (
+        patch.object(Store, "async_load", mock_async_load),
+        patch.object(Store, "async_delay_save", mock_async_delay_save),
+    ):
+        await acc._async_clear_runtime_deadline("valve.front_lawn")
+
+    assert "valve.front_lawn" not in acc._runtime_deadlines
+    assert saved_keys.count(legacy_key) == 0
+
+
+async def test_irrigation_system_schedule_expired_retry_unknown_entity_noop(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test scheduling an expired retry for unknown entity is a no-op."""
+    hass.states.async_set("valve.front_lawn", STATE_OPEN)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        40,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+
+    with patch.object(
+        acc,
+        "_async_call_local_runtime_close_and_resync",
+        AsyncMock(),
+    ) as close_mock:
+        acc._schedule_expired_close_retry("valve.unknown")
+        await hass.async_block_till_done()
+
+    assert close_mock.await_count == 0
+
+
+async def test_irrigation_system_clamps_device_duration_to_characteristic_max(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test device duration attributes are clamped to irrigation max duration."""
+    hass.states.async_set(
+        "valve.front_lawn",
+        STATE_OPEN,
+        {"duration": IRRIGATION_DURATION_MAX + 1000},
+    )
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        41,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars["duration"] == IRRIGATION_DURATION_MAX
+
+
+async def test_irrigation_system_restore_closed_zone_clears_runtime_deadline(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test startup restore clears persisted deadline for closed valves."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        42,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc._runtime_deadlines_loaded = True
+    acc._runtime_deadlines = {"valve.front_lawn": dt_util.utcnow().isoformat()}
+
+    with patch.object(
+        acc,
+        "_async_clear_runtime_deadline",
+        AsyncMock(return_value=None),
+    ) as clear_mock:
+        await acc._async_restore_local_runtime_deadlines()
+
+    clear_mock.assert_awaited_once_with("valve.front_lawn")
+
+
+async def test_irrigation_system_legacy_runtime_store_is_cached(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test legacy runtime store helper returns the same Store instance."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        43,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+
+    first_store = acc._legacy_runtime_deadline_store("valve.front_lawn")
+    second_store = acc._legacy_runtime_deadline_store("valve.front_lawn")
+
+    assert first_store is second_store
+
+
+async def test_irrigation_system_stop_closes_locally_timed_active_valves(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test async_stop closes valves with active local auto-close timers."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        44,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    with (
+        patch.object(
+            acc,
+            "async_call_service_and_wait",
+            AsyncMock(return_value=True),
+        ),
+        patch.object(
+            acc,
+            "_async_call_local_runtime_close_and_resync",
+            AsyncMock(),
+        ) as close_mock,
+    ):
+        acc._set_valve_duration("valve.front_lawn", 10)
+        acc._set_valve_active("valve.front_lawn", 1)
+        await hass.async_block_till_done()
+
+        acc.async_stop()
+        await hass.async_block_till_done()
+
+    close_mock.assert_awaited_once_with("valve.front_lawn")
+
+
+async def test_irrigation_system_restores_deadline_after_membership_change(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test per-zone fallback restores deadlines after group membership changes."""
+    with freeze_time(dt_util.utcnow()):
+        now = dt_util.utcnow()
+        persisted_end_time = now + timedelta(seconds=5)
+        hass.states.async_set("valve.front_lawn", STATE_OPEN)
+        hass.states.async_set("valve.back_lawn", STATE_OPEN)
+        hass.states.async_set("valve.side_lawn", STATE_OPEN)
+        await hass.async_block_till_done()
+
+        old_group = IrrigationSystem(
+            hass,
+            hk_driver,
+            "Irrigation",
+            "valve.front_lawn",
+            33,
+            {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                "linked_irrigation_valves": ["valve.back_lawn"],
+            },
+        )
+
+        new_group = IrrigationSystem(
+            hass,
+            hk_driver,
+            "Irrigation",
+            "valve.front_lawn",
+            34,
+            {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                "linked_irrigation_valves": ["valve.back_lawn", "valve.side_lawn"],
+            },
+        )
+
+        stable_key = new_group._runtime_deadline_store.key
+        old_legacy_key = old_group._legacy_runtime_deadline_store(
+            "valve.front_lawn"
+        ).key
+
+        async def mock_async_load(self: Store[dict[str, str]]) -> dict[str, str] | None:
+            if self.key == stable_key:
+                return None
+            if self.key == old_legacy_key:
+                return {"valve.front_lawn": persisted_end_time.isoformat()}
+            return None
+
+        with patch.object(Store, "async_load", mock_async_load):
+            new_group.run()
+            await hass.async_block_till_done()
+
+        front_chars = new_group._valve_chars["valve.front_lawn"]
+        assert front_chars["close_timer"] is not None
+        assert front_chars["update_timer"] is not None
+        assert front_chars["end_time"] == persisted_end_time
+        new_group.async_stop()
+
+
+async def test_irrigation_system_storage_key_stable_across_primary_changes(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test irrigation runtime storage key depends on grouped valves, not primary."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    hass.states.async_set("valve.back_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    front_primary = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        25,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    back_primary = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.back_lawn",
+        26,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.front_lawn"],
+        },
+    )
+
+    assert (
+        front_primary._runtime_deadline_store.key
+        == back_primary._runtime_deadline_store.key
+    )
+
+
+async def test_irrigation_system_migrates_legacy_runtime_deadline_store(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test irrigation runtime deadlines migrate from legacy per-primary storage."""
+    with freeze_time(dt_util.utcnow()):
+        now = dt_util.utcnow()
+        persisted_end_time = now + timedelta(seconds=5)
+        hass.states.async_set("valve.front_lawn", STATE_OPEN)
+        hass.states.async_set("valve.back_lawn", STATE_OPEN)
+        await hass.async_block_till_done()
+
+        acc = IrrigationSystem(
+            hass,
+            hk_driver,
+            "Irrigation",
+            "valve.back_lawn",
+            27,
+            {
+                CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+                "linked_irrigation_valves": ["valve.front_lawn"],
+            },
+        )
+
+        stable_key = acc._runtime_deadline_store.key
+        legacy_key = Store(
+            hass,
+            1,
+            f"homekit.irrigation_runtime.{hk_driver.entry_id}.valve.front_lawn",
+        ).key
+
+        async def mock_async_load(self: Store[dict[str, str]]) -> dict[str, str] | None:
+            if self.key == stable_key:
+                return None
+            if self.key == legacy_key:
+                return {"valve.front_lawn": persisted_end_time.isoformat()}
+            return None
+
+        with patch.object(Store, "async_load", mock_async_load):
+            acc.run()
+            await hass.async_block_till_done()
+
+        front_chars = acc._valve_chars["valve.front_lawn"]
+        assert front_chars["close_timer"] is not None
+        assert front_chars["update_timer"] is not None
+        assert front_chars["end_time"] == persisted_end_time
+        acc.async_stop()
+
+
+async def test_irrigation_system_open_state_sync_does_not_start_auto_close(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test syncing an open valve state does not create local auto-close timers."""
+    hass.states.async_set("valve.front_lawn", STATE_OPEN)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        15,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars["close_timer"] is None
+    assert front_chars["update_timer"] is None
+    assert front_chars["end_time"] is None
+    assert front_chars[CHAR_REMAINING_DURATION].value == IRRIGATION_DEFAULT_DURATION
+
+
+async def test_irrigation_system_marks_missing_linked_zone_fault_on_startup(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test missing linked zone state is faulted during startup sync."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        15,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    back_chars = acc._valve_chars["valve.back_lawn"]
+    assert back_chars[CHAR_ACTIVE].value == 0
+    assert back_chars[CHAR_IN_USE].value == 0
+    assert back_chars[CHAR_STATUS_FAULT].value == 1
+    assert acc._char_system_status_fault.value == 1
+
+
+async def test_irrigation_system_deactivates_all_valves(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test IrrigationSystem deactivates all valves when HomeKit sets system active=0."""
+    hass.states.async_set("valve.front_lawn", STATE_OPEN)
+    hass.states.async_set("valve.back_lawn", STATE_OPEN)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        16,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    with patch.object(
+        acc, "async_call_service_and_wait", AsyncMock(return_value=True)
+    ) as service_mock:
+        acc._set_system_active(0)
+        await hass.async_block_till_done()
+
+    close_calls = [
+        args
+        for args in service_mock.await_args_list
+        if args.args[1] == SERVICE_CLOSE_VALVE
+    ]
+    assert len(close_calls) == 2
+
+
+async def test_irrigation_system_system_active_set_true_is_noop(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test IrrigationSystem activating system (value=1) is a no-op."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        17,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    with patch.object(
+        acc, "async_call_service_and_wait", AsyncMock(return_value=True)
+    ) as service_mock:
+        acc._set_system_active(1)
+        await hass.async_block_till_done()
+
+    assert not service_mock.called
+
+
+async def test_irrigation_system_linked_zone_fault_on_no_old_state(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test linked zone fault when state event has no old_state or new_state."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    hass.states.async_set("valve.back_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        18,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    event = Event(
+        EVENT_STATE_CHANGED,
+        {"entity_id": "valve.back_lawn", "old_state": None, "new_state": None},
+    )
+    acc._async_linked_valve_state_changed(event)
+    await hass.async_block_till_done()
+
+    back_chars = acc._valve_chars["valve.back_lawn"]
+    assert back_chars[CHAR_STATUS_FAULT].value == 1
+
+
+async def test_irrigation_system_reads_remaining_via_end_time(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test IrrigationSystem reads remaining duration from end_time attribute."""
+    with freeze_time(dt_util.utcnow()):
+        future_end = (dt_util.utcnow() + timedelta(seconds=120)).isoformat()
+        hass.states.async_set(
+            "valve.front_lawn",
+            STATE_OPEN,
+            {"end_time": future_end},
+        )
+        await hass.async_block_till_done()
+
+        acc = IrrigationSystem(
+            hass,
+            hk_driver,
+            "Irrigation",
+            "valve.front_lawn",
+            19,
+            {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+        )
+        acc.run()
+        await hass.async_block_till_done()
+
+        front_chars = acc._valve_chars["valve.front_lawn"]
+        assert front_chars[CHAR_REMAINING_DURATION].value == 120
+
+
+async def test_irrigation_system_closed_state_ignores_stale_remaining_attributes(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test closed valves always report zero remaining duration."""
+    hass.states.async_set(
+        "valve.front_lawn",
+        STATE_CLOSED,
+        {
+            "remaining_duration": 120,
+            "end_time": (dt_util.utcnow() + timedelta(seconds=120)).isoformat(),
+        },
+    )
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        27,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars[CHAR_ACTIVE].value == 0
+    assert front_chars[CHAR_IN_USE].value == 0
+    assert front_chars[CHAR_REMAINING_DURATION].value == 0
+
+
+async def test_irrigation_system_ignores_impossible_end_time_date(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test impossible end_time values fall back to local runtime handling."""
+    hass.states.async_set(
+        "valve.front_lawn",
+        STATE_OPEN,
+        {"end_time": "2026-02-30T00:00:00"},
+    )
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        24,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars["close_timer"] is None
+    assert front_chars["update_timer"] is None
+    assert front_chars["end_time"] is None
+    assert front_chars[CHAR_REMAINING_DURATION].value == IRRIGATION_DEFAULT_DURATION
+
+
+async def test_irrigation_system_ignores_infinite_duration_attribute(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test infinite duration attributes fall back to the default duration."""
+    hass.states.async_set(
+        "valve.front_lawn",
+        STATE_OPEN,
+        {"duration": "inf"},
+    )
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        28,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars["duration"] == IRRIGATION_DEFAULT_DURATION
+    assert front_chars[CHAR_REMAINING_DURATION].value == IRRIGATION_DEFAULT_DURATION
+
+
+async def test_irrigation_system_ignores_infinite_remaining_attribute(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test infinite remaining attributes fall back to local runtime handling."""
+    hass.states.async_set(
+        "valve.front_lawn",
+        STATE_OPEN,
+        {"remaining_duration": "inf"},
+    )
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        29,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars[CHAR_REMAINING_DURATION].value == IRRIGATION_DEFAULT_DURATION
+
+
+async def test_irrigation_system_end_time_remaining_counts_down_without_state_events(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test end_time remaining duration keeps updating between state updates."""
+    with freeze_time(dt_util.utcnow()):
+        now = dt_util.utcnow()
+        expected_end_time = now + timedelta(seconds=3)
+        future_end = expected_end_time.isoformat()
+        hass.states.async_set(
+            "valve.front_lawn",
+            STATE_OPEN,
+            {"end_time": future_end},
+        )
+        await hass.async_block_till_done()
+
+        acc = IrrigationSystem(
+            hass,
+            hk_driver,
+            "Irrigation",
+            "valve.front_lawn",
+            22,
+            {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+        )
+        acc.run()
+        await hass.async_block_till_done()
+
+        front_chars = acc._valve_chars["valve.front_lawn"]
+        assert front_chars[CHAR_REMAINING_DURATION].value == 3
+        assert front_chars["close_timer"] is None
+        assert front_chars["update_timer"] is not None
+        assert front_chars["end_time"] == expected_end_time
+
+        async_fire_time_changed(hass, now + timedelta(seconds=1))
+        await hass.async_block_till_done()
+        assert front_chars[CHAR_REMAINING_DURATION].value == 2
+        assert front_chars["update_timer"] is not None
+        assert front_chars["end_time"] == expected_end_time
+
+        async_fire_time_changed(hass, now + timedelta(seconds=2))
+        await hass.async_block_till_done()
+        assert front_chars[CHAR_REMAINING_DURATION].value == 1
+        assert front_chars["update_timer"] is not None
+        assert front_chars["end_time"] == expected_end_time
+
+        async_fire_time_changed(hass, now + timedelta(seconds=3))
+        await hass.async_block_till_done()
+        assert front_chars[CHAR_REMAINING_DURATION].value == 0
+        assert front_chars["update_timer"] is None
+        assert front_chars["end_time"] == expected_end_time
+        acc.async_stop()
+
+
+async def test_irrigation_system_ignores_invalid_duration_attribute(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test IrrigationSystem falls back to default when duration attribute is invalid."""
+    hass.states.async_set(
+        "valve.front_lawn",
+        STATE_CLOSED,
+        {"set_duration": "not-a-number"},
+    )
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        20,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars["duration"] == IRRIGATION_DEFAULT_DURATION
+
+
+async def test_irrigation_system_zero_duration_skips_timers(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test IrrigationSystem skips auto-close timers when duration is zero."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        21,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    with patch.object(acc, "async_call_service_and_wait", AsyncMock(return_value=True)):
+        acc._set_valve_duration("valve.front_lawn", 0)
+        acc._set_valve_active("valve.front_lawn", 1)
+        await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars["close_timer"] is None
+    assert front_chars["update_timer"] is None
