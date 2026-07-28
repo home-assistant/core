@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, State
 
 from tests.common import async_mock_service
 
@@ -366,8 +366,7 @@ async def test_set_if_valid_guards_frozen_valid_values(
     """Test armed_home is pushed only when it is in the frozen valid values.
 
     armed_home maps to StayArm (0) for both the current and target
-    characteristics, so a build without ARM_HOME skips both (leaving them at the
-    disarmed default 3) and a build with ARM_HOME pushes both to 0.
+    characteristics, so a build without ARM_HOME must skip both.
     """
     entity_id = "alarm_control_panel.test"
 
@@ -382,8 +381,10 @@ async def test_set_if_valid_guards_frozen_valid_values(
         value_is_valid
     )
 
-    hass.states.async_set(
-        entity_id, AlarmControlPanelState.ARMED_HOME, attributes=attrs
+    # Call the update path directly: the state-change dispatcher swallows
+    # callback exceptions, so a regressed set_value would raise unnoticed there.
+    acc.async_update_state(
+        State(entity_id, AlarmControlPanelState.ARMED_HOME, attributes=attrs)
     )
     await hass.async_block_till_done()
 
