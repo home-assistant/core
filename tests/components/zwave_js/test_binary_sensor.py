@@ -346,6 +346,52 @@ async def test_power_management_notification_sensor(
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
+@pytest.mark.usefixtures("wallmote_central_scene", "integration")
+async def test_power_management_battery_charging_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test Power Management battery charging notification sensor."""
+    entity_id = "binary_sensor.mbr_wallmote_quad_battery_is_charging"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert (
+        state.attributes.get(ATTR_DEVICE_CLASS)
+        == BinarySensorDeviceClass.BATTERY_CHARGING
+    )
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "binary_sensor.mbr_wallmote_quad_battery_is_fully_charged",
+        "binary_sensor.mbr_wallmote_quad_charge_battery_soon",
+        "binary_sensor.mbr_wallmote_quad_charge_battery_now",
+    ],
+    ids=["fully_charged", "charge_soon", "charge_now"],
+)
+@pytest.mark.usefixtures("wallmote_central_scene", "integration")
+async def test_power_management_battery_level_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+) -> None:
+    """Test Power Management battery level notification sensors are diagnostic."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
 async def test_notification_off_state(
     hass: HomeAssistant,
     lock_popp_electric_strike_lock_control: Node,

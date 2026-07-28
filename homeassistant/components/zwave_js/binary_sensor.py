@@ -12,6 +12,7 @@ from zwave_js_server.const.command_class.notification import (
     AccessControlNotificationEvent,
     NotificationEvent,
     NotificationType,
+    PowerManagementNotificationEvent,
     SmokeAlarmNotificationEvent,
 )
 from zwave_js_server.model.driver import Driver
@@ -1475,6 +1476,29 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
                 SmokeAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
                 SmokeAlarmNotificationEvent.DUST_IN_DEVICE_STATUS_MAINTENANCE_REQUIRED_DUST_IN_DEVICE,
             },
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                PowerManagementNotificationEvent.BATTERY_LOAD_STATUS_BATTERY_IS_CHARGING
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.POWER_MANAGEMENT)
+            },
+        ),
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 8: Power Management - State Id 12 (Battery is charging)
+            key=NOTIFICATION_POWER_MANAGEMENT,
+            states={
+                PowerManagementNotificationEvent.BATTERY_LOAD_STATUS_BATTERY_IS_CHARGING
+            },
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         entity_class=ZWaveNotificationBinarySensor,
     ),
