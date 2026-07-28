@@ -3,14 +3,15 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.wirelesstag.const import SIGNAL_TAG_UPDATE
+from homeassistant.components.sensor import SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
+
+from tests.common import async_fire_time_changed
 
 UUID = "00000000-0000-0000-0000-000000000001"
 ENTITY_ID = "sensor.wirelesstag_bedroom_temperature"
@@ -49,21 +50,34 @@ def _mock_tag() -> MagicMock:
     return tag
 
 
+async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Let the platform poll the tag once."""
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
 async def _recover_by_poll(
-    hass: HomeAssistant, tag: MagicMock, mock_api: MagicMock
+    hass: HomeAssistant,
+    tag: MagicMock,
+    mock_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Make the tag available again through the polling path."""
     mock_api.load_tags.return_value = {tag.uuid: tag}
-    await async_update_entity(hass, ENTITY_ID)
+    await _poll(hass, freezer)
 
 
 async def _recover_by_push(
-    hass: HomeAssistant, tag: MagicMock, mock_api: MagicMock
+    hass: HomeAssistant,
+    tag: MagicMock,
+    mock_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Make the tag available again through a push notification."""
-    async_dispatcher_send(
-        hass, SIGNAL_TAG_UPDATE.format(tag.tag_id, tag.tag_manager_mac), tag
-    )
+    push_callback = mock_api.start_monitoring.call_args[0][0]
+    # The library calls back from its own worker thread.
+    await hass.async_add_executor_job(push_callback, {tag.uuid: tag}, {})
 
 
 @pytest.mark.parametrize(
@@ -75,7 +89,10 @@ async def _recover_by_push(
 )
 async def test_update_handles_tag_missing_from_reload(
     hass: HomeAssistant,
-    recover: Callable[[HomeAssistant, MagicMock, MagicMock], Awaitable[None]],
+    freezer: FrozenDateTimeFactory,
+    recover: Callable[
+        [HomeAssistant, MagicMock, MagicMock, FrozenDateTimeFactory], Awaitable[None]
+    ],
 ) -> None:
     """Test an update where the tag is no longer returned is handled gracefully.
 
@@ -96,12 +113,11 @@ async def test_update_handles_tag_missing_from_reload(
 
         # The tag is no longer returned by a reload.
         mock_api.load_tags.return_value = {}
-        await async_update_entity(hass, ENTITY_ID)
-        await hass.async_block_till_done()
+        await _poll(hass, freezer)
 
         assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
-        await recover(hass, tag, mock_api)
+        await recover(hass, tag, mock_api, freezer)
         await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == "21.5"
