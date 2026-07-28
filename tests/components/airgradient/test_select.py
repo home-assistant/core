@@ -152,6 +152,80 @@ async def test_go_measurement_interval_select(
     mock_v1_airgradient_client.set_measurement_interval.assert_awaited_once_with(300)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_go_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test Go select entities."""
+    mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
+        "config_v1_local.json", ApiVersion.V1
+    )
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "option", "method", "expected"),
+    [
+        ("select.airgradient_gps_mode", "always", "set_gps_mode", "always"),
+        (
+            "select.airgradient_front_led_brightness",
+            "bright",
+            "set_front_led_brightness",
+            3,
+        ),
+        (
+            "select.airgradient_back_led_brightness",
+            "dim",
+            "set_back_led_brightness",
+            1,
+        ),
+        (
+            "select.airgradient_touch_led_intensity",
+            "bright",
+            "set_touch_led_intensity",
+            2,
+        ),
+        (
+            "select.airgradient_co2_automatic_baseline_duration",
+            "0",
+            "set_co2_automatic_baseline_calibration",
+            -1,
+        ),
+    ],
+)
+async def test_go_select_writes(
+    hass: HomeAssistant,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    option: str,
+    method: str,
+    expected: int | str,
+) -> None:
+    """Test Go select values use the documented wire values."""
+    mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
+        "config_v1_local.json", ApiVersion.V1
+    )
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        blocking=True,
+    )
+
+    getattr(mock_v1_airgradient_client, method).assert_awaited_once_with(expected)
+
+
 @pytest.mark.parametrize(
     ("exception", "error_message"),
     [
