@@ -91,7 +91,6 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Discovered scenes: %s", scenes)
 
         if user_input is not None:
-            # Really hacky code recycling. It works
             name_to_id = {scene.name: scene_id for scene_id, scene in scenes.items()}
             self._scene_control_types = {}
             for sceneid in name_to_id.values():
