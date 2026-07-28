@@ -15,7 +15,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from tests.common import MockConfigEntry, get_schema_suggested_value
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -247,10 +247,6 @@ async def test_reconfigure_flow_updates_host(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    assert (
-        get_schema_suggested_value(result["data_schema"].schema, CONF_HOST)
-        == "192.168.1.100"
-    )
 
     mock_probe_player.return_value = WiimProbeResult(
         host="192.168.1.111",

@@ -84,7 +84,6 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle user initiated reconfiguration."""
         errors: dict[str, str] = {}
         reconfigure_entry = self._get_reconfigure_entry()
-        suggested_values = {CONF_HOST: reconfigure_entry.data[CONF_HOST]}
 
         if user_input is not None:
             try:
@@ -104,7 +103,8 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input or suggested_values
+                STEP_USER_DATA_SCHEMA,
+                user_input or {CONF_HOST: reconfigure_entry.data[CONF_HOST]},
             ),
             errors=errors,
         )
