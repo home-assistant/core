@@ -190,12 +190,12 @@ ECO_MODE_NUMBERS = (
 class EcoModeNumberEntity(RestoreNumber):
     """Power/SoC parameters used the next time ECO_CHARGE/ECO_DISCHARGE is selected.
 
-    These are not inverter settings read back from the device - they only
-    live in GoodweRuntimeData (reset to the description default on every
-    integration reload/HA restart) and are applied the next time
-    OperationMode.ECO_CHARGE or ECO_DISCHARGE is selected on the operation
-    mode select entity. RestoreNumber is used so a user-configured value
-    survives a reload/restart instead of silently resetting.
+    Not an inverter register - the value only lives in GoodweRuntimeData and
+    is read by InverterOperationModeEntity when the select entity is set to
+    eco_charge/eco_discharge. GoodweRuntimeData itself is recreated with the
+    100/100 defaults on every reload, so this entity restores its last known
+    value (via RestoreNumber) and writes it back into GoodweRuntimeData on
+    startup, keeping the two in sync.
     """
 
     _attr_should_poll = False
