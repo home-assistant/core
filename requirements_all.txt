@@ -339,7 +339,7 @@ aiolookin==1.0.0
 aiolyric==2.1.1
 
 # homeassistant.components.mealie
-aiomealie==1.2.4
+aiomealie==2.0.0
 
 # homeassistant.components.melcloud_home
 aiomelcloudhome==0.2.1

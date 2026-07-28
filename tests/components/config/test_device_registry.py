@@ -1,6 +1,7 @@
 """Test device_registry API."""
 
 from datetime import datetime
+from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -149,6 +150,121 @@ async def test_list_devices(
 
     # Remove the bad device to avoid errors when test is being torn down
     device_registry.async_remove_device(device2.id)
+
+
+def _storage_device_v1_12(
+    device_id: str,
+    config_entries: list[str],
+    primary_config_entry: str | None,
+    identifier: str,
+) -> dict[str, Any]:
+    """Return a stored device in version 1.12 format."""
+    return {
+        "area_id": None,
+        "config_entries": config_entries,
+        "config_entries_subentries": {
+            config_entry: [None] for config_entry in config_entries
+        },
+        "configuration_url": None,
+        "connections": [],
+        "created_at": "1970-01-01T00:00:00+00:00",
+        "disabled_by": None,
+        "entry_type": None,
+        "hw_version": None,
+        "id": device_id,
+        "identifiers": [["test", identifier]],
+        "labels": [],
+        "manufacturer": None,
+        "model": None,
+        "model_id": None,
+        "modified_at": "1970-01-01T00:00:00+00:00",
+        "name": None,
+        "name_by_user": None,
+        "primary_config_entry": primary_config_entry,
+        "serial_number": None,
+        "sw_version": None,
+        "via_device_id": None,
+    }
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_list_composite_splits(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test listing the devices pre-migration composite devices were split into."""
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+    entry_3 = MockConfigEntry()
+    entry_3.add_to_hass(hass)
+
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 12,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                # Composite spanning two config entries, with entry_1 as primary
+                _storage_device_v1_12(
+                    "compositea000000000000000000000",
+                    [entry_1.entry_id, entry_2.entry_id],
+                    entry_1.entry_id,
+                    "a",
+                ),
+                # Composite spanning two config entries, without a primary
+                _storage_device_v1_12(
+                    "compositeb000000000000000000000",
+                    [entry_1.entry_id, entry_3.entry_id],
+                    None,
+                    "b",
+                ),
+                # Single config entry device, not split
+                _storage_device_v1_12(
+                    "single0000000000000000000000000",
+                    [entry_1.entry_id],
+                    entry_1.entry_id,
+                    "c",
+                ),
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    splits_a = registry.async_get_devices_for_composite_device_id(
+        "compositea000000000000000000000"
+    )
+    splits_b = registry.async_get_devices_for_composite_device_id(
+        "compositeb000000000000000000000"
+    )
+    assert len(splits_a) == 2
+    assert len(splits_b) == 2
+    primary_a = next(
+        device for device in splits_a if device.config_entry_id == entry_1.entry_id
+    )
+
+    await client.send_json_auto_id(
+        {"type": "config/device_registry/list_composite_splits"}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "compositea000000000000000000000": {
+            "split_ids": unordered([device.id for device in splits_a]),
+            "primary_id": primary_a.id,
+        },
+        "compositeb000000000000000000000": {
+            "split_ids": unordered([device.id for device in splits_b]),
+            "primary_id": None,
+        },
+    }
 
 
 @pytest.mark.parametrize(
