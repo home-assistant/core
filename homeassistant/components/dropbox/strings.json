@@ -33,6 +33,12 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication with Dropbox failed"
+    },
+    "cannot_connect": {
+      "message": "Error communicating with Dropbox"
+    },
     "missing_refresh_token": {
       "message": "[%key:component::dropbox::config::step::reauth_confirm::description%]"
     },
