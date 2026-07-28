@@ -42,6 +42,20 @@ async def test_connection_error_retries(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_no_controllers_retries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hortos_client: AsyncMock,
+) -> None:
+    """Test an entry whose controllers have gone retries instead of loading empty."""
+    mock_hortos_client.get_devices.return_value = []
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.states.async_entity_ids("sensor")
+
+
 async def test_auth_error_sets_error_state(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
