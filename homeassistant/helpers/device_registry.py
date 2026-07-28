@@ -12,7 +12,7 @@ import logging
 import os
 import shutil
 import time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, Unpack, override
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypedDict, Unpack, override
 
 import attr
 from yarl import URL
@@ -1024,6 +1024,13 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 _LOGGER.info("Backed up %s to %s before migration", source, backup)
 
 
+class _CollidingKeys(NamedTuple):
+    """Identifiers and connections shared with a colliding device."""
+
+    identifiers: set[tuple[str, str]]
+    connections: set[tuple[str, str]]
+
+
 class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
     BaseRegistryItems[_EntryTypeT]
 ):
@@ -1197,56 +1204,62 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
                         entries[scoped.id] = scoped
         return list(entries.values())
 
-    def get_colliding_entries(
+    def get_colliding_device_ids(
         self,
         identifiers: set[tuple[str, str]],
         connections: set[tuple[str, str]],
         *,
         config_entry_id: str,
         exclude_device_id: str | None,
-    ) -> dict[str, tuple[set[tuple[str, str]], set[tuple[str, str]]]]:
-        """Map other same-config-entry holders of the given keys to the shared keys.
+    ) -> dict[str, _CollidingKeys]:
+        """Get the ids of other same-config-entry devices holding the given keys.
 
-        Includes holders shadowed in the index. connections must be normalized.
+        Returns a map from the id of each colliding device to the identifiers and
+        connections it shares with the given ones. Includes devices shadowed in the
+        index. connections must be normalized.
         """
-        colliding: dict[str, tuple[set[tuple[str, str]], set[tuple[str, str]]]] = {}
+        colliding: dict[str, _CollidingKeys] = {}
         for identifier in identifiers:
-            for holder_id in self._holder_ids(
+            for holder_id in self._holder_device_ids(
                 identifier,
                 config_entry_id,
                 self._identifiers,
                 self._shadowed_identifiers,
             ):
                 if holder_id != exclude_device_id:
-                    colliding.setdefault(holder_id, (set(), set()))[0].add(identifier)
+                    colliding.setdefault(
+                        holder_id, _CollidingKeys(set(), set())
+                    ).identifiers.add(identifier)
         for connection in connections:
-            for holder_id in self._holder_ids(
+            for holder_id in self._holder_device_ids(
                 connection,
                 config_entry_id,
                 self._connections,
                 self._shadowed_connections,
             ):
                 if holder_id != exclude_device_id:
-                    colliding.setdefault(holder_id, (set(), set()))[1].add(connection)
+                    colliding.setdefault(
+                        holder_id, _CollidingKeys(set(), set())
+                    ).connections.add(connection)
         return colliding
 
-    def _holder_ids(
+    def _holder_device_ids(
         self,
         key: tuple[str, str],
-        config_entry_id: str | None,
+        config_entry_id: str,
         index: dict[tuple[str, str], dict[str | None, _EntryTypeT]],
         shadowed_index: dict[tuple[str | None, tuple[str, str]], set[str]],
     ) -> list[str]:
-        """Get the ids of all devices of a config entry holding a key."""
-        holder_ids: list[str] = []
+        """Get a list of ids of the config entry's devices holding a key."""
+        holder_device_ids: list[str] = []
         if (by_config_entry := index.get(key)) is not None and (
             slot_holder := by_config_entry.get(config_entry_id)
         ) is not None:
-            holder_ids.append(slot_holder.id)
-        holder_ids.extend(shadowed_index.get((config_entry_id, key), ()))
-        return holder_ids
+            holder_device_ids.append(slot_holder.id)
+        holder_device_ids.extend(shadowed_index.get((config_entry_id, key), ()))
+        return holder_device_ids
 
-    def count_shadowed(self) -> int:
+    def count_shadowed_keys(self) -> int:
         """Count keys registered to multiple devices of one config entry."""
         return sum(
             len(device_ids)
@@ -2437,7 +2450,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             match_identifiers = added_identifiers
             match_connections = added_connections
         # A deleted device holding an identity the device now owns can never restore
-        for deleted_device_id in self.deleted_devices.get_colliding_entries(
+        for deleted_device_id in self.deleted_devices.get_colliding_device_ids(
             match_identifiers or set(),
             match_connections or set(),
             config_entry_id=effective_config_entry_id,
@@ -2621,7 +2634,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if not matched_device.has_composite_identifiers:
                 identifiers = matched_device.identifiers | identifiers
                 connections = matched_device.connections | connections
-        colliding = self.devices.get_colliding_entries(
+        colliding = self.devices.get_colliding_device_ids(
             identifiers,
             connections,
             config_entry_id=config_entry.entry_id,
@@ -2674,7 +2687,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if not device.has_composite_identifiers:
             identifiers = device.identifiers | identifiers
             connections = device.connections | connections
-        colliding = self.deleted_devices.get_colliding_entries(
+        colliding = self.deleted_devices.get_colliding_device_ids(
             identifiers,
             connections,
             config_entry_id=device.config_entry_id,
@@ -2931,8 +2944,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 )
 
         if (
-            shadowed_count := devices.count_shadowed()
-            + deleted_devices.count_shadowed()
+            shadowed_count := devices.count_shadowed_keys()
+            + deleted_devices.count_shadowed_keys()
         ):
             _LOGGER.info(
                 "Loaded %d identifiers/connections registered to multiple devices of "
