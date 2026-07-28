@@ -621,13 +621,6 @@ async def test_async_poll_manual_hosts_skips_ping_for_disabled_device(
 
     assert "media_player.living_room" in entity_registry.entities
 
-    device = device_registry.async_get_device(identifiers={(sonos.DOMAIN, soco.uid)})
-    assert device is not None
-    device_registry.async_update_device(
-        device.id,
-        disabled_by=dr.DeviceEntryDisabler.USER,
-    )
-
     # Mark the speaker unavailable via ZGS event with VanishedDevices.
     async def fire_vanish_event():
         subscription = soco.zoneGroupTopology.subscribe.return_value
@@ -650,6 +643,19 @@ async def test_async_poll_manual_hosts_skips_ping_for_disabled_device(
 
     await fire_vanish_event()
 
+    # Verify the speaker is marked unavailable.
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    # Now disable the device.
+    device = device_registry.async_get_device(identifiers={(sonos.DOMAIN, soco.uid)})
+    assert device is not None
+    device_registry.async_update_device(
+        device.id,
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
     # SonosSpeaker.ping uses RenderingControl.GetVolume under the hood.
     soco.renderingControl.GetVolume.reset_mock()
     with freeze_time(dt_util.utcnow()) as freezer:
@@ -657,6 +663,7 @@ async def test_async_poll_manual_hosts_skips_ping_for_disabled_device(
         async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    # The disabled speaker should not have been pinged.
     soco.renderingControl.GetVolume.assert_not_called()
 
 
