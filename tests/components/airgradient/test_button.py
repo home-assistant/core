@@ -97,6 +97,19 @@ async def test_cloud_creates_no_button(
     assert len(hass.states.async_all()) == 0
 
 
+async def test_unknown_v1_model_creates_no_actions(
+    hass: HomeAssistant,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unknown V1 models do not assume supported actions."""
+    mock_v1_airgradient_client.get_current_measures.return_value.model = "P-UNKNOWN"
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.BUTTON]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert not hass.states.async_all()
+
+
 @pytest.mark.parametrize(
     ("exception", "error_message"),
     [

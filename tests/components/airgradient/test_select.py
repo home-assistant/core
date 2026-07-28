@@ -1,9 +1,10 @@
 """Tests for the AirGradient select platform."""
 
+from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from airgradient import AirGradientConnectionError, AirGradientError
+from airgradient import AirGradientConnectionError, AirGradientError, ApiVersion
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -91,6 +92,32 @@ async def test_cloud_creates_no_number(
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
+
+
+async def test_v1_config_omission_removes_entity(
+    hass: HomeAssistant,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test omitted V1 fields remove their corresponding entities."""
+    mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
+        "config_v1_local.json", ApiVersion.V1
+    )
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("select.airgradient_co2_automatic_baseline_duration")
+    mock_v1_airgradient_client.get_config.return_value = replace(
+        mock_v1_airgradient_client.get_config.return_value,
+        co2_automatic_baseline_calibration_days=None,
+    )
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("select.airgradient_co2_automatic_baseline_duration") is None
 
 
 @pytest.mark.parametrize(
