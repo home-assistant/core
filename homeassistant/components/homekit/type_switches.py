@@ -657,6 +657,8 @@ class IrrigationSystem(HomeAccessory):
             )
             name = cleanup_name_for_homekit(friendly or entity_id)
             initial_duration = self._duration_from_state(valve_state)
+            if initial_duration is None:
+                initial_duration = IRRIGATION_DEFAULT_DURATION
             initial_remaining = self._remaining_from_state(valve_state)
             serv_valve = self.add_preload_service(
                 SERV_VALVE,
@@ -748,6 +750,18 @@ class IrrigationSystem(HomeAccessory):
 
     @callback
     @override
+    def async_update_state_callback(self, new_state: State | None) -> None:
+        """Handle primary valve state changes, including unavailable/unknown."""
+        if new_state is None:
+            return
+        if new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            self._sync_valve_chars(self.entity_id, new_state)
+            self._update_system_state()
+            return
+        super().async_update_state_callback(new_state)
+
+    @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update primary valve entity state from HA."""
         self._sync_valve_chars(self.entity_id, new_state)
@@ -770,7 +784,9 @@ class IrrigationSystem(HomeAccessory):
         is_open = state.state in VALVE_OPEN_STATES
         chars[CHAR_ACTIVE].set_value(int(is_open))
         chars[CHAR_IN_USE].set_value(int(is_open))
-        if (device_duration := self._duration_from_state(state)) != chars["duration"]:
+        if (device_duration := self._duration_from_state(state)) is not None and (
+            device_duration != chars["duration"]
+        ):
             chars["duration"] = device_duration
             chars[CHAR_SET_DURATION].set_value(device_duration)
         remaining = self._remaining_from_state(state)
@@ -831,17 +847,17 @@ class IrrigationSystem(HomeAccessory):
             chars["duration"] = max(int(value), 0)
             chars[CHAR_SET_DURATION].set_value(chars["duration"])
 
-    def _duration_from_state(self, state: State | None) -> int:
+    def _duration_from_state(self, state: State | None) -> int | None:
         """Get a valve duration from state attributes when provided by the device."""
         if state is None:
-            return IRRIGATION_DEFAULT_DURATION
+            return None
         for key in ("set_duration", "duration", "default_duration"):
             if (raw := state.attributes.get(key)) is not None:
                 try:
                     return max(int(float(raw)), 0)
                 except TypeError, ValueError:
                     continue
-        return IRRIGATION_DEFAULT_DURATION
+        return None
 
     def _remaining_from_state(self, state: State | None) -> int:
         """Get remaining duration from state attributes when provided by the device."""

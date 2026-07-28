@@ -14,6 +14,7 @@ from homeassistant.components.homekit.const import (
     CHAR_IN_USE,
     CHAR_NAME,
     CHAR_REMAINING_DURATION,
+    CHAR_STATUS_FAULT,
     SERV_OUTLET,
     TYPE_FAUCET,
     TYPE_IRRIGATION_SYSTEM,
@@ -1234,6 +1235,33 @@ async def test_irrigation_system_resyncs_linked_zone_on_service_failure(
     assert back_chars[CHAR_REMAINING_DURATION].value == 0
 
 
+async def test_irrigation_system_preserves_homekit_set_duration_without_device_attr(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test HomeKit-selected duration persists when valve lacks duration attrs."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        11,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    acc._set_valve_duration("valve.front_lawn", 900)
+    hass.states.async_set("valve.front_lawn", STATE_OPEN)
+    await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars["duration"] == 900
+    assert front_chars[CHAR_REMAINING_DURATION].value == 900
+
+
 async def test_irrigation_system_reports_fault_for_unavailable_zone(
     hass: HomeAssistant, hk_driver
 ) -> None:
@@ -1259,3 +1287,33 @@ async def test_irrigation_system_reports_fault_for_unavailable_zone(
     back_chars = acc._valve_chars["valve.back_lawn"]
     assert back_chars[CHAR_ACTIVE].value == 0
     assert back_chars[CHAR_IN_USE].value == 0
+    assert back_chars[CHAR_STATUS_FAULT].value == 1
+    assert acc._char_system_status_fault.value == 1
+
+
+async def test_irrigation_system_primary_unavailable_sets_fault(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test primary valve unavailable update sets zone/system status fault."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        12,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("valve.front_lawn", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars[CHAR_ACTIVE].value == 0
+    assert front_chars[CHAR_IN_USE].value == 0
+    assert front_chars[CHAR_STATUS_FAULT].value == 1
+    assert acc._char_system_status_fault.value == 1

@@ -755,6 +755,12 @@ async def test_options_flow_valves_filters_grouped_default_entities(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bridged_device_triggers"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert "entity_config" not in config_entry.options
 
 
 async def test_options_flow_exclude_mode_with_cameras(hass: HomeAssistant) -> None:

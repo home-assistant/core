@@ -410,6 +410,19 @@ class OptionsFlowHandler(OptionsFlow):
         # Maps the displayed climate field label back to its entity id.
         self._climate_choices: dict[str, str] = {}
 
+    @staticmethod
+    def _clear_irrigation_entity_config(
+        all_entity_config: dict[str, dict[str, Any]],
+    ) -> None:
+        """Remove irrigation grouping metadata from saved entity config."""
+        for entity_id, entity_config in list(all_entity_config.items()):
+            if entity_config.get(CONF_TYPE) == TYPE_IRRIGATION_SYSTEM:
+                entity_config.pop(CONF_TYPE, None)
+            entity_config.pop(CONF_LINKED_IRRIGATION_VALVES, None)
+            entity_config.pop(CONF_IRRIGATION_CONTROLLER, None)
+            if not entity_config:
+                all_entity_config.pop(entity_id, None)
+
     async def async_step_climate(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -513,23 +526,20 @@ class OptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Optionally group valve entities into an Irrigation System accessory."""
-        if not self.included_valves:
-            return await self.async_step_bridged_device_triggers()
-
         hk_options = self.hk_options
+        all_entity_config: dict[str, dict[str, Any]] = hk_options.setdefault(
+            CONF_ENTITY_CONFIG, {}
+        )
+
+        if not self.included_valves:
+            self._clear_irrigation_entity_config(all_entity_config)
+            if not all_entity_config:
+                hk_options.pop(CONF_ENTITY_CONFIG, None)
+            return await self.async_step_bridged_device_triggers()
 
         if user_input is not None:
             grouped: list[str] = user_input.get(CONF_IRRIGATION_GROUPED_VALVES, [])
-            all_entity_config: dict[str, dict[str, Any]] = hk_options.setdefault(
-                CONF_ENTITY_CONFIG, {}
-            )
-            for entity_id in self.included_valves:
-                entity_config = all_entity_config.get(entity_id, {})
-                entity_config.pop(CONF_TYPE, None)
-                entity_config.pop(CONF_LINKED_IRRIGATION_VALVES, None)
-                entity_config.pop(CONF_IRRIGATION_CONTROLLER, None)
-                if not entity_config:
-                    all_entity_config.pop(entity_id, None)
+            self._clear_irrigation_entity_config(all_entity_config)
 
             if len(grouped) >= 2:
                 primary = grouped[0]
@@ -547,7 +557,6 @@ class OptionsFlowHandler(OptionsFlow):
                 hk_options.pop(CONF_ENTITY_CONFIG, None)
             return await self.async_step_bridged_device_triggers()
 
-        all_entity_config = hk_options.get(CONF_ENTITY_CONFIG, {})
         current_grouped: list[str] = []
         for entity_id in self.included_valves:
             entity_config = all_entity_config.get(entity_id, {})
