@@ -434,7 +434,7 @@ async def test_matter_exception_on_door_lock_write_attribute(
 
 @pytest.mark.parametrize("node_fixture", ["mock_valve"])
 async def test_valve_default_open_duration_nullable(
-   hass: HomeAssistant,
+    hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
