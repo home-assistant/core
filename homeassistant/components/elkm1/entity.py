@@ -3,14 +3,13 @@
 from collections.abc import Iterable
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -129,15 +128,10 @@ class ElkEntity(Entity):
     @override
     def device_info(self) -> DeviceInfo:
         """Device info connecting via the ElkM1 system."""
-        config_entry = self.platform.config_entry
-        if TYPE_CHECKING:
-            assert config_entry
         return DeviceInfo(
             name=self._element.name,
             identifiers={(DOMAIN, self._unique_id)},
-            via_device_id=dr.async_get_device_id_by_identifier(
-                self.hass, (DOMAIN, f"{self._prefix}_system"), config_entry.entry_id
-            ),
+            via_device=(DOMAIN, f"{self._prefix}_system"),
         )
 
 
