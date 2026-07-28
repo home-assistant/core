@@ -1573,3 +1573,33 @@ async def test_irrigation_system_ignores_invalid_duration_attribute(
 
     front_chars = acc._valve_chars["valve.front_lawn"]
     assert front_chars["duration"] == IRRIGATION_DEFAULT_DURATION
+
+
+async def test_irrigation_system_zero_duration_skips_timers(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test IrrigationSystem skips auto-close timers when duration is zero."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        21,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    with patch.object(
+        acc, "async_call_service_and_wait", AsyncMock(return_value=True)
+    ):
+        acc._set_valve_duration("valve.front_lawn", 0)
+        acc._set_valve_active("valve.front_lawn", 1)
+        await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars["close_timer"] is None
+    assert front_chars["update_timer"] is None
