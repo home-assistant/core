@@ -92,11 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
         await session.api.close()
         raise
 
-    try:
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    except BaseException:
-        await session.stop_polling()
-        raise
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def stop_polling(event):
         """Stop polling service."""

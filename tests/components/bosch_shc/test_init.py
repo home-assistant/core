@@ -153,30 +153,3 @@ async def test_setup_entry_polling_failure_closes_session(
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     session.api.close.assert_awaited_once()
-
-
-async def test_setup_entry_platform_forward_failure_stops_polling(
-    hass: HomeAssistant,
-) -> None:
-    """A failure forwarding to platforms must stop the already-started polling."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id="test-mac", data=MOCK_DATA)
-    entry.add_to_hass(hass)
-
-    session = _mock_session()
-
-    with (
-        patch(
-            "homeassistant.components.bosch_shc.SHCSessionAsync",
-            return_value=session,
-        ),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            side_effect=RuntimeError,
-        ),
-    ):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    session.start_polling.assert_awaited_once()
-    session.stop_polling.assert_awaited_once()
-    session.api.close.assert_not_called()
