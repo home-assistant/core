@@ -9,7 +9,7 @@ from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import PVEVMUSER_PERMISSIONS, setup_integration
 
 from tests.common import (
     MockConfigEntry,
@@ -68,3 +68,26 @@ async def test_storage_missing_used_fraction(
 
     state = hass.states.get("sensor.storage_local_storage_usage_percentage")
     assert state.state == STATE_UNKNOWN
+
+
+async def test_sensors_according_to_permissions(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that sensors are not created when not allowed."""
+    mock_proxmox_client.access.permissions.get.return_value = PVEVMUSER_PERMISSIONS
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    assert "sensor.pve1_status" in {e.entity_id for e in entries}
+    assert "sensor.pve1_cpu" not in {e.entity_id for e in entries}

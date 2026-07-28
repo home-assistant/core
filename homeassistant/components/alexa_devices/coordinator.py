@@ -35,7 +35,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 
-from .const import _LOGGER, CONF_LOGIN_DATA, DOMAIN
+from .const import CONF_LOGIN_DATA, DOMAIN, LOGGER
 
 SCAN_INTERVAL = 300
 
@@ -115,12 +115,12 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         """Initialize the scanner."""
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name=entry.title,
             config_entry=entry,
             update_interval=timedelta(seconds=SCAN_INTERVAL),
             request_refresh_debouncer=Debouncer(
-                hass, _LOGGER, cooldown=SCAN_INTERVAL, immediate=False
+                hass, LOGGER, cooldown=SCAN_INTERVAL, immediate=False
             ),
         )
         self.api = AmazonEchoApi(
@@ -232,12 +232,12 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         device_registry = dr.async_get(self.hass)
 
         for serial_num in stale_devices:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Detected change in devices: serial %s removed",
                 serial_num,
             )
-            device = device_registry.async_get_device(
-                identifiers={(DOMAIN, serial_num)}
+            device = device_registry.async_get_device_by_identifier(
+                (DOMAIN, serial_num), self.config_entry.entry_id
             )
             if device:
                 device_registry.async_update_device(
@@ -259,7 +259,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 routine_unique_id,
             )
             if entity_id:
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Detected change in routines: routine %s removed",
                     routine_unique_id.replace(
                         f"{slugify(self.config_entry.unique_id)}-", ""
@@ -281,7 +281,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 todo_list_unique_id,
             )
             if entity_id:
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Detected change in todo lists: todo list entity %s removed",
                     entity_id,
                 )

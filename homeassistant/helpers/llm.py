@@ -406,6 +406,11 @@ class MergedAPI(API):
 
 def selector_serializer(schema: Any) -> Any:  # noqa: C901
     """Convert selectors into OpenAPI schema."""
+    if schema is cv.string or schema is intent.non_empty_string:
+        return {"type": "string"}
+    if schema is cv.boolean:
+        return {"type": "boolean"}
+
     if not isinstance(schema, selector.Selector):
         return UNSUPPORTED
 
