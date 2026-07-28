@@ -5,12 +5,13 @@ from dataclasses import dataclass
 import logging
 from typing import override
 
-from goodwe import Inverter, InverterError
+from goodwe import Inverter, InverterError, OperationMode
 
 from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
+    RestoreNumber,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
 from homeassistant.core import HomeAssistant
@@ -97,11 +98,7 @@ async def async_setup_entry(
     for description in filter(lambda dsc: dsc.filter(inverter), NUMBERS):
         try:
             current_value = await description.getter(inverter)
-        except InverterError:
-            # Inverter model does not support this setting
-            _LOGGER.debug("Could not read inverter setting %s", description.key)
-            continue
-        except ValueError:
+        except InverterError, ValueError:
             # Inverter model does not support this setting
             _LOGGER.debug("Could not read inverter setting %s", description.key)
             continue
@@ -111,10 +108,14 @@ async def async_setup_entry(
         )
 
     runtime_data = config_entry.runtime_data
-    entities.extend(
-        EcoModeNumberEntity(device_info, eco_description, inverter, runtime_data)
-        for eco_description in ECO_MODE_NUMBERS
-    )
+    supported_modes = await inverter.get_operation_modes(True)
+    if OperationMode.ECO_CHARGE in supported_modes or (
+        OperationMode.ECO_DISCHARGE in supported_modes
+    ):
+        entities.extend(
+            EcoModeNumberEntity(device_info, eco_description, inverter, runtime_data)
+            for eco_description in ECO_MODE_NUMBERS
+        )
 
     async_add_entities(entities)
 
@@ -186,12 +187,15 @@ ECO_MODE_NUMBERS = (
 )
 
 
-class EcoModeNumberEntity(NumberEntity):
+class EcoModeNumberEntity(RestoreNumber):
     """Power/SoC parameters used the next time ECO_CHARGE/ECO_DISCHARGE is selected.
 
-    These are not inverter settings read back from the device - they are only
-    applied the next time OperationMode.ECO_CHARGE or ECO_DISCHARGE is selected
-    on the operation mode select entity.
+    These are not inverter settings read back from the device - they only
+    live in GoodweRuntimeData (reset to the description default on every
+    integration reload/HA restart) and are applied the next time
+    OperationMode.ECO_CHARGE or ECO_DISCHARGE is selected on the operation
+    mode select entity. RestoreNumber is used so a user-configured value
+    survives a reload/restart instead of silently resetting.
     """
 
     _attr_should_poll = False
@@ -211,6 +215,19 @@ class EcoModeNumberEntity(NumberEntity):
         self._attr_device_info = device_info
         self._runtime_data = runtime_data
         self._attr_native_value = float(getattr(runtime_data, description.attr_name))
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the last known value, if any, on startup."""
+        await super().async_added_to_hass()
+        last_data = await self.async_get_last_number_data()
+        if last_data is not None and last_data.native_value is not None:
+            self._attr_native_value = last_data.native_value
+            setattr(
+                self._runtime_data,
+                self.entity_description.attr_name,
+                int(last_data.native_value),
+            )
 
     @override
     async def async_set_native_value(self, value: float) -> None:
