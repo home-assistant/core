@@ -21,29 +21,23 @@ async def test_scene_select_initial_state(
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
 
-    # Test Room has "Regular Test Scene" active (static) from fixture
-    state = hass.states.get("select.test_room_scene")
-    assert state is not None
-    assert state.state == "Regular Test Scene"
-    assert "Regular Test Scene" in state.attributes["options"]
-
-    # Test Room has a smart scene active from fixture
-    state = hass.states.get("select.test_room_smart_scene")
+    # A smart scene and its effective regular scene can both be active. The smart
+    # scene is the top-level selection shown by the Hue app.
+    state = hass.states.get("select.test_room_test_room_scene")
     assert state is not None
     assert state.state == "Smart Test Scene"
-    assert "Smart Test Scene" in state.attributes["options"]
+    assert state.attributes["options"] == [
+        "Regular Test Scene",
+        "Smart Test Scene",
+    ]
+    assert hass.states.get("select.test_room_test_room_smart_scene") is None
 
     # Test Zone has "Dynamic Test Scene" active (dynamic_palette) from fixture
     state = hass.states.get("select.test_zone_scene")
     assert state is not None
     assert state.state == "Dynamic Test Scene"
-    assert "Dynamic Test Scene" in state.attributes["options"]
-
-    # Test Zone has no smart scenes — entity exists but with empty options
-    state = hass.states.get("select.test_zone_smart_scene")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes["options"] == []
+    assert state.attributes["options"] == ["Dynamic Test Scene"]
+    assert hass.states.get("select.test_zone_smart_scene") is None
 
 
 async def test_scene_select_becomes_inactive(
@@ -53,11 +47,27 @@ async def test_scene_select_becomes_inactive(
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
 
-    # Verify starting state
-    assert hass.states.get("select.test_room_scene").state == "Regular Test Scene"
+    # The active smart scene takes precedence over its effective regular scene.
+    assert (
+        hass.states.get("select.test_room_test_room_scene").state == "Smart Test Scene"
+    )
 
-    # Simulate regular scene becoming inactive
+    smart_scene_id = "8abe5a3e-94c8-4058-908f-56241818509a"
     regular_scene_id = "cdbf3740-7977-4a11-8275-8c78636ad4bd"
+
+    # When the smart scene stops, fall back to the still-active regular scene.
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {"id": smart_scene_id, "type": "smart_scene", "state": "inactive"},
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("select.test_room_test_room_scene").state
+        == "Regular Test Scene"
+    )
+
+    # Once both scenes are inactive, the select has no active option.
     mock_bridge_v2.api.emit_event(
         "update",
         {
@@ -68,8 +78,7 @@ async def test_scene_select_becomes_inactive(
     )
     await hass.async_block_till_done()
 
-    # Select should now have no active option
-    assert hass.states.get("select.test_room_scene").state == STATE_UNKNOWN
+    assert hass.states.get("select.test_room_test_room_scene").state == STATE_UNKNOWN
 
     # Reactivate the scene
     mock_bridge_v2.api.emit_event(
@@ -85,7 +94,10 @@ async def test_scene_select_becomes_inactive(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("select.test_room_scene").state == "Regular Test Scene"
+    assert (
+        hass.states.get("select.test_room_test_room_scene").state
+        == "Regular Test Scene"
+    )
 
 
 async def test_scene_select_activate_option(
@@ -100,7 +112,10 @@ async def test_scene_select_activate_option(
     await hass.services.async_call(
         "select",
         "select_option",
-        {"entity_id": "select.test_room_scene", "option": "Regular Test Scene"},
+        {
+            "entity_id": "select.test_room_test_room_scene",
+            "option": "Regular Test Scene",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -108,7 +123,9 @@ async def test_scene_select_activate_option(
     # Bridge API should have been called with the correct scene id
     regular_scene_id = "cdbf3740-7977-4a11-8275-8c78636ad4bd"
     assert len(mock_bridge_v2.mock_requests) == 1
-    assert regular_scene_id in mock_bridge_v2.mock_requests[0]["path"]
+    path = mock_bridge_v2.mock_requests[0]["path"]
+    assert "/scene/" in path
+    assert regular_scene_id in path
 
 
 async def test_scene_select_disambiguates_duplicate_names(
@@ -135,19 +152,20 @@ async def test_scene_select_disambiguates_duplicate_names(
     await mock_bridge_v2.api.load_test_data(test_data)
     await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
 
-    state = hass.states.get("select.test_room_scene")
+    state = hass.states.get("select.test_room_test_room_scene")
     assert state is not None
-    assert state.state == "Regular Test Scene (cdbf3740)"
+    assert state.state == "Smart Test Scene"
     assert state.attributes["options"] == [
         "Regular Test Scene (22222222)",
         "Regular Test Scene (cdbf3740)",
+        "Smart Test Scene",
     ]
 
     await hass.services.async_call(
         "select",
         "select_option",
         {
-            "entity_id": "select.test_room_scene",
+            "entity_id": "select.test_room_test_room_scene",
             "option": "Regular Test Scene (22222222)",
         },
         blocking=True,
@@ -155,7 +173,59 @@ async def test_scene_select_disambiguates_duplicate_names(
     await hass.async_block_till_done()
 
     last_request = mock_bridge_v2.mock_requests[-1]
+    assert "/scene/" in last_request["path"]
     assert duplicate_scene_id in last_request["path"]
+
+
+async def test_scene_select_disambiguated_label_does_not_shadow_scene_name(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test a generated duplicate label cannot shadow a literal scene name."""
+    test_data = deepcopy(v2_resources_test_data)
+    regular_scene = next(
+        resource
+        for resource in test_data
+        if resource["type"] == "scene"
+        and resource["metadata"]["name"] == "Regular Test Scene"
+    )
+
+    duplicate_scene = deepcopy(regular_scene)
+    duplicate_scene_id = "22222222-3333-4444-8555-666666666666"
+    duplicate_scene["id"] = duplicate_scene_id
+    duplicate_scene["status"]["active"] = "inactive"
+    test_data.append(duplicate_scene)
+
+    literal_suffix_scene = deepcopy(regular_scene)
+    literal_suffix_scene_id = "33333333-4444-4555-8666-777777777777"
+    literal_suffix_scene["id"] = literal_suffix_scene_id
+    literal_suffix_scene["metadata"]["name"] = "Regular Test Scene (22222222)"
+    literal_suffix_scene["status"]["active"] = "inactive"
+    test_data.append(literal_suffix_scene)
+
+    await mock_bridge_v2.api.load_test_data(test_data)
+    await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
+
+    state = hass.states.get("select.test_room_test_room_scene")
+    assert state is not None
+    assert state.attributes["options"] == [
+        "Regular Test Scene (222222223)",
+        "Regular Test Scene (cdbf3740)",
+        "Regular Test Scene (22222222)",
+        "Smart Test Scene",
+    ]
+
+    for option, scene_id in (
+        ("Regular Test Scene (222222223)", duplicate_scene_id),
+        ("Regular Test Scene (22222222)", literal_suffix_scene_id),
+    ):
+        mock_bridge_v2.mock_requests.clear()
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {"entity_id": "select.test_room_test_room_scene", "option": option},
+            blocking=True,
+        )
+        assert scene_id in mock_bridge_v2.mock_requests[0]["path"]
 
 
 async def test_scene_select_skips_rebuild_on_status_update_for_duplicate_names(
@@ -203,15 +273,75 @@ async def test_scene_select_skips_rebuild_on_status_update_for_duplicate_names(
         mock_refresh.assert_not_called()
 
 
-async def test_smart_scene_select_active(
+async def test_scene_select_refreshes_options_for_scene_events(
     hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
 ) -> None:
-    """Test smart scene select entity state transitions."""
+    """Test add, rename, and delete events refresh the unified scene options."""
+    test_data = deepcopy(v2_resources_test_data)
+    regular_scene = next(
+        resource
+        for resource in test_data
+        if resource["type"] == "scene"
+        and resource["metadata"]["name"] == "Regular Test Scene"
+    )
+    smart_scene = next(
+        resource for resource in test_data if resource["type"] == "smart_scene"
+    )
+
+    await mock_bridge_v2.api.load_test_data(test_data)
+    await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
+
+    added_scene = deepcopy(regular_scene)
+    added_scene["id"] = "22222222-3333-4444-8555-666666666666"
+    added_scene["metadata"]["name"] = "Added scene"
+    added_scene["status"]["active"] = "inactive"
+    mock_bridge_v2.api.emit_event("add", added_scene)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_room_test_room_scene")
+    assert state is not None
+    assert state.attributes["options"] == [
+        "Added scene",
+        "Regular Test Scene",
+        "Smart Test Scene",
+    ]
+
+    renamed_scene = deepcopy(added_scene)
+    renamed_scene["metadata"]["name"] = "Renamed scene"
+    mock_bridge_v2.api.emit_event("update", renamed_scene)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_room_test_room_scene")
+    assert state.attributes["options"] == [
+        "Regular Test Scene",
+        "Renamed scene",
+        "Smart Test Scene",
+    ]
+
+    # Deleting the active smart scene removes its option and exposes its effective
+    # regular scene as the current selection.
+    mock_bridge_v2.api.emit_event("delete", smart_scene)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_room_test_room_scene")
+    assert state.state == "Regular Test Scene"
+    assert state.attributes["options"] == [
+        "Regular Test Scene",
+        "Renamed scene",
+    ]
+
+
+async def test_scene_select_prefers_active_smart_scene(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test smart scene state transitions in the unified scene select."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
 
     # Smart scene starts active
-    assert hass.states.get("select.test_room_smart_scene").state == "Smart Test Scene"
+    assert (
+        hass.states.get("select.test_room_test_room_scene").state == "Smart Test Scene"
+    )
 
     smart_scene_id = "8abe5a3e-94c8-4058-908f-56241818509a"
 
@@ -222,7 +352,10 @@ async def test_smart_scene_select_active(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("select.test_room_smart_scene").state == STATE_UNKNOWN
+    assert (
+        hass.states.get("select.test_room_test_room_scene").state
+        == "Regular Test Scene"
+    )
 
     # Reactivate smart scene
     mock_bridge_v2.api.emit_event(
@@ -231,13 +364,15 @@ async def test_smart_scene_select_active(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("select.test_room_smart_scene").state == "Smart Test Scene"
+    assert (
+        hass.states.get("select.test_room_test_room_scene").state == "Smart Test Scene"
+    )
 
 
-async def test_smart_scene_select_activate_option(
+async def test_scene_select_activate_smart_scene_option(
     hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
 ) -> None:
-    """Test that selecting a smart scene option calls the bridge smart_scene recall API."""
+    """Test selecting a smart scene uses the smart scene recall API."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
 
@@ -245,17 +380,19 @@ async def test_smart_scene_select_activate_option(
     await hass.services.async_call(
         "select",
         "select_option",
-        {"entity_id": "select.test_room_smart_scene", "option": "Smart Test Scene"},
+        {"entity_id": "select.test_room_test_room_scene", "option": "Smart Test Scene"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     smart_scene_id = "8abe5a3e-94c8-4058-908f-56241818509a"
     assert len(mock_bridge_v2.mock_requests) == 1
-    assert smart_scene_id in mock_bridge_v2.mock_requests[0]["path"]
+    path = mock_bridge_v2.mock_requests[0]["path"]
+    assert "/smart_scene/" in path
+    assert smart_scene_id in path
 
 
-async def test_smart_scene_select_disambiguates_duplicate_names(
+async def test_scene_select_disambiguates_duplicate_smart_scene_names(
     hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
 ) -> None:
     """Test duplicate smart scene names are exposed and recalled distinctly."""
@@ -271,10 +408,11 @@ async def test_smart_scene_select_disambiguates_duplicate_names(
     await mock_bridge_v2.api.load_test_data(test_data)
     await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
 
-    state = hass.states.get("select.test_room_smart_scene")
+    state = hass.states.get("select.test_room_test_room_scene")
     assert state is not None
     assert state.state == "Smart Test Scene (8abe5a3e)"
     assert state.attributes["options"] == [
+        "Regular Test Scene",
         "Smart Test Scene (11111111)",
         "Smart Test Scene (8abe5a3e)",
     ]
@@ -283,7 +421,7 @@ async def test_smart_scene_select_disambiguates_duplicate_names(
         "select",
         "select_option",
         {
-            "entity_id": "select.test_room_smart_scene",
+            "entity_id": "select.test_room_test_room_scene",
             "option": "Smart Test Scene (11111111)",
         },
         blocking=True,
@@ -291,16 +429,64 @@ async def test_smart_scene_select_disambiguates_duplicate_names(
     await hass.async_block_till_done()
 
     last_request = mock_bridge_v2.mock_requests[-1]
+    assert "/smart_scene/" in last_request["path"]
     assert duplicate_smart_scene_id in last_request["path"]
+
+
+async def test_scene_select_disambiguates_names_across_scene_types(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test identical regular and smart scene names remain independently selectable."""
+    test_data = deepcopy(v2_resources_test_data)
+    smart_scene = next(
+        resource for resource in test_data if resource["type"] == "smart_scene"
+    )
+    smart_scene["metadata"]["name"] = "Regular Test Scene"
+
+    await mock_bridge_v2.api.load_test_data(test_data)
+    await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
+
+    state = hass.states.get("select.test_room_test_room_scene")
+    assert state is not None
+    assert state.state == "Regular Test Scene (8abe5a3e)"
+    assert state.attributes["options"] == [
+        "Regular Test Scene (8abe5a3e)",
+        "Regular Test Scene (cdbf3740)",
+    ]
+
+    mock_bridge_v2.mock_requests.clear()
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": "select.test_room_test_room_scene",
+            "option": "Regular Test Scene (cdbf3740)",
+        },
+        blocking=True,
+    )
+    assert "/scene/" in mock_bridge_v2.mock_requests[0]["path"]
+
+    mock_bridge_v2.mock_requests.clear()
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": "select.test_room_test_room_scene",
+            "option": "Regular Test Scene (8abe5a3e)",
+        },
+        blocking=True,
+    )
+    assert "/smart_scene/" in mock_bridge_v2.mock_requests[0]["path"]
 
 
 @pytest.mark.parametrize(
     ("entity_id", "expected_options"),
     [
-        ("select.test_room_scene", ["Regular Test Scene"]),
-        ("select.test_room_smart_scene", ["Smart Test Scene"]),
+        (
+            "select.test_room_test_room_scene",
+            ["Regular Test Scene", "Smart Test Scene"],
+        ),
         ("select.test_zone_scene", ["Dynamic Test Scene"]),
-        ("select.test_zone_smart_scene", []),
     ],
 )
 async def test_scene_select_options(
