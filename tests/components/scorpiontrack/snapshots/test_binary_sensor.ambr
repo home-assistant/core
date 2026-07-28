@@ -24,7 +24,7 @@
     'object_id_base': 'Ignition',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ignition',
     'platform': 'scorpiontrack',
@@ -39,7 +39,6 @@
 # name: test_ignition_binary_sensor_snapshot[binary_sensor.ab12_cde_ignition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AB12 CDE Ignition',
     }),
     'context': <ANY>,

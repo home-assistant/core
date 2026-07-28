@@ -8,7 +8,6 @@ from pyscorpiontrack import ScorpionTrackShare
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.scorpiontrack.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -129,6 +128,6 @@ async def test_ignition_binary_sensor_uses_existing_vehicle_device(
     assert ignition_entry is not None
     assert tracker_entry is not None
     assert ignition_entry.unique_id == "101_1_ignition"
-    assert ignition_entry.original_device_class is BinarySensorDeviceClass.RUNNING
+    assert ignition_entry.original_device_class is None
     assert ignition_entry.device_id == tracker_entry.device_id
     assert ignition_entry.device_id is not None

@@ -2,10 +2,7 @@
 
 from typing import override
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -31,7 +28,6 @@ async def async_setup_entry(
 class ScorpionTrackIgnitionBinarySensor(ScorpionTrackEntity, BinarySensorEntity):
     """Represent the latest shared vehicle ignition state."""
 
-    _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_translation_key = "ignition"
 
     def __init__(self, coordinator: ScorpionTrackCoordinator, vehicle_id: int) -> None:
