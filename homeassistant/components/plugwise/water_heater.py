@@ -1,7 +1,7 @@
 """Plugwise water heater component for Home Assistant."""
 
 from dataclasses import dataclass
-from typing import Any, override
+from typing import Any, cast, override
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -147,11 +147,11 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        temperature = cast(float, kwargs.get(ATTR_TEMPERATURE))
         await self.coordinator.api.set_number(
             self._dev_id,
             self.entity_description.key,
-            float(temperature),
+            temperature,
         )
 
     @plugwise_command
