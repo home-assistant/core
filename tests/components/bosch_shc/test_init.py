@@ -23,7 +23,10 @@ def platforms() -> Generator[None]:
 
 
 async def test_setup_entry_success(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_session: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """A successful setup creates the device and starts polling."""
     mock_config_entry.add_to_hass(hass)
@@ -39,7 +42,6 @@ async def test_setup_entry_success(
     assert mock_config_entry.runtime_data is mock_session
     mock_session.start_polling.assert_called_once()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, "test-mac")})
     assert device is not None
     assert device.manufacturer == "Bosch"
