@@ -614,6 +614,8 @@ async def test_async_poll_manual_hosts_skips_ping_for_disabled_device(
 ) -> None:
     """Test disabled manual-host speakers are not pinged on heartbeat."""
     soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco.renderingControl = Mock()
+    soco.renderingControl.GetVolume = Mock()
 
     await _setup_hass(hass)
 
@@ -626,12 +628,27 @@ async def test_async_poll_manual_hosts_skips_ping_for_disabled_device(
         disabled_by=dr.DeviceEntryDisabler.USER,
     )
 
-    config_entry = hass.config_entries.async_entries(sonos.DOMAIN)[0]
-    speaker = config_entry.runtime_data.discovered[soco.uid]
+    # Mark the speaker unavailable via ZGS event with VanishedDevices.
+    async def fire_vanish_event():
+        subscription = soco.zoneGroupTopology.subscribe.return_value
+        sub_callback = await subscription.wait_for_callback_to_be_set()
+        zgs_with_vanished = f"""<ZoneGroupState>
+            <ZoneGroups>
+                <ZoneGroup Coordinator="{soco.uid}" ID="{soco.uid}:1384750254">
+                    <ZoneGroupMember UUID="{soco.uid}" Location="http://192.168.4.2:1400/xml/device_description.xml" ZoneName="Living Room"/>
+                </ZoneGroup>
+            </ZoneGroups>
+            <VanishedDevices>
+                <ZoneGroupMember UUID="{soco.uid}" Reason="powered off" ZoneName="Living Room"/>
+            </VanishedDevices>
+        </ZoneGroupState>"""
+        event = SonosMockEvent(
+            soco, soco.zoneGroupTopology, {"ZoneGroupState": zgs_with_vanished}
+        )
+        sub_callback(event)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Mark the speaker unavailable before the next manual-host heartbeat.
-    await speaker.async_vanished("test")
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await fire_vanish_event()
 
     # SonosSpeaker.ping uses RenderingControl.GetVolume under the hood.
     soco.renderingControl.GetVolume.reset_mock()
