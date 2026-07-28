@@ -122,17 +122,17 @@
       "bottomoven_stop": {
         "name": "Lower oven stop"
       },
-      "start": {
-        "name": "Appliance start"
-      },
-      "stop": {
-        "name": "Appliance stop"
-      },
       "pause": {
         "name": "Appliance pause"
       },
       "resume": {
         "name": "Appliance resume"
+      },
+      "start": {
+        "name": "Appliance start"
+      },
+      "stop": {
+        "name": "Appliance stop"
       },
       "upperoven_start": {
         "name": "Upper oven start"
@@ -177,6 +177,14 @@
           "temporary_locked": "Temporarily locked"
         }
       }
+    }
+  },
+  "exceptions": {
+    "remote_control_disabled": {
+      "message": "Remote control is disabled for this appliance. Please enable it on the appliance and try again."
+    },
+    "unsupported_state_for_command": {
+      "message": "The appliance is in a state that prevents executing the request command."
     }
   }
 }

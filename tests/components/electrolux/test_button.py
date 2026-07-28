@@ -8,13 +8,9 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import get_appliance_id, setup_integration
@@ -133,103 +129,67 @@ async def test_press(
 
 
 @pytest.mark.parametrize(
-    ("appliance_fixture", "entity_id", "state_property", "state_value", "ha_state"),
+    (
+        "appliance_fixture",
+        "entity_id",
+        "state_property",
+        "state_value",
+        "error_reason",
+    ),
     [
         (
             "tumble_dryer",
             "button.dryer_appliance_start",
             "remoteControl",
             "DISABLED",
-            STATE_UNAVAILABLE,
-        ),
-        (
-            "tumble_dryer",
-            "button.dryer_appliance_start",
-            "applianceState",
-            "READY_TO_START",
-            STATE_UNKNOWN,
+            "remote_control_disabled",
         ),
         (
             "tumble_dryer",
             "button.dryer_appliance_start",
             "applianceState",
             "RUNNING",
-            STATE_UNAVAILABLE,
-        ),
-        (
-            "tumble_dryer",
-            "button.dryer_appliance_pause",
-            "applianceState",
-            "RUNNING",
-            STATE_UNKNOWN,
+            "unsupported_state_for_command",
         ),
         (
             "tumble_dryer",
             "button.dryer_appliance_pause",
             "applianceState",
             "READY_TO_START",
-            STATE_UNAVAILABLE,
-        ),
-        (
-            "tumble_dryer",
-            "button.dryer_appliance_resume",
-            "applianceState",
-            "PAUSED",
-            STATE_UNKNOWN,
+            "unsupported_state_for_command",
         ),
         (
             "tumble_dryer",
             "button.dryer_appliance_resume",
             "applianceState",
             "RUNNING",
-            STATE_UNAVAILABLE,
-        ),
-        (
-            "tumble_dryer",
-            "button.dryer_appliance_stop",
-            "applianceState",
-            "PAUSED",
-            STATE_UNKNOWN,
+            "unsupported_state_for_command",
         ),
         (
             "tumble_dryer",
             "button.dryer_appliance_stop",
             "applianceState",
             "RUNNING",
-            STATE_UNAVAILABLE,
+            "unsupported_state_for_command",
         ),
         # Oven Start/Stop buttons
         (
             "fenix_oven",
             "button.fenix_appliance_start",
             "applianceState",
-            "READY_TO_START",
-            STATE_UNKNOWN,
-        ),
-        (
-            "fenix_oven",
-            "button.fenix_appliance_start",
-            "applianceState",
             "RUNNING",
-            STATE_UNAVAILABLE,
-        ),
-        (
-            "fenix_oven",
-            "button.fenix_appliance_stop",
-            "applianceState",
-            "RUNNING",
-            STATE_UNKNOWN,
+            "unsupported_state_for_command",
         ),
         (
             "fenix_oven",
             "button.fenix_appliance_stop",
             "applianceState",
             "READY_TO_START",
-            STATE_UNAVAILABLE,
+            "unsupported_state_for_command",
         ),
     ],
 )
-async def test_availability(
+async def test_press_error(
     hass: HomeAssistant,
     appliances: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -237,9 +197,9 @@ async def test_availability(
     entity_id: str,
     state_property: str,
     state_value: Any,
-    ha_state: str,
+    error_reason: str,
 ) -> None:
-    """Test availability."""
+    """Test states of the number entity."""
 
     appliance_id = get_appliance_id(appliance_fixture)
 
@@ -251,4 +211,14 @@ async def test_availability(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(entity_id).state == ha_state
+    appliance_id = get_appliance_id(appliance_fixture)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == error_reason
+    appliances.send_command.assert_not_called()

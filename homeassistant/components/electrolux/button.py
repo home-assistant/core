@@ -28,8 +28,10 @@ from electrolux_group_developer_sdk.feature_constants import EXECUTE_COMMAND
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxBaseEntity
 from .entity_helper import async_setup_entities_helper
@@ -236,32 +238,23 @@ class ElectroluxBaseButton[T: SupportedAppliance](
 
     @override
     def _update_attr_state(self) -> bool:
-        new_available = self._is_button_available()
-        if self._attr_available != new_available:
-            self._attr_available = new_available
-            return True
         return False
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return true if the button can be pressed."""
-        return self._is_button_available()
 
     @override
     async def async_press(self) -> None:
         """Handle the button press."""
+        self._is_command_executable()
         command = self._get_command()
         await self.coordinator.client.send_command(self._appliance_id, command)
         await self.coordinator.async_refresh()
 
     @abstractmethod
-    def _is_button_available(self) -> bool:
-        """Return true if the button can be pressed."""
-
-    @abstractmethod
     def _get_command(self) -> dict[str, Any]:
         """Return the command to send when the button is pressed."""
+
+    @abstractmethod
+    def _is_command_executable(self) -> None:
+        """Throws an exception if the command cannot be executed in the current appliance state."""
 
 
 class ElectroluxButton[T: SupportedAppliance](ElectroluxBaseButton[T]):
@@ -280,16 +273,20 @@ class ElectroluxButton[T: SupportedAppliance](ElectroluxBaseButton[T]):
         self.entity_description = description
 
     @override
-    def _is_button_available(self) -> bool:
-        """Return true if the button can be pressed."""
-        if self._appliance_data.get_current_remote_control() != "ENABLED":
-            return False
-        return self.entity_description.available_fn(self._appliance_data)
+    def _get_command(self) -> dict[str, Any]:
+        return self.entity_description.command_fn(self._appliance_data)
 
     @override
-    def _get_command(self) -> dict[str, Any]:
-        """Return the command to send when the button is pressed."""
-        return self.entity_description.command_fn(self._appliance_data)
+    def _is_command_executable(self) -> None:
+        if self._appliance_data.get_current_remote_control() != "ENABLED":
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="remote_control_disabled"
+            )
+        if not self.entity_description.available_fn(self._appliance_data):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_state_for_command",
+            )
 
 
 class ElectroluxSubmoduleButton[T: SupportedAppliance](ElectroluxBaseButton[T]):
@@ -316,13 +313,17 @@ class ElectroluxSubmoduleButton[T: SupportedAppliance](ElectroluxBaseButton[T]):
         self._attr_translation_key = translation_key
 
     @override
-    def _is_button_available(self) -> bool:
-        """Return true if the button can be pressed."""
-        if self._appliance_data.get_current_remote_control() != "ENABLED":
-            return False
-        return self.entity_description.available_fn(self._appliance_data, self._cavity)
+    def _get_command(self) -> dict[str, Any]:
+        return self.entity_description.command_fn(self._appliance_data, self._cavity)
 
     @override
-    def _get_command(self) -> dict[str, Any]:
-        """Return the command to send when the button is pressed."""
-        return self.entity_description.command_fn(self._appliance_data, self._cavity)
+    def _is_command_executable(self) -> None:
+        if self._appliance_data.get_current_remote_control() != "ENABLED":
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="remote_control_disabled"
+            )
+        if not self.entity_description.available_fn(self._appliance_data, self._cavity):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_state_for_command",
+            )

@@ -46,7 +46,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_button[button.dryer_appliance_resume-entry]
@@ -96,7 +96,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_button[button.dryer_appliance_start-entry]
@@ -196,7 +196,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_button[button.fenix_appliance_start-entry]
@@ -296,7 +296,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_button[button.pux_pizza_oven_appliance_start-entry]
@@ -346,7 +346,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_button[button.pux_pizza_oven_appliance_stop-entry]
@@ -396,7 +396,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_button[button.supex_oven_upper_oven_start-entry]
@@ -496,6 +496,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
