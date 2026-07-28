@@ -7,13 +7,7 @@ from types import SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from boschshcpy import (
-    SHCCamera360,
-    SHCCameraEyes,
-    SHCLightSwitch,
-    SHCSmartPlug,
-    SHCSmartPlugCompact,
-)
+from boschshcpy import CameraLightService, PowerSwitchService, PrivacyModeService
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -32,12 +26,12 @@ from .conftest import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-SMART_PLUG_ON = SHCSmartPlug.PowerSwitchService.State.ON
-SMART_PLUG_OFF = SHCSmartPlug.PowerSwitchService.State.OFF
-LIGHT_SWITCH_OFF = SHCLightSwitch.PowerSwitchService.State.OFF
-SMART_PLUG_COMPACT_OFF = SHCSmartPlugCompact.PowerSwitchService.State.OFF
-CAMERA_EYES_OFF = SHCCameraEyes.CameraLightService.State.OFF
-PRIVACY_ENABLED = SHCCamera360.PrivacyModeService.State.ENABLED
+SMART_PLUG_ON = PowerSwitchService.State.ON
+SMART_PLUG_OFF = PowerSwitchService.State.OFF
+LIGHT_SWITCH_OFF = PowerSwitchService.State.OFF
+SMART_PLUG_COMPACT_OFF = PowerSwitchService.State.OFF
+CAMERA_EYES_OFF = CameraLightService.State.OFF
+PRIVACY_ENABLED = PrivacyModeService.State.ENABLED
 
 SMART_PLUG_ENTITY_ID = "switch.smart_plug"
 SMART_PLUG_ROUTING_ENTITY_ID = "switch.smart_plug_routing"
@@ -77,7 +71,7 @@ def _base_device(device_id: str, name: str, **extra: Any) -> SimpleNamespace:
 
 def _smart_plug_device(
     device_id: str = "hdm:HomeMaticIP:plug1",
-    switchstate: SHCSmartPlug.PowerSwitchService.State = SMART_PLUG_OFF,
+    switchstate: PowerSwitchService.State = SMART_PLUG_OFF,
     routing: str = "ENABLED",
 ) -> SimpleNamespace:
     return _base_device(
@@ -90,28 +84,28 @@ def _smart_plug_device(
 
 def _light_switch_device(
     device_id: str = "hdm:HomeMaticIP:lightswitch1",
-    switchstate: SHCLightSwitch.PowerSwitchService.State = LIGHT_SWITCH_OFF,
+    switchstate: PowerSwitchService.State = LIGHT_SWITCH_OFF,
 ) -> SimpleNamespace:
     return _base_device(device_id, "Light Switch", switchstate=switchstate)
 
 
 def _smart_plug_compact_device(
     device_id: str = "hdm:HomeMaticIP:plugcompact1",
-    switchstate: SHCSmartPlugCompact.PowerSwitchService.State = SMART_PLUG_COMPACT_OFF,
+    switchstate: PowerSwitchService.State = SMART_PLUG_COMPACT_OFF,
 ) -> SimpleNamespace:
     return _base_device(device_id, "Smart Plug Compact", switchstate=switchstate)
 
 
 def _camera_eyes_device(
     device_id: str = "hdm:HomeMaticIP:cameraeyes1",
-    cameralight: SHCCameraEyes.CameraLightService.State = CAMERA_EYES_OFF,
+    cameralight: CameraLightService.State = CAMERA_EYES_OFF,
 ) -> SimpleNamespace:
     return _base_device(device_id, "Camera Eyes", cameralight=cameralight)
 
 
 def _camera_360_device(
     device_id: str = "hdm:HomeMaticIP:camera3601",
-    privacymode: SHCCamera360.PrivacyModeService.State = PRIVACY_ENABLED,
+    privacymode: PrivacyModeService.State = PRIVACY_ENABLED,
 ) -> SimpleNamespace:
     return _base_device(device_id, "Camera 360", privacymode=privacymode)
 
