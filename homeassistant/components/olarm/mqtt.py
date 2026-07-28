@@ -40,14 +40,11 @@ class OlarmFlowClientMQTT:
         self._oauth_session: config_entry_oauth2_flow.OAuth2Session = oauth_session
         self._coordinator: OlarmDataUpdateCoordinator = coordinator
 
-        # user and device ref
         self._user_id: str = entry.data["user_id"]
         self.device_id: str = entry.data["device_id"]
-
-        # olarm connect client
         self._olarm_flow_client: OlarmFlowClient = olarm_client
 
-        # get the assigned client ID suffix from config (default to "1" for backward compatibility)
+        # Default to "1" for backward compatibility with entries created before suffixes
         self.client_id_suffix: str = str(entry.data.get("client_id_suffix", "1"))
 
     def _mqtt_status_callback(
@@ -64,7 +61,6 @@ class OlarmFlowClientMQTT:
             _LOGGER.debug("MQTT connecting to Olarm service")
         elif status == "connected":
             _LOGGER.debug("MQTT connected to Olarm service")
-            # Clear any disconnection repair issues
             self._hass.loop.call_soon_threadsafe(
                 ir.async_delete_issue,
                 self._hass,
@@ -78,7 +74,6 @@ class OlarmFlowClientMQTT:
             asyncio.run_coroutine_threadsafe(
                 self._coordinator.async_ensure_token_valid(), self._hass.loop
             )
-            # Create repair issue for disconnection
             self._hass.loop.call_soon_threadsafe(
                 functools.partial(
                     ir.async_create_issue,
@@ -108,10 +103,8 @@ class OlarmFlowClientMQTT:
         self._olarm_flow_client.set_mqtt_status_callback(self._mqtt_status_callback)
 
         try:
-            # Ensure token is valid before connecting to MQTT
             await self._coordinator.async_ensure_token_valid()
 
-            # Startup MQTT
             await self._olarm_flow_client.start_mqtt_async(
                 user_id=self._user_id,
                 client_id_suffix=self.client_id_suffix,
@@ -119,7 +112,6 @@ class OlarmFlowClientMQTT:
                 timeout=10.0,
             )
 
-            # Subscribe to Device Events
             self._olarm_flow_client.subscribe_to_device(
                 self.device_id, self.mqtt_message_callback
             )
@@ -148,7 +140,6 @@ class OlarmFlowClientMQTT:
             except Exception as e:  # noqa: BLE001
                 _LOGGER.warning("Error stopping MQTT client: %s", e)
             finally:
-                # Clean up any repair issues
                 ir.async_delete_issue(
                     self._hass, DOMAIN, f"mqtt_disconnected_{self.device_id}"
                 )

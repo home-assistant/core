@@ -51,17 +51,10 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         """Create a new instance of the OlarmCoordinator."""
 
         self._oauth_session = oauth_session
-
-        # user props
         self._user_id = entry.data["user_id"]
-
-        # device props
         self.device_id = entry.data["device_id"]
-
-        # olarm connect client
         self._olarm_connect_client = olarm_client
 
-        # Initialize DataUpdateCoordinator with no update interval (one-time setup only)
         super().__init__(
             hass,
             _LOGGER,
@@ -75,7 +68,6 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
 
         Checks if access token has expired and if not uses refresh token to fetch new.
         """
-        # Check if token needs refresh
         token_valid: bool = self._oauth_session.valid_token
         if not token_valid:
             _LOGGER.debug("Access token expired, refreshing")

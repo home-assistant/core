@@ -41,7 +41,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> bool:
     """Set up olarm from a config entry."""
 
-    # use oauth2 to get tokens
     try:
         implementation = (
             await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -65,29 +64,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> boo
         "OAuth2 session ok, access_token expires at -> %s", session.token["expires_at"]
     )
 
-    # setup OlarmFlow API and MQTT client
     olarm_client = OlarmFlowClient(
         session.token["access_token"], session.token["expires_at"]
     )
 
-    coordinator = OlarmDataUpdateCoordinator(
-        hass,
-        entry,
-        session,
-        olarm_client,
-    )
+    coordinator = OlarmDataUpdateCoordinator(hass, entry, session, olarm_client)
 
-    # Fetch initial data using DataUpdateCoordinator pattern
     await coordinator.async_config_entry_first_refresh()
 
-    # setup and start mqtt
-    mqtt_client = OlarmFlowClientMQTT(
-        hass,
-        entry,
-        session,
-        olarm_client,
-        coordinator,
-    )
+    mqtt_client = OlarmFlowClientMQTT(hass, entry, session, olarm_client, coordinator)
     try:
         await mqtt_client.init_mqtt()
     except (MqttTimeoutError, MqttConnectError) as err:
@@ -107,10 +92,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> bo
     """Unload a config entry."""
     mqtt_client = entry.runtime_data.mqtt_client
 
-    # Unload platforms first
     unload_ok = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
-    # Only stop MQTT if unload was successful
     if unload_ok:
         try:
             await mqtt_client.async_stop()

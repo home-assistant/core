@@ -41,7 +41,6 @@ class OlarmBinarySensorEntityDescription(BinarySensorEntityDescription):
     unique_id_fn: Callable[[str, int], str]
 
 
-# Descriptions for the different Olarm binary sensor types
 SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
     "zone": OlarmBinarySensorEntityDescription(
         key="zone",
@@ -154,12 +153,10 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
     ) -> None:
         """Init the class."""
 
-        # Initialize base entity
         super().__init__(coordinator, device_id)
 
         self.entity_description = description
 
-        # set attributes via description
         self._attr_translation_key = self.entity_description.key
         if self.entity_description.key in ("zone", "zone_bypass"):
             self._attr_translation_placeholders = {
@@ -175,7 +172,6 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
             self.entity_description.key,
         )
 
-        # set the device class if provided
         if sensor_class in CLASS_MAP:
             self._attr_device_class = CLASS_MAP[sensor_class]
 
@@ -184,7 +180,6 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         self.sensor_label = sensor_label
         self.sensor_class = sensor_class
 
-        # initialize state via description
         self._attr_is_on = self.entity_description.value_fn(
             self.coordinator.data.device_state, self.sensor_index
         )

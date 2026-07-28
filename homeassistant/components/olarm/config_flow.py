@@ -64,7 +64,6 @@ class OlarmOauth2FlowHandler(
         """Create an entry for the flow, or update existing entry."""
         errors: dict[str, str] = {}
 
-        # Extract oauth tokens to authenticate to Olarm services
         self._oauth_data = data
         self._access_token = data["token"]["access_token"]
         self._refresh_token = data["token"]["refresh_token"]
@@ -77,7 +76,6 @@ class OlarmOauth2FlowHandler(
         try:
             api_result = await olarm_connect_client.get_devices()  # OlarmFlowClient uses "devices" terminology but an Olarm is connected to a system
         except DevicesNotFound:
-            # Handle if user has no systems
             return self.async_abort(reason="no_systems_found")
         except OlarmFlowClientApiError:
             # Otherwise, assume it's an auth-related error
@@ -101,14 +99,11 @@ class OlarmOauth2FlowHandler(
             _LOGGER.debug(user_input)
             self._device_id = user_input["select_system"]
 
-            # abort if oauth data is not available
             if self._oauth_data is None:
                 return self.async_abort(reason="oauth_data_missing")
 
-            # Find next available client_id_suffix
             client_id_suffix = self._get_next_client_id_suffix()
 
-            # load system details into config
             data = {
                 "user_id": self._user_id,
                 "device_id": self._device_id,
@@ -117,18 +112,15 @@ class OlarmOauth2FlowHandler(
                 "token": self._oauth_data["token"],
             }
 
-            # Create a unique ID using the device identifier and abort if it already exists
             unique_id = self._device_id
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(title="Olarm Integration", data=data)
 
-        # abort if no systems are found
         if self._systems is None:
             return self.async_abort(reason="no_systems_found")
 
-        # setup system selection dropdown and sort by system name
         system_options: dict[str, str] = {
             system["deviceId"]: f"{system['deviceName']} - {system['deviceSerial']}"
             for system in self._systems
