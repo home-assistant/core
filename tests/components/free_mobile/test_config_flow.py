@@ -62,6 +62,9 @@ async def test_flow_user_username_already_configured(hass: HomeAssistant) -> Non
 @pytest.mark.parametrize(
     ("status_code", "error_key"),
     [
+        pytest.param(
+            HTTPStatus.BAD_REQUEST, "missing_parameter", id="missing_parameter"
+        ),
         pytest.param(HTTPStatus.FORBIDDEN, "invalid_auth", id="invalid_auth"),
         pytest.param(
             HTTPStatus.INTERNAL_SERVER_ERROR, "server_error", id="server_error"
@@ -140,6 +143,30 @@ async def test_flow_import_dedup_by_title_same_name_is_rejected(
     assert result["reason"] == "already_configured"
 
 
+async def test_flow_import_dedup_by_title_is_case_insensitive(
+    hass: HomeAssistant,
+) -> None:
+    """Test importing titles that only differ by case is rejected.
+
+    Notify service names are slugified, so "Maman" and "maman" would both
+    register as notify.maman if not deduplicated consistently.
+    """
+    first_import = {**MOCK_CONFIG, CONF_NAME: "Maman"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=first_import
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Maman"
+
+    second_import = {**MOCK_CONFIG, CONF_NAME: "maman"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=second_import
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_flow_import_dedup_by_title_distinct_name_allows_shared_username(
     hass: HomeAssistant,
 ) -> None:
@@ -178,6 +205,7 @@ async def test_flow_import_no_name_uses_username_as_title(hass: HomeAssistant) -
 @pytest.mark.parametrize(
     "status_code",
     [
+        pytest.param(HTTPStatus.BAD_REQUEST, id="missing_parameter"),
         pytest.param(HTTPStatus.FORBIDDEN, id="invalid_auth"),
         pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, id="server_error"),
     ],

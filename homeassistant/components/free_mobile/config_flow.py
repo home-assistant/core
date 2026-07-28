@@ -15,6 +15,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util import slugify
 
 from .const import DOMAIN, VALIDATION_MESSAGE
 
@@ -49,10 +50,12 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
         exposing its own notify service. Imported entries are deduplicated
         by title rather than by username to preserve that behavior; new
         entries created through the UI are deduplicated by username instead
-        (see async_step_user).
+        (see async_step_user). Titles are compared after slugifying since
+        that is the transformation used to derive the notify service name.
         """
+        slug = slugify(title)
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.title == title:
+            if slugify(entry.title) == slug:
                 raise AbortFlow("already_configured")
 
     @override
@@ -92,6 +95,8 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
                 "Unexpected error while validating Free Mobile credentials"
             )
             return {"base": "unknown"}
+        if resp.status_code == HTTPStatus.BAD_REQUEST:
+            return {"base": "missing_parameter"}
         if resp.status_code == HTTPStatus.FORBIDDEN:
             return {"base": "invalid_auth"}
         if resp.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:

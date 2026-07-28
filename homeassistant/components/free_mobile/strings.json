@@ -6,6 +6,7 @@
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_parameter": "At least one parameter is missing.",
       "server_error": "Free Mobile server error, try again later.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

@@ -2,9 +2,10 @@
 
 from typing import Any
 
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.redact import async_redact_data
 from homeassistant.util import yaml as yaml_util
 
 from .const import DOMAIN
@@ -35,12 +36,14 @@ def async_deprecate_yaml_issue(
             hass,
             DOMAIN,
             f"deprecated_yaml_import_issue_error_{config[CONF_USERNAME]}",
-            breaks_in_ha_version="2027.2.0",
+            breaks_in_ha_version="2027.1.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml_import_issue_error",
             translation_placeholders={
                 "url": f"/config/integrations/dashboard/add?domain={DOMAIN}",
-                "config": yaml_util.dump(config),
+                "config": yaml_util.dump(
+                    async_redact_data(config, {CONF_ACCESS_TOKEN})
+                ),
             },
         )

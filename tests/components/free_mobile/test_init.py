@@ -1,9 +1,17 @@
 """Tests for the Free Mobile integration."""
 
+from http import HTTPStatus
+from unittest.mock import MagicMock
+
 from homeassistant.components.free_mobile.const import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_NAME,
+    CONF_PLATFORM,
+    CONF_USERNAME,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -82,4 +90,39 @@ async def test_import_already_configured(
     assert issue_registry.async_get_issue(
         domain=HOMEASSISTANT_DOMAIN,
         issue_id=f"deprecated_yaml_{DOMAIN}",
+    )
+
+
+async def test_import_validation_error_creates_redacted_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_send_sms: MagicMock,
+) -> None:
+    """Test a failed yaml import creates an issue without leaking the access token."""
+    mock_send_sms.return_value = MagicMock(status_code=HTTPStatus.FORBIDDEN)
+
+    await async_setup_component(
+        hass,
+        NOTIFY_DOMAIN,
+        {
+            NOTIFY_DOMAIN: [
+                {
+                    CONF_PLATFORM: DOMAIN,
+                    CONF_NAME: "notifier_name",
+                    **MOCK_CONFIG,
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=f"deprecated_yaml_import_issue_error_{MOCK_CONFIG[CONF_USERNAME]}",
+    )
+    assert issue is not None
+    assert (
+        MOCK_CONFIG[CONF_ACCESS_TOKEN] not in issue.translation_placeholders["config"]
     )
