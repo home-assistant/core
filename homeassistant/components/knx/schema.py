@@ -3,7 +3,7 @@
 from abc import ABC
 from collections import OrderedDict
 from datetime import timedelta
-from typing import ClassVar, Final
+from typing import Any, ClassVar, Final
 
 import voluptuous as vol
 from xknx.devices.climate import FanSpeedMode, SetpointShiftMode
@@ -74,6 +74,7 @@ from .validation import (
     dpt_base_type_validator,
     ga_list_validator,
     ga_validator,
+    ia_validator,
     numeric_type_validator,
     sensor_type_validator,
     string_type_validator,
@@ -510,6 +511,16 @@ class DateTimeSchema(KNXPlatformSchema):
     )
 
 
+def _validate_expose_write_back(config: dict[str, Any]) -> dict[str, Any]:
+    """`write_back` is not supported for exposures targeting an attribute."""
+    if (
+        config.get(ExposeSchema.CONF_KNX_EXPOSE_WRITE_BACK)
+        and config.get(ExposeSchema.CONF_KNX_EXPOSE_ATTRIBUTE) is not None
+    ):
+        raise vol.Invalid("`write_back` is not supported together with `attribute`")
+    return config
+
+
 class ExposeSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX exposures."""
 
@@ -521,6 +532,8 @@ class ExposeSchema(KNXPlatformSchema):
     CONF_KNX_EXPOSE_COOLDOWN = "cooldown"
     CONF_KNX_EXPOSE_PERIODIC_SEND = "periodic_send"
     CONF_KNX_EXPOSE_DEFAULT = "default"
+    CONF_KNX_EXPOSE_WRITE_BACK = "write_back"
+    CONF_KNX_EXPOSE_SOURCE_WHITELIST = "source_whitelist"
     CONF_TIME = "time"
     CONF_DATE = "date"
     CONF_DATETIME = "datetime"
@@ -551,9 +564,15 @@ class ExposeSchema(KNXPlatformSchema):
             vol.Optional(CONF_KNX_EXPOSE_ATTRIBUTE): cv.string,
             vol.Optional(CONF_KNX_EXPOSE_DEFAULT): cv.match_all,
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_KNX_EXPOSE_WRITE_BACK, default=False): cv.boolean,
+            vol.Optional(CONF_KNX_EXPOSE_SOURCE_WHITELIST, default=list): vol.All(
+                cv.ensure_list, [ia_validator]
+            ),
         }
     )
-    ENTITY_SCHEMA = vol.Any(EXPOSE_SENSOR_SCHEMA, EXPOSE_TIME_SCHEMA)
+    ENTITY_SCHEMA = vol.Any(
+        vol.All(EXPOSE_SENSOR_SCHEMA, _validate_expose_write_back), EXPOSE_TIME_SCHEMA
+    )
 
 
 class FanSchema(KNXPlatformSchema):

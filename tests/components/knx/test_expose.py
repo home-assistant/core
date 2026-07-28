@@ -5,6 +5,7 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.knx.const import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.schema import ExposeSchema
@@ -52,6 +53,32 @@ async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
     hass.states.async_set(entity_id, "off", {"brightness": 0})
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", False)
+
+
+def test_expose_write_back_allows_numeric() -> None:
+    """Test write_back is allowed for a numeric exposure."""
+    ExposeSchema.ENTITY_SCHEMA(
+        {
+            CONF_TYPE: "5.010",
+            KNX_ADDRESS: "1/1/8",
+            CONF_ENTITY_ID: "number.fake",
+            ExposeSchema.CONF_KNX_EXPOSE_WRITE_BACK: True,
+        }
+    )
+
+
+def test_expose_write_back_rejects_attribute() -> None:
+    """Test write_back is rejected together with an attribute exposure."""
+    with pytest.raises(vol.Invalid):
+        ExposeSchema.ENTITY_SCHEMA(
+            {
+                CONF_TYPE: "5.010",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: "number.fake",
+                CONF_ATTRIBUTE: "foo",
+                ExposeSchema.CONF_KNX_EXPOSE_WRITE_BACK: True,
+            }
+        )
 
 
 async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit) -> None:
