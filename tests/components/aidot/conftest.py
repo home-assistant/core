@@ -18,7 +18,13 @@ import pytest
 from homeassistant.components.aidot.const import DOMAIN
 from homeassistant.core import callback
 
-from .const import TEST_DEVICE1, TEST_DEVICE_LIST, TEST_EMAIL, TEST_LOGIN_RESP
+from .const import (
+    TEST_DEVICE1,
+    TEST_DEVICE_LIST,
+    TEST_EMAIL,
+    TEST_LOGIN_ENTRY_DATA,
+    TEST_LOGIN_RESP,
+)
 
 from tests.common import MockConfigEntry
 
@@ -39,7 +45,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=TEST_LOGIN_RESP["id"],
         title=TEST_EMAIL,
-        data=TEST_LOGIN_RESP.copy(),
+        data=TEST_LOGIN_ENTRY_DATA.copy(),
     )
 
 

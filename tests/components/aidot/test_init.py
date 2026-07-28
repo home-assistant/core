@@ -40,3 +40,8 @@ async def test_async_setup_entry_auth_failed(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    # Verify reauth flow is triggered
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["handler"] == "aidot"
+    assert flows[0]["context"]["source"] == "reauth"
