@@ -60,6 +60,8 @@ _LOGGER = logging.getLogger(__name__)
 _WRITE_BACK_DISPATCH: dict[tuple[str, str], tuple[str, str, str]] = {
     ("numeric", "number"): ("number", "set_value", "value"),
     ("numeric", "input_number"): ("input_number", "set_value", "value"),
+    ("string", "text"): ("text", "set_value", "value"),
+    ("string", "input_text"): ("input_text", "set_value", "value"),
 }
 
 

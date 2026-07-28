@@ -6,6 +6,7 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
+from xknx.dpt import DPTString
 
 from homeassistant.components.knx.const import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.schema import ExposeSchema
@@ -27,6 +28,7 @@ from .conftest import KNXTestKit
 from tests.common import async_fire_time_changed, async_mock_service
 from tests.typing import WebSocketGenerator
 
+_STRING_PAYLOAD = tuple(DPTString.to_knx("Hello").value)
 _SWITCH_ENTITY = "switch.fake"
 
 
@@ -119,6 +121,8 @@ async def test_binary_expose_write_back_source_filter(
     [
         pytest.param("5.010", (42,), 42, "number", id="number"),
         pytest.param("5.010", (42,), 42, "input_number", id="input_number"),
+        pytest.param("16.000", _STRING_PAYLOAD, "Hello", "text", id="text"),
+        pytest.param("16.000", _STRING_PAYLOAD, "Hello", "input_text", id="input_text"),
     ],
 )
 async def test_value_expose_write_back(
