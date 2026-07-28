@@ -194,7 +194,9 @@ class NetatmoDataHandler:
             )
         )
 
-        self.account = pyatmo.AsyncAccount(self.auth)
+        self.account = pyatmo.AsyncAccount(
+            self.auth, disabled_homes_ids=list(self.disabled_homes)
+        )
 
         await self.subscribe(ACCOUNT, ACCOUNT, None)
 
@@ -309,8 +311,6 @@ class NetatmoDataHandler:
 
         if publisher == "public":
             kwargs = {"area_id": self.account.register_public_weather_area(**kwargs)}
-        elif publisher == ACCOUNT:
-            kwargs = {"disabled_homes_ids": list(self.disabled_homes)}
 
         interval = int(DEFAULT_INTERVALS[publisher] / self._interval_factor)
         self.publisher[signal_name] = NetatmoPublisher(
@@ -358,11 +358,6 @@ class NetatmoDataHandler:
         self.setup_air_care()
 
         for home in self.account.homes.values():
-            # With pyatmo <= 9.5.0 a disabled home can reappear in
-            # account.homes as a pseudo-home once weather data was fetched
-            if home.entity_id in self.disabled_homes:
-                continue
-
             signal_home = f"{HOME}-{home.entity_id}"
 
             await self.subscribe(HOME, signal_home, None, home_id=home.entity_id)

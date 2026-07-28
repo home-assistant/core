@@ -379,7 +379,7 @@ async def test_option_flow_home_added_mid_flow(
         assert result["type"] is FlowResultType.FORM
 
         # A new home appears in the account topology while the form is open
-        config_entry.runtime_data.account.all_homes_id["new_home_id"] = "New home"
+        config_entry.runtime_data.account.all_home_names["new_home_id"] = "New home"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_ENABLED_HOMES: [HOME_1_ID]}

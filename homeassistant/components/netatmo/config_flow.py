@@ -112,9 +112,10 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
         """Return a mapping of home id to home display name."""
         if self.config_entry.state is not ConfigEntryState.LOADED:
             return {}
-        all_homes_id = self.config_entry.runtime_data.account.all_homes_id
+        all_home_names = self.config_entry.runtime_data.account.all_home_names
         return {
-            home_id: home_name or home_id for home_id, home_name in all_homes_id.items()
+            home_id: home_name or home_id
+            for home_id, home_name in all_home_names.items()
         }
 
     def _homes_selection_offered(self, homes: dict[str, str]) -> bool:

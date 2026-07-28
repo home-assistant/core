@@ -157,7 +157,7 @@ async def test_setup_with_disabled_home(
 
     data_handler = config_entry.runtime_data
     account = data_handler.account
-    assert set(account.all_homes_id) == {HOME_1_ID, HOME_2_ID}
+    assert set(account.all_home_names) == {HOME_1_ID, HOME_2_ID}
     assert HOME_2_ID in account.homes
     assert not hass.states.async_entity_ids(CLIMATE_DOMAIN)
     # The disabled home is not polled
