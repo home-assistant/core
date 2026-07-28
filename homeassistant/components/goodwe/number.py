@@ -92,7 +92,7 @@ async def async_setup_entry(
     inverter = config_entry.runtime_data.inverter
     device_info = config_entry.runtime_data.device_info
 
-    entities = []
+    entities: list[NumberEntity] = []
 
     for description in filter(lambda dsc: dsc.filter(inverter), NUMBERS):
         try:
@@ -210,9 +210,7 @@ class EcoModeNumberEntity(NumberEntity):
         self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = device_info
         self._runtime_data = runtime_data
-        self._attr_native_value = float(
-            getattr(runtime_data, description.attr_name)
-        )
+        self._attr_native_value = float(getattr(runtime_data, description.attr_name))
 
     @override
     async def async_set_native_value(self, value: float) -> None:
