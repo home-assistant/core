@@ -680,12 +680,20 @@ async def _async_cancel_coordinator_tasks(coord: BoschCameraCoordinator) -> None
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry and cancel any background coordinator tasks."""
+    """Unload a config entry and cancel any background coordinator tasks.
+
+    Platforms are unloaded FIRST. If `async_unload_platforms` returns False
+    the config entry stays loaded, so the coordinator's timers/background
+    tasks must stay alive too — cancelling them first would leave a loaded
+    integration whose entities never update again (Copilot review round 15).
+    """
+    unloaded = bool(await hass.config_entries.async_unload_platforms(entry, PLATFORMS))
+
     coord = getattr(entry, "runtime_data", None)
-    if coord:
+    if unloaded and coord:
         await _async_cancel_coordinator_tasks(coord)
 
-    return bool(await hass.config_entries.async_unload_platforms(entry, PLATFORMS))
+    return unloaded
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

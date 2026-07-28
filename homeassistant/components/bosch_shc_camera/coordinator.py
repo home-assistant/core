@@ -798,7 +798,10 @@ class BoschCameraCoordinator(
     async def async_outage_ping_all(self) -> None:
         """Ping every known camera concurrently during a cloud outage.
 
-        Called from the UpdateFailed paths in `_async_update_data`. Throttled
+        Called from all three outer failure paths in `_async_update_data`
+        (`UpdateFailed`/`TimeoutError`/`aiohttp.ClientError`, via
+        tick_failure.py's dispatch_* helpers — Copilot review round 15).
+        Throttled
         to once per 30 s so a flapping cloud does not hammer the LAN. Result
         feeds `lan_tcp_reachable`, which the switch/light entity
         `available` checks and the card LAN-tile renderer consult.
@@ -1107,8 +1110,8 @@ class BoschCameraCoordinator(
             await run_housekeeping(self, data, opts, now, is_first_tick)
 
             # Raise a Repairs issue when movement/person notifications are
-            # disabled on a camera — without them the binary sensors are
-            # permanently "Clear" with no error shown to the user.
+            # disabled on a camera — without them the bosch_shc_camera_motion/
+            # _person bus events never fire, with no error shown otherwise.
             try:
                 self._refresh_notifications_disabled_issues()
             except Exception:  # noqa: BLE001 — explicitly non-fatal per log message; must not abort the coordinator tick
@@ -1186,8 +1189,8 @@ class BoschCameraCoordinator(
                     self._notif_disabled_logged.add(cam_id)
                     _LOGGER.warning(
                         "Camera %r has %s cloud notification(s) disabled — "
-                        "the corresponding binary sensor(s) will stay 'Clear'. "
-                        "Enable the notification switch(es) in Home Assistant or "
+                        "the corresponding bosch_shc_camera_* event(s) will "
+                        "never fire. Enable the notification setting(s) in "
                         "the Bosch Smart Home app",
                         cam_title,
                         types_str,

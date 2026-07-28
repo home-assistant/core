@@ -32,6 +32,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def dispatch_update_failed(coordinator: BoschCameraCoordinator) -> None:
     """Side effect for `except UpdateFailed:` — caller still re-raises."""
+    _outage_ping = getattr(coordinator, "async_outage_ping_all", None)
+    if _outage_ping is not None:
+        coordinator.spawn_tracked(
+            _outage_ping(), name="bosch_shc_camera_outage_ping_update_failed"
+        )
     _cloud_alert = getattr(coordinator, "_async_maybe_announce_cloud_state", None)
     if _cloud_alert is not None:
         coordinator.spawn_tracked(
@@ -64,6 +69,11 @@ async def dispatch_client_error(
 
     Returns the `UpdateFailed` the caller must `raise ... from err`.
     """
+    _outage_ping = getattr(coordinator, "async_outage_ping_all", None)
+    if _outage_ping is not None:
+        coordinator.spawn_tracked(
+            _outage_ping(), name="bosch_shc_camera_outage_ping_client_error"
+        )
     _cloud_alert = getattr(coordinator, "_async_maybe_announce_cloud_state", None)
     if _cloud_alert is not None:
         coordinator.spawn_tracked(

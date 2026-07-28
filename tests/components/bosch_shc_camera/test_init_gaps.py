@@ -524,3 +524,65 @@ async def test_options_updated_falls_back_to_coordinator_snapshot(
         await _async_options_updated(hass, entry)
 
     mock_reload.assert_not_called()
+
+
+async def test_unload_entry_cancels_coordinator_tasks_only_after_platforms_unload(
+    hass: HomeAssistant,
+) -> None:
+    """Coordinator tasks are cancelled ONLY when async_unload_platforms succeeds.
+
+    Regression for Copilot review round 15: cancelling the coordinator's
+    timers/background tasks BEFORE unloading platforms leaves a loaded
+    integration whose entities never update again if the platform unload
+    itself fails (returns False) — the config entry stays LOADED either way,
+    but the old ordering guaranteed the coordinator was already dead.
+
+    Goes through `hass.config_entries.async_unload` (not a direct
+    `async_unload_entry` call) per HA-core's own test convention.
+    """
+    entry = _mock_config_entry()
+    entry.add_to_hass(hass)
+    await _setup_healthy_entry(hass, entry)
+
+    init_mod = "homeassistant.components.bosch_shc_camera"
+    with (
+        patch.object(
+            hass.config_entries,
+            "async_unload_platforms",
+            AsyncMock(return_value=False),
+        ) as mock_unload_platforms,
+        patch(
+            f"{init_mod}._async_cancel_coordinator_tasks", AsyncMock()
+        ) as mock_cancel_tasks,
+    ):
+        result = await hass.config_entries.async_unload(entry.entry_id)
+
+    assert result is False
+    mock_unload_platforms.assert_awaited_once()
+    mock_cancel_tasks.assert_not_called()
+
+
+async def test_unload_entry_cancels_coordinator_tasks_when_platforms_unload_succeeds(
+    hass: HomeAssistant,
+) -> None:
+    """A successful platform unload DOES cancel the coordinator's background tasks."""
+    entry = _mock_config_entry()
+    entry.add_to_hass(hass)
+    await _setup_healthy_entry(hass, entry)
+    coord = entry.runtime_data
+
+    init_mod = "homeassistant.components.bosch_shc_camera"
+    with (
+        patch.object(
+            hass.config_entries,
+            "async_unload_platforms",
+            AsyncMock(return_value=True),
+        ),
+        patch(
+            f"{init_mod}._async_cancel_coordinator_tasks", AsyncMock()
+        ) as mock_cancel_tasks,
+    ):
+        result = await hass.config_entries.async_unload(entry.entry_id)
+
+    assert result is True
+    mock_cancel_tasks.assert_awaited_once_with(coord)

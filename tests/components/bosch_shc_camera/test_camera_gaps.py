@@ -809,3 +809,68 @@ async def test_local_outage_snap_returns_none_on_network_error(
         result = await entity._async_local_outage_snap(MagicMock(), None)
 
     assert result is None
+
+
+# ── _async_local_outage_snap — thumbnail request must not poison the shared
+# full-resolution cache (Copilot review round 15) ───────────────────────────
+
+
+async def test_local_outage_snap_thumbnail_request_does_not_update_shared_cache(
+    hass: HomeAssistant,
+) -> None:
+    """A width=N (thumbnail) outage snap returns its bytes but leaves cached_image/last_image_fetch untouched.
+
+    Mirrors the guard already applied to the tier-1/tier-2 fetch paths in
+    `_async_camera_image_impl` (bug-hunt 2026-07-27) — `_async_local_outage_snap`
+    itself was missed by that earlier fix, since it is a shared helper called
+    from all three failure points regardless of requested resolution.
+    """
+    entity = await _setup_camera_entity(hass)
+    entity.coordinator.local_creds_cache[CAM_ID] = {
+        "user": "cbs-user",
+        "password": "cbs-pass",
+        "host": "192.168.1.50",
+        "port": 443,
+    }
+    sentinel_cached = b"already-cached-full-res-frame"
+    sentinel_fetch_time = time.monotonic() - 3600
+    entity.cached_image = sentinel_cached
+    entity.last_image_fetch = sentinel_fetch_time
+    thumb_bytes = b"\xff\xd8thumbnail-outage-frame"
+
+    with patch(
+        f"{_CAMERA_MOD}.async_digest_request",
+        AsyncMock(return_value=_digest_cm(200, thumb_bytes)),
+    ):
+        result = await entity._async_local_outage_snap(MagicMock(), 320)
+
+    assert result == thumb_bytes
+    assert entity.cached_image == sentinel_cached
+    assert entity.last_image_fetch == sentinel_fetch_time
+
+
+async def test_local_outage_snap_full_resolution_request_updates_shared_cache(
+    hass: HomeAssistant,
+) -> None:
+    """A req_jpeg_size=None (full-resolution) outage snap DOES update the shared cache."""
+    entity = await _setup_camera_entity(hass)
+    entity.coordinator.local_creds_cache[CAM_ID] = {
+        "user": "cbs-user",
+        "password": "cbs-pass",
+        "host": "192.168.1.50",
+        "port": 443,
+    }
+    entity.cached_image = b"stale-full-res-frame"
+    sentinel_fetch_time = time.monotonic() - 3600
+    entity.last_image_fetch = sentinel_fetch_time
+    full_bytes = b"\xff\xd8full-resolution-outage-frame"
+
+    with patch(
+        f"{_CAMERA_MOD}.async_digest_request",
+        AsyncMock(return_value=_digest_cm(200, full_bytes)),
+    ):
+        result = await entity._async_local_outage_snap(MagicMock(), None)
+
+    assert result == full_bytes
+    assert entity.cached_image == full_bytes
+    assert entity.last_image_fetch != sentinel_fetch_time

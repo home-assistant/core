@@ -934,8 +934,15 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             _LOGGER.debug("LOCAL outage snap failed: %s", err)
             return None
         if outage_data:
-            self.cached_image = outage_data
-            self.last_image_fetch = time.monotonic()
+            # Only a full-resolution fetch may update the shared cache — see
+            # the tier-1a comment in `_async_camera_image_impl`. This helper
+            # also serves width=N (thumbnail) requests; without this guard a
+            # thumbnail-sized outage snap would poison cached_image and
+            # suppress the next full-resolution fetch until the cache TTL
+            # elapses (Copilot review round 15).
+            if req_jpeg_size is None:
+                self.cached_image = outage_data
+                self.last_image_fetch = time.monotonic()
             _LOGGER.info(
                 "%s: outage fallback — LOCAL snap.jpg %d bytes via cached Digest creds",
                 self._display_name,

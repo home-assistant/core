@@ -9,6 +9,7 @@ renamed to the final path so a crash mid-write leaves the previous file intact.
 """
 
 import asyncio
+import contextlib
 import logging
 from pathlib import Path
 import re
@@ -172,8 +173,18 @@ async def load_snapshot(hass: HomeAssistant, cam_id: str) -> bytes | None:
 
 
 def _sync_remove_all(hass: HomeAssistant) -> None:
-    """Blocking: delete the entire persisted-snapshot directory, if present."""
-    shutil.rmtree(_storage_dir(hass), ignore_errors=True)
+    """Blocking: delete the entire persisted-snapshot directory, if present.
+
+    Only a missing directory (nothing was ever persisted) is tolerated.
+    `ignore_errors=True` would also swallow permission/filesystem errors,
+    reporting removal success while leaving every private camera JPEG on
+    disk — this must propagate instead so `async_remove_entry`'s caller
+    sees the failure (Copilot review round 15; a near-identical finding
+    was flagged and its review thread marked resolved in round 5, but the
+    code was never actually changed then).
+    """
+    with contextlib.suppress(FileNotFoundError):
+        shutil.rmtree(_storage_dir(hass))
 
 
 async def async_remove_all_snapshots(hass: HomeAssistant) -> None:

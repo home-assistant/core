@@ -154,3 +154,25 @@ async def test_async_remove_all_snapshots_on_missing_directory_is_a_noop(
 ) -> None:
     """Removing snapshots when nothing was ever saved does not raise."""
     await async_remove_all_snapshots(hass)
+
+
+async def test_async_remove_all_snapshots_propagates_real_oserror(
+    hass: HomeAssistant,
+) -> None:
+    """A genuine filesystem/permission error during removal must NOT be swallowed.
+
+    Regression for Copilot review round 15: `_sync_remove_all` used to call
+    `shutil.rmtree(..., ignore_errors=True)`, which reports success even when
+    permission or filesystem errors leave every persisted JPEG on disk — the
+    same finding was raised and its review thread marked resolved in round 5,
+    but the code was never actually changed then. Only a missing directory
+    (see the noop test above) may be tolerated; every other OSError must
+    propagate so `async_remove_entry`'s caller sees the failure.
+    """
+    await save_snapshot(hass, CAM_ID, VALID_JPEG)
+
+    with (
+        patch("shutil.rmtree", side_effect=PermissionError("denied")),
+        pytest.raises(PermissionError, match="denied"),
+    ):
+        await async_remove_all_snapshots(hass)

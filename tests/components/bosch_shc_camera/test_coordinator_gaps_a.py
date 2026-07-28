@@ -382,6 +382,32 @@ async def test_refresh_notifications_disabled_issues_creates_issue(
     assert CAM_ID in coord._notif_disabled_logged
 
 
+async def test_refresh_notifications_disabled_issues_log_message_matches_camera_only_scope(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """The one-time WARNING log describes this build's real behavior.
+
+    Regression for Copilot review round 15: the old wording told users to
+    enable a "notification switch(es) in Home Assistant" and warned that
+    "binary sensor(s)" would stay Clear — but this camera-only Core PR ships
+    no switch or binary_sensor platform at all, so both entities described
+    don't exist. The message (and the matching `notifications_disabled`
+    Repairs-issue translation string) must instead describe the real
+    consequence: the `bosch_shc_camera_motion`/`_person` bus events never
+    firing, and the real fix location (the Bosch Smart Home app only).
+    """
+    coord = await _make_coordinator(hass)
+    coord.notifications_cache = {CAM_ID: {"movement": False, "person": True}}
+    coord.data = {CAM_ID: {"info": {"title": "Front Door"}}}
+
+    coord._refresh_notifications_disabled_issues()
+
+    assert "bosch_shc_camera_" in caplog.text
+    assert "Bosch Smart Home app" in caplog.text
+    assert "switch" not in caplog.text.lower()
+    assert "binary sensor" not in caplog.text.lower()
+
+
 async def test_refresh_notifications_disabled_issues_clears_when_reenabled(
     hass: HomeAssistant,
 ) -> None:

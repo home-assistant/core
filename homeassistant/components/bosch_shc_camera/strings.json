@@ -31,7 +31,7 @@
       "title": "Bosch Camera — Firmware update available"
     },
     "notifications_disabled": {
-      "description": "The **{types}** cloud notification(s) are disabled for camera **{camera}**.\n\nWithout these notifications, Bosch does not send motion or person events, so the corresponding binary sensors will permanently show **Clear** even when motion occurs.\n\n**How to fix:** Enable the **{types}** notification switch(es) for this camera in Home Assistant (Settings → Devices & Services → Bosch Smart Home Camera → the camera device), or turn them on in the Bosch Smart Home app under the camera's notification settings.",
+      "description": "The **{types}** cloud notification(s) are disabled for camera **{camera}**.\n\nWithout these notifications, Bosch does not send motion or person events at all, so this integration's `bosch_shc_camera_motion`/`bosch_shc_camera_person` events will never fire for this camera.\n\n**How to fix:** Open the Bosch Smart Home app and enable the **{types}** notification setting(s) for this camera.",
       "title": "Bosch Camera — Notifications disabled"
     },
     "token_expired": {
