@@ -1548,6 +1548,40 @@ async def test_irrigation_system_reads_remaining_via_end_time(
         assert front_chars[CHAR_REMAINING_DURATION].value == 120
 
 
+async def test_irrigation_system_end_time_remaining_counts_down_without_state_events(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test end_time remaining duration keeps updating between state updates."""
+    with freeze_time(dt_util.utcnow()):
+        now = dt_util.utcnow()
+        future_end = (now + timedelta(seconds=120)).isoformat()
+        hass.states.async_set(
+            "valve.front_lawn",
+            STATE_OPEN,
+            {"end_time": future_end},
+        )
+        await hass.async_block_till_done()
+
+        acc = IrrigationSystem(
+            hass,
+            hk_driver,
+            "Irrigation",
+            "valve.front_lawn",
+            22,
+            {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+        )
+        acc.run()
+        await hass.async_block_till_done()
+
+        front_chars = acc._valve_chars["valve.front_lawn"]
+        assert front_chars[CHAR_REMAINING_DURATION].value == 120
+        assert front_chars["close_timer"] is None
+
+        async_fire_time_changed(hass, now + timedelta(seconds=1))
+        await hass.async_block_till_done()
+        assert front_chars[CHAR_REMAINING_DURATION].value == 119
+
+
 async def test_irrigation_system_ignores_invalid_duration_attribute(
     hass: HomeAssistant, hk_driver
 ) -> None:

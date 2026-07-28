@@ -810,6 +810,13 @@ class IrrigationSystem(HomeAccessory):
         if is_open:
             if remaining > 0:
                 self._clear_local_runtime(entity_id)
+                if (end_time := self._end_time_from_state(state)) is not None:
+                    self._start_runtime_updates(entity_id, end_time)
+                else:
+                    self._start_runtime_updates(
+                        entity_id,
+                        dt_util.utcnow() + timedelta(seconds=remaining),
+                    )
             elif (local_remaining := self._remaining_from_local_runtime(entity_id)) > 0:
                 remaining = local_remaining
             else:
@@ -898,13 +905,19 @@ class IrrigationSystem(HomeAccessory):
                     return max(int(float(raw)), 0)
                 except TypeError, ValueError:
                     continue
-        if (end_time_raw := state.attributes.get("end_time")) is not None:
-            if (end_time := dt_util.parse_datetime(str(end_time_raw))) is not None:
-                return max(
-                    int((dt_util.as_utc(end_time) - dt_util.utcnow()).total_seconds()),
-                    0,
-                )
+        if (end_time := self._end_time_from_state(state)) is not None:
+            return max(int((end_time - dt_util.utcnow()).total_seconds()), 0)
         return 0
+
+    def _end_time_from_state(self, state: State | None) -> datetime | None:
+        """Get normalized UTC end_time from valve state attributes."""
+        if state is None:
+            return None
+        if (end_time_raw := state.attributes.get("end_time")) is None:
+            return None
+        if (end_time := dt_util.parse_datetime(str(end_time_raw))) is None:
+            return None
+        return dt_util.as_utc(end_time)
 
     async def _async_call_valve_service_and_resync(
         self, entity_id: str, service: str, value: int
@@ -956,6 +969,20 @@ class IrrigationSystem(HomeAccessory):
             seconds,
             self._make_close_runtime_callback(entity_id),
         )
+        chars["update_timer"] = async_call_later(
+            self.hass,
+            1,
+            self._make_update_runtime_callback(entity_id),
+        )
+
+    def _start_runtime_updates(self, entity_id: str, end_time: datetime) -> None:
+        """Track remaining runtime locally without scheduling auto-close calls."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None:
+            return
+        if max(int((end_time - dt_util.utcnow()).total_seconds()), 0) <= 0:
+            return
+        chars["end_time"] = end_time
         chars["update_timer"] = async_call_later(
             self.hass,
             1,
