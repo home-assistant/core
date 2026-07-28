@@ -98,12 +98,8 @@ def get_thumbnail_url_full(
             )
         return fix_image_url(getattr(item, "album_art_uri", ""))
 
-    # Remember a track's real album art URI so the browse-image proxy can fetch it
-    # later, keyed by the content id that core round-trips back to us: a track's art
-    # is served by the speaker keyed by the full service URI (incl. query string),
-    # which cannot be reconstructed from the content id alone. Only tracks read this
-    # cache back (albums and artists are resolved via get_media), so only tracks are
-    # cached here.
+    # Cache a track's real art URI: the proxy needs it later, and a track's art is
+    # keyed by the full service URI (query string), which the content id can't rebuild.
     if (
         media_content_type == MediaType.TRACK
         and item is not None
@@ -117,10 +113,8 @@ def get_thumbnail_url_full(
             while len(cache) > BROWSE_IMAGE_CACHE_SIZE:
                 cache.pop(next(iter(cache)))
 
-    # Do not unquote: get_browse_image_url percent-encodes the content id into the
-    # proxy URL path and aiohttp unquotes it automatically, so the id round-trips
-    # intact. Unquoting here would collapse a track URI's "?sid=...&..." query
-    # string into the proxy URL, truncating the id and breaking the art lookup.
+    # Don't unquote: the id is percent-encoded into the proxy path and aiohttp decodes
+    # it on return; unquoting here would truncate a track's "?sid=...&..." query.
     return get_browse_image_url(
         media_content_type,
         media_content_id,
