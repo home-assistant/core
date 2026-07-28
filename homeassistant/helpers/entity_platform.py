@@ -833,8 +833,8 @@ class EntityPlatform:
                 already_exists = True
         return (already_exists, restored)
 
-    def _report_rejected_device_attach(self, entity: Entity, reason: str) -> None:
-        """Report a rejected attempt to attach a device to an entity.
+    def _check_device_attach(self, entity: Entity, reason: str) -> None:
+        """Check the entity does not attach a device and report it if it does.
 
         A device can only be attached to an entity which has a unique ID and
         belongs to a config entry.
@@ -970,7 +970,7 @@ class EntityPlatform:
                 else:
                     device = entity.device_entry
             else:
-                self._report_rejected_device_attach(entity, "without a config entry")
+                self._check_device_attach(entity, "without a config entry")
                 device = None
                 entity.device_entry = None
 
@@ -1043,7 +1043,7 @@ class EntityPlatform:
             entity.entity_id = entry.entity_id
 
         else:  # entity.unique_id is None
-            self._report_rejected_device_attach(entity, "without a unique ID")
+            self._check_device_attach(entity, "without a unique ID")
             entity.device_entry = None
 
             # We won't generate an entity ID if the platform has already set one
