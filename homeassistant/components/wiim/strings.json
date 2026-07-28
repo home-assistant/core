@@ -6,7 +6,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "missing_homeassistant_url": "Failed to determine Home Assistant URL. Please make sure you have an internal URL set.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "wrong_device": "The host belongs to a different WiiM device."
+      "unique_id_mismatch": "The host belongs to a different WiiM device."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

@@ -267,6 +267,7 @@ async def test_reconfigure_flow_updates_host(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.111"
+    assert mock_config_entry.unique_id == "uuid:test-udn-1234"
     assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
 
 
@@ -330,5 +331,5 @@ async def test_reconfigure_flow_wrong_device(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "wrong_device"
+    assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.100"
