@@ -50,7 +50,6 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -1348,11 +1347,7 @@ class EnvoyInverterEntity(EnvoySensorBaseEntity):
             name=f"Inverter {serial_number}",
             manufacturer="Enphase",
             model="Inverter",
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, self.envoy_serial_num),
-                coordinator.config_entry.entry_id,
-            ),
+            via_device=(DOMAIN, self.envoy_serial_num),
             serial_number=serial_number,
         )
 
@@ -1397,11 +1392,7 @@ class EnvoyEnchargeEntity(EnvoySensorBaseEntity):
             model="Encharge",
             name=f"Encharge {serial_number}",
             sw_version=str(encharge_inventory[self._serial_number].firmware_version),
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, self.envoy_serial_num),
-                coordinator.config_entry.entry_id,
-            ),
+            via_device=(DOMAIN, self.envoy_serial_num),
             serial_number=serial_number,
         )
 
@@ -1469,11 +1460,7 @@ class EnvoyEnpowerEntity(EnvoySensorBaseEntity):
             model="Enpower",
             name=f"Enpower {enpower_data.serial_number}",
             sw_version=str(enpower_data.firmware_version),
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, self.envoy_serial_num),
-                coordinator.config_entry.entry_id,
-            ),
+            via_device=(DOMAIN, self.envoy_serial_num),
             serial_number=enpower_data.serial_number,
         )
 
@@ -1578,11 +1565,7 @@ class EnvoyCollarEntity(EnvoySensorBaseEntity):
             model="IQ Meter Collar",
             name=f"Collar {collar_data.serial_number}",
             sw_version=str(collar_data.firmware_version),
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, self.envoy_serial_num),
-                coordinator.config_entry.entry_id,
-            ),
+            via_device=(DOMAIN, self.envoy_serial_num),
             serial_number=collar_data.serial_number,
         )
 
@@ -1616,11 +1599,7 @@ class EnvoyC6CCEntity(EnvoySensorBaseEntity):
             model="C6 COMBINER CONTROLLER",
             name=f"C6 Combiner {c6cc_data.serial_number}",
             sw_version=str(c6cc_data.firmware_version),
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, self.envoy_serial_num),
-                coordinator.config_entry.entry_id,
-            ),
+            via_device=(DOMAIN, self.envoy_serial_num),
             serial_number=c6cc_data.serial_number,
         )
 

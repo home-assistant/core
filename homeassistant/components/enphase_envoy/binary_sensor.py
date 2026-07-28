@@ -15,7 +15,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -210,11 +209,7 @@ class EnvoyEnchargeBinarySensorEntity(EnvoyBaseBinarySensorEntity):
             model="Encharge",
             name=f"Encharge {serial_number}",
             sw_version=str(encharge_inventory[self._serial_number].firmware_version),
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, self.envoy_serial_num),
-                coordinator.config_entry.entry_id,
-            ),
+            via_device=(DOMAIN, self.envoy_serial_num),
             serial_number=serial_number,
         )
 
@@ -248,11 +243,7 @@ class EnvoyEnpowerBinarySensorEntity(EnvoyBaseBinarySensorEntity):
             model="Enpower",
             name=f"Enpower {enpower.serial_number}",
             sw_version=str(enpower.firmware_version),
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, self.envoy_serial_num),
-                coordinator.config_entry.entry_id,
-            ),
+            via_device=(DOMAIN, self.envoy_serial_num),
             serial_number=enpower.serial_number,
         )
 
@@ -286,11 +277,7 @@ class EnvoyCollarBinarySensorEntity(EnvoyBaseBinarySensorEntity):
             model="IQ Meter Collar",
             name=f"Collar {collar_data.serial_number}",
             sw_version=str(collar_data.firmware_version),
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, self.envoy_serial_num),
-                coordinator.config_entry.entry_id,
-            ),
+            via_device=(DOMAIN, self.envoy_serial_num),
             serial_number=collar_data.serial_number,
         )
 
@@ -324,11 +311,7 @@ class EnvoyC6CCBinarySensorEntity(EnvoyBaseBinarySensorEntity):
             model="C6 COMBINER CONTROLLER",
             name=f"C6 Combiner {c6cc_data.serial_number}",
             sw_version=str(c6cc_data.firmware_version),
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, self.envoy_serial_num),
-                coordinator.config_entry.entry_id,
-            ),
+            via_device=(DOMAIN, self.envoy_serial_num),
             serial_number=c6cc_data.serial_number,
         )
 

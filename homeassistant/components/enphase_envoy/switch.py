@@ -11,7 +11,6 @@ from pyenphase.models.tariff import EnvoyStorageSettings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -136,11 +135,7 @@ class EnvoyEnpowerSwitchEntity(EnvoyBaseEntity, SwitchEntity):
             model="Enpower",
             name=f"Enpower {self._serial_number}",
             sw_version=str(enpower.firmware_version),
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, self.envoy_serial_num),
-                coordinator.config_entry.entry_id,
-            ),
+            via_device=(DOMAIN, self.envoy_serial_num),
             serial_number=self._serial_number,
         )
 
@@ -194,11 +189,7 @@ class EnvoyDryContactSwitchEntity(EnvoyBaseEntity, SwitchEntity):
             model="Dry contact relay",
             name=relay.load_name,
             sw_version=str(enpower.firmware_version),
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, enpower.serial_number),
-                coordinator.config_entry.entry_id,
-            ),
+            via_device=(DOMAIN, enpower.serial_number),
         )
 
     @property
@@ -248,11 +239,7 @@ class EnvoyStorageSettingsSwitchEntity(EnvoyBaseEntity, SwitchEntity):
                 model="Enpower",
                 name=f"Enpower {self._serial_number}",
                 sw_version=str(enpower.firmware_version),
-                via_device_id=dr.async_get_device_id_by_identifier(
-                    coordinator.hass,
-                    (DOMAIN, self.envoy_serial_num),
-                    coordinator.config_entry.entry_id,
-                ),
+                via_device=(DOMAIN, self.envoy_serial_num),
                 serial_number=self._serial_number,
             )
         else:
