@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_USERNAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.redact import async_redact_data
@@ -32,10 +32,11 @@ def async_deprecate_yaml_issue(
             },
         )
     else:
+        name = config.get(CONF_NAME) or config[CONF_USERNAME]
         async_create_issue(
             hass,
             DOMAIN,
-            f"deprecated_yaml_import_issue_error_{config[CONF_USERNAME]}",
+            f"deprecated_yaml_import_issue_error_{name}",
             breaks_in_ha_version="2027.2.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
