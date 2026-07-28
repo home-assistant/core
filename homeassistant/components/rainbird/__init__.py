@@ -43,6 +43,7 @@ PLATFORMS = [
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.VALVE,
 ]
 
 

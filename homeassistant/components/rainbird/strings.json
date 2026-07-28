@@ -55,12 +55,22 @@
     "step": {
       "init": {
         "data": {
-          "duration": "Default irrigation time in minutes"
+          "duration": "Default irrigation time in minutes",
+          "zone_type": "Zone entity type"
         },
         "data_description": {
-          "duration": "The default duration the sprinkler will run when turned on."
+          "duration": "The default duration the sprinkler will run when turned on.",
+          "zone_type": "Whether sprinkler zones are exposed as switches or valves."
         },
         "title": "[%key:component::rainbird::config::step::user::title%]"
+      }
+    }
+  },
+  "selector": {
+    "zone_type": {
+      "options": {
+        "switch": "Switch",
+        "valve": "Valve"
       }
     }
   },

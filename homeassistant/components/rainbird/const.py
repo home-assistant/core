@@ -6,6 +6,10 @@ DEFAULT_TRIGGER_TIME_MINUTES = 6
 
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_IMPORTED_NAMES = "imported_names"
+CONF_ZONE_TYPE = "zone_type"
+
+ZONE_TYPE_SWITCH = "switch"
+ZONE_TYPE_VALVE = "valve"
 
 ATTR_DURATION = "duration"
 

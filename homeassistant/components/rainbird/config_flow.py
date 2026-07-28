@@ -20,9 +20,12 @@ from . import RainbirdConfigEntry
 from .const import (
     ATTR_DURATION,
     CONF_SERIAL_NUMBER,
+    CONF_ZONE_TYPE,
     DEFAULT_TRIGGER_TIME_MINUTES,
     DOMAIN,
     TIMEOUT_SECONDS,
+    ZONE_TYPE_SWITCH,
+    ZONE_TYPE_VALVE,
 )
 from .coordinator import async_create_clientsession
 
@@ -120,7 +123,10 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_SERIAL_NUMBER: serial_number,
                         CONF_MAC: wifi_params.mac_address,
                     },
-                    options={ATTR_DURATION: DEFAULT_TRIGGER_TIME_MINUTES},
+                    options={
+                        ATTR_DURATION: DEFAULT_TRIGGER_TIME_MINUTES,
+                        CONF_ZONE_TYPE: ZONE_TYPE_SWITCH,
+                    },
                 )
 
         return self.async_show_form(
@@ -211,6 +217,17 @@ class RainBirdOptionsFlowHandler(OptionsFlow):
                         ATTR_DURATION,
                         default=self.config_entry.options[ATTR_DURATION],
                     ): cv.positive_int,
+                    vol.Optional(
+                        CONF_ZONE_TYPE,
+                        default=self.config_entry.options.get(
+                            CONF_ZONE_TYPE, ZONE_TYPE_SWITCH
+                        ),
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[ZONE_TYPE_SWITCH, ZONE_TYPE_VALVE],
+                            translation_key="zone_type",
+                        )
+                    ),
                 }
             ),
         )

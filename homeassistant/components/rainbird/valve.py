@@ -5,7 +5,11 @@ from typing import Any, override
 
 from pyrainbird.exceptions import RainbirdApiException, RainbirdDeviceBusyException
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.valve import (
+    ValveDeviceClass,
+    ValveEntity,
+    ValveEntityFeature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -31,12 +35,12 @@ async def async_setup_entry(
     config_entry: RainbirdConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up entry for a Rain Bird irrigation switches."""
-    if config_entry.options.get(CONF_ZONE_TYPE) == ZONE_TYPE_VALVE:
+    """Set up entry for Rain Bird irrigation valves."""
+    if config_entry.options.get(CONF_ZONE_TYPE) != ZONE_TYPE_VALVE:
         return
     coordinator = config_entry.runtime_data.coordinator
     async_add_entities(
-        RainBirdSwitch(
+        RainBirdValve(
             coordinator,
             zone,
             config_entry.options[ATTR_DURATION],
@@ -46,8 +50,12 @@ async def async_setup_entry(
     )
 
 
-class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity):
-    """Representation of a Rain Bird switch."""
+class RainBirdValve(CoordinatorEntity[RainbirdUpdateCoordinator], ValveEntity):
+    """Representation of a Rain Bird valve."""
+
+    _attr_device_class = ValveDeviceClass.WATER
+    _attr_reports_position = False
+    _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
 
     def __init__(
         self,
@@ -56,10 +64,9 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         duration_minutes: int,
         imported_name: str | None,
     ) -> None:
-        """Initialize a Rain Bird Switch Device."""
+        """Initialize a Rain Bird Valve Device."""
         super().__init__(coordinator)
         self._zone = zone
-        _LOGGER.debug("coordinator.unique_id=%s", coordinator.unique_id)
         if coordinator.unique_id is not None:
             self._attr_unique_id = f"{coordinator.unique_id}-{zone}"
         device_name = f"{MANUFACTURER} Sprinkler {zone}"
@@ -85,8 +92,8 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         return {"zone": self._zone}
 
     @override
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the switch on."""
+    async def async_open_valve(self, **kwargs: Any) -> None:
+        """Open the valve."""
         try:
             await self.coordinator.controller.irrigate_zone(
                 int(self._zone),
@@ -99,15 +106,13 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         except RainbirdApiException as err:
             raise HomeAssistantError("Rain Bird device failure") from err
 
-        # The device reflects the old state for a few moments. Update the
-        # state manually and trigger a refresh after a short debounced delay.
         self.coordinator.data.active_zones.add(self._zone)
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     @override
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the switch off."""
+    async def async_close_valve(self) -> None:
+        """Close the valve."""
         try:
             await self.coordinator.controller.stop_irrigation()
         except RainbirdDeviceBusyException as err:
@@ -117,15 +122,13 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         except RainbirdApiException as err:
             raise HomeAssistantError("Rain Bird device failure") from err
 
-        # The device reflects the old state for a few moments. Update the
-        # state manually and trigger a refresh after a short debounced delay.
-        if self.is_on:
+        if self.is_closed is False:
             self.coordinator.data.active_zones.remove(self._zone)
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     @property
     @override
-    def is_on(self) -> bool:
-        """Return true if switch is on."""
-        return self._zone in self.coordinator.data.active_zones
+    def is_closed(self) -> bool:
+        """Return true if valve is closed."""
+        return self._zone not in self.coordinator.data.active_zones
