@@ -1,7 +1,8 @@
 """The tests for the Home Assistant HTTP component."""
 
 import asyncio
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Iterator
+from contextlib import contextmanager
 import errno
 from http import HTTPStatus
 import logging
@@ -12,11 +13,12 @@ import ssl
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
+import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
-from homeassistant.components import cloud, http
+from homeassistant.components import cloud, http, onboarding
 from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.http import DOMAIN
 from homeassistant.components.http.config import (
@@ -29,7 +31,7 @@ from homeassistant.components.http.config import (
     async_get_and_load_store,
     default_server_port,
 )
-from homeassistant.components.http.const import ENV_SETUP_PORT
+from homeassistant.components.http.const import ENV_SETUP_PORT, ENV_SUPERVISOR
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -98,6 +100,71 @@ def mock_create_server() -> Generator[Mock]:
     # Close any server that is not already closed (closing twice is a no-op).
     for server in servers:
         server.close()
+
+
+async def _bind_redirect_ephemeral(self: http.HomeAssistantHTTP) -> asyncio.Server:
+    """Bind the legacy redirect on an ephemeral localhost port instead of 8123."""
+    assert self._legacy_redirect_runner is not None
+    return await self.hass.loop.create_server(
+        self._legacy_redirect_runner.server, "127.0.0.1", 0, start_serving=False
+    )
+
+
+# A port-80 default config, standing in for _DEFAULT_CONFIG under Supervisor
+# (which is frozen at import to port 8123 in the test process).
+DEFAULT_80_CONFIG = HTTP_STORAGE_SCHEMA({"server_port": 80})
+
+
+@contextmanager
+def _supervisor_default_config() -> Iterator[None]:
+    """Simulate a fresh Supervisor install: the default config on port 80.
+
+    _DEFAULT_CONFIG is frozen at import (port 8123 without Supervisor in the
+    test process), so both references are patched to a port-80 default to
+    reproduce production, where SUPERVISOR is set before the module is
+    imported. The redirect binds an ephemeral localhost port instead of 8123.
+    """
+    with (
+        # clear=True so a developer/CI SETUP_PORT can't skew the simulation.
+        patch.dict(os.environ, {ENV_SUPERVISOR: "core"}, clear=True),
+        patch(
+            "homeassistant.components.http.config._DEFAULT_CONFIG", DEFAULT_80_CONFIG
+        ),
+        patch(
+            "homeassistant.components.http.server._DEFAULT_CONFIG", DEFAULT_80_CONFIG
+        ),
+        patch(
+            "homeassistant.components.http.server.HomeAssistantHTTP._async_create_redirect_server",
+            autospec=True,
+            side_effect=_bind_redirect_ephemeral,
+        ),
+    ):
+        yield
+
+
+async def _setup_http_with_onboarding(
+    hass: HomeAssistant, *, onboarded: bool = False
+) -> None:
+    """Set up http and onboarding, then start Home Assistant.
+
+    The legacy-port transition is bound to onboarding, so onboarding must be
+    set up (as it always is via frontend in production) for the redirect to
+    start.
+    """
+    assert await async_setup_component(hass, "http", {})
+    assert await async_setup_component(hass, "onboarding", {})
+    if onboarded:
+        hass.data[onboarding.DOMAIN].onboarded = True
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
+def _complete_onboarding(hass: HomeAssistant) -> None:
+    """Mark onboarding complete and fire its listeners, as the views do."""
+    data = hass.data[onboarding.DOMAIN]
+    data.onboarded = True
+    for listener in list(data.listeners):
+        listener()
 
 
 def _setup_broken_ssl_pem_files(tmp_path: Path) -> tuple[Path, Path]:
@@ -980,6 +1047,76 @@ async def test_unix_socket_rejected_relative_path(
     assert "path must be absolute" in caplog.text
 
 
+async def test_supervisor_http_config_view(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    tmp_path: Path,
+) -> None:
+    """Test the HTTP config view is registered and served over the socket only."""
+    await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=["system-admin"]
+    )
+    socket_path = tmp_path / "core.sock"
+    loop = asyncio.get_running_loop()
+    with (
+        patch.dict(
+            os.environ, {"SUPERVISOR_CORE_API_SOCKET": str(socket_path)}, clear=False
+        ),
+        patch(
+            "homeassistant.components.http.web_runner.HomeAssistantUnixSite"
+            "._create_unix_socket",
+            return_value=Mock(),
+        ),
+        patch.object(loop, "create_unix_server", return_value=Mock()),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {"http": {}})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    # Hidden from ordinary (non-socket) requests.
+    resp = await client.get("/api/core/http_config")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+    with patch(
+        "homeassistant.components.http.server.is_supervisor_unix_socket_request",
+        return_value=True,
+    ):
+        # Served over the Supervisor Unix socket with the live server config.
+        resp = await client.get("/api/core/http_config")
+        assert resp.status == HTTPStatus.OK
+        assert await resp.json() == {
+            "port": 8123,
+            "ssl": False,
+            "ssl_peer_certificate": False,
+            "server_host": ["0.0.0.0", "::"],
+        }
+
+        # A specific bind is reported verbatim so Supervisor can decide.
+        hass.http.server_host = ["1.2.3.4"]
+        resp = await client.get("/api/core/http_config")
+        assert resp.status == HTTPStatus.OK
+        assert (await resp.json())["server_host"] == ["1.2.3.4"]
+
+        # TLS is reported from the active SSL context and peer certificate.
+        hass.http.context = Mock(spec=ssl.SSLContext)
+        hass.http.ssl_peer_certificate = "/config/peer.pem"
+        resp = await client.get("/api/core/http_config")
+        assert resp.status == HTTPStatus.OK
+        result = await resp.json()
+        assert result["ssl"] is True
+        assert result["ssl_peer_certificate"] is True
+
+        # Recovery mode can leave a certificate configured while the context
+        # failed to build and the listener runs plaintext: report plaintext.
+        hass.http.ssl_certificate = "/config/cert.pem"
+        hass.http.context = None
+        resp = await client.get("/api/core/http_config")
+        assert resp.status == HTTPStatus.OK
+        assert (await resp.json())["ssl"] is False
+
+
 @pytest.mark.usefixtures("freezer")
 async def test_yaml_migration_to_storage(
     hass: HomeAssistant,
@@ -1482,13 +1619,24 @@ async def test_setup_migrates_v2_1_storage_to_v2_2(
         pytest.param({ENV_SETUP_PORT: "0"}, 8123, id="out-of-range"),
         pytest.param({ENV_SETUP_PORT: "notaport"}, 8123, id="not-a-number"),
         pytest.param({ENV_SETUP_PORT: ""}, 8123, id="empty"),
+        pytest.param({ENV_SUPERVISOR: "core"}, 80, id="supervisor"),
+        pytest.param(
+            {ENV_SUPERVISOR: "core", ENV_SETUP_PORT: "8080"},
+            8080,
+            id="supervisor-setup-port-override",
+        ),
+        pytest.param(
+            {ENV_SUPERVISOR: "core", ENV_SETUP_PORT: "notaport"},
+            80,
+            id="supervisor-invalid-setup-port",
+        ),
     ],
 )
 def test_default_server_port(
     env: dict[str, str],
     expected_port: int,
 ) -> None:
-    """Test SETUP_PORT overrides the default port and invalid values fall back."""
+    """Test the default port, including Supervisor and SETUP_PORT overrides."""
     with patch.dict(os.environ, env, clear=True):
         assert default_server_port() == expected_port
 
@@ -1510,6 +1658,197 @@ async def test_setup_port_env_var_used_as_default(
     assert hass_storage["http"]["data"]["pending"] == _stored_config(
         {"server_port": 80}, created_at=dt_util.utcnow().isoformat()
     )
+
+
+async def test_default_config_under_supervisor_starts_redirect(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the default config under Supervisor uses port 80 and redirects 8123."""
+    with _supervisor_default_config():
+        await _setup_http_with_onboarding(hass)
+
+    assert hass.config.api.port == 80
+    assert hass.http._legacy_redirect_server is not None
+
+
+async def test_persisted_default_config_starts_redirect(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the redirect still starts for a default config loaded from disk.
+
+    A persisted default config carries created_at/error metadata, so the
+    transition gate must compare without it (not by identity or raw equality).
+    """
+    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
+
+    with _supervisor_default_config():
+        await _setup_http_with_onboarding(hass)
+
+    assert hass.config.api.port == 80
+    assert hass.http._legacy_redirect_server is not None
+
+
+async def test_no_redirect_when_already_onboarded(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the redirect is not started when onboarding is already complete."""
+    with _supervisor_default_config():
+        await _setup_http_with_onboarding(hass, onboarded=True)
+
+    assert hass.http._legacy_redirect_server is None
+
+
+async def test_redirect_stops_on_onboarding_complete(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the redirect is torn down once onboarding completes."""
+    with _supervisor_default_config():
+        await _setup_http_with_onboarding(hass)
+
+        server = hass.http
+        assert server._legacy_redirect_server is not None
+
+        _complete_onboarding(hass)
+        await hass.async_block_till_done()
+
+        assert server._legacy_redirect_server is None
+        assert server._legacy_redirect_runner is None
+
+
+async def test_no_redirect_without_supervisor(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test no redirect is started for the default config outside Supervisor."""
+    assert await async_setup_component(hass, "http", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.config.api.port == 8123
+    assert hass.http._legacy_redirect_runner is None
+    assert hass.http._legacy_redirect_server is None
+
+
+async def test_no_redirect_with_setup_port_outside_supervisor(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test SETUP_PORT alone (no Supervisor) does not start the redirect.
+
+    SETUP_PORT changes the default port for plain container installs too, but
+    the transition is Supervisor-only.
+    """
+    with (
+        patch(
+            "homeassistant.components.http.config._DEFAULT_CONFIG", DEFAULT_80_CONFIG
+        ),
+        patch(
+            "homeassistant.components.http.server._DEFAULT_CONFIG", DEFAULT_80_CONFIG
+        ),
+    ):
+        assert await async_setup_component(hass, "http", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert hass.http._legacy_redirect_server is None
+
+
+async def test_no_redirect_when_http_configured(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test no redirect is started once HTTP is configured (onboarding is over).
+
+    A user-configured config differs from the default, so even under Supervisor
+    the transition must not apply.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 9000})
+
+    with _supervisor_default_config():
+        assert await async_setup_component(hass, "http", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert hass.config.api.port == 9000
+    assert hass.http._legacy_redirect_server is None
+
+
+async def test_redirect_bind_failure_is_handled(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setup continues when the legacy redirect server cannot bind."""
+    with (
+        patch.dict(os.environ, {ENV_SUPERVISOR: "core"}, clear=True),
+        patch(
+            "homeassistant.components.http.config._DEFAULT_CONFIG", DEFAULT_80_CONFIG
+        ),
+        patch(
+            "homeassistant.components.http.server._DEFAULT_CONFIG", DEFAULT_80_CONFIG
+        ),
+        patch(
+            "homeassistant.components.http.server.HomeAssistantHTTP._async_create_redirect_server",
+            autospec=True,
+            side_effect=OSError(errno.EADDRINUSE, "Address already in use"),
+        ),
+    ):
+        assert await async_setup_component(hass, "http", {})
+        assert await async_setup_component(hass, "onboarding", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    server = hass.http
+    assert server._legacy_redirect_server is None
+    assert server._legacy_redirect_runner is None
+
+
+async def test_legacy_redirect_serves_method_preserving_307(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the legacy redirect serves a 307 to the active port for any method."""
+    captured: dict[str, int] = {}
+
+    async def _bind_serving(self: http.HomeAssistantHTTP) -> asyncio.Server:
+        assert self._legacy_redirect_runner is not None
+        server = await self.hass.loop.create_server(
+            self._legacy_redirect_runner.server, "127.0.0.1", 0
+        )
+        captured["port"] = server.sockets[0].getsockname()[1]
+        return server
+
+    with (
+        patch.dict(os.environ, {ENV_SUPERVISOR: "core"}, clear=True),
+        patch(
+            "homeassistant.components.http.config._DEFAULT_CONFIG", DEFAULT_80_CONFIG
+        ),
+        patch(
+            "homeassistant.components.http.server._DEFAULT_CONFIG", DEFAULT_80_CONFIG
+        ),
+        patch(
+            "homeassistant.components.http.server.HomeAssistantHTTP._async_create_redirect_server",
+            autospec=True,
+            side_effect=_bind_serving,
+        ),
+    ):
+        await _setup_http_with_onboarding(hass)
+        assert hass.http._legacy_redirect_server is not None
+
+        async with (
+            aiohttp.ClientSession() as session,
+            session.post(
+                f"http://127.0.0.1:{captured['port']}/api/foo?bar=1",
+                allow_redirects=False,
+            ) as resp,
+        ):
+            # 307 preserves the POST method; only the port changes (80 is
+            # the default HTTP port, so it is omitted from the URL).
+            assert resp.status == 307
+            assert resp.headers["Location"] == "http://127.0.0.1/api/foo?bar=1"
 
 
 @pytest.mark.usefixtures("freezer")
@@ -2356,6 +2695,68 @@ async def test_recovery_mode_default_config_bind_failure_fails_setup(
     assert f"Failed to create HTTP server at port {default_server_port()}" in (
         caplog.text
     )
+
+
+async def test_recovery_mode_supervisor_falls_back_to_legacy_port(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    mock_create_server: Mock,
+) -> None:
+    """Under Supervisor, an unbindable default port 80 falls back to 8123.
+
+    _DEFAULT_CONFIG is frozen at import (port 8123 without Supervisor), so it is
+    patched to the port-80 Supervisor default; the legacy fallback uses the real
+    _DEFAULT_CONFIG_LEGACY_PORT (port 8123).
+    """
+    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
+    hass.config.recovery_mode = True
+
+    legacy_server = await _ephemeral_server(hass)
+    # stable (80) and default (80) fail; the legacy default (8123) binds.
+    mock_create_server.side_effect = [
+        OSError(errno.EADDRINUSE, "Address already in use"),
+        OSError(errno.EADDRINUSE, "Address already in use"),
+        legacy_server,
+    ]
+
+    with (
+        patch.dict(os.environ, {ENV_SUPERVISOR: "core"}),
+        patch(
+            "homeassistant.components.http.config._DEFAULT_CONFIG", DEFAULT_80_CONFIG
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    assert "falling back to the previous default port 8123" in caplog.text
+    assert hass.config.api.port == 8123
+    legacy_server.close()
+    await legacy_server.wait_closed()
+
+
+async def test_recovery_mode_no_legacy_fallback_without_supervisor(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    mock_create_server: Mock,
+) -> None:
+    """A non-Supervisor default-port override must not fall back to port 8123.
+
+    Port 8123 is not exposed for a plain container install using SETUP_PORT, so
+    recovery must fail instead of reporting success on an unreachable port.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 8080})
+    hass.config.recovery_mode = True
+
+    mock_create_server.side_effect = OSError(errno.EADDRINUSE, "Address already in use")
+
+    with patch(
+        "homeassistant.components.http.config._DEFAULT_CONFIG",
+        HTTP_STORAGE_SCHEMA({"server_port": 8080}),
+    ):
+        assert not await async_setup_component(hass, DOMAIN, {})
+
+    assert "previous default port" not in caplog.text
 
 
 async def test_pending_config_promote_cancels_revert(
