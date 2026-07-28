@@ -314,19 +314,24 @@ class KnxExposeEntity:
                 return
             # Reflect the received value and pre-seed the ExposeSensor's last-sent
             # payload so the entity state change we trigger re-encodes identically
-            # and is skipped by skip_unchanged. xknx exposes no public API for this;
-            # guard the private attribute so a future xknx change surfaces as a
-            # warning instead of silently echoing the value back onto the bus.
+            # and is skipped by skip_unchanged. Seed the canonical re-encoding
+            # (sensor_value.last_payload, i.e. to_knx(value)) rather than the raw
+            # telegram payload: lossy DPTs (e.g. 5.001) re-encode a decoded value to
+            # a different payload than the one received. xknx exposes no public API
+            # for this; guard the private attribute so a future xknx change surfaces
+            # as a warning instead of silently echoing the value back onto the bus.
             with suppress(ConversionError):
                 xknx_expose.sensor_value.value = call.echo_value
-            if hasattr(xknx_expose, "_payload_after_cooldown"):
-                xknx_expose._payload_after_cooldown = telegram.payload.value  # noqa: SLF001
-            else:
-                _LOGGER.warning(
-                    "KNX expose %s: cannot suppress write_back echo (unexpected xknx "
-                    "internals); the value may be re-sent to the bus",
-                    self.entity_id,
-                )
+                if hasattr(xknx_expose, "_payload_after_cooldown"):
+                    xknx_expose._payload_after_cooldown = (  # noqa: SLF001
+                        xknx_expose.sensor_value.last_payload
+                    )
+                else:
+                    _LOGGER.warning(
+                        "KNX expose %s: cannot suppress write_back echo (unexpected "
+                        "xknx internals); the value may be re-sent to the bus",
+                        self.entity_id,
+                    )
             self.hass.async_create_task(
                 self.hass.services.async_call(
                     call.domain, call.service, call.data, blocking=False

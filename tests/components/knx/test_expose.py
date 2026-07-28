@@ -184,12 +184,16 @@ async def test_value_expose_write_back(
 async def test_numeric_expose_write_back_no_echo(
     hass: HomeAssistant, knx: KNXTestKit
 ) -> None:
-    """Test a state change resulting from a numeric write-back is not re-sent."""
+    """Test a state change resulting from a numeric write-back is not re-sent.
+
+    Uses the lossy DPT 5.001 (scaling): raw 127 decodes to 50%, which re-encodes
+    to 128. Echo suppression must key off the re-encoded payload, not the raw one.
+    """
     entity_id = "number.fake"
     await knx.setup_integration(
         {
             CONF_KNX_EXPOSE: {
-                CONF_TYPE: "5.010",
+                CONF_TYPE: "5.001",
                 KNX_ADDRESS: "1/1/8",
                 CONF_ENTITY_ID: entity_id,
                 ExposeSchema.CONF_KNX_EXPOSE_WRITE_BACK: True,
@@ -199,8 +203,8 @@ async def test_numeric_expose_write_back_no_echo(
     )
     async_mock_service(hass, "number", "set_value")
 
-    await knx.receive_write("1/1/8", (42,), source="1.1.5")
-    hass.states.async_set(entity_id, "42")
+    await knx.receive_write("1/1/8", (127,), source="1.1.5")
+    hass.states.async_set(entity_id, "50")
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
 
