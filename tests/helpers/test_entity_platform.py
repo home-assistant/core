@@ -797,6 +797,20 @@ async def test_registry_respect_entity_namespace(
     assert entity.entity_id == "test_domain.ns_device_name"
 
 
+async def test_registry_respect_entity_id_prefix(hass: HomeAssistant) -> None:
+    """Test that the registry respects an entity ID prefix."""
+
+    class EntityWithIdPrefix(MockEntity):
+        """Mock entity with an entity ID prefix."""
+
+        _attr_entity_id_prefix = "integration"
+
+    platform = MockEntityPlatform(hass)
+    entity = EntityWithIdPrefix(unique_id="1234", name="Device Name")
+    await platform.async_add_entities([entity])
+    assert entity.entity_id == "test_domain.integration_device_name"
+
+
 async def test_registry_respect_entity_disabled(hass: HomeAssistant) -> None:
     """Test that the registry respects entity disabled."""
     mock_registry(

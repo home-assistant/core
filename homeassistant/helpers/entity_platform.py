@@ -1276,6 +1276,10 @@ def _async_derive_object_ids(
             object_id = f"{platform.platform_name}_{entity.unique_id}"
         object_id = f"{platform.entity_namespace} {object_id}"
 
+    if entity.entity_id_prefix is not None and object_id is not None:
+        is_base = False
+        object_id = f"{entity.entity_id_prefix} {object_id}"
+
     suggested_object_id: str | None = None
     object_id_base: str | None = None
     if is_base:

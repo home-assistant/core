@@ -229,6 +229,7 @@ class UptimeKumaSensorEntity(
 
     entity_description: UptimeKumaSensorEntityDescription
 
+    _attr_entity_id_prefix = DOMAIN
     _attr_has_entity_name = True
 
     def __init__(
@@ -261,6 +262,17 @@ class UptimeKumaSensorEntity(
             manufacturer="Uptime Kuma",
             configuration_url=configuration_url,
             sw_version=coordinator.api.version.version,
+        )
+
+    @property
+    @override
+    def suggested_object_id(self) -> str | None:
+        """Return the suggested object ID."""
+        object_id = super().suggested_object_id
+        return (
+            f"{self.coordinator.data[self.monitor].monitor_name} {object_id}"
+            if object_id is not None
+            else None
         )
 
     @property

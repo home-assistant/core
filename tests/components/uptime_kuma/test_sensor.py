@@ -46,6 +46,31 @@ async def test_setup(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("mock_pythonkuma", "entity_registry_enabled_by_default")
+async def test_existing_entity_id_is_preserved(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an existing entity ID is not changed."""
+    config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{config_entry.entry_id}_1_cert_days_remaining",
+        config_entry=config_entry,
+        suggested_object_id="monitor_1_certificate_expiry",
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get("sensor.monitor_1_certificate_expiry")
+    assert not entity_registry.async_get(
+        "sensor.uptime_kuma_monitor_1_certificate_expiry"
+    )
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_migrate_unique_id(
     hass: HomeAssistant,
@@ -76,7 +101,7 @@ async def test_migrate_unique_id(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert (entity := entity_registry.async_get("sensor.monitor_status"))
+    assert (entity := entity_registry.async_get("sensor.uptime_kuma_monitor_status"))
     assert entity.unique_id == "123456789_Monitor_status"
 
     mock_pythonkuma.metrics.return_value = {
@@ -97,7 +122,7 @@ async def test_migrate_unique_id(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (entity := entity_registry.async_get("sensor.monitor_status"))
+    assert (entity := entity_registry.async_get("sensor.uptime_kuma_monitor_status"))
     assert entity.unique_id == "123456789_1_status"
 
     assert (

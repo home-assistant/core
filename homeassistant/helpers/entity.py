@@ -437,6 +437,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "device_class",
     "device_info",
     "entity_category",
+    "entity_id_prefix",
     "has_entity_name",
     "entity_picture",
     "entity_registry_enabled_default",
@@ -577,6 +578,7 @@ class Entity(
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
+    _attr_entity_id_prefix: str | None = None
     _attr_has_entity_name: bool
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
@@ -627,6 +629,11 @@ class Entity(
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._attr_unique_id
+
+    @cached_property
+    def entity_id_prefix(self) -> str | None:
+        """Return the prefix for a suggested entity ID."""
+        return self._attr_entity_id_prefix
 
     @cached_property
     def has_entity_name(self) -> bool:
