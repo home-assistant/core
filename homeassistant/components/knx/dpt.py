@@ -44,28 +44,28 @@ def get_supported_dpts() -> Mapping[str, DPTInfo]:
     dpts: dict[str, DPTInfo] = {}
     for dpt_class in DPTBase.dpt_class_tree():
         dpt_number_str = dpt_class.dpt_number_str()
-        ha_dpt_class = _ha_dpt_class(dpt_class)
+        dpt_kind = ha_dpt_class(dpt_class)
         info = DPTInfo(
-            dpt_class=ha_dpt_class,
+            dpt_class=dpt_kind,
             main=dpt_class.dpt_main_number,  # type: ignore[typeddict-item] # checked in xknx unit tests
             sub=dpt_class.dpt_sub_number,
             name=dpt_class.value_type,
             unit=_sensor_unit_overrides.get(dpt_number_str, dpt_class.unit),
             sensor_device_class=_sensor_device_classes.get(dpt_number_str),
-            sensor_state_class=_get_sensor_state_class(ha_dpt_class, dpt_number_str),
+            sensor_state_class=_get_sensor_state_class(dpt_kind, dpt_number_str),
             payload_length=dpt_class.payload_length,
         )
-        if ha_dpt_class == "numeric":
+        if dpt_kind == "numeric":
             _add_numeric_details(info, cast(type[DPTNumeric], dpt_class))
-        elif ha_dpt_class == "enum":
+        elif dpt_kind == "enum":
             _add_enum_details(info, cast(type[DPTEnum], dpt_class))
-        elif ha_dpt_class == "complex":
+        elif dpt_kind == "complex":
             _add_complex_details(info, cast(type[DPTComplex], dpt_class))
         dpts[dpt_number_str] = info
     return dpts
 
 
-def _ha_dpt_class(dpt_cls: type[DPTBase]) -> HaDptClass:
+def ha_dpt_class(dpt_cls: type[DPTBase]) -> HaDptClass:
     """Return the DPT class identifier string."""
     if issubclass(dpt_cls, DPTNumeric):
         return "numeric"
@@ -187,10 +187,10 @@ _sensor_unit_overrides: Mapping[str, str] = {
 
 
 def _get_sensor_state_class(
-    ha_dpt_class: HaDptClass, dpt_number_str: str
+    dpt_kind: HaDptClass, dpt_number_str: str
 ) -> SensorStateClass | None:
     """Return the SensorStateClass for a given DPT."""
-    if ha_dpt_class != "numeric":
+    if dpt_kind != "numeric":
         return None
 
     return _sensor_state_class_overrides.get(
