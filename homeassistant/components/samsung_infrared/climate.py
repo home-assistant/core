@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from infrared_protocols.commands.samsung import SamsungAC0292Command
+from infrared_protocols.commands.samsung_ac import SamsungAC0292Command
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
