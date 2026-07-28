@@ -5,7 +5,8 @@ from typing import Any, NotRequired, TypedDict
 import voluptuous as vol
 from xknx import XKNX
 from xknx.dpt import DPTBase
-from xknx.telegram.address import parse_device_group_address
+from xknx.dpt.dpt_1 import DPT1BitEnum
+from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -14,7 +15,9 @@ from homeassistant.helpers import (
     template as template_helper,
 )
 
+from ..dpt import ha_dpt_class
 from ..expose import KnxExposeEntity, KnxExposeOptions
+from ..validation import ia_validator
 from .entity_store_validation import validate_config_store_data
 from .knx_selector import GASelector
 
@@ -29,6 +32,8 @@ class KNXExposeStoreOptionModel(TypedDict):
     periodic_send: NotRequired[float]
     respond_to_read: NotRequired[bool]
     value_template: NotRequired[str]
+    write_back: NotRequired[bool]
+    source_whitelist: NotRequired[list[str]]
 
 
 class KNXExposeStoreConfigModel(TypedDict):
@@ -60,21 +65,46 @@ def validate_expose_template_no_coerce(value: str) -> str:
     return value  # return original string for storage and later template creation
 
 
-EXPOSE_OPTION_SCHEMA = vol.Schema(
-    {
-        vol.Required("ga"): GASelector(
-            state=False,
-            passive=False,
-            write_required=True,
-            dpt=["numeric", "enum", "complex", "string"],
-        ),
-        vol.Optional("attribute"): str,
-        vol.Optional("default"): object,
-        vol.Optional("cooldown"): cv.positive_float,  # frontend renders to duration
-        vol.Optional("periodic_send"): cv.positive_float,
-        vol.Optional("respond_to_read"): bool,
-        vol.Optional("value_template"): validate_expose_template_no_coerce,
-    }
+def _validate_expose_option_write_back(
+    config: KNXExposeStoreOptionModel,
+) -> KNXExposeStoreOptionModel:
+    """Validate write-back constraints for a UI expose option."""
+    if not config.get("write_back"):
+        return config
+    if config.get("attribute") is not None:
+        raise vol.Invalid("`write_back` is not supported together with `attribute`")
+    transcoder = DPTBase.parse_transcoder(config["ga"]["dpt"])
+    # DPT1 binary classifies as "enum", so match it explicitly before numeric/string
+    if transcoder is None or not (
+        issubclass(transcoder, DPT1BitEnum)
+        or ha_dpt_class(transcoder) in ("numeric", "string")
+    ):
+        raise vol.Invalid("`write_back` is not supported for the configured DPT")
+    return config
+
+
+EXPOSE_OPTION_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required("ga"): GASelector(
+                state=False,
+                passive=False,
+                write_required=True,
+                dpt=["numeric", "enum", "complex", "string"],
+            ),
+            vol.Optional("attribute"): str,
+            vol.Optional("default"): object,
+            vol.Optional("cooldown"): cv.positive_float,  # frontend renders to duration
+            vol.Optional("periodic_send"): cv.positive_float,
+            vol.Optional("respond_to_read"): bool,
+            vol.Optional("value_template"): validate_expose_template_no_coerce,
+            vol.Optional("write_back", default=False): bool,
+            vol.Optional("source_whitelist", default=list): vol.All(
+                cv.ensure_list, [ia_validator]
+            ),
+        }
+    ),
+    _validate_expose_option_write_back,
 )
 
 EXPOSE_CONFIG_SCHEMA = vol.Schema(
@@ -114,6 +144,10 @@ def _store_to_expose_option(
         periodic_send=config.get("periodic_send", 0),
         respond_to_read=config.get("respond_to_read", True),
         value_template=value_template,
+        write_back=config.get("write_back", False),
+        source_whitelist=frozenset(
+            str(IndividualAddress(ia)) for ia in config.get("source_whitelist", ())
+        ),
     )
 
 

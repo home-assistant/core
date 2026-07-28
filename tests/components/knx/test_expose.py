@@ -683,6 +683,116 @@ async def test_ui_expose_with_options(
     await knx.assert_write(GROUP_ADDRESS_1, (50,))
 
 
+async def test_ui_expose_write_back(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a UI expose with write-back enabled updates the entity."""
+    entity_id = "switch.test"
+    group_address = "1/1/8"
+
+    await knx.setup_integration()
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "knx/update_expose",
+            "entity_id": entity_id,
+            "data": {
+                "options": [
+                    {
+                        "ga": {"write": group_address, "dpt": "1.001"},
+                        "write_back": True,
+                        "source_whitelist": ["1.1.5"],
+                    }
+                ],
+            },
+        }
+    )
+    res = await ws_client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is True, res["result"]
+
+    stored = hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["expose"][entity_id]
+    assert stored["options"][0]["write_back"] is True
+    assert stored["options"][0]["source_whitelist"] == ["1.1.5"]
+
+    turn_on = async_mock_service(hass, "switch", SERVICE_TURN_ON)
+
+    # Whitelisted source updates the entity
+    await knx.receive_write(group_address, 1, source="1.1.5")
+    assert len(turn_on) == 1
+    assert turn_on[0].data == {"entity_id": entity_id}
+
+    # Non-whitelisted source is ignored
+    await knx.receive_write(group_address, 1, source="1.1.99")
+    assert len(turn_on) == 1
+
+
+@pytest.mark.parametrize(
+    ("option", "expected_success"),
+    [
+        pytest.param(
+            {"ga": {"write": "1/1/1", "dpt": "1.001"}, "write_back": True},
+            True,
+            id="binary",
+        ),
+        pytest.param(
+            {"ga": {"write": "1/1/1", "dpt": "5.001"}, "write_back": True},
+            True,
+            id="numeric",
+        ),
+        pytest.param(
+            {"ga": {"write": "1/1/1", "dpt": "16.000"}, "write_back": True},
+            True,
+            id="string",
+        ),
+        pytest.param(
+            {"ga": {"write": "1/1/1", "dpt": "232.600"}, "write_back": True},
+            False,
+            id="complex",
+        ),
+        pytest.param(
+            {"ga": {"write": "1/1/1", "dpt": "20.102"}, "write_back": True},
+            False,
+            id="enum",
+        ),
+        pytest.param(
+            {
+                "ga": {"write": "1/1/1", "dpt": "5.001"},
+                "write_back": True,
+                "attribute": "brightness",
+            },
+            False,
+            id="attribute",
+        ),
+    ],
+)
+async def test_ui_expose_validate_write_back(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    option: dict[str, Any],
+    expected_success: bool,
+) -> None:
+    """Test write-back validation against the configured DPT and attribute."""
+    await knx.setup_integration()
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "knx/validate_expose",
+            "entity_id": "switch.test",
+            "data": {"options": [option]},
+        }
+    )
+    res = await ws_client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is expected_success, res["result"]
+
+
 @pytest.mark.freeze_time("2022-1-7 9:13:14")  # UTC -> +1h = Vienna in winter (9 -> 0xA)
 @pytest.mark.parametrize(
     ("time_type", "raw"),
