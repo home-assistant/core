@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import ATTR_EFFECT_LIST, DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_EFFECT,
+    ATTR_EFFECT_LIST,
+    DOMAIN as LIGHT_DOMAIN,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -66,3 +70,29 @@ async def test_turning_on_or_off_writes_state(
         "Nemo",
         "Something Else",
     ]
+
+
+@pytest.mark.parametrize(
+    ("effect", "expected_effect"),
+    [
+        ("", None),
+        ("*Solid*", None),
+        ("Rainbow", "Rainbow"),
+    ],
+)
+async def test_effect(
+    hass: HomeAssistant,
+    mock_nanoleaf: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    effect: str,
+    expected_effect: str | None,
+) -> None:
+    """Test the current effect."""
+    mock_nanoleaf.is_on = True
+    mock_nanoleaf.effect = effect
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("light.nanoleaf")
+    assert state is not None
+    assert state.attributes.get(ATTR_EFFECT) == expected_effect
