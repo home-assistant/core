@@ -9,7 +9,6 @@ from xknx.dpt import DPTLatin1
 from homeassistant import config_entries
 from homeassistant.components.text import TextEntity, TextMode
 from homeassistant.const import (
-    CONF_ENTITY_CATEGORY,
     CONF_MODE,
     CONF_NAME,
     CONF_TYPE,
@@ -33,7 +32,12 @@ from .const import (
     KNX_ADDRESS,
     KNX_MODULE_KEY,
 )
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .storage.const import CONF_ENTITY, CONF_GA_TEXT
 from .storage.util import ConfigExtractor
@@ -75,15 +79,12 @@ class _KnxText(TextEntity, RestoreEntity):
     """Representation of a KNX text."""
 
     _device: XknxNotification
-    _attr_native_max = 14
 
     @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
-        if not self._device.remote_value.readable and (
-            last_state := await self.async_get_last_state()
-        ):
+        if last_state := await self.async_get_last_state():
             if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                 self._device.remote_value.value = last_state.state
 
@@ -126,11 +127,13 @@ class KnxYamlText(_KnxText, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.remote_value.group_address),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            unique_id=build_yaml_unique_id(self._device.remote_value.group_address),
+            entity_config=config,
         )
         self._attr_mode = config[CONF_MODE]
+        self._attr_native_max_length = (
+            self._device.remote_value.dpt_class.payload_length
+        )
 
 
 class KnxUiText(_KnxText, KnxUiEntity):
@@ -161,3 +164,6 @@ class KnxUiText(_KnxText, KnxUiEntity):
             value_type=knx_conf.get_dpt(CONF_GA_TEXT),
         )
         self._attr_mode = TextMode(knx_conf.get(CONF_MODE))
+        self._attr_native_max_length = (
+            self._device.remote_value.dpt_class.payload_length
+        )

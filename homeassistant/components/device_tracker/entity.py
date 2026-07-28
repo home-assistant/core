@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, final, override
 from propcache.api import cached_property
 
 from homeassistant.components import zone
-from homeassistant.components.zone import ATTR_PASSIVE, ATTR_RADIUS
+from homeassistant.components.zone import ZoneEntityStateAttribute
 from homeassistant.const import (  # noqa: F401
     ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
@@ -16,6 +16,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_HOME,
     STATE_NOT_HOME,
     EntityCategory,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -368,10 +369,14 @@ class TrackerEntity(
                     for entity_id in zones
                     if (zone_state := self.hass.states.get(entity_id)) is not None
                 ),
-                key=lambda z: z.attributes[ATTR_RADIUS],
+                key=lambda z: z.attributes[ZoneEntityStateAttribute.RADIUS],
             )
             self.__active_zone = next(
-                (z for z in zone_states if not z.attributes.get(ATTR_PASSIVE)),
+                (
+                    z
+                    for z in zone_states
+                    if not z.attributes.get(ZoneEntityStateAttribute.PASSIVE)
+                ),
                 None,
             )
             self.__in_zones = [z.entity_id for z in zone_states]
@@ -418,8 +423,8 @@ class TrackerEntity(
         attr.update(super().state_attributes)
 
         if self.latitude is not None and self.longitude is not None:
-            attr[TrackerEntityStateAttribute.LATITUDE] = self.latitude
-            attr[TrackerEntityStateAttribute.LONGITUDE] = self.longitude
+            attr[EntityStateAttribute.LATITUDE] = self.latitude
+            attr[EntityStateAttribute.LONGITUDE] = self.longitude
             attr[TrackerEntityStateAttribute.GPS_ACCURACY] = self.location_accuracy
 
         return attr
@@ -702,17 +707,29 @@ class ScannerEntity(
             await super().async_internal_added_to_hass()
             return
 
-        # Attach entry to device
-        if self.registry_entry.device_id != device_entry.id:
-            self.registry_entry = er.async_get(self.hass).async_update_entity(
-                self.entity_id, device_id=device_entry.id
+        dev_reg = dr.async_get(self.hass)
+        # find_device_entry may return a synthesized pre-migration composite whose id is
+        # not a real device and can't be assigned to an entity; resolve it to the split
+        # owned by this config entry so we attach to a concrete device.
+        if device_entry.id not in dev_reg.devices:
+            device_entry = next(
+                (
+                    split
+                    for split in dev_reg.async_get_devices_for_composite_device_id(
+                        device_entry.id
+                    )
+                    if split.config_entry_id == self.platform.config_entry.entry_id
+                ),
+                None,
             )
 
-        # Attach device to config entry
-        if self.platform.config_entry.entry_id not in device_entry.config_entries:
-            dr.async_get(self.hass).async_update_device(
-                device_entry.id,
-                add_config_entry_id=self.platform.config_entry.entry_id,
+        # Attach entry to device
+        if (
+            device_entry is not None
+            and self.registry_entry.device_id != device_entry.id
+        ):
+            self.registry_entry = er.async_get(self.hass).async_update_entity(
+                self.entity_id, device_id=device_entry.id
             )
 
         # Do this last or else the entity registry update listener has been installed
