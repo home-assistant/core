@@ -1420,3 +1420,156 @@ async def test_irrigation_system_marks_missing_linked_zone_fault_on_startup(
     assert back_chars[CHAR_IN_USE].value == 0
     assert back_chars[CHAR_STATUS_FAULT].value == 1
     assert acc._char_system_status_fault.value == 1
+
+
+async def test_irrigation_system_deactivates_all_valves(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test IrrigationSystem deactivates all valves when HomeKit sets system active=0."""
+    hass.states.async_set("valve.front_lawn", STATE_OPEN)
+    hass.states.async_set("valve.back_lawn", STATE_OPEN)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        16,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    with patch.object(
+        acc, "async_call_service_and_wait", AsyncMock(return_value=True)
+    ) as service_mock:
+        acc._set_system_active(0)
+        await hass.async_block_till_done()
+
+    close_calls = [
+        args
+        for args in service_mock.await_args_list
+        if args.args[1] == SERVICE_CLOSE_VALVE
+    ]
+    assert len(close_calls) == 2
+
+
+async def test_irrigation_system_system_active_set_true_is_noop(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test IrrigationSystem activating system (value=1) is a no-op."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        17,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    with patch.object(
+        acc, "async_call_service_and_wait", AsyncMock(return_value=True)
+    ) as service_mock:
+        acc._set_system_active(1)
+        await hass.async_block_till_done()
+
+    assert not service_mock.called
+
+
+async def test_irrigation_system_linked_zone_fault_on_no_old_state(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test linked zone fault when state event has no old_state or new_state."""
+    from homeassistant.const import EVENT_STATE_CHANGED
+
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    hass.states.async_set("valve.back_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        18,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    event = Event(
+        EVENT_STATE_CHANGED,
+        {"entity_id": "valve.back_lawn", "old_state": None, "new_state": None},
+    )
+    acc._async_linked_valve_state_changed(event)
+    await hass.async_block_till_done()
+
+    back_chars = acc._valve_chars["valve.back_lawn"]
+    assert back_chars[CHAR_STATUS_FAULT].value == 1
+
+
+async def test_irrigation_system_reads_remaining_via_end_time(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test IrrigationSystem reads remaining duration from end_time attribute."""
+    future_end = (dt_util.utcnow() + timedelta(seconds=120)).isoformat()
+    hass.states.async_set(
+        "valve.front_lawn",
+        STATE_OPEN,
+        {"end_time": future_end},
+    )
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        19,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars[CHAR_REMAINING_DURATION].value >= 119
+
+
+async def test_irrigation_system_ignores_invalid_duration_attribute(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test IrrigationSystem falls back to default when duration attribute is invalid."""
+    from homeassistant.components.homekit.type_switches import IRRIGATION_DEFAULT_DURATION
+
+    hass.states.async_set(
+        "valve.front_lawn",
+        STATE_CLOSED,
+        {"set_duration": "not-a-number"},
+    )
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        20,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    front_chars = acc._valve_chars["valve.front_lawn"]
+    assert front_chars["duration"] == IRRIGATION_DEFAULT_DURATION
