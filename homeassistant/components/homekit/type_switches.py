@@ -717,6 +717,7 @@ class IrrigationSystem(HomeAccessory):
             serv_irrigation.add_linked_service(serv_valve)
             serv_valve.add_linked_service(serv_service_label)
 
+        self.set_primary_service(serv_irrigation)
         for entity_id in self._valve_entity_ids:
             if valve_state := self.hass.states.get(entity_id):
                 self._sync_valve_chars(entity_id, valve_state)
