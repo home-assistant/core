@@ -1,5 +1,6 @@
 """Class to hold all switch accessories."""
 
+from datetime import timedelta
 import logging
 from typing import Any, Final, NamedTuple, override
 
@@ -583,7 +584,7 @@ class SelectSwitch(HomeAccessory):
 
 
 HK_VALVE_TYPE_IRRIGATION = 1
-HK_PROGRAM_MODE_NO_SCHEDULE_ACTIVE = 1
+HK_PROGRAM_MODE_NO_PROGRAM_SCHEDULED = 0
 HK_IS_CONFIGURED = 1
 HK_STATUS_FAULT_NO_FAULT = 0
 HK_STATUS_FAULT_GENERAL_FAULT = 1
@@ -630,7 +631,7 @@ class IrrigationSystem(HomeAccessory):
         )
         self._char_program_mode = serv_irrigation.configure_char(
             CHAR_PROGRAM_MODE,
-            value=HK_PROGRAM_MODE_NO_SCHEDULE_ACTIVE,
+            value=HK_PROGRAM_MODE_NO_PROGRAM_SCHEDULED,
         )
         self._char_system_remaining = serv_irrigation.configure_char(
             CHAR_REMAINING_DURATION,
@@ -708,6 +709,9 @@ class IrrigationSystem(HomeAccessory):
                 CHAR_REMAINING_DURATION: char_remaining,
                 CHAR_STATUS_FAULT: char_status_fault,
                 "duration": initial_duration,
+                "end_time": None,
+                "close_timer": None,
+                "update_timer": None,
             }
             serv_irrigation.add_linked_service(serv_valve)
 
@@ -744,6 +748,9 @@ class IrrigationSystem(HomeAccessory):
         """Handle state changes for linked (non-primary) valve entities."""
         new_state = event.data["new_state"]
         if new_state is None:
+            if old_state := event.data["old_state"]:
+                self._set_valve_unavailable(old_state.entity_id)
+                self._update_system_state()
             return
         self._sync_valve_chars(new_state.entity_id, new_state)
         self._update_system_state()
@@ -777,9 +784,8 @@ class IrrigationSystem(HomeAccessory):
             HK_STATUS_FAULT_GENERAL_FAULT if has_fault else HK_STATUS_FAULT_NO_FAULT
         )
         if has_fault:
-            chars[CHAR_ACTIVE].set_value(0)
-            chars[CHAR_IN_USE].set_value(0)
-            chars[CHAR_REMAINING_DURATION].set_value(0)
+            self._set_valve_inactive(entity_id)
+            self._clear_local_runtime(entity_id)
             return
         is_open = state.state in VALVE_OPEN_STATES
         chars[CHAR_ACTIVE].set_value(int(is_open))
@@ -790,8 +796,16 @@ class IrrigationSystem(HomeAccessory):
             chars["duration"] = device_duration
             chars[CHAR_SET_DURATION].set_value(device_duration)
         remaining = self._remaining_from_state(state)
-        if remaining == 0 and is_open:
-            remaining = chars["duration"]
+        if is_open:
+            if remaining > 0:
+                self._clear_local_runtime(entity_id)
+            elif (local_remaining := self._remaining_from_local_runtime(entity_id)) > 0:
+                remaining = local_remaining
+            else:
+                self._start_local_runtime(entity_id, chars["duration"])
+                remaining = self._remaining_from_local_runtime(entity_id)
+        else:
+            self._clear_local_runtime(entity_id)
         chars[CHAR_REMAINING_DURATION].set_value(remaining)
 
     def _update_system_state(self) -> None:
@@ -834,6 +848,10 @@ class IrrigationSystem(HomeAccessory):
             chars[CHAR_IN_USE].set_value(int(value))
             chars[CHAR_ACTIVE].set_value(int(value))
             chars[CHAR_REMAINING_DURATION].set_value(chars["duration"] if value else 0)
+        if value:
+            self._start_local_runtime(entity_id, chars["duration"] if chars else 0)
+        else:
+            self._clear_local_runtime(entity_id)
         self.hass.async_create_task(
             self._async_call_valve_service_and_resync(entity_id, service, value),
             eager_start=True,
@@ -886,6 +904,90 @@ class IrrigationSystem(HomeAccessory):
         )
         if success:
             return
+        self._clear_local_runtime(entity_id)
         if state := self.hass.states.get(entity_id):
             self._sync_valve_chars(entity_id, state)
         self._update_system_state()
+
+    def _set_valve_unavailable(self, entity_id: str) -> None:
+        """Set zone characteristics to faulted/unavailable."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None:
+            return
+        chars[CHAR_STATUS_FAULT].set_value(HK_STATUS_FAULT_GENERAL_FAULT)
+        self._set_valve_inactive(entity_id)
+        self._clear_local_runtime(entity_id)
+
+    def _set_valve_inactive(self, entity_id: str) -> None:
+        """Set zone active/in-use/remaining to inactive values."""
+        if chars := self._valve_chars.get(entity_id):
+            chars[CHAR_ACTIVE].set_value(0)
+            chars[CHAR_IN_USE].set_value(0)
+            chars[CHAR_REMAINING_DURATION].set_value(0)
+
+    def _start_local_runtime(self, entity_id: str, duration: int) -> None:
+        """Start local countdown/auto-close for a zone."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None:
+            return
+        self._clear_local_runtime(entity_id)
+        seconds = max(int(duration), 0)
+        if seconds <= 0:
+            return
+        chars["end_time"] = dt_util.utcnow() + timedelta(seconds=seconds)
+        chars["close_timer"] = async_call_later(
+            self.hass,
+            seconds,
+            lambda _now, eid=entity_id: self._async_local_runtime_close(eid),
+        )
+        chars["update_timer"] = async_call_later(
+            self.hass,
+            1,
+            lambda _now, eid=entity_id: self._update_local_remaining(eid),
+        )
+
+    @callback
+    def _async_local_runtime_close(self, entity_id: str) -> None:
+        """Close a zone when local runtime reaches zero."""
+        if chars := self._valve_chars.get(entity_id):
+            chars["close_timer"] = None
+        self._set_valve_active(entity_id, 0)
+
+    @callback
+    def _update_local_remaining(self, entity_id: str) -> None:
+        """Update local remaining duration countdown."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None:
+            return
+        chars["update_timer"] = None
+        if chars[CHAR_IN_USE].value != 1:
+            return
+        remaining = self._remaining_from_local_runtime(entity_id)
+        chars[CHAR_REMAINING_DURATION].set_value(remaining)
+        self._update_system_state()
+        if remaining > 0:
+            chars["update_timer"] = async_call_later(
+                self.hass,
+                1,
+                lambda _now, eid=entity_id: self._update_local_remaining(eid),
+            )
+
+    def _remaining_from_local_runtime(self, entity_id: str) -> int:
+        """Return remaining seconds from local runtime tracking."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None or (end_time := chars["end_time"]) is None:
+            return 0
+        return max(int((end_time - dt_util.utcnow()).total_seconds()), 0)
+
+    def _clear_local_runtime(self, entity_id: str) -> None:
+        """Cancel local runtime timers for a zone."""
+        chars = self._valve_chars.get(entity_id)
+        if chars is None:
+            return
+        if chars["close_timer"] is not None:
+            chars["close_timer"]()
+            chars["close_timer"] = None
+        if chars["update_timer"] is not None:
+            chars["update_timer"]()
+            chars["update_timer"] = None
+        chars["end_time"] = None

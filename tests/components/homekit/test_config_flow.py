@@ -769,6 +769,69 @@ async def test_options_flow_valves_filters_grouped_default_entities(
     }
 
 
+async def test_options_flow_valves_creates_irrigation_grouping(
+    hass: HomeAssistant,
+) -> None:
+    """Test valve grouping submission persists primary/linked relationships."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        options={
+            CONF_FILTER: {
+                "include_domains": ["valve"],
+                "include_entities": ["valve.front", "valve.back"],
+                "exclude_domains": [],
+                "exclude_entities": [],
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+    hass.states.async_set("valve.front", "closed")
+    hass.states.async_set("valve.back", "closed")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["valve"],
+            "include_exclude_mode": "include",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "include"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"entities": ["valve.front", "valve.back"]},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "valves"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"irrigation_grouped_valves": ["valve.front", "valve.back"]},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bridged_device_triggers"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options["entity_config"] == {
+        "valve.front": {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            CONF_LINKED_IRRIGATION_VALVES: ["valve.back"],
+        },
+        "valve.back": {CONF_IRRIGATION_CONTROLLER: "valve.front"},
+    }
+
+
 async def test_options_flow_exclude_mode_with_cameras(hass: HomeAssistant) -> None:
     """Test config flow options in exclude mode with cameras."""
 

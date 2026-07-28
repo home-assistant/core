@@ -1196,6 +1196,7 @@ async def test_irrigation_system_reads_valve_duration_attributes(
     await hass.async_block_till_done()
 
     front_chars = acc._valve_chars["valve.front_lawn"]
+    assert acc._char_program_mode.value == 0
     assert front_chars[CHAR_IN_USE].value == 1
     assert front_chars["duration"] == 1800
     assert front_chars[CHAR_REMAINING_DURATION].value == 600
@@ -1317,3 +1318,77 @@ async def test_irrigation_system_primary_unavailable_sets_fault(
     assert front_chars[CHAR_IN_USE].value == 0
     assert front_chars[CHAR_STATUS_FAULT].value == 1
     assert acc._char_system_status_fault.value == 1
+
+
+async def test_irrigation_system_marks_linked_zone_fault_on_state_remove(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test linked zone state removal marks the zone and system as faulted."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    hass.states.async_set("valve.back_lawn", STATE_OPEN)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        13,
+        {
+            CONF_TYPE: TYPE_IRRIGATION_SYSTEM,
+            "linked_irrigation_valves": ["valve.back_lawn"],
+        },
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    hass.states.async_remove("valve.back_lawn")
+    await hass.async_block_till_done()
+
+    back_chars = acc._valve_chars["valve.back_lawn"]
+    assert back_chars[CHAR_ACTIVE].value == 0
+    assert back_chars[CHAR_IN_USE].value == 0
+    assert back_chars[CHAR_STATUS_FAULT].value == 1
+    assert acc._char_system_status_fault.value == 1
+
+
+async def test_irrigation_system_applies_set_duration_for_auto_close(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test zone auto-closes after HomeKit set duration when no device timing exists."""
+    hass.states.async_set("valve.front_lawn", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc = IrrigationSystem(
+        hass,
+        hk_driver,
+        "Irrigation",
+        "valve.front_lawn",
+        14,
+        {CONF_TYPE: TYPE_IRRIGATION_SYSTEM},
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    with patch.object(
+        acc, "async_call_service_and_wait", AsyncMock(return_value=True)
+    ) as service_mock:
+        acc._set_valve_duration("valve.front_lawn", 2)
+        acc._set_valve_active("valve.front_lawn", 1)
+        await hass.async_block_till_done()
+
+        front_chars = acc._valve_chars["valve.front_lawn"]
+        assert front_chars[CHAR_REMAINING_DURATION].value == 2
+
+        now = dt_util.utcnow()
+        async_fire_time_changed(hass, now + timedelta(seconds=1))
+        await hass.async_block_till_done()
+        assert front_chars[CHAR_REMAINING_DURATION].value == 1
+
+        async_fire_time_changed(hass, now + timedelta(seconds=3))
+        await hass.async_block_till_done()
+
+    assert front_chars[CHAR_IN_USE].value == 0
+    assert any(
+        args.args[1] == SERVICE_CLOSE_VALVE for args in service_mock.await_args_list
+    )
