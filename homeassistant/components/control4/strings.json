@@ -33,14 +33,5 @@
         }
       }
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Seconds between updates"
-        }
-      }
-    }
   }
 }
