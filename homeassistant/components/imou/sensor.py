@@ -22,7 +22,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -146,14 +146,7 @@ async def async_setup_entry(
             if imou_device_identifier(device) in device_keys
         )
 
-    coordinator.new_device_callbacks.append(_add_sensors)
-
-    @callback
-    def _remove_new_device_callback() -> None:
-        if _add_sensors in coordinator.new_device_callbacks:
-            coordinator.new_device_callbacks.remove(_add_sensors)
-
-    entry.async_on_unload(_remove_new_device_callback)
+    entry.async_on_unload(coordinator.register_new_device_callback(_add_sensors))
     _add_sensors(coordinator.devices)
 
 

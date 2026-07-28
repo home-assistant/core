@@ -926,6 +926,8 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
     Maintains six additional indexes:
     - id -> entry
     - (domain, platform, unique_id) -> entity_id
+        domain: entity component domain (e.g. light, sensor)
+        platform: integration domain (e.g. hue, zwave)
     - config_entry_id -> dict[key, True]
     - device_id -> dict[key, True]
     - area_id -> dict[key, True]
@@ -999,7 +1001,11 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         return self._device_id_index.keys()
 
     def get_entity_id(self, key: tuple[str, str, str]) -> str | None:
-        """Get entity_id from (domain, platform, unique_id)."""
+        """Get entity_id from (domain, platform, unique_id).
+
+        domain: entity component domain (e.g. light, sensor)
+        platform: integration domain (e.g. hue, zwave)
+        """
         return self._index.get(key)
 
     def get_entry(self, key: str) -> RegistryEntry | None:
@@ -1197,7 +1203,7 @@ class EntityRegistry(BaseRegistry):
     ) -> str | None:
         """Check if an entity_id is currently registered.
 
-        domain: entity platform domain (e.g. light, sensor)
+        domain: entity component domain (e.g. light, sensor)
         platform: integration domain (e.g. hue, zwave)
         """
         return self.entities.get_entity_id((domain, platform, unique_id))
@@ -1392,7 +1398,11 @@ class EntityRegistry(BaseRegistry):
         translation_key: str | None | UndefinedType = UNDEFINED,
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
-        """Get entity. Create if it doesn't exist."""
+        """Get entity. Create if it doesn't exist.
+
+        domain: entity component domain (e.g. light, sensor)
+        platform: integration domain (e.g. hue, zwave)
+        """
         config_entry_id: str | None | UndefinedType = UNDEFINED
         if not config_entry:
             config_entry_id = None
@@ -1423,6 +1433,7 @@ class EntityRegistry(BaseRegistry):
             )
 
         self.hass.verify_event_loop_thread("entity_registry.async_get_or_create")
+        device_id = self._ignore_composite_device_id(platform, device_id)
         _validate_item(
             self.hass,
             domain,
@@ -1746,6 +1757,38 @@ class EntityRegistry(BaseRegistry):
             )
 
     @callback
+    def _ignore_composite_device_id(
+        self, platform: str, device_id: str | None | UndefinedType
+    ) -> str | None | UndefinedType:
+        """Ignore a request to link an entity to a composite device id.
+
+        A pre-migration composite device was split into one device per config
+        entry, and the composite id no longer refers to a real device. Return
+        UNDEFINED to keep the entity's current device link, and ask the user to
+        report an issue.
+        """
+        if not device_id or device_id is UNDEFINED:
+            return device_id
+        device_registry = dr.async_get(self.hass)
+        if not device_registry.async_is_composite_device_id(device_id):
+            # A real device or an unknown id; let _validate_item handle it
+            return device_id
+        report_issue = async_suggest_report_issue(
+            self.hass, integration_domain=platform
+        )
+        _LOGGER.warning(
+            (
+                "Ignoring request to link entity from integration %s to device %s:"
+                " the device id refers to a composite device which was split into"
+                " one device per config entry, please %s"
+            ),
+            platform,
+            device_id,
+            report_issue,
+        )
+        return UNDEFINED
+
+    @callback
     def _async_update_entity(
         self,
         entity_id: str,
@@ -1781,6 +1824,8 @@ class EntityRegistry(BaseRegistry):
     ) -> RegistryEntry:
         """Private facing update properties method."""
         old = self.entities[entity_id]
+
+        device_id = self._ignore_composite_device_id(old.platform, device_id)
 
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs

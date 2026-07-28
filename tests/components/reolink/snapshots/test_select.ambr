@@ -1155,7 +1155,7 @@
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
-        '2',
+        '3',
         '5',
       ]),
     }),
@@ -1195,7 +1195,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Pre-recording frame rate',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
-        '2',
+        '3',
         '5',
       ]),
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
