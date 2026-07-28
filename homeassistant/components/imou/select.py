@@ -78,7 +78,7 @@ class ImouSelect(ImouEntity, SelectEntity):
     @property
     @override
     def options(self) -> list[str]:
-        """Return a set of selectable options."""
+        """Return a list of selectable options."""
         return self.device.selects[self._entity_type][PARAM_OPTIONS]
 
     @property
