@@ -3095,7 +3095,7 @@ async def test_async_is_composite_device_id(
     assert device_registry.async_is_composite_device_id(old_id) is True
     assert device_registry.async_is_composite_device_id(device_1.id) is False
     assert device_registry.async_is_composite_device_id(device_2.id) is False
-    assert device_registry.async_is_composite_device_id("unknown_id") is False
+    assert device_registry.async_is_composite_device_id("unknown_id") is None
 
 
 @pytest.mark.parametrize("load_registries", [False])
