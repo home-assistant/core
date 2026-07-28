@@ -900,7 +900,7 @@ class IrrigationSystem(HomeAccessory):
                     continue
         if (end_time_raw := state.attributes.get("end_time")) is not None:
             if (end_time := dt_util.parse_datetime(str(end_time_raw))) is not None:
-                return max(int((end_time - dt_util.utcnow()).total_seconds()), 0)
+                return max(int((dt_util.as_utc(end_time) - dt_util.utcnow()).total_seconds()), 0)
         return 0
 
     async def _async_call_valve_service_and_resync(

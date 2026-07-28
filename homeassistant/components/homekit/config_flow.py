@@ -538,7 +538,9 @@ class OptionsFlowHandler(OptionsFlow):
             return await self.async_step_bridged_device_triggers()
 
         if user_input is not None:
-            grouped: list[str] = user_input.get(CONF_IRRIGATION_GROUPED_VALVES, [])
+            grouped: list[str] = list(
+                dict.fromkeys(user_input.get(CONF_IRRIGATION_GROUPED_VALVES, []))
+            )
             self._clear_irrigation_entity_config(all_entity_config)
 
             if len(grouped) >= 2:
