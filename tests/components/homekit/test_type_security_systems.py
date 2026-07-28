@@ -365,13 +365,9 @@ async def test_set_if_valid_guards_frozen_valid_values(
 ) -> None:
     """Test armed_home is pushed only when it is in the frozen valid values.
 
-    The valid values are frozen from supported_features at build time. Pushing
-    a value outside that set would raise ValueError inside set_value, so we skip
-    and leave the characteristic unchanged instead. armed_home maps to StayArm
-    (0) for both the current and target characteristics, so a build without
-    ARM_HOME must skip both (leaving them at the disarmed default 3), and a
-    build with ARM_HOME must push both to 0. Reconciling the valid values in
-    place is a separate follow-up.
+    armed_home maps to StayArm (0) for both the current and target
+    characteristics, so a build without ARM_HOME skips both (leaving them at the
+    disarmed default 3) and a build with ARM_HOME pushes both to 0.
     """
     entity_id = "alarm_control_panel.test"
 
@@ -391,7 +387,5 @@ async def test_set_if_valid_guards_frozen_valid_values(
     )
     await hass.async_block_till_done()
 
-    # No ValueError raised. Both characteristics move to 0 when it is valid, and
-    # stay at the disarmed default 3 when it is skipped.
     assert acc.char_current_state.value == expected_current
     assert acc.char_target_state.value == expected_target

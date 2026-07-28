@@ -165,17 +165,11 @@ class SecuritySystem(HomeAccessory):
         self.async_call_service(ALARM_CONTROL_PANEL_DOMAIN, service, params)
 
     def _set_if_valid(self, char: Characteristic, value: int) -> bool:
-        """Push value to char, skipping states it doesn't currently advertise.
+        """Push value to char if advertised, else skip to avoid a ValueError.
 
-        The characteristic's valid values are frozen from supported_features at
-        accessory build time and can go stale: a feature change can slip past
-        the reload guard in async_update_event_state_callback when it arrives
-        across an unavailable boundary. Pushing a value outside the frozen set
-        would raise ValueError in pyhap, so skip and log instead. A newly-added
-        mode stays invisible until the accessory is rebuilt by other means;
-        reconciling valid values in place is a separate follow-up.
-
-        Returns True if the value was pushed, False if it was skipped.
+        The characteristic's valid values are frozen at build time; pushing a
+        value outside that set would raise ValueError in pyhap. Returns True if
+        the value was pushed, False if it was skipped.
         """
         if value in char.properties[PROP_VALID_VALUES].values():
             char.set_value(value)
