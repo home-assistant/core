@@ -56,7 +56,6 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The Teslemetry account must be loaded before setting up local control. Try again once it has finished loading.",
-        "gateway_mismatch": "This Powerwall system belongs to a different energy site. Expected gateway {expected} but found {actual}. Check the local network address and try again.",
         "not_supported": "Energy sites are added automatically from your Teslemetry account and cannot be added manually.",
         "powerwall_unreachable": "There is a problem communicating with your Powerwall. Ensure it has a reliable network connection and try again later.",
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
