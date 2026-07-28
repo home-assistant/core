@@ -25,7 +25,13 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_SERIAL_NUMBER, DOMAIN, TIMEOUT_SECONDS
+from .const import (
+    CONF_SERIAL_NUMBER,
+    CONF_ZONE_TYPE,
+    DOMAIN,
+    TIMEOUT_SECONDS,
+    ZONE_TYPE_SWITCH,
+)
 from .coordinator import (
     RainbirdScheduleUpdateCoordinator,
     RainbirdUpdateCoordinator,
@@ -131,6 +137,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
     await data.coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = data
+    _async_migrate_zone_entity_type(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
@@ -271,6 +278,25 @@ def _async_fix_device_id(
         device_registry.async_update_device(
             old_entry.id, new_identifiers={(DOMAIN, new_unique_id)}
         )
+
+
+def _async_migrate_zone_entity_type(
+    hass: HomeAssistant, entry: RainbirdConfigEntry
+) -> None:
+    """Remove entity registry entries for the inactive zone entity type.
+
+    When switching between switch and valve modes, a config entry reload
+    preserves the old platform's registry entries as unavailable. This removes
+    those stale entries so only the active platform's entities remain.
+    """
+    zone_type = entry.options.get(CONF_ZONE_TYPE, ZONE_TYPE_SWITCH)
+    inactive_domain = (
+        Platform.VALVE if zone_type == ZONE_TYPE_SWITCH else Platform.SWITCH
+    )
+    entity_reg = er.async_get(hass)
+    for entity_entry in er.async_entries_for_config_entry(entity_reg, entry.entry_id):
+        if entity_entry.domain == inactive_domain:
+            entity_reg.async_remove(entity_entry.entity_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> bool:

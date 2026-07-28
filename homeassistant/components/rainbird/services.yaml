@@ -2,7 +2,9 @@ start_irrigation:
   target:
     entity:
       integration: rainbird
-      domain: switch
+      domain:
+        - switch
+        - valve
   fields:
     duration:
       required: true
