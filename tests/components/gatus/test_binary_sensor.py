@@ -203,6 +203,7 @@ async def test_binary_sensor_readded_endpoint(
     mock_gatus_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that a removed endpoint can be successfully re-added and has its entity recreated."""
     await setup_integration(hass, mock_config_entry)
@@ -214,7 +215,6 @@ async def test_binary_sensor_readded_endpoint(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     entity_registry.async_remove("binary_sensor.core_backend_service")
     assert hass.states.get("binary_sensor.core_backend_service") is None
 
