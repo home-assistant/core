@@ -303,7 +303,11 @@ def build_item_response(
         item = get_media(media_library, idstring, search_type)
 
         title = getattr(item, "title", None)
-        thumbnail = get_thumbnail_url(search_type, payload["idstring"])
+        # The browse image proxy round-trips this back to async_get_browse_image,
+        # which matches on MediaType, not on the Sonos search type.
+        thumbnail = get_thumbnail_url(
+            SONOS_TO_MEDIA_TYPES[search_type], payload["idstring"]
+        )
 
     if not title:
         title = _get_title(id_string=payload["idstring"])

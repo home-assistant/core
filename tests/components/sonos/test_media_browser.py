@@ -52,6 +52,44 @@ def mock_browse_by_idstring(
     return None
 
 
+@pytest.mark.parametrize(
+    ("idstring", "expected_type"),
+    [
+        pytest.param("A:ALBUM/Abbey%20Road", MediaType.ALBUM, id="album"),
+        pytest.param(
+            "A:ALBUMARTIST/The%20Beatles", MediaType.ARTIST, id="album_artist"
+        ),
+    ],
+)
+def test_build_item_response_container_art_uses_media_type(
+    idstring: str, expected_type: MediaType
+) -> None:
+    """Test container art is requested with a MediaType, not a Sonos search type.
+
+    async_get_browse_image matches on MediaType, so requesting the container art
+    with the Sonos search type makes the browse image proxy return no image.
+    """
+    music_library = MagicMock()
+    music_library.browse_by_idstring.return_value = [
+        MockMusicServiceItem(
+            "Come Together",
+            "x-file-cifs://192.168.42.10/music/01%20Come%20Together.mp3",
+            idstring,
+            "object.item.audioItem.musicTrack",
+        )
+    ]
+    music_library.get_music_library_information.return_value = []
+    get_thumbnail_url = Mock(return_value="/thumb")
+
+    build_item_response(
+        music_library,
+        {"search_type": MediaType.ALBUM, "idstring": idstring},
+        get_thumbnail_url,
+    )
+
+    assert get_thumbnail_url.call_args.args[0] == expected_type
+
+
 async def test_build_item_response(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
