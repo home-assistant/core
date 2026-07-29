@@ -59,8 +59,8 @@ class TRMNLCoordinator(DataUpdateCoordinator[dict[int, Device]]):
         if self.data is not None:
             device_registry = dr.async_get(self.hass)
             for device_id in set(self.data) - set(new_data):
-                if entry := device_registry.async_get_device(
-                    identifiers={(DOMAIN, str(device_id))}
+                if entry := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, str(device_id)), self.config_entry.entry_id
                 ):
                     device_registry.async_update_device(
                         device_id=entry.id,

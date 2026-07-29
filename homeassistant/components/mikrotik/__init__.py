@@ -17,14 +17,16 @@ from .coordinator import (
 )
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
+    Platform.UPDATE,
 ]
 
 
 def _call_api(data: dict[str, Any]) -> Api:
     """Call the Mikrotik API."""
-    with mikrotik_config_entry_errors():
+    with mikrotik_config_entry_errors(during_setup=True):
         api: Api = get_api(data)
         return api
 
