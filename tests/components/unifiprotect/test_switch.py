@@ -9,19 +9,22 @@ from uiprotect.data import (
     Permission,
     PublicHdrMode,
     RecordingMode,
+    Sensor,
     SmartDetectAudioType,
     SmartDetectObjectType,
     VideoMode,
 )
+from uiprotect.data.public_devices import SensorFeatureCapability
 from uiprotect.exceptions import ClientError, NotAuthorized
 
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
 from homeassistant.components.unifiprotect.switch import (
     ATTR_PREV_MIC,
     ATTR_PREV_RECORD,
     CAMERA_SWITCHES,
     LIGHT_SWITCHES,
     PRIVACY_MODE_SWITCH,
+    SENSE_SWITCHES,
     ProtectSwitchEntityDescription,
 )
 from homeassistant.const import (
@@ -48,6 +51,7 @@ from .utils import (
     public_device_ws_message,
     remove_entities,
     setup_public_light,
+    setup_public_sensor,
 )
 
 CAMERA_SWITCHES_BASIC = [
@@ -664,3 +668,73 @@ async def test_switch_turn_on_not_authorized(
         await hass.services.async_call(
             "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
+
+
+# The USL Environmental family reports temperature/humidity/light but neither
+# motion nor alarm-sound detection.
+_ENV_CAPABILITIES = {
+    SensorFeatureCapability.TEMPERATURE,
+    SensorFeatureCapability.HUMIDITY,
+    SensorFeatureCapability.LIGHT,
+}
+
+
+async def test_switch_sense_capability_creation_filter(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A capability map limits the config switches to the advertised capabilities."""
+    setup_public_sensor(ufp, capabilities=_ENV_CAPABILITIES)
+    await init_entry(hass, ufp, [sensor_all])
+
+    for key, created in (
+        ("status_light", True),
+        ("temperature", True),
+        ("humidity", True),
+        ("light", True),
+        ("motion", False),
+        ("alarm", False),
+    ):
+        description = next(d for d in SENSE_SWITCHES if d.key == key)
+        _, entity_id = await ids_from_device_description(
+            hass, Platform.SWITCH, sensor_all, description
+        )
+        assert (entity_registry.async_get(entity_id) is not None) is created, key
+
+
+async def test_switch_sense_capability_registry_cleanup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A console upgrade removes registry entries for unsupported capabilities."""
+    stale = entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        f"{sensor_all.mac}_motion",
+        config_entry=ufp.entry,
+    )
+    setup_public_sensor(ufp, capabilities=_ENV_CAPABILITIES)
+    await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
+
+    assert entity_registry.async_get(stale.entity_id) is None
+
+
+async def test_switch_sense_no_capability_map_creates_all(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """Without a capability map (Protect below 7.2) every config switch is created."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    for description in SENSE_SWITCHES:
+        _, entity_id = await ids_from_device_description(
+            hass, Platform.SWITCH, sensor_all, description
+        )
+        assert entity_registry.async_get(entity_id) is not None, description.key
