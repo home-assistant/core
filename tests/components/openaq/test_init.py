@@ -126,6 +126,39 @@ async def test_setup_stops_after_a_failed_location_refresh(
     mock_openaq_client.close.assert_called_once()
 
 
+async def test_coordinators_share_client_lock(
+    hass: HomeAssistant,
+    mock_openaq_client: MagicMock,
+) -> None:
+    """Test coordinators share the lock for the shared client."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="OpenAQ",
+        data={CONF_API_KEY: API_KEY},
+        unique_id=DOMAIN,
+        subentries_data=[
+            ConfigSubentryDataWithId(
+                data={CONF_LOCATION_ID: LOCATION_ID},
+                subentry_id="ABCDEF",
+                subentry_type="location",
+                title="Del Norte",
+                unique_id=str(LOCATION_ID),
+            ),
+            ConfigSubentryDataWithId(
+                data={CONF_LOCATION_ID: 9999},
+                subentry_id="GHIJKL",
+                subentry_type="location",
+                title="South Valley",
+                unique_id="9999",
+            ),
+        ],
+    )
+    await setup_integration(hass, config_entry)
+    coordinators = list(config_entry.runtime_data.coordinators.values())
+
+    assert coordinators[0]._client_lock is coordinators[1]._client_lock
+
+
 async def test_setup_fetches_location_data(
     hass: HomeAssistant,
     mock_openaq_client: MagicMock,
