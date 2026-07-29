@@ -305,12 +305,9 @@ async def test_subscribe_retries_on_unexpected_exception(
 ) -> None:
     """An exception that isn't a TraccarException must still be retried.
 
-    pytraccar's contract is that subscribe() only raises TraccarException
-    (or a subclass), but we've seen in practice that this can have gaps
-    (e.g. an unrecognized failure re-wrapped behind a generic exception
-    upstream, or a future pytraccar/aiohttp change). Anything unexpected
-    should be logged and retried, not allowed to kill the task the same
-    way the original recursion bug did.
+    pytraccar's own exceptions all subclass TraccarException, but an
+    unrecognized failure could still slip through as something else -
+    that must not be allowed to escape the retry loop.
     """
     calls = 0
 
@@ -396,10 +393,9 @@ async def test_subscribe_clean_return_resets_error_logging(
 ) -> None:
     """A clean return re-arms error logging for the next failure streak.
 
-    Regression test: previously only the failure counter was reset on a
-    clean return, not the should-log flag, so a failure streak starting
-    right after a clean return would be silently throttled instead of
-    logging its first error.
+    The should-log flag must reset alongside the failure counter - otherwise
+    a failure streak starting right after a clean return would be silently
+    throttled instead of logging its first error.
     """
     calls = 0
 
