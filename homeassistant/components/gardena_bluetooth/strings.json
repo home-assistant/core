@@ -8,9 +8,10 @@
     "error": {
       "cannot_connect": "Failed to connect: {error}"
     },
+    "flow_title": "{name} ({identifier})",
     "step": {
       "confirm": {
-        "description": "Do you want to set up {name}?\n\nBefore you continue, make sure the device is in pairing mode."
+        "description": "Do you want to set up {name} ({identifier})?\n\nBefore you continue, make sure the device is in pairing mode."
       },
       "user": {
         "data": {
@@ -102,7 +103,14 @@
     },
     "sensor": {
       "activation_reason": {
-        "name": "Activation reason"
+        "name": "Activation reason",
+        "state": {
+          "external": "External",
+          "manual": "Manual",
+          "none": "Inactive",
+          "schedule": "Schedule",
+          "setup": "Setup"
+        }
       },
       "aqua_contour_error": {
         "name": "Error",
@@ -151,6 +159,12 @@
       },
       "spray_current_sector": {
         "name": "Current sector"
+      },
+      "tank_pressure": {
+        "name": "Tank pressure"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
       }
     },
     "switch": {

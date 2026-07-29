@@ -11,7 +11,6 @@ import itertools
 import logging
 import queue
 import re
-import time
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, NamedTuple, cast, override
 from zoneinfo import ZoneInfo
@@ -357,26 +356,25 @@ class ZHADeviceProxy(EventBase):
     @property
     def device_info(self) -> dict[str, Any]:
         """Return a device description for device."""
-        ieee = str(self.device.ieee)
-        time_struct = time.localtime(self.device.last_seen)
-        update_time = time.strftime("%Y-%m-%dT%H:%M:%S", time_struct)
+        info = self.device.device_info
+        ieee = str(info.ieee)
         return {
             ATTR_IEEE: ieee,
-            ATTR_NWK: self.device.nwk,
-            ATTR_MANUFACTURER: self.device.manufacturer,
-            ATTR_MODEL: self.device.model,
-            ATTR_NAME: self.device.name or ieee,
-            ATTR_QUIRK_APPLIED: self.device.quirk_applied,
-            ATTR_QUIRK_CLASS: self.device.quirk_class,
-            ATTR_EXPOSES_FEATURES: self.device.exposes_features,
-            ATTR_MANUFACTURER_CODE: self.device.manufacturer_code,
-            ATTR_POWER_SOURCE: self.device.power_source,
-            ATTR_LQI: self.device.lqi,
-            ATTR_RSSI: self.device.rssi,
-            ATTR_LAST_SEEN: update_time,
-            ATTR_AVAILABLE: self.device.available,
-            ATTR_DEVICE_TYPE: self.device.device_type,
-            ATTR_SIGNATURE: self.device.zigbee_signature,
+            ATTR_NWK: info.nwk,
+            ATTR_MANUFACTURER: info.manufacturer,
+            ATTR_MODEL: info.model,
+            ATTR_NAME: info.name or ieee,
+            ATTR_QUIRK_APPLIED: info.quirk_applied,
+            ATTR_QUIRK_CLASS: info.quirk_class,
+            ATTR_EXPOSES_FEATURES: info.exposes_features,
+            ATTR_MANUFACTURER_CODE: info.manufacturer_code,
+            ATTR_POWER_SOURCE: info.power_source,
+            ATTR_LQI: info.lqi,
+            ATTR_RSSI: info.rssi,
+            ATTR_LAST_SEEN: info.last_seen,
+            ATTR_AVAILABLE: info.available,
+            ATTR_DEVICE_TYPE: info.device_type,
+            ATTR_SIGNATURE: info.signature,
         }
 
     @property
