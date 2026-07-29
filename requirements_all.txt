@@ -193,7 +193,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==14.2.0
+aioamazondevices==14.2.2
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -1586,7 +1586,7 @@ micloud==0.5
 microBeesPy==0.3.5
 
 # homeassistant.components.midea
-midea-local==6.10.0
+midea-local==6.11.1
 
 # homeassistant.components.mill
 mill-local==0.5.0
