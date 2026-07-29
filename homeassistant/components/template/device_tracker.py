@@ -191,14 +191,17 @@ class TrackerExtraStoredData(ExtraStoredData):
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> Self:
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored tracker state from a dict."""
-        return cls(
-            in_zones=restored["in_zones"],
-            latitude=restored["latitude"],
-            longitude=restored["longitude"],
-            location_accuracy=restored["location_accuracy"],
-        )
+        try:
+            return cls(
+                in_zones=restored["in_zones"],
+                latitude=restored["latitude"],
+                longitude=restored["longitude"],
+                location_accuracy=restored["location_accuracy"],
+            )
+        except KeyError:
+            return None
 
 
 class AbstractTemplateTracker(AbstractTemplateEntity, TrackerEntity, RestoreEntity):
