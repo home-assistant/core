@@ -131,10 +131,6 @@ async def async_migrate_entry(
             return {"new_unique_id": new_unique_id}
         return None
 
-    if config_entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
-
     if config_entry.version == 1:
         await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
         hass.config_entries.async_update_entry(config_entry, version=2)

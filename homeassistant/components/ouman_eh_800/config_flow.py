@@ -1,7 +1,7 @@
 """Config flow for the Ouman EH-800 integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from ouman_eh_800_api import (
     OumanClientAuthenticationError,
@@ -38,42 +38,68 @@ class OumanEh800ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    async def _async_validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
+        """Normalize the URL, check for duplicates and test the connection.
+
+        Mutates user_input to hold the normalized URL. Returns form errors,
+        empty if validation succeeded.
+        """
+        try:
+            user_input[CONF_URL] = _normalize_url(user_input[CONF_URL])
+        except ValueError:
+            return {CONF_URL: "invalid_url"}
+        self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+        client = OumanEh800Client(
+            session=async_get_clientsession(self.hass),
+            username=user_input[CONF_USERNAME],
+            password=user_input[CONF_PASSWORD],
+            address=user_input[CONF_URL],
+        )
+        try:
+            await client.login()
+        except OumanClientCommunicationError:
+            return {"base": "cannot_connect"}
+        except OumanClientAuthenticationError:
+            return {"base": "invalid_auth"}
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return {"base": "unknown"}
+        return {}
+
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                user_input[CONF_URL] = _normalize_url(user_input[CONF_URL])
-            except ValueError:
-                errors[CONF_URL] = "invalid_url"
-            else:
-                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
-                client = OumanEh800Client(
-                    session=async_get_clientsession(self.hass),
-                    username=user_input[CONF_USERNAME],
-                    password=user_input[CONF_PASSWORD],
-                    address=user_input[CONF_URL],
-                )
-                try:
-                    await client.login()
-                except OumanClientCommunicationError:
-                    errors["base"] = "cannot_connect"
-                except OumanClientAuthenticationError:
-                    errors["base"] = "invalid_auth"
-                except Exception:
-                    _LOGGER.exception("Unexpected exception")
-                    errors["base"] = "unknown"
-                else:
-                    return self.async_create_entry(
-                        title="Ouman EH-800", data=user_input
-                    )
+            if not (errors := await self._async_validate_input(user_input)):
+                return self.async_create_entry(title="Ouman EH-800", data=user_input)
 
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if not (errors := await self._async_validate_input(user_input)):
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or reconfigure_entry.data
             ),
             errors=errors,
         )

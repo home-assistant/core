@@ -440,22 +440,23 @@ async def test_node_status_sensor(
 
     # Assert a node status sensor entity is not created for the controller
     driver = client.driver
-    node = driver.controller.nodes[1]
-    assert node.is_controller_node
+    controller_node = driver.controller.nodes[1]
+    assert controller_node.is_controller_node
     assert (
         entity_registry.async_get_entity_id(
-            DOMAIN,
             "sensor",
-            f"{get_valueless_base_unique_id(driver, node)}.node_status",
+            DOMAIN,
+            f"{get_valueless_base_unique_id(driver, controller_node)}.node_status",
         )
         is None
     )
 
     # Assert a controller status sensor entity is not created for a node
+    assert not node.is_controller_node
     assert (
         entity_registry.async_get_entity_id(
-            DOMAIN,
             "sensor",
+            DOMAIN,
             f"{get_valueless_base_unique_id(driver, node)}.controller_status",
         )
         is None
@@ -945,7 +946,7 @@ async def test_statistics_sensors_migration(
     node = Node(client, copy.deepcopy(zp3111_state))
     client.driver.controller.nodes[node.node_id] = node
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
     controller_base_unique_id = f"{client.driver.controller.home_id}.1.statistics"

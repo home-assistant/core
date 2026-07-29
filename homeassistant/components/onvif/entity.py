@@ -1,5 +1,7 @@
 """Base classes for ONVIF entities."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -15,6 +17,7 @@ class ONVIFBaseEntity(Entity):
         self.device: ONVIFDevice = device
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if device is available."""
         return self.device.available
@@ -35,6 +38,7 @@ class ONVIFBaseEntity(Entity):
         )
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         connections: set[tuple[str, str]] = set()

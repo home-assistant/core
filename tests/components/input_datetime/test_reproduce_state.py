@@ -2,6 +2,7 @@
 
 import pytest
 
+from homeassistant.components.input_datetime import DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
@@ -31,7 +32,7 @@ async def test_reproducing_states(
         {"has_date": False, "has_time": False},
     )
 
-    datetime_calls = async_mock_service(hass, "input_datetime", "set_datetime")
+    datetime_calls = async_mock_service(hass, DOMAIN, "set_datetime")
 
     # These calls should do nothing as entities already in desired state
     await async_reproduce_state(

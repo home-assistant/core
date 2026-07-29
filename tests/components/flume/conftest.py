@@ -99,7 +99,7 @@ def config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
 
 def encode_access_token() -> str:
     """Encode the payload of the access token."""
-    expiration_time = datetime.datetime.now() + datetime.timedelta(hours=12)
+    expiration_time = datetime.datetime.now() + datetime.timedelta(hours=12)  # pylint: disable=home-assistant-enforce-naive-now
     payload = {
         "user_id": USER_ID,
         "exp": int(expiration_time.timestamp()),

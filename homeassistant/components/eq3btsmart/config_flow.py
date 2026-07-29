@@ -1,6 +1,6 @@
 """Config flow for eQ-3 Bluetooth Smart thermostats."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -20,6 +20,7 @@ class EQ3ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.mac_address: str = ""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -50,6 +51,7 @@ class EQ3ConfigFlow(ConfigFlow, domain=DOMAIN):
         # since the thermostat probably is not advertising right now.
         return self.async_create_entry(title=slugify(mac_address), data={})
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:

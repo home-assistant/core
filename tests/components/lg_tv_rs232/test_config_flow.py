@@ -55,6 +55,30 @@ async def test_user_form_creates_entry(
     mock_lgtv.disconnect.assert_awaited_once()
 
 
+async def test_user_form_float_set_id(
+    hass: HomeAssistant,
+    mock_lgtv: MagicMock,
+    mock_async_setup_entry: AsyncMock,
+) -> None:
+    """Test that a float set_id from NumberSelector is converted to int."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.lg_tv_rs232.config_flow.LGTV",
+        return_value=mock_lgtv,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_DEVICE: MOCK_DEVICE, CONF_SET_ID: 1.0},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SET_ID] == MOCK_SET_ID
+    assert isinstance(result["data"][CONF_SET_ID], int)
+
+
 async def test_user_form_no_tv_shows_troubleshooting(
     hass: HomeAssistant,
     mock_lgtv: MagicMock,

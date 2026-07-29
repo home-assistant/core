@@ -32,7 +32,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_ACCESS_TOKEN: "abc",
             CONF_NAME: "Yardian",
             "yid": "yid123",
-            "model": "PRO1902",
+            "model": "PRO1902C1",
             "serialNumber": "SN1",
         },
         title="Yardian Smart Sprinkler",
@@ -48,12 +48,17 @@ def mock_yardian_client() -> Generator[AsyncMock]:
         ) as client_cls,
         patch(
             "homeassistant.components.yardian.config_flow.AsyncYardianClient",
-            autospec=True,
-        ) as flow_client_cls,
+            new=client_cls,
+        ),
     ):
         client = client_cls.return_value
-        flow_client_cls.return_value = client
 
+        client_cls.create.return_value = client
+
+        client.fetch_device_info.return_value = {
+            "name": "fake_name",
+            "yid": "fake_yid",
+        }
         client.fetch_device_state.return_value = YardianDeviceState(
             zones=[["Zone 1", 1], ["Zone 2", 0]],
             active_zones={0},
@@ -73,4 +78,11 @@ def mock_yardian_client() -> Generator[AsyncMock]:
 def sensor_platform_only() -> Generator[None]:
     """Limit the integration setup to the sensor platform for faster tests."""
     with patch("homeassistant.components.yardian.PLATFORMS", [Platform.SENSOR]):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_ui_refresh_delay() -> Generator[None]:
+    """Patch the Switch refresh delay to 0 seconds to speed up tests."""
+    with patch("homeassistant.components.yardian.switch.SWITCH_REFRESH_DELAY", 0):
         yield

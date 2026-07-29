@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from opower import (
     Account,
@@ -97,6 +97,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         # is needed for _insert_statistics.
         self.async_add_listener(_dummy_listener)
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[str, OpowerData]:

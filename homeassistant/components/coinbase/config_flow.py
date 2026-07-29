@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from coinbase.rest import RESTClient
 from coinbase.rest.rest_base import HTTPError
@@ -114,6 +114,7 @@ class CoinbaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     reauth_entry: CoinbaseConfigEntry
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -201,6 +202,7 @@ class CoinbaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: CoinbaseConfigEntry,
     ) -> OptionsFlowHandler:

@@ -6,7 +6,7 @@ import dataclasses
 from dataclasses import dataclass
 from datetime import datetime
 import math
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict, override
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
@@ -84,6 +84,7 @@ class FloorEntry(NormalizedNameBaseRegistryEntry):
 class FloorRegistryStore(Store[FloorRegistryStoreData]):
     """Store floor registry data."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,
@@ -122,12 +123,14 @@ class FloorRegistryItems(NormalizedNameBaseRegistryItems[FloorEntry]):
         super().__init__()
         self._aliases_index: RegistryIndexType = defaultdict(dict)
 
+    @override
     def _index_entry(self, key: str, entry: FloorEntry) -> None:
         """Index an entry."""
         super()._index_entry(key, entry)
         for normalized_alias in {normalize_name(alias) for alias in entry.aliases}:
             self._aliases_index[normalized_alias][key] = True
 
+    @override
     def _unindex_entry(
         self, key: str, replacement_entry: FloorEntry | None = None
     ) -> None:
@@ -305,6 +308,7 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
             _EventFloorRegistryUpdatedData_Reorder(action="reorder"),
         )
 
+    @override
     async def _async_load(self) -> None:
         """Load the floor registry."""
         data = await self._store.async_load()
@@ -326,6 +330,7 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         self._floor_data = floors.data
 
     @callback
+    @override
     def _data_to_save(self) -> FloorRegistryStoreData:
         """Return data of floor registry to store in a file."""
         return {

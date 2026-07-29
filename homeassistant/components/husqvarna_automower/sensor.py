@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 from operator import attrgetter
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aioautomower.model import (
     ExternalReasons,
@@ -443,21 +443,25 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
         self._attr_unique_id = f"{mower_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.mower_attributes)
 
     @property
+    @override
     def options(self) -> list[str] | None:
         """Return the option of the sensor."""
         return self.entity_description.option_fn(self.mower_attributes)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return self.entity_description.extra_state_attributes_fn(self.mower_attributes)
 
     @property
+    @override
     def available(self) -> bool:
         """Return the available attribute of the entity."""
         return super().available and self.native_value is not None
@@ -484,11 +488,13 @@ class WorkAreaSensorEntity(WorkAreaAvailableEntity, SensorEntity):
         }
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.work_area_attributes)
 
     @property
+    @override
     def translation_key(self) -> str:
         """Return the translation key of the work area."""
         return self.entity_description.translation_key_fn(
