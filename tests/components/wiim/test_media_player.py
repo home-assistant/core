@@ -267,9 +267,11 @@ async def test_state_machine_updates_from_transport_events(
 @pytest.mark.parametrize(
     ("service", "device_method"),
     [
-        (SERVICE_MEDIA_STOP, "async_stop"),
-        (SERVICE_MEDIA_NEXT_TRACK, "async_next"),
-        (SERVICE_MEDIA_PREVIOUS_TRACK, "async_previous"),
+        pytest.param(SERVICE_MEDIA_STOP, "async_stop", id="stop"),
+        pytest.param(SERVICE_MEDIA_NEXT_TRACK, "async_next", id="next"),
+        pytest.param(
+            SERVICE_MEDIA_PREVIOUS_TRACK, "async_previous", id="previous"
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_wiim_controller")
