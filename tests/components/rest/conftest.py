@@ -84,14 +84,6 @@ async def async_setup_entry(
 
 
 @pytest.fixture
-async def async_setup_default_entry(
-    hass: HomeAssistant, get_config_entry_data: dict[str, Any]
-) -> MockConfigEntry:
-    """Get the default entry with the default settings."""
-    return await async_setup_entry(hass, get_config_entry_data)
-
-
-@pytest.fixture
 async def async_setup_complete_entry(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
