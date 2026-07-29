@@ -81,7 +81,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> boo
         mqtt_client=mqtt_client,
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    except Exception:
+        try:
+            await mqtt_client.async_stop()
+        except Exception:
+            _LOGGER.exception("Error stopping MQTT client after failed setup")
+        raise
 
     return True
 
