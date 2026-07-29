@@ -12,6 +12,7 @@ from py_rejseplan.exceptions import APIError, ConnectionError, HTTPError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -58,8 +59,17 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
     async def _async_update_data(self) -> DepartureBoard:
         """Update data via library."""
         try:
-            board = await self._fetch_data(self.stop_ids)
-        except (APIError, HTTPError) as error:  # runtime errors from the API
+            stop_ids = {
+                subentry.data[CONF_STOP_ID]
+                for subentry in self.config_entry.subentries.values()
+                if subentry.subentry_type == "stop"
+            }
+            board = await self._fetch_data(stop_ids)
+        except HTTPError as error:  # runtime errors from the API
+            if error.status in (401, 403):
+                raise ConfigEntryAuthFailed("API key expired or revoked") from error
+            raise UpdateFailed(error) from error
+        except APIError as error:  # runtime errors from the API
             raise UpdateFailed(error) from error
         except ConnectionError as error:  # network errors
             raise UpdateFailed(

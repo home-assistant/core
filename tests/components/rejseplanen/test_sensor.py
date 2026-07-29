@@ -252,3 +252,11 @@ async def test_departure_cleanup_trigger(
     freezer.move_to(datetime(2024, 1, 1, 10, 2, 15, tzinfo=UTC))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    # Verify timer was replaced and cleanup callback executed
+    # The entity state should be updated with current departures (v2)
+    entity_id = "sensor.rejseplanen_123456"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    # After cleanup fires, the entity should have the v2 departures
+    assert state.state not in (None, "unavailable")

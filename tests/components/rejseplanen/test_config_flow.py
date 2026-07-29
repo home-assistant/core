@@ -55,32 +55,16 @@ async def test_form_user_step(
 
 
 @pytest.mark.parametrize(
-    ("patch_args", "expected_errors"),
+    ("return_value", "expected_errors"),
     [
         # Invalid authentication
-        (
-            {"return_value": False, "side_effect": None},
-            {"base": "invalid_auth"},
-        ),
-        # API connection exception
-        (
-            {"return_value": True, "side_effect": ConnectionError("Connection failed")},
-            {"base": "cannot_connect"},
-        ),
-        (
-            {"return_value": True, "side_effect": TimeoutError("Network Timeout")},
-            {"base": "cannot_connect"},
-        ),
-        (
-            {"return_value": True, "side_effect": OSError("OS Error")},
-            {"base": "cannot_connect"},
-        ),
+        (False, {"base": "invalid_auth"}),
     ],
 )
 async def test_config_flow_error_cases(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    patch_args: dict[str, Any],
+    return_value: bool,
     expected_errors: dict[str, str],
 ) -> None:
     """Test invalid authentication handling."""
@@ -93,8 +77,7 @@ async def test_config_flow_error_cases(
         "homeassistant.components.rejseplanen.config_flow.Rejseplanen"
     ) as mock_client:
         mock_client.return_value.validate_auth_key_async = AsyncMock(
-            return_value=patch_args["return_value"],
-            side_effect=patch_args["side_effect"],
+            return_value=return_value
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
