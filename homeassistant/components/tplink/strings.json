@@ -12,6 +12,7 @@
       "cannot_connect": "Connection error: {error}",
       "cannot_connect_camera": "Unable to access the camera stream, verify that you have set up the camera account: {error}",
       "invalid_auth": "Unable to authenticate: {error}",
+      "invalid_auth_email_case": "Unable to authenticate. Your TP-Link account email is registered with a different capitalization; try {canonical} (the email is case-sensitive for local control, unlike the Kasa app which ignores case).",
       "invalid_camera_auth": "Camera stream authentication failed"
     },
     "flow_title": "{name} {model} ({host})",

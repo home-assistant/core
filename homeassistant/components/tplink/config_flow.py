@@ -48,6 +48,7 @@ from . import (
     mac_alias,
     set_credentials,
 )
+from ._email_case import async_get_canonical_username, suggest_username_case
 from .const import (
     CONF_AES_KEYS,
     CONF_CAMERA_CREDENTIALS,
@@ -90,6 +91,39 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, Device] = {}
         self._discovered_device: Device | None = None
+        self._suggested_username: str | None = None
+
+    async def _async_suggest_username_case(
+        self,
+        username: str,
+        password: str,
+        errors: dict[str, str],
+        placeholders: dict[str, str],
+    ) -> None:
+        """On auth failure, suggest the correct e-mail capitalisation.
+
+        The KLAP/AES local auth_hash is derived from the username
+        case-sensitively, but TP-Link cloud login is case-insensitive, so a
+        device is often provisioned with a different capitalisation than the
+        user types. Look the account's canonical e-mail up via the cloud and, if
+        it differs from the entered value only in case, switch to a translated
+        error that names it and pre-fill the username field. Best effort: on any
+        failure the existing error is left intact.
+        """
+        self._suggested_username = None
+        canonical = await async_get_canonical_username(self.hass, username, password)
+        if suggestion := suggest_username_case(username, canonical):
+            self._suggested_username = suggestion
+            errors[CONF_PASSWORD] = "invalid_auth_email_case"
+            placeholders["canonical"] = suggestion
+
+    def _auth_data_schema(self) -> vol.Schema:
+        """Auth schema, pre-filling a suggested username case if we have one."""
+        if self._suggested_username:
+            return self.add_suggested_values_to_schema(
+                STEP_AUTH_DATA_SCHEMA, {CONF_USERNAME: self._suggested_username}
+            )
+        return STEP_AUTH_DATA_SCHEMA
 
     @override
     async def async_step_dhcp(
@@ -236,6 +270,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 placeholders["error"] = str(ex)
+                await self._async_suggest_username_case(
+                    username, password, errors, placeholders
+                )
             except KasaException as ex:
                 errors["base"] = "cannot_connect"
                 placeholders["error"] = str(ex)
@@ -255,7 +292,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="discovery_auth_confirm",
-            data_schema=STEP_AUTH_DATA_SCHEMA,
+            data_schema=self._auth_data_schema(),
             errors=errors,
             description_placeholders=placeholders,
         )
@@ -403,6 +440,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 placeholders["error"] = str(ex)
+                await self._async_suggest_username_case(
+                    username, password, errors, placeholders
+                )
             except KasaException as ex:
                 errors["base"] = "cannot_connect"
                 placeholders["error"] = str(ex)
@@ -422,7 +462,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user_auth_confirm",
-            data_schema=STEP_AUTH_DATA_SCHEMA,
+            data_schema=self._auth_data_schema(),
             errors=errors,
             description_placeholders=placeholders,
         )
@@ -769,6 +809,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 placeholders["error"] = str(ex)
+                await self._async_suggest_username_case(
+                    username, password, errors, placeholders
+                )
             except KasaException as ex:
                 errors["base"] = "cannot_connect"
                 placeholders["error"] = str(ex)
@@ -800,7 +843,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=STEP_AUTH_DATA_SCHEMA,
+            data_schema=self._auth_data_schema(),
             errors=errors,
             description_placeholders=placeholders,
         )

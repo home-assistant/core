@@ -1028,6 +1028,57 @@ async def test_manual_auth(
     assert result3["context"]["unique_id"] == MAC_ADDRESS
 
 
+@pytest.mark.usefixtures("mock_init")
+async def test_manual_auth_suggests_email_case(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """A wrong-case email auth failure suggests the registered case and pre-fills it."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["step_id"] == "user"
+
+    mock_discovery["mock_devices"][IP_ADDRESS].update.side_effect = AuthenticationError
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: IP_ADDRESS}
+    )
+    await hass.async_block_till_done()
+    assert result2["step_id"] == "user_auth_confirm"
+
+    # The entered credentials still fail locally (wrong case), but the cloud
+    # reports a canonical e-mail that differs only in case.
+    with (
+        override_side_effect(mock_connect["connect"], AuthenticationError),
+        patch(
+            "homeassistant.components.tplink.config_flow.async_get_canonical_username",
+            AsyncMock(return_value="Fake_Username"),
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={
+                CONF_USERNAME: "fake_username",
+                CONF_PASSWORD: "fake_password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "user_auth_confirm"
+    assert result3["errors"] == {CONF_PASSWORD: "invalid_auth_email_case"}
+    assert result3["description_placeholders"]["canonical"] == "Fake_Username"
+
+    # The username field is pre-filled with the correct capitalisation.
+    suggested = {
+        str(marker.schema): marker.description.get("suggested_value")
+        for marker in result3["data_schema"].schema
+        if getattr(marker, "description", None)
+    }
+    assert suggested.get(CONF_USERNAME) == "Fake_Username"
+
+
 async def test_manual_auth_camera(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
