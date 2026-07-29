@@ -129,8 +129,14 @@ class LinknLinkCoordinator(DataUpdateCoordinator[LinknLinkData]):
         if self._cancel_position_notification is not None:
             self._position_notification_pending = True
             return
-        self.async_set_updated_data(replace(self.data, position_state=position_state))
+        self._async_set_position_state(position_state)
         self._async_schedule_position_notification()
+
+    @callback
+    def _async_set_position_state(self, state: UltraPositionSubscriptionState) -> None:
+        """Update position data without resetting the environmental poll timer."""
+        self.data = replace(self.data, position_state=state)
+        self.async_update_listeners()
 
     @callback
     def _async_schedule_position_notification(self) -> None:
@@ -150,9 +156,7 @@ class LinknLinkCoordinator(DataUpdateCoordinator[LinknLinkData]):
         self._position_notification_pending = False
         if self.position_subscription is None:
             return
-        self.async_set_updated_data(
-            replace(self.data, position_state=self.position_subscription.state)
-        )
+        self._async_set_position_state(self.position_subscription.state)
         self._async_schedule_position_notification()
 
     @callback
@@ -194,7 +198,7 @@ class LinknLinkCoordinator(DataUpdateCoordinator[LinknLinkData]):
         elif state.subscribed and was_connected is False:
             LOGGER.info("Ultra local position subscription is available")
         self._async_cancel_position_notification()
-        self.async_set_updated_data(replace(self.data, position_state=state))
+        self._async_set_position_state(state)
 
     @override
     async def async_shutdown(self) -> None:
