@@ -156,6 +156,7 @@ async def test_single_account_flow_with_mfa(
     assert result["data"][CONF_ACCOUNT_NUMBER] == ACCOUNT_NUMBER
     assert result["result"].unique_id == ACCOUNT_NUMBER
 
+
 @pytest.mark.parametrize(
     ("exception_type", "expected_error"),
     [
