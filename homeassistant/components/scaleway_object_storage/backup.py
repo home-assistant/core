@@ -372,6 +372,9 @@ class ScalewayBackupAgent(BackupAgent):
 
                 for worker in done:
                     # Raise the first exception we see
+                    if worker.cancelled():
+                        continue
+
                     if task_exception := worker.exception():
                         raise task_exception
 
