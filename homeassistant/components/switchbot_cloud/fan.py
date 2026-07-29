@@ -68,7 +68,6 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
-
         power: str | None = self.coordinator.data.get(
             "power"
         ) or self.coordinator.data.get("powerState")
