@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from ollama import Message, ResponseError
+from ollama import Message, ProcessResponse, ResponseError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -242,6 +242,7 @@ async def test_template_variables(
     )
     with (
         patch("ollama.AsyncClient.list"),
+        patch("ollama.AsyncClient.ps", return_value=ProcessResponse(models=[])),
         patch(
             "ollama.AsyncClient.chat",
             return_value=stream_generator(
@@ -770,8 +771,9 @@ async def test_template_error(
             "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
         },
     )
-    with patch(
-        "ollama.AsyncClient.list",
+    with (
+        patch("ollama.AsyncClient.list"),
+        patch("ollama.AsyncClient.ps", return_value=ProcessResponse(models=[])),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

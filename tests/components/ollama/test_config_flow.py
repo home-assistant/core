@@ -4,7 +4,7 @@ import asyncio
 from unittest.mock import ANY, AsyncMock, patch
 
 from httpx import HTTPError
-from ollama import ResponseError
+from ollama import ProcessResponse, ResponseError
 import pytest
 
 from homeassistant import config_entries
@@ -774,6 +774,9 @@ async def test_user_step_async_client_headers(
         "homeassistant.components.ollama.config_flow.ollama.AsyncClient",
     ) as mock_async_client:
         mock_async_client.return_value.list = AsyncMock(return_value={"models": []})
+        mock_async_client.return_value.ps = AsyncMock(
+            return_value=ProcessResponse(models=[])
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -874,6 +877,9 @@ async def test_user_step_trim_url(hass: HomeAssistant) -> None:
         "homeassistant.components.ollama.config_flow.ollama.AsyncClient",
     ) as mock_async_client:
         mock_async_client.return_value.list = AsyncMock(return_value={"models": []})
+        mock_async_client.return_value.ps = AsyncMock(
+            return_value=ProcessResponse(models=[])
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}

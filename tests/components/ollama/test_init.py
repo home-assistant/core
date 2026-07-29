@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import attr
 from httpx import ConnectError
-from ollama import ResponseError
+from ollama import ProcessResponse, ResponseError
 import pytest
 
 from homeassistant.components import ollama
@@ -74,6 +74,7 @@ async def test_init_with_api_key(
 
     with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
         mock_client.return_value.list = AsyncMock(return_value={"models": []})
+        mock_client.return_value.ps = AsyncMock(return_value=ProcessResponse(models=[]))
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -93,6 +94,7 @@ async def test_init_without_api_key(
 
     with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
         mock_client.return_value.list = AsyncMock(return_value={"models": []})
+        mock_client.return_value.ps = AsyncMock(return_value=ProcessResponse(models=[]))
 
         assert await async_setup_component(hass, ollama.DOMAIN, {})
         await hass.async_block_till_done()
