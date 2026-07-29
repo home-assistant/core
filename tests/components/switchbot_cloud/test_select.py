@@ -20,6 +20,7 @@ from . import configure_integration
     "device",
     [
         "Standing Fan",
+        "Battery Circulator Fan",
         "Battery Circulator Fan 2 Pro",
     ],
 )
