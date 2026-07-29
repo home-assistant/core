@@ -46,9 +46,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
         ) from err
 
     if device is None:
-        raise ConfigEntryNotReady(
-            "Unsupported device or failed to identify device type"
-        )
+        raise ConfigEntryNotReady("Failed to identify device type")
+
+    if entry.unique_id is None and device.mac_address:
+        hass.config_entries.async_update_entry(entry, unique_id=device.mac_address)
 
     coordinator = PapouchDataUpdateCoordinator(hass, api_client, entry, device)
     await coordinator.async_config_entry_first_refresh()

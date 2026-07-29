@@ -1,9 +1,10 @@
 """Sensor platform for the Papouch integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PapouchConfigEntry
@@ -39,9 +40,12 @@ class PapouchSensor(PapouchEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
+
+        mac = format_mac(coordinator.device.mac_address)
+
         self.item_id = sensor_data["item_id"]
         self.data_key = sensor_data["type"]
-        self._attr_unique_id = f"{entry.entry_id}_{self.data_key}_{self.item_id}"
+        self._attr_unique_id = f"{mac}_{self.data_key}_{self.item_id}"
         self._attr_name = sensor_data["name"]
 
         if "device_class" in sensor_data:
@@ -51,11 +55,13 @@ class PapouchSensor(PapouchEntity, SensorEntity):
         if "unit" in sensor_data:
             self._attr_native_unit_of_measurement = sensor_data["unit"]
 
+    @override
     @property
     def native_value(self) -> float | int | None:
         """Return the state of the sensor."""
         return self.coordinator.data.get(self.data_key, {}).get(self.item_id)
 
+    @override
     @callback
     def _handle_coordinator_update(self) -> None:
         for sensor_data in self.coordinator.device.get_supported_sensors():

@@ -43,14 +43,16 @@ async def create_device(api_client: PapouchApiClient) -> PapouchDevice | None:
 
     _LOGGER.info("Creation of the device: %s", device)
 
+    # settings are being fetched now, because ctor isn't async
     if "Quido" in device:
-        # settings are being fetched now, because ctor isn't async
         settings = await api_client.fetch_settings()
         return Quido(api_client, settings, info)
     if "TH2E" in device:
-        return TH2E(api_client, info)
+        settings = await api_client.fetch_settings()
+        return TH2E(api_client, settings, info)
     if "TME" in device:
-        return TME(api_client, info)
+        fresh = await api_client.fetch_data()
+        return TME(api_client, info, fresh)
 
     return None
 

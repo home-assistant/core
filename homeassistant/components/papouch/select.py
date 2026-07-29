@@ -1,9 +1,10 @@
 """Select platform for the Papouch integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PapouchConfigEntry
@@ -39,18 +40,23 @@ class PapouchSelectEntity(PapouchEntity, SelectEntity):
     ) -> None:
         """Initialize the select entity."""
         super().__init__(coordinator, entry)
+
+        mac = format_mac(coordinator.device.mac_address)
+
         self.item_id = select_data["item_id"]
         self.category = select_data["category"]
 
-        self._attr_unique_id = f"{entry.entry_id}_{self.category}_{self.item_id}"
+        self._attr_unique_id = f"{mac}_{self.category}_{self.item_id}"
         self._attr_name = select_data["name"]
         self._attr_options = select_data["options"]
 
+    @override
     @property
     def current_option(self) -> str | None:
         """Return the currently selected option."""
         return self.coordinator.device.get_select_option(self.category, self.item_id)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option on the device."""
         await self.coordinator.device.set_select_option(

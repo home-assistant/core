@@ -24,43 +24,46 @@ class Quido(PapouchDevice):
         "Counts ascending and descending edges",
     ]
 
+    @override
     @property
     def name(self) -> str:
         """Return device's name."""
         return self._name
 
+    @override
     @property
     def location(self) -> str:
         """Return device's location."""
         return self._location
 
+    @override
     @property
     def manufacturer(self) -> str:
         """Return device's manufacturer."""
         return "Papouch s.r.o."
 
+    @override
+    @property
+    def mac_address(self) -> str:
+        """Return device's MAC address."""
+        return self._mac_address
+
     def __init__(self, api_client: PapouchApiClient, settings: str, info: str) -> None:
-        """Constructor for Quido device.
-
-        Note that Quido needs settings and info in parameters.
-        So creating Quido needs using the network even for dummy devices.
-        """
-
-        self.info = info
-        self.settings = settings
-
-        # Note that get_name and get_location are contracts from base class
-        # but since parsing XML every time someone needs a name is expensive
-        # it is stored right away
-        # moreover this should be done AFTER setting the info
-        self._name = self.get_name()
-        self._location = self.get_location()
+        """Constructor for Quido device."""
 
         self.api_client = api_client
+
+        self.info_root = defused_ET.fromstring(info)
+        self.settings_root = defused_ET.fromstring(settings)
+
+        self._name = self.get_name()
+        self._location = self.get_location()
+        self._mac_address = self.get_mac_address()
+
         self.number_inputs = -1
         self.number_outputs = -1
         self.number_temp = 1
-        self.counter_states = {}
+        self.counter_states: dict[str, str] = {}
         self.size_counter_bits = 16
         self.temperature_unit = "°C"  # default
 
@@ -84,7 +87,7 @@ class Quido(PapouchDevice):
                 val_str = element.attrib.get("val", "0")
                 parsed_data["temperature"][item_id] = float(val_str)
 
-            elif element.tag == "dout":
+            elif element.tag == "dout":  # codespell:ignore dout
                 val_str = element.attrib.get("val", "0")
                 parsed_data["switch"][item_id] = int(val_str)
 
@@ -253,8 +256,7 @@ class Quido(PapouchDevice):
     @override
     async def switch_to_web_mode(self) -> None:
         """Switch the device network mode to WEB using its current settings."""
-        root = defused_ET.fromstring(self.settings)
-        box = root.find(".//set[@box='1']")
+        box = self.settings_root.find(".//set[@box='1']")
         if box is None:
             raise ValueError("Network settings not found")
 
@@ -301,18 +303,16 @@ class Quido(PapouchDevice):
 
     async def _decrease_value_counter(self, item_id: str, value: int) -> None:
         """Command for decreasing specific counter."""
-        await self._send_command("c", item_id, value)
+        await self._send_command("c", item_id, str(value))
 
     def _get_counter_mode(self, item_id: str) -> str:
         """Get the current mode of the counter."""
-        return self.counter_states.get(item_id, self.COUNTER_MODES[0])
+        result = self.counter_states.get(item_id, self.COUNTER_MODES[0])
+        return str(result)
 
-    async def _set_counter_mode(self, item_id: str, mode: str) -> str | None:
+    async def _set_counter_mode(self, item_id: str, mode: str) -> None:
         """Set the new mode of the counter."""
         current_settings = await self.api_client.fetch_settings()
-
-        if current_settings != self.settings:
-            pass
 
         root = defused_ET.fromstring(current_settings)
 
@@ -370,14 +370,12 @@ class Quido(PapouchDevice):
         global temperature unit used by the device.
         """
 
-        if not self.settings:
+        if self.settings_root is None:
             return
 
         try:
-            root = defused_ET.fromstring(self.settings)
-
-            input_items = root.findall(".//set[@box='10']/item")
-            output_items = root.findall(".//set[@box='11']/item")
+            input_items = self.settings_root.findall(".//set[@box='10']/item")
+            output_items = self.settings_root.findall(".//set[@box='11']/item")
 
             self.number_inputs = len(input_items)
             self.number_outputs = len(output_items)
@@ -397,7 +395,7 @@ class Quido(PapouchDevice):
                         f"Invalid mode index for item {item_id}: {mode_index_str}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
                     ) from err
 
-            box_elem = root.find(".//set[@box='8']")
+            box_elem = self.settings_root.find(".//set[@box='8']")
             if box_elem is not None:
                 unit = box_elem.get("units")
                 if unit == "C":
@@ -415,16 +413,29 @@ class Quido(PapouchDevice):
     @override
     def get_location(self) -> str:
         """Return the location of the device."""
-        root = defused_ET.fromstring(self.info)
-        heartbeat = find_tag(root, "heartbeat")
-        return heartbeat.attrib.get("location") if heartbeat is not None else ""
+        heartbeat = find_tag(self.info_root, "heartbeat")
+        if heartbeat is not None:
+            return heartbeat.attrib.get("location", "")
+        return ""
 
     @override
     def get_name(self) -> str:
         """Return the name of the device."""
-        root = defused_ET.fromstring(self.info)
-        heartbeat = find_tag(root, "heartbeat")
-        return heartbeat.attrib.get("device") if heartbeat is not None else ""
+        heartbeat = find_tag(self.info_root, "heartbeat")
+        if heartbeat is not None:
+            return heartbeat.attrib.get("device", "")
+        return ""
+
+    @override
+    def get_mac_address(self) -> str:
+        """Return the MAC address of the device."""
+        box = self.settings_root.find(".//set[@box='12']")
+        if box is not None:
+            return str(box.attrib.get("mac", ""))
+
+        raise DeviceParseError(
+            f"The device doesn't have box 12 with MAC address, device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+        )
 
     async def _turn_on_coil(self, item_id: str) -> None:
         """Command for turning on the coil by its id."""
@@ -466,7 +477,7 @@ class Quido(PapouchDevice):
 
             if status == ERROR_STATUS:
                 raise DeviceResponseError(
-                    f"{self.name} ({self.location}) - {self.ip_address} returned an error, whole response: {response_text}"
+                    f"{self.name} ({self.location}) - {self.api_client.ip_address} returned an error, whole response: {response_text}"
                 )
         else:
             raise DeviceResponseError(

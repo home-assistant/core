@@ -34,6 +34,11 @@ class PapouchDevice(ABC):
     def manufacturer(self) -> str:
         """Return device's manufacturer."""
 
+    @property
+    @abstractmethod
+    def mac_address(self) -> str:
+        """Return device's MAC address."""
+
     @abstractmethod
     def parse_xml(self, xml_data: str) -> dict:
         """Parse the device-specific XML and return normalized data.
@@ -46,7 +51,7 @@ class PapouchDevice(ABC):
         temp, sns   -> temperature
         din         -> input
         din_cnt     -> counter
-        dout        -> switch
+        dout        -> switch # codespell:ignore dout
 
         Example output:
         {
@@ -179,6 +184,10 @@ class PapouchDevice(ABC):
     @abstractmethod
     def get_name(self) -> str:
         """Return the name of the device."""
+
+    @abstractmethod
+    def get_mac_address(self) -> str:
+        """Return the MAC address of the device."""
 
     @abstractmethod
     def _parse_initial_settings(self) -> None:

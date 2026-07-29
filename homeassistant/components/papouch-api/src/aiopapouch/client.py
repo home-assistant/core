@@ -1,6 +1,7 @@
 """This file is used for communicating with the device."""
 
 import logging
+from typing import Any
 
 import aiohttp
 import defusedxml.ElementTree as defused_ET
@@ -47,7 +48,7 @@ class PapouchApiClient:
         return await self._fetch(SETTINGS_URL)
 
     async def _send_request(
-        self, method: str, endpoint: str, device: str, **kwargs
+        self, method: str, endpoint: str, device: str, **kwargs: Any
     ) -> str:
 
         timeout = aiohttp.ClientTimeout(total=TIMEOUT_REQUEST)
@@ -99,9 +100,8 @@ class PapouchApiClient:
         if heartbeat_tag is not None:
             mode = heartbeat_tag.attrib.get("mode")
             if mode is not None:
-                return mode
+                return int(mode)
 
-            # TODO: this is a bad practice but the easiest one
             if heartbeat_tag.attrib.get("device") == "TME":
                 return WEB_MODE_INDEX
 

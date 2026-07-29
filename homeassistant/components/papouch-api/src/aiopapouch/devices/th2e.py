@@ -24,34 +24,42 @@ class TH2E(PapouchDevice):
         "Temperature (TMP)",
     ]
 
+    @override
     @property
     def name(self) -> str:
         """Return device's name."""
         return self._name
 
+    @override
     @property
     def location(self) -> str:
         """Return device's location."""
         return self._location
 
+    @override
     @property
     def manufacturer(self) -> str:
         """Return device's manufacturer."""
         return "Papouch s.r.o."
 
-    def __init__(self, api_client: PapouchApiClient, info: str) -> None:
-        """Constructor for TH2E device.
+    @override
+    @property
+    def mac_address(self) -> str:
+        """Return device's MAC address."""
+        return self._mac_address
 
-        Note that TH2E needs info in parameters.
-        So creating TH2E needs using the network even for dummy devices.
-        """
+    def __init__(self, api_client: PapouchApiClient, settings: str, info: str) -> None:
+        """Constructor for TH2E device."""
+        self.api_client = api_client
 
-        self.info = info
+        self.info_root = defused_ET.fromstring(info)
+        self.settings_root = defused_ET.fromstring(settings)
 
         self._name = self.get_name()
         self._location = self.get_location()
-        self.api_client = api_client
-        self.units_sensors = {}
+        self._mac_address = self.get_mac_address()
+
+        self.units_sensors: dict[str, dict[str, str]] = {}
         self.type_sensor = 0
 
     @override
@@ -65,7 +73,13 @@ class TH2E(PapouchDevice):
         parsed_data: dict[str, dict[str, Any]] = {"sensor": {}}
 
         status_tag = find_tag(root, "status")
-        self.type_sensor = int(status_tag.attrib.get("typesens"))
+
+        if status_tag is None:
+            raise DeviceParseError(
+                f"The device doesn't have box status tag in fresh.xml, device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            )
+
+        self.type_sensor = int(status_tag.attrib.get("typesens", ""))
 
         for element in root.iter():
             if not element.tag.endswith("sns"):
@@ -92,16 +106,32 @@ class TH2E(PapouchDevice):
     @override
     def get_location(self) -> str:
         """Return the location of the device."""
-        root = defused_ET.fromstring(self.info)
-        heartbeat = find_tag(root, "heartbeat")
-        return heartbeat.attrib.get("location") if heartbeat is not None else ""
+        heartbeat = find_tag(self.info_root, "heartbeat")
+        if heartbeat is not None:
+            return heartbeat.attrib.get("location", "")
+        return ""
 
     @override
     def get_name(self) -> str:
         """Return the name of the device."""
-        root = defused_ET.fromstring(self.info)
-        heartbeat = find_tag(root, "heartbeat")
-        return heartbeat.attrib.get("device") if heartbeat is not None else ""
+        heartbeat = find_tag(self.info_root, "heartbeat")
+        if heartbeat is not None:
+            return heartbeat.attrib.get("device", "")
+        return ""
+
+    @override
+    def get_mac_address(self) -> str:
+        """Return the MAC address of the device."""
+        box = self.settings_root.find(
+            ".//{http://www.papouch.com/xml/th2e/set}set[@box='12']"
+        )
+
+        if box is not None:
+            return str(box.attrib.get("mac", ""))
+
+        raise DeviceParseError(
+            f"The device doesn't have box 12 with MAC address, device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+        )
 
     @override
     def get_supported_buttons(self) -> list[dict[str, Any]]:

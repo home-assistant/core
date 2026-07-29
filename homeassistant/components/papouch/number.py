@@ -1,9 +1,10 @@
 """Number platform for the Papouch integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PapouchConfigEntry
@@ -38,10 +39,13 @@ class PapouchNumber(PapouchEntity, NumberEntity):
     ) -> None:
         """Initialize the number entity."""
         super().__init__(coordinator, entry)
+
+        mac = format_mac(coordinator.device.mac_address)
+
         self.item_id = number_data["item_id"]
         self.category = number_data["category"]
 
-        self._attr_unique_id = f"{entry.entry_id}_{self.category}_{self.item_id}"
+        self._attr_unique_id = f"{mac}_{self.category}_{self.item_id}"
         self._attr_name = number_data["name"]
 
         self._attr_native_min_value = number_data.get("min_value", 0)
@@ -52,18 +56,20 @@ class PapouchNumber(PapouchEntity, NumberEntity):
 
         self._current_value = 1
 
+    @override
     @property
     def native_value(self) -> float:
         """Return the local value, NOT the real hardware counter."""
         return self._current_value
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Send the command and update the UI."""
         await self.coordinator.device.set_number_value(
             self.category, self.item_id, value
         )
 
-        self._current_value = value
+        self._current_value = int(value)
         self.async_write_ha_state()
 
         await self.coordinator.async_request_refresh()

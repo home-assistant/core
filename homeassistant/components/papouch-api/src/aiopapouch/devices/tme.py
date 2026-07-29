@@ -6,6 +6,7 @@ from typing import Any, override
 import defusedxml.ElementTree as defused_ET
 
 from ..client import PapouchApiClient
+from ..exceptions import DeviceParseError
 from .base import PapouchDevice, find_tag
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,34 +19,43 @@ ITEM_ID = "1"
 class TME(PapouchDevice):
     """Represents devices of TME family."""
 
+    @override
     @property
     def name(self) -> str:
         """Return device's name."""
         return self._name
 
+    @override
     @property
     def location(self) -> str:
         """Return device's location."""
         return self._location
 
+    @override
     @property
     def manufacturer(self) -> str:
         """Return device's manufacturer."""
         return "Papouch s.r.o."
 
-    def __init__(self, api_client: PapouchApiClient, info: str) -> None:
-        """Constructor for TME device.
+    @override
+    @property
+    def mac_address(self) -> str:
+        """Return device's MAC address."""
+        return self._mac_address
 
-        Note that TME needs info in parameters.
-        So creating TME needs using the network even for dummy devices.
-        """
+    def __init__(self, api_client: PapouchApiClient, info: str, fresh: str) -> None:
+        """Constructor for TME device."""
 
-        self.info = info
+        self.api_client = api_client
+
+        self.info_root = defused_ET.fromstring(info)
+        self.fresh_root = defused_ET.fromstring(fresh)
 
         self._name = self.get_name()
         self._location = self.get_location()
-        self.api_client = api_client
-        self.units_sensor = []
+        self._mac_address = self.get_mac_address()
+
+        self.units_sensor: list[dict[str, str]] = []
 
         self._parse_initial_settings()
 
@@ -84,16 +94,29 @@ class TME(PapouchDevice):
     @override
     def get_location(self) -> str:
         """Return the location of the device."""
-        root = defused_ET.fromstring(self.info)
-        heartbeat = find_tag(root, "heartbeat")
-        return heartbeat.attrib.get("location") if heartbeat is not None else ""
+        heartbeat = find_tag(self.info_root, "heartbeat")
+        if heartbeat is not None:
+            return heartbeat.attrib.get("location", "")
+        return ""
 
     @override
     def get_name(self) -> str:
         """Return the name of the device."""
-        root = defused_ET.fromstring(self.info)
-        heartbeat = find_tag(root, "heartbeat")
-        return heartbeat.attrib.get("device") if heartbeat is not None else ""
+        heartbeat = find_tag(self.info_root, "heartbeat")
+        if heartbeat is not None:
+            return heartbeat.attrib.get("device", "")
+        return ""
+
+    @override
+    def get_mac_address(self) -> str:
+        """Return the name of the device."""
+        status = find_tag(self.fresh_root, "status")
+        if status is not None:
+            return status.attrib.get("mac", "")
+
+        raise DeviceParseError(
+            f"The device doesn't have status with MAC address, device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+        )
 
     @override
     def get_supported_buttons(self) -> list[dict[str, Any]]:

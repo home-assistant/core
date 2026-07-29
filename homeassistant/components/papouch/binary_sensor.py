@@ -1,9 +1,10 @@
 """Binary sensor platform for the Papouch integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PapouchConfigEntry
@@ -38,15 +39,19 @@ class PapouchBinarySensor(PapouchEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator, entry)
+
+        mac = format_mac(coordinator.device.mac_address)
+
         self.item_id = sensor_data["item_id"]
         self.data_key = sensor_data["type"]
 
-        self._attr_unique_id = f"{entry.entry_id}_{self.data_key}_{self.item_id}"
+        self._attr_unique_id = f"{mac}_{self.data_key}_{self.item_id}"
         self._attr_name = sensor_data["name"]
 
         if "device_class" in sensor_data:
             self._attr_device_class = sensor_data["device_class"]
 
+    @override
     @property
     def is_on(self) -> bool:
         """Return True if the binary sensor is on."""

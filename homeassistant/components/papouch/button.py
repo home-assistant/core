@@ -1,9 +1,10 @@
 """Button platform for the Papouch integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PapouchConfigEntry
@@ -39,11 +40,15 @@ class PapouchCommandButton(PapouchEntity, ButtonEntity):
     ) -> None:
         """Initialize the button."""
         super().__init__(coordinator, entry)
+
+        mac = format_mac(coordinator.device.mac_address)
+
         self.cmd_type = btn_data["cmd"]
 
-        self._attr_unique_id = f"{entry.entry_id}_btn_{self.cmd_type}"
+        self._attr_unique_id = f"{mac}_btn_{self.cmd_type}"
         self._attr_name = btn_data["name"]
 
+    @override
     async def async_press(self) -> None:
         """Execute the command."""
         await self.coordinator.device.execute_button_command(self.cmd_type)

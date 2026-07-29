@@ -37,6 +37,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         self, ip_address: str
     ) -> tuple[dict[str, str], int | None]:
         """Test the connection and return any errors and the device mode."""
+
         if not re.match(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", ip_address):
             return {"ip_address": "invalid_ip_format"}, None
 
