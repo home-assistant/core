@@ -98,9 +98,13 @@ def test_vacuum_no_deprecated_battery_feature(
     assert ATTR_BATTERY_LEVEL not in vacuum.state_attributes
 
 
-def test_vacuum_does_not_advertise_stop() -> None:
+def test_vacuum_does_not_advertise_stop(
+    coordinator_factory: CoordinatorFactory,
+) -> None:
     """No device exposes vacuum.stop (the backend registers no such action)."""
-    assert VacuumEntityFeature.STOP not in VacuumEntityFeature.STATE
+    vacuum = BeatbotVacuum(coordinator_factory("pool_clean_bot"), DEVICE_ID)
+
+    assert VacuumEntityFeature.STOP not in vacuum.supported_features
 
 
 def test_work_mode_is_not_exposed_as_vacuum_fan_speed(
@@ -214,6 +218,29 @@ def test_vacuum_features_skip_readonly_action(
 
     assert set(vacuum.supported_features) == {VacuumEntityFeature.STATE}
     assert VacuumEntityFeature.START not in vacuum.supported_features
+
+
+def test_vacuum_preserves_empty_feature_set(
+    coordinator_factory: CoordinatorFactory,
+) -> None:
+    """Do not infer state support from unusable advertised capabilities."""
+    capabilities = {
+        INTERFACE_VACUUM_STATE: BeatbotCapability(
+            interface_info=INTERFACE_VACUUM_STATE,
+            retrievable=False,
+            non_controllable=True,
+        ),
+        INTERFACE_START: BeatbotCapability(
+            interface_info=INTERFACE_START,
+            non_controllable=True,
+        ),
+    }
+    vacuum = BeatbotVacuum(
+        coordinator_factory("pool_clean_bot", capabilities=capabilities),
+        DEVICE_ID,
+    )
+
+    assert vacuum.supported_features == VacuumEntityFeature(0)
 
 
 def test_unknown_status_is_idle() -> None:

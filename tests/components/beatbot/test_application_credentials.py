@@ -12,8 +12,9 @@ async def test_auth_implementation(hass: HomeAssistant) -> None:
     implementation = await async_get_auth_implementation(
         hass,
         "beatbot",
-        ClientCredential("client-id", "", name="Beatbot"),
+        ClientCredential("client-id", "client-secret", name="Beatbot"),
     )
 
     assert implementation.client_id == "client-id"
+    assert implementation.client_secret == "client-secret"
     assert implementation.extra_authorize_data["scope"] == "device:info"

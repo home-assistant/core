@@ -226,6 +226,7 @@ class BeatbotEventClient:
             await stream.connect()
             is_reconnect = self._has_connected
             self._has_connected = True
+            self._token_refresh_attempted = False
             self._connection_generation += 1
             _LOGGER.debug(
                 "Connected to Beatbot event stream at %s", self._api.event_stream_url
@@ -288,21 +289,14 @@ class BeatbotEventClient:
         if self._reload_scheduled or self._stopping:
             return
         self._reload_scheduled = True
-
-        async def _reload() -> None:
-            try:
-                await self._hass.config_entries.async_reload(self._entry.entry_id)
-            finally:
-                self._reload_scheduled = False
-
-        self._hass.async_create_task(
-            _reload(), f"beatbot_reload_{self._entry.entry_id}"
-        )
+        self._hass.config_entries.async_schedule_reload(self._entry.entry_id)
 
     def _remove_device_from_registries(self, device_id: str) -> None:
         """Remove entities and the device registry entry after account removal."""
         device_registry = dr.async_get(self._hass)
-        device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), self._entry.entry_id
+        )
         if device is None:
             return
 

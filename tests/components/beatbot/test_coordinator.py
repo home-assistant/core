@@ -126,7 +126,7 @@ async def test_coordinator_state_auth_failure_requests_reauth(
 async def test_coordinator_state_connection_failure_keeps_device(
     hass: HomeAssistant,
 ) -> None:
-    """Keep discovery data when the runtime state endpoint is unavailable."""
+    """Keep new discovery data unavailable until runtime state is fetched."""
     device = _device("dev-1", SUPPORTED_PRODUCT)
     api = SimpleNamespace(
         get_devices=AsyncMock(return_value=[device]),
@@ -137,6 +137,7 @@ async def test_coordinator_state_connection_failure_keeps_device(
     data = await coordinator._async_update_data()
 
     assert data == {"dev-1": device}
+    assert data["dev-1"].is_online is False
 
 
 async def test_coordinator_applies_batch_device_state(
@@ -377,6 +378,17 @@ async def test_poll_new_device_schedules_platform_reload(
     coordinator._schedule_entry_reload.assert_called_once()
 
 
+def test_entry_reload_is_scheduled_once(hass: HomeAssistant) -> None:
+    """Use the config-entry scheduler and coalesce topology reloads."""
+    hass.config_entries.async_schedule_reload = Mock()
+    coordinator = BeatbotCoordinator(hass, SimpleNamespace(), _entry())
+
+    coordinator._schedule_entry_reload()
+    coordinator._schedule_entry_reload()
+
+    hass.config_entries.async_schedule_reload.assert_called_once_with("entry")
+
+
 async def test_poll_preserves_state_missing_from_batch(hass: HomeAssistant) -> None:
     """Preserve last-known runtime state when batch data omits a device."""
     previous = _device("dev-1", SUPPORTED_PRODUCT)
@@ -394,6 +406,30 @@ async def test_poll_preserves_state_missing_from_batch(hass: HomeAssistant) -> N
 
     assert data["dev-1"].name == "Updated name"
     assert data["dev-1"].battery_level == 42
+
+
+async def test_poll_preserves_state_missing_from_partial_batch(
+    hass: HomeAssistant,
+) -> None:
+    """Overlay partial batch data without resetting last-known runtime fields."""
+    previous = _device("dev-1", SUPPORTED_PRODUCT)
+    previous.work_status = 5
+    previous.battery_level = 42
+    discovered = _device("dev-1", SUPPORTED_PRODUCT)
+    api = SimpleNamespace(
+        get_devices=AsyncMock(return_value=[discovered]),
+        get_device_states=AsyncMock(
+            return_value={"dev-1": {"states": {"vacuum.battery": 75}}}
+        ),
+    )
+    coordinator = BeatbotCoordinator(hass, api, _entry())
+    coordinator.async_set_updated_data({"dev-1": previous})
+
+    data = await coordinator._async_update_data()
+
+    assert data["dev-1"].work_status == 5
+    assert data["dev-1"].battery_level == 75
+    assert data["dev-1"].is_online is True
 
 
 async def test_poll_removes_registry_only_stale_device_after_three_misses(
@@ -430,7 +466,7 @@ def test_coordinator_finds_and_removes_registered_device(
         identifiers={(coord_mod.DOMAIN, "dev-1"), ("other", "ignored")},
     )
     device_registry = SimpleNamespace(
-        async_get_device=Mock(return_value=registry_device),
+        async_get_device_by_identifier=Mock(return_value=registry_device),
         async_update_device=Mock(),
     )
     entity_registry = SimpleNamespace(async_remove=Mock())
@@ -457,8 +493,8 @@ def test_coordinator_finds_and_removes_registered_device(
 
     coordinator._remove_device_from_registries("dev-1")
 
-    device_registry.async_get_device.assert_called_once_with(
-        identifiers={(coord_mod.DOMAIN, "dev-1")}
+    device_registry.async_get_device_by_identifier.assert_called_once_with(
+        (coord_mod.DOMAIN, "dev-1"), "entry"
     )
     entity_registry.async_remove.assert_called_once_with("vacuum.beatbot")
     device_registry.async_update_device.assert_called_once_with(
@@ -470,12 +506,14 @@ def test_remove_missing_registry_device(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Ignore removal when no registry device exists."""
-    device_registry = SimpleNamespace(async_get_device=Mock(return_value=None))
+    device_registry = SimpleNamespace(
+        async_get_device_by_identifier=Mock(return_value=None)
+    )
     monkeypatch.setattr(coord_mod.dr, "async_get", Mock(return_value=device_registry))
     coordinator = BeatbotCoordinator(hass, SimpleNamespace(), _entry())
 
     coordinator._remove_device_from_registries("missing")
 
-    device_registry.async_get_device.assert_called_once_with(
-        identifiers={(coord_mod.DOMAIN, "missing")}
+    device_registry.async_get_device_by_identifier.assert_called_once_with(
+        (coord_mod.DOMAIN, "missing"), "entry"
     )

@@ -103,6 +103,9 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
 
         previous_data = self.data if isinstance(self.data, dict) else {}
         for device_id, device in result.items():
+            previous_device = previous_data.get(device_id)
+            if previous_device is not None:
+                device.copy_runtime_state_from(previous_device)
             if (state := states.get(device_id)) is not None:
                 self._apply_state_with_logging(
                     device_id,
@@ -111,11 +114,8 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
                     state.get("is_online"),
                     source="batch",
                 )
-            elif (previous_device := previous_data.get(device_id)) is not None:
-                # Discovery and runtime state are separate endpoints. Preserve
-                # the last-known state when the batch response is partial or
-                # unavailable, while retaining fresh discovery metadata.
-                device.copy_runtime_state_from(previous_device)
+            elif previous_device is None:
+                device.is_online = False
         self._reconcile_device_set(result)
         return result
 
@@ -175,7 +175,9 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
     def _remove_device_from_registries(self, device_id: str) -> None:
         """Remove one confirmed-absent device and all of its entities."""
         device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), self.config_entry.entry_id
+        )
         if device is None:
             return
         entity_registry = er.async_get(self.hass)
@@ -195,31 +197,10 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
             return
         entry_id = self.config_entry.entry_id
         self._reload_scheduled = True
-
-        async def _reload() -> None:
-            try:
-                await self.hass.config_entries.async_reload(entry_id)
-            finally:
-                self._reload_scheduled = False
-
-        self.hass.async_create_task(_reload(), f"beatbot_reconcile_{entry_id}")
+        self.hass.config_entries.async_schedule_reload(entry_id)
 
     async def async_refresh_device_state(self, device_id: str) -> None:
-        """Fetch state for one device and push it to entities immediately.
-
-        Used after a control command (start/pause/return/work_mode) to confirm
-        the new state quickly and cheaply: a single `GET /devices/{id}/state`
-        instead of re-running the full discovery + batch-state refresh. The
-        regular reconciliation poll still runs as normal for everything else.
-
-        Waits `POST_CONTROL_REFRESH_DELAY` before fetching: the device does
-        not report the new state the instant the action is issued, so reading
-        immediately can return the previous value.
-
-        Best-effort like the batch path: a connection failure is logged and
-        skipped (last-known values stay), while an auth failure escalates to
-        reauth since the token is invalid.
-        """
+        """Refresh one device after allowing its control action to settle."""
         await asyncio.sleep(POST_CONTROL_REFRESH_DELAY)
         try:
             state = await self.api.get_device_state(device_id)

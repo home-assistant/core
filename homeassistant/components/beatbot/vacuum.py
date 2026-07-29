@@ -119,9 +119,9 @@ class BeatbotVacuum(BeatbotEntity, StateVacuumEntity):
         """Initialize the Beatbot vacuum."""
         super().__init__(coordinator, device_id)
         self._attr_unique_id = device_id
+        features = vacuum_features_from_capabilities(self.data.capabilities)
         self._attr_supported_features = (
-            vacuum_features_from_capabilities(self.data.capabilities)
-            or VacuumEntityFeature.STATE
+            VacuumEntityFeature.STATE if features is None else features
         )
 
     @property

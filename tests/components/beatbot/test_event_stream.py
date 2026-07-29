@@ -199,7 +199,7 @@ async def test_device_added_reloads_entry(
 ) -> None:
     """Reload the entry after a device-added event."""
     client, coordinator = event_client
-    hass.config_entries.async_reload = AsyncMock(return_value=True)
+    hass.config_entries.async_schedule_reload = Mock()
 
     client._handle_text_message(
         event_factory(
@@ -212,9 +212,7 @@ async def test_device_added_reloads_entry(
             },
         )
     )
-    await hass.async_block_till_done()
-
-    hass.config_entries.async_reload.assert_awaited_once_with("entry")
+    hass.config_entries.async_schedule_reload.assert_called_once_with("entry")
     coordinator.async_apply_device_event.assert_not_called()
 
 
@@ -225,12 +223,10 @@ async def test_device_removed_with_null_payload_reloads_entry(
 ) -> None:
     """Reload the entry after a device-removed event."""
     client, coordinator = event_client
-    hass.config_entries.async_reload = AsyncMock(return_value=True)
+    hass.config_entries.async_schedule_reload = Mock()
 
     client._handle_text_message(event_factory("event-removed", "device_removed", None))
-    await hass.async_block_till_done()
-
-    hass.config_entries.async_reload.assert_awaited_once_with("entry")
+    hass.config_entries.async_schedule_reload.assert_called_once_with("entry")
     coordinator.async_apply_device_event.assert_not_called()
 
 
@@ -241,15 +237,13 @@ async def test_malformed_device_lifecycle_events_do_not_reload(
 ) -> None:
     """Ignore malformed device lifecycle events."""
     client, _ = event_client
-    hass.config_entries.async_reload = AsyncMock(return_value=True)
+    hass.config_entries.async_schedule_reload = Mock()
 
     client._handle_text_message(
         event_factory("bad-added", "device_added", {"deviceId": "another-device"})
     )
     client._handle_text_message(event_factory("bad-removed", "device_removed", {}))
-    await hass.async_block_till_done()
-
-    hass.config_entries.async_reload.assert_not_awaited()
+    hass.config_entries.async_schedule_reload.assert_not_called()
 
 
 async def test_stop_is_idempotent(
@@ -322,6 +316,7 @@ async def test_reconnect_requests_full_refresh(
     client, coordinator = event_client
     coordinator.async_request_refresh = AsyncMock()
     client._has_connected = True
+    client._token_refresh_attempted = True
 
     class _WebSocket:
         closed = False
@@ -353,3 +348,4 @@ async def test_reconnect_requests_full_refresh(
         await client._connect_and_receive()
 
     coordinator.async_request_refresh.assert_awaited_once()
+    assert client._token_refresh_attempted is False
