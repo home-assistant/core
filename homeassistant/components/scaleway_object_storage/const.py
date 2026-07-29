@@ -1,12 +1,10 @@
 """Constants for the Scaleway Object Storage integration."""
 
-from typing import TYPE_CHECKING, Final
+from collections.abc import Callable
+from typing import Final
 
 from homeassistant.const import CONF_REGION as HASS_CONF_REGION
 from homeassistant.util.hass_dict import HassKey
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 DOMAIN = "scaleway_object_storage"
 

@@ -1,12 +1,19 @@
 """BackupAgent implementation based on Scaleway Object Storage."""
 
 import asyncio
+from collections.abc import (
+    AsyncGenerator,
+    AsyncIterator,
+    Awaitable,
+    Callable,
+    Coroutine,
+)
 from dataclasses import dataclass
 import hashlib
 from http import HTTPStatus
 import json
 import logging
-from typing import TYPE_CHECKING, Any, Self
+from typing import Any, Self
 
 import aiohttp
 from aiohttp import ClientConnectionError
@@ -21,7 +28,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.core import HomeAssistant, callback
 
-from . import exceptions, helpers
+from . import ScalewayConfigEntry, exceptions, helpers
 from .const import (
     CONF_OBJECT_PREFIX,
     CONTENT_TYPE_TAR,
@@ -36,19 +43,8 @@ from .const import (
     MULTIPART_PART_SIZE,
 )
 
-if TYPE_CHECKING:
-    from collections.abc import (
-        AsyncGenerator,
-        AsyncIterator,
-        Awaitable,
-        Callable,
-        Coroutine,
-    )
-
-    from . import ScalewayConfigEntry
-
-    type OpenStream = Callable[[], Awaitable[AsyncIterator[bytes]]]
-    type UploadJob = tuple[_Part, Coroutine[None, None, None]]
+type OpenStream = Callable[[], Awaitable[AsyncIterator[bytes]]]
+type UploadJob = tuple[_Part, Coroutine[None, None, None]]
 
 _LOGGER = logging.getLogger(__name__)
 

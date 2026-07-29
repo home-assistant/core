@@ -1,11 +1,11 @@
 """Config flow for the Scaleway Object Storage integration."""
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -28,9 +28,6 @@ from .const import (
     DOCS_PLACEHOLDERS,
     DOMAIN,
 )
-
-if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigFlowResult
 
 SECTION_CREDENTIALS_SCHEMA = vol.Schema(
     {

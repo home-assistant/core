@@ -1,10 +1,11 @@
 """Integration-internal helper functions that bundle common interactions with the underlying aiohttp_s3_client."""
 
 import asyncio
+from collections.abc import AsyncGenerator, Generator, Mapping
 from http import HTTPStatus
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from aiohttp import ClientConnectionError, ClientSession, InvalidURL
 from aiohttp_s3_client import S3Client
@@ -13,10 +14,6 @@ from aiohttp_s3_client.client import AwsDownloadError
 from homeassistant.components.backup import AgentBackup
 
 from . import exceptions
-
-if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator, Generator, Mapping
-
 from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,

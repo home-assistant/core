@@ -1,15 +1,11 @@
 """The Scaleway Object Storage integration."""
 
-from typing import TYPE_CHECKING
+from aiohttp_s3_client import S3Client
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-
-if TYPE_CHECKING:
-    from aiohttp_s3_client import S3Client
-
-    from homeassistant.core import HomeAssistant
 
 from . import exceptions, helpers
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
