@@ -16,7 +16,9 @@ from .const import DOMAIN
 from .coordinator import HarborConfigEntry, HarborCoordinator
 from .entity import HarborEntity
 
-PARALLEL_UPDATES = 0
+# Commands are sent over a single MQTT session to one camera, and each settings
+# write is followed by a settings refresh, so they are serialized.
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -101,7 +103,7 @@ class HarborSwitch(HarborEntity, SwitchEntity):
         """Run a switch command and translate library errors."""
         try:
             await action(self.coordinator)
-        except HarborCommandError as err:
+        except (HarborCommandError, TimeoutError, ConnectionError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key=f"switch_{translation_key}_failed",
