@@ -1,7 +1,6 @@
 """Tests for helpers module."""
 
 from collections.abc import AsyncGenerator, Mapping
-from datetime import UTC, datetime
 import json
 from typing import Any, cast
 from unittest.mock import MagicMock
@@ -19,6 +18,7 @@ from homeassistant.components.scaleway_object_storage.const import (
     CONF_REGION,
     HEADER_METADATA,
 )
+from homeassistant.util import utcnow
 
 from .conftest import MockS3ResponseFactory
 
@@ -28,7 +28,7 @@ async def _mock_list_objects() -> AsyncGenerator[tuple[list[AwsObjectMeta], list
         meta = AwsObjectMeta(
             etag="cafe",
             key=key,
-            last_modified=datetime.now(tz=UTC),
+            last_modified=utcnow(),
             size=1024,
             storage_class="STANDARD",
         )
