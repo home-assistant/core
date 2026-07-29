@@ -74,8 +74,6 @@ class OllamaDataUpdateCoordinator(DataUpdateCoordinator[OllamaData]):
         """Make an optional request to Ollama."""
         try:
             return await self._request(request)
-        except ConfigEntryAuthFailed:
-            raise
         except (ConfigEntryError, UpdateFailed) as err:
             _LOGGER.debug("Optional Ollama request failed: %s", err)
             return None
