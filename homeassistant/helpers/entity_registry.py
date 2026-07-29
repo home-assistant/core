@@ -499,7 +499,7 @@ def _async_get_full_entity_name(
     has_entity_name: bool,
     name: str | None,
     original_name: str | None,
-    original_name_unprefixed: str | None | UndefinedType = UNDEFINED,
+    original_name_unprefixed: str | UndefinedType | None = UNDEFINED,
     overridden_name: str | None = None,
     parts: Sequence[EntityNamePart],
     unprefix_name: bool = False,
@@ -582,10 +582,10 @@ def _async_get_full_entity_name(
 def async_get_full_entity_name(
     hass: HomeAssistant,
     entry: RegistryEntry,
-    original_name: str | None | UndefinedType = UNDEFINED,
+    original_name: str | UndefinedType | None = UNDEFINED,
 ) -> str:
     """Get full entity name for an entry."""
-    original_name_unprefixed: str | None | UndefinedType = UNDEFINED
+    original_name_unprefixed: str | UndefinedType | None = UNDEFINED
     if original_name is UNDEFINED or original_name == entry.original_name:
         original_name = entry.original_name
         original_name_unprefixed = entry.original_name_unprefixed
@@ -1114,12 +1114,12 @@ def _validate_item(
     domain: str,
     platform: str,
     *,
-    config_entry_id: str | None | UndefinedType = None,
-    config_subentry_id: str | None | UndefinedType = None,
-    device_id: str | None | UndefinedType = None,
-    disabled_by: RegistryEntryDisabler | None | UndefinedType = None,
-    entity_category: EntityCategory | None | UndefinedType = None,
-    hidden_by: RegistryEntryHider | None | UndefinedType = None,
+    config_entry_id: str | UndefinedType | None = None,
+    config_subentry_id: str | UndefinedType | None = None,
+    device_id: str | UndefinedType | None = None,
+    disabled_by: RegistryEntryDisabler | UndefinedType | None = None,
+    entity_category: EntityCategory | UndefinedType | None = None,
+    hidden_by: RegistryEntryHider | UndefinedType | None = None,
     old_config_subentry_id: str | None = None,
     report_non_string_unique_id: bool = True,
     unique_id: str | Hashable | UndefinedType | Any,
@@ -1420,8 +1420,8 @@ class EntityRegistry(BaseRegistry):
         *,
         # Used for entity ID generation, if entity gets created.
         # `suggested_object_id` has priority over `object_id_base`.
-        object_id_base: str | None | UndefinedType = UNDEFINED,
-        suggested_object_id: str | None | UndefinedType = UNDEFINED,
+        object_id_base: str | UndefinedType | None = UNDEFINED,
+        suggested_object_id: str | UndefinedType | None = UNDEFINED,
         # To disable or hide an entity if it gets created, does not affect
         # existing entities
         disabled_by: RegistryEntryDisabler | None = None,
@@ -1429,25 +1429,25 @@ class EntityRegistry(BaseRegistry):
         # Function to generate initial entity options if it gets created
         get_initial_options: Callable[[], EntityOptionsType | None] | None = None,
         # Data that we want entry to have
-        capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
-        config_entry: ConfigEntry | None | UndefinedType = UNDEFINED,
-        config_subentry_id: str | None | UndefinedType = UNDEFINED,
-        device_id: str | None | UndefinedType = UNDEFINED,
+        capabilities: Mapping[str, Any] | UndefinedType | None = UNDEFINED,
+        config_entry: ConfigEntry | UndefinedType | None = UNDEFINED,
+        config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        device_id: str | UndefinedType | None = UNDEFINED,
         entity_category: EntityCategory | UndefinedType | None = UNDEFINED,
         has_entity_name: bool | UndefinedType = UNDEFINED,
-        original_device_class: str | None | UndefinedType = UNDEFINED,
-        original_icon: str | None | UndefinedType = UNDEFINED,
-        original_name: str | None | UndefinedType = UNDEFINED,
-        supported_features: int | None | UndefinedType = UNDEFINED,
-        translation_key: str | None | UndefinedType = UNDEFINED,
-        unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+        original_device_class: str | UndefinedType | None = UNDEFINED,
+        original_icon: str | UndefinedType | None = UNDEFINED,
+        original_name: str | UndefinedType | None = UNDEFINED,
+        supported_features: int | UndefinedType | None = UNDEFINED,
+        translation_key: str | UndefinedType | None = UNDEFINED,
+        unit_of_measurement: str | UndefinedType | None = UNDEFINED,
     ) -> RegistryEntry:
         """Get entity. Create if it doesn't exist.
 
         domain: entity component domain (e.g. light, sensor)
         platform: integration domain (e.g. hue, zwave)
         """
-        config_entry_id: str | None | UndefinedType = UNDEFINED
+        config_entry_id: str | UndefinedType | None = UNDEFINED
         if not config_entry:
             config_entry_id = None
         elif config_entry is not UNDEFINED:
@@ -1756,7 +1756,7 @@ class EntityRegistry(BaseRegistry):
                 # An empty name_unprefixed means the entity name equals
                 # the device name (e.g. a main sensor); a non-empty one
                 # is appended as a suffix.
-                name: str | None | UndefinedType = UNDEFINED
+                name: str | UndefinedType | None = UNDEFINED
                 if (
                     by_user
                     and entity.name is None
@@ -1802,8 +1802,8 @@ class EntityRegistry(BaseRegistry):
 
     @callback
     def _ignore_composite_device_id(
-        self, platform: str, device_id: str | None | UndefinedType
-    ) -> str | None | UndefinedType:
+        self, platform: str, device_id: str | UndefinedType | None
+    ) -> str | UndefinedType | None:
         """Ignore a request to link an entity to a composite device id.
 
         A pre-migration composite device was split into one device per config
@@ -1838,33 +1838,33 @@ class EntityRegistry(BaseRegistry):
         entity_id: str,
         *,
         aliases: list[AliasEntry] | UndefinedType = UNDEFINED,
-        area_id: str | None | UndefinedType = UNDEFINED,
+        area_id: str | UndefinedType | None = UNDEFINED,
         categories: dict[str, str] | UndefinedType = UNDEFINED,
-        capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
-        config_entry_id: str | None | UndefinedType = UNDEFINED,
-        config_subentry_id: str | None | UndefinedType = UNDEFINED,
-        device_class: str | None | UndefinedType = UNDEFINED,
-        device_id: str | None | UndefinedType = UNDEFINED,
-        disabled_by: RegistryEntryDisabler | None | UndefinedType = UNDEFINED,
-        entity_category: EntityCategory | None | UndefinedType = UNDEFINED,
-        hidden_by: RegistryEntryHider | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
+        capabilities: Mapping[str, Any] | UndefinedType | None = UNDEFINED,
+        config_entry_id: str | UndefinedType | None = UNDEFINED,
+        config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        device_class: str | UndefinedType | None = UNDEFINED,
+        device_id: str | UndefinedType | None = UNDEFINED,
+        disabled_by: RegistryEntryDisabler | UndefinedType | None = UNDEFINED,
+        entity_category: EntityCategory | UndefinedType | None = UNDEFINED,
+        hidden_by: RegistryEntryHider | UndefinedType | None = UNDEFINED,
+        icon: str | UndefinedType | None = UNDEFINED,
         has_entity_name: bool | UndefinedType = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
-        name: str | None | UndefinedType = UNDEFINED,
+        name: str | UndefinedType | None = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
-        object_id_base: str | None | UndefinedType = UNDEFINED,
+        object_id_base: str | UndefinedType | None = UNDEFINED,
         options: EntityOptionsType | UndefinedType = UNDEFINED,
-        original_device_class: str | None | UndefinedType = UNDEFINED,
-        original_icon: str | None | UndefinedType = UNDEFINED,
-        original_name: str | None | UndefinedType = UNDEFINED,
-        original_name_unprefixed: str | None | UndefinedType = UNDEFINED,
-        platform: str | None | UndefinedType = UNDEFINED,
-        suggested_object_id: str | None | UndefinedType = UNDEFINED,
+        original_device_class: str | UndefinedType | None = UNDEFINED,
+        original_icon: str | UndefinedType | None = UNDEFINED,
+        original_name: str | UndefinedType | None = UNDEFINED,
+        original_name_unprefixed: str | UndefinedType | None = UNDEFINED,
+        platform: str | UndefinedType | None = UNDEFINED,
+        suggested_object_id: str | UndefinedType | None = UNDEFINED,
         supported_features: int | UndefinedType = UNDEFINED,
-        translation_key: str | None | UndefinedType = UNDEFINED,
-        unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+        translation_key: str | UndefinedType | None = UNDEFINED,
+        unit_of_measurement: str | UndefinedType | None = UNDEFINED,
     ) -> RegistryEntry:
         """Private facing update properties method."""
         old = self.entities[entity_id]
@@ -2015,28 +2015,28 @@ class EntityRegistry(BaseRegistry):
         entity_id: str,
         *,
         aliases: list[AliasEntry] | UndefinedType = UNDEFINED,
-        area_id: str | None | UndefinedType = UNDEFINED,
+        area_id: str | UndefinedType | None = UNDEFINED,
         categories: dict[str, str] | UndefinedType = UNDEFINED,
-        capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
-        config_entry_id: str | None | UndefinedType = UNDEFINED,
-        config_subentry_id: str | None | UndefinedType = UNDEFINED,
-        device_class: str | None | UndefinedType = UNDEFINED,
-        device_id: str | None | UndefinedType = UNDEFINED,
-        disabled_by: RegistryEntryDisabler | None | UndefinedType = UNDEFINED,
-        entity_category: EntityCategory | None | UndefinedType = UNDEFINED,
-        hidden_by: RegistryEntryHider | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
+        capabilities: Mapping[str, Any] | UndefinedType | None = UNDEFINED,
+        config_entry_id: str | UndefinedType | None = UNDEFINED,
+        config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        device_class: str | UndefinedType | None = UNDEFINED,
+        device_id: str | UndefinedType | None = UNDEFINED,
+        disabled_by: RegistryEntryDisabler | UndefinedType | None = UNDEFINED,
+        entity_category: EntityCategory | UndefinedType | None = UNDEFINED,
+        hidden_by: RegistryEntryHider | UndefinedType | None = UNDEFINED,
+        icon: str | UndefinedType | None = UNDEFINED,
         has_entity_name: bool | UndefinedType = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
-        name: str | None | UndefinedType = UNDEFINED,
+        name: str | UndefinedType | None = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
-        original_device_class: str | None | UndefinedType = UNDEFINED,
-        original_icon: str | None | UndefinedType = UNDEFINED,
-        original_name: str | None | UndefinedType = UNDEFINED,
+        original_device_class: str | UndefinedType | None = UNDEFINED,
+        original_icon: str | UndefinedType | None = UNDEFINED,
+        original_name: str | UndefinedType | None = UNDEFINED,
         supported_features: int | UndefinedType = UNDEFINED,
-        translation_key: str | None | UndefinedType = UNDEFINED,
-        unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+        translation_key: str | UndefinedType | None = UNDEFINED,
+        unit_of_measurement: str | UndefinedType | None = UNDEFINED,
     ) -> RegistryEntry:
         """Update properties of an entity."""
         return self._async_update_entity(
@@ -2075,7 +2075,7 @@ class EntityRegistry(BaseRegistry):
         new_config_entry_id: str | UndefinedType = UNDEFINED,
         new_config_subentry_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
-        new_device_id: str | None | UndefinedType = UNDEFINED,
+        new_device_id: str | UndefinedType | None = UNDEFINED,
     ) -> RegistryEntry:
         """Update entity platform.
 
@@ -2124,7 +2124,7 @@ class EntityRegistry(BaseRegistry):
     def async_update_settings(
         self,
         *,
-        entity_id_parts: list[EntityNamePart] | None | UndefinedType = UNDEFINED,
+        entity_id_parts: list[EntityNamePart] | UndefinedType | None = UNDEFINED,
     ) -> EntityRegistrySettings:
         """Update entity registry settings."""
         self.hass.verify_event_loop_thread("entity_registry.async_update_settings")
