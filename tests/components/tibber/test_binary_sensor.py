@@ -6,9 +6,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import create_tibber_device
 
@@ -44,6 +45,61 @@ async def test_binary_sensor_snapshot(
     await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+async def test_binary_sensors_with_empty_external_ids(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    data_api_client_mock: AsyncMock,
+    setup_credentials: None,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test binary sensors use separate devices when external IDs are empty."""
+    devices = {
+        device_id: create_tibber_device(
+            device_id=device_id,
+            external_id="",
+            name=name,
+            connector_status="connected",
+        )
+        for device_id, name in (
+            ("charger-left", "Charger left"),
+            ("charger-right", "Charger right"),
+        )
+    }
+    data_api_client_mock.get_all_devices = AsyncMock(return_value=devices)
+    data_api_client_mock.update_devices = AsyncMock(return_value=devices)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    left_entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, "charger-left_connector.status"
+    )
+    right_entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, "charger-right_connector.status"
+    )
+    assert left_entity_id is not None
+    assert right_entity_id is not None
+
+    left_entity = entity_registry.async_get(left_entity_id)
+    right_entity = entity_registry.async_get(right_entity_id)
+    assert left_entity is not None
+    assert right_entity is not None
+    assert left_entity.device_id != right_entity.device_id
+
+    left_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "charger-left"), config_entry.entry_id
+    )
+    right_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "charger-right"), config_entry.entry_id
+    )
+    assert left_device is not None
+    assert right_device is not None
+    assert left_entity.device_id == left_device.id
+    assert right_entity.device_id == right_device.id
 
 
 @pytest.mark.parametrize(
