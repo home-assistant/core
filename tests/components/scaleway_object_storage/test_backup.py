@@ -27,14 +27,14 @@ from homeassistant.components.scaleway_object_storage import (
     DOMAIN,
 )
 from homeassistant.components.scaleway_object_storage.backup import (
+    CONTENT_TYPE_TAR,
+    HEADER_CONTENT_DISPOSITION,
+    HEADER_CONTENT_TYPE,
     ScalewayBackupAgent,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.scaleway_object_storage.const import (
     CONF_BUCKET,
-    CONTENT_TYPE_TAR,
-    HEADER_CONTENT_DISPOSITION,
-    HEADER_CONTENT_TYPE,
     HEADER_METADATA,
 )
 from homeassistant.core import HomeAssistant

@@ -14,7 +14,7 @@ import hashlib
 from http import HTTPStatus
 import json
 import logging
-from typing import Any, Self, override
+from typing import Any, Final, Self, override
 
 from aiohttp import ClientConnectionError, ClientResponse
 from aiohttp_s3_client.client import AwsUploadError, MultipartUploader, S3Client
@@ -31,20 +31,23 @@ from homeassistant.core import HomeAssistant, callback
 from . import ScalewayConfigEntry, exceptions, helpers
 from .const import (
     CONF_OBJECT_PREFIX,
-    CONTENT_TYPE_TAR,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
-    HEADER_CONTENT_DISPOSITION,
-    HEADER_CONTENT_TYPE,
     HEADER_METADATA,
-    MAX_PARALLEL_HEAD_REQUESTS,
-    MAX_PARALLEL_UPLOADS,
-    MULTIPART_MIN_SIZE,
-    MULTIPART_PART_SIZE,
 )
 
 type OpenStream = Callable[[], Awaitable[AsyncIterator[bytes]]]
 type UploadJob = tuple[_Part, Coroutine[None, None, None]]
+
+MAX_PARALLEL_HEAD_REQUESTS: Final[int] = 8
+MAX_PARALLEL_UPLOADS: Final[int] = 4
+
+MULTIPART_MIN_SIZE: Final[int] = 50 * 2**20
+MULTIPART_PART_SIZE: Final[int] = 32 * 2**20
+
+HEADER_CONTENT_DISPOSITION: Final[str] = "Content-Disposition"
+HEADER_CONTENT_TYPE: Final[str] = "Content-Type"
+CONTENT_TYPE_TAR: Final[str] = "application/x-tar"
 
 _LOGGER = logging.getLogger(__name__)
 

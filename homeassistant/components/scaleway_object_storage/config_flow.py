@@ -1,7 +1,7 @@
 """Config flow for the Scaleway Object Storage integration."""
 
 from collections.abc import Mapping
-from typing import Any, override
+from typing import Any, Final, override
 
 import voluptuous as vol
 
@@ -25,9 +25,14 @@ from .const import (
     CONF_REGION,
     CONF_SECRET_KEY,
     CONF_SECTION_CREDENTIALS,
-    DOCS_PLACEHOLDERS,
     DOMAIN,
 )
+
+DOCS_PLACEHOLDERS: Final = {
+    "api_key_docs": "https://www.scaleway.com/docs/iam/api-cli/using-api-key-object-storage/",
+    "bucket_docs": "https://www.scaleway.com/docs/object-storage/how-to/create-a-bucket/",
+}
+
 
 SECTION_CREDENTIALS_SCHEMA = vol.Schema(
     {
