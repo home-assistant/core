@@ -147,38 +147,6 @@ class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of an existing entry."""
-        reconfigure_entry = self._get_reconfigure_entry()
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            self._async_abort_entries_match(
-                {
-                    CONF_ZONE: user_input[CONF_ZONE],
-                    CONF_DOMAIN: user_input[CONF_DOMAIN],
-                }
-            )
-
-            if error := await self._async_validate(user_input):
-                errors[ERROR_FIELDS.get(error, "base")] = error
-            else:
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    title=user_input[CONF_DOMAIN],
-                    data_updates=user_input,
-                )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input or reconfigure_entry.data
-            ),
-            errors=errors,
-        )
-
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
         self._async_abort_entries_match(
