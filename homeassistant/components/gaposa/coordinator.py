@@ -84,7 +84,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
         except (ClientError, TimeoutError, OSError) as exc:
             raise UpdateFailed(
                 f"Error talking to Gaposa: {exc}",
-                retry_after=timedelta(seconds=UPDATE_INTERVAL_FAST),
+                retry_after=UPDATE_INTERVAL_FAST,
             ) from exc
         finally:
             self._updating = False
