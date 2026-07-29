@@ -66,7 +66,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
             }
             board = await self._fetch_data(stop_ids)
         except HTTPError as error:  # runtime errors from the API
-            if error.status in (401, 403):
+            if error.status_code in (401, 403):
                 raise ConfigEntryAuthFailed("API key expired or revoked") from error
             raise UpdateFailed(error) from error
         except APIError as error:  # runtime errors from the API

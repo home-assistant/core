@@ -204,6 +204,7 @@ async def test_departure_cleanup_trigger(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test cleanup trigger is scheduled, cancelled on update, and fires at departure time."""
@@ -255,7 +256,9 @@ async def test_departure_cleanup_trigger(
 
     # Verify timer was replaced and cleanup callback executed
     # The entity state should be updated with current departures (v2)
-    entity_id = "sensor.rejseplanen_123456"
+    entity_id = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )[0].entity_id
     state = hass.states.get(entity_id)
     assert state is not None
     # After cleanup fires, the entity should have the v2 departures

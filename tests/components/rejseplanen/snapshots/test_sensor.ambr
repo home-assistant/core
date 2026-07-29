@@ -42,11 +42,11 @@
 # name: test_sensor_snapshot[sensor.gym_delayed_by-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by rejseplanen.dk',
-      'device_class': 'duration',
-      'friendly_name': 'Gym Delayed by',
-      'icon': 'mdi:bus',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by rejseplanen.dk',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gym Delayed by',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bus',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gym_delayed_by',
@@ -96,9 +96,9 @@
 # name: test_sensor_snapshot[sensor.gym_departing_from_track-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by rejseplanen.dk',
-      'friendly_name': 'Gym Departing from track',
-      'icon': 'mdi:bus',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by rejseplanen.dk',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gym Departing from track',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bus',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gym_departing_from_track',
@@ -148,10 +148,10 @@
 # name: test_sensor_snapshot[sensor.gym_departing_in-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by rejseplanen.dk',
-      'device_class': 'timestamp',
-      'friendly_name': 'Gym Departing in',
-      'icon': 'mdi:bus',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by rejseplanen.dk',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gym Departing in',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bus',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gym_departing_in',
@@ -201,9 +201,9 @@
 # name: test_sensor_snapshot[sensor.gym_line-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by rejseplanen.dk',
-      'friendly_name': 'Gym Line',
-      'icon': 'mdi:bus',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by rejseplanen.dk',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gym Line',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bus',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gym_line',
@@ -253,9 +253,9 @@
 # name: test_sensor_snapshot[sensor.gym_number_of_departures-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by rejseplanen.dk',
-      'friendly_name': 'Gym Number of departures',
-      'icon': 'mdi:bus',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by rejseplanen.dk',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gym Number of departures',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bus',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gym_number_of_departures',
@@ -305,9 +305,9 @@
 # name: test_sensor_snapshot[sensor.gym_towards-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by rejseplanen.dk',
-      'friendly_name': 'Gym Towards',
-      'icon': 'mdi:bus',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by rejseplanen.dk',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gym Towards',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bus',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gym_towards',
@@ -360,11 +360,11 @@
 # name: test_sensor_snapshot[sensor.work_delayed_by-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by rejseplanen.dk',
-      'device_class': 'duration',
-      'friendly_name': 'Work Delayed by',
-      'icon': 'mdi:bus',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by rejseplanen.dk',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Work Delayed by',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bus',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.work_delayed_by',
@@ -414,9 +414,9 @@
 # name: test_sensor_snapshot[sensor.work_departing_from_track-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by rejseplanen.dk',
-      'friendly_name': 'Work Departing from track',
-      'icon': 'mdi:bus',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by rejseplanen.dk',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Work Departing from track',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bus',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.work_departing_from_track',
@@ -466,10 +466,10 @@
 # name: test_sensor_snapshot[sensor.work_departing_in-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by rejseplanen.dk',
-      'device_class': 'timestamp',
-      'friendly_name': 'Work Departing in',
-      'icon': 'mdi:bus',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by rejseplanen.dk',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Work Departing in',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bus',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.work_departing_in',
@@ -519,9 +519,9 @@
 # name: test_sensor_snapshot[sensor.work_line-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by rejseplanen.dk',
-      'friendly_name': 'Work Line',
-      'icon': 'mdi:bus',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by rejseplanen.dk',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Work Line',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bus',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.work_line',
@@ -571,9 +571,9 @@
 # name: test_sensor_snapshot[sensor.work_number_of_departures-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by rejseplanen.dk',
-      'friendly_name': 'Work Number of departures',
-      'icon': 'mdi:bus',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by rejseplanen.dk',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Work Number of departures',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bus',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.work_number_of_departures',
@@ -623,9 +623,9 @@
 # name: test_sensor_snapshot[sensor.work_towards-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by rejseplanen.dk',
-      'friendly_name': 'Work Towards',
-      'icon': 'mdi:bus',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by rejseplanen.dk',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Work Towards',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bus',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.work_towards',

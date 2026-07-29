@@ -88,6 +88,7 @@ def make_mock_departures(stop_id: int) -> list[Departure]:
             (base_time - timedelta(minutes=8)).time().replace(second=0, microsecond=0)
         )
         past_dep.rtDate = base_time.date()
+        past_dep.rtTrack = "2B"
         past_dep.stopExtId = 456789
         departures.append(past_dep)
 
@@ -107,6 +108,7 @@ def make_mock_departures(stop_id: int) -> list[Departure]:
         )
         buffer_dep.date = base_time.date()
         buffer_dep.track = "2B"
+        buffer_dep.rtTrack = "2B"
         buffer_dep.final_stop = "North Station"
         buffer_dep.messages = ["Delayed"]
         buffer_dep.rtTime = (

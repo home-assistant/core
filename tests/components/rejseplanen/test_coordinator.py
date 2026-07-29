@@ -12,7 +12,7 @@ import pytest
 from homeassistant.components.rejseplanen.helpers import COPENHAGEN_TZ
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import make_mock_departures
@@ -43,7 +43,7 @@ async def test_setup_entry_first_refresh_fails(
     "error",
     [
         APIError("api error"),
-        HTTPError("http error"),
+        HTTPError("http error", status_code=500),
         ConnectionError(
             "Connection error while fetching data: ConnectionError: connection error"
         ),
@@ -59,6 +59,23 @@ async def test_coordinator_fetch_errors(
     with (
         patch.object(coordinator, "_fetch_data", side_effect=error),
         pytest.raises(UpdateFailed),
+    ):
+        await coordinator._async_update_data()
+
+
+async def test_coordinator_fetch_http_auth_error(
+    setup_integration: None, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that auth-related HTTP errors raise ConfigEntryAuthFailed."""
+    coordinator = mock_config_entry.runtime_data
+
+    with (
+        patch.object(
+            coordinator,
+            "_fetch_data",
+            side_effect=HTTPError("http error", status_code=401),
+        ),
+        pytest.raises(ConfigEntryAuthFailed),
     ):
         await coordinator._async_update_data()
 
