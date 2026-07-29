@@ -49,8 +49,6 @@ from .utils import (
     remove_entities,
 )
 
-from tests.common import MockConfigEntry
-
 
 def _channel_entity_id(camera_obj: ProtectCamera, channel_id: int) -> str:
     """Return the entity_id for a camera channel."""
@@ -1099,8 +1097,7 @@ async def test_unadopted_camera_not_enumerated_from_public_frame(
 async def test_public_only_camera_end_to_end(
     hass: HomeAssistant,
     camera: ProtectCamera,
-    ufp_public_only_entry: MockConfigEntry,
-    ufp_public_only_client: Mock,
+    ufp_public_only: MockUFPFixture,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
     """A public-only entry with a camera in the bootstrap creates a working entity.
@@ -1109,7 +1106,7 @@ async def test_public_only_camera_end_to_end(
     used by the other tests here), proving cameras and the alarm panel coexist
     under ``PUBLIC_ONLY_PLATFORMS``.
     """
-    ufp_public_only_client.base_url = "https://1.1.1.1"
+    ufp_public_only.api.base_url = "https://1.1.1.1"
     # The stream-building test helper reads the private ``rtsps_url`` property,
     # which needs a client with a bootstrap; keep that off the public client.
     channel_api = Mock()
@@ -1117,12 +1114,12 @@ async def test_public_only_camera_end_to_end(
         channel._api = channel_api
     public = make_public_camera(camera)
     public.rtsps_streams = public_rtsps_for(camera)
-    ufp_public_only_client.public_bootstrap.cameras = {camera.id: public}
-    ufp_public_only_client.get_public_api_camera_snapshot = AsyncMock()
+    ufp_public_only.api.public_bootstrap.cameras = {camera.id: public}
+    ufp_public_only.api.get_public_api_camera_snapshot = AsyncMock()
 
     await setup_public_only()
 
-    assert ufp_public_only_entry.state is ConfigEntryState.LOADED
+    assert ufp_public_only.entry.state is ConfigEntryState.LOADED
     high_id = f"camera.{camera.name}_high_resolution_channel".replace(" ", "_").lower()
     state = hass.states.get(high_id)
     assert state is not None

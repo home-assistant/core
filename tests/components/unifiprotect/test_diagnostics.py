@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 
 from .utils import MockUFPFixture, init_entry
 
-from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -112,13 +111,12 @@ async def test_diagnostics(
 async def test_public_only_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    ufp_public_only_entry: MockConfigEntry,
-    ufp_public_only_client: Mock,
+    ufp_public_only: MockUFPFixture,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
     """Diagnostics for a public-only entry dump the public cache."""
     await setup_public_only()
-    ufp_public_only_client.public_bootstrap.nvr.unifi_dict = Mock(
+    ufp_public_only.api.public_bootstrap.nvr.unifi_dict = Mock(
         return_value={"name": "Test NVR"}
     )
     camera = Mock()
@@ -128,10 +126,10 @@ async def test_public_only_diagnostics(
             "rtspsStreams": {"high": "rtsps://10.0.0.2:7441/secret?enableSrtp"},
         }
     )
-    ufp_public_only_client.public_bootstrap.cameras = {"cam-id": camera}
+    ufp_public_only.api.public_bootstrap.cameras = {"cam-id": camera}
 
     diag = await get_diagnostics_for_config_entry(
-        hass, hass_client, ufp_public_only_entry
+        hass, hass_client, ufp_public_only.entry
     )
 
     assert "bootstrap" not in diag

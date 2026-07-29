@@ -656,38 +656,68 @@ def mock_ufp_public_only_client() -> Mock:
         )
     )
     client.public_bootstrap = pb
-
-    subs: dict[str, Any] = {}
-
-    def _sub(name: str) -> Callable[[Any], Mock]:
-        def _subscribe(callback: Any) -> Mock:
-            subs[name] = callback
-            return Mock()
-
-        return _subscribe
-
-    client.subscribe_devices_websocket = Mock(side_effect=_sub("devices"))
-    client.subscribe_devices_websocket_state = Mock(side_effect=_sub("devices_state"))
-    client.subscribe_events = Mock(side_effect=_sub("events"))
-    client.subs = subs
     return client
+
+
+@pytest.fixture(name="ufp_public_only")
+def mock_ufp_public_only(
+    ufp_public_only_entry: MockConfigEntry,
+    ufp_public_only_client: Mock,
+) -> MockUFPFixture:
+    """Bundle the API-key-only entry and client, like ``ufp`` does for hybrid."""
+    ufp = MockUFPFixture(ufp_public_only_entry, ufp_public_only_client)
+
+    def subscribe_devices_websocket(
+        ws_callback: Callable[[WSSubscriptionMessage], None],
+    ) -> Any:
+        ufp.devices_ws_subscription = ws_callback
+        return Mock()
+
+    def subscribe_devices_websocket_state(
+        ws_state_subscription: Callable[[WebsocketState], None],
+    ) -> Any:
+        ufp.devices_ws_state_subscription = ws_state_subscription
+        return Mock()
+
+    def subscribe_events(events_callback: Callable[..., None]) -> Any:
+        ufp.events_subscription = events_callback
+        return Mock()
+
+    def subscribe_events_websocket_state(
+        ws_state_subscription: Callable[[WebsocketState], None],
+    ) -> Any:
+        ufp.events_ws_state_subscription = ws_state_subscription
+        return Mock()
+
+    ufp_public_only_client.subscribe_devices_websocket = subscribe_devices_websocket
+    ufp_public_only_client.subscribe_devices_websocket_state = (
+        subscribe_devices_websocket_state
+    )
+    ufp_public_only_client.subscribe_events = subscribe_events
+    ufp_public_only_client.subscribe_events_websocket_state = (
+        subscribe_events_websocket_state
+    )
+    return ufp
 
 
 @pytest.fixture(name="setup_public_only")
 def setup_public_only_fixture(
     hass: HomeAssistant,
-    ufp_public_only_entry: MockConfigEntry,
-    ufp_public_only_client: Mock,
+    ufp_public_only: MockUFPFixture,
 ) -> Callable[[], Coroutine[Any, Any, None]]:
-    """Return a callable setting up the API-key-only entry with its mock client."""
-    ufp_public_only_entry.add_to_hass(hass)
+    """Return a callable setting up the API-key-only entry with its mock client.
+
+    Deferred rather than an auto-setup fixture because several tests mutate the
+    client (or the entry) first. The entry is added here so those tests can.
+    """
+    ufp_public_only.entry.add_to_hass(hass)
 
     async def _setup() -> None:
         with patch(
             "homeassistant.components.unifiprotect.async_create_api_client",
-            return_value=ufp_public_only_client,
+            return_value=ufp_public_only.api,
         ):
-            await hass.config_entries.async_setup(ufp_public_only_entry.entry_id)
+            await hass.config_entries.async_setup(ufp_public_only.entry.entry_id)
             await hass.async_block_till_done()
 
     return _setup

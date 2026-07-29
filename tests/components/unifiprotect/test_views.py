@@ -22,7 +22,6 @@ from homeassistant.core import HomeAssistant
 
 from .utils import MockUFPFixture, init_entry
 
-from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 
@@ -974,14 +973,14 @@ async def test_event_video(
 
 async def test_public_only_entry_id_lookup_404(
     hass: HomeAssistant,
-    ufp_public_only_entry: MockConfigEntry,
+    ufp_public_only: MockUFPFixture,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
     """The media proxy views reject a public-only entry id with a 404."""
     await setup_public_only()
 
     view = ThumbnailProxyView(hass)
-    result = view._get_data_or_404(ufp_public_only_entry.entry_id)
+    result = view._get_data_or_404(ufp_public_only.entry.entry_id)
     assert isinstance(result, web.Response)
     assert result.status == 404
 

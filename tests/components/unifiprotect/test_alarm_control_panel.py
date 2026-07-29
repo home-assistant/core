@@ -349,19 +349,18 @@ async def test_alarm_panel_availability_decoupled_from_private_websocket(
 
 async def test_public_only_nvr_websocket_updates_alarm(
     hass: HomeAssistant,
-    ufp_public_only_client: Mock,
+    ufp_public_only: MockUFPFixture,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
     """An NVR devices-websocket frame re-renders the alarm from the public arm mode."""
     await setup_public_only()
 
     # Flip the public arm mode, then deliver an NVR frame over the devices WS.
-    ufp_public_only_client.public_bootstrap.arm_mode.status = NvrArmModeStatus.ARMED
-    devices_cb = ufp_public_only_client.subs["devices"]
+    ufp_public_only.api.public_bootstrap.arm_mode.status = NvrArmModeStatus.ARMED
     msg = Mock()
-    msg.new_obj = ufp_public_only_client.public_bootstrap.nvr  # model == NVR
+    msg.new_obj = ufp_public_only.api.public_bootstrap.nvr  # model == NVR
     msg.old_obj = None
-    devices_cb(msg)
+    ufp_public_only.devices_ws_subscription(msg)
     await hass.async_block_till_done()
 
     state = hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID)
@@ -371,19 +370,18 @@ async def test_public_only_nvr_websocket_updates_alarm(
 
 async def test_public_only_ws_state_refreshes_alarm(
     hass: HomeAssistant,
-    ufp_public_only_client: Mock,
+    ufp_public_only: MockUFPFixture,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
     """A public devices-websocket reconnect re-signals the NVR alarm panel."""
     await setup_public_only()
 
-    state_cb = ufp_public_only_client.subs["devices_state"]
     # Drop then restore: the restore re-signals the NVR (public branch).
-    state_cb(WebsocketState.DISCONNECTED)
+    ufp_public_only.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
     assert hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID).state == STATE_UNAVAILABLE
 
-    state_cb(WebsocketState.CONNECTED)
+    ufp_public_only.devices_ws_state_subscription(WebsocketState.CONNECTED)
     await hass.async_block_till_done()
     assert (
         hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID).state
