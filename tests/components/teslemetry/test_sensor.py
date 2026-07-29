@@ -163,7 +163,7 @@ async def test_sensors_streaming(
             Signal.ISOLATION_RESISTANCE,
             "sensor.test_isolation_resistance",
             2.5,
-            2500,
+            2.5,
         ),
     ],
     ids=["tpms_fl", "tpms_fr", "tpms_rl", "tpms_rr", "isolation_resistance"],

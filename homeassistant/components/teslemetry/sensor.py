@@ -1114,13 +1114,13 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="isolation_resistance",
-        # Teslemetry streams this field in kΩ; the entity's declared unit is Ω.
+        # Teslemetry streams this field in kΩ; declare the unit as kΩ.
         streaming_listener=lambda vehicle, callback: vehicle.listen_IsolationResistance(
-            lambda x: callback(None) if x is None else callback(x * 1000)
+            callback
         ),
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement="Ω",
+        native_unit_of_measurement="kΩ",
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
