@@ -39,6 +39,8 @@ async def async_setup_entry(
         msg = f"Unable to connect to Tewke device at {entry.data[CONF_HOST]}"
         raise ConfigEntryNotReady(msg) from err
 
+    entry.async_on_unload(tap.close)
+
     tewke_coordinator = TewkeCoordinator(
         hass=hass,
         logger=LOGGER,
@@ -58,7 +60,6 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     entry.async_on_unload(tewke_coordinator.cancel_observation_timeout)
-    entry.async_on_unload(tap.close)
 
     return True
 

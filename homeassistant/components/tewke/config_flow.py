@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, override
 
 import pytewke
+from pytewke.error import PyTewkeDiscoveryError
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -10,6 +11,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN, LOGGER
 
@@ -82,10 +84,16 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
         tap = self._tap if self._tap is not None else pytewke.Tap(self._discovered_host)
         self._tap = tap
 
-        if not tap.resources:
-            await tap.discover()
+        try:
+            if not tap.resources:
+                await tap.discover()
 
-        scenes = await tap.get_scenes()
+            scenes = await tap.get_scenes()
+        except PyTewkeDiscoveryError as err:
+            await tap.close()
+            msg = f"Unable to connect to Tewke device at {self._discovered_host}"
+            raise ConfigEntryNotReady(msg) from err
+
         self._scenes = scenes
         LOGGER.debug("Discovered scenes: %s", scenes)
 
