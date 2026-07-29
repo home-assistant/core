@@ -1,13 +1,13 @@
 # serializer version: 1
-# name: test_number_update[number.zonwering_begane_grond_keuken_alle_maximum_rotation]
+# name: test_number_update[config_prod_slat_rotate.json-status_prod_slat_rotate.json-number.zonwering_begane_grond_keuken_alle_maximum_rotation]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by WMS WebControl pro API',
-      'friendly_name': 'Keuken alle Maximum Rotation',
-      'max': 127,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by WMS WebControl pro API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Keuken alle Maximum rotation',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 127,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.zonwering_begane_grond_keuken_alle_maximum_rotation',
@@ -17,15 +17,15 @@
     'state': '75',
   })
 # ---
-# name: test_number_update[number.zonwering_begane_grond_keuken_alle_minimum_rotation]
+# name: test_number_update[config_prod_slat_rotate.json-status_prod_slat_rotate.json-number.zonwering_begane_grond_keuken_alle_minimum_rotation]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by WMS WebControl pro API',
-      'friendly_name': 'Keuken alle Minimum Rotation',
-      'max': 0,
-      'min': -127,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by WMS WebControl pro API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Keuken alle Minimum rotation',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -127,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.zonwering_begane_grond_keuken_alle_minimum_rotation',
@@ -35,15 +35,15 @@
     'state': '-75',
   })
 # ---
-# name: test_number_update[number.zonwering_begane_grond_keuken_alle_raw_rotation]
+# name: test_number_update[config_prod_slat_rotate.json-status_prod_slat_rotate.json-number.zonwering_begane_grond_keuken_alle_raw_rotation]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by WMS WebControl pro API',
-      'friendly_name': 'Keuken alle Raw Rotation',
-      'max': 127,
-      'min': -127,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by WMS WebControl pro API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Keuken alle Raw rotation',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 127,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -127,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.zonwering_begane_grond_keuken_alle_raw_rotation',

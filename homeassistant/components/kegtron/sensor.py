@@ -1,5 +1,7 @@
 """Support for Kegtron sensors."""
 
+from typing import override
+
 from kegtron_ble import (
     SensorDeviceClass as KegtronSensorDeviceClass,
     SensorUpdate,
@@ -130,6 +132,7 @@ class KegtronBluetoothSensorEntity(
     """Representation of a Kegtron sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

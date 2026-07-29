@@ -5,12 +5,15 @@ from typing import TYPE_CHECKING, Final
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components.bluetooth import BluetoothScanningMode
+from homeassistant.const import __version__ as ha_version
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from .domain_data import DomainData
 
 DOMAIN = "esphome"
+
+CLIENT_INFO = f"Home Assistant {ha_version}"
 
 ESPHOME_DATA: HassKey[DomainData] = HassKey(DOMAIN)
 

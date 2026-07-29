@@ -1,6 +1,6 @@
 """Support for Netgear LTE notifications."""
 
-from typing import Any
+from typing import Any, override
 
 import eternalegypt
 from eternalegypt.eternalegypt import Modem
@@ -38,6 +38,7 @@ class NetgearNotifyService(BaseNotificationService):
         self.modem: Modem = discovery_info["modem"]
         discovery_info["entry"].async_on_unload(self.async_unregister_services)
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 

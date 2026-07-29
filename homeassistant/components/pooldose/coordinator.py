@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from pooldose.client import PooldoseClient
 from pooldose.request_status import RequestStatus
@@ -38,12 +39,14 @@ class PooldoseCoordinator(DataUpdateCoordinator[StructuredValuesDict]):
         )
         self.client = client
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         # Update device info after successful connection
         self.device_info = self.client.device_info
         _LOGGER.debug("Device info: %s", self.device_info)
 
+    @override
     async def _async_update_data(self) -> StructuredValuesDict:
         """Fetch data from the PoolDose API."""
         try:
@@ -59,7 +62,7 @@ class PooldoseCoordinator(DataUpdateCoordinator[StructuredValuesDict]):
                 translation_key="update_connect_failed",
             ) from err
 
-        if status != RequestStatus.SUCCESS:
+        if status is not RequestStatus.SUCCESS:
             raise UpdateFailed(
                 translation_domain=self.config_entry.domain,
                 translation_key="api_status_error",

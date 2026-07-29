@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from wiim.consts import PlayingStatus as SDKPlayingStatus
@@ -31,10 +31,14 @@ from homeassistant.components.media_player import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_WIIM, LOGGER, WiimConfigEntry
+from .const import DATA_WIIM, DOMAIN, LOGGER, WiimConfigEntry
 from .entity import WiimBaseEntity
 from .models import WiimData
 
@@ -46,6 +50,7 @@ MEDIA_CONTENT_ID_FAVORITES = (
 MEDIA_CONTENT_ID_PLAYLISTS = (
     f"{MEDIA_TYPE_WIIM_LIBRARY}/{MEDIA_CONTENT_ID_ROOT}/playlists"
 )
+
 
 SDK_TO_HA_STATE: dict[SDKPlayingStatus, MediaPlayerState] = {
     SDKPlayingStatus.PLAYING: MediaPlayerState.PLAYING,
@@ -65,7 +70,13 @@ SUPPORT_WIIM_BASE = (
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.SEEK
+    | MediaPlayerEntityFeature.GROUPING
 )
+
+
+def _group_member_state_signal(member_udn: str) -> str:
+    """Return the dispatcher signal for a grouped member state refresh."""
+    return f"wiim_group_member_state_{member_udn}"
 
 
 def media_player_exception_wrap[
@@ -86,11 +97,21 @@ def media_player_exception_wrap[
         except (WiimDeviceException, WiimRequestException, WiimException) as err:
             await self._async_handle_critical_error(err)
             raise HomeAssistantError(
-                f"{func.__name__} failed for {self.entity_id}"
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": func.__name__,
+                    "entity_id": self.entity_id or self._device.name,
+                },
             ) from err
         except RuntimeError as err:
             raise HomeAssistantError(
-                f"{func.__name__} failed for {self.entity_id}"
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": func.__name__,
+                    "entity_id": self.entity_id or self._device.name,
+                },
             ) from err
 
         self._update_ha_state_from_sdk_cache()
@@ -135,6 +156,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         return self.hass.data[DATA_WIIM]
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return the features supported by the current device state."""
         features = SUPPORT_WIIM_BASE
@@ -208,6 +230,44 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         return target_device
 
     @callback
+    def _async_handle_group_member_state_refresh(self) -> None:
+        """Trigger local follower cache refresh on leader update push."""
+        group_snapshot = self._get_group_snapshot()
+        if group_snapshot.role != WiimGroupRole.FOLLOWER:
+            LOGGER.debug(
+                "Ignoring group member refresh for %s because role is %s",
+                self.entity_id,
+                group_snapshot.role,
+            )
+            return
+
+        LOGGER.debug(
+            "Follower %s received propagated group update from leader %s",
+            self.entity_id,
+            group_snapshot.leader_udn,
+        )
+        self._update_ha_state_from_sdk_cache()
+
+    @callback
+    def _async_propagate_group_state_update(
+        self, group_snapshot: WiimGroupSnapshot
+    ) -> None:
+        """Notify grouped followers to refresh from the leader's latest cache."""
+        if group_snapshot.role != WiimGroupRole.LEADER:
+            return
+
+        for member_udn in group_snapshot.member_udns:
+            if member_udn == self._device.udn:
+                continue
+
+            LOGGER.debug(
+                "Leader %s propagating grouped state refresh to follower %s",
+                self.entity_id,
+                member_udn,
+            )
+            async_dispatcher_send(self.hass, _group_member_state_signal(member_udn))
+
+    @callback
     def _update_ha_state_from_sdk_cache(
         self,
         *,
@@ -217,8 +277,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         """Update HA state from SDK's cache/HTTP poll attributes.
 
         This is the main method for updating this entity's HA attributes.
-        Crucially, it also handles propagating metadata to
-        followers if this is a leader.
+        Crucially, it also handles propagating metadata to followers if this is a leader.
         """
         LOGGER.debug(
             "Device %s: Updating HA state from SDK cache/HTTP poll",
@@ -289,6 +348,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         if write_state:
             self.async_write_ha_state()
+            self._async_propagate_group_state_update(group_snapshot)
 
     @callback
     def _handle_sdk_general_device_update(self, device: WiimDevice) -> None:
@@ -454,6 +514,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         )
 
     @callback
+    @override
     def _async_registry_updated(
         self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
@@ -468,10 +529,18 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         super()._async_registry_updated(event)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to Home Assistant."""
         await super().async_added_to_hass()
         self._wiim_data.entity_id_to_udn_map[self.entity_id] = self._device.udn
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                _group_member_state_signal(self._device.udn),
+                self._async_handle_group_member_state_refresh,
+            )
+        )
         LOGGER.debug(
             "Added %s (UDN: %s) to entity maps in hass.data",
             self.entity_id,
@@ -492,6 +561,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._device.name,
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from Home Assistant."""
         # Unregister SDK callbacks
@@ -523,21 +593,25 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         await self._wiim_data.controller.async_update_all_multiroom_status()
 
     @media_player_exception_wrap
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0-1."""
         await self._device.async_set_volume(round(volume * 100))
 
     @media_player_exception_wrap
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         await self._device.async_set_mute(mute)
 
     @media_player_exception_wrap
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._get_command_target_device("media_play").async_play()
 
     @media_player_exception_wrap
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         target_device = self._get_command_target_device("media_pause")
@@ -545,26 +619,31 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         await target_device.sync_device_duration_and_position()
 
     @media_player_exception_wrap
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._get_command_target_device("media_stop").async_stop()
 
     @media_player_exception_wrap
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._get_command_target_device("media_next_track").async_next()
 
     @media_player_exception_wrap
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._get_command_target_device("media_previous_track").async_previous()
 
     @media_player_exception_wrap
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Seek to a specific position in the track."""
         await self._get_command_target_device("media_seek").async_seek(int(position))
 
     @media_player_exception_wrap
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -581,7 +660,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             await self._async_play_url(target_device, play_item.url)
         elif media_type == MEDIA_TYPE_WIIM_LIBRARY:
             if not media_id.isdigit():
-                raise ServiceValidationError(f"Invalid preset ID: {media_id}")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_preset_id",
+                    translation_placeholders={"media_id": media_id},
+                )
 
             preset_number = int(media_id)
             await target_device.play_preset(preset_number)
@@ -602,7 +685,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         elif media_type == MediaType.TRACK:
             if not media_id.isdigit():
                 raise ServiceValidationError(
-                    f"Invalid media_id: {media_id}. Expected a valid track index."
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_track_id",
+                    translation_placeholders={"media_id": media_id},
                 )
 
             track_index = int(media_id)
@@ -611,13 +696,18 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_media_content_type = MediaType.TRACK
             self._attr_state = MediaPlayerState.PLAYING
         else:
-            raise ServiceValidationError(f"Unsupported media type: {media_type}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_media_type",
+                translation_placeholders={"media_type": str(media_type)},
+            )
 
     async def _async_play_url(self, target_device: WiimDevice, media_id: str) -> None:
         """Play a direct media URL on the target device."""
         if not target_device.supports_http_api:
             raise ServiceValidationError(
-                "Direct URL playback is not supported on this device"
+                translation_domain=DOMAIN,
+                translation_key="direct_url_playback_unsupported",
             )
 
         url = async_process_play_media_url(self.hass, media_id)
@@ -626,6 +716,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._attr_state = MediaPlayerState.PLAYING
 
     @media_player_exception_wrap
+    @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         target_device = self._get_command_target_device("repeat_set")
@@ -634,6 +725,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         )
 
     @media_player_exception_wrap
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         repeat = self._attr_repeat or WiimRepeatMode.OFF
@@ -643,12 +735,14 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         )
 
     @media_player_exception_wrap
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input mode."""
         await self._get_command_target_device("select_source").async_set_play_mode(
             source
         )
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -665,7 +759,10 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             media_content_id
         ):
             if not self._device.supports_http_api:
-                raise BrowseError("Media sources are not supported on this device")
+                raise BrowseError(
+                    translation_domain=DOMAIN,
+                    translation_key="media_sources_unsupported",
+                )
 
             return await media_source.async_browse_media(
                 self.hass,
@@ -788,4 +885,66 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             media_content_type,
             media_content_id,
         )
-        raise BrowseError(f"Invalid browse path: {media_content_id}")
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_browse_path",
+            translation_placeholders={"media_content_id": str(media_content_id)},
+        )
+
+    @media_player_exception_wrap
+    @override
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join group_members (entity_ids) to the group led by the current player."""
+        target_device = self._get_command_target_device("join")
+        follower_udns_to_join: list[str] = []
+        for member_entity_id in group_members:
+            if member_entity_id == self.entity_id:
+                LOGGER.debug("Skipping joining self to group: %s", member_entity_id)
+                continue
+
+            follower_udn = self._wiim_data.entity_id_to_udn_map.get(member_entity_id)
+            if follower_udn is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_grouping_entity",
+                    translation_placeholders={"entity_id": member_entity_id},
+                )
+
+            if follower_udn == target_device.udn:
+                LOGGER.debug(
+                    "Skipping joining command target to its own group: %s",
+                    member_entity_id,
+                )
+                continue
+
+            follower_udns_to_join.append(follower_udn)
+
+        if not follower_udns_to_join:
+            LOGGER.debug(
+                "Skipping join for %s because no follower UDNs were resolved from %s",
+                self.entity_id,
+                group_members,
+            )
+            return
+
+        LOGGER.debug(
+            "Player %s (UDN %s) joining follower UDNs: %s from entity_ids: %s",
+            self.entity_id,
+            target_device.udn,
+            follower_udns_to_join,
+            group_members,
+        )
+        await self._wiim_data.controller.async_join_group(
+            target_device.udn, follower_udns_to_join
+        )
+
+    @media_player_exception_wrap
+    @override
+    async def async_unjoin_player(self) -> None:
+        """Remove this player from any group it is currently in."""
+        LOGGER.debug(
+            "Player %s (UDN %s) attempting to unjoin from group",
+            self.entity_id,
+            self._device.udn,
+        )
+        await self._wiim_data.controller.async_ungroup_device(self._device.udn)

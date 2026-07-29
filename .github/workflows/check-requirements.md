@@ -15,94 +15,41 @@ tools:
   github:
     toolsets: [repos, pull_requests]
     min-integrity: unapproved
+if: needs.prepare.outputs.skip != 'true'
 safe-outputs:
   add-comment:
     max: 1
-    target: "${{ needs.extract_pr_number.outputs.pr_number }}"
+    target: "${{ needs.prepare.outputs.pr_number }}"
   needs:
-    - extract_pr_number
+    - prepare
 jobs:
-  gate:
-    # Skip the (token-spending) agent when no tracked requirement file changed
+  prepare:
+    # The deterministic stage always uploads an artifact; its `skip_aw` flag is
+    # true when no tracked requirement file changed since the last comment,
+    # which is our cue to skip the (token-spending) agent. Recover the PR number
+    # to comment on either way.
     if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read
-      pull-requests: read
     outputs:
-      skip: ${{ steps.gate.outputs.skip }}
+      skip: ${{ steps.prepare.outputs.skip }}
+      pr_number: ${{ steps.prepare.outputs.pr_number }}
     steps:
       - name: Download deterministic-results artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: check-requirements-deterministic
-          path: /tmp/gate
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Decide whether requirements changed since the last comment
-        id: gate
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PR=$(jq -r '.pr_number' /tmp/gate/results.json)
-          HEAD=$(jq -r '.head_sha // empty' /tmp/gate/results.json)
-          if [ -z "${HEAD}" ]; then
-            echo "Artifact has no head_sha; running the agent."
-            exit 0
-          fi
-          # Recover the commit recorded in the most recent requirements-check
-          # comment from the "Checked at commit" link
-          PRIOR=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" \
-            --jq '.[] | select(.body | contains("<!-- requirements-check -->")) | .body' \
-            | grep -oiE '/commit/[0-9a-f]{40}' \
-            | grep -oiE '[0-9a-f]{40}' | tail -1 || true)
-          if [ -z "${PRIOR}" ]; then
-            echo "No previous comment with a recorded commit; running the agent."
-            exit 0
-          fi
-          if [ "${PRIOR}" = "${HEAD}" ]; then
-            echo "Head ${HEAD} unchanged since the last comment; skipping the agent."
-            echo "skip=true" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-          # List files changed between the recorded commit and the current head.
-          # Tracked patterns mirror script/check_requirements/diff.py TRACKED_PATTERNS.
-          CHANGED=$(gh api "repos/${GITHUB_REPOSITORY}/compare/${PRIOR}...${HEAD}" \
-            --jq '.files[].filename' 2>/dev/null) || {
-            echo "Could not compare ${PRIOR}...${HEAD}; running the agent."
-            exit 0
-          }
-          TRACKED=$(printf '%s\n' "${CHANGED}" \
-            | grep -Ex 'requirements.*\.txt|homeassistant/package_constraints\.txt' || true)
-          if [ -z "${TRACKED}" ]; then
-            echo "No tracked requirement files changed since ${PRIOR}; skipping the agent."
-            echo "skip=true" >> "${GITHUB_OUTPUT}"
-          else
-            echo "Tracked requirement files changed since ${PRIOR}; running the agent:"
-            printf '%s\n' "${TRACKED}"
-          fi
-  extract_pr_number:
-    needs: gate
-    if: needs.gate.outputs.skip != 'true' && github.event.workflow_run.conclusion == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-    outputs:
-      pr_number: ${{ steps.extract.outputs.pr_number }}
-    steps:
-      - name: Download deterministic-results artifact
+        id: download
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: check-requirements-deterministic
           path: /tmp/deterministic
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Extract PR number from artifact
-        id: extract
+      - name: Resolve skip and PR number from the artifact
+        id: prepare
         run: |
-          PR=$(jq -r '.pr_number' /tmp/deterministic/results.json)
-          echo "pr_number=${PR}" >> "${GITHUB_OUTPUT}"
+          echo "skip=$(jq -r '.skip_aw' /tmp/deterministic/results.json)" >> "${GITHUB_OUTPUT}"
+          echo "pr_number=$(jq -r '.pr_number' /tmp/deterministic/results.json)" >> "${GITHUB_OUTPUT}"
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.workflow_run.id }}
   cancel-in-progress: true
@@ -164,6 +111,9 @@ Read the JSON directly for the full schema. Key fields:
   - `{{CHECK_DETAIL:<pkg>:<kind>}}` → `<icon> <one-line explanation>`
     (the bullet's `- **<label>**:` prefix is already rendered; replace
     only the placeholder).
+  - `{{SUMMARY}}` → the single top-of-comment summary line, present only
+    when at least one check needed resolving. Fill it **after** resolving
+    every check, based on the final cell verdicts (see Step 3).
 
 Do not modify other content in `rendered_comment`, do not re-evaluate
 deterministic checks, do not add or remove packages. If `needs_agent`
@@ -191,6 +141,13 @@ Replace every placeholder with the resolved value and emit
 `rendered_comment` via `add_comment`. Preserve the leading
 `<!-- requirements-check -->` marker. The PR target is already wired;
 do not pass `item_number`.
+
+If a `{{SUMMARY}}` placeholder is present, replace it last, once every
+`{{CHECK_CELL:…}}` is resolved:
+- `All requirements checks passed. ✅` — when every check cell across all
+  packages is `✅` or `☑️` (treat `—`/skipped as not a problem).
+- `⚠️ Some checks require attention — see the details below.` — when any
+  cell is `⚠️` or `❌`.
 
 ## Check instructions
 

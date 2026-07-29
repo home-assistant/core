@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aioswitcher.device import SwitcherBase
 from aioswitcher.device.tools import validate_token
@@ -37,6 +37,7 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
         self.username: str | None = None
         self.token: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

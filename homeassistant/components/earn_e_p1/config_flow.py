@@ -1,7 +1,7 @@
 """Config flow for the EARN-E P1 Meter integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from earn_e_p1 import EarnEP1Device, EarnEP1Listener, discover, validate
 import voluptuous as vol
@@ -56,6 +56,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
             return await listener.validate(host, timeout=VALIDATION_TIMEOUT)
         return await validate(host, timeout=VALIDATION_TIMEOUT)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,9 +1,13 @@
 """Support for MySensors covers."""
 
 from enum import Enum, unique
-from typing import Any
+from typing import Any, override
 
-from homeassistant.components.cover import ATTR_POSITION, CoverEntity
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    CoverEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -79,21 +83,25 @@ class MySensorsCover(MySensorsChildEntity, CoverEntity):
         return CoverState.OPEN
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return True if the cover is closed."""
         return self.get_cover_state() is CoverState.CLOSED
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return True if the cover is closing."""
         return self.get_cover_state() is CoverState.CLOSING
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return True if the cover is opening."""
         return self.get_cover_state() is CoverState.OPENING
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -102,6 +110,7 @@ class MySensorsCover(MySensorsChildEntity, CoverEntity):
         set_req = self.gateway.const.SetReq
         return self._values.get(set_req.V_DIMMER)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the cover up."""
         set_req = self.gateway.const.SetReq
@@ -109,6 +118,7 @@ class MySensorsCover(MySensorsChildEntity, CoverEntity):
             self.node_id, self.child_id, set_req.V_UP, 1, ack=1
         )
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Move the cover down."""
         set_req = self.gateway.const.SetReq
@@ -116,6 +126,7 @@ class MySensorsCover(MySensorsChildEntity, CoverEntity):
             self.node_id, self.child_id, set_req.V_DOWN, 1, ack=1
         )
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs.get(ATTR_POSITION)
@@ -124,8 +135,51 @@ class MySensorsCover(MySensorsChildEntity, CoverEntity):
             self.node_id, self.child_id, set_req.V_DIMMER, position, ack=1
         )
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the device."""
+        set_req = self.gateway.const.SetReq
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_STOP, 1, ack=1
+        )
+
+    @property
+    @override
+    def current_cover_tilt_position(self) -> int | None:
+        """Return current position of cover tilt."""
+        set_req = self.gateway.const.SetReq
+        if hasattr(set_req, "V_TILT"):
+            return self._values.get(set_req.V_TILT)
+        return None
+
+    @override
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Move the cover tilt to a specific position."""
+        set_req = self.gateway.const.SetReq
+        position = kwargs[ATTR_TILT_POSITION]
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_TILT, position, ack=1
+        )
+
+    @override
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the cover tilt."""
+        set_req = self.gateway.const.SetReq
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_TILT, 100, ack=1
+        )
+
+    @override
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the cover tilt."""
+        set_req = self.gateway.const.SetReq
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_TILT, 0, ack=1
+        )
+
+    @override
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop the cover tilt."""
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_STOP, 1, ack=1

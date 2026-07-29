@@ -1,15 +1,18 @@
 """Provides triggers for counters."""
 
-from homeassistant.const import CONF_MAXIMUM, CONF_MINIMUM
+from typing import override
+
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA,
     EntityTriggerBase,
+    NotTriggeredReasonReporter,
     Trigger,
 )
 
-from . import CONF_INITIAL, DOMAIN
+from . import DOMAIN
+from .const import CounterEntityStateAttribute
 
 
 def _is_integer_state(state: State) -> bool:
@@ -27,7 +30,12 @@ class CounterBaseIntegerTrigger(EntityTriggerBase):
     _domain_specs = {DOMAIN: DomainSpec()}
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
-    def is_valid_state(self, state: State) -> bool:
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state is valid."""
         return _is_integer_state(state)
 
@@ -35,6 +43,7 @@ class CounterBaseIntegerTrigger(EntityTriggerBase):
 class CounterDecrementedTrigger(CounterBaseIntegerTrigger):
     """Trigger for when a counter is decremented."""
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the counter value decreased."""
         return int(from_state.state) > int(to_state.state)
@@ -43,6 +52,7 @@ class CounterDecrementedTrigger(CounterBaseIntegerTrigger):
 class CounterIncrementedTrigger(CounterBaseIntegerTrigger):
     """Trigger for when a counter is incremented."""
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the counter value increased."""
         return int(from_state.state) < int(to_state.state)
@@ -57,9 +67,16 @@ class CounterValueBaseTrigger(EntityTriggerBase):
 class CounterMaxReachedTrigger(CounterValueBaseTrigger):
     """Trigger for when a counter reaches its maximum value."""
 
-    def is_valid_state(self, state: State) -> bool:
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state matches the expected state(s)."""
-        if (max_value := state.attributes.get(CONF_MAXIMUM)) is None:
+        if (
+            max_value := state.attributes.get(CounterEntityStateAttribute.MAXIMUM)
+        ) is None:
             return False
         return state.state == str(max_value)
 
@@ -67,9 +84,16 @@ class CounterMaxReachedTrigger(CounterValueBaseTrigger):
 class CounterMinReachedTrigger(CounterValueBaseTrigger):
     """Trigger for when a counter reaches its minimum value."""
 
-    def is_valid_state(self, state: State) -> bool:
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state matches the expected state(s)."""
-        if (min_value := state.attributes.get(CONF_MINIMUM)) is None:
+        if (
+            min_value := state.attributes.get(CounterEntityStateAttribute.MINIMUM)
+        ) is None:
             return False
         return state.state == str(min_value)
 
@@ -77,9 +101,16 @@ class CounterMinReachedTrigger(CounterValueBaseTrigger):
 class CounterResetTrigger(CounterValueBaseTrigger):
     """Trigger for reset of counter entities."""
 
-    def is_valid_state(self, state: State) -> bool:
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state matches the expected state(s)."""
-        if (init_state := state.attributes.get(CONF_INITIAL)) is None:
+        if (
+            init_state := state.attributes.get(CounterEntityStateAttribute.INITIAL)
+        ) is None:
             return False
         return state.state == str(init_state)
 

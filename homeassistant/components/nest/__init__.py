@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from http import HTTPStatus
 import logging
+from typing import override
 
 from aiohttp import ClientError, web
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait
@@ -144,8 +145,8 @@ class SignalUpdateCallback:
             return
         _LOGGER.debug("Event Update %s", events.keys())
         device_registry = dr.async_get(self._hass)
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), self._config_entry.entry_id
         )
         if not device_entry:
             return
@@ -235,10 +236,7 @@ class SignalUpdateCallback:
             if device_id in devices:
                 continue
             _LOGGER.info("Removing stale device entry '%s'", device_id)
-            device_registry.async_update_device(
-                device_id=device_entry.id,
-                remove_config_entry_id=self._config_entry.entry_id,
-            )
+            device_registry.async_remove_device(device_entry.id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool:
@@ -275,7 +273,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
     subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
     subscriber.cache_policy.fetch = True
     # Use disk backed event media store
-    subscriber.cache_policy.store = await async_get_media_event_store(hass, subscriber)
+    subscriber.cache_policy.store = await async_get_media_event_store(
+        hass, entry, subscriber
+    )
     subscriber.cache_policy.transcoder = await async_get_transcoder(hass)
 
     # The device manager has a single change callback. When the change
@@ -434,10 +434,12 @@ class NestEventMediaView(NestEventViewBase):
     url = "/api/nest/event_media/{device_id}/{event_token}"
     name = "api:nest:event_media"
 
+    @override
     async def load_media(self, nest_device: Device, event_token: str) -> Media | None:
         """Load the specified media."""
         return await nest_device.event_media_manager.get_media_from_token(event_token)
 
+    @override
     async def handle_media(self, media: Media) -> web.StreamResponse:
         """Process the specified media."""
         return web.Response(body=media.contents, content_type=media.content_type)
@@ -462,6 +464,7 @@ class NestEventMediaThumbnailView(NestEventViewBase):
         self._lock = asyncio.Lock()
         self.hass = hass
 
+    @override
     async def load_media(self, nest_device: Device, event_token: str) -> Media | None:
         """Load the specified media."""
         if CameraClipPreviewTrait.NAME in nest_device.traits:
@@ -473,6 +476,7 @@ class NestEventMediaThumbnailView(NestEventViewBase):
                 )
         return await nest_device.event_media_manager.get_media_from_token(event_token)
 
+    @override
     async def handle_media(self, media: Media) -> web.StreamResponse:
         """Start a GET request."""
         contents = media.contents

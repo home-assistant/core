@@ -1,6 +1,6 @@
 """Config flow for NMBS integration."""
 
-from typing import Any
+from typing import Any, override
 
 from pyrail import iRail
 from pyrail.models import StationDetails
@@ -46,6 +46,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             for station in self.stations
         ]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pywizlight import wizlight
 
@@ -113,6 +113,7 @@ class WizSpeedNumber(WizEntity, NumberEntity):
         self._async_update_attrs()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -121,11 +122,13 @@ class WizSpeedNumber(WizEntity, NumberEntity):
         )
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         if (value := self.entity_description.value_fn(self._device)) is not None:
             self._attr_native_value = float(value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the speed value."""
         await self.entity_description.set_value_fn(self._device, int(value))

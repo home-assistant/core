@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 from gios import Gios
@@ -60,6 +60,7 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
             configuration_url=URL.format(station_id=station_id),
         )
 
+    @override
     async def _async_update_data(self) -> GiosSensors:
         """Update data via library."""
         try:

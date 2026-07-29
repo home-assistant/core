@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from visionpluspython.exceptions import WattsVisionError
 from visionpluspython.models import ThermostatDevice, ThermostatMode
@@ -119,16 +119,19 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
             self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.device.current_temperature
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature setpoint."""
         return self.device.setpoint
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
         return THERMOSTAT_MODE_TO_HVAC.get(
@@ -136,17 +139,20 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
         )
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action."""
         return HVAC_ACTION_TO_HA.get(self.device.hvac_action)
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         return THERMOSTAT_MODE_TO_PRESET.get(
             _parse_thermostat_mode(self.device.thermostat_mode)
         )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         mode = PRESET_MODE_TO_THERMOSTAT[preset_mode]
@@ -170,6 +176,7 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
 
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -237,6 +244,7 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
 
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         mode = HVAC_MODE_TO_THERMOSTAT[hvac_mode]

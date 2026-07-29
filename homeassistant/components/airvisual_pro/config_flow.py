@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, override
 
 from pyairvisual.node import (
     InvalidAuthenticationError,
@@ -111,6 +111,7 @@ class AirVisualProFlowHandler(ConfigFlow, domain=DOMAIN):
             self._get_reauth_entry(), data_updates=user_input
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

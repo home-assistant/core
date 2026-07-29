@@ -1,6 +1,7 @@
 """Platform for binary sensor integration."""
 
 import logging
+from typing import override
 
 from laundrify_aio import LaundrifyDevice
 
@@ -61,6 +62,7 @@ class LaundrifyPowerPlug(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Check if the device is available."""
         return (
@@ -69,11 +71,13 @@ class LaundrifyPowerPlug(
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return entity state."""
         return bool(self._device.status == "ON")
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._device = self.coordinator.data[self._attr_unique_id]

@@ -1,5 +1,7 @@
 """Support for UniFi AP Direct access as device tracker using Coordinator."""
 
+from typing import override
+
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -115,16 +117,19 @@ class UniFiScannerEntity(
         self._attr_name = device.get("hostname") or mac
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the AP."""
         return self._mac in self.coordinator.data
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return the MAC address of the device."""
         return self._mac
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the IP address of the device."""
         if device := self.coordinator.data.get(self._mac):
@@ -132,6 +137,7 @@ class UniFiScannerEntity(
         return None
 
     @property
+    @override
     def hostname(self) -> str | None:
         """Return the hostname of the device."""
         if device := self.coordinator.data.get(self._mac):

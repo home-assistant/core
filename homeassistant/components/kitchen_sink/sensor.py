@@ -130,7 +130,7 @@ class DemoSensor(SensorEntity):
         device_unique_id: str,
         unique_id: str,
         device_name: str,
-        entity_name: str | None | UndefinedType,
+        entity_name: str | UndefinedType | None,
         state: StateType,
         device_class: SensorDeviceClass | None,
         state_class: SensorStateClass | None,

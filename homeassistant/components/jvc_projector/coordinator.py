@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from jvcprojector import (
     JvcProjector,
@@ -69,6 +69,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
         self.state: dict[type[Command], str] = {}
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update state with the current value of a command."""
         commands: set[type[Command]] = set(self.async_contexts())
