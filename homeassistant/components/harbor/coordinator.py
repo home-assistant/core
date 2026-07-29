@@ -152,7 +152,7 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
     def _client(self) -> HarborMQTTClient:
         """Return the active MQTT client."""
         if self._mqtt_client is None:
-            raise RuntimeError("MQTT client is not connected")
+            raise ConnectionError("MQTT client is not connected")
         return self._mqtt_client
 
     @property
