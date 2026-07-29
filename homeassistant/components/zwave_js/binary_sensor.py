@@ -1582,7 +1582,6 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             entity_category=EntityCategory.DIAGNOSTIC,
             not_states={
                 PowerManagementNotificationEvent.IDLE,
-                PowerManagementNotificationEvent.MAINS_STATUS_AC_MAINS_DISCONNECTED,
                 PowerManagementNotificationEvent.MAINS_STATUS_AC_MAINS_RE_CONNECTED,
                 PowerManagementNotificationEvent.OVER_CURRENT_STATUS_OVER_CURRENT_DETECTED,
                 PowerManagementNotificationEvent.OVER_VOLTAGE_STATUS_OVER_VOLTAGE_DETECTED,

@@ -359,18 +359,26 @@ async def test_power_management_notification_sensor(
 
 
 @pytest.mark.usefixtures("ring_keypad", "integration")
-async def test_power_management_mains_disconnected_not_discovered(
+async def test_power_management_mains_disconnected_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the mains disconnected state is the off state of the mains sensor.
+    """Test the AC mains disconnected sensor is kept as a diagnostic sensor.
 
     State 2 (AC mains disconnected) and state 3 (AC mains re-connected) are the
     two sides of a single PLUG sensor, so no separate entity is created for it.
+    State 2 (AC mains disconnected) gets its own entity without a device class.
+    It's kept for backwards compatibility to be deprecated separately.
     """
     entity_id = "binary_sensor.keypad_v2_ac_mains_disconnected"
-    assert hass.states.get(entity_id) is None
-    assert entity_registry.async_get(entity_id) is None
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
 @pytest.mark.usefixtures("wallmote_central_scene", "integration")
