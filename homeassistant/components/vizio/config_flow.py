@@ -334,6 +334,35 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device host."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            unique_id = await _async_get_unique_id(
+                self.hass, host, entry.data[CONF_DEVICE_CLASS]
+            )
+            if not unique_id:
+                errors[CONF_HOST] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    entry, data_updates={CONF_HOST: host}
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_HOST, default=entry.data[CONF_HOST]): str}
+            ),
+            errors=errors,
+        )
+
     async def async_step_pair_tv(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

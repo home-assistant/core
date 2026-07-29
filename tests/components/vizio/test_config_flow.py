@@ -1,8 +1,10 @@
 """Tests for Vizio config flow."""
 
 import dataclasses
+from unittest.mock import patch
 
 import pytest
+from vizaio import VizioConnectionError
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.vizio import DATA_APPS
@@ -609,4 +611,59 @@ async def test_zeroconf_flow_already_configured_hostname(hass: HomeAssistant) ->
     # be replaced with the discovered IP
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == HOST
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup")
+async def test_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test reconfigure flow updates the host after recovering from an error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Device unreachable at the new host
+    with patch(
+        "homeassistant.components.vizio.config_flow.Vizio.get_serial_number",
+        side_effect=VizioConnectionError("cannot connect"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: HOST2}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+    # Device reachable at the new host
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: HOST2}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == HOST2
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup")
+async def test_reconfigure_flow_wrong_device(hass: HomeAssistant) -> None:
+    """Test reconfigure flow aborts when the new host is a different device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.vizio.config_flow.Vizio.get_serial_number",
+        return_value="different_serial",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: HOST2}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
     assert entry.data[CONF_HOST] == HOST

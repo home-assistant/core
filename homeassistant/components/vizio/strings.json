@@ -3,6 +3,8 @@
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device.",
       "updated_entry": "This entry has already been set up but the name, apps, and/or options defined in the configuration do not match the previously imported configuration, so the configuration entry has been updated accordingly."
     },
     "error": {
@@ -25,6 +27,15 @@
       "pairing_complete_import": {
         "description": "Your VIZIO SmartCast device is now connected to Home Assistant.\n\nYour access token is '**{access_token}**'.",
         "title": "[%key:component::vizio::config::step::pairing_complete::title%]"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::vizio::config::step::user::data_description::host%]"
+        },
+        "description": "Update the address of your VIZIO SmartCast device."
       },
       "user": {
         "data": {
