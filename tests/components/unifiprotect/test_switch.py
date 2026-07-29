@@ -739,3 +739,26 @@ async def test_switch_sense_no_capability_map_creates_all(
             hass, Platform.SWITCH, sensor_all, description
         )
         assert entity_registry.async_get(entity_id) is not None, description.key
+
+
+async def test_switch_sense_no_capability_map_keeps_existing(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """Without a capability map (Protect below 7.2) nothing is removed.
+
+    The console cannot say which capabilities it lacks, so an existing entity
+    must survive setup instead of being deleted on a guess.
+    """
+    existing = entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        f"{sensor_all.mac}_motion",
+        config_entry=ufp.entry,
+    )
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
+
+    assert entity_registry.async_get(existing.entity_id) is not None
