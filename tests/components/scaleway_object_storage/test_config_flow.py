@@ -201,6 +201,7 @@ async def test_form_failed_connection_check(
         "bucket-name",
         "bucket.name.with.dots",
         "bucket123",
+        "bucket-name-with-exactly-63-characters-abcdef-abcdef-abcdef-abc",
     ],
 )
 async def test_form_bucket_name_validation__valid(
@@ -235,6 +236,7 @@ async def test_form_bucket_name_validation__valid(
         "",
         "bucket/pathBUCKET",
         "example_bucket",
+        "bucket-name-with-more-than-63-characters-abcdef-abcdef-abcdef-ab",
     ],
 )
 async def test_form_bucket_name_validation__invalid(
