@@ -45,6 +45,7 @@ CONFIG_SCHEMA = vol.Schema(
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
+
 async def _validate_after_before(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
@@ -63,6 +64,7 @@ async def _validate_after_before(
             user_input[time_key] = mode
     return user_input
 
+
 async def _suggested_values(handler: SchemaCommonFlowHandler) -> dict[str, Any]:
     """Split the stored after/before value into its mode and time fields."""
     suggested_values = dict(handler.options)
@@ -78,6 +80,7 @@ async def _suggested_values(handler: SchemaCommonFlowHandler) -> dict[str, Any]:
         else:
             suggested_values[mode_key] = MODE_TIME
     return suggested_values
+
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
