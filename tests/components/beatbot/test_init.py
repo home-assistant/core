@@ -89,7 +89,6 @@ async def test_async_setup_entry_starts_runtime_objects(
     assert entry.runtime_data.event_client is event_client
 
 
-@pytest.mark.parametrize("ignore_missing_translations", ["component.vacuum.services."])
 async def test_async_setup_entry_loads_vacuum_platform(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
