@@ -165,7 +165,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: Route53ConfigEntry) -> b
         except HomeAssistantError as err:
             _LOGGER.warning(err)
 
-    # Do a first update
     try:
         await _async_update_route53(
             hass, aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl
@@ -173,10 +172,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: Route53ConfigEntry) -> b
     except HomeAssistantError as err:
         raise ConfigEntryNotReady from err
 
-    # Track interval
     remove_interval = async_track_time_interval(hass, update_records_interval, INTERVAL)
 
-    # Store cleanup function
     entry.runtime_data = Route53Data(
         remove_interval=remove_interval,
     )
@@ -236,7 +233,6 @@ async def _async_update_route53(
 ) -> None:
     _LOGGER.debug("Starting update for zone %s", zone)
 
-    # Get the IP Address
     session = async_get_clientsession(hass)
     try:
         async with session.get(

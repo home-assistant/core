@@ -29,10 +29,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# AWS error codes that mean the hosted zone ID is wrong rather than the credentials
+# Without these, a mistyped zone ID surfaces as an authentication failure
 ZONE_ERROR_CODES = {"NoSuchHostedZone", "InvalidInput"}
 
-# Errors that belong on a specific field instead of the form as a whole
 ERROR_FIELDS = {"invalid_zone": CONF_ZONE, "invalid_domain": CONF_DOMAIN}
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -182,7 +181,6 @@ class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
-        # Check if already configured
         self._async_abort_entries_match(
             {
                 CONF_ZONE: user_input[CONF_ZONE],
