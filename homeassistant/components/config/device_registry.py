@@ -17,12 +17,53 @@ from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryDisabl
 def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Device Registry views."""
 
+    websocket_api.async_register_command(hass, websocket_list_composite_splits)
     websocket_api.async_register_command(hass, websocket_list_devices)
+    websocket_api.async_register_command(hass, websocket_list_linked_devices)
     websocket_api.async_register_command(hass, websocket_update_device)
     websocket_api.async_register_command(
         hass, websocket_remove_config_entry_from_device
     )
     return True
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/device_registry/list_composite_splits",
+    }
+)
+def websocket_list_composite_splits(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle list composite device splits command.
+
+    Maps every pre-migration composite device id that was removed by splitting the
+    device into one device per config entry to the ids of the devices which replaced
+    it, and which of those (if any) belongs to the composite's former primary config
+    entry.
+    """
+    registry = dr.async_get(hass)
+    connection.send_result(
+        msg["id"],
+        {
+            composite_id: {
+                "split_ids": [device.id for device in devices],
+                "primary_id": next(
+                    (
+                        device.id
+                        for device in devices
+                        if device.config_entry_id
+                        == device.composite_primary_config_entry
+                    ),
+                    None,
+                ),
+            }
+            for composite_id, devices in registry.devices.get_composite_splits().items()
+        },
+    )
 
 
 @callback
@@ -53,6 +94,44 @@ def websocket_list_devices(
     )
     msg_json = b"".join((msg_json_prefix, inner, b"]}"))
     connection.send_message(msg_json)
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/device_registry/list_linked_devices",
+        vol.Required("device_id"): str,
+    }
+)
+def websocket_list_linked_devices(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle list linked devices command.
+
+    Linked devices share at least one connection or identifier with the given
+    device. Each such connection or identifier is unique within a config entry, so
+    the linked devices belong to other config entries.
+    """
+    registry = dr.async_get(hass)
+    device_id = msg["device_id"]
+
+    if (device := registry.async_get(device_id)) is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Device not found"
+        )
+        return
+
+    linked_devices = [
+        entry.id
+        for entry in registry.async_get_devices(
+            identifiers=device.identifiers, connections=device.connections
+        )
+        if entry.id != device_id
+    ]
+
+    connection.send_result(msg["id"], {"linked_devices": linked_devices})
 
 
 @require_admin
