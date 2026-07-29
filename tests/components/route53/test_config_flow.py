@@ -73,7 +73,7 @@ async def test_full_flow(
 async def test_records_must_not_be_empty(
     hass: HomeAssistant, mock_boto3_client: MagicMock, records: list[str]
 ) -> None:
-    """Test an entry cannot be created without at least one usable record."""
+    """Test a record list without usable entries is rejected and can be corrected."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -99,6 +99,25 @@ async def test_records_must_not_be_empty(
 
     assert CONF_RECORDS in err.value.schema_errors
     assert not hass.config_entries.async_entries(DOMAIN)
+
+    with patch(
+        "homeassistant.components.route53.config_flow.boto3.client",
+        return_value=mock_boto3_client.return_value,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ACCESS_KEY_ID: "test-key",
+                CONF_SECRET_ACCESS_KEY: "test-secret",
+                CONF_ZONE: "test-zone",
+                CONF_DOMAIN: "example.com",
+                CONF_RECORDS: ["test1"],
+                CONF_TTL: DEFAULT_TTL,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
