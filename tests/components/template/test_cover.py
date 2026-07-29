@@ -1193,6 +1193,21 @@ async def test_flow_preview(
             CoverState.OPEN,
         ),
         (
+            # Missing Key
+            CoverState.OPEN,
+            {
+                "current_cover_position": 0,
+                "current_cover_tilt_position": 10,
+                "is_closing": False,
+            },
+            STATE_UNKNOWN,
+            {
+                "current_position": None,
+                "current_tilt_position": None,
+            },
+            CoverState.OPEN,
+        ),
+        (
             STATE_UNAVAILABLE,
             {
                 "current_cover_position": 0,
