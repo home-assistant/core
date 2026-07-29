@@ -207,6 +207,9 @@ async def test_fade_stop_direction(
     assert state is not None
     assert state.attributes["event_type"] == "long_press_end"
     assert state.attributes.get("direction") == expected_direction
+    # An unknown direction omits the attribute entirely rather than
+    # publishing it as null.
+    assert ("direction" in state.attributes) is (expected_direction is not None)
 
 
 async def test_control_event_suppressed_while_websocket_syncing(
