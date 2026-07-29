@@ -98,7 +98,12 @@ MODEL_CAPABILITIES: tuple[tuple[str, ModelCapabilities], ...] = (
     (
         "DIY",
         ModelCapabilities(
-            config=COMMON_LEGACY_CONFIG,
+            config=COMMON_LEGACY_CONFIG
+            | {
+                PM_STANDARD_CONFIG,
+                TEMPERATURE_UNIT,
+                DISPLAY_BRIGHTNESS,
+            },
             actions=frozenset({CO2_CALIBRATION}),
         ),
     ),
