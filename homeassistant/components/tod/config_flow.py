@@ -50,19 +50,18 @@ async def _validate_after_before(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Resolve the after/before mode and time fields to a single stored value."""
+    resolved_input = user_input.copy()
     for mode_key, time_key in (
         (CONF_AFTER_MODE, CONF_AFTER_TIME),
         (CONF_BEFORE_MODE, CONF_BEFORE_TIME),
     ):
-        mode = user_input.pop(mode_key)
-        time_value = user_input.pop(time_key, None)
-        if mode == MODE_TIME:
-            if time_value is None:
-                raise SchemaFlowError(f"{time_key}_required")
-            user_input[time_key] = time_value
-        else:
-            user_input[time_key] = mode
-    return user_input
+        mode = user_input[mode_key]
+        time_value = user_input.get(time_key)
+        if mode == MODE_TIME and time_value is None:
+            raise SchemaFlowError(f"{time_key}_required")
+        resolved_input.pop(mode_key)
+        resolved_input[time_key] = time_value if mode == MODE_TIME else mode
+    return resolved_input
 
 
 async def _suggested_values(handler: SchemaCommonFlowHandler) -> dict[str, Any]:
