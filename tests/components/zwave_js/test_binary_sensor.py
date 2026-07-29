@@ -365,10 +365,9 @@ async def test_power_management_mains_disconnected_sensor(
 ) -> None:
     """Test the AC mains disconnected sensor is kept as a diagnostic sensor.
 
-    State 2 (AC mains disconnected) and state 3 (AC mains re-connected) are the
-    two sides of a single PLUG sensor, so no separate entity is created for it.
-    State 2 (AC mains disconnected) gets its own entity without a device class.
-    It's kept for backwards compatibility to be deprecated separately.
+    State 3 (AC mains re-connected) is the PLUG sensor, with state 2 (AC mains
+    disconnected) as its off state. State 2 also gets its own entity without a
+    device class, kept for backwards compatibility to be deprecated separately.
     """
     entity_id = "binary_sensor.keypad_v2_ac_mains_disconnected"
     state = hass.states.get(entity_id)
