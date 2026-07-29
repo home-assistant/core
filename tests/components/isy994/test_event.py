@@ -15,12 +15,13 @@ from pyisy.constants import (
     ES_SYNCING,
 )
 from pyisy.helpers import NodeProperty
+from pyisy.nodes import NodeChangedEvent
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.isy994.const import EVENT_ISY994_CONTROL
 from homeassistant.components.isy994.event import _sub_button_name
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -210,6 +211,35 @@ async def test_fade_stop_direction(
     # An unknown direction omits the attribute entirely rather than
     # publishing it as null.
     assert ("direction" in state.attributes) is (expected_direction is not None)
+
+
+async def test_disabling_node_marks_entity_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_isy: MagicMock,
+    mock_node: Callable[..., Any],
+) -> None:
+    """Availability tracks the node's enabled flag.
+
+    The entity skips the base class's status_events subscription, so only the
+    filtered enabled/disabled subscription keeps `available` current.
+    """
+    mock_config_entry.add_to_hass(hass)
+    node = mock_node(mock_isy, "11 11 11 1", "Test Switch", "DimmerLampSwitch_ADV")
+    mock_isy.nodes.__iter__.return_value = [("Test Switch", node)]
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = hass.states.async_entity_ids("event")[0]
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    node.enabled = False
+    handler = mock_isy.nodes.status_events.subscribe.call_args.args[0]
+    handler(MagicMock(spec=NodeChangedEvent), "key")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_control_event_suppressed_while_websocket_syncing(
