@@ -6,8 +6,15 @@ Setting a value activates the override; setting it to 0 clears it.
 
 from typing import TYPE_CHECKING, override
 
+from pytewke.error import (
+    PyTewkeCoapError,
+    PyTewkeInvalidRequestError,
+    PyTewkeUnknownError,
+)
+
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.const import UnitOfPower
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import TewkeEntity
@@ -71,7 +78,14 @@ class TewkeEnergyOverrideNumber(TewkeEntity, NumberEntity):
         """
         tap = self.coordinator.config_entry.runtime_data.tap
         override_value: float | None = value if value > 0 else None
-        updated = await tap.set_energy_override(override_value)
+        try:
+            updated = await tap.set_energy_override(override_value)
+        except (PyTewkeInvalidRequestError, RuntimeError) as err:
+            raise HomeAssistantError("Internal error setting energy override") from err
+        except TimeoutError as err:
+            raise HomeAssistantError("Setting energy override timed out") from err
+        except (PyTewkeCoapError, PyTewkeUnknownError) as err:
+            raise HomeAssistantError("Error setting energy override") from err
 
         current = self.coordinator.data
         self.coordinator.async_set_updated_data({**current, "energy_override": updated})
