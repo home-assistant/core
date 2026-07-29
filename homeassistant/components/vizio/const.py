@@ -1,9 +1,6 @@
 """Constants used by vizio component."""
 
-from pyvizio.const import (
-    DEVICE_CLASS_SPEAKER as VIZIO_DEVICE_CLASS_SPEAKER,
-    DEVICE_CLASS_TV as VIZIO_DEVICE_CLASS_TV,
-)
+from vizaio import DeviceType
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -55,10 +52,9 @@ VIZIO_MUTE_ON = "on"
 VIZIO_VOLUME = "volume"
 VIZIO_MUTE = "mute"
 
-# Since Vizio component relies on device class, this dict will ensure that changes to
-# the values of DEVICE_CLASS_SPEAKER or DEVICE_CLASS_TV
-# don't require changes to pyvizio.
+# Maps HA device class to the vizaio device type so changes to vizaio's
+# DeviceType values never require a config entry migration.
 VIZIO_DEVICE_CLASSES = {
-    MediaPlayerDeviceClass.SPEAKER: VIZIO_DEVICE_CLASS_SPEAKER,
-    MediaPlayerDeviceClass.TV: VIZIO_DEVICE_CLASS_TV,
+    MediaPlayerDeviceClass.SPEAKER: DeviceType.SOUNDBAR,
+    MediaPlayerDeviceClass.TV: DeviceType.TV,
 }
