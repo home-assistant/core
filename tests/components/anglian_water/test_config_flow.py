@@ -156,14 +156,21 @@ async def test_single_account_flow_with_mfa(
     assert result["data"][CONF_ACCOUNT_NUMBER] == ACCOUNT_NUMBER
     assert result["result"].unique_id == ACCOUNT_NUMBER
 
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_single_account_flow_with_mfa_invalid_code(
+@pytest.mark.parametrize(
+    ("exception_type", "expected_error"),
+    [
+        (MFARequiredError, "invalid_code"),
+        (ValueError, "unknown"),
+    ],
+)
+async def test_single_account_flow_with_mfa_exception(
     hass: HomeAssistant,
     mock_anglian_water_authenticator: AsyncMock,
     mock_anglian_water_client: AsyncMock,
+    exception_type,
+    expected_error,
 ) -> None:
-    """Test the config flow when there is just a single account with MFA required and an invalid code is provided."""
+    """Test the config flow when there is just a single account with MFA required and an exception is raised."""
     mock_anglian_water_client.api.get_associated_accounts.return_value = (
         await async_load_json_object_fixture(
             hass, "single_associated_accounts.json", DOMAIN
@@ -192,7 +199,7 @@ async def test_single_account_flow_with_mfa_invalid_code(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mfa"
 
-    mock_anglian_water_authenticator.send_mfa_request.side_effect = MFARequiredError
+    mock_anglian_water_authenticator.send_mfa_request.side_effect = exception_type
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -204,7 +211,7 @@ async def test_single_account_flow_with_mfa_invalid_code(
     assert result is not None
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mfa"
-    assert result["errors"] == {"base": "invalid_code"}
+    assert result["errors"] == {"base": expected_error}
 
     mock_anglian_water_authenticator.send_mfa_request.side_effect = None
 
