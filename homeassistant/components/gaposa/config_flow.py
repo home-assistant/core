@@ -43,15 +43,13 @@ class GaposaConfigFlow(ConfigFlow, domain=DOMAIN):
             data[CONF_API_KEY],
             websession=async_get_clientsession(self.hass),
         )
+        # Snapshot the client list inside the try — pygaposa's close()
+        # may invalidate state, so we can't read it after finally.
+        clients: list = []
         try:
             async with timeout(10):
                 await gaposa.login(data[CONF_USERNAME], data[CONF_PASSWORD])
-            # Read clients before close() — pygaposa's close() may
-            # invalidate state, and reading it after risks stale or
-            # empty data on a future upstream refactor.
-            if not gaposa.clients:
-                return None, "no_clients"
-            return gaposa.clients[0][1].uid, ""
+            clients = list(gaposa.clients)
         except (GaposaAuthException, FirebaseAuthException) as exc:
             _LOGGER.debug("Gaposa authentication failed: %s", exc)
             return None, "invalid_auth"
@@ -63,6 +61,10 @@ class GaposaConfigFlow(ConfigFlow, domain=DOMAIN):
             return None, "unknown"
         finally:
             await gaposa.close()
+
+        if not clients:
+            return None, "no_clients"
+        return clients[0][1].uid, ""
 
     @override
     async def async_step_user(

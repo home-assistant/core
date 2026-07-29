@@ -72,12 +72,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
     @override
     async def _async_update_data(self) -> dict[str, Motor]:
         """Refresh motor state from the Gaposa cloud."""
-        # Gaposa.update() no longer fires per-device listeners itself
-        # (pygaposa 0.2.5 defaults notifyListeners=False). The gate is
-        # still needed to suppress command-driven listener pushes from
-        # pygaposa's fire-and-forget post-command polls that might run
-        # concurrently with a scheduled update() — otherwise each one
-        # publishes an intermediate flatten before we return.
+        # Suppress pygaposa post-command listener pushes during scheduled refresh.
         self._updating = True
         try:
             async with timeout(10):
@@ -87,8 +82,10 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
             # a fast retry loop cannot recover from bad credentials.
             raise ConfigEntryAuthFailed(f"Gaposa authentication failed: {exc}") from exc
         except (ClientError, TimeoutError, OSError) as exc:
-            self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
-            raise UpdateFailed(f"Error talking to Gaposa: {exc}") from exc
+            raise UpdateFailed(
+                f"Error talking to Gaposa: {exc}",
+                retry_after=timedelta(seconds=UPDATE_INTERVAL_FAST),
+            ) from exc
         finally:
             self._updating = False
 
@@ -112,8 +109,6 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
                 device.removeListener(self._listener)
 
         self.devices = current_devices
-
-        self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
 
         return self._get_data_from_devices()
 

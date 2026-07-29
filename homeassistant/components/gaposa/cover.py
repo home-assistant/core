@@ -42,16 +42,10 @@ async def async_setup_entry(
     config_entry: GaposaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add a cover entity for every motor present at the first refresh.
-
-    Motors added to the Gaposa account later will not appear until the
-    config entry is reloaded — the ``dynamic-devices`` quality-scale rule
-    is still ``todo`` for this integration.
-    """
+    """Add a cover entity for every motor present at the first refresh."""
     coordinator = config_entry.runtime_data
     async_add_entities(
-        GaposaCover(coordinator, motor_id, motor)
-        for motor_id, motor in coordinator.data.items()
+        GaposaCover(coordinator, motor_id) for motor_id in coordinator.data
     )
 
 
@@ -67,32 +61,24 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         self,
         coordinator: DataUpdateCoordinatorGaposa,
         motor_id: str,
-        motor: Motor,
     ) -> None:
         """Initialize the cover."""
         super().__init__(coordinator, context=motor_id)
         self._motor_id = motor_id
-        self._motor = motor
         self._last_command: str | None = None
         self._last_command_time: datetime | None = None
         self._attr_unique_id = motor_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, motor_id)},
-            name=motor.name,
+            name=coordinator.data[motor_id].name,
             manufacturer="Gaposa",
         )
         self._cancel_motion_refresh: CALLBACK_TYPE | None = None
 
     @property
     def motor(self) -> Motor:
-        """Return the current Motor object from coordinator data.
-
-        Falls back to the initial Motor instance if the motor has
-        disappeared from a refresh — property callers on an
-        unavailable entity (e.g. logging in async_write_ha_state)
-        should not raise KeyError.
-        """
-        return self.coordinator.data.get(self._motor_id, self._motor)
+        """Return the current Motor object from coordinator data."""
+        return self.coordinator.data[self._motor_id]
 
     @property
     @override
