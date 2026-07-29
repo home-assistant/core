@@ -406,6 +406,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
+async def _async_call_webrtc_provider(
+    coro: Coroutine[Any, Any, None], description: str, entity_id: str
+) -> None:
+    """Await a WebRTC provider callback without letting exceptions propagate.
+
+    Provider callbacks can do I/O and must not break camera setup or removal.
+    """
+    try:
+        await coro
+    except HomeAssistantError as ex:
+        _LOGGER.error("Error %s %s: %s", description, entity_id, ex)
+    except Exception:
+        _LOGGER.exception("Unexpected error %s %s", description, entity_id)
+
+
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "brand",
     "frame_interval",
@@ -692,7 +707,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._webrtc_provider:
-            await self._webrtc_provider.async_unregister_camera(self)
+            await _async_call_webrtc_provider(
+                self._webrtc_provider.async_unregister_camera(self),
+                "unregistering WebRTC provider for",
+                self.entity_id,
+            )
             self._webrtc_provider = None
         await super().async_internal_will_remove_from_hass()
 
@@ -716,10 +735,18 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return
 
         if old_provider:
-            await old_provider.async_unregister_camera(self)
+            await _async_call_webrtc_provider(
+                old_provider.async_unregister_camera(self),
+                "unregistering WebRTC provider for",
+                self.entity_id,
+            )
 
         if new_provider:
-            await new_provider.async_register_camera(self)
+            await _async_call_webrtc_provider(
+                new_provider.async_register_camera(self),
+                "registering WebRTC provider for",
+                self.entity_id,
+            )
 
         self._webrtc_provider = new_provider
         self._invalidate_camera_capabilities_cache()
@@ -993,20 +1020,11 @@ async def websocket_update_prefs(
         if (camera := hass.data[DATA_COMPONENT].get_entity(entity_id)) and (
             provider := camera.webrtc_provider
         ):
-            try:
-                await provider.async_on_camera_prefs_update(camera)
-            except HomeAssistantError as ex:
-                _LOGGER.error(
-                    "Error notifying WebRTC provider of %s preferences update: %s",
-                    entity_id,
-                    ex,
-                )
-            except Exception:
-                _LOGGER.exception(
-                    "Unexpected error notifying WebRTC provider of %s preferences "
-                    "update",
-                    entity_id,
-                )
+            await _async_call_webrtc_provider(
+                provider.async_on_camera_prefs_update(camera),
+                "notifying WebRTC provider of preferences update for",
+                entity_id,
+            )
         connection.send_result(msg["id"], entity_prefs)
 
 

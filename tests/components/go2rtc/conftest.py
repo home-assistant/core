@@ -68,7 +68,8 @@ def rest_client() -> Generator[AsyncMock]:
             return_value=AwesomeVersion(RECOMMENDED_VERSION)
         )
         client.webrtc = Mock(spec_set=_WebRTCClient)
-        client.preload = Mock(spec_set=_PreloadClient)
+        client.preload = preload = Mock(spec_set=_PreloadClient)
+        preload.list.return_value = {}
         yield client
 
 
