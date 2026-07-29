@@ -171,7 +171,7 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
 
 def get_device_class_or_undefined(
     hass: HomeAssistant, entity_id: str
-) -> str | None | UndefinedType:
+) -> str | UndefinedType | None:
     """Get the device class of an entity or UNDEFINED if not found."""
     try:
         return get_device_class(hass, entity_id)

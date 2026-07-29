@@ -924,59 +924,33 @@ async def test_ssl_issue_urls_configured(
 
 
 @pytest.mark.parametrize(
-    (
-        "hassio",
-        "http_config",
-        "expected_serverhost",
-        "expected_issues",
-    ),
+    ("http_config", "expected_serverhost"),
     [
-        (False, {}, ["0.0.0.0", "::"], {("http", "deprecated_yaml")}),
-        (
-            False,
-            {"server_host": "0.0.0.0"},
-            ["0.0.0.0"],
-            {("http", "deprecated_yaml")},
-        ),
-        (True, {}, ["0.0.0.0", "::"], {("http", "deprecated_yaml")}),
-        (
-            True,
-            {"server_host": "0.0.0.0"},
-            [
-                "0.0.0.0",
-            ],
-            {
-                ("http", "server_host_deprecated_hassio"),
-                ("http", "deprecated_yaml"),
-            },
-        ),
+        pytest.param({}, ["0.0.0.0", "::"], id="default"),
+        pytest.param({"server_host": "0.0.0.0"}, ["0.0.0.0"], id="server_host"),
     ],
 )
 async def test_server_host(
     hass: HomeAssistant,
-    hassio: bool,
     issue_registry: ir.IssueRegistry,
     http_config: dict,
     expected_serverhost: list,
-    expected_issues: set[tuple[str, str]],
-    caplog: pytest.LogCaptureFixture,
     mock_create_server: Mock,
 ) -> None:
     """Test server_host behavior."""
-    with patch("homeassistant.components.http.is_hassio", return_value=hassio):
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {"http": http_config},
-        )
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {"http": http_config},
+    )
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     mock_create_server.assert_called_once()
     assert hass.http.server_host == expected_serverhost
     assert hass.http.server_port == 8123
 
-    assert set(issue_registry.issues) == expected_issues
+    assert set(issue_registry.issues) == {("http", "deprecated_yaml")}
 
 
 async def test_unix_socket_started_with_supervisor(

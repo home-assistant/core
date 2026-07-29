@@ -685,6 +685,21 @@ async def test_flow_preview(
             },
         ),
         (
+            # Missing Key
+            STATE_HOME,
+            {
+                "in_zones": [],
+                "location_accuracy": 10.0,
+            },
+            STATE_UNKNOWN,
+            {
+                "in_zones": [],
+                "latitude": None,
+                "longitude": None,
+                "gps_accuracy": None,
+            },
+        ),
+        (
             STATE_UNAVAILABLE,
             {
                 "in_zones": [],
