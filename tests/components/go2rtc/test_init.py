@@ -35,11 +35,18 @@ from homeassistant.components.camera import (
     async_get_image,
 )
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
-from homeassistant.components.go2rtc import HomeAssistant, WebRTCProvider
+from homeassistant.components.go2rtc import (
+    HomeAssistant,
+    WebRTCProvider,
+    async_get_rtsp_stream_url,
+)
 from homeassistant.components.go2rtc.const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    HA_MANAGED_RTSP_HOST,
+    HA_MANAGED_RTSP_PORT,
+    HA_MANAGED_URL,
     RECOMMENDED_VERSION,
 )
 from homeassistant.components.go2rtc.util import (
@@ -1198,3 +1205,147 @@ async def test_basic_auth_with_debug_ui(hass: HomeAssistant, server_dir: Path) -
         call_kwargs = mock_server_cls.call_args[1]
         assert call_kwargs["username"] == "test_user"
         assert call_kwargs["password"] == "test_pass"
+
+
+@pytest.mark.usefixtures("init_integration", "init_test_integration")
+async def test_get_rtsp_stream_url(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+) -> None:
+    """The helper registers the stream and returns the managed RTSP URL."""
+    url = await async_get_rtsp_stream_url(hass, "camera.test")
+    assert (
+        url
+        == f"rtsp://{HA_MANAGED_RTSP_HOST}:{HA_MANAGED_RTSP_PORT}/test_camera_unique_id"
+    )
+    rest_client.streams.add.assert_called_once_with(
+        "test_camera_unique_id",
+        [
+            "rtsp://stream",
+            "ffmpeg:test_camera_unique_id#audio=opus#query=log_level=debug",
+        ],
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_get_rtsp_stream_url_generic_camera(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """A generic camera's source resolves through the ffmpeg wrapping."""
+    camera = init_test_integration
+    camera.set_stream_source("https://my_stream_url.m3u8")
+
+    with patch.object(camera.platform.platform_data, "platform_name", "generic"):
+        url = await async_get_rtsp_stream_url(hass, "camera.test")
+        identifier = get_camera_identifier(camera)
+
+    assert url == f"rtsp://{HA_MANAGED_RTSP_HOST}:{HA_MANAGED_RTSP_PORT}/{identifier}"
+    rest_client.streams.add.assert_called_once_with(
+        identifier,
+        [
+            "ffmpeg:https://my_stream_url.m3u8",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+        ],
+    )
+
+
+@pytest.mark.usefixtures("init_test_integration")
+async def test_get_rtsp_stream_url_not_setup(hass: HomeAssistant) -> None:
+    """The helper returns None when go2rtc is not set up."""
+    assert await async_get_rtsp_stream_url(hass, "camera.test") is None
+
+
+@pytest.mark.usefixtures(
+    "rest_client",
+    "mock_is_docker_env",
+    "mock_get_binary",
+    "server",
+    "init_test_integration",
+)
+@pytest.mark.parametrize(
+    "server_url",
+    [
+        pytest.param("http://localhost:1984/", id="other-port"),
+        # Same URL as the managed server: ownership must not be inferred from
+        # the URL, the user's server may expose a different RTSP endpoint.
+        pytest.param(HA_MANAGED_URL, id="managed-url-collision"),
+    ],
+)
+async def test_get_rtsp_stream_url_external_server(
+    hass: HomeAssistant, server_url: str
+) -> None:
+    """The helper returns None for an external server whose RTSP endpoint is unknown."""
+    config = {DOMAIN: {CONF_URL: server_url}}
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert await async_get_rtsp_stream_url(hass, "camera.test") is None
+
+
+@pytest.mark.parametrize(
+    "stream_source",
+    [
+        pytest.param("invalid://not_supported", id="unsupported-scheme"),
+        pytest.param(None, id="no-source"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_get_rtsp_stream_url_unusable_source(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    stream_source: str | None,
+) -> None:
+    """The helper returns None for an unusable source without tearing down sessions."""
+    init_test_integration.set_stream_source(stream_source)
+    provider = hass.config_entries.async_loaded_entries(DOMAIN)[0].runtime_data
+    with patch.object(provider, "teardown", wraps=provider.teardown) as teardown:
+        assert await async_get_rtsp_stream_url(hass, "camera.test") is None
+    teardown.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_transient_stream_source_error_keeps_sessions(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+) -> None:
+    """A transient camera error during an offer must not tear down sessions.
+
+    Cameras such as Nest raise HomeAssistantError from stream_source() for
+    temporary API failures; only a genuinely unusable source tears down.
+    """
+    camera = init_test_integration
+    receive_message_callback = Mock(spec_set=WebRTCSendMessage)
+    provider = hass.config_entries.async_loaded_entries(DOMAIN)[0].runtime_data
+
+    with (
+        patch.object(provider, "teardown", wraps=provider.teardown) as teardown,
+        patch.object(
+            MockCamera, "stream_source", side_effect=HomeAssistantError("api down")
+        ),
+    ):
+        await camera.async_handle_async_webrtc_offer(
+            OFFER_SDP, "session_transient", receive_message_callback
+        )
+
+    receive_message_callback.assert_called_once_with(
+        WebRTCError("go2rtc_webrtc_offer_failed", "api down")
+    )
+    teardown.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration", "init_test_integration")
+async def test_get_rtsp_stream_url_unknown_camera(hass: HomeAssistant) -> None:
+    """The helper returns None for an unavailable camera entity."""
+    assert await async_get_rtsp_stream_url(hass, "camera.does_not_exist") is None
+
+
+@pytest.mark.usefixtures("init_integration", "init_test_integration")
+async def test_get_rtsp_stream_url_server_rejects(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+) -> None:
+    """A managed-server error falls back to None instead of propagating."""
+    rest_client.streams.add.side_effect = Go2RtcClientError
+    assert await async_get_rtsp_stream_url(hass, "camera.test") is None
