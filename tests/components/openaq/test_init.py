@@ -1,5 +1,8 @@
 """Test OpenAQ initialization."""
 
+import asyncio
+import threading
+import time
 from unittest.mock import MagicMock, patch
 
 from openaq import NotAuthorizedError, ServerError
@@ -127,11 +130,11 @@ async def test_setup_stops_after_a_failed_location_refresh(
     mock_openaq_client.close.assert_called_once()
 
 
-async def test_coordinators_share_client_lock(
+async def test_refreshes_serialize_shared_client_calls(
     hass: HomeAssistant,
     mock_openaq_client: MagicMock,
 ) -> None:
-    """Test coordinators share the lock for the shared client."""
+    """Test coordinators serialize calls to the shared client."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="OpenAQ",
@@ -156,8 +159,25 @@ async def test_coordinators_share_client_lock(
     )
     await setup_integration(hass, config_entry)
     coordinators = list(config_entry.runtime_data.coordinators.values())
+    active_lock = threading.Lock()
+    active_calls = 0
+    max_active_calls = 0
 
-    assert coordinators[0]._client_lock is coordinators[1]._client_lock
+    def latest(location_id: int) -> object:
+        """Track overlapping calls to the synchronous SDK client."""
+        nonlocal active_calls, max_active_calls
+        with active_lock:
+            active_calls += 1
+            max_active_calls = max(max_active_calls, active_calls)
+        time.sleep(0.1)
+        with active_lock:
+            active_calls -= 1
+        return make_response([])
+
+    mock_openaq_client.locations.latest.side_effect = latest
+    await asyncio.gather(*(coordinator.async_refresh() for coordinator in coordinators))
+
+    assert max_active_calls == 1
 
 
 async def test_setup_fetches_location_data(

@@ -114,9 +114,9 @@ async def test_missing_latest_values_create_unknown_entity(
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("mock_openaq_client")
 async def test_sensor_without_metadata_has_no_unit(
     hass: HomeAssistant,
-    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a sensor without metadata has no native unit."""
