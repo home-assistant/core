@@ -13,7 +13,7 @@ import hashlib
 from http import HTTPStatus
 import json
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import aiohttp
 from aiohttp import ClientConnectionError
@@ -162,16 +162,10 @@ class ScalewayBackupAgent(BackupAgent):
         finally:
             response.release()
 
+    @override
     async def async_download_backup(
         self, backup_id: str, **kwargs: Any
     ) -> AsyncIterator[bytes]:
-        """Download a backup file.
-
-        Raises BackupNotFound if the backup does not exist.
-
-        :param backup_id: The ID of the backup that was returned in async_list_backups.
-        :return: An async iterator that yields bytes.
-        """
         object_key = self._calculate_object_key(backup_id)
 
         try:
@@ -193,6 +187,7 @@ class ScalewayBackupAgent(BackupAgent):
 
         return self._yield_chunks(response)
 
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -201,12 +196,6 @@ class ScalewayBackupAgent(BackupAgent):
         on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
-        """Upload a backup.
-
-        :param open_stream: A function returning an async iterator that yields bytes.
-        :param backup: Metadata about the backup that should be uploaded.
-        :param on_progress: A callback to report the number of uploaded bytes.
-        """
         if backup.size < MULTIPART_MIN_SIZE:
             await self._upload_object(backup=backup, open_stream=open_stream)
             on_progress(bytes_uploaded=backup.size)
@@ -409,13 +398,8 @@ class ScalewayBackupAgent(BackupAgent):
             _LOGGER.warning("Got exception while managing multipart upload", exc_info=e)
             helpers.raise_for_status(e.status)
 
+    @override
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
-        """Delete a backup file.
-
-        Raises BackupNotFound if the backup does not exist.
-
-        :param backup_id: The ID of the backup that was returned in async_list_backups.
-        """
         object_key = self._calculate_object_key(backup_id)
 
         try:
@@ -454,8 +438,8 @@ class ScalewayBackupAgent(BackupAgent):
             # Likely caused by a race condition (object was deleted between listing and reading)
             return None
 
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
-        """List backups."""
         backups = []
         limiter = asyncio.Semaphore(MAX_PARALLEL_HEAD_REQUESTS)
 
@@ -488,11 +472,8 @@ class ScalewayBackupAgent(BackupAgent):
         # Get task results and filter out None values
         return list(filter(None, (task.result() for task in backups)))
 
+    @override
     async def async_get_backup(self, backup_id: str, **kwargs: Any) -> AgentBackup:
-        """Return a backup.
-
-        Raises BackupNotFound if the backup does not exist.
-        """
         object_key = self._calculate_object_key(backup_id)
         return await helpers.read_object_metadata(
             client=self._client, object_key=object_key, limiter=None

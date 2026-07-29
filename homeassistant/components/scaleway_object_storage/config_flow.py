@@ -1,7 +1,7 @@
 """Config flow for the Scaleway Object Storage integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -109,10 +109,10 @@ class ScalewayConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             return True
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initiated by the user."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
