@@ -5,6 +5,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_domain": "[%key:component::route53::config::error::invalid_domain%]",
+      "invalid_records": "No usable records were found in the YAML configuration.",
       "invalid_zone": "[%key:component::route53::config::error::invalid_zone%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -47,6 +48,10 @@
     },
     "deprecated_yaml_import_issue_invalid_domain": {
       "description": "Configuring {integration_title} using YAML is being removed but the domain in your YAML configuration is not inside the configured hosted zone.\n\nPlease verify that the domain is the hosted zone's domain or a subdomain of it, then restart Home Assistant to try again or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_invalid_records": {
+      "description": "Configuring {integration_title} using YAML is being removed but your YAML configuration does not list any usable records.\n\nPlease add at least one record to the `{domain}` configuration and restart Home Assistant to try again, or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.",
       "title": "The {integration_title} YAML configuration import failed"
     },
     "deprecated_yaml_import_issue_invalid_zone": {

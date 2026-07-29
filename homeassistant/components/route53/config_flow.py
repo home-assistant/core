@@ -157,6 +157,13 @@ class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
+        # The YAML schema accepts blank records, unlike the form schema
+        try:
+            user_input[CONF_RECORDS] = _clean_records(user_input[CONF_RECORDS])
+        except vol.Invalid:
+            _LOGGER.error("No usable records in the YAML configuration")
+            return self.async_abort(reason="invalid_records")
+
         user_input[CONF_DOMAIN] = _normalize(user_input[CONF_DOMAIN])
         await self.async_set_unique_id(
             f"{user_input[CONF_ZONE]}_{user_input[CONF_DOMAIN]}"

@@ -384,6 +384,67 @@ async def test_import_flow_success(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    "records",
+    [
+        pytest.param([], id="empty_list"),
+        pytest.param([""], id="empty_string"),
+        pytest.param(["  "], id="whitespace_only"),
+    ],
+)
+async def test_import_flow_without_records_aborts(
+    hass: HomeAssistant, mock_boto3_client: MagicMock, records: list[str]
+) -> None:
+    """Test YAML without usable records aborts instead of creating an entry."""
+    with patch(
+        "homeassistant.components.route53.config_flow.boto3.client",
+        return_value=mock_boto3_client.return_value,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_ACCESS_KEY_ID: "test-key",
+                CONF_SECRET_ACCESS_KEY: "test-secret",
+                CONF_ZONE: "test-zone",
+                CONF_DOMAIN: "example.com",
+                CONF_RECORDS: records,
+                CONF_TTL: DEFAULT_TTL,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_records"
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+
+async def test_import_flow_strips_records(
+    hass: HomeAssistant, mock_boto3_client: MagicMock
+) -> None:
+    """Test imported record names are stripped."""
+    with patch(
+        "homeassistant.components.route53.config_flow.boto3.client",
+        return_value=mock_boto3_client.return_value,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_ACCESS_KEY_ID: "test-key",
+                CONF_SECRET_ACCESS_KEY: "test-secret",
+                CONF_ZONE: "test-zone",
+                CONF_DOMAIN: "example.com",
+                CONF_RECORDS: [" test1 ", "test2"],
+                CONF_TTL: DEFAULT_TTL,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_RECORDS] == ["test1", "test2"]
+
+
 async def test_import_flow_already_configured(
     hass: HomeAssistant, mock_boto3_client: MagicMock
 ) -> None:
