@@ -1,5 +1,6 @@
 """Test the NMBS integration setup."""
 
+import asyncio
 from unittest.mock import AsyncMock
 
 from pyrail.models import StationsApiResponse
@@ -78,7 +79,16 @@ async def test_concurrent_setup_shares_station_fetch(
     mock_nmbs_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that entries set up concurrently share one station fetch."""
+    """Test that entries set up concurrently share one in-flight station fetch."""
+    stations_response = mock_nmbs_client.get_stations.return_value
+    release_fetch = asyncio.Event()
+
+    async def _blocked_get_stations() -> StationsApiResponse:
+        await release_fetch.wait()
+        return stations_response
+
+    mock_nmbs_client.get_stations.side_effect = _blocked_get_stations
+
     mock_config_entry.add_to_hass(hass)
     second_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -91,7 +101,18 @@ async def test_concurrent_setup_shares_station_fetch(
     )
     second_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    setup_task = hass.async_create_task(async_setup_component(hass, DOMAIN, {}))
+    # Release the fetch only after both entry setups are underway, so the
+    # second entry sees the first entry's fetch in flight rather than a
+    # completed task.
+    while (
+        mock_config_entry.state is not ConfigEntryState.SETUP_IN_PROGRESS
+        or second_entry.state is not ConfigEntryState.SETUP_IN_PROGRESS
+    ):
+        await asyncio.sleep(0)
+    release_fetch.set()
+
+    assert await setup_task
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
