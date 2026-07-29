@@ -167,9 +167,16 @@ async def test_frontend_and_static(mock_http_client: TestClient) -> None:
     """Test if we can get the frontend."""
     resp = await mock_http_client.get("")
     assert resp.status == 200
-    assert "cache-control" not in resp.headers
+    assert resp.headers["cache-control"] == "no-cache"
+    etag = resp.headers["etag"]
+    assert etag.startswith('W/"')
 
     text = await resp.text()
+
+    resp = await mock_http_client.get("", headers={"If-None-Match": etag})
+    assert resp.status == HTTPStatus.NOT_MODIFIED
+    assert resp.headers["cache-control"] == "no-cache"
+    assert resp.headers["etag"] == etag
 
     # Test we can retrieve frontend.js
     frontendjs = re.search(r"(?P<app>\/frontend_es5\/app.[A-Za-z0-9_-]{16}.js)", text)
@@ -178,6 +185,7 @@ async def test_frontend_and_static(mock_http_client: TestClient) -> None:
     resp = await mock_http_client.get(frontendjs.groups(0)[0])
     assert resp.status == 200
     assert "public" in resp.headers.get("cache-control")
+    assert "immutable" in resp.headers.get("cache-control")
 
 
 @pytest.mark.parametrize("sw_url", ["/sw-modern.js", "/sw-legacy.js"])
@@ -618,7 +626,7 @@ async def test_extra_js(
     async def get_response():
         resp = await mock_http_client_with_extra_js.get("")
         assert resp.status == 200
-        assert "cache-control" not in resp.headers
+        assert resp.headers["cache-control"] == "no-cache"
 
         return await resp.text()
 
