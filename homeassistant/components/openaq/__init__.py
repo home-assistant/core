@@ -1,5 +1,7 @@
 """The OpenAQ integration."""
 
+import asyncio
+
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -18,11 +20,12 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> bool:
     """Set up OpenAQ from a config entry."""
     client = await async_create_openaq_client(hass, entry.data[CONF_API_KEY])
+    client_lock = asyncio.Lock()
     coordinators: dict[str, OpenAQDataUpdateCoordinator] = {}
 
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LOCATION):
         coordinators[subentry.subentry_id] = OpenAQDataUpdateCoordinator(
-            hass, entry, subentry, client
+            hass, entry, subentry, client, client_lock
         )
 
     try:
