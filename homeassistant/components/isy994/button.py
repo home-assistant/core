@@ -1,5 +1,7 @@
 """Representation of ISY/IoX buttons."""
 
+from typing import override
+
 from pyisy import ISY
 from pyisy.constants import (
     ATTR_ACTION,
@@ -106,10 +108,12 @@ class ISYNodeButtonEntity(ButtonEntity):
         self._availability_handler: EventListener | None = None
 
     @property
+    @override
     def available(self) -> bool:
         """Return entity availability."""
         return self._node_enabled
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node change events."""
         # No status for NetworkResources or ISY Query buttons
@@ -135,6 +139,7 @@ class ISYNodeButtonEntity(ButtonEntity):
 class ISYNodeQueryButtonEntity(ISYNodeButtonEntity):
     """Representation of a device query button entity."""
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._node.query()
@@ -143,6 +148,7 @@ class ISYNodeQueryButtonEntity(ISYNodeButtonEntity):
 class ISYNodeBeepButtonEntity(ISYNodeButtonEntity):
     """Representation of a device beep button entity."""
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._node.beep()
@@ -153,6 +159,7 @@ class ISYNetworkResourceButtonEntity(ISYNodeButtonEntity):
 
     _attr_has_entity_name = False
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._node.run()

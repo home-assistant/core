@@ -1,7 +1,8 @@
 """Platform for PAJ GPS sensor integration."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import override
 
 from pajgps_api.models.trackpoint import TrackPoint
 
@@ -11,12 +12,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfSpeed
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfSpeed
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PajGpsConfigEntry
-from .coordinator import PajGpsCoordinator
+from .coordinator import Device, PajGpsCoordinator
 from .entity import PajGpsEntity
 
 PARALLEL_UPDATES = 0
@@ -27,6 +28,7 @@ class PajGpsSensorEntityDescription(SensorEntityDescription):
     """Describes a PAJ GPS sensor entity."""
 
     value_fn: Callable[[TrackPoint], int | None]
+    supported_fn: Callable[[Device], bool] = field(default=lambda _: True)
 
 
 SENSOR_DESCRIPTIONS: tuple[PajGpsSensorEntityDescription, ...] = (
@@ -37,6 +39,16 @@ SENSOR_DESCRIPTIONS: tuple[PajGpsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda tp: tp.speed,
+    ),
+    PajGpsSensorEntityDescription(
+        key="battery",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=0,
+        value_fn=lambda tp: tp.battery_level,
+        supported_fn=lambda device: device.has_battery,
     ),
 )
 
@@ -62,6 +74,7 @@ async def async_setup_entry(
                 PajGpsSensor(coordinator, device_id, description)
                 for device_id in sorted_new_ids
                 for description in SENSOR_DESCRIPTIONS
+                if description.supported_fn(coordinator.data.devices[device_id])
             )
             known_device_ids.update(sorted_new_ids)
 
@@ -87,6 +100,7 @@ class PajGpsSensor(PajGpsEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.user_id}_{device_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the sensor value from the latest trackpoint."""
         tp = self.coordinator.data.positions.get(self._device_id)

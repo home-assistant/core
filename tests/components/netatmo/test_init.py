@@ -3,20 +3,34 @@
 from datetime import timedelta
 from functools import partial
 from time import time
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 from pyatmo.const import ALL_SCOPES
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import cloud
+from homeassistant.components import cloud, webhook
 from homeassistant.components.netatmo import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_WEBHOOK_ID, Platform
+from homeassistant.const import (
+    CONF_WEBHOOK_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.exceptions import OAuth2TokenRequestReauthError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.exceptions import (
+    OAuth2TokenRequestReauthError,
+    ServiceValidationError,
+)
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -71,7 +85,9 @@ async def test_setup_component(
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ) as mock_impl,
-        patch("homeassistant.components.netatmo.webhook_generate_url") as mock_webhook,
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url"
+        ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = partial(
             fake_post_request, hass
@@ -104,7 +120,7 @@ async def test_setup_component_with_config(
     """Test setup of the netatmo component with dev account."""
     fake_post_hits = 0
 
-    async def fake_post(*args, **kwargs):
+    async def fake_post(*args: Any, **kwargs: Any):
         """Fake error during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
@@ -114,11 +130,13 @@ async def test_setup_component_with_config(
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ) as mock_impl,
-        patch("homeassistant.components.netatmo.webhook_generate_url") as mock_webhook,
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url"
+        ) as mock_webhook,
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["sensor"]),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["sensor"]),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -171,6 +189,69 @@ async def test_setup_component_with_webhook(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
+async def test_no_deprecation_issue_on_setup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the automatic webhook lifecycle does not raise the deprecation issue."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "deprecated_service_register_webhook"
+    )
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "deprecated_service_unregister_webhook"
+    )
+
+
+@pytest.mark.parametrize(
+    ("service", "expected_registered"),
+    [
+        pytest.param("register_webhook", True, id="register"),
+        pytest.param("unregister_webhook", False, id="unregister"),
+    ],
+)
+async def test_deprecated_webhook_service(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+    service: str,
+    expected_registered: bool,
+) -> None:
+    """Test the deprecated webhook actions still work and raise a repair issue."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+        assert webhook_id in hass.data[webhook.DOMAIN]
+
+        # register_webhook re-registers the already-active webhook without
+        # raising; unregister_webhook tears it down.
+        await hass.services.async_call(DOMAIN, service, blocking=True)
+
+        assert (webhook_id in hass.data[webhook.DOMAIN]) is expected_registered
+
+    assert issue_registry.async_get_issue(DOMAIN, f"deprecated_service_{service}")
+
+
+@pytest.mark.parametrize("service", ["register_webhook", "unregister_webhook"])
+async def test_deprecated_webhook_service_not_loaded(
+    hass: HomeAssistant,
+    service: str,
+) -> None:
+    """Test calling a webhook action without a loaded entry raises."""
+    await async_setup_component(hass, DOMAIN, {})
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(DOMAIN, service, blocking=True)
+
+
 async def test_setup_without_https(
     hass: HomeAssistant, config_entry: MockConfigEntry, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -188,7 +269,7 @@ async def test_setup_without_https(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url"
+            "homeassistant.components.netatmo.webhook.webhook_generate_url"
         ) as mock_async_generate_url,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = partial(
@@ -227,12 +308,12 @@ async def test_setup_with_cloud(
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", []),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = partial(
@@ -297,12 +378,12 @@ async def test_setup_with_cloudhook(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", []),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = partial(
@@ -346,12 +427,14 @@ async def test_setup_component_with_delay(
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ) as mock_impl,
-        patch("homeassistant.components.netatmo.webhook_generate_url") as mock_webhook,
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url"
+        ) as mock_webhook,
         patch(
             "pyatmo.AbstractAsyncAuth.async_post_api_request",
             side_effect=partial(fake_post_request, hass),
         ) as mock_post_api_request,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["light"]),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["light"]),
     ):
         assert await async_setup_component(
             hass, DOMAIN, {"netatmo": {"client_id": "123", "client_secret": "abc"}}
@@ -416,7 +499,9 @@ async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ) as mock_impl,
-        patch("homeassistant.components.netatmo.webhook_generate_url") as mock_webhook,
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url"
+        ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = partial(
             fake_post_request, hass
@@ -466,7 +551,9 @@ async def test_setup_component_invalid_token(
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ) as mock_impl,
-        patch("homeassistant.components.netatmo.webhook_generate_url") as mock_webhook,
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url"
+        ) as mock_webhook,
         patch("homeassistant.components.netatmo.OAuth2Session") as mock_session,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = partial(
@@ -576,3 +663,89 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("platform", "entity_id", "module_id", "initial_state"),
+    [
+        pytest.param(
+            "switch", "switch.prise", "12:34:56:80:00:12:ac:f2", "on", id="switch"
+        ),
+        pytest.param(
+            "cover", "cover.entrance_blinds", "0009999992", "closed", id="cover"
+        ),
+        pytest.param(
+            "fan",
+            "fan.centralized_ventilation_controler",
+            "12:34:56:00:01:01:01:b1",
+            "on",
+            id="fan",
+        ),
+        pytest.param(
+            "light",
+            "light.unknown_00_11_22_33_00_11_45_fe",
+            "00:11:22:33:00:11:45:fe",
+            "off",
+            id="light",
+        ),
+        pytest.param(
+            "button",
+            "button.entrance_blinds_preferred_position",
+            "0009999992",
+            STATE_UNKNOWN,
+            id="button",
+        ),
+    ],
+)
+async def test_entity_unavailable_when_device_unreachable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    platform: str,
+    entity_id: str,
+    module_id: str,
+    initial_state: str,
+) -> None:
+    """Test that entities become unavailable when their device is unreachable."""
+    reachable = True
+
+    def set_reachable(payload: dict) -> None:
+        home = payload.get("body", {}).get("home")
+        if not isinstance(home, dict):
+            return
+        for module in home.get("modules", []):
+            if module.get("id") == module_id:
+                module["reachable"] = reachable
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        return await fake_post_request(
+            hass, *args, msg_callback=set_reachable, **kwargs
+        )
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", [platform]),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+            return_value=AsyncMock(),
+        ),
+        patch("homeassistant.components.netatmo.webhook.webhook_generate_url"),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == initial_state
+
+    reachable = False
+    for _ in range(11):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

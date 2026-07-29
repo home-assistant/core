@@ -1,4 +1,7 @@
 {
+  "application_credentials": {
+    "description": "The **client secret** is ignored, enter any value. Follow the [setup instructions]({more_info_url}) to obtain the Client ID."
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -161,6 +164,14 @@
       }
     },
     "sensor": {
+      "active_mode": {
+        "name": "Mode",
+        "state": {
+          "cooling": "Cooling",
+          "heating": "Heating",
+          "standby": "[%key:common::state::standby%]"
+        }
+      },
       "boiler_supply_temperature": {
         "name": "Boiler supply temperature"
       },
@@ -353,6 +364,18 @@
       },
       "evaporator_overheat_temperature": {
         "name": "Evaporator overheat temperature"
+      },
+      "exhaust_humidity": {
+        "name": "Exhaust humidity"
+      },
+      "exhaust_temperature": {
+        "name": "Exhaust temperature"
+      },
+      "extract_humidity": {
+        "name": "Extract humidity"
+      },
+      "extract_temperature": {
+        "name": "Extract temperature"
       },
       "filter_hours": {
         "name": "Filter hours"

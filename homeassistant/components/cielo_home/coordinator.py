@@ -3,7 +3,7 @@
 from copy import copy
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohttp import ClientError
 from cieloconnectapi import CieloClient
@@ -59,6 +59,7 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
             ),
         )
 
+    @override
     async def _async_update_data(self) -> CieloData:
         """Fetch data from the API."""
         try:

@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 from urllib.error import URLError
 
 from radiotherm.validate import RadiothermTstatError
@@ -41,6 +42,7 @@ class RadioThermUpdateCoordinator(DataUpdateCoordinator[RadioThermUpdate]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> RadioThermUpdate:
         """Update data from the thermostat."""
         try:

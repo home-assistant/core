@@ -1,6 +1,6 @@
 """Config flow for the LiteJet lighting system."""
 
-from typing import Any
+from typing import Any, override
 
 import pylitejet
 from serial import SerialException
@@ -43,6 +43,7 @@ class LiteJetOptionsFlow(OptionsFlow):
 class LiteJetConfigFlow(ConfigFlow, domain=DOMAIN):
     """LiteJet config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -70,6 +71,7 @@ class LiteJetConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: LiteJetConfigEntry,
     ) -> LiteJetOptionsFlow:

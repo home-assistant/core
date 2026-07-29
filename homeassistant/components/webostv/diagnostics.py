@@ -18,6 +18,7 @@ TO_REDACT = {
     "deviceUUID",
     "icon",
     "largeIcon",
+    "macAddress",
 }
 
 

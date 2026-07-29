@@ -1,5 +1,7 @@
 """UptimeRobot binary_sensor platform."""
 
+from typing import override
+
 from pyuptimerobot import UptimeRobotMonitor
 
 from homeassistant.components.binary_sensor import (
@@ -49,6 +51,7 @@ class UptimeRobotBinarySensor(UptimeRobotEntity, BinarySensorEntity):
     """Representation of a UptimeRobot binary sensor."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the entity is on."""
         return bool(self._monitor.status in STATUSES_ON)

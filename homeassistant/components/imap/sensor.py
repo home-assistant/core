@@ -1,5 +1,7 @@
 """IMAP sensor support."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
@@ -59,6 +61,7 @@ class ImapSensor(CoordinatorEntity[ImapDataUpdateCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the number of emails found."""
         return self.coordinator.data

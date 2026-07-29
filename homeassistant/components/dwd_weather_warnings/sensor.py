@@ -9,7 +9,7 @@ Warnungen vor markantem Wetter (Stufe 2)  # codespell:ignore vor
 Wetterwarnungen (Stufe 1)
 """
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
@@ -104,6 +104,7 @@ class DwdWeatherWarningsSensor(
         return [warning for warning in warnings if warning[API_ATTR_WARNING_END] > now]
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         if self.entity_description.key == CURRENT_WARNING_SENSOR:
@@ -115,6 +116,7 @@ class DwdWeatherWarningsSensor(
         return max((w.get(API_ATTR_WARNING_LEVEL, 0) for w in warnings), default=0)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         data = {
@@ -152,6 +154,7 @@ class DwdWeatherWarningsSensor(
         return data
 
     @property
+    @override
     def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self.coordinator.api.data_valid
