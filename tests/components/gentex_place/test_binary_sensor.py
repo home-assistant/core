@@ -28,7 +28,7 @@ async def test_binary_sensor_entities_created(
 
     assert hass.states.get("binary_sensor.master_bedroom_smoke") is not None
     assert hass.states.get("binary_sensor.master_bedroom_carbon_monoxide") is not None
-    assert hass.states.get("binary_sensor.master_bedroom_heat") is not None
+    assert hass.states.get("binary_sensor.master_bedroom_heat_alarm") is not None
 
 
 @pytest.mark.usefixtures(

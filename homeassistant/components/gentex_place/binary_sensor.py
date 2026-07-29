@@ -40,9 +40,11 @@ ALARM_BINARY_SENSOR_DESCRIPTIONS: tuple[
         device_class=BinarySensorDeviceClass.CO,
         value_fn=lambda shadow: shadow.co_alarm_status,
     ),
+    # Uses SAFETY class because heat_alarm is life-safety alarm
     PlaceAlarmBinarySensorEntityDescription(
         key="heat_alarm",
-        device_class=BinarySensorDeviceClass.HEAT,
+        translation_key="heat_alarm",
+        device_class=BinarySensorDeviceClass.SAFETY,
         value_fn=lambda shadow: shadow.heat_alarm_status,
     ),
     PlaceAlarmBinarySensorEntityDescription(
