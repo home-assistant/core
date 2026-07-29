@@ -3,7 +3,7 @@
 from dataclasses import replace
 from datetime import timedelta
 import logging
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiolinknlink import UltraConnectionError
 import pytest
@@ -227,6 +227,31 @@ async def test_position_updates_are_coalesced(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert hass.states.get(target_count_id).state == "0"
+
+
+async def test_position_updates_do_not_reset_environment_refresh(
+    hass: HomeAssistant,
+    mock_linknlink_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_position_subscription: tuple[MagicMock, MagicMock],
+) -> None:
+    """Test position callbacks preserve the environmental refresh timer."""
+    await setup_integration(hass, mock_config_entry)
+    subscription_class, subscription = mock_position_subscription
+    position_callback = subscription_class.call_args.kwargs["callback"]
+    status_callback = subscription_class.call_args.kwargs["status_callback"]
+    coordinator = mock_config_entry.runtime_data
+
+    with patch.object(coordinator, "_schedule_refresh") as schedule_refresh:
+        position_callback(POSITION_UPDATE)
+        empty_update = replace(POSITION_UPDATE, targets=())
+        subscription.state = replace(POSITION_STATE, latest_update=empty_update)
+        position_callback(empty_update)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+        status_callback(replace(POSITION_STATE, stale=True))
+        await hass.async_block_till_done()
+
+    schedule_refresh.assert_not_called()
 
 
 async def test_environment_failure_does_not_disable_position_entities(
