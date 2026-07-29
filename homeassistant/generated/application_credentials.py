@@ -6,6 +6,7 @@ To update, run python3 -m script.hassfest
 APPLICATION_CREDENTIALS = [
     "aladdin_connect",
     "august",
+    "beatbot",
     "dropbox",
     "ekeybionyx",
     "electric_kiwi",
