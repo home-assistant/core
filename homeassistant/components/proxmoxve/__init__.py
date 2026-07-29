@@ -69,9 +69,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) ->
             if "@" in data.get(CONF_USERNAME, ""):
                 username, realm = data[CONF_USERNAME].split("@", 1)
                 data[CONF_USERNAME] = username
-                data[CONF_REALM] = realm.lower()
+                data[CONF_REALM] = realm
 
-        realm = data[CONF_REALM].lower()
+        realm = data[CONF_REALM]
 
         # If the realm is one of the base providers,
         # set the provider to match the realm.

@@ -1,6 +1,7 @@
 """Test device_registry API."""
 
 from datetime import datetime
+from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -61,6 +62,8 @@ async def test_list_devices(
             "area_id": None,
             "config_entries": [entry.entry_id],
             "config_entries_subentries": {entry.entry_id: [None]},
+            "config_entry_id": entry.entry_id,
+            "config_subentry_id": None,
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
             "created_at": utcnow().timestamp(),
@@ -84,6 +87,8 @@ async def test_list_devices(
             "area_id": None,
             "config_entries": [entry.entry_id],
             "config_entries_subentries": {entry.entry_id: [None]},
+            "config_entry_id": entry.entry_id,
+            "config_subentry_id": None,
             "configuration_url": None,
             "connections": [],
             "created_at": utcnow().timestamp(),
@@ -119,6 +124,8 @@ async def test_list_devices(
             "area_id": None,
             "config_entries": [entry.entry_id],
             "config_entries_subentries": {entry.entry_id: [None]},
+            "config_entry_id": entry.entry_id,
+            "config_subentry_id": None,
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
             "created_at": utcnow().timestamp(),
@@ -143,6 +150,122 @@ async def test_list_devices(
 
     # Remove the bad device to avoid errors when test is being torn down
     device_registry.async_remove_device(device2.id)
+
+
+def _storage_device_v1_12(
+    device_id: str,
+    config_entries: list[str],
+    primary_config_entry: str | None,
+    identifier: str,
+) -> dict[str, Any]:
+    """Return a stored device in version 1.12 format."""
+    return {
+        "area_id": None,
+        "config_entries": config_entries,
+        "config_entries_subentries": {
+            config_entry: [None] for config_entry in config_entries
+        },
+        "configuration_url": None,
+        "connections": [],
+        "created_at": "1970-01-01T00:00:00+00:00",
+        "disabled_by": None,
+        "entry_type": None,
+        "hw_version": None,
+        "id": device_id,
+        "identifiers": [["test", identifier]],
+        "labels": [],
+        "manufacturer": None,
+        "model": None,
+        "model_id": None,
+        "modified_at": "1970-01-01T00:00:00+00:00",
+        "name": None,
+        "name_by_user": None,
+        "primary_config_entry": primary_config_entry,
+        "serial_number": None,
+        "sw_version": None,
+        "via_device_id": None,
+    }
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_list_composite_splits(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test listing the devices pre-migration composite devices were split into."""
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+    entry_3 = MockConfigEntry()
+    entry_3.add_to_hass(hass)
+
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 12,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                # Composite spanning two config entries, with entry_1 as primary
+                _storage_device_v1_12(
+                    "compositea000000000000000000000",
+                    [entry_1.entry_id, entry_2.entry_id],
+                    entry_1.entry_id,
+                    "a",
+                ),
+                # Composite spanning two config entries, without a primary
+                _storage_device_v1_12(
+                    "compositeb000000000000000000000",
+                    [entry_1.entry_id, entry_3.entry_id],
+                    None,
+                    "b",
+                ),
+                # Single config entry device, not split
+                _storage_device_v1_12(
+                    "single0000000000000000000000000",
+                    [entry_1.entry_id],
+                    entry_1.entry_id,
+                    "c",
+                ),
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
+    registry = dr.async_get(hass)
+
+    splits_a = registry.async_get_devices_for_composite_device_id(
+        "compositea000000000000000000000"
+    )
+    splits_b = registry.async_get_devices_for_composite_device_id(
+        "compositeb000000000000000000000"
+    )
+    assert len(splits_a) == 2
+    assert len(splits_b) == 2
+    primary_a = next(
+        device for device in splits_a if device.config_entry_id == entry_1.entry_id
+    )
+
+    await client.send_json_auto_id(
+        {"type": "config/device_registry/list_composite_splits"}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "compositea000000000000000000000": {
+            "split_ids": unordered([device.id for device in splits_a]),
+            "primary_id": primary_a.id,
+        },
+        "compositeb000000000000000000000": {
+            "split_ids": unordered([device.id for device in splits_b]),
+            "primary_id": None,
+        },
+    }
 
 
 @pytest.mark.parametrize(
@@ -307,7 +430,7 @@ async def test_remove_config_entry_from_device(
     entry_2.supports_remove_device = True
     entry_2.add_to_hass(hass)
 
-    device_registry.async_get_or_create(
+    device_entry_1 = device_registry.async_get_or_create(
         config_entry_id=entry_1.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
@@ -315,11 +438,14 @@ async def test_remove_config_entry_from_device(
         config_entry_id=entry_2.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    assert device_entry.config_entries == {entry_1.entry_id, entry_2.entry_id}
+    # Identifiers and connections are unique per config entry, so the two config
+    # entries get separate devices even though they share a connection
+    assert device_entry_1.id != device_entry.id
+    assert device_entry.config_entries == {entry_2.entry_id}
 
-    # Try removing a config entry from the device, it should fail because
+    # Try removing the config entry from the device, it should fail because
     # async_remove_config_entry_device returns False
-    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
+    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -327,25 +453,20 @@ async def test_remove_config_entry_from_device(
     # Make async_remove_config_entry_device return True
     can_remove = True
 
-    # Remove the 1st config entry
-    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
-
-    assert response["success"]
-    assert response["result"]["config_entries"] == [entry_2.entry_id]
-
-    # Check that the config entry was removed from the device
-    assert device_registry.async_get(device_entry.id).config_entries == {
-        entry_2.entry_id
-    }
-
-    # Remove the 2nd config entry
+    # Remove the config entry, this was the device's only config entry so the
+    # device is removed
     response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
 
     assert response["success"]
     assert response["result"] is None
 
-    # This was the last config entry, the device is removed
+    # This was the only config entry, the device is removed
     assert not device_registry.async_get(device_entry.id)
+
+    # The device belonging to the other config entry is untouched
+    assert device_registry.async_get(device_entry_1.id).config_entries == {
+        entry_1.entry_id
+    }
 
 
 async def test_remove_config_entry_from_device_fails(
@@ -396,38 +517,38 @@ async def test_remove_config_entry_from_device_fails(
     entry_3.supports_remove_device = True
     entry_3.add_to_hass(hass)
 
-    device_registry.async_get_or_create(
+    device_entry_1 = device_registry.async_get_or_create(
         config_entry_id=entry_1.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    device_registry.async_get_or_create(
+    device_entry_2 = device_registry.async_get_or_create(
         config_entry_id=entry_2.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    device_entry = device_registry.async_get_or_create(
+    device_entry_3 = device_registry.async_get_or_create(
         config_entry_id=entry_3.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    assert device_entry.config_entries == {
-        entry_1.entry_id,
-        entry_2.entry_id,
-        entry_3.entry_id,
-    }
+    # Identifiers and connections are unique per config entry, so each config entry
+    # gets its own device even though they share a connection
+    assert device_entry_1.config_entries == {entry_1.entry_id}
+    assert device_entry_2.config_entries == {entry_2.entry_id}
+    assert device_entry_3.config_entries == {entry_3.entry_id}
 
     fake_entry_id = "abc123"
     assert entry_1.entry_id != fake_entry_id
     fake_device_id = "abc123"
-    assert device_entry.id != fake_device_id
+    assert device_entry_3.id != fake_device_id
 
     # Try removing a non existing config entry from the device
-    response = await ws_client.remove_device(device_entry.id, fake_entry_id)
+    response = await ws_client.remove_device(device_entry_3.id, fake_entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Unknown config entry"
 
     # Try removing a config entry which does not support removal from the device
-    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
+    response = await ws_client.remove_device(device_entry_1.id, entry_1.entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -443,22 +564,22 @@ async def test_remove_config_entry_from_device_fails(
     assert response["error"]["message"] == "Unknown device"
 
     # Try removing a config entry from a device which it's not connected to
-    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
-
-    assert response["success"]
-    assert set(response["result"]["config_entries"]) == {
-        entry_1.entry_id,
-        entry_3.entry_id,
-    }
-
-    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
+    response = await ws_client.remove_device(device_entry_3.id, entry_2.entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Config entry not in device"
 
+    # Removing a config entry which supports removal removes the device, since it is
+    # the device's only config entry
+    response = await ws_client.remove_device(device_entry_2.id, entry_2.entry_id)
+
+    assert response["success"]
+    assert response["result"] is None
+    assert not device_registry.async_get(device_entry_2.id)
+
     # Try removing a config entry which can't be loaded from a device - allowed
-    response = await ws_client.remove_device(device_entry.id, entry_3.entry_id)
+    response = await ws_client.remove_device(device_entry_3.id, entry_3.entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -517,7 +638,7 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     entry_2.supports_remove_device = True
     entry_2.add_to_hass(hass)
 
-    device_registry.async_get_or_create(
+    device_entry_1 = device_registry.async_get_or_create(
         config_entry_id=entry_1.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
@@ -525,11 +646,14 @@ async def test_remove_config_entry_from_device_if_integration_remove(
         config_entry_id=entry_2.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    assert device_entry.config_entries == {entry_1.entry_id, entry_2.entry_id}
+    # Identifiers and connections are unique per config entry, so the two config
+    # entries get separate devices even though they share a connection
+    assert device_entry_1.id != device_entry.id
+    assert device_entry.config_entries == {entry_2.entry_id}
 
-    # Try removing a config entry from the device, it should fail because
+    # Try removing the config entry from the device, it should fail because
     # async_remove_config_entry_device returns False
-    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
+    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -537,22 +661,97 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     # Make async_remove_config_entry_device return True
     can_remove = True
 
-    # Remove the 1st config entry
-    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
-
-    assert response["success"]
-    assert response["result"]["config_entries"] == [entry_2.entry_id]
-
-    # Check that the config entry was removed from the device
-    assert device_registry.async_get(device_entry.id).config_entries == {
-        entry_2.entry_id
-    }
-
-    # Remove the 2nd config entry
+    # Remove the config entry, this was the device's only config entry so the
+    # device is removed
     response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
 
     assert response["success"]
     assert response["result"] is None
 
-    # This was the last config entry, the device is removed
+    # This was the only config entry, the device is removed
     assert not device_registry.async_get(device_entry.id)
+
+    # The device belonging to the other config entry is untouched
+    assert device_registry.async_get(device_entry_1.id).config_entries == {
+        entry_1.entry_id
+    }
+
+
+async def test_list_linked_devices(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test listing devices sharing a connection or identifier."""
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+    entry_3 = MockConfigEntry()
+    entry_3.add_to_hass(hass)
+
+    mac = (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")
+
+    # device_1 shares its identifier with device_2 and its connection with device_3
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id,
+        connections={mac},
+        identifiers={("bridgeid", "0123")},
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+    device_3 = device_registry.async_get_or_create(
+        config_entry_id=entry_3.entry_id,
+        connections={mac},
+    )
+    # device_4 shares nothing with the others
+    device_4 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id,
+        identifiers={("bridgeid", "9999")},
+    )
+    assert len({device_1.id, device_2.id, device_3.id, device_4.id}) == 4
+
+    async def list_linked(device_id: str) -> dict:
+        await client.send_json_auto_id(
+            {
+                "type": "config/device_registry/list_linked_devices",
+                "device_id": device_id,
+            }
+        )
+        return await client.receive_json()
+
+    # device_1 is linked to both device_2 (identifier) and device_3 (connection)
+    msg = await list_linked(device_1.id)
+    assert msg["success"]
+    assert msg["result"]["linked_devices"] == unordered([device_2.id, device_3.id])
+
+    # device_2 and device_3 each only share with device_1, not with each other
+    msg = await list_linked(device_2.id)
+    assert msg["result"]["linked_devices"] == [device_1.id]
+
+    msg = await list_linked(device_3.id)
+    assert msg["result"]["linked_devices"] == [device_1.id]
+
+    # device_4 has no linked devices
+    msg = await list_linked(device_4.id)
+    assert msg["result"]["linked_devices"] == []
+
+
+async def test_list_linked_devices_unknown_device(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+) -> None:
+    """Test listing linked devices for an unknown device returns an error."""
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/list_linked_devices",
+            "device_id": "does_not_exist",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+    assert msg["error"]["message"] == "Device not found"

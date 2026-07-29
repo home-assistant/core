@@ -68,6 +68,7 @@ class MockUFPFixture:
     devices_ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
     events_subscription: Callable[[ProtectEvent, EventChange], None] | None = None
     devices_ws_state_subscription: Callable[[WebsocketState], None] | None = None
+    events_ws_state_subscription: Callable[[WebsocketState], None] | None = None
 
     def ws_msg(self, msg: WSSubscriptionMessage) -> None:
         """Emit WS message for testing."""
@@ -240,19 +241,21 @@ async def init_entry(
     await hass.async_block_till_done()
 
 
-def public_rtsps_for(camera: Camera) -> RTSPSStreams | None:
+def public_rtsps_for(camera: Camera) -> RTSPSStreams:
     """Build a camera's primed RTSPS streams from its RTSP-enabled channels.
 
     Mirrors what the library writes onto ``PublicCamera.rtsps_streams`` during
-    ``update_public()`` — only RTSP-enabled channels carry an active URL, and a
-    camera with none is left streamless (``None``).
+    ``update_public()`` — only RTSP-enabled channels carry an active URL. The
+    server answers a successful read with ``null`` per inactive quality even
+    when nothing is enabled, so a read always yields a streams object;
+    ``None`` on the camera means the read itself failed (best-effort prime).
     """
     urls = {
         channel.rtsps_quality: channel.rtsps_url
         for channel in camera.channels
         if channel.is_rtsp_enabled and channel.rtsps_quality is not None
     }
-    return RTSPSStreams(**urls) if urls else None
+    return RTSPSStreams(**urls)
 
 
 def make_public_sensor(
@@ -414,6 +417,10 @@ _HDR_DISPLAY_TO_PUBLIC = {
 }
 
 
+_ALL_OBJECT_TYPES = [t for t in SmartDetectObjectType if t.audio_type is None]
+_ALL_AUDIO_TYPES = list(SmartDetectAudioType)
+
+
 def make_public_camera(
     camera: Camera,
     *,
@@ -424,6 +431,21 @@ def make_public_camera(
     osd_logo: bool = False,
     osd_debug: bool = False,
     video_mode: VideoMode | None = None,
+    is_motion_detected: bool = False,
+    is_smart_currently_detected: bool = False,
+    is_person_currently_detected: bool = False,
+    is_vehicle_currently_detected: bool = False,
+    is_animal_currently_detected: bool = False,
+    is_audio_currently_detected: bool = False,
+    is_smoke_currently_detected: bool = False,
+    is_cmonx_currently_detected: bool = False,
+    is_siren_currently_detected: bool = False,
+    is_baby_cry_currently_detected: bool = False,
+    is_speaking_currently_detected: bool = False,
+    is_bark_currently_detected: bool = False,
+    is_car_alarm_currently_detected: bool = False,
+    is_car_horn_currently_detected: bool = False,
+    is_glass_break_currently_detected: bool = False,
     object_types: list[SmartDetectObjectType] | None = None,
     audio_types: list[SmartDetectAudioType] | None = None,
     mic_volume: int | None = None,
@@ -431,11 +453,15 @@ def make_public_camera(
 ) -> Mock:
     """Build a public-API camera for a private camera's migrated fields.
 
-    Only ``state``, ``video_mode``, ``mic_volume``, and ``hdr_type`` (derived
-    from the private ``hdr_mode_display``) mirror the private camera when not
-    overridden. The other fields deliberately default to off/empty
-    (``status_light``/``osd_*`` disabled, no smart-detect types) instead of
-    mirroring, so a test overriding one sets a value the private object would
+    The stream tiers/mic/HDR back the migrated stream and select entities; the
+    ``is_*`` flags back the migrated ``ufp_public_value`` detection paths and the
+    ``smart_detect_settings`` types back the per-type ``ufp_public_enabled_fn``
+    gates (default: all types enabled). ``state``, ``video_mode``, ``mic_volume``
+    and ``hdr_type`` (derived from the private ``hdr_mode_display``) mirror the
+    private camera when not overridden.
+
+    ``status_light`` and the ``osd_*`` flags deliberately default to off instead
+    of mirroring, so a test overriding one sets a value the private object would
     not produce and a wrong ``ufp_public_value``/``ufp_public_value_fn`` fails
     the test.
     """
@@ -456,12 +482,28 @@ def make_public_camera(
     )
     public.video_mode = camera.video_mode if video_mode is None else video_mode
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
+    public.is_motion_detected = is_motion_detected
+    public.is_smart_currently_detected = is_smart_currently_detected
+    public.is_person_currently_detected = is_person_currently_detected
+    public.is_vehicle_currently_detected = is_vehicle_currently_detected
+    public.is_animal_currently_detected = is_animal_currently_detected
+    public.is_audio_currently_detected = is_audio_currently_detected
+    public.is_smoke_currently_detected = is_smoke_currently_detected
+    public.is_cmonx_currently_detected = is_cmonx_currently_detected
+    public.is_siren_currently_detected = is_siren_currently_detected
+    public.is_baby_cry_currently_detected = is_baby_cry_currently_detected
+    public.is_speaking_currently_detected = is_speaking_currently_detected
+    public.is_bark_currently_detected = is_bark_currently_detected
+    public.is_car_alarm_currently_detected = is_car_alarm_currently_detected
+    public.is_car_horn_currently_detected = is_car_horn_currently_detected
+    public.is_glass_break_currently_detected = is_glass_break_currently_detected
     public.smart_detect_settings = PublicSmartDetectSettings(
-        object_types=object_types or [],
-        audio_types=audio_types or [],
+        object_types=_ALL_OBJECT_TYPES if object_types is None else object_types,
+        audio_types=_ALL_AUDIO_TYPES if audio_types is None else audio_types,
     )
     # A Mock(spec) does not evaluate properties, so mirror the PublicCamera
-    # parity properties the migrated switches read using the library's own logic.
+    # parity properties the migrated switches read and the detection sensors
+    # gate on, using the library's own logic.
     for name in (
         "is_high_fps_enabled",
         "is_person_detection_on",

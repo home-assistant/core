@@ -289,6 +289,16 @@
           }
         }
       },
+      "motion_detection": {
+        "name": "Motion detection",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Motion"
+            }
+          }
+        }
+      },
       "nfc": {
         "name": "NFC",
         "state_attributes": {
@@ -305,6 +315,41 @@
           "event_type": {
             "state": {
               "detected": "Detected"
+            }
+          }
+        }
+      },
+      "smart_detection": {
+        "name": "Smart detection",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "animal": "Animal",
+              "car": "Car",
+              "face": "Face",
+              "license_plate": "License plate",
+              "package": "Package",
+              "person": "Person",
+              "pet": "Pet",
+              "vehicle": "Vehicle"
+            }
+          }
+        }
+      },
+      "sound_detection": {
+        "name": "Sound detection",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "baby_cry": "Baby cry",
+              "bark": "Barking",
+              "car_alarm": "Car alarm",
+              "car_horn": "Car horn",
+              "co": "CO alarm",
+              "glass_break": "Glass break",
+              "siren": "Siren",
+              "smoke": "Smoke alarm",
+              "speaking": "Speaking"
             }
           }
         }

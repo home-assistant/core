@@ -592,31 +592,36 @@ async def test_switch_camera_osd_public_value(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
+# Only the switch under test is enabled; ``make_public_camera`` defaults both
+# lists to every type, so each case pins both to keep the others off.
 CAMERA_SWITCHES_DETECTION_READ = [
-    ("smart_person", {"object_types": [SmartDetectObjectType.PERSON]}),
-    ("smart_vehicle", {"object_types": [SmartDetectObjectType.VEHICLE]}),
-    ("smart_animal", {"object_types": [SmartDetectObjectType.ANIMAL]}),
-    ("smart_package", {"object_types": [SmartDetectObjectType.PACKAGE]}),
-    ("smart_licenseplate", {"object_types": [SmartDetectObjectType.LICENSE_PLATE]}),
-    ("smart_smoke", {"audio_types": [SmartDetectAudioType.SMOKE]}),
-    ("smart_cmonx", {"audio_types": [SmartDetectAudioType.CMONX]}),
-    ("smart_siren", {"audio_types": [SmartDetectAudioType.SIREN]}),
-    ("smart_baby_cry", {"audio_types": [SmartDetectAudioType.BABY_CRY]}),
-    ("smart_speak", {"audio_types": [SmartDetectAudioType.SPEAK]}),
-    ("smart_bark", {"audio_types": [SmartDetectAudioType.BARK]}),
-    ("smart_car_alarm", {"audio_types": [SmartDetectAudioType.BURGLAR]}),
-    ("smart_car_horn", {"audio_types": [SmartDetectAudioType.CAR_HORN]}),
-    ("smart_glass_break", {"audio_types": [SmartDetectAudioType.GLASS_BREAK]}),
+    ("smart_person", [SmartDetectObjectType.PERSON], []),
+    ("smart_vehicle", [SmartDetectObjectType.VEHICLE], []),
+    ("smart_animal", [SmartDetectObjectType.ANIMAL], []),
+    ("smart_package", [SmartDetectObjectType.PACKAGE], []),
+    ("smart_licenseplate", [SmartDetectObjectType.LICENSE_PLATE], []),
+    ("smart_smoke", [], [SmartDetectAudioType.SMOKE]),
+    ("smart_cmonx", [], [SmartDetectAudioType.CMONX]),
+    ("smart_siren", [], [SmartDetectAudioType.SIREN]),
+    ("smart_baby_cry", [], [SmartDetectAudioType.BABY_CRY]),
+    ("smart_speak", [], [SmartDetectAudioType.SPEAK]),
+    ("smart_bark", [], [SmartDetectAudioType.BARK]),
+    ("smart_car_alarm", [], [SmartDetectAudioType.BURGLAR]),
+    ("smart_car_horn", [], [SmartDetectAudioType.CAR_HORN]),
+    ("smart_glass_break", [], [SmartDetectAudioType.GLASS_BREAK]),
 ]
 
 
-@pytest.mark.parametrize(("key", "public_kwargs"), CAMERA_SWITCHES_DETECTION_READ)
+@pytest.mark.parametrize(
+    ("key", "object_types", "audio_types"), CAMERA_SWITCHES_DETECTION_READ
+)
 async def test_switch_camera_detection_public_value(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
     key: str,
-    public_kwargs: dict[str, list[SmartDetectObjectType] | list[SmartDetectAudioType]],
+    object_types: list[SmartDetectObjectType],
+    audio_types: list[SmartDetectAudioType],
 ) -> None:
     """Each detection toggle reads its on/off state from its own public flag."""
 
@@ -654,9 +659,15 @@ async def test_switch_camera_detection_public_value(
     _, entity_id = await ids_from_device_description(
         hass, Platform.SWITCH, doorbell, description
     )
+
+    all_off = make_public_camera(doorbell, object_types=[], audio_types=[])
+    ufp.devices_ws_subscription(public_device_ws_message(all_off))
+    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
 
-    public = make_public_camera(doorbell, **public_kwargs)
+    public = make_public_camera(
+        doorbell, object_types=object_types, audio_types=audio_types
+    )
     ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 

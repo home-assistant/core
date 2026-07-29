@@ -204,7 +204,14 @@ def test_entities_areas_area_true(hass: HomeAssistant) -> None:
         },
     )
     device_registry = mock_device_registry(
-        hass, {"mock-dev-id": DeviceEntry(id="mock-dev-id", area_id="mock-area-id")}
+        hass,
+        {
+            "mock-dev-id": DeviceEntry(
+                config_entry_id="mock-config-entry",
+                id="mock-dev-id",
+                area_id="mock-area-id",
+            )
+        },
     )
 
     policy = {"area_ids": {"mock-area-id": {"read": True, "control": True}}}
