@@ -126,8 +126,9 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
             account_id = self.config_entry.unique_id
             device_registry = dr.async_get(self.hass)
             for device_id in stale_devices:
-                device = device_registry.async_get_device(
-                    identifiers={(DOMAIN, f"{account_id}_{device_id}")}
+                device = device_registry.async_get_device_by_identifier(
+                    (DOMAIN, f"{account_id}_{device_id}"),
+                    self.config_entry.entry_id,
                 )
                 if device:
                     device_registry.async_update_device(
@@ -201,22 +202,15 @@ class AqvifyAggrDataCoordinator(
 
         self.api_client = api_client
 
-    @staticmethod
-    def _get_times() -> tuple[str, str]:
-        """Determine strings for time parameters for aggregated data from API."""
-        date_time_fmt = "%Y-%m-%dT%H:%MZ"
-        base_time = utcnow() - timedelta(hours=1)
-        beg_time = base_time.replace(minute=0).strftime(date_time_fmt)
-        end_time = base_time.replace(minute=59).strftime(date_time_fmt)
-        return beg_time, end_time
-
     @override
     async def _async_update_data(self) -> dict[str, AqvifyHourAggregatedValues]:
         """Fetch device state."""
         devices = self.config_entry.runtime_data.coordinator.data.devices
 
         device_data: dict[str, AqvifyHourAggregatedValues] = {}
-        beg_time, end_time = self._get_times()
+        base_time = utcnow() - timedelta(hours=1)
+        beg_time = base_time.replace(minute=0, second=0, microsecond=0)
+        end_time = base_time.replace(minute=59, second=0, microsecond=0)
         for device in devices.devices.values():
             device_key = device.device_key
             if TYPE_CHECKING:

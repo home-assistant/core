@@ -10,15 +10,14 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import get_device_info
 from .const import (
     SERVICE_REMOTE_START,
     SERVICE_REMOTE_STOP,
     VEHICLE_HAS_EV,
     VEHICLE_HAS_REMOTE_START,
-    VEHICLE_VIN,
 )
 from .coordinator import SubaruConfigEntry, SubaruDataUpdateCoordinator
+from .entity import SubaruEntity
 from .remote_service import async_call_remote_service
 
 
@@ -59,10 +58,9 @@ async def async_setup_entry(
     )
 
 
-class SubaruButton(ButtonEntity):
+class SubaruButton(SubaruEntity, ButtonEntity):
     """Class for a Subaru button."""
 
-    _attr_has_entity_name = True
     entity_description: SubaruButtonEntityDescription
 
     def __init__(
@@ -73,13 +71,10 @@ class SubaruButton(ButtonEntity):
         description: SubaruButtonEntityDescription,
     ) -> None:
         """Initialize the button for the vehicle."""
+        super().__init__(vehicle_info, description.key)
         self.controller = controller
         self.coordinator = coordinator
-        self.vehicle_info = vehicle_info
         self.entity_description = description
-        vin = vehicle_info[VEHICLE_VIN]
-        self._attr_unique_id = f"{vin}_{description.key}"
-        self._attr_device_info = get_device_info(vehicle_info)
 
     @override
     async def async_press(self) -> None:
