@@ -129,6 +129,12 @@
       "end_of_service": {
         "name": "End of service"
       },
+      "ethernet_carrier_detect": {
+        "name": "Ethernet carrier"
+      },
+      "ethernet_full_duplex": {
+        "name": "Ethernet full duplex"
+      },
       "evse_charging_status": {
         "name": "Charging status"
       },
@@ -606,6 +612,40 @@
       "estimated_heat_required": {
         "name": "Required heating energy"
       },
+      "ethernet_collision_count": {
+        "name": "Ethernet collisions"
+      },
+      "ethernet_overrun_count": {
+        "name": "Ethernet overruns"
+      },
+      "ethernet_packet_rx_count": {
+        "name": "Ethernet packets received"
+      },
+      "ethernet_packet_tx_count": {
+        "name": "Ethernet packets transmitted"
+      },
+      "ethernet_phy_rate": {
+        "name": "Ethernet PHY rate",
+        "state": {
+          "1g": "1 Gbit/s",
+          "2_5g": "2.5 Gbit/s",
+          "5g": "5 Gbit/s",
+          "10g": "10 Gbit/s",
+          "10m": "10 Mbit/s",
+          "40g": "40 Gbit/s",
+          "100g": "100 Gbit/s",
+          "100m": "100 Mbit/s",
+          "200g": "200 Gbit/s",
+          "400g": "400 Gbit/s",
+          "unknown": "Unknown"
+        }
+      },
+      "ethernet_time_since_reset": {
+        "name": "Ethernet counters reset"
+      },
+      "ethernet_tx_error_count": {
+        "name": "Ethernet transmit errors"
+      },
       "eve_weather_trend": {
         "name": "Weather trend",
         "state": {
@@ -765,6 +805,12 @@
       },
       "thread_network_name": {
         "name": "Thread network name"
+      },
+      "thread_pan_id": {
+        "name": "Thread PAN ID"
+      },
+      "thread_partition_id": {
+        "name": "Thread partition ID"
       },
       "thread_routing_role": {
         "name": "Thread routing role",

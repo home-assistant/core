@@ -599,4 +599,34 @@ DISCOVERY_SCHEMAS = [
             clusters.GeneralDiagnostics.Attributes.ActiveNetworkFaults,
         ),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="EthernetDiagnosticsCarrierDetect",
+            translation_key="ethernet_carrier_detect",
+            device_class=BinarySensorDeviceClass.CONNECTIVITY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(
+            clusters.EthernetNetworkDiagnostics.Attributes.CarrierDetect,
+        ),
+        # Reported as null while the interface has no link state to speak of.
+        allow_none_value=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="EthernetDiagnosticsFullDuplex",
+            translation_key="ethernet_full_duplex",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(
+            clusters.EthernetNetworkDiagnostics.Attributes.FullDuplex,
+        ),
+        allow_none_value=True,
+    ),
 ]
