@@ -124,18 +124,22 @@
           "radar_colors": "Colour scale",
           "radar_duration": "Loop duration",
           "radar_fps": "Loop frame rate",
+          "radar_interpolation": "Smooth radar image",
           "radar_layer": "Radar type",
           "radar_legend": "Show legend",
           "radar_opacity": "Radar opacity",
           "radar_radius": "Map radius",
-          "radar_timestamp": "Show timestamp"
+          "radar_timestamp": "Show timestamp",
+          "radar_webp": "Use WebP images"
         },
         "data_description": {
           "radar_colors": "Number of colours in the rain/snow radar scale (has no effect on the precipitation type layer)",
           "radar_duration": "How far back the radar animation goes, in minutes (0 for the full available history)",
           "radar_fps": "Frame rate of the radar animation",
+          "radar_interpolation": "Smooth the radar image instead of leaving it pixelated (uses more bandwidth)",
           "radar_opacity": "Opacity of the radar layer overlay (0-100)",
-          "radar_radius": "Radius of the radar map in kilometres"
+          "radar_radius": "Radius of the radar map in kilometres",
+          "radar_webp": "Request radar images as WebP instead of PNG to reduce bandwidth, at the cost of higher latency"
         },
         "title": "Radar camera options"
       }

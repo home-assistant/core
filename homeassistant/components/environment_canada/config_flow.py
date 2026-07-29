@@ -33,21 +33,25 @@ from .const import (
     CONF_RADAR_COLORS,
     CONF_RADAR_DURATION,
     CONF_RADAR_FPS,
+    CONF_RADAR_INTERPOLATION,
     CONF_RADAR_LAYER,
     CONF_RADAR_LEGEND,
     CONF_RADAR_OPACITY,
     CONF_RADAR_RADIUS,
     CONF_RADAR_TIMESTAMP,
+    CONF_RADAR_WEBP,
     CONF_STATION,
     CONF_TITLE,
     DEFAULT_RADAR_COLORS,
     DEFAULT_RADAR_DURATION,
     DEFAULT_RADAR_FPS,
+    DEFAULT_RADAR_INTERPOLATION,
     DEFAULT_RADAR_LAYER,
     DEFAULT_RADAR_LEGEND,
     DEFAULT_RADAR_OPACITY,
     DEFAULT_RADAR_RADIUS,
     DEFAULT_RADAR_TIMESTAMP,
+    DEFAULT_RADAR_WEBP,
     DOMAIN,
     RADAR_COLOR_OPTIONS,
     RADAR_LAYERS,
@@ -242,6 +246,16 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                         translation_key="radar_colors",
                     )
                 ),
+                vol.Required(
+                    CONF_RADAR_INTERPOLATION,
+                    default=options.get(
+                        CONF_RADAR_INTERPOLATION, DEFAULT_RADAR_INTERPOLATION
+                    ),
+                ): BooleanSelector(),
+                vol.Required(
+                    CONF_RADAR_WEBP,
+                    default=options.get(CONF_RADAR_WEBP, DEFAULT_RADAR_WEBP),
+                ): BooleanSelector(),
             }
         )
 
