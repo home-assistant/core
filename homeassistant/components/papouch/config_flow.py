@@ -7,7 +7,7 @@ import re
 from typing import override
 
 import aiohttp
-from aiopapouch import PapouchApiClient, create_device
+from aiopapouch import PapouchHTTPClient, create_device
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -42,7 +42,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"ip_address": "invalid_ip_format"}, None
 
         session = async_get_clientsession(self.hass)
-        client = PapouchApiClient(ip_address, session)
+        client = PapouchHTTPClient(ip_address, session)
 
         try:
             await client.fetch_info()
@@ -94,7 +94,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={"ip_address": self.discovered_ip})
 
         session = async_get_clientsession(self.hass)
-        client = PapouchApiClient(self.discovered_ip, session)
+        client = PapouchHTTPClient(self.discovered_ip, session)
 
         try:
             await asyncio.sleep(DHCP_TIMEOUT)
@@ -232,7 +232,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._saved_input is not None
 
         session = async_get_clientsession(self.hass)
-        client = PapouchApiClient(self._saved_input["ip_address"], session)
+        client = PapouchHTTPClient(self._saved_input["ip_address"], session)
 
         try:
             device = await create_device(client)

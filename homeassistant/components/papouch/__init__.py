@@ -1,7 +1,7 @@
 """Initialization file of the integration."""
 
 import aiohttp
-from aiopapouch import PapouchApiClient, create_device
+from aiopapouch import PapouchHTTPClient, create_device
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
     """Set up Papouch device from a config entry."""
 
     session = async_get_clientsession(hass)
-    api_client = PapouchApiClient(entry.data["ip_address"], session)
+    api_client = PapouchHTTPClient(entry.data["ip_address"], session)
 
     try:
         device = await create_device(api_client)

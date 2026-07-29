@@ -13,8 +13,17 @@ from .base import PapouchDevice, find_tag
 _LOGGER = logging.getLogger(__name__)
 
 
-class TH2E(PapouchDevice):
-    """Represents TH2E device."""
+class PapagoETH(PapouchDevice):
+    """Represents Papago device family.
+
+    Note that it uses unified code that
+    will be applicable to all of Papago devices.
+
+    In case if there will be a new Papago
+    that uses a different XML this will be wrong
+    and the best option will be to create X classes
+    for every concrete device. YAGNI.
+    """
 
     SENSOR_TYPES = [
         "Unused",
@@ -48,19 +57,23 @@ class TH2E(PapouchDevice):
         """Return device's MAC address."""
         return self._mac_address
 
-    def __init__(self, api_client: PapouchTransport, settings: str, info: str) -> None:
-        """Constructor for TH2E device."""
+    def __init__(self, api_client: PapouchTransport, info: str) -> None:
+        """Constructor for Papago device.
+
+        Note that every Papago has a different settings XML
+        so unlike other devices we don't need it here.
+        """
+
         self.api_client = api_client
 
         self.info_root = defused_ET.fromstring(info)
-        self.settings_root = defused_ET.fromstring(settings)
 
         self._name = self.get_name()
         self._location = self.get_location()
         self._mac_address = self.get_mac_address()
 
-        self.units_sensors: dict[str, dict[str, str]] = {}
-        self.type_sensor = 0
+        # self.units_sensors: dict[str, dict[str, str]] = {}
+        # self.type_sensor = 0
 
     @override
     def parse_fresh_data(self, xml_data: str) -> dict:
@@ -398,11 +411,3 @@ class TH2E(PapouchDevice):
     @override
     def _parse_initial_settings(self) -> None:
         pass
-
-
-async def async_setup_th2e(transport: PapouchTransport) -> TH2E:
-    """Async factory for TH2E device."""
-    settings = await transport.fetch_settings()
-    info = await transport.fetch_info()
-
-    return TH2E(transport, settings, info)

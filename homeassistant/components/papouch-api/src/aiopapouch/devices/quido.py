@@ -1,12 +1,13 @@
-"""This file contains definition of the Quido device."""
+"""This file contains definition of the QuidoETH device."""
 
+from abc import ABC, abstractmethod
 import logging
 from typing import Any, override
 import xml.etree.ElementTree as ET
 
 import defusedxml.ElementTree as defused_ET
 
-from ..client import PapouchApiClient
+from ..client import PapouchTransport
 from ..exceptions import DeviceLogicError, DeviceParseError, DeviceResponseError
 from .base import PapouchDevice, find_tag
 
@@ -14,8 +15,8 @@ _LOGGER = logging.getLogger(__name__)
 ERROR_STATUS = "0"
 
 
-class Quido(PapouchDevice):
-    """Represents devices of Quido family."""
+class QuidoBase(PapouchDevice, ABC):
+    """Base class for all Quido devices containing shared entity logic."""
 
     COUNTER_MODES = [
         "Off",
@@ -23,6 +24,22 @@ class Quido(PapouchDevice):
         "Counts ascending edges",
         "Counts ascending and descending edges",
     ]
+
+    def __init__(self) -> None:
+        """Constructor for the base of the Quido."""
+
+        # These variables should be populated by the child classes
+        self.number_inputs = -1
+        self.number_outputs = -1
+        self.number_temp = 1
+        self.counter_states: dict[str, str] = {}
+        self.temperature_unit = "°C"
+
+        self._name = ""
+        self._location = ""
+        self._mac_address = ""
+
+    # These methods are the same for every Quido device:
 
     @override
     @property
@@ -47,55 +64,6 @@ class Quido(PapouchDevice):
     def mac_address(self) -> str:
         """Return device's MAC address."""
         return self._mac_address
-
-    def __init__(self, api_client: PapouchApiClient, settings: str, info: str) -> None:
-        """Constructor for Quido device."""
-
-        self.api_client = api_client
-
-        self.info_root = defused_ET.fromstring(info)
-        self.settings_root = defused_ET.fromstring(settings)
-
-        self._name = self.get_name()
-        self._location = self.get_location()
-        self._mac_address = self.get_mac_address()
-
-        self.number_inputs = -1
-        self.number_outputs = -1
-        self.number_temp = 1
-        self.counter_states: dict[str, str] = {}
-        self.size_counter_bits = 16
-        self.temperature_unit = "°C"  # default
-
-        self._parse_initial_settings()
-
-    @override
-    def parse_xml(self, xml_data: str) -> dict:
-        """Defines parser method for Quido family."""
-        root = defused_ET.fromstring(xml_data)
-        parsed_data: dict[str, dict[str, Any]] = {
-            "temperature": {},
-            "input": {},
-            "switch": {},
-            "counter": {},
-        }
-
-        for element in root:
-            item_id = element.attrib.get("id")
-
-            if element.tag == "temp":
-                val_str = element.attrib.get("val", "0")
-                parsed_data["temperature"][item_id] = float(val_str)
-
-            elif element.tag == "dout":  # codespell:ignore dout
-                val_str = element.attrib.get("val", "0")
-                parsed_data["switch"][item_id] = int(val_str)
-
-            elif element.tag == "din":
-                parsed_data["input"][item_id] = int(element.attrib.get("val", "0"))
-                parsed_data["counter"][item_id] = int(element.attrib.get("cnt", "0"))
-
-        return parsed_data
 
     @override
     def get_supported_buttons(self) -> list[dict[str, Any]]:
@@ -229,6 +197,86 @@ class Quido(PapouchDevice):
         """Turn off the switch by its id."""
         await self._turn_off_coil(item_id)
 
+    # These are the methods all of the children should implement
+
+    @abstractmethod
+    async def _connect_all_coils(self) -> None:
+        pass
+
+    @abstractmethod
+    async def _disconnect_all_coils(self) -> None:
+        pass
+
+    @abstractmethod
+    async def _reset_all_counters(self) -> None:
+        pass
+
+    @abstractmethod
+    async def _turn_on_coil(self, item_id: str) -> None:
+        pass
+
+    @abstractmethod
+    async def _turn_off_coil(self, item_id: str) -> None:
+        pass
+
+    @abstractmethod
+    async def _decrease_value_counter(self, item_id: str, value: int) -> None:
+        pass
+
+
+class QuidoETH(QuidoBase):
+    """Represents devices of Quido family."""
+
+    def __init__(self, api_client: PapouchTransport, settings: str, info: str) -> None:
+        """Constructor for Quido device."""
+
+        super().__init__()
+        self.api_client = api_client
+
+        self.info_root = defused_ET.fromstring(info)
+        self.settings_root = defused_ET.fromstring(settings)
+
+        self._name = self.get_name()
+        self._location = self.get_location()
+        self._mac_address = self.get_mac_address()
+
+        self.number_inputs = -1
+        self.number_outputs = -1
+        self.number_temp = 1
+        self.counter_states: dict[str, str] = {}
+        self.size_counter_bits = 16
+        self.temperature_unit = "°C"  # default
+
+        self._parse_initial_settings()
+
+    @override
+    def parse_fresh_data(self, xml_data: str) -> dict:
+        """Defines parser method for QuidoETH."""
+        root = defused_ET.fromstring(xml_data)
+        parsed_data: dict[str, dict[str, Any]] = {
+            "temperature": {},
+            "input": {},
+            "switch": {},
+            "counter": {},
+        }
+
+        for element in root:
+            item_id = element.attrib.get("id")
+
+            if element.tag == "temp":
+                val_str = element.attrib.get("val", "0")
+                parsed_data["temperature"][item_id] = float(val_str)
+
+            elif element.tag == "dout":  # codespell:ignore dout
+                val_str = element.attrib.get("val", "0")
+                parsed_data["switch"][item_id] = int(val_str)
+
+            elif element.tag == "din":
+                parsed_data["input"][item_id] = int(element.attrib.get("val", "0"))
+                parsed_data["counter"][item_id] = int(element.attrib.get("cnt", "0"))
+
+        return parsed_data
+
     @override
     async def set_number_value(self, category: str, item_id: str, value: float) -> None:
         if category == "decrease_counter":
@@ -286,7 +334,7 @@ class Quido(PapouchDevice):
         )
 
         xml_payload = ET.tostring(save_root, encoding="unicode")
-        response = await self.api_client.send_command_POST(
+        response = await self.api_client.write_command(
             xml_payload, f"{self.name} ({self.location})"
         )
         self._check_response(response)
@@ -356,7 +404,7 @@ class Quido(PapouchDevice):
 
         xml_payload = ET.tostring(save_root, encoding="unicode")
 
-        response = await self.api_client.send_command_POST(
+        response = await self.api_client.write_command(
             xml_payload, f"{self.name} ({self.location})"
         )
         self._check_response(response)
@@ -462,7 +510,7 @@ class Quido(PapouchDevice):
         }
         params = {key: value for key, value in raw_params.items() if value is not None}
 
-        response = await self.api_client.send_command_GET(
+        response = await self.api_client.read_command(
             params, f"{self.name} ({self.location})"
         )
 
@@ -485,3 +533,18 @@ class Quido(PapouchDevice):
             raise DeviceResponseError(
                 f"Response doesn't have the result tag! In the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
             )
+
+
+class QuidoRS485(QuidoBase):
+    """NotImplemented."""
+
+
+async def async_setup_quido(transport: PapouchTransport) -> QuidoBase:
+    """Async factory for Quido devices."""
+    settings = await transport.fetch_settings()
+    info = await transport.fetch_info()
+
+    if transport.protocol == "http":
+        return QuidoETH(transport, settings, info)
+
+    return QuidoRS485(transport, settings, info)

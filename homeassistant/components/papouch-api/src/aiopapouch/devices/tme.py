@@ -5,7 +5,7 @@ from typing import Any, override
 
 import defusedxml.ElementTree as defused_ET
 
-from ..client import PapouchApiClient
+from ..client import PapouchTransport
 from ..exceptions import DeviceParseError
 from .base import PapouchDevice, find_tag
 
@@ -43,7 +43,7 @@ class TME(PapouchDevice):
         """Return device's MAC address."""
         return self._mac_address
 
-    def __init__(self, api_client: PapouchApiClient, info: str, fresh: str) -> None:
+    def __init__(self, api_client: PapouchTransport, info: str, fresh: str) -> None:
         """Constructor for TME device."""
 
         self.api_client = api_client
@@ -60,7 +60,7 @@ class TME(PapouchDevice):
         self._parse_initial_settings()
 
     @override
-    def parse_xml(self, xml_data: str) -> dict:
+    def parse_fresh_data(self, xml_data: str) -> dict:
         root = defused_ET.fromstring(xml_data)
         parsed_data: dict[str, dict[str, Any]] = {"sensor": {}}
 
@@ -190,8 +190,16 @@ class TME(PapouchDevice):
 
     @override
     async def switch_to_web_mode(self) -> None:
-        """Switch the device network mode to WEB using its current settings."""
+        """Unused in TME."""
 
     @override
     def _parse_initial_settings(self) -> None:
         pass
+
+
+async def async_setup_tme(transport: PapouchTransport) -> TME:
+    """Async factory for TME device."""
+    fresh = await transport.fetch_data()
+    info = await transport.fetch_info()
+
+    return TME(transport, info, fresh)

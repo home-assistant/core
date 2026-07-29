@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 import aiohttp
-from aiopapouch import PapouchApiClient, PapouchDevice
+from aiopapouch import PapouchDevice, PapouchTransport
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,7 +21,7 @@ class PapouchDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        api_client: PapouchApiClient,
+        api_client: PapouchTransport,
         entry: ConfigEntry,
         device: PapouchDevice,
     ) -> None:
@@ -40,7 +40,7 @@ class PapouchDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from the device."""
         try:
-            raw_xml = await self.api_client.fetch_data()
-            return self.device.parse_xml(raw_xml)
+            fresh_data = await self.api_client.fetch_data()
+            return self.device.parse_fresh_data(fresh_data)
         except aiohttp.ClientError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from None

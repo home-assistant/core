@@ -2,59 +2,36 @@
 
 import logging
 
-import defusedxml.ElementTree as defused_ET
-
-from ..client import PapouchApiClient
+from ..client import PapouchTransport
 from .base import PapouchDevice
-from .quido import Quido
-from .th2e import TH2E
-from .tme import TME
+from .quido import async_setup_quido
+from .th2e import async_setup_th2e
+from .tme import async_setup_tme
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def create_device(api_client: PapouchApiClient) -> PapouchDevice | None:
+async def create_device(api_client: PapouchTransport) -> PapouchDevice | None:
     """Function that creates proper device instance.
 
-    Returns "None" if the device is not supported
-    or when the device doesn't have proper identification tag.
+    Returns "None" if the device is not supported.
     """
 
-    info = await api_client.fetch_info()
+    device_name = await api_client.get_device_name()
 
-    try:
-        root = defused_ET.fromstring(info)
-
-        heartbeat = None
-        for element in root.iter():
-            if element.tag.endswith("heartbeat"):
-                heartbeat = element
-                break
-
-        if heartbeat is None:
-            return None
-
-        device = heartbeat.attrib.get("device")
-        if not device:
-            return None
-
-    except defused_ET.ParseError, AttributeError:
+    if device_name is None:
         return None
 
-    _LOGGER.info("Creation of the device: %s", device)
-
-    # settings are being fetched now, because ctor isn't async
-    if "Quido" in device:
-        settings = await api_client.fetch_settings()
-        return Quido(api_client, settings, info)
-    if "TH2E" in device:
-        settings = await api_client.fetch_settings()
-        return TH2E(api_client, settings, info)
-    if "TME" in device:
-        fresh = await api_client.fetch_data()
-        return TME(api_client, info, fresh)
+    if "Quido" in device_name:
+        return await async_setup_quido(api_client)
+    if "TH2E" in device_name:
+        return await async_setup_th2e(api_client)
+    if "TME" in device_name:
+        return await async_setup_tme(api_client)
+    # if "Papago" in device:
+    #     return None
 
     return None
 
 
-__all__ = ["TH2E", "TME", "PapouchDevice", "Quido", "create_device"]
+__all__ = ["PapouchDevice", "create_device"]

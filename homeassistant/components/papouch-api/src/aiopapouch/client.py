@@ -1,7 +1,8 @@
 """This file is used for communicating with the device."""
 
+from abc import ABC, abstractmethod
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 import defusedxml.ElementTree as defused_ET
@@ -21,7 +22,48 @@ TIMEOUT_REQUEST = 10
 _LOGGER = logging.getLogger(__name__)
 
 
-class PapouchApiClient:
+class PapouchTransport(ABC):
+    """Abstract base class for all Papouch communication methods."""
+
+    @abstractmethod
+    async def fetch_info(self) -> str:
+        """Fetch the device identification data."""
+
+    @abstractmethod
+    async def fetch_settings(self) -> str:
+        """Fetch the device configuration."""
+
+    @abstractmethod
+    async def fetch_data(self) -> str:
+        """Fetch the latest sensor readings."""
+
+    @abstractmethod
+    async def read_command(self, params: dict, context: str) -> str:
+        """Send a simple command with key-value parameters.
+
+        Context string is used for error message
+        and it will be populated with a device information.
+        """
+
+    @abstractmethod
+    async def write_command(self, payload: str, context: str) -> str:
+        """Send a complex payload (like XML settings).
+
+        Context string is used for error message
+        and it will be populated with a device information.
+        """
+
+    @abstractmethod
+    async def get_device_name(self) -> str:
+        """Return name of the device."""
+
+    @property
+    @abstractmethod
+    def protocol(self) -> str:
+        """Return type of the protocol to communicate with a device."""
+
+
+class PapouchHTTPClient(PapouchTransport):
     """API client for communicating with a device."""
 
     def __init__(self, ip_address: str, session: aiohttp.ClientSession) -> None:
@@ -30,25 +72,57 @@ class PapouchApiClient:
         self.session = session
         self.ip_address = ip_address
 
+    @property
+    @override
+    def protocol(self) -> str:
+        return "http"
+
     async def _fetch(self, endpoint: str) -> str:
         async with self.session.get(self.base_url + endpoint) as response:
             response.raise_for_status()
             return await response.text()
 
+    @override
     async def fetch_info(self) -> str:
         """Fetching information about a device."""
         return await self._fetch(INFO_URL)
 
+    @override
     async def fetch_data(self) -> str:
         """Fetching data about a device."""
         return await self._fetch(DATA_URL)
 
+    @override
     async def fetch_settings(self) -> str:
         """Fetching settings about a device."""
         return await self._fetch(SETTINGS_URL)
 
+    @override
+    async def get_device_name(self) -> str | None:
+        info = await self.fetch_info()
+
+        try:
+            root = defused_ET.fromstring(info)
+        except defused_ET.ParseError:
+            return None
+
+        heartbeat = None
+        for element in root.iter():
+            if element.tag.endswith("heartbeat"):
+                heartbeat = element
+                break
+
+        if heartbeat is None:
+            return None
+
+        device = heartbeat.attrib.get("device")
+        if not device:
+            return None
+
+        return device
+
     async def _send_request(
-        self, method: str, endpoint: str, device: str, **kwargs: Any
+        self, method: str, endpoint: str, context: str, **kwargs: Any
     ) -> str:
 
         timeout = aiohttp.ClientTimeout(total=TIMEOUT_REQUEST)
@@ -65,26 +139,26 @@ class PapouchApiClient:
 
         except (aiohttp.ClientError, TimeoutError) as exception:
             raise DeviceConnectionError(
-                f"Failed to connect to {device} - {self.ip_address}: {exception}"
+                f"Failed to connect to {context} - {self.ip_address}: {exception}"
             ) from exception
 
-    async def send_command_GET(self, params: dict, device: str) -> str:
+    @override
+    async def read_command(self, params: dict, context: str) -> str:
         """Command for communicating with any device by using GET request.
 
-        Parameters are queries that will be added to the request.
-        Device string is used for error message.
+        Parameters are GET queries that will be added to the request.
         """
 
-        return await self._send_request("GET", SET_URL, device, params=params)
+        return await self._send_request("GET", SET_URL, context, params=params)
 
-    async def send_command_POST(self, data: str, device: str) -> str:
+    @override
+    async def write_command(self, data: str, context: str) -> str:
         """Command for communicating with any device by using POST request.
 
-        Data contains the payload that will be sent in the request body.
-        Device string is used for error message.
+        Data contains the POST payload that will be sent in the request body.
         """
 
-        return await self._send_request("POST", SAVE_URL, device, data=data)
+        return await self._send_request("POST", SAVE_URL, context, data=data)
 
     async def get_device_mode(self) -> int:
         """Function is used for the resolving the mode of the device."""
@@ -102,7 +176,8 @@ class PapouchApiClient:
             if mode is not None:
                 return int(mode)
 
-            if heartbeat_tag.attrib.get("device") == "TME":
+            device_name = heartbeat_tag.attrib.get("device")
+            if self._check_exceptions_device_web_mode(device_name):
                 return WEB_MODE_INDEX
 
             _LOGGER.error("Heartbeat tag found, but 'mode' attribute is missing!")
@@ -110,3 +185,10 @@ class PapouchApiClient:
 
         _LOGGER.error("Response doesn't have heartbeat tag!")
         return -1
+
+    def _check_exceptions_device_web_mode(self, device_name: str) -> bool:
+        if "TME" in device_name:
+            return True
+        if "Papago" in device_name and "ETH" in device_name:
+            return True
+        return False

@@ -40,7 +40,7 @@ class PapouchDevice(ABC):
         """Return device's MAC address."""
 
     @abstractmethod
-    def parse_xml(self, xml_data: str) -> dict:
+    def parse_fresh_data(self, xml_data: str) -> dict:
         """Parse the device-specific XML and return normalized data.
 
         The returned dictionary must map the parsed data to standard keys,

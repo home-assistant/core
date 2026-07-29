@@ -3,7 +3,7 @@
 import asyncio
 
 import aiohttp
-from aiopapouch import PapouchApiClient, create_device
+from aiopapouch import PapouchHTTPClient, create_device
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -44,7 +44,7 @@ async def _is_supported_device(
     """
 
     session = async_get_clientsession(hass)
-    client = PapouchApiClient(ip_address, session)
+    client = PapouchHTTPClient(ip_address, session)
 
     try:
         await client.fetch_info()
