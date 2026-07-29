@@ -31,15 +31,16 @@ async def test_setup_and_unload(
 
 
 async def test_energy_only_hub_is_registered(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """A Remo E lite with no sensor events is still registered.
 
-    It reports no te/hu/il/mo events, so no device-scoped entity is ever created
-    for it; without eager registration its hub device would be missing.
+    It reports no temperature/humidity/illuminance/motion events, so no
+    device-scoped entity is ever created for it; without eager registration
+    its hub device would be missing.
     """
-    device_registry = dr.async_get(hass)
-
     hub = device_registry.async_get_device(identifiers={(DOMAIN, "device-remoe-1")})
     assert hub is not None
     assert hub.manufacturer == "Nature"
@@ -51,15 +52,15 @@ async def test_energy_only_hub_is_registered(
 
 
 async def test_appliance_links_to_its_hub(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Every appliance points at its parent hub via via_device.
 
     The smart meter under the Remo E lite must be linked to the hub rather than
     orphaned at the top level, regardless of platform setup ordering.
     """
-    device_registry = dr.async_get(hass)
-
     hub = device_registry.async_get_device(identifiers={(DOMAIN, "device-remoe-1")})
     meter = device_registry.async_get_device(
         identifiers={(DOMAIN, "appliance-meter-1")}
@@ -110,13 +111,13 @@ async def test_appliance_rename_reaches_the_device_registry(
     init_integration: MockConfigEntry,
     mock_client: AsyncMock,
     appliances: list[Appliance],
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """A nickname edited in the Nature app propagates on the next poll.
 
     The device would otherwise keep the nickname it happened to have when
     its first entity was created.
     """
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, "appliance-ir-1")})
     assert device is not None
     assert device.name == "Fan"
