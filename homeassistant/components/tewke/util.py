@@ -67,32 +67,29 @@ class _TewkeObserver:
         if self.coordinator.data is None:
             return
 
-        scene_control_types = self.entry.runtime_data.scene_control_types
+        current_scenes = self.entry.runtime_data.scenes.copy()
 
         # Handle scenes that are no longer provided by the device
-        removed_configured_ids = [
-            sid for sid in scene_control_types if sid not in scenes
-        ]
+        removed_configured_ids = [sid for sid in current_scenes if sid not in scenes]
         if removed_configured_ids:
             LOGGER.info(
                 "Marking deleted scenes as unavailable: %s", removed_configured_ids
             )
-            new_scene_control_types = dict(scene_control_types)
 
             for sid in removed_configured_ids:
-                del new_scene_control_types[sid]
+                del current_scenes[sid]
 
             new_data = dict(self.entry.data)
-            new_data["scene_control_types"] = new_scene_control_types
+            new_data["scenes"] = current_scenes
 
-            self.entry.runtime_data.scene_control_types = new_scene_control_types
+            self.entry.runtime_data.scenes = current_scenes
             self.hass.config_entries.async_update_entry(self.entry, data=new_data)
             return
 
         configured_scenes = {
             scene_id: scene
             for scene_id, scene in scenes.items()
-            if scene_id in scene_control_types
+            if scene_id in current_scenes
         }
 
         self.coordinator.async_set_updated_data(
@@ -113,7 +110,7 @@ class _TewkeObserver:
         new_scenes = {
             scene_id: scene
             for scene_id, scene in scenes.items()
-            if scene_id not in scene_control_types
+            if scene_id not in current_scenes
             and scene_id not in self.entry.runtime_data.pending_scenes
         }
 

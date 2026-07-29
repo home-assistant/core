@@ -28,7 +28,6 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
     _discovered_name: str
     _room_name: str | None = None
     _scenes: dict[str, Scene]
-    _scene_control_types: dict[str, str]
     _tap: pytewke.Tap | None = None
 
     @override
@@ -91,15 +90,11 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Discovered scenes: %s", scenes)
 
         if user_input is not None:
-            name_to_id = {scene.name: scene_id for scene_id, scene in scenes.items()}
-            self._scene_control_types = {}
-            for sceneid in name_to_id.values():
-                self._scene_control_types[sceneid] = "light"
             data = {
                 CONF_HOST: self._discovered_host,
                 CONF_NAME: self._discovered_name,
                 "room_name": self._room_name,
-                "scene_control_types": self._scene_control_types or {},
+                "scenes": self._scenes,
             }
 
             if self.source == SOURCE_RECONFIGURE:

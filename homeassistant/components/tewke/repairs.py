@@ -53,7 +53,7 @@ class TewkeNewSceneRepairFlow(RepairsFlow):
         for i, _ in enumerate(self._pending_list):
             scene_configs.append(f"scene_section_{i}")
         pending: dict[str, Scene] = self.entry.runtime_data.pending_scenes
-        new_control_types = self.entry.runtime_data.scene_control_types.copy()
+        current_scenes = self.entry.runtime_data.scenes.copy()
         added_scenes: list[Scene] = []
         index_name_to_id = {
             f"scene_section_{i}": sid for i, (sid, _) in enumerate(self._pending_list)
@@ -70,7 +70,7 @@ class TewkeNewSceneRepairFlow(RepairsFlow):
 
             added_scenes.append(pending[scene_id])
 
-            new_control_types[scene_id] = "light"
+            current_scenes[scene_id] = pending[scene_id]
 
             del pending[scene_id]
 
@@ -78,14 +78,14 @@ class TewkeNewSceneRepairFlow(RepairsFlow):
             self.entry,
             data={
                 **self.entry.data,
-                "scene_control_types": new_control_types,
+                "scenes": current_scenes,
             },
         )
 
         coordinator = self.entry.runtime_data.coordinator
         scenes_all = coordinator.data.get("scenes_all", {})
         configured_scenes = {
-            sid: scene for sid, scene in scenes_all.items() if sid in new_control_types
+            sid: scene for sid, scene in scenes_all.items() if sid in current_scenes
         }
         coordinator.async_set_updated_data(
             {

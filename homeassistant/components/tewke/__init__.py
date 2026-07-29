@@ -50,7 +50,7 @@ async def async_setup_entry(
         host=entry.data[CONF_HOST],
         tap=tap,
         coordinator=tewke_coordinator,
-        scene_control_types=entry.data.get("scene_control_types", {}),
+        scenes=entry.data.get("scenes", {}),
     )
 
     await tewke_coordinator.async_config_entry_first_refresh()

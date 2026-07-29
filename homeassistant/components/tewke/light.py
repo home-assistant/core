@@ -25,7 +25,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Tewke light entities from a config entry."""
     coordinator = entry.runtime_data.coordinator
-    scene_control_types = entry.runtime_data.scene_control_types
 
     entities = [
         TewkeSceneLight(
@@ -33,7 +32,6 @@ async def async_setup_entry(
             scene=scene,
         )
         for scene_id, scene in coordinator.data["scenes"].items()
-        if scene_control_types.get(scene_id) == "light"
     ]
     entities += [
         # We want to expose the scene lights and physical lights
@@ -50,7 +48,6 @@ async def async_setup_entry(
                 scene=scene,
             )
             for scene in scenes
-            if scene_control_types.get(scene.id) == "light"
         )
 
     entry.async_on_unload(

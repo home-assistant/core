@@ -21,6 +21,6 @@ class TewkeData:
     host: str
     tap: pytewke.Tap
     coordinator: TewkeCoordinator
-    scene_control_types: dict[str, str]
+    scenes: dict[str, Scene]
     pending_scenes: dict[str, Scene] = field(default_factory=dict)
     observe_active: bool = False

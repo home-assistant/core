@@ -264,11 +264,11 @@ class TewkeCoordinator(DataUpdateCoordinator[TewkeCoordinatorData]):
             msg = f"Error communicating with Tewke Tap: {err}"
             raise UpdateFailed(msg) from err
 
-        scene_control_types = self.config_entry.runtime_data.scene_control_types
+        scenes = self.config_entry.runtime_data.scenes
         configured_scenes = {
             scene_id: scene
             for scene_id, scene in scenes_all.items()
-            if scene_id in scene_control_types
+            if scene_id in scenes
         }
 
         try:
