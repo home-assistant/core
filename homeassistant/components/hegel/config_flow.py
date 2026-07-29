@@ -1,7 +1,7 @@
 """Config flow for Hegel integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from hegel_ip_client import HegelClient
 from hegel_ip_client.exceptions import HegelConnectionError
@@ -41,6 +41,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             await client.stop()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -72,6 +73,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

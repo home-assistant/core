@@ -39,7 +39,7 @@
 # name: test_all_entities[time.nursery_yoto_day_mode_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nursery Yoto Day mode start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto Day mode start',
     }),
     'context': <ANY>,
     'entity_id': 'time.nursery_yoto_day_mode_start',
@@ -89,7 +89,7 @@
 # name: test_all_entities[time.nursery_yoto_night_mode_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nursery Yoto Night mode start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto Night mode start',
     }),
     'context': <ANY>,
     'entity_id': 'time.nursery_yoto_night_mode_start',

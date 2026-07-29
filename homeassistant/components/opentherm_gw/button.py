@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 import pyotgw.vars as gw_vars
 
@@ -69,6 +70,7 @@ class OpenThermButton(OpenThermEntity, ButtonEntity):
     _attr_entity_category = EntityCategory.CONFIG
     entity_description: OpenThermButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Perform button action."""
         await self.entity_description.action(self._gateway)

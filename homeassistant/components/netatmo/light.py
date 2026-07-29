@@ -1,7 +1,7 @@
 """Support for the Netatmo camera lights."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyatmo import modules as NaModules
 
@@ -19,10 +19,12 @@ from .const import (
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_LIGHT,
 )
-from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
-from .entity import NetatmoModuleEntity
+from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
+from .entity import NetatmoModuleEntity, NetatmoReachabilityEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -74,7 +76,7 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize a Netatmo Presence camera light."""
         super().__init__(netatmo_device)
-        self._attr_unique_id = f"{self.device.entity_id}-light"
+        self._attr_unique_id = f"{self.device.entity_id}-light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         self._signal_name = f"{HOME}-{self.home.entity_id}"
         self._publishers.extend(
@@ -87,6 +89,7 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
             ]
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
@@ -118,27 +121,32 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
             return
 
     @property
+    @override
     def available(self) -> bool:
         """If the webhook is not established, mark as unavailable."""
-        return bool(self.data_handler.webhook)
+        return super().available and bool(self.data_handler.webhook)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn camera floodlight on."""
         _LOGGER.debug("Turn camera '%s' on", self.name)
         await self.device.async_floodlight_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn camera floodlight into auto mode."""
         _LOGGER.debug("Turn camera '%s' to auto mode", self.name)
         await self.device.async_floodlight_auto()
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         self._attr_is_on = bool(self.device.floodlight == "on")
+        self.async_write_ha_state()
 
 
-class NetatmoLight(NetatmoModuleEntity, LightEntity):
+class NetatmoLight(NetatmoReachabilityEntity, LightEntity):
     """Representation of a dimmable light by Legrand/BTicino."""
 
     _attr_name = None
@@ -149,7 +157,7 @@ class NetatmoLight(NetatmoModuleEntity, LightEntity):
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize a Netatmo light."""
         super().__init__(netatmo_device)
-        self._attr_unique_id = f"{self.device.entity_id}-light"
+        self._attr_unique_id = f"{self.device.entity_id}-light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         if self.device.brightness is not None:
             self._attr_color_mode = ColorMode.BRIGHTNESS
@@ -168,6 +176,7 @@ class NetatmoLight(NetatmoModuleEntity, LightEntity):
             ]
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -181,6 +190,7 @@ class NetatmoLight(NetatmoModuleEntity, LightEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         await self.device.async_off()
@@ -188,12 +198,15 @@ class NetatmoLight(NetatmoModuleEntity, LightEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._attr_is_on = self.device.on is True
+        if self.device.reachable is not False:
+            self._attr_is_on = self.device.on is True
 
-        if (brightness := self.device.brightness) is not None:
-            # Netatmo uses a range of [0, 100] to control brightness
-            self._attr_brightness = round(brightness * 2.55)
-        else:
-            self._attr_brightness = None
+            if (brightness := self.device.brightness) is not None:
+                # Netatmo uses a range of [0, 100] to control brightness
+                self._attr_brightness = round(brightness * 2.55)
+            else:
+                self._attr_brightness = None
+        self.async_write_ha_state()

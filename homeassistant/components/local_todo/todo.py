@@ -3,6 +3,7 @@
 import asyncio
 import datetime
 import logging
+from typing import override
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
@@ -159,6 +160,7 @@ class LocalTodoListEntity(TodoListEntity):
             )
         self._attr_todo_items = todo_items
 
+    @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         todo = _convert_item(item)
@@ -168,6 +170,7 @@ class LocalTodoListEntity(TodoListEntity):
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
+    @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the To-do list."""
         todo = _convert_item(item)
@@ -177,6 +180,7 @@ class LocalTodoListEntity(TodoListEntity):
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
+    @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item from the To-do list."""
         async with self._calendar_lock:
@@ -186,6 +190,7 @@ class LocalTodoListEntity(TodoListEntity):
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
+    @override
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
     ) -> None:

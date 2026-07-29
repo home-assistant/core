@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pytradfri.command import Command
 from pytradfri.device import Device
@@ -71,6 +71,7 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
         """Refresh device data."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator.
 
@@ -80,6 +81,7 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return cast(bool, self._device.reachable) and super().available

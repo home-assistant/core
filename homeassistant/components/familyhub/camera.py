@@ -1,5 +1,7 @@
 """Family Hub camera for Samsung Refrigerators."""
 
+from typing import override
+
 from pyfamilyhublocal import FamilyHubCam
 import voluptuous as vol
 
@@ -50,6 +52,7 @@ class FamilyHubCamera(Camera):
         self._name = name
         self.family_hub_cam = family_hub_cam
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -57,6 +60,7 @@ class FamilyHubCamera(Camera):
         return await self.family_hub_cam.async_get_cam_image()
 
     @property
+    @override
     def name(self):
         """Return the name of this camera."""
         return self._name

@@ -707,7 +707,6 @@ async def test_zone_trigger_behavior_all(
 # --- Zone occupancy trigger tests ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key"),
     ["zone.occupancy_detected", "zone.occupancy_cleared"],
@@ -727,7 +726,6 @@ async def test_zone_occupancy_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "from_state", "to_state", "should_fire"),
     [
@@ -809,7 +807,6 @@ async def test_zone_occupancy_trigger_transitions(
     assert (len(service_calls) == 1) is should_fire
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "from_value", "to_value", "revert_value"),
     [

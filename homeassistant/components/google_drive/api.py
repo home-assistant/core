@@ -4,7 +4,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 from dataclasses import dataclass
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientSession, ClientTimeout, StreamReader
 from aiohttp.client_exceptions import ClientError, ClientResponseError
@@ -50,6 +50,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
         super().__init__(websession)
         self._oauth_session = oauth_session
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         try:
@@ -91,6 +92,7 @@ class AsyncConfigFlowAuth(AbstractAuth):
         super().__init__(websession)
         self._token = token
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         return self._token

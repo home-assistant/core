@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from airos.data import AirOSDataBaseClass
 
@@ -114,6 +115,7 @@ class AirOSBinarySensor(AirOSEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.data.derived.mac}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

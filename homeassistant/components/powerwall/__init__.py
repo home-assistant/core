@@ -253,7 +253,9 @@ async def async_migrate_entity_unique_ids(
     new_base_unique_id = base_info.gateway_din
 
     dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get_device(identifiers={(DOMAIN, old_base_unique_id)}):
+    if device := dev_reg.async_get_device_by_identifier(
+        (DOMAIN, old_base_unique_id), entry.entry_id
+    ):
         dev_reg.async_update_device(
             device.id, new_identifiers={(DOMAIN, new_base_unique_id)}
         )
@@ -344,6 +346,22 @@ async def get_backup_reserve_percentage(power_wall: Powerwall) -> float | None:
         return None
 
 
+async def get_max_charge_power(power_wall: Powerwall) -> int | None:
+    """Return the instantaneous max charge power."""
+    try:
+        return await power_wall.get_instantaneous_max_charge_power()
+    except MissingAttributeError:
+        return None
+
+
+async def get_max_discharge_power(power_wall: Powerwall) -> int | None:
+    """Return the instantaneous max discharge power."""
+    try:
+        return await power_wall.get_instantaneous_max_discharge_power()
+    except MissingAttributeError:
+        return None
+
+
 async def get_operation_mode(power_wall: Powerwall) -> OperationMode | None:
     """Return the operation mode."""
     try:
@@ -372,10 +390,14 @@ async def _fetch_powerwall_data(
             grid_services_active=grid_services_active,
             grid_status=grid_status,
             backup_reserve=None,
+            max_charge_power=None,
+            max_discharge_power=None,
             operation_mode=None,
             batteries={},
         )
     backup_reserve = await get_backup_reserve_percentage(power_wall)
+    max_charge_power = await get_max_charge_power(power_wall)
+    max_discharge_power = await get_max_discharge_power(power_wall)
     operation_mode = await get_operation_mode(power_wall)
     site_master = await power_wall.get_sitemaster()
     batteries = await power_wall.get_batteries()
@@ -386,6 +408,8 @@ async def _fetch_powerwall_data(
         grid_services_active=grid_services_active,
         grid_status=grid_status,
         backup_reserve=backup_reserve,
+        max_charge_power=max_charge_power,
+        max_discharge_power=max_discharge_power,
         operation_mode=operation_mode,
         batteries={battery.serial_number: battery for battery in batteries},
     )

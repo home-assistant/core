@@ -13,6 +13,7 @@ from soco.data_structures import (
     DidlPlaylistContainer,
     SearchResult,
 )
+from soco.exceptions import SoCoUPnPException
 from sonos_websocket.exception import SonosWebsocketError
 from syrupy.assertion import SnapshotAssertion
 
@@ -40,6 +41,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
+    MediaPlayerEntityFeature,
     RepeatMode,
 )
 from homeassistant.components.sonos.const import (
@@ -323,6 +325,69 @@ async def test_play_media_library_content_error(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("error", "translation_key", "translation_placeholders"),
+    [
+        pytest.param(
+            OSError("Network down"),
+            "call_failed",
+            {
+                "target": "media_player.zone_a",
+                "error": "Network down",
+            },
+            id="generic-error",
+        ),
+        pytest.param(
+            SoCoUPnPException("UPnP Error 701 received", "701", ""),
+            "upnp_call_failed",
+            {
+                "target": "media_player.zone_a",
+                "error": "UPnP Error 701 received",
+                "error_code": "701",
+            },
+            id="upnp-error",
+        ),
+        pytest.param(
+            SoCoUPnPException("UPnP Error 800 received", "800", ""),
+            "upnp_call_failed_music_service_unavailable",
+            {
+                "target": "media_player.zone_a",
+                "error": "UPnP Error 800 received",
+                "error_code": "800",
+            },
+            id="upnp-error-800-music-service-unavailable",
+        ),
+    ],
+)
+async def test_play_media_error_translation(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    error: Exception,
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+) -> None:
+    """Test play_media surfaces translated error details for failures."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    soco_mock.play_uri.side_effect = error
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "track",
+                ATTR_MEDIA_CONTENT_ID: _track_url,
+                ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == translation_placeholders
 
 
 _track_url = "S://192.168.42.100/music/iTunes/The%20Beatles/A%20Hard%20Day%2fs%I%20Should%20Have%20Known%20Better.mp3"
@@ -723,6 +788,7 @@ async def test_play_sonos_playlist(
         ),
     ],
 )
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_line_in_tv(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -825,6 +891,7 @@ async def test_select_source_line_in_tv(
         ),
     ],
 )
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_play_uri(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -866,6 +933,7 @@ async def test_select_source_play_uri(
         ),
     ],
 )
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_play_queue(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -897,6 +965,7 @@ async def test_select_source_play_queue(
     soco_mock.play_from_queue.assert_called_with(0)
 
 
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_error(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -1425,16 +1494,26 @@ async def test_media_get_queue(
     assert result == snapshot
 
 
+FAVORITE_TITLES = [
+    "66 - Watercolors",
+    "Les P'tits Bateaux",
+    "James Taylor Radio",
+    "1984",
+    "American Tall Tales",
+    "sample playlist",
+]
+
+
 @pytest.mark.parametrize(
     ("speaker_model", "source_list"),
     [
-        ("Sonos Arc Ultra", [SOURCE_TV]),
-        ("Sonos Arc", [SOURCE_TV]),
-        ("Sonos Playbar", [SOURCE_TV]),
-        ("Sonos Connect", [SOURCE_LINEIN]),
-        ("Sonos Play:5", [SOURCE_LINEIN]),
-        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV]),
-        ("Sonos Era", None),
+        ("Sonos Arc Ultra", [SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Arc", [SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Playbar", [SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Connect", [SOURCE_LINEIN, *FAVORITE_TITLES]),
+        ("Sonos Play:5", [SOURCE_LINEIN, *FAVORITE_TITLES]),
+        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Era", FAVORITE_TITLES),
     ],
     indirect=["speaker_model"],
 )
@@ -1442,11 +1521,69 @@ async def test_media_source_list(
     hass: HomeAssistant,
     async_autosetup_sonos,
     speaker_model: str,
-    source_list: list[str] | None,
+    source_list: list[str],
 ) -> None:
     """Test the mapping between the speaker model name and source_list."""
     state = hass.states.get("media_player.zone_a")
     assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == source_list
+    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
+    assert features & MediaPlayerEntityFeature.SELECT_SOURCE
+
+
+@pytest.mark.parametrize(
+    ("speaker_model", "expected_sources", "expected_after_clear"),
+    [
+        ("Model Name", FAVORITE_TITLES, None),
+        ("Sonos Arc Ultra", [SOURCE_TV, *FAVORITE_TITLES], [SOURCE_TV]),
+        (
+            "Sonos Amp",
+            [SOURCE_LINEIN, SOURCE_TV, *FAVORITE_TITLES],
+            [SOURCE_LINEIN, SOURCE_TV],
+        ),
+    ],
+    indirect=["speaker_model"],
+)
+async def test_source_list_favorites_cleared(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    speaker_model: str,
+    expected_sources: list[str],
+    expected_after_clear: list[str] | None,
+) -> None:
+    """Test source_list and SELECT_SOURCE update when favorites are cleared."""
+    entity_id = "media_player.zone_a"
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == expected_sources
+    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
+    assert features & MediaPlayerEntityFeature.SELECT_SOURCE
+
+    # Clear favorites via the music library mock
+    empty_favorites = SearchResult([], "favorites", 0, 0, 2)
+    soco.music_library.get_sonos_favorites.return_value = empty_favorites
+    soco.music_library.get_music_library_information.side_effect = None
+    soco.music_library.get_music_library_information.return_value = SearchResult(
+        [], "sonos_playlists", 0, 0, 0
+    )
+
+    # Trigger a favorites cache update via the content directory event
+    service = soco.contentDirectory
+    subscription = service.subscribe.return_value
+    favorites_event = SonosMockEvent(
+        soco,
+        service,
+        {"favorites_update_id": "2", "container_update_i_ds": "FV:2,2"},
+    )
+    subscription.callback(event=favorites_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == expected_after_clear
+    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
+    assert bool(features & MediaPlayerEntityFeature.SELECT_SOURCE) == (
+        expected_after_clear is not None
+    )
 
 
 async def test_service_update_alarm(

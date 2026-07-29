@@ -2007,7 +2007,7 @@ async def test_result_stream_message_set_idempotent(
 async def test_tts_cache() -> None:
     """Test TTSCache."""
 
-    async def data_gen(queue: asyncio.Queue[bytes | None | Exception]):
+    async def data_gen(queue: asyncio.Queue[bytes | Exception | None]):
         while chunk := await queue.get():
             if isinstance(chunk, Exception):
                 raise chunk

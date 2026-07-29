@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 from fitbit_web_api.models.device import Device
 
@@ -638,6 +638,7 @@ class FitbitSensor(SensorEntity):
             self._attr_available = True
             self._attr_native_value = self.entity_description.value_fn(result)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -677,6 +678,7 @@ class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEnti
             self._attr_entity_registry_enabled_default = True
 
     @property
+    @override
     def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         if self.device.battery is not None and (
@@ -686,6 +688,7 @@ class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEnti
         return self.entity_description.icon
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
         return {
@@ -693,12 +696,14 @@ class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEnti
             "type": self.device.type.lower() if self.device.type is not None else None,
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass update state from existing coordinator data."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.device = self.coordinator.data[cast(str, self.device.id)]
@@ -733,12 +738,14 @@ class FitbitBatteryLevelSensor(
             model=device.device_version,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass update state from existing coordinator data."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.device = self.coordinator.data[cast(str, self.device.id)]

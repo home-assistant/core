@@ -2,9 +2,8 @@
 
 from collections.abc import Mapping
 import ipaddress
-import logging
 import socket
-from typing import Any, Self
+from typing import Any, Self, override
 from urllib.parse import ParseResult, urlparse
 
 from fritzconnection import FritzConnection
@@ -50,10 +49,9 @@ from .const import (
     ERROR_UNKNOWN,
     ERROR_UPNP_NOT_CONFIGURED,
     FRITZ_AUTH_EXCEPTIONS,
+    LOGGER,
 )
 from .coordinator import FritzConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -65,6 +63,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: FritzConfigEntry,
     ) -> FritzBoxToolsOptionsFlowHandler:
@@ -97,13 +96,14 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 use_tls=self._use_tls,
                 timeout=60.0,
                 pool_maxsize=30,
+                redact_debug_log=True,
             )
         except FRITZ_AUTH_EXCEPTIONS:
             return ERROR_AUTH_INVALID
         except FritzConnectionException:
             return ERROR_CANNOT_CONNECT
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected exception")
             return ERROR_UNKNOWN
 
         self._model = connection.call_action("DeviceInfo:1", "GetInfo")["NewModelName"]
@@ -155,6 +155,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             return int(port)
         return DEFAULT_HTTPS_PORT if user_input[CONF_SSL] else DEFAULT_HTTP_PORT
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -193,6 +194,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow._host == self._host
@@ -263,6 +265,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

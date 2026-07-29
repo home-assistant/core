@@ -2,7 +2,7 @@
 
 import dataclasses
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from miio import Device as MiioDevice
 
@@ -84,6 +84,7 @@ from .const import (
     MODEL_FAN_P10,
     MODEL_FAN_P11,
     MODEL_FAN_P18,
+    MODEL_FAN_P33,
     MODEL_FAN_SA1,
     MODEL_FAN_V2,
     MODEL_FAN_V3,
@@ -257,6 +258,7 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11_P18,
     MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11_P18,
     MODEL_FAN_P18: FEATURE_FLAGS_FAN_P10_P11_P18,
+    MODEL_FAN_P33: FEATURE_FLAGS_FAN_P10_P11_P18,
     MODEL_FAN_P5: FEATURE_FLAGS_FAN_P5,
     MODEL_FAN_P9: FEATURE_FLAGS_FAN_P9,
     MODEL_FAN_SA1: FEATURE_FLAGS_FAN,
@@ -275,6 +277,7 @@ OSCILLATION_ANGLE_VALUES = {
     MODEL_FAN_P10: OscillationAngleValues(max_value=140, min_value=30, step=30),
     MODEL_FAN_P11: OscillationAngleValues(max_value=140, min_value=30, step=30),
     MODEL_FAN_P18: OscillationAngleValues(max_value=140, min_value=30, step=30),
+    MODEL_FAN_P33: OscillationAngleValues(max_value=140, min_value=30, step=30),
 }
 
 FAVORITE_LEVEL_VALUES = {
@@ -373,6 +376,7 @@ class XiaomiNumberEntity(
         self.entity_description = description
 
     @property
+    @override
     def available(self) -> bool:
         """Return the number controller availability."""
         if (
@@ -383,6 +387,7 @@ class XiaomiNumberEntity(
             return False
         return super().available
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set an option of the miio device."""
         method = getattr(self, self.entity_description.method)
@@ -391,6 +396,7 @@ class XiaomiNumberEntity(
             self.async_write_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.

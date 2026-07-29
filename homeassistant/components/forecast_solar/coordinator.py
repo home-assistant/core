@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the Forecast.Solar integration."""
 
 from datetime import timedelta
+from typing import override
 
 from forecast_solar import Estimate, ForecastSolar, ForecastSolarConnectionError, Plane
 
@@ -88,6 +89,7 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
             update_interval=update_interval,
         )
 
+    @override
     async def _async_update_data(self) -> Estimate:
         """Fetch Forecast.Solar estimates."""
         try:

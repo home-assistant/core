@@ -1,6 +1,6 @@
 """WiZ integration light platform."""
 
-from typing import Any
+from typing import Any, override
 
 from pywizlight import PilotBuilder
 from pywizlight.bulblibrary import BulbClass, BulbType, Features
@@ -92,6 +92,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         self._async_update_attrs()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         state = self._device.state
@@ -125,6 +126,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
 
         super()._async_update_attrs()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         await self._device.turn_on(_async_pilot_builder(**kwargs))

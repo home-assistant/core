@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from youless_api import YoulessAPI
 
@@ -33,7 +34,7 @@ class YouLessSensorEntityDescription(SensorEntityDescription):
     """Describes a YouLess sensor entity."""
 
     device_group: str
-    value_func: Callable[[YoulessAPI], float | None | str]
+    value_func: Callable[[YoulessAPI], float | str | None]
 
 
 SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
@@ -335,10 +336,11 @@ class YouLessSensor(YouLessEntity, SensorEntity):
             f"{device}_{description.device_group}",
             description.device_group,
         )
-        self._attr_unique_id = f"{DOMAIN}_{device}_{description.key}"
+        self._attr_unique_id = f"{DOMAIN}_{device}_{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_func(self.device)

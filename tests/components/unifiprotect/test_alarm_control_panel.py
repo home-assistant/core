@@ -286,7 +286,7 @@ async def test_alarm_panel_unavailable_on_ws_disconnect(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
 ) -> None:
-    """Entity becomes unavailable when the private WebSocket disconnects."""
+    """Entity becomes unavailable when the public devices WebSocket disconnects."""
     arm_mode = _make_arm_mode(NvrArmModeStatus.ARMED)
     pb = _make_public_bootstrap(arm_mode)
     ufp.api.has_public_bootstrap = True
@@ -298,16 +298,47 @@ async def test_alarm_panel_unavailable_on_ws_disconnect(
     assert state is not None
     assert state.state == AlarmControlPanelState.ARMED_AWAY
 
-    ufp.ws_state_subscription(WebsocketState.DISCONNECTED)
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
 
     state = hass.states.get(ALARM_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    ufp.ws_state_subscription(WebsocketState.CONNECTED)
+    ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
     await hass.async_block_till_done()
 
     state = hass.states.get(ALARM_ENTITY_ID)
     assert state is not None
     assert state.state == AlarmControlPanelState.ARMED_AWAY
+
+
+async def test_alarm_panel_availability_decoupled_from_private_websocket(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """Alarm availability follows the public WS only: private loss is a no-op."""
+    arm_mode = _make_arm_mode(NvrArmModeStatus.ARMED)
+    pb = _make_public_bootstrap(arm_mode)
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+    await init_entry(hass, ufp, [])
+    state = hass.states.get(ALARM_ENTITY_ID)
+    assert state is not None
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
+
+    # A private WS loss does not affect the alarm panel.
+    assert ufp.ws_state_subscription is not None
+    ufp.ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    state = hass.states.get(ALARM_ENTITY_ID)
+    assert state is not None
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
+
+    # The public WS loss does flip it unavailable.
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    state = hass.states.get(ALARM_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

@@ -4,14 +4,12 @@ import asyncio
 from collections.abc import AsyncIterable
 from functools import partial
 import hashlib
-import io
 from itertools import chain
 import json
 import logging
 from pathlib import Path
 import socket
-from typing import Any, cast
-import wave
+from typing import Any, cast, override
 
 from aioesphomeapi import (
     MediaPlayerFormatPurpose,
@@ -53,6 +51,7 @@ from .entity import EsphomeAssistEntity, convert_api_error_ha_error
 from .entry_data import ESPHomeConfigEntry
 from .enum_mapper import EsphomeEnumMapper
 from .ffmpeg_proxy import async_create_proxy_url
+from .wav_parser import stream_wav
 
 PARALLEL_UPDATES = 0
 
@@ -186,6 +185,7 @@ class EsphomeAssistSatellite(
         )
 
     @property
+    @override
     def pipeline_entity_id(self) -> str | None:
         """Return the entity ID of the pipeline to use for the next conversation."""
         return self.get_pipeline_entity(self._active_pipeline_index)
@@ -201,17 +201,20 @@ class EsphomeAssistSatellite(
         return self._get_entity_id(f"wake_word{id_suffix}")
 
     @property
+    @override
     def vad_sensitivity_entity_id(self) -> str | None:
         """Return the entity ID of the VAD sensitivity for the next conversation."""
         return self._get_entity_id("vad_sensitivity")
 
     @callback
+    @override
     def async_get_configuration(
         self,
     ) -> assist_satellite.AssistSatelliteConfiguration:
         """Get the current satellite configuration."""
         return self._satellite_config
 
+    @override
     async def async_set_configuration(
         self, config: assist_satellite.AssistSatelliteConfiguration
     ) -> None:
@@ -255,6 +258,7 @@ class EsphomeAssistSatellite(
         # Inform listeners that config has been updated
         self._entry_data.async_assist_satellite_config_updated(self._satellite_config)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -327,6 +331,7 @@ class EsphomeAssistSatellite(
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -334,6 +339,7 @@ class EsphomeAssistSatellite(
         self._is_running = False
         self._stop_pipeline()
 
+    @override
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Handle pipeline events."""
         try:
@@ -372,11 +378,15 @@ class EsphomeAssistSatellite(
             data_to_send = {"tts_start_streaming": "1"}
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END:
             assert event.data is not None
+            intent_output = event.data["intent_output"]
             data_to_send = {
-                "conversation_id": event.data["intent_output"]["conversation_id"],
+                "conversation_id": intent_output["conversation_id"],
                 "continue_conversation": str(
-                    int(event.data["intent_output"]["continue_conversation"])
+                    int(intent_output["continue_conversation"])
                 ),
+                "speech": intent_output["response"]["speech"]
+                .get("plain", {})
+                .get("speech", ""),
             }
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
             assert event.data is not None
@@ -432,6 +442,7 @@ class EsphomeAssistSatellite(
         self.cli.send_voice_assistant_event(event_type, data_to_send)
 
     @convert_api_error_ha_error
+    @override
     async def async_announce(
         self, announcement: assist_satellite.AssistSatelliteAnnouncement
     ) -> None:
@@ -442,6 +453,7 @@ class EsphomeAssistSatellite(
         await self._do_announce(announcement, run_pipeline_after=False)
 
     @convert_api_error_ha_error
+    @override
     async def async_start_conversation(
         self, start_announcement: assist_satellite.AssistSatelliteAnnouncement
     ) -> None:
@@ -713,36 +725,41 @@ class EsphomeAssistSatellite(
                 )
                 return
 
-            data = b"".join([chunk async for chunk in tts_result.async_stream_result()])
+            seconds_in_chunk = samples_per_chunk / sample_rate
+            start_time: float | None = None
+            audio_duration_sent = 0.0
 
-            with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
-                if (
-                    (wav_file.getframerate() != sample_rate)
-                    or (wav_file.getsampwidth() != sample_width)
-                    or (wav_file.getnchannels() != sample_channels)
-                ):
-                    _LOGGER.error("Can only stream 16Khz 16-bit mono WAV")
-                    return
+            async for chunk, is_last in stream_wav(
+                tts_result.async_stream_result(),
+                expected_format="pcm",
+                expected_channels=sample_channels,
+                expected_width=sample_width,
+                expected_sample_rate=sample_rate,
+                samples_per_chunk=samples_per_chunk,
+            ):
+                if not self._is_running:
+                    break  # type: ignore[unreachable]
 
-                _LOGGER.debug("Streaming %s audio samples", wav_file.getnframes())
+                if start_time is None:
+                    start_time = asyncio.get_running_loop().time()
 
-                while self._is_running:
-                    chunk = wav_file.readframes(samples_per_chunk)
-                    if not chunk:
-                        break
+                self._send_tts_audio(chunk)
 
-                    if self._udp_server is not None:
-                        self._udp_server.send_audio_bytes(chunk)
-                    else:
-                        self.cli.send_voice_assistant_audio(chunk)
+                audio_duration_sent += seconds_in_chunk
 
-                    # Wait for 90% of the duration of the audio that was
-                    # sent for it to be played.  This will overrun the
-                    # device's buffer for very long audio, so using a media
-                    # player is preferred.
-                    samples_in_chunk = len(chunk) // (sample_width * sample_channels)
-                    seconds_in_chunk = samples_in_chunk / sample_rate
-                    await asyncio.sleep(seconds_in_chunk * 0.9)
+                if is_last:
+                    break
+
+                # The ring buffer in the remote device is fixed at 512ms.
+                # We want to keep it at around 384ms (75% full) to prevent
+                # the buffer from overflowing or underflowing.
+                assert start_time is not None
+                elapsed = asyncio.get_running_loop().time() - start_time
+                if (wait_time := (audio_duration_sent - 0.384) - elapsed) > 0:
+                    await asyncio.sleep(wait_time)
+
+        except ValueError as err:
+            _LOGGER.error("Error streaming WAV: %s", err)
         except asyncio.CancelledError:
             return  # Don't trigger state change
         finally:
@@ -753,6 +770,13 @@ class EsphomeAssistSatellite(
         # State change
         self.tts_response_finished()
         self._entry_data.async_set_assist_pipeline_state(False)
+
+    def _send_tts_audio(self, payload: bytes) -> None:
+        """Send TTS audio via API or UDP."""
+        if self._udp_server is not None:
+            self._udp_server.send_audio_bytes(payload)
+        else:
+            self.cli.send_voice_assistant_audio(payload)
 
     async def _wrap_audio_stream(self) -> AsyncIterable[bytes]:
         """Yield audio chunks from the queue until None."""
@@ -820,10 +844,12 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         super().__init__(*args, **kwargs)
         self._audio_queue = audio_queue
 
+    @override
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         """Store transport for later use."""
         self.transport = cast(asyncio.DatagramTransport, transport)
 
+    @override
     def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         """Handle incoming UDP packet."""
         if self.remote_addr is None:
@@ -831,6 +857,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
         self._audio_queue.put_nowait(data)
 
+    @override
     def error_received(self, exc: Exception) -> None:
         """Handle when a send or receive operation raises an OSError.
 
