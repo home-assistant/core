@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
 import logging
-from typing import Any, Literal, TypeGuard, override
+from typing import Any, Literal, TypeIs, override
 
 import voluptuous as vol
 
@@ -45,10 +45,12 @@ ATTR_AFTER = "after"
 ATTR_BEFORE = "before"
 ATTR_NEXT_UPDATE = "next_update"
 
+TIME_OR_SUN_EVENT = vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event))
+
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_AFTER): vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event)),
-        vol.Required(CONF_BEFORE): vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event)),
+        vol.Required(CONF_AFTER): TIME_OR_SUN_EVENT,
+        vol.Required(CONF_BEFORE): TIME_OR_SUN_EVENT,
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_period,
         vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
@@ -67,9 +69,9 @@ async def async_setup_entry(
         _LOGGER.error("Timezone is not set in Home Assistant configuration")  # type: ignore[unreachable]
         return
 
-    after = cv.time(config_entry.options[CONF_AFTER_TIME])
+    after = TIME_OR_SUN_EVENT(config_entry.options[CONF_AFTER_TIME])
     after_offset = timedelta(0)
-    before = cv.time(config_entry.options[CONF_BEFORE_TIME])
+    before = TIME_OR_SUN_EVENT(config_entry.options[CONF_BEFORE_TIME])
     before_offset = timedelta(0)
     name = config_entry.title
     unique_id = config_entry.entry_id
@@ -101,7 +103,7 @@ async def async_setup_platform(
     async_add_entities([sensor])
 
 
-def _is_sun_event(sun_event: time | SunEventType) -> TypeGuard[SunEventType]:
+def _is_sun_event(sun_event: time | SunEventType) -> TypeIs[SunEventType]:
     """Return true if event is sun event not time."""
     return sun_event in (SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 
@@ -117,9 +119,9 @@ class TodSensor(BinarySensorEntity):
     def __init__(
         self,
         name: str,
-        after: time,
+        after: time | SunEventType,
         after_offset: timedelta,
-        before: time,
+        before: time | SunEventType,
         before_offset: timedelta,
         unique_id: str | None,
     ) -> None:
