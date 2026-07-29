@@ -1,5 +1,7 @@
 """Base entities for the Nature Remo integration."""
 
+from typing import override
+
 from aionatureremo import Appliance, Device
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -79,6 +81,7 @@ class NatureRemoDeviceEntity(CoordinatorEntity[NatureRemoCoordinator]):
         return self._last_device
 
     @property
+    @override
     def available(self) -> bool:
         """Unavailable when the device disappears or reports itself offline.
 
@@ -124,6 +127,7 @@ class NatureRemoApplianceEntity(CoordinatorEntity[NatureRemoCoordinator]):
         return self._last_appliance
 
     @property
+    @override
     def available(self) -> bool:
         """Unavailable when the appliance disappears from the account."""
         return (

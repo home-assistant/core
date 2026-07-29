@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from aionatureremo import (
     APPLIANCE_TYPE_SMART_METER,
@@ -173,6 +174,7 @@ class NatureRemoDeviceSensor(NatureRemoDeviceEntity, SensorEntity):
         self._attr_unique_id = f"{device_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the current value."""
         return self.entity_description.value_fn(self.device)
@@ -195,6 +197,7 @@ class NatureRemoSmartMeterSensor(NatureRemoApplianceEntity, SensorEntity):
         self._attr_unique_id = f"{appliance_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the current value."""
         meter = self.appliance.smart_meter

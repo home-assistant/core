@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from aionatureremo import (
     Appliance,
@@ -53,6 +54,7 @@ class NatureRemoCoordinator(DataUpdateCoordinator[NatureRemoData]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> NatureRemoData:
         """Fetch devices and appliances (two API calls, sequential)."""
         # Sequential rather than gather: deterministic error attribution and

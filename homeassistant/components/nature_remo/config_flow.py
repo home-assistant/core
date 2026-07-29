@@ -1,7 +1,7 @@
 """Config flow for the Nature Remo integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aionatureremo import NatureRemoAuthError, NatureRemoClient, NatureRemoError, User
 import voluptuous as vol
@@ -40,6 +40,7 @@ class NatureRemoConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected error validating the access token")
             return None, "unknown"
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
