@@ -1,7 +1,7 @@
 """Tests for REST config_flow.py."""
 
+from http import HTTPStatus
 from typing import Any
-from unittest.mock import ANY
 
 from aiohttp import ClientError
 import pytest
@@ -13,7 +13,6 @@ from homeassistant.components.rest.const import (
     DOMAIN,
 )
 from homeassistant.const import (
-    CONF_HEADERS,
     CONF_ICON,
     CONF_NAME,
     CONF_PARAMS,
@@ -22,7 +21,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from .conftest import async_setup_entry
 
@@ -30,13 +29,19 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-@pytest.mark.usefixtures("async_mock_resource")
 async def test_entry_and_subentries(
     hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
-    get_subentry_data: dict[str, Any],
+    get_subentry_data: list[config_entries.ConfigSubentryData],
 ) -> None:
     """Test the basic config flow and subentry flow."""
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        json={"key": "on"},
+        params={"fake_param": "fake_value"},
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -46,7 +51,12 @@ async def test_entry_and_subentries(
     assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], get_config_entry_data | {CONF_PAYLOAD: "test payload"}
+        result["flow_id"],
+        get_config_entry_data
+        | {
+            CONF_PAYLOAD: "test payload",
+            CONF_PARAMS: [{"key": "fake_param", "value": "fake_value"}],
+        },
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -175,16 +185,8 @@ async def test_config_invalid_input(
     user_input = {
         **get_config_entry_data,
         CONF_ENCODING: "fake_encoding",
-        CONF_PARAMS: "not_a_dictionary",
-        CONF_HEADERS: {"fake_key": "{{ 'fake_data' }"},
     }
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {
-        CONF_ENCODING: "codec not found",
-        CONF_HEADERS: "template_err_1",
-        CONF_PARAMS: "expected a dictionary",
-    }
-    assert result["description_placeholders"] == {"template_err_msg_1": ANY}
+    with pytest.raises(InvalidData) as ex:
+        await hass.config_entries.flow.async_configure(result["flow_id"], user_input)
+
+    assert ex.value.error_message == "codec not found"

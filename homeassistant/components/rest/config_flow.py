@@ -3,8 +3,6 @@
 from re import search
 from typing import Any, override
 
-import voluptuous as vol
-
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     SOURCE_USER,
@@ -17,8 +15,7 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_NAME, CONF_RESOURCE, Platform
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
+from homeassistant.core import callback
 from homeassistant.helpers.template import Template
 
 from . import CONFIG_ENTRY_PLATFORMS, create_rest_data_from_config_entry
@@ -30,13 +27,11 @@ from .const import (
     DOMAIN,
     OPTION_NONE,
 )
-from .data import RestData
 from .schema import (
     BINARY_SENSOR_SCHEMA,
     BINARY_SENSOR_SUBENTRY_FLOW_SCHEMA,
     CREATE_ENTRY_SCHEMA,
     RESOURCE_FLOW_SCHEMA,
-    RESOURCE_VALIDATION_SCHEMA,
 )
 
 FLOW_SCHEMA = "flow_schema"
@@ -50,38 +45,6 @@ SUBENTRY_CONFIG: dict[Platform, dict[str, Any]] = {
         VALIDATION_SCHEMA: BINARY_SENSOR_SCHEMA,
     }
 }
-
-
-async def _validate_input(
-    hass: HomeAssistant, user_input: dict[str, Any]
-) -> tuple[dict[str, str], dict[str, str]]:
-    try:
-        vol.Schema(RESOURCE_VALIDATION_SCHEMA)(user_input)
-        rest: RestData = create_rest_data_from_config_entry(hass, user_input)
-        await rest.async_update()
-        if rest.last_exception:
-            return (
-                {"base": "endpoint_error"},
-                {"error_message": str(rest.last_exception)},
-            )
-    except vol.Invalid as ex:
-        errors: dict[str, str] = {}
-        placeholders: dict[str, str] = {}
-        template_err_index: int = 0
-        # This will map the error to the appropriate field as ObjectSelectors do not
-        # validate templates by default
-        for error in ex.errors if isinstance(ex, vol.MultipleInvalid) else [ex]:
-            if isinstance(error.__cause__, TemplateError):
-                template_err_index += 1
-                errors[str(error.path[0])] = f"template_err_{template_err_index}"
-                prepend: str = f"{error.path[1]}: " if len(error.path) > 1 else ""
-                placeholders[f"template_err_msg_{template_err_index}"] = (
-                    f"{prepend}{error.__cause__!s}"
-                )
-            else:
-                errors[str(error.path[0])] = error.error_message
-        return (errors, placeholders)
-    return ({}, {})
 
 
 class RestConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -113,10 +76,14 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """First step in config flow."""
         errors: dict[str, str] = {}
-        placeholders: dict[str, Any] = {}
+        placeholders: dict[str, str] = {}
         if user_input is not None:
-            errors, placeholders = await _validate_input(self.hass, user_input)
-            if not errors:
+            rest = create_rest_data_from_config_entry(self.hass, user_input)
+            await rest.async_update()
+            if rest.last_exception:
+                errors["base"] = "endpoint_error"
+                placeholders["error_message"] = str(rest.last_exception)
+            else:
                 if self.source == SOURCE_USER:
                     self._data = user_input
                     return await self.async_step_create_entry()

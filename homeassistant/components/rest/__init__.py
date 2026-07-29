@@ -268,13 +268,18 @@ def create_rest_data_from_config_entry(
     mutable_config[CONF_RESOURCE_TEMPLATE] = mutable_config.pop(CONF_RESOURCE)
     if mutable_config.get(CONF_PAYLOAD):
         mutable_config[CONF_PAYLOAD_TEMPLATE] = mutable_config.pop(CONF_PAYLOAD)
+    for key in (CONF_PARAMS, CONF_HEADERS):
+        if key in mutable_config:
+            mutable_config[key] = {
+                param["key"]: param["value"] for param in mutable_config[key]
+            }
     # Flatten to match .yaml format
     ssl: dict[str, Any] = mutable_config.pop(CONF_SSL_SECTION)
     auth: dict[str, Any] = mutable_config.pop(CONF_AUTHENTICATION)
     return create_rest_data_from_config(
         hass,
         vol.Schema(RESOURCE_SCHEMA, extra=vol.REMOVE_EXTRA)(
-            {**mutable_config, **ssl, **auth}
+            mutable_config | ssl | auth
         ),  # To convert templates
     )
 

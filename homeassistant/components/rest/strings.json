@@ -22,12 +22,7 @@
       "codec not found": "Encoding not supported",
       "credentials_missing": "Username and password are both required",
       "endpoint_error": "Error communicating with resource: {error_message}",
-      "expected a dictionary": "Expected a yaml dictionary",
-      "invalid url": "Invalid URL",
-      "template_err_1": "Invalid template {template_err_msg_1}",
-      "template_err_2": "Invalid template {template_err_msg_2}",
-      "template_err_3": "Invalid template {template_err_msg_3}",
-      "template_err_4": "Invalid template {template_err_msg_4}"
+      "invalid url": "Invalid URL"
     },
     "initiate_flow": {
       "user": "Add RESTful Resource"
@@ -51,9 +46,7 @@
         },
         "data_description": {
           "encoding": "The character encoding to use if none provided in the header of the response.",
-          "headers": "Request headers as a yaml dictionary (`key: value`) to be sent with the request, supports templates.",
           "name": "The title of the resource entity.",
-          "params": "Query parameters as a yaml dictionary (`key: value`) to be sent with the request, supports templates.",
           "payload": "The request body payload to send with the request, typically json, supports templates.",
           "resource": "A resource or endpoint that contains the value, supports templates."
         },
@@ -184,6 +177,18 @@
       "options": {
         "binary_sensor": "[%key:component::binary_sensor::title%]",
         "z_none": "None, create RESTful resource only"
+      }
+    },
+    "headers": {
+      "fields": {
+        "key": "HTTP Header",
+        "value": "Header Value"
+      }
+    },
+    "params": {
+      "fields": {
+        "key": "Query Parameter",
+        "value": "Parameter Value"
       }
     }
   },

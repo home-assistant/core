@@ -1,7 +1,7 @@
 """The rest component schemas."""
 
 from codecs import lookup as codec_lookup
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -35,7 +35,6 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
@@ -133,9 +132,53 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+
+class TemplateURLSelector(selector.TemplateSelector):
+    """Selector to validate templated urls."""
+
+    @override
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        template = cv.template(data)
+        cv.url(template.async_render())
+        return template.template
+
+
+class EncodingSelector(selector.TextSelector):
+    """Selector to validate text encoding."""
+
+    @override
+    def __call__(self, data: Any) -> str | list[str]:
+        encoding = str(super().__call__(data))
+        try:
+            codec_lookup(encoding)
+        except LookupError:
+            raise vol.Invalid("codec not found") from None
+        return encoding
+
+
+def _object_selector(translation_key: str) -> selector.ObjectSelector:
+    return selector.ObjectSelector(
+        selector.ObjectSelectorConfig(
+            fields={
+                "key": selector.ObjectSelectorField(
+                    required=True, selector=selector.TemplateSelector()
+                ),
+                "value": selector.ObjectSelectorField(
+                    required=True, selector=selector.TemplateSelector()
+                ),
+            },
+            multiple=True,
+            label_field="key",
+            description_field="value",
+            translation_key=translation_key,
+        )
+    )
+
+
 RESOURCE_FLOW_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_RESOURCE): selector.TemplateSelector(),
+        vol.Required(CONF_RESOURCE): TemplateURLSelector(),
         vol.Required(CONF_METHOD, default=DEFAULT_METHOD): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=METHODS, mode=selector.SelectSelectorMode.DROPDOWN
@@ -166,8 +209,8 @@ RESOURCE_FLOW_SCHEMA = vol.Schema(
             ),
             options=SectionConfig(collapsed=True),
         ),
-        vol.Optional(CONF_HEADERS): selector.ObjectSelector(),
-        vol.Optional(CONF_PARAMS): selector.ObjectSelector(),
+        vol.Optional(CONF_HEADERS): _object_selector(CONF_HEADERS),
+        vol.Optional(CONF_PARAMS): _object_selector(CONF_PARAMS),
         vol.Optional(CONF_PAYLOAD): selector.TemplateSelector(),
         vol.Required(CONF_SSL_SECTION): section(
             vol.Schema(
@@ -201,51 +244,7 @@ RESOURCE_FLOW_SCHEMA = vol.Schema(
                 unit_of_measurement=UnitOfTime.SECONDS,
             )
         ),
-        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): selector.TextSelector(),
-    }
-)
-
-
-def _template_url(value: Any) -> Template:
-    template = cv.template(value)
-    cv.url(template.async_render(parse_result=False))
-    return template
-
-
-def _valid_codec(value: Any) -> Any:
-    try:
-        codec_lookup(value)
-    except LookupError:
-        raise vol.Invalid("codec not found") from None
-    return value
-
-
-RESOURCE_VALIDATION_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_RESOURCE): _template_url,
-        vol.Required(CONF_METHOD): cv.string,
-        vol.Required(CONF_AUTHENTICATION): vol.Schema(
-            {
-                vol.Required(CONF_AUTHENTICATION): cv.string,
-                vol.Inclusive(
-                    CONF_USERNAME, CONF_AUTHENTICATION, msg="credentials_missing"
-                ): cv.string,
-                vol.Inclusive(
-                    CONF_PASSWORD, CONF_AUTHENTICATION, msg="credentials_missing"
-                ): cv.string,
-            },
-        ),
-        vol.Optional(CONF_HEADERS): vol.Schema({cv.template: cv.template}),
-        vol.Optional(CONF_PARAMS): vol.Schema({cv.template: cv.template}),
-        vol.Optional(CONF_PAYLOAD): cv.template,
-        vol.Required(CONF_SSL_SECTION): vol.Schema(
-            {
-                vol.Required(CONF_VERIFY_SSL): cv.boolean,
-                vol.Required(CONF_SSL_CIPHER_LIST): vol.In(SSLCipherList),
-            }
-        ),
-        vol.Optional(CONF_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_ENCODING): _valid_codec,
+        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): EncodingSelector(),
     }
 )
 

@@ -711,7 +711,7 @@ async def test_setup_get_basic_auth_utf8(
 async def test_setup_from_config_entry(
     hass: HomeAssistant,
     get_config_entry_data: dict[str, Any],
-    get_subentry_data: dict[str, Any],
+    get_subentry_data: list[ConfigSubentryData],
 ) -> None:
     """Test platform setup from config_entry."""
     entry = await async_setup_entry(
