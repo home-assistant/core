@@ -233,14 +233,17 @@ class WatcherBase:
         registered_devices_domains = matchers.registered_devices_domains
 
         dev_reg = dr.async_get(self.hass)
-        if device := dev_reg.async_get_device(
+        # Several config entries can each own a device for the same MAC, so check every
+        # matching device, not just the first, or a shared-MAC integration is dropped.
+        for device in dev_reg.async_get_devices(
             connections={(CONNECTION_NETWORK_MAC, formatted_mac)}
         ):
-            for entry_id in device.config_entries:
-                if (
-                    entry := self.hass.config_entries.async_get_entry(entry_id)
-                ) and entry.domain in registered_devices_domains:
-                    matched_domains.add(entry.domain)
+            if (
+                entry := self.hass.config_entries.async_get_entry(
+                    device.config_entry_id
+                )
+            ) and entry.domain in registered_devices_domains:
+                matched_domains.add(entry.domain)
 
         oui = uppercase_mac[:6]
         lowercase_hostname_first_char = (
