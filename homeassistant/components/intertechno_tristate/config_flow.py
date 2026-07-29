@@ -1,7 +1,6 @@
 """Config flow for the Intertechno TriState integration."""
 
-from typing import Any
-from typing import override
+from typing import Any, override
 
 from rf_protocols.commands import ModulationType
 from rf_protocols.commands.pt2262 import PT2262Command
