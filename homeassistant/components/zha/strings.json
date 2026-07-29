@@ -428,6 +428,21 @@
       "reset_summation_delivered_right": {
         "name": "Reset right summation delivered"
       },
+      "reset_total_energy": {
+        "name": "Reset total energy"
+      },
+      "reset_total_energy_bottom": {
+        "name": "Reset bottom total energy"
+      },
+      "reset_total_energy_left": {
+        "name": "Reset left total energy"
+      },
+      "reset_total_energy_right": {
+        "name": "Reset right total energy"
+      },
+      "reset_total_energy_top": {
+        "name": "Reset top total energy"
+      },
       "restart_device": {
         "name": "Restart device"
       },
@@ -595,6 +610,36 @@
       },
       "compensation_speed": {
         "name": "Compensation speed"
+      },
+      "countdown_to_turn_off": {
+        "name": "Countdown to turn off"
+      },
+      "countdown_to_turn_off_bottom": {
+        "name": "Countdown to turn off bottom"
+      },
+      "countdown_to_turn_off_left": {
+        "name": "Countdown to turn off left"
+      },
+      "countdown_to_turn_off_right": {
+        "name": "Countdown to turn off right"
+      },
+      "countdown_to_turn_off_top": {
+        "name": "Countdown to turn off top"
+      },
+      "countdown_to_turn_on": {
+        "name": "Countdown to turn on"
+      },
+      "countdown_to_turn_on_bottom": {
+        "name": "Countdown to turn on bottom"
+      },
+      "countdown_to_turn_on_left": {
+        "name": "Countdown to turn on left"
+      },
+      "countdown_to_turn_on_right": {
+        "name": "Countdown to turn on right"
+      },
+      "countdown_to_turn_on_top": {
+        "name": "Countdown to turn on top"
       },
       "deadzone_temperature": {
         "name": "Deadzone temperature"
@@ -914,6 +959,12 @@
       "portion_weight": {
         "name": "Portion weight"
       },
+      "power_drop_threshold": {
+        "name": "Power drop threshold"
+      },
+      "power_rise_threshold": {
+        "name": "Power rise threshold"
+      },
       "presence_detection_timeout": {
         "name": "Presence detection timeout"
       },
@@ -955,6 +1006,9 @@
       },
       "ramp_rate_on_to_off_remote": {
         "name": "Remote ramp rate on to off"
+      },
+      "red_led_brightness": {
+        "name": "Red LED brightness"
       },
       "regulation_setpoint_offset": {
         "name": "Regulation setpoint offset"
@@ -2076,6 +2130,9 @@
       },
       "manual_mode": {
         "name": "Manual mode"
+      },
+      "metering_only_mode": {
+        "name": "Metering only mode"
       },
       "mounting_mode": {
         "name": "Mounting mode"
