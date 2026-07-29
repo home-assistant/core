@@ -55,6 +55,9 @@
       "reset_lifespan_brush": {
         "name": "Reset main brush lifespan"
       },
+      "reset_lifespan_cleaning_solution": {
+        "name": "Reset cleaning solution lifespan"
+      },
       "reset_lifespan_dust_bag": {
         "name": "Reset dust bag lifespan"
       },
@@ -70,17 +73,29 @@
       "reset_lifespan_round_mop": {
         "name": "Reset round mop lifespan"
       },
+      "reset_lifespan_sewage_box": {
+        "name": "Reset sewage box lifespan"
+      },
       "reset_lifespan_side_brush": {
         "name": "Reset side brush lifespan"
       },
       "reset_lifespan_station_filter": {
         "name": "Reset station filter lifespan"
       },
+      "reset_lifespan_trimmer_brush": {
+        "name": "Reset edge trimmer brush lifespan"
+      },
       "reset_lifespan_unit_care": {
         "name": "Reset unit care lifespan"
       },
       "reset_lifespan_uv_sanitizer": {
         "name": "Reset UV sanitizer lifespan"
+      },
+      "reset_lifespan_water_sink": {
+        "name": "Reset water sink lifespan"
+      },
+      "reset_lifespan_weed_rope": {
+        "name": "Reset edge trimmer line lifespan"
       },
       "station_action_clean_base": {
         "name": "Clean base"
@@ -176,6 +191,9 @@
       "lifespan_brush": {
         "name": "Main brush lifespan"
       },
+      "lifespan_cleaning_solution": {
+        "name": "Cleaning solution lifespan"
+      },
       "lifespan_dust_bag": {
         "name": "Dust bag lifespan"
       },
@@ -194,14 +212,26 @@
       "lifespan_round_mop": {
         "name": "Round mop lifespan"
       },
+      "lifespan_sewage_box": {
+        "name": "Sewage box lifespan"
+      },
       "lifespan_side_brush": {
         "name": "Side brush lifespan"
+      },
+      "lifespan_trimmer_brush": {
+        "name": "Edge trimmer brush lifespan"
       },
       "lifespan_unit_care": {
         "name": "Unit care lifespan"
       },
       "lifespan_uv_sanitizer": {
         "name": "UV sanitizer lifespan"
+      },
+      "lifespan_water_sink": {
+        "name": "Water sink lifespan"
+      },
+      "lifespan_weed_rope": {
+        "name": "Edge trimmer line lifespan"
       },
       "network_ip": {
         "name": "IP address"

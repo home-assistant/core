@@ -1,6 +1,6 @@
 """WebSocket API for the HTTP integration user config."""
 
-from typing import Any
+from typing import Any, Final
 
 import voluptuous as vol
 
@@ -12,8 +12,11 @@ from homeassistant.components.homeassistant import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .config import HTTP_STORAGE_SCHEMA, async_get_and_load_store
-from .const import ATTR_CONFIG
+from .config import HTTP_STORAGE_SCHEMA, ConfData, async_get_and_load_store
+from .const import ATTR_CONFIG, CONF_SERVER_PORT
+from .server import async_verify_can_bind
+
+ERR_BIND_FAILED: Final = "bind_failed"
 
 
 @callback
@@ -36,8 +39,12 @@ async def websocket_get_config(
 
     ``stable`` is the confirmed-working config
     ``pending`` is an unconfirmed config awaiting promotion, or ``None``.
+    A pending config that failed its trial is kept with its ``error``
+    (and ``error_message``) recorded, but is never applied again.
     ``revert_at`` is when an unconfirmed pending config auto-reverts to
     stable, or ``None`` when no revert is scheduled.
+    ``active_config_type`` is the slot the running server was started with.
+    ``default`` is the built-in default config.
     """
     store = await async_get_and_load_store(hass)
     connection.send_result(
@@ -46,6 +53,8 @@ async def websocket_get_config(
             "stable": store.stable,
             "pending": store.pending,
             "revert_at": store.revert_deadline,
+            "active_config_type": store.active_config_type,
+            "default": store.default,
         },
     )
 
@@ -65,13 +74,28 @@ async def websocket_set_config(
 ) -> None:
     """Store a new pending HTTP configuration and restart to apply it.
 
+    A new config is first verified to be applicable by binding its
+    configured address, so an unusable config is rejected here instead of
+    being discovered after the restart. The check is skipped when the port
+    matches the currently bound one: the running server holds that port
+    until the restart releases it, so a probe would always fail against
+    ourselves.
+
     Restart whenever the pending slot changes, so the runtime config is
     refreshed. The result reports whether a restart was triggered via
     ``{"restart": bool}``.
     """
+    config: ConfData | None = msg[ATTR_CONFIG]
+    if config is not None and config[CONF_SERVER_PORT] != hass.http.server_port:
+        try:
+            await async_verify_can_bind(hass, config)
+        except HomeAssistantError as err:
+            connection.send_error(msg["id"], ERR_BIND_FAILED, str(err))
+            return
+
     store = await async_get_and_load_store(hass)
     previous_pending = store.pending
-    await store.async_set_pending(msg[ATTR_CONFIG])
+    await store.async_set_pending(config)
     restart = store.pending != previous_pending
     connection.send_result(msg["id"], {"restart": restart})
 
