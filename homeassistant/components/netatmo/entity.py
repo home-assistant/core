@@ -9,7 +9,6 @@ from pyatmo.modules.device_types import DEVICE_DESCRIPTION_MAP
 
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -145,10 +144,7 @@ class NetatmoRoomEntity(NetatmoDeviceEntity):
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
-        registry = dr.async_get(self.hass)
-        if device := registry.async_get_device(
-            identifiers={(DOMAIN, self.device.entity_id)}
-        ):
+        if device := self.device_entry:
             self.data_handler.device_ids[self.device.entity_id] = device.id
 
     @property
