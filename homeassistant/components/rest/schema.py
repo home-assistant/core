@@ -63,6 +63,7 @@ from .const import (
     DOMAIN,
     METHODS,
     MIN_SCAN_INTERVAL,
+    OPTION_NONE,
 )
 from .data import DEFAULT_TIMEOUT
 
@@ -255,6 +256,7 @@ RESOURCE_VALIDATION_SCHEMA = vol.Schema(
     }
 )
 
+
 OPTIONS_FLOW_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_SCAN_INTERVAL): selector.NumberSelector(
@@ -269,9 +271,11 @@ OPTIONS_FLOW_SCHEMA = vol.Schema(
 
 CREATE_ENTRY_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_INITIAL_SUBENTRY_TYPE): selector.SelectSelector(
+        vol.Required(
+            CONF_INITIAL_SUBENTRY_TYPE, default=OPTION_NONE
+        ): selector.SelectSelector(
             selector.SelectSelectorConfig(
-                options=CONFIG_ENTRY_PLATFORMS,
+                options=[*CONFIG_ENTRY_PLATFORMS, OPTION_NONE],
                 sort=True,
                 translation_key="entity_platforms",
             )

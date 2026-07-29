@@ -30,6 +30,7 @@ CONF_INITIAL_SUBENTRY_TYPE = "initial_subentry_type"
 CONF_JSON_ATTRS = "json_attributes"
 CONF_JSON_ATTRS_PATH = "json_attributes_path"
 
+OPTION_NONE = "z_none"  # sort last
 
 REST_IDX = "rest_idx"
 PLATFORM_IDX = "platform_idx"
