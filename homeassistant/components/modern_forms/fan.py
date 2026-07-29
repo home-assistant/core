@@ -21,6 +21,7 @@ from .const import (
     CLEAR_TIMER,
     OPT_ON,
     OPT_SPEED,
+    OPT_WIND,
     SERVICE_CLEAR_FAN_SLEEP_TIMER,
     SERVICE_SET_FAN_SLEEP_TIMER,
 )
@@ -162,18 +163,15 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        if preset_mode is not None:
-            await self.coordinator.modern_forms.fan(
-                on=FAN_POWER_ON, wind=preset_mode == PRESET_MODE_BREEZE
-            )
-            return
-
-        data = {OPT_ON: FAN_POWER_ON}
+        data: dict[str, Any] = {OPT_ON: FAN_POWER_ON}
 
         if percentage:
             data[OPT_SPEED] = round(
                 percentage_to_ranged_value(self.SPEED_RANGE, percentage)
             )
+        if preset_mode is not None:
+            data[OPT_WIND] = preset_mode == PRESET_MODE_BREEZE
+
         await self.coordinator.modern_forms.fan(**data)
 
     @modernforms_exception_handler

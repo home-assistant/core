@@ -1,5 +1,7 @@
 """Tests for the Modern Forms fan platform."""
 
+from collections.abc import Callable, Coroutine
+from typing import Any
 from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
@@ -39,7 +41,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration, modern_forms_breeze_call_mock
+from . import (
+    init_integration,
+    modern_forms_breeze_active_call_mock,
+    modern_forms_breeze_call_mock,
+)
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -261,19 +267,31 @@ async def test_breeze_preset_mode_unsupported(
     assert state.attributes.get(ATTR_PRESET_MODE) is None
 
 
+@pytest.mark.parametrize(
+    ("mock_type", "expected_preset_mode"),
+    [
+        pytest.param(modern_forms_breeze_call_mock, PRESET_MODE_NORMAL, id="wind_off"),
+        pytest.param(
+            modern_forms_breeze_active_call_mock, PRESET_MODE_BREEZE, id="wind_on"
+        ),
+    ],
+)
 async def test_breeze_preset_mode_state(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    mock_type: Callable[
+        [HomeAssistant, str, str, dict[str, Any]],
+        Coroutine[Any, Any, Any],
+    ],
+    expected_preset_mode: str,
 ) -> None:
     """Test the breeze preset mode is exposed and reflects device state."""
-    await init_integration(
-        hass, aioclient_mock, mock_type=modern_forms_breeze_call_mock
-    )
+    await init_integration(hass, aioclient_mock, mock_type=mock_type)
 
     state = hass.states.get("fan.modernformsfan_fan")
     assert state
     assert state.attributes[ATTR_SUPPORTED_FEATURES] & FanEntityFeature.PRESET_MODE
-    assert state.attributes.get(ATTR_PRESET_MODE) == PRESET_MODE_NORMAL
+    assert state.attributes.get(ATTR_PRESET_MODE) == expected_preset_mode
 
 
 async def test_set_breeze_preset_mode(
@@ -333,3 +351,47 @@ async def test_turn_on_with_breeze_preset_mode(
         )
         await hass.async_block_till_done()
         fan_mock.assert_called_once_with(on=True, wind=True)
+
+
+async def test_turn_on_with_percentage_and_preset_mode(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test turning on the fan with both a percentage and a preset mode."""
+    await init_integration(
+        hass, aioclient_mock, mock_type=modern_forms_breeze_call_mock
+    )
+
+    with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "fan.modernformsfan_fan",
+                ATTR_PERCENTAGE: 100,
+                ATTR_PRESET_MODE: PRESET_MODE_BREEZE,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        fan_mock.assert_called_once_with(on=True, speed=6, wind=True)
+
+
+async def test_turn_off_does_not_touch_wind(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test turning off the fan does not send the wind flag."""
+    await init_integration(
+        hass, aioclient_mock, mock_type=modern_forms_breeze_call_mock
+    )
+
+    with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "fan.modernformsfan_fan"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        fan_mock.assert_called_once_with(on=False)
