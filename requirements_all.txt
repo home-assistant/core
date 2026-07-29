@@ -345,7 +345,7 @@ aiomealie==2.0.0
 aiomelcloudhome==0.2.1
 
 # homeassistant.components.modern_forms
-aiomodernforms==0.1.8
+aiomodernforms==0.2.0
 
 # homeassistant.components.yamaha_musiccast
 aiomusiccast==0.15.0
@@ -1278,7 +1278,7 @@ hole==0.9.2
 holidays==0.101
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260624.6
+home-assistant-frontend==20260729.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.6.24
@@ -1335,7 +1335,7 @@ icalendar==6.3.1
 icmplib==3.0.4
 
 # homeassistant.components.idasen_desk
-idasen-ha==2.7.0
+idasen-ha==3.0.1
 
 # homeassistant.components.idrive_e2
 idrive-e2-client==0.1.1
@@ -3062,7 +3062,7 @@ smart-meter-texas==0.5.5
 snapcast==2.3.8
 
 # homeassistant.components.sonos
-soco==0.31.1
+soco==0.31.2
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
