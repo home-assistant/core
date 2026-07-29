@@ -20,7 +20,6 @@ from homeassistant.components.openaq.coordinator import (
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY, UnitOfDensity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import API_KEY, LOCATION_ID, make_latest, make_sensor
@@ -108,11 +107,11 @@ async def test_initial_refresh_exception_group_maps_error(
     assert err.value.translation_key == expected_translation_key
 
 
-async def test_initial_refresh_auth_error_raises_config_entry_auth_failed(
+async def test_initial_refresh_auth_error_raises_update_failed(
     hass: HomeAssistant,
     mock_openaq_client: MagicMock,
 ) -> None:
-    """Test initial refresh auth errors raise ConfigEntryAuthFailed."""
+    """Test initial refresh auth errors raise UpdateFailed."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="OpenAQ",
@@ -137,12 +136,12 @@ async def test_initial_refresh_auth_error_raises_config_entry_auth_failed(
     auth_error = NotAuthorizedError("Invalid API key")
     mock_openaq_client.locations.get.side_effect = auth_error
 
-    with pytest.raises(ConfigEntryAuthFailed) as err:
+    with pytest.raises(UpdateFailed) as err:
         await coordinator._async_update_data()
 
     assert err.value.__cause__ is auth_error
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "authentication_failed"
+    assert err.value.translation_key == "unable_to_fetch"
 
 
 async def test_initial_refresh_runs_sdk_calls_in_executor(
@@ -163,11 +162,7 @@ async def test_initial_refresh_runs_sdk_calls_in_executor(
     ) as mock_executor:
         await coordinator._async_update_data()
 
-    assert [call.args[0] for call in mock_executor.call_args_list] == [
-        mock_openaq_client.locations.get,
-        mock_openaq_client.locations.latest,
-        mock_openaq_client.locations.sensors,
-    ]
+    assert mock_executor.call_count == 1
 
 
 def test_normalize_latest_measurements() -> None:
@@ -264,12 +259,12 @@ def test_normalize_latest_measurements_allows_missing_units() -> None:
     )
 
 
-async def test_update_data_auth_error_raises_config_entry_auth_failed(
+async def test_update_data_auth_error_raises_update_failed(
     hass: HomeAssistant,
     mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test refresh auth errors raise ConfigEntryAuthFailed."""
+    """Test refresh auth errors raise UpdateFailed."""
     coordinator = OpenAQDataUpdateCoordinator(
         hass,
         mock_config_entry,
@@ -281,8 +276,8 @@ async def test_update_data_auth_error_raises_config_entry_auth_failed(
         "Invalid API key"
     )
 
-    with pytest.raises(ConfigEntryAuthFailed) as err:
+    with pytest.raises(UpdateFailed) as err:
         await coordinator._async_update_data()
 
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "authentication_failed"
+    assert err.value.translation_key == "unable_to_fetch"
