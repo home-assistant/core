@@ -670,12 +670,13 @@ async def test_switch_turn_on_not_authorized(
         )
 
 
-# The USL Environmental family reports temperature/humidity/light but neither
-# motion nor alarm-sound detection.
+# A USL Environmental reports these four and neither motion nor alarm-sound
+# detection, so none of its capabilities back a motion or alarm switch.
 _ENV_CAPABILITIES = {
     SensorFeatureCapability.TEMPERATURE,
     SensorFeatureCapability.HUMIDITY,
     SensorFeatureCapability.LIGHT,
+    SensorFeatureCapability.WATER_LEAK,
 }
 
 
