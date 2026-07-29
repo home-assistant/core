@@ -13,11 +13,13 @@ from homeassistant.components.rest.const import (
     DOMAIN,
 )
 from homeassistant.const import (
+    CONF_AUTHENTICATION,
     CONF_ICON,
     CONF_NAME,
     CONF_PARAMS,
     CONF_PAYLOAD,
     CONF_TIMEOUT,
+    CONF_USERNAME,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -186,7 +188,9 @@ async def test_config_invalid_input(
         **get_config_entry_data,
         CONF_ENCODING: "fake_encoding",
     }
+    user_input[CONF_AUTHENTICATION][CONF_USERNAME] = "test_user"
     with pytest.raises(InvalidData) as ex:
         await hass.config_entries.flow.async_configure(result["flow_id"], user_input)
 
-    assert ex.value.error_message == "codec not found"
+    assert ex.value.schema_errors[CONF_ENCODING] == "codec not found"
+    assert ex.value.schema_errors[CONF_AUTHENTICATION] == "credentials_missing"

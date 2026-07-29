@@ -14,7 +14,13 @@ from homeassistant.config_entries import (
     SubentryFlowContext,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_NAME, CONF_RESOURCE, Platform
+from homeassistant.const import (
+    CONF_AUTHENTICATION,
+    CONF_NAME,
+    CONF_RESOURCE,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.template import Template
 
@@ -92,22 +98,22 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=Template(user_input[CONF_RESOURCE], self.hass).async_render(),
                     data=user_input,
                 )
+        suggested_values = user_input or (
+            self._get_reconfigure_entry().data
+            if self.source == SOURCE_RECONFIGURE
+            else {}
+        )
         return self.async_show_form(
             step_id="user",
             errors=errors,
             description_placeholders=placeholders,
             data_schema=(
                 self.add_suggested_values_to_schema(
-                    data_schema=RESOURCE_FLOW_SCHEMA,
-                    suggested_values=user_input
-                    or (
-                        {
-                            **self._get_reconfigure_entry().data,
-                            CONF_NAME: self._get_reconfigure_entry().title,
-                        }
-                        if self.source == SOURCE_RECONFIGURE
-                        else {}
+                    data_schema=RESOURCE_FLOW_SCHEMA(
+                        CONF_AUTHENTICATION in suggested_values
+                        and CONF_USERNAME not in suggested_values[CONF_AUTHENTICATION]
                     ),
+                    suggested_values=suggested_values,
                 )
             ),
             last_step=self.source == SOURCE_RECONFIGURE,

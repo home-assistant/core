@@ -133,7 +133,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class TemplateURLSelector(selector.TemplateSelector):
+class _TemplateURLSelector(selector.TemplateSelector):
     """Selector to validate templated urls."""
 
     @override
@@ -144,7 +144,7 @@ class TemplateURLSelector(selector.TemplateSelector):
         return template.template
 
 
-class EncodingSelector(selector.TextSelector):
+class _EncodingSelector(selector.TextSelector):
     """Selector to validate text encoding."""
 
     @override
@@ -157,96 +157,120 @@ class EncodingSelector(selector.TextSelector):
         return encoding
 
 
-def _object_selector(translation_key: str) -> selector.ObjectSelector:
-    return selector.ObjectSelector(
-        selector.ObjectSelectorConfig(
-            fields={
-                "key": selector.ObjectSelectorField(
-                    required=True, selector=selector.TemplateSelector()
-                ),
-                "value": selector.ObjectSelectorField(
-                    required=True, selector=selector.TemplateSelector()
-                ),
-            },
-            multiple=True,
-            label_field="key",
-            description_field="value",
-            translation_key=translation_key,
+class _ObjectSelector(selector.ObjectSelector):
+    def __init__(self, translation_key: str) -> None:
+        super().__init__(
+            selector.ObjectSelectorConfig(
+                fields={
+                    "key": selector.ObjectSelectorField(
+                        required=True, selector=selector.TemplateSelector()
+                    ),
+                    "value": selector.ObjectSelectorField(
+                        required=True, selector=selector.TemplateSelector()
+                    ),
+                },
+                multiple=True,
+                label_field="key",
+                description_field="value",
+                translation_key=translation_key,
+            )
         )
+
+
+class _auth_section(section):
+    @override
+    def __call__(self, data: Any) -> Any:
+        try:
+            return self.schema(data)
+        except vol.MultipleInvalid as ex:
+            for error in ex.errors:
+                if isinstance(error, vol.InclusiveInvalid):
+                    raise vol.Invalid("credentials_missing") from error
+            raise
+
+
+def RESOURCE_FLOW_SCHEMA(collapse_auth: bool = True) -> vol.Schema:
+    """Resource flow schema with ability to collapse auth."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_RESOURCE): _TemplateURLSelector(),
+            vol.Required(CONF_METHOD, default=DEFAULT_METHOD): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=METHODS, mode=selector.SelectSelectorMode.DROPDOWN
+                )
+            ),
+            vol.Required(CONF_AUTHENTICATION): _auth_section(
+                vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION
+                        ): selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=[
+                                    HTTP_BASIC_AUTHENTICATION,
+                                    HTTP_DIGEST_AUTHENTICATION,
+                                ],
+                                translation_key=CONF_AUTHENTICATION,
+                                mode=selector.SelectSelectorMode.DROPDOWN,
+                            )
+                        ),
+                        vol.Inclusive(
+                            CONF_USERNAME, CONF_AUTHENTICATION
+                        ): selector.TextSelector(),
+                        vol.Inclusive(
+                            CONF_PASSWORD, CONF_AUTHENTICATION
+                        ): selector.TextSelector(
+                            selector.TextSelectorConfig(
+                                type=selector.TextSelectorType.PASSWORD
+                            )
+                        ),
+                    }
+                ),
+                options=SectionConfig(collapsed=collapse_auth),
+            ),
+            vol.Optional(CONF_HEADERS): _ObjectSelector(CONF_HEADERS),
+            vol.Optional(CONF_PARAMS): _ObjectSelector(CONF_PARAMS),
+            vol.Optional(CONF_PAYLOAD): selector.TemplateSelector(),
+            vol.Required(CONF_SSL_SECTION): section(
+                vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
+                        ): selector.BooleanSelector(),
+                        vol.Required(
+                            CONF_SSL_CIPHER_LIST,
+                            default=DEFAULT_SSL_CIPHER_LIST,
+                        ): selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=[
+                                    selector.SelectOptionDict(
+                                        value=cipher.value,
+                                        label=cipher.value.capitalize().replace(
+                                            "_", " "
+                                        ),
+                                    )
+                                    for cipher in SSLCipherList
+                                ],
+                                mode=selector.SelectSelectorMode.DROPDOWN,
+                            )
+                        ),
+                    }
+                ),
+                options=SectionConfig(collapsed=True),
+            ),
+            vol.Optional(
+                CONF_TIMEOUT, default=DEFAULT_TIMEOUT
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0,
+                    mode=selector.NumberSelectorMode.BOX,
+                    unit_of_measurement=UnitOfTime.SECONDS,
+                )
+            ),
+            vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): _EncodingSelector(),
+        }
     )
 
-
-RESOURCE_FLOW_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_RESOURCE): TemplateURLSelector(),
-        vol.Required(CONF_METHOD, default=DEFAULT_METHOD): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=METHODS, mode=selector.SelectSelectorMode.DROPDOWN
-            )
-        ),
-        vol.Required(CONF_AUTHENTICATION): section(
-            vol.Schema(
-                {
-                    vol.Required(
-                        CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=[
-                                HTTP_BASIC_AUTHENTICATION,
-                                HTTP_DIGEST_AUTHENTICATION,
-                            ],
-                            translation_key=CONF_AUTHENTICATION,
-                            mode=selector.SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                    vol.Optional(CONF_USERNAME): selector.TextSelector(),
-                    vol.Optional(CONF_PASSWORD): selector.TextSelector(
-                        selector.TextSelectorConfig(
-                            type=selector.TextSelectorType.PASSWORD
-                        )
-                    ),
-                }
-            ),
-            options=SectionConfig(collapsed=True),
-        ),
-        vol.Optional(CONF_HEADERS): _object_selector(CONF_HEADERS),
-        vol.Optional(CONF_PARAMS): _object_selector(CONF_PARAMS),
-        vol.Optional(CONF_PAYLOAD): selector.TemplateSelector(),
-        vol.Required(CONF_SSL_SECTION): section(
-            vol.Schema(
-                {
-                    vol.Required(
-                        CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
-                    ): selector.BooleanSelector(),
-                    vol.Required(
-                        CONF_SSL_CIPHER_LIST,
-                        default=DEFAULT_SSL_CIPHER_LIST,
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=[
-                                selector.SelectOptionDict(
-                                    value=cipher.value,
-                                    label=cipher.value.capitalize().replace("_", " "),
-                                )
-                                for cipher in SSLCipherList
-                            ],
-                            mode=selector.SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                }
-            ),
-            options=SectionConfig(collapsed=True),
-        ),
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0,
-                mode=selector.NumberSelectorMode.BOX,
-                unit_of_measurement=UnitOfTime.SECONDS,
-            )
-        ),
-        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): EncodingSelector(),
-    }
-)
 
 CREATE_ENTRY_SCHEMA = vol.Schema(
     {
