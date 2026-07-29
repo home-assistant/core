@@ -784,7 +784,6 @@ ignore = [
   # Disabled to implement in follow up PRs after ruff 0.16 bump
   "ISC004",
   "LOG004",
-  "FURB192",
 ]
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
