@@ -434,7 +434,7 @@ async def async_setup_entry(
     entities: list[SelectEntity] = [
         ReolinkSelectEntity(reolink_data, channel, entity_description)
         for entity_description in SELECT_ENTITIES
-        for channel in reolink_data.host.api.channels
+        for channel in reolink_data.host.api.stream_channels
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(

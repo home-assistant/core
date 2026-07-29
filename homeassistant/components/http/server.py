@@ -27,6 +27,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 from yarl import URL
 
+from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.http import (
@@ -36,12 +37,13 @@ from homeassistant.helpers.http import (
     current_request,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.setup import async_when_setup
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .config import ConfData
+from .config import _DEFAULT_CONFIG, ConfData, _strip_meta
 from .const import (
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
@@ -50,6 +52,7 @@ from .const import (
     CONF_SSL_PEER_CERTIFICATE,
     CONF_SSL_PROFILE,
     CONF_TRUSTED_PROXIES,
+    ENV_SUPERVISOR,
     SSL_INTERMEDIATE,
     is_supervisor_unix_socket_request,
 )
@@ -106,6 +109,14 @@ def make_server(
         ],
         ssl_profile=conf[CONF_SSL_PROFILE],
         supervisor_unix_socket_path=supervisor_unix_socket_path,
+        # Only the unconfigured default config on the new Supervisor default
+        # port bridges the previous one; compare without metadata so a default
+        # config reloaded from disk still matches.
+        port_transition=(
+            ENV_SUPERVISOR in os.environ
+            and _strip_meta(conf) == _strip_meta(_DEFAULT_CONFIG)
+            and conf[CONF_SERVER_PORT] != SERVER_PORT
+        ),
     )
 
 
@@ -192,6 +203,7 @@ class HomeAssistantHTTP:
         trusted_proxies: list[IPv4Network | IPv6Network],
         ssl_profile: str,
         supervisor_unix_socket_path: Path | None = None,
+        port_transition: bool = False,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
         self.app = HomeAssistantApplication(
@@ -215,6 +227,12 @@ class HomeAssistantHTTP:
         self.supervisor_site: HomeAssistantUnixSite | None = None
         self.context: ssl.SSLContext | None = None
         self._server: asyncio.Server | None = None
+        # Redirect the previous default port to the active one, bound to
+        # onboarding: it starts only while onboarding is pending and is torn
+        # down when onboarding completes.
+        self._port_transition = port_transition
+        self._legacy_redirect_runner: web.AppRunner | None = None
+        self._legacy_redirect_server: asyncio.Server | None = None
 
     async def async_bind(self) -> None:
         """Create the SSL context and the server, binding its sockets.
@@ -531,8 +549,89 @@ class HomeAssistantHTTP:
 
         _LOGGER.info("Now listening on port %d", self.server_port)
 
+        if self._port_transition:
+            # Defer to onboarding setup so async_is_onboarded and
+            # async_add_listener see loaded onboarding data. onboarding is a
+            # dependency of frontend, so it is always set up here.
+            async_when_setup(
+                self.hass, "onboarding", self._async_manage_port_transition
+            )
+
+    async def _async_manage_port_transition(
+        self, hass: HomeAssistant, _component: str
+    ) -> None:
+        """Start the legacy-port redirect until onboarding completes."""
+        from homeassistant.components import onboarding  # noqa: PLC0415
+
+        if onboarding.async_is_onboarded(hass):
+            return
+        await self._async_start_legacy_redirect()
+        if self._legacy_redirect_server is not None:
+            onboarding.async_add_listener(hass, self._on_onboarding_complete)
+
+    @callback
+    def _on_onboarding_complete(self) -> None:
+        """Tear down the transition once onboarding completes."""
+        self.hass.async_create_task(self._async_stop_legacy_redirect())
+
+    async def _async_start_legacy_redirect(self) -> None:
+        """Redirect the previous default port to the active port."""
+        target_port = self.server_port
+
+        async def _redirect(request: web.Request) -> web.StreamResponse:
+            # Temporary, method-preserving redirect so non-GET requests from
+            # existing clients keep working during the transition.
+            raise web.HTTPTemporaryRedirect(request.url.with_port(target_port))
+
+        redirect_app = web.Application()
+        redirect_app.router.add_route("*", "/{path:.*}", _redirect)
+        self._legacy_redirect_runner = web.AppRunner(redirect_app)
+        await self._legacy_redirect_runner.setup()
+        try:
+            self._legacy_redirect_server = await self._async_create_redirect_server()
+        except OSError as error:
+            _LOGGER.error(
+                "Failed to start legacy port %d redirect: %s", SERVER_PORT, error
+            )
+            await self._legacy_redirect_runner.cleanup()
+            self._legacy_redirect_runner = None
+            return
+
+        _LOGGER.info("Redirecting legacy port %d to port %d", SERVER_PORT, target_port)
+
+    async def _async_create_redirect_server(self) -> asyncio.Server:
+        """Bind the legacy redirect server on the previous default port."""
+        assert self._legacy_redirect_runner is not None
+        server_factory = self._legacy_redirect_runner.server
+        assert server_factory is not None
+        return await self.hass.loop.create_server(
+            server_factory,
+            self.server_host if self.server_host is not None else DEFAULT_BIND,
+            SERVER_PORT,
+        )
+
+    async def _async_stop_legacy_redirect(self) -> None:
+        """Stop the legacy redirect server and free its port."""
+        server = self._legacy_redirect_server
+        runner = self._legacy_redirect_runner
+        # Drop the references up front: both the onboarding listener and the
+        # stop event tear the redirect down, so a second call must not wait on
+        # a teardown that is already in flight.
+        self._legacy_redirect_server = None
+        self._legacy_redirect_runner = None
+        if server is not None:
+            # Stop accepting new connections, but do not await wait_closed()
+            # yet: it only returns once every open connection is done, and the
+            # runner cleanup below is what actually closes them.
+            server.close()
+        if runner is not None:
+            await runner.cleanup()
+        if server is not None:
+            await server.wait_closed()
+
     async def stop(self) -> None:
         """Stop the aiohttp server."""
+        await self._async_stop_legacy_redirect()
         if self.supervisor_site is not None:
             await self.supervisor_site.stop()
             if self.supervisor_unix_socket_path is not None:
