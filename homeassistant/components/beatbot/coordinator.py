@@ -3,30 +3,31 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, Any, override
 
 from beatbot_cloud import (
     BeatbotAuthenticationError,
     BeatbotClient,
     BeatbotConnectionError,
+    BeatbotDeviceData,
+    BeatbotEvent,
+    ProductCategory,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .iot.category import CATEGORY_MAP
-from .iot.const import (
+from .const import (
     DOMAIN,
     NETWORK_REFRESH_INTERVAL,
     POST_CONTROL_REFRESH_DELAY,
-    SUPPORTED_PRODUCT_CATEGORIES,
     SUPPORTED_PRODUCT_IDS,
 )
-from .iot.mapping import HA_STATE_FIELD_MAP, apply_state
-from .models import BeatbotDeviceData
+
+if TYPE_CHECKING:
+    from . import BeatbotConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 _MISSING_DEVICE_CONFIRMATIONS = 3
@@ -35,11 +36,13 @@ _MISSING_DEVICE_CONFIRMATIONS = 3
 class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
     """Coordinate Beatbot cloud data and device reconciliation."""
 
+    config_entry: BeatbotConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
         api: BeatbotClient,
-        config_entry: ConfigEntry | None = None,
+        config_entry: BeatbotConfigEntry,
     ) -> None:
         """Initialize the Beatbot coordinator."""
         super().__init__(
@@ -50,14 +53,12 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
             config_entry=config_entry,
         )
         self.api = api
-        self._config_entry = config_entry
-        self._entry_id = config_entry.entry_id if config_entry is not None else None
         self._missing_device_counts: dict[str, int] = {}
         self._reload_scheduled = False
         # One delayed post-control reconciliation task per device. A later
         # command replaces the pending task for that device (debounce), while
         # commands for different devices remain independent.
-        self._refresh_tasks: dict[str, asyncio.Task] = {}
+        self._refresh_tasks: dict[str, asyncio.Task[None]] = {}
 
     @override
     async def _async_update_data(self) -> dict[str, BeatbotDeviceData]:
@@ -75,7 +76,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
         # Gate first by supported product line, then by verified model.
         result: dict[str, BeatbotDeviceData] = {}
         for d in devices:
-            if CATEGORY_MAP.get(d.product_category) not in SUPPORTED_PRODUCT_CATEGORIES:
+            if d.product_category != ProductCategory.POOL_CLEAN_BOT:
                 _LOGGER.debug(
                     "Skipping device %s (productId=%s): product category %r is "
                     "not supported by this integration",
@@ -127,9 +128,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
                 # Discovery and runtime state are separate endpoints. Preserve
                 # the last-known state when the batch response is partial or
                 # unavailable, while retaining fresh discovery metadata.
-                for field in set(HA_STATE_FIELD_MAP.values()):
-                    setattr(device, field, getattr(previous_device, field))
-                device.is_online = previous_device.is_online
+                device.copy_runtime_state_from(previous_device)
         self._reconcile_device_set(result)
         return result
 
@@ -175,11 +174,11 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
     @callback
     def _registered_device_ids(self) -> set[str]:
         """Return Beatbot device IDs still associated with this config entry."""
-        if self._entry_id is None:
-            return set()
         registry = dr.async_get(self.hass)
         device_ids: set[str] = set()
-        for device in dr.async_entries_for_config_entry(registry, self._entry_id):
+        for device in dr.async_entries_for_config_entry(
+            registry, self.config_entry.entry_id
+        ):
             for domain, identifier in device.identifiers:
                 if domain == DOMAIN:
                     device_ids.add(identifier)
@@ -188,8 +187,6 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
     @callback
     def _remove_device_from_registries(self, device_id: str) -> None:
         """Remove one confirmed-absent device and all of its entities."""
-        if self._entry_id is None:
-            return
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
         if device is None:
@@ -198,18 +195,18 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
         for entity in er.async_entries_for_device(
             entity_registry, device.id, include_disabled_entities=True
         ):
-            if entity.config_entry_id == self._entry_id:
+            if entity.config_entry_id == self.config_entry.entry_id:
                 entity_registry.async_remove(entity.entity_id)
         device_registry.async_update_device(
-            device.id, remove_config_entry_id=self._entry_id
+            device.id, remove_config_entry_id=self.config_entry.entry_id
         )
 
     @callback
     def _schedule_entry_reload(self) -> None:
         """Reload platforms once after a confirmed topology change."""
-        if self._entry_id is None or self._reload_scheduled:
+        if self._reload_scheduled:
             return
-        entry_id = self._entry_id
+        entry_id = self.config_entry.entry_id
         self._reload_scheduled = True
 
         async def _reload() -> None:
@@ -273,21 +270,19 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
     @callback
     def async_apply_device_event(
         self,
-        device_id: str,
-        states: dict | None,
-        is_online: bool | None = None,
+        event: BeatbotEvent,
     ) -> None:
         """Overlay a pushed state delta without changing the poll cadence."""
-        device = self.data.get(device_id)
+        device = self.data.get(event.device_id)
         if device is None:
-            _LOGGER.debug("Ignoring event for undiscovered device %s", device_id)
+            _LOGGER.debug("Ignoring event for undiscovered device %s", event.device_id)
             return
-        self._apply_state_with_logging(
-            device_id,
-            device,
-            states,
-            is_online,
-            source="websocket",
+        if not event.apply_to(device):
+            return
+        _LOGGER.debug(
+            "Applied Beatbot state event (deviceId=%s, type=%s)",
+            event.device_id,
+            event.event_type,
         )
         # DataUpdateCoordinator.async_set_updated_data resets the next poll
         # deadline. Notify listeners directly so steady event traffic cannot
@@ -299,37 +294,18 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
     def _apply_state_with_logging(
         device_id: str,
         device: BeatbotDeviceData,
-        states: dict | None,
+        states: dict[str, Any] | None,
         is_online: bool | None,
         *,
         source: str,
     ) -> None:
         """Apply state and log useful field-level changes without credentials."""
-        for interface_info, new_value in (states or {}).items():
-            field = HA_STATE_FIELD_MAP.get(interface_info)
-            if field is None or not hasattr(device, field):
-                continue
-            old_value = getattr(device, field)
-            if old_value != new_value:
-                _LOGGER.debug(
-                    "Beatbot state changed "
-                    "(source=%s, deviceId=%s, interfaceInfo=%s, old=%r, new=%r)",
-                    source,
-                    device_id,
-                    interface_info,
-                    old_value,
-                    new_value,
-                )
-        if is_online is not None and device.is_online != bool(is_online):
-            _LOGGER.debug(
-                "Beatbot state changed "
-                "(source=%s, deviceId=%s, interfaceInfo=online, old=%r, new=%r)",
-                source,
-                device_id,
-                device.is_online,
-                bool(is_online),
-            )
-        apply_state(device, states, is_online)
+        _LOGGER.debug(
+            "Applying Beatbot state update (source=%s, deviceId=%s)",
+            source,
+            device_id,
+        )
+        device.apply_state(states, is_online)
 
     @callback
     def async_schedule_device_state_refresh(self, device_id: str) -> None:
@@ -353,8 +329,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
                     "starting reauthentication",
                     device_id,
                 )
-                if self._config_entry is not None:
-                    self._config_entry.async_start_reauth(self.hass)
+                self.config_entry.async_start_reauth(self.hass)
             finally:
                 current = asyncio.current_task()
                 if self._refresh_tasks.get(device_id) is current:

@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.beatbot.iot.event_stream import (
+from homeassistant.components.beatbot.event_stream import (
     BeatbotEventClient,
     _RefreshToken,
 )
@@ -110,9 +110,10 @@ def test_property_event_routes_incremental_state(
         )
     )
 
-    coordinator.async_apply_device_event.assert_called_once_with(
-        "dev-1", {"vacuum.battery": 76}
-    )
+    coordinator.async_apply_device_event.assert_called_once()
+    event = coordinator.async_apply_device_event.call_args.args[0]
+    assert event.device_id == "dev-1"
+    assert event.payload == {"interfaceInfo": "vacuum.battery", "value": 76}
 
 
 def test_status_event_routes_online_state(
@@ -123,9 +124,10 @@ def test_status_event_routes_online_state(
 
     client._handle_text_message(event_factory("event-2", "status", {"online": False}))
 
-    coordinator.async_apply_device_event.assert_called_once_with(
-        "dev-1", None, is_online=False
-    )
+    coordinator.async_apply_device_event.assert_called_once()
+    event = coordinator.async_apply_device_event.call_args.args[0]
+    assert event.device_id == "dev-1"
+    assert event.payload == {"online": False}
 
 
 def test_duplicate_event_is_applied_once(
@@ -343,7 +345,7 @@ async def test_reconnect_requests_full_refresh(
 
     with (
         patch(
-            "homeassistant.components.beatbot.iot.event_stream.async_get_clientsession",
+            "homeassistant.components.beatbot.event_stream.async_get_clientsession",
             return_value=session,
         ),
         pytest.raises(asyncio.CancelledError),

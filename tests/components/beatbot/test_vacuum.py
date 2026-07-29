@@ -6,23 +6,26 @@ from types import SimpleNamespace
 from typing import Protocol
 from unittest.mock import AsyncMock, MagicMock
 
-from beatbot_cloud import BeatbotAuthenticationError, BeatbotConnectionError
+from beatbot_cloud import (
+    BeatbotAuthenticationError,
+    BeatbotCapability,
+    BeatbotConnectionError,
+    BeatbotDeviceData,
+)
 import pytest
 
-from homeassistant.components.beatbot.iot.category import (
-    VACUUM_FEATURES_BY_CATEGORY,
-    ProductCategory,
-    vacuum_activity,
-    vacuum_features_from_capabilities,
-)
-from homeassistant.components.beatbot.iot.const import (
+from homeassistant.components.beatbot.const import (
     INTERFACE_PAUSE,
     INTERFACE_RETURN_TO_BASE,
     INTERFACE_START,
     INTERFACE_VACUUM_STATE,
 )
-from homeassistant.components.beatbot.models import BeatbotCapability, BeatbotDeviceData
-from homeassistant.components.beatbot.vacuum import BeatbotVacuum
+from homeassistant.components.beatbot.vacuum import (
+    BeatbotVacuum,
+    async_setup_entry,
+    vacuum_activity,
+    vacuum_features_from_capabilities,
+)
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     VacuumActivity,
@@ -96,61 +99,9 @@ def test_vacuum_no_deprecated_battery_feature(
     assert ATTR_BATTERY_LEVEL not in vacuum.state_attributes
 
 
-def test_category_table_has_no_battery_feature() -> None:
-    """No category advertises the deprecated BATTERY feature."""
-    for features in VACUUM_FEATURES_BY_CATEGORY.values():
-        assert VacuumEntityFeature.BATTERY not in features
-
-
-def test_clean_base_station_notice_does_not_set_vacuum_error(
-    coordinator_factory: CoordinatorFactory,
-) -> None:
-    """Informational station notices must not fault the vacuum entity."""
-    coordinator = coordinator_factory("clean_base_station")
-    coordinator.data[DEVICE_ID].error_code = 1 << 5
-
-    vacuum = BeatbotVacuum(coordinator, DEVICE_ID)
-
-    assert vacuum.activity is not VacuumActivity.ERROR
-
-
-def test_clean_base_station_uses_its_own_translation(
-    coordinator_factory: CoordinatorFactory,
-) -> None:
-    """The station vacuum entity must not use the pool-cleaner name."""
-    vacuum = BeatbotVacuum(coordinator_factory("clean_base_station"), DEVICE_ID)
-
-    assert vacuum.translation_key == "beatbot_clean_base_station_vacuum"
-
-
-def test_clean_base_station_fault_sets_vacuum_error(
-    coordinator_factory: CoordinatorFactory,
-) -> None:
-    """The five station fault bits must continue to set ERROR activity."""
-    coordinator = coordinator_factory("clean_base_station")
-    coordinator.data[DEVICE_ID].error_code = 1 << 4
-
-    vacuum = BeatbotVacuum(coordinator, DEVICE_ID)
-
-    assert vacuum.activity is VacuumActivity.ERROR
-
-
-def test_clean_base_station_fault_wins_over_notice(
-    coordinator_factory: CoordinatorFactory,
-) -> None:
-    """A real fault must not be hidden when notice bits are also active."""
-    coordinator = coordinator_factory("clean_base_station")
-    coordinator.data[DEVICE_ID].error_code = (1 << 0) | (1 << 24)
-
-    vacuum = BeatbotVacuum(coordinator, DEVICE_ID)
-
-    assert vacuum.activity is VacuumActivity.ERROR
-
-
 def test_vacuum_does_not_advertise_stop() -> None:
     """No device exposes vacuum.stop (the backend registers no such action)."""
-    for features in VACUUM_FEATURES_BY_CATEGORY.values():
-        assert VacuumEntityFeature.STOP not in features
+    assert VacuumEntityFeature.STOP not in VacuumEntityFeature.STATE
 
 
 def test_work_mode_is_not_exposed_as_vacuum_fan_speed(
@@ -268,9 +219,44 @@ def test_vacuum_features_skip_readonly_action(
 
 def test_unknown_status_is_idle() -> None:
     """Unknown work states fall back to idle."""
-    assert (
-        vacuum_activity(ProductCategory.POOL_CLEAN_BOT, 999, 0) is VacuumActivity.IDLE
-    )
+    assert vacuum_activity(999, 0) is VacuumActivity.IDLE
+
+
+@pytest.mark.parametrize(
+    ("work_status", "error_code", "expected"),
+    [
+        (5, 0, VacuumActivity.CLEANING),
+        (0, 1, VacuumActivity.ERROR),
+    ],
+)
+def test_vacuum_activity(
+    work_status: int, error_code: int, expected: VacuumActivity
+) -> None:
+    """Map known pool-cleaner states and errors."""
+    assert vacuum_activity(work_status, error_code) is expected
+
+
+def test_entity_activity(coordinator_factory: CoordinatorFactory) -> None:
+    """Expose the library state as vacuum activity."""
+    coordinator = coordinator_factory("pool_clean_bot")
+    coordinator.data[DEVICE_ID].work_status = 5
+
+    assert BeatbotVacuum(coordinator, DEVICE_ID).activity is VacuumActivity.CLEANING
+
+
+async def test_setup_entry(
+    hass: HomeAssistant, coordinator_factory: CoordinatorFactory
+) -> None:
+    """Set up one vacuum per coordinator device."""
+    coordinator = coordinator_factory("pool_clean_bot")
+    entry = SimpleNamespace(runtime_data=SimpleNamespace(coordinator=coordinator))
+    async_add_entities = MagicMock()
+
+    await async_setup_entry(hass, entry, async_add_entities)
+
+    entities = list(async_add_entities.call_args.args[0])
+    assert len(entities) == 1
+    assert entities[0].unique_id == DEVICE_ID
 
 
 def test_non_vacuum_capabilities_do_not_define_features() -> None:

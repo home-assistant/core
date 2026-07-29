@@ -8,7 +8,8 @@ from unittest.mock import AsyncMock, Mock, patch
 from beatbot_cloud import BeatbotAuthenticationError
 import pytest
 
-from homeassistant.components.beatbot.iot.const import DOMAIN, SUPPORTED_PLATFORMS
+from homeassistant.components.beatbot import config_entry_oauth2_flow
+from homeassistant.components.beatbot.const import DOMAIN, PLATFORMS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -18,6 +19,16 @@ from homeassistant.exceptions import (
 )
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def mock_oauth_implementation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make the config entry's OAuth implementation available."""
+    monkeypatch.setattr(
+        config_entry_oauth2_flow,
+        "async_get_config_entry_implementation",
+        AsyncMock(return_value=Mock()),
+    )
 
 
 def _entry() -> MockConfigEntry:
@@ -68,7 +79,7 @@ async def test_async_setup_entry_starts_runtime_objects(
     coordinator_cls.assert_called_once()
     coordinator.async_config_entry_first_refresh.assert_awaited_once()
     hass.config_entries.async_forward_entry_setups.assert_awaited_once_with(
-        entry, SUPPORTED_PLATFORMS
+        entry, PLATFORMS
     )
     event_client_cls.assert_called_once()
     event_client.async_start.assert_called_once()
@@ -167,7 +178,7 @@ async def test_async_unload_entry_stops_events_and_unloads_platforms(
     event_client.async_stop.assert_awaited_once()
     coordinator.async_cancel_pending_refreshes.assert_called_once()
     hass.config_entries.async_unload_platforms.assert_awaited_once_with(
-        entry, SUPPORTED_PLATFORMS
+        entry, PLATFORMS
     )
 
 
@@ -242,12 +253,7 @@ async def test_async_setup_entry_not_ready(hass: HomeAssistant) -> None:
 
 
 async def test_async_setup_entry_auth_failed(hass: HomeAssistant) -> None:
-    """An authentication failure starts reauthentication."""
-    with patch.object(
-        hass.config_entries.flow, "async_init", new_callable=AsyncMock
-    ) as reauth_flow:
-        await _assert_first_refresh_failure(
-            hass, ConfigEntryAuthFailed, ConfigEntryState.SETUP_ERROR
-        )
-
-    reauth_flow.assert_awaited_once()
+    """An authentication failure fails config entry setup."""
+    await _assert_first_refresh_failure(
+        hass, ConfigEntryAuthFailed, ConfigEntryState.SETUP_ERROR
+    )

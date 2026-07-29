@@ -1,36 +1,41 @@
-"""Shared base entity for all Beatbot platforms.
-
-Every entity attached to a device contributes the same `device_info`
-(name / manufacturer / model / sw_version) to the device registry, instead
-of relying on a single entity (the vacuum) to supply it. That way the
-device is populated correctly no matter which platform's entities load
-first or fail to load.
-"""
+"""Shared base entity for the Beatbot integration."""
 
 from collections.abc import Awaitable, Callable
-from typing import Any, override
+from typing import Any
 
-from beatbot_cloud import BeatbotAuthenticationError, BeatbotConnectionError
+from beatbot_cloud import (
+    BeatbotAuthenticationError,
+    BeatbotConnectionError,
+    BeatbotDeviceData,
+)
 
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import BeatbotCoordinator
-from .iot.const import DOMAIN
-from .models import BeatbotDeviceData
 
 
 class BeatbotEntity(CoordinatorEntity[BeatbotCoordinator]):
     """Common base: device metadata + per-device data accessor."""
 
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: BeatbotCoordinator, device_id: str) -> None:
         """Initialize a Beatbot entity."""
         super().__init__(coordinator)
         self._device_id = device_id
+        data = self.data
+        version = next((item.version for item in data.versions if item.version), None)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            name=data.name or None,
+            manufacturer="Beatbot",
+            model=data.model or None,
+            model_id=data.product_id,
+            sw_version=version,
+        )
 
     @property
     def data(self) -> BeatbotDeviceData:
@@ -50,8 +55,7 @@ class BeatbotEntity(CoordinatorEntity[BeatbotCoordinator]):
         try:
             await command()
         except BeatbotAuthenticationError as err:
-            if self.coordinator.config_entry is not None:
-                self.coordinator.config_entry.async_start_reauth(self.hass)
+            self.coordinator.config_entry.async_start_reauth(self.hass)
             raise ConfigEntryAuthFailed from err
         except BeatbotConnectionError as err:
             raise HomeAssistantError(
@@ -61,21 +65,3 @@ class BeatbotEntity(CoordinatorEntity[BeatbotCoordinator]):
                     "device": self.data.name or self._device_id,
                 },
             ) from err
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return device registry information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
-            name=self.data.name or None,
-            manufacturer="Beatbot",
-            model=self.data.model or None,
-            model_id=self.data.product_id,
-            # Show each firmware channel's version distinctly (e.g.
-            # "ch1:0.0.80 ch2:0.0.80") rather than collapsing to one value.
-            sw_version=" ".join(
-                f"ch{v.channel}:{v.version}" for v in self.data.versions if v.version
-            )
-            or None,
-        )

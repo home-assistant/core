@@ -31,13 +31,13 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from ..coordinator import BeatbotCoordinator
 from .const import (
     DOMAIN,
     EVENT_DEDUP_CACHE_SIZE,
     EVENT_HEARTBEAT_INTERVAL,
     EVENT_HEARTBEAT_TIMEOUT,
 )
+from .coordinator import BeatbotCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -263,7 +263,6 @@ class BeatbotEventClient:
         event_id = event.event_id
         event_type = event.event_type
         device_id = event.device_id
-        payload = event.payload
         if event_id in self._seen_event_ids:
             return
         self._remember_event(event_id)
@@ -274,22 +273,9 @@ class BeatbotEventClient:
             event_type,
         )
 
-        if event_type == "properties_changed":
-            assert isinstance(payload, dict)
-            interface_info = payload["interfaceInfo"]
-            self._coordinator.async_apply_device_event(
-                device_id, {interface_info: payload["value"]}
-            )
-        elif event_type == "status":
-            assert isinstance(payload, dict)
-            online = payload["online"]
-            self._coordinator.async_apply_device_event(
-                device_id, None, is_online=online
-            )
+        if event_type in ("properties_changed", "status"):
+            self._coordinator.async_apply_device_event(event)
         elif event_type == "device_added":
-            if not isinstance(payload, dict) or payload.get("deviceId") != device_id:
-                _LOGGER.warning("Ignoring malformed Beatbot device-added event")
-                return
             self._schedule_entry_reload()
         elif event_type == "device_removed":
             self._remove_device_from_registries(device_id)

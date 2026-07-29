@@ -10,10 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestReauthError
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .config_flow import BeatbotOAuth2Implementation
+from .const import PLATFORMS
 from .coordinator import BeatbotCoordinator
-from .iot.const import DOMAIN, SUPPORTED_PLATFORMS
-from .iot.event_stream import BeatbotEventClient
+from .event_stream import BeatbotEventClient
 
 
 @dataclass
@@ -31,14 +30,6 @@ type BeatbotConfigEntry = ConfigEntry[BeatbotRuntimeData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: BeatbotConfigEntry) -> bool:
     """Set up Beatbot from a config entry."""
-    implementations = await config_entry_oauth2_flow.async_get_implementations(
-        hass, DOMAIN
-    )
-    if DOMAIN not in implementations:
-        config_entry_oauth2_flow.async_register_implementation(
-            hass, DOMAIN, BeatbotOAuth2Implementation(hass)
-        )
-
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
@@ -66,14 +57,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeatbotConfigEntry) -> b
         event_client=event_client,
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     event_client.async_start()
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: BeatbotConfigEntry) -> bool:
     """Unload a config entry."""
-    if not await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS):
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
     # Cancel any post-control refresh tasks still sleeping in their delay
     # window before tearing down the coordinator/api/session they close over.

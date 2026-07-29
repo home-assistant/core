@@ -7,12 +7,16 @@ import logging
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 
-from beatbot_cloud import BeatbotAuthenticationError, BeatbotConnectionError
+from beatbot_cloud import (
+    BeatbotAuthenticationError,
+    BeatbotConnectionError,
+    BeatbotDeviceData,
+    BeatbotEvent,
+)
 import pytest
 
 from homeassistant.components.beatbot import coordinator as coord_mod
 from homeassistant.components.beatbot.coordinator import BeatbotCoordinator
-from homeassistant.components.beatbot.models import BeatbotDeviceData
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -21,7 +25,11 @@ SUPPORTED_PRODUCT = "sblekiy3t188s9ql"
 
 
 def _entry() -> SimpleNamespace:
-    return SimpleNamespace(entry_id="entry", async_on_unload=Mock())
+    return SimpleNamespace(
+        entry_id="entry",
+        pref_disable_polling=False,
+        async_on_unload=Mock(),
+    )
 
 
 def _device(device_id: str, product_id: str) -> BeatbotDeviceData:
@@ -46,7 +54,7 @@ async def test_coordinator_only_keeps_supported_products(hass: HomeAssistant) ->
         get_devices=AsyncMock(return_value=[supported, unsupported]),
         get_device_states=AsyncMock(return_value={}),
     )
-    coordinator = BeatbotCoordinator(hass, api)
+    coordinator = BeatbotCoordinator(hass, api, _entry())
 
     data = await coordinator._async_update_data()
 
@@ -66,7 +74,7 @@ async def test_coordinator_drops_unsupported_product_category(
         get_devices=AsyncMock(return_value=[device]),
         get_device_states=AsyncMock(return_value={}),
     )
-    coordinator = BeatbotCoordinator(hass, api)
+    coordinator = BeatbotCoordinator(hass, api, _entry())
 
     data = await coordinator._async_update_data()
 
@@ -82,7 +90,7 @@ async def test_coordinator_auth_failure_requests_reauth(
         get_devices=AsyncMock(side_effect=BeatbotAuthenticationError),
         get_device_states=AsyncMock(return_value={}),
     )
-    coordinator = BeatbotCoordinator(hass, api)
+    coordinator = BeatbotCoordinator(hass, api, _entry())
 
     with pytest.raises(ConfigEntryAuthFailed):
         await coordinator._async_update_data()
@@ -96,7 +104,7 @@ async def test_coordinator_connection_failure_is_retryable(
         get_devices=AsyncMock(side_effect=BeatbotConnectionError),
         get_device_states=AsyncMock(return_value={}),
     )
-    coordinator = BeatbotCoordinator(hass, api)
+    coordinator = BeatbotCoordinator(hass, api, _entry())
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
@@ -111,7 +119,7 @@ async def test_coordinator_state_auth_failure_requests_reauth(
         get_devices=AsyncMock(return_value=[device]),
         get_device_states=AsyncMock(side_effect=BeatbotAuthenticationError),
     )
-    coordinator = BeatbotCoordinator(hass, api)
+    coordinator = BeatbotCoordinator(hass, api, _entry())
 
     with pytest.raises(ConfigEntryAuthFailed):
         await coordinator._async_update_data()
@@ -126,7 +134,7 @@ async def test_coordinator_state_connection_failure_keeps_device(
         get_devices=AsyncMock(return_value=[device]),
         get_device_states=AsyncMock(side_effect=BeatbotConnectionError("offline")),
     )
-    coordinator = BeatbotCoordinator(hass, api)
+    coordinator = BeatbotCoordinator(hass, api, _entry())
 
     data = await coordinator._async_update_data()
 
@@ -149,7 +157,7 @@ async def test_coordinator_applies_batch_device_state(
             }
         ),
     )
-    coordinator = BeatbotCoordinator(hass, api)
+    coordinator = BeatbotCoordinator(hass, api, _entry())
 
     data = await coordinator._async_update_data()
 
@@ -167,7 +175,7 @@ async def test_coordinator_empty_allow_list_drops_everything(
         get_devices=AsyncMock(return_value=[supported]),
         get_device_states=AsyncMock(return_value={}),
     )
-    coordinator = BeatbotCoordinator(hass, api)
+    coordinator = BeatbotCoordinator(hass, api, _entry())
 
     data = await coordinator._async_update_data()
 
@@ -179,7 +187,7 @@ async def test_device_event_overlays_state_without_resetting_poll(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """A push updates the existing device and only notifies listeners."""
-    coordinator = BeatbotCoordinator(hass, SimpleNamespace())
+    coordinator = BeatbotCoordinator(hass, SimpleNamespace(), _entry())
     device = _device("dev-1", SUPPORTED_PRODUCT)
     coordinator.async_set_updated_data({"dev-1": device})
     listener = Mock()
@@ -191,14 +199,17 @@ async def test_device_event_overlays_state_without_resetting_poll(
         logging.DEBUG, logger="homeassistant.components.beatbot.coordinator"
     ):
         coordinator.async_apply_device_event(
-            "dev-1", {"vacuum.battery": 42}, is_online=False
+            BeatbotEvent(
+                "event-1",
+                "properties_changed",
+                "dev-1",
+                {"interfaceInfo": "vacuum.battery", "value": 42},
+            )
         )
 
     assert device.battery_level == 42
-    assert device.is_online is False
-    assert "source=websocket" in caplog.text
-    assert "interfaceInfo=vacuum.battery, old=80, new=42" in caplog.text
-    assert "interfaceInfo=online, old=True, new=False" in caplog.text
+    assert device.is_online
+    assert "Applied Beatbot state event" in caplog.text
     assert coordinator.last_update_success
     assert coordinator._unsub_refresh is next_poll
     listener.assert_called_once()
@@ -207,11 +218,16 @@ async def test_device_event_overlays_state_without_resetting_poll(
 
 async def test_device_event_ignores_unknown_device(hass: HomeAssistant) -> None:
     """Ignore push events for devices outside coordinator data."""
-    coordinator = BeatbotCoordinator(hass, SimpleNamespace())
+    coordinator = BeatbotCoordinator(hass, SimpleNamespace(), _entry())
     coordinator.async_set_updated_data({})
 
     coordinator.async_apply_device_event(
-        "unknown", {"vacuum.battery": 42}, is_online=False
+        BeatbotEvent(
+            "event-1",
+            "properties_changed",
+            "unknown",
+            {"interfaceInfo": "vacuum.battery", "value": 42},
+        )
     )
 
     assert coordinator.data == {}
@@ -233,7 +249,7 @@ async def test_post_control_refresh_fetches_only_target_device(
             }
         )
     )
-    coordinator = BeatbotCoordinator(hass, api)
+    coordinator = BeatbotCoordinator(hass, api, _entry())
     coordinator.async_set_updated_data({"dev-1": device})
 
     with caplog.at_level(
@@ -247,7 +263,7 @@ async def test_post_control_refresh_fetches_only_target_device(
     assert device.work_status == 5
     assert "source=post_control" in caplog.text
     assert "states={'vacuum.state': 5}" in caplog.text
-    assert "interfaceInfo=vacuum.state, old=0, new=5" in caplog.text
+    assert "Applying Beatbot state update" in caplog.text
     assert coordinator._refresh_tasks == {}
 
 
@@ -255,7 +271,7 @@ async def test_post_control_refresh_debounces_per_device(
     hass: HomeAssistant,
 ) -> None:
     """A later command cancels the older pending refresh for that device."""
-    coordinator = BeatbotCoordinator(hass, SimpleNamespace())
+    coordinator = BeatbotCoordinator(hass, SimpleNamespace(), _entry())
     started = asyncio.Event()
     release = asyncio.Event()
 
@@ -285,7 +301,7 @@ async def test_cancel_pending_post_control_refreshes(
     hass: HomeAssistant,
 ) -> None:
     """Unload cancellation prevents delayed requests from outliving the API."""
-    coordinator = BeatbotCoordinator(hass, SimpleNamespace())
+    coordinator = BeatbotCoordinator(hass, SimpleNamespace(), _entry())
 
     coordinator.async_schedule_device_state_refresh("dev-1")
     coordinator.async_schedule_device_state_refresh("dev-2")
