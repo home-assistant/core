@@ -63,17 +63,20 @@ async def test_full_flow(
 
 
 @pytest.mark.parametrize(
-    "domain",
+    ("domain", "stored_domain"),
     [
-        pytest.param("example.com", id="zone_apex"),
-        pytest.param("EXAMPLE.COM.", id="case_and_trailing_dot"),
-        pytest.param("home.example.com", id="subdomain_of_zone"),
+        pytest.param("example.com", "example.com", id="zone_apex"),
+        pytest.param("EXAMPLE.COM.", "example.com", id="case_and_trailing_dot"),
+        pytest.param("home.example.com", "home.example.com", id="subdomain_of_zone"),
     ],
 )
 async def test_domain_inside_zone_accepted(
-    hass: HomeAssistant, mock_boto3_client: MagicMock, domain: str
+    hass: HomeAssistant,
+    mock_boto3_client: MagicMock,
+    domain: str,
+    stored_domain: str,
 ) -> None:
-    """Test domains belonging to the hosted zone are accepted."""
+    """Test domains belonging to the hosted zone are accepted and canonicalized."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -96,6 +99,56 @@ async def test_domain_inside_zone_accepted(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_DOMAIN] == stored_domain
+
+
+@pytest.mark.parametrize(
+    "domain",
+    [
+        pytest.param("EXAMPLE.COM.", id="case_and_trailing_dot"),
+        pytest.param("example.com", id="exact"),
+    ],
+)
+async def test_duplicate_domain_variants_abort(
+    hass: HomeAssistant, mock_boto3_client: MagicMock, domain: str
+) -> None:
+    """Test case and trailing-dot variants are treated as the same entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test-zone_example.com",
+        data={
+            CONF_ACCESS_KEY_ID: "test-key",
+            CONF_SECRET_ACCESS_KEY: "test-secret",
+            CONF_ZONE: "test-zone",
+            CONF_DOMAIN: "example.com",
+            CONF_RECORDS: ["test1"],
+            CONF_TTL: DEFAULT_TTL,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.route53.config_flow.boto3.client",
+        return_value=mock_boto3_client.return_value,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ACCESS_KEY_ID: "test-key",
+                CONF_SECRET_ACCESS_KEY: "test-secret",
+                CONF_ZONE: "test-zone",
+                CONF_DOMAIN: domain,
+                CONF_RECORDS: ["test1"],
+                CONF_TTL: DEFAULT_TTL,
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -280,6 +333,7 @@ async def test_import_flow_already_configured(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id="test-zone_example.com",
         data={
             CONF_ACCESS_KEY_ID: "test-key",
             CONF_SECRET_ACCESS_KEY: "test-secret",
@@ -381,6 +435,7 @@ async def test_user_flow_already_configured(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id="test-zone_example.com",
         data={
             CONF_ACCESS_KEY_ID: "test-key",
             CONF_SECRET_ACCESS_KEY: "test-secret",

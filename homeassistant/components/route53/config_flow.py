@@ -129,12 +129,11 @@ class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match(
-                {
-                    CONF_ZONE: user_input[CONF_ZONE],
-                    CONF_DOMAIN: user_input[CONF_DOMAIN],
-                }
+            user_input[CONF_DOMAIN] = _normalize(user_input[CONF_DOMAIN])
+            await self.async_set_unique_id(
+                f"{user_input[CONF_ZONE]}_{user_input[CONF_DOMAIN]}"
             )
+            self._abort_if_unique_id_configured()
 
             if error := await self._async_validate(user_input):
                 errors[ERROR_FIELDS.get(error, "base")] = error
@@ -149,12 +148,11 @@ class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
-        self._async_abort_entries_match(
-            {
-                CONF_ZONE: user_input[CONF_ZONE],
-                CONF_DOMAIN: user_input[CONF_DOMAIN],
-            }
+        user_input[CONF_DOMAIN] = _normalize(user_input[CONF_DOMAIN])
+        await self.async_set_unique_id(
+            f"{user_input[CONF_ZONE]}_{user_input[CONF_DOMAIN]}"
         )
+        self._abort_if_unique_id_configured()
 
         if error := await self._async_validate(user_input):
             return self.async_abort(reason=error)
