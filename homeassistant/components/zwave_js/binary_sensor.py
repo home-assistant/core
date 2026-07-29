@@ -76,6 +76,17 @@ NOTIFICATION_WEATHER = "16"
 NOTIFICATION_IRRIGATION = "17"
 NOTIFICATION_GAS = "18"
 
+# Generic device classes where heat notifications represent primary
+# functionality rather than diagnostic.
+# https://github.com/zwave-js/backlog/issues/119#issuecomment-3096168116
+HEAT_PRIMARY_DEVICE_CLASSES: set[str | int] = {
+    "Appliance",
+    "Notification Sensor",
+    "Thermostat",
+    "Multilevel Sensor",
+    "Alarm Sensor",
+}
+
 # Deprecated/legacy synthetic Access Control door state notification
 # event IDs that don't exist in zwave-js-server
 ACCESS_CONTROL_DOOR_STATE_OPEN_REGULAR = 5632
@@ -227,6 +238,7 @@ LEGACY_DOOR_STATE_REPAIR_ISSUE_KEYS = frozenset(
 MIGRATED_NOTIFICATION_TYPES = {
     NotificationType.SMOKE_ALARM,
     NotificationType.ACCESS_CONTROL,
+    NotificationType.HEAT_ALARM,
 }
 
 NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] = (
@@ -264,18 +276,6 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
     NotificationZWaveJSEntityDescription(
         # NotificationType 3: Carbon Dioxide - All other State Id's
         key=NOTIFICATION_CARBON_DIOXIDE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 4: Heat - State ID's 8, A, B
-        key=NOTIFICATION_HEAT,
-        states={8, 10, 11},
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 4: Heat - All other State Id's
-        key=NOTIFICATION_HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
@@ -1490,16 +1490,8 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
                 (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HEAT_ALARM)
             },
         ),
-        # Generic device classes where overheat/underheat is primary
-        # functionality rather than diagnostic.
-        # https://github.com/zwave-js/backlog/issues/119#issuecomment-3096168116
-        device_class_generic={
-            "Appliance",
-            "Notification Sensor",
-            "Thermostat",
-            "Multilevel Sensor",
-            "Alarm Sensor",
-        },
+        device_class_generic=HEAT_PRIMARY_DEVICE_CLASSES,
+        allow_multi=True,
         entity_description=NotificationZWaveJSEntityDescription(
             # NotificationType 4: Heat - overheat/underheat detected (primary)
             key=NOTIFICATION_HEAT,
@@ -1530,6 +1522,8 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
                 (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HEAT_ALARM)
             },
         ),
+        not_device_class_generic=HEAT_PRIMARY_DEVICE_CLASSES,
+        allow_multi=True,
         entity_description=NotificationZWaveJSEntityDescription(
             # NotificationType 4: Heat - overheat/underheat detected (diagnostic)
             key=NOTIFICATION_HEAT,
@@ -1541,6 +1535,134 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             },
             device_class=BinarySensorDeviceClass.HEAT,
             entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HEAT_ALARM)
+            },
+        ),
+        device_class_generic=HEAT_PRIMARY_DEVICE_CLASSES,
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 4: Heat - rapid temperature rise/fall (primary)
+            key=NOTIFICATION_HEAT,
+            states={
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL,
+            },
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HEAT_ALARM)
+            },
+        ),
+        not_device_class_generic=HEAT_PRIMARY_DEVICE_CLASSES,
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 4: Heat - rapid temperature rise/fall (diagnostic)
+            key=NOTIFICATION_HEAT,
+            states={
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL,
+            },
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HeatAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
+                HeatAlarmNotificationEvent.DUST_IN_DEVICE_STATUS_MAINTENANCE_REQUIRED_DUST_IN_DEVICE,
+                HeatAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HEAT_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 4: Heat - replacement/dust/inspection
+            key=NOTIFICATION_HEAT,
+            states={
+                HeatAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
+                HeatAlarmNotificationEvent.DUST_IN_DEVICE_STATUS_MAINTENANCE_REQUIRED_DUST_IN_DEVICE,
+                HeatAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
+            },
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HEAT_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 4: Heat - All other State Id's
+            key=NOTIFICATION_HEAT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            not_states={
+                HeatAlarmNotificationEvent.IDLE,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL,
+                HeatAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
+                HeatAlarmNotificationEvent.DUST_IN_DEVICE_STATUS_MAINTENANCE_REQUIRED_DUST_IN_DEVICE,
+                HeatAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
+            },
         ),
         entity_class=ZWaveNotificationBinarySensor,
     ),
