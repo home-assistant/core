@@ -2430,6 +2430,34 @@ async def test_async_get_device_by_connection_normalizes(
     )
 
 
+async def test_async_get_device_id_by_identifier(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """The id lookup returns the device id, and raises when there is no match."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "1")}
+    )
+
+    assert (
+        dr.async_get_device_id_by_identifier(
+            hass, ("test", "1"), config_entry_id=entry.entry_id
+        )
+        == device.id
+    )
+    # A missing device is treated as an error: an unknown identifier or the
+    # wrong config entry both raise rather than silently returning None.
+    with pytest.raises(ValueError, match="no device with identifier"):
+        dr.async_get_device_id_by_identifier(
+            hass, ("test", "missing"), config_entry_id=entry.entry_id
+        )
+    with pytest.raises(ValueError, match="no device with identifier"):
+        dr.async_get_device_id_by_identifier(
+            hass, ("test", "1"), config_entry_id="unknown_entry_id"
+        )
+
+
 @pytest.mark.parametrize(
     ("create_kwargs", "lookup_kwargs", "miss_kwargs"),
     [
@@ -3095,7 +3123,7 @@ async def test_async_is_composite_device_id(
     assert device_registry.async_is_composite_device_id(old_id) is True
     assert device_registry.async_is_composite_device_id(device_1.id) is False
     assert device_registry.async_is_composite_device_id(device_2.id) is False
-    assert device_registry.async_is_composite_device_id("unknown_id") is False
+    assert device_registry.async_is_composite_device_id("unknown_id") is None
 
 
 @pytest.mark.parametrize("load_registries", [False])

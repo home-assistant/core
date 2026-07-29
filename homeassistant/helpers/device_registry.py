@@ -1659,15 +1659,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return self.devices.get_devices_for_composite_device_id(composite_device_id)
 
     @callback
-    def async_is_composite_device_id(self, device_id: str) -> bool:
+    def async_is_composite_device_id(self, device_id: str) -> bool | None:
         """Return True if device_id is a pre-migration composite device id.
 
         A composite device was split into one device per config entry; the
-        composite device id no longer refers to a registered device.
+        composite device id no longer refers to a registered device. Returns
+        False for a registered device id, and None for an unknown id.
         """
-        return device_id not in self.devices and bool(
-            self.devices.get_devices_for_composite_device_id(device_id)
-        )
+        if device_id in self.devices:
+            return False
+        if self.devices.get_devices_for_composite_device_id(device_id):
+            return True
+        return None
 
     @callback
     def _resolve_via_device_id(
@@ -3144,6 +3147,27 @@ def async_get(hass: HomeAssistant) -> DeviceRegistry:
         return hass.data[DATA_REGISTRY]
     except KeyError as ex:
         raise RuntimeError("Device registry not set up") from ex
+
+
+@callback
+def async_get_device_id_by_identifier(
+    hass: HomeAssistant, identifier: tuple[str, str], *, config_entry_id: str
+) -> str:
+    """Get the id of the device with the identifier, owned by the config entry.
+
+    Convenience wrapper for linking a device to its via device through
+    via_device_id. Identifiers are unique within a config entry, so the lookup
+    cannot be ambiguous.
+
+    Raises ValueError if no such device exists.
+    """
+    device = async_get(hass).async_get_device_by_identifier(identifier, config_entry_id)
+    if device is None:
+        raise ValueError(
+            f"There is no device with identifier {identifier} in config entry "
+            f"{config_entry_id}"
+        )
+    return device.id
 
 
 def async_setup(hass: HomeAssistant) -> None:
