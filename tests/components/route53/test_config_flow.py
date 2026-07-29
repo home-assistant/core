@@ -22,10 +22,10 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_form(
+async def test_full_flow(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_boto3_client: MagicMock
 ) -> None:
-    """Test we get the form."""
+    """Test the full user flow creates an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -36,7 +36,7 @@ async def test_form(
         "homeassistant.components.route53.config_flow.boto3.client",
         return_value=mock_boto3_client.return_value,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_ACCESS_KEY_ID: "test-key",
@@ -49,9 +49,9 @@ async def test_form(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "example.com"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "example.com"
+    assert result["data"] == {
         CONF_ACCESS_KEY_ID: "test-key",
         CONF_SECRET_ACCESS_KEY: "test-secret",
         CONF_ZONE: "test-zone",
@@ -89,7 +89,7 @@ async def test_form_domain_must_be_in_zone(
         "homeassistant.components.route53.config_flow.boto3.client",
         return_value=mock_boto3_client.return_value,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_ACCESS_KEY_ID: "test-key",
@@ -102,7 +102,7 @@ async def test_form_domain_must_be_in_zone(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is expected_type
+    assert result["type"] is expected_type
 
 
 @pytest.mark.parametrize(
@@ -154,7 +154,7 @@ async def test_form_errors(
         "homeassistant.components.route53.config_flow.boto3.client",
         return_value=mock_boto3_client.return_value,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_ACCESS_KEY_ID: "test-key",
@@ -166,8 +166,8 @@ async def test_form_errors(
             },
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == expected_errors
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == expected_errors
 
 
 async def test_import_flow_success(
@@ -513,7 +513,7 @@ async def test_user_flow_already_configured(
         "homeassistant.components.route53.config_flow.boto3.client",
         return_value=mock_boto3_client.return_value,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_ACCESS_KEY_ID: "test-key",
@@ -526,5 +526,5 @@ async def test_user_flow_already_configured(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
