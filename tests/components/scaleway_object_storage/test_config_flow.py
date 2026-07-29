@@ -19,7 +19,7 @@ from homeassistant.components.scaleway_object_storage.const import (
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from tests.common import MockConfigEntry
 
@@ -192,3 +192,73 @@ async def test_form_failed_connection_check(
     assert result["title"] == ScalewayConfigFlow._generate_title(valid_config)
     assert result["data"] == valid_config
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "bucket_name",
+    [
+        "bucketname",
+        "bucket-name",
+        "bucket.name.with.dots",
+        "bucket123",
+    ],
+)
+async def test_form_bucket_name_validation__valid(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    valid_config: Mapping[str, Any],
+    bucket_name: str,
+) -> None:
+    """Test we handle exceptions raised during connection check."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    config = dict(valid_config)
+    config[CONF_BUCKET] = bucket_name
+
+    with patch(
+        "homeassistant.components.scaleway_object_storage.helpers.check_connection",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            config,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    "bucket_name",
+    [
+        "",
+        "bucket/pathBUCKET",
+        "example_bucket",
+    ],
+)
+async def test_form_bucket_name_validation__invalid(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    valid_config: Mapping[str, Any],
+    bucket_name: str,
+) -> None:
+    """Test we handle exceptions raised during connection check."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    config = dict(valid_config)
+    config[CONF_BUCKET] = bucket_name
+
+    with (
+        patch(
+            "homeassistant.components.scaleway_object_storage.helpers.check_connection",
+            return_value=None,
+        ),
+        pytest.raises(InvalidData),
+    ):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            config,
+        )

@@ -57,7 +57,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
                 ],
             )
         ),
-        vol.Required(CONF_BUCKET): cv.string,
+        vol.Required(CONF_BUCKET): vol.All(
+            cv.string,
+            vol.Length(max=63),
+            # See https://www.scaleway.com/en/docs/object-storage/faq/#is-there-a-limitation-on-the-bucket-name
+            cv.matches_regex(r"^[a-z\d\-.]+$"),
+        ),
         vol.Optional(CONF_OBJECT_PREFIX, default=""): cv.string,
     }
 )
