@@ -2,7 +2,11 @@
 
 from typing import Any, override
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import (
+    ColorMode,
+    LightEntity,
+    LightEntityStateAttribute,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -52,6 +56,6 @@ class DynaliteLight(DynaliteBase, LightEntity):
     @override
     def initialize_state(self, state):
         """Initialize the state from cache."""
-        target_level = state.attributes.get(ATTR_BRIGHTNESS)
+        target_level = state.attributes.get(LightEntityStateAttribute.BRIGHTNESS)
         if target_level is not None:
             self._device.init_level(target_level)

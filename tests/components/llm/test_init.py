@@ -44,8 +44,8 @@ def llm_context() -> llm.LLMContext:
 
 
 def _mock_tools_platform(
-    hass: HomeAssistant, domain: str, tools: LLMTools | Exception
-) -> None:
+    hass: HomeAssistant, domain: str, tools: LLMTools | Exception | None
+) -> Mock:
     """Register a mock <integration>/llm.py platform returning the given tools."""
     if isinstance(tools, Exception):
         async_get_tools = Mock(side_effect=tools)
@@ -53,6 +53,7 @@ def _mock_tools_platform(
         async_get_tools = Mock(return_value=tools)
     hass.config.components.add(domain)
     mock_platform(hass, f"{domain}.llm", Mock(async_get_tools=async_get_tools))
+    return async_get_tools
 
 
 async def test_setup(hass: HomeAssistant) -> None:
@@ -64,25 +65,27 @@ async def test_setup(hass: HomeAssistant) -> None:
 async def test_get_tools(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
     """Test that tools from an integration platform are returned."""
     tool = _StubTool("my_tool")
-    _mock_tools_platform(
+    platform_get_tools = _mock_tools_platform(
         hass, "test", LLMTools(tools=[tool], prompt="use my_tool wisely")
     )
 
     assert await async_setup_component(hass, "llm", {})
 
-    result = await async_get_tools(hass, llm_context)
-    assert result.tools == [tool]
+    result = await async_get_tools(hass, llm_context, "assist")
+    # The llm integration also exposes its own GetDateTime tool (domain "llm").
+    assert [tool.name for tool in result.tools] == ["GetDateTime", "my_tool"]
     assert result.prompt == "use my_tool wisely"
+    platform_get_tools.assert_called_once_with(hass, llm_context, "assist")
 
 
 async def test_get_tools_empty(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
-    """Test that no platforms yields no tools."""
+    """Test that only the llm integration's own tools are returned by default."""
     assert await async_setup_component(hass, "llm", {})
 
-    result = await async_get_tools(hass, llm_context)
-    assert result.tools == []
+    result = await async_get_tools(hass, llm_context, "assist")
+    assert [tool.name for tool in result.tools] == ["GetDateTime"]
     assert result.prompt is None
 
 
@@ -98,9 +101,24 @@ async def test_get_tools_merges_sorted(
 
     assert await async_setup_component(hass, "llm", {})
 
-    result = await async_get_tools(hass, llm_context)
-    assert result.tools == [tool_a, tool_b]
+    result = await async_get_tools(hass, llm_context, "assist")
+    assert [tool.name for tool in result.tools] == ["GetDateTime", "tool_a", "tool_b"]
     assert result.prompt == "prompt a\nprompt b"
+
+
+async def test_get_tools_skips_none_platform(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test that a platform returning None for the API is skipped."""
+    tool = _StubTool("good_tool")
+    _mock_tools_platform(hass, "test_none", None)
+    _mock_tools_platform(hass, "test_good", LLMTools(tools=[tool]))
+
+    assert await async_setup_component(hass, "llm", {})
+
+    result = await async_get_tools(hass, llm_context, "assist")
+    assert [tool.name for tool in result.tools] == ["GetDateTime", "good_tool"]
+    assert result.prompt is None
 
 
 async def test_get_tools_isolates_failing_platform(
@@ -115,7 +133,7 @@ async def test_get_tools_isolates_failing_platform(
 
     assert await async_setup_component(hass, "llm", {})
 
-    result = await async_get_tools(hass, llm_context)
-    assert result.tools == [tool]
+    result = await async_get_tools(hass, llm_context, "assist")
+    assert [tool.name for tool in result.tools] == ["GetDateTime", "good_tool"]
     assert result.prompt == "prompt"
     assert "Error getting tools from LLM platform test_bad" in caplog.text

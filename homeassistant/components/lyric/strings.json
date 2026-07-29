@@ -61,6 +61,9 @@
       "outdoor_temperature": {
         "name": "Outdoor temperature"
       },
+      "room_average_temperature": {
+        "name": "Room average temperature"
+      },
       "room_humidity": {
         "name": "Room humidity"
       },
