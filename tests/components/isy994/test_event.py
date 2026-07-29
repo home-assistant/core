@@ -18,18 +18,27 @@ from pyisy.helpers import NodeProperty
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.isy994.const import EVENT_ISY994_CONTROL
 from homeassistant.components.isy994.event import _sub_button_name
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_capture_events, snapshot_platform
+
+SWITCH_ENTITY_ID = "switch.garage_relay"
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Return the platforms to set up, overridden by parametrization."""
+    return [Platform.EVENT]
 
 
 @pytest.fixture(autouse=True)
-def mock_event_platform() -> Generator[None]:
-    """Mock the platforms to only include event."""
-    with patch("homeassistant.components.isy994.PLATFORMS", [Platform.EVENT]):
+def mock_event_platform(platforms: list[Platform]) -> Generator[None]:
+    """Mock the platforms that are set up."""
+    with patch("homeassistant.components.isy994.PLATFORMS", platforms):
         yield
 
 
@@ -158,13 +167,29 @@ async def test_control_event_triggers_entity(
     assert state.attributes.get("multi_press_count") == expected_count
 
 
-async def test_fade_stop_reports_direction_of_last_fade(
+@pytest.mark.parametrize(
+    ("controls", "expected_direction"),
+    [
+        pytest.param([CMD_FADE_DOWN, CMD_FADE_STOP], "down", id="paired_stop"),
+        pytest.param([CMD_FADE_STOP], None, id="orphan_stop"),
+        pytest.param(
+            [CMD_FADE_DOWN, CMD_FADE_STOP, CMD_FADE_STOP], None, id="duplicate_stop"
+        ),
+    ],
+)
+async def test_fade_stop_direction(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_isy: MagicMock,
     mock_node: Callable[..., Any],
+    controls: list[str],
+    expected_direction: str | None,
 ) -> None:
-    """CMD_FADE_STOP's direction tracks whichever fade most recently started."""
+    """CMD_FADE_STOP reports the direction of the fade it ends, once.
+
+    The remembered direction is consumed by the stop that uses it, so a stop
+    with no preceding fade start reports no direction instead of a stale one.
+    """
     mock_config_entry.add_to_hass(hass)
     node = mock_node(mock_isy, "11 11 11 1", "Test Switch", "DimmerLampSwitch_ADV")
     mock_isy.nodes.__iter__.return_value = [("Test Switch", node)]
@@ -173,15 +198,15 @@ async def test_fade_stop_reports_direction_of_last_fade(
     await hass.async_block_till_done()
 
     handler = node.control_events.subscribe.call_args.args[0]
-    handler(MagicMock(spec=NodeProperty, control=CMD_FADE_DOWN))
-    handler(MagicMock(spec=NodeProperty, control=CMD_FADE_STOP))
+    for control in controls:
+        handler(MagicMock(spec=NodeProperty, control=control))
     await hass.async_block_till_done()
 
     entity_ids = hass.states.async_entity_ids("event")
     state = hass.states.get(entity_ids[0])
     assert state is not None
     assert state.attributes["event_type"] == "long_press_end"
-    assert state.attributes.get("direction") == "down"
+    assert state.attributes.get("direction") == expected_direction
 
 
 async def test_control_event_suppressed_while_websocket_syncing(
@@ -211,6 +236,43 @@ async def test_control_event_suppressed_while_websocket_syncing(
     state = hass.states.get(entity_ids[0])
     assert state is not None
     assert state.attributes.get("event_type") is None
+
+
+@pytest.mark.parametrize("platforms", [[Platform.EVENT, Platform.SWITCH]])
+@pytest.mark.parametrize(
+    "control", [CMD_ON, CMD_OFF, CMD_ON_FAST, CMD_OFF_FAST, CMD_FADE_UP, CMD_FADE_STOP]
+)
+async def test_legacy_control_bus_event_not_duplicated(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_isy: MagicMock,
+    mock_node: Callable[..., Any],
+    control: str,
+) -> None:
+    """The legacy isy994_control bus event still fires exactly once per control.
+
+    The node's primary (switch) entity keeps firing the bus event from the
+    base class, while the event entity overrides async_on_control and must
+    not fire a second one for the same control.
+    """
+    mock_config_entry.add_to_hass(hass)
+    node = mock_node(mock_isy, "22 22 22 1", "Garage Relay", "RelayLampSwitch_ADV")
+    mock_isy.nodes.__iter__.return_value = [("Garage Relay", node)]
+    events = async_capture_events(hass, EVENT_ISY994_CONTROL)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SWITCH_ENTITY_ID) is not None
+    assert len(hass.states.async_entity_ids("event")) == 1
+
+    for call in node.control_events.subscribe.call_args_list:
+        call.args[0](MagicMock(spec=NodeProperty, control=control))
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["entity_id"] == SWITCH_ENTITY_ID
+    assert events[0].data["control"] == control
 
 
 async def test_unsupported_control_is_ignored(

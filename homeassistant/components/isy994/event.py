@@ -148,11 +148,10 @@ class ISYButtonEvent(ISYNodeEntity, EventEntity):
         write on every value update; availability still tracks the node's
         enabled flag via a filtered subscription.
         """
-        if hasattr(self._node, "control_events"):
-            self._control_handler = self._node.control_events.subscribe(
-                self.async_on_control
-            )
-            self.async_on_remove(self._control_handler.unsubscribe)
+        self._control_handler = self._node.control_events.subscribe(
+            self.async_on_control
+        )
+        self.async_on_remove(self._control_handler.unsubscribe)
         self._change_handler = self._node.isy.nodes.status_events.subscribe(
             self._async_on_availability_change,
             event_filter={
@@ -184,9 +183,14 @@ class ISYButtonEvent(ISYNodeEntity, EventEntity):
         if websocket is not None and websocket.status != ES_CONNECTED:
             return
         if event.control == CMD_FADE_STOP:
+            # FADE_STOP carries no direction of its own, so it consumes the
+            # one from the fade it ends; a stop with no preceding start
+            # reports no direction rather than a stale one.
+            direction = self._last_fade_direction
+            self._last_fade_direction = None
             self._trigger_event(
                 ButtonEventType.LONG_PRESS_END,
-                {ATTR_DIRECTION: self._last_fade_direction},
+                {ATTR_DIRECTION: direction} if direction is not None else None,
             )
             self.async_write_ha_state()
             return
