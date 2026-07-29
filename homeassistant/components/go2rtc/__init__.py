@@ -460,11 +460,9 @@ class WebRTCProvider(CameraWebRTCProvider):
         camera: Camera,
     ) -> None:
         """Will be called when the provider is unregistered for a camera."""
-        streams = await self._rest_client.streams.list()
-        if streams.get(get_camera_identifier(camera)):
-            # If no stream exists, no need to disable preload
-            # as a stream is required to enable preload
-            await self._update_preload_stream(camera)
+        identifier = get_camera_identifier(camera)
+        if identifier in await self._rest_client.preload.list():
+            await self._rest_client.preload.disable(identifier)
 
     @override
     async def async_on_camera_prefs_update(

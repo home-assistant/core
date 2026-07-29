@@ -753,7 +753,6 @@ async def test_camera_unregisters_from_webrtc_provider_on_removal(
     with patch.object(
         register_test_provider, "async_unregister_camera", autospec=True
     ) as mock_unregister:
-        # Call async_internal_will_remove_from_hass directly to test the cleanup logic
-        await camera.async_internal_will_remove_from_hass()
+        await camera.async_remove()
         mock_unregister.assert_called_once_with(camera)
         assert camera.webrtc_provider is None

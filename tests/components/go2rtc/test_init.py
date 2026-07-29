@@ -1235,38 +1235,43 @@ async def test_preload_settings_is_applied_on_register(
 
 @pytest.mark.usefixtures("init_integration", "ws_client")
 async def test_preload_disabled_on_unregister(
+    hass: HomeAssistant,
     rest_client: AsyncMock,
     init_test_integration: MockCamera,
 ) -> None:
-    """Test async_unregister_camera disables preload when stream exists."""
+    """Test async_unregister_camera disables preload when it is enabled."""
     camera = init_test_integration
     assert isinstance(camera.webrtc_provider, WebRTCProvider)
     provider = camera.webrtc_provider
     identifier = get_camera_identifier(camera)
-    rest_client.streams.list.return_value = {
-        identifier: Stream([Producer("rtsp://stream")])
-    }
     rest_client.preload.list.return_value = {identifier}
+    # The preference stays enabled, but go2rtc must not keep preloading a
+    # camera the provider no longer handles
+    await _setup_camera_prefs(
+        hass,
+        camera.entity_id,
+        DynamicStreamSettings(
+            orientation=Orientation.NO_TRANSFORM, preload_stream=True
+        ),
+    )
 
     await provider.async_unregister_camera(camera)
 
-    # Verify preload was disabled
     rest_client.preload.disable.assert_called_once_with(identifier)
 
 
 @pytest.mark.usefixtures("init_integration", "ws_client")
-async def test_preload_not_disabled_when_no_stream_exists(
+async def test_preload_not_disabled_when_not_enabled(
     rest_client: AsyncMock,
     init_test_integration: MockCamera,
 ) -> None:
-    """Test async_unregister_camera doesn't disable preload when no stream exists."""
+    """Test async_unregister_camera doesn't disable preload when it is not enabled."""
     camera = init_test_integration
     assert isinstance(camera.webrtc_provider, WebRTCProvider)
     provider = camera.webrtc_provider
 
     await provider.async_unregister_camera(camera)
 
-    # Verify preload was not disabled since no stream exists
     rest_client.preload.disable.assert_not_called()
 
 

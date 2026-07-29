@@ -1143,7 +1143,7 @@ async def test_provider_unregister_error_does_not_propagate(
         "async_unregister_camera",
         AsyncMock(side_effect=side_effect),
     ) as mock_unregister:
-        await camera_obj.async_internal_will_remove_from_hass()
+        await camera_obj.async_remove()
 
     mock_unregister.assert_called_once_with(camera_obj)
     assert camera_obj.webrtc_provider is None
