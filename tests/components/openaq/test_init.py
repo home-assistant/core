@@ -8,11 +8,9 @@ from unittest.mock import MagicMock, patch
 from openaq import NotAuthorizedError, ServerError
 
 from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
-from homeassistant.components.openaq.coordinator import OpenAQDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import setup_integration
 from .conftest import API_KEY, LOCATION_ID, make_latest, make_response
@@ -107,22 +105,18 @@ async def test_setup_stops_after_a_failed_location_refresh(
         ],
     )
 
-    async def first_refresh(coordinator: OpenAQDataUpdateCoordinator) -> None:
+    def get_location(location_id: int) -> object:
         """Fail the first configured location refresh."""
-        refreshed_locations.append(coordinator.location_id)
-        raise ConfigEntryNotReady("API error")
+        refreshed_locations.append(location_id)
+        raise ServerError("API error")
 
     def close_client() -> None:
         """Assert the failing refresh finished before closing the client."""
         assert refreshed_locations == [LOCATION_ID]
 
+    mock_openaq_client.locations.get.side_effect = get_location
     mock_openaq_client.close.side_effect = close_client
-
-    with patch(
-        "homeassistant.components.openaq.OpenAQDataUpdateCoordinator.async_config_entry_first_refresh",
-        first_refresh,
-    ):
-        await setup_integration(hass, config_entry)
+    await setup_integration(hass, config_entry)
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert refreshed_locations == [LOCATION_ID]
