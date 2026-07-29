@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, patch
 
 from openaq import NotAuthorizedError, ServerError
 
-from homeassistant.components.openaq import async_unload_entry
 from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
 from homeassistant.components.openaq.coordinator import OpenAQDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryDataWithId
@@ -241,7 +240,7 @@ async def test_failed_unload_does_not_close_client(
     with patch.object(
         hass.config_entries, "async_unload_platforms", return_value=False
     ):
-        assert not await async_unload_entry(hass, mock_config_entry)
+        assert not await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
     mock_openaq_client.close.assert_not_called()
 
