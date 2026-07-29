@@ -16,6 +16,7 @@ from homeassistant.components.openai_conversation.const import (
     CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
+    CONF_PRO_MODE,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
@@ -273,6 +274,7 @@ async def test_subentry_unsupported_model(
         ("gpt-5.4-pro", ["medium", "high", "xhigh"]),
         ("gpt-5.5", ["none", "low", "medium", "high", "xhigh"]),
         ("gpt-5.5-pro", ["medium", "high", "xhigh"]),
+        ("gpt-5.6", ["none", "low", "medium", "high", "xhigh", "max"]),
     ],
 )
 async def test_subentry_reasoning_effort_list(
@@ -466,6 +468,8 @@ async def test_subentry_reasoning_summary_default_sanitized_on_model_switch(
 @pytest.mark.parametrize(
     ("model", "service_tier_options"),
     [
+        ("gpt-5.6", ["auto", "flex", "default", "priority"]),
+        ("gpt-5.5", ["auto", "flex", "default", "priority"]),
         ("gpt-5.4", ["auto", "flex", "default", "priority"]),
         ("gpt-5.4-pro", ["auto", "flex", "default", "priority"]),
         ("gpt-5.2", ["auto", "flex", "default", "priority"]),
@@ -817,12 +821,12 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 },
                 {
                     CONF_TEMPERATURE: 0.8,
-                    CONF_CHAT_MODEL: "gpt-5",
+                    CONF_CHAT_MODEL: "gpt-5.6",
                     CONF_TOP_P: 0.9,
                     CONF_MAX_TOKENS: 1000,
                 },
                 {
-                    CONF_REASONING_EFFORT: "minimal",
+                    CONF_REASONING_EFFORT: "max",
                     CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                     CONF_CODE_INTERPRETER: False,
                     CONF_VERBOSITY: "high",
@@ -831,17 +835,18 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
                     CONF_WEB_SEARCH_INLINE_CITATIONS: True,
+                    CONF_PRO_MODE: True,
                 },
             ),
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-5",
+                CONF_CHAT_MODEL: "gpt-5.6",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_STORE_RESPONSES: False,
-                CONF_REASONING_EFFORT: "minimal",
+                CONF_REASONING_EFFORT: "max",
                 CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                 CONF_CODE_INTERPRETER: False,
                 CONF_VERBOSITY: "high",
@@ -850,6 +855,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
                 CONF_WEB_SEARCH_INLINE_CITATIONS: True,
+                CONF_PRO_MODE: True,
             },
         ),
         # Test that old options are removed after reconfiguration
@@ -966,7 +972,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_LLM_HASS_API: ["assist"],
                 CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-5",
+                CONF_CHAT_MODEL: "gpt-5.6",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "low",
@@ -974,6 +980,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_SERVICE_TIER: "flex",
                 CONF_CODE_INTERPRETER: True,
                 CONF_VERBOSITY: "medium",
+                CONF_PRO_MODE: True,
             },
             (
                 {

@@ -63,7 +63,8 @@ async def test_updating(
 
     # Resolve the created scene entity dynamically
     entity_entries = er.async_entries_for_config_entry(
-        er.async_get(hass), mock_config_entry.entry_id
+        er.async_get(hass),  # pylint: disable=home-assistant-tests-registry-fixtures
+        mock_config_entry.entry_id,
     )
     scene_entities = [e for e in entity_entries if e.domain == SCENE_DOMAIN]
     assert scene_entities, "No scene entities registered"

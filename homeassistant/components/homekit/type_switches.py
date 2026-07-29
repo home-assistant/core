@@ -556,6 +556,6 @@ class SelectSwitch(HomeAccessory):
     @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-        current_option = cleanup_name_for_homekit(new_state.state)
+        current_option = new_state.state
         for option, char in self.select_chars.items():
             char.set_value(option == current_option)

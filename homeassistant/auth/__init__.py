@@ -675,7 +675,7 @@ class AuthManager:
             jwt_wrapper.verify_and_decode(
                 token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"]
             )
-        except jwt.InvalidTokenError:
+        except jwt.InvalidTokenError, jwt.InvalidKeyError:
             return None
 
         if refresh_token is None or not refresh_token.user.is_active:

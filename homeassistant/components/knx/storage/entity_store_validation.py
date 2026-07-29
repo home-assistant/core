@@ -11,8 +11,8 @@ from .entity_store_schema import ENTITY_STORE_DATA_SCHEMA
 
 class _ErrorDescription(TypedDict):
     path: list[str] | None
-    error_message: str
-    error_class: str
+    message: str
+    code: str | None
 
 
 class EntityStoreValidationError(TypedDict):
@@ -34,8 +34,8 @@ def parse_invalid(exc: vol.Invalid) -> _ErrorDescription:
     """Parse a vol.Invalid exception."""
     return _ErrorDescription(
         path=[str(path) for path in exc.path],  # exc.path: str | vol.Required
-        error_message=exc.msg,
-        error_class=type(exc).__name__,
+        message=exc.msg,
+        code=type(exc).__name__,
     )
 
 

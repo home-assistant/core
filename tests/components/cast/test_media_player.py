@@ -1053,6 +1053,7 @@ async def test_entity_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1066,6 +1067,7 @@ async def test_entity_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1125,6 +1127,7 @@ async def test_entity_browse_media_audio_only(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -2287,6 +2290,7 @@ async def test_cast_platform_browse_media(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": "/api/brands/integration/spotify/logo.png",
         "children_media_class": None,
     }
@@ -2312,6 +2316,7 @@ async def test_cast_platform_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "children_media_class": None,
         "thumbnail": None,
         "children": [],

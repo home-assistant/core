@@ -111,6 +111,4 @@ def remove_stale_devices(
                 break
 
         if device_id and device_id not in all_device_ids:
-            device_registry.async_update_device(
-                device_entry.id, remove_config_entry_id=config_entry.entry_id
-            )
+            device_registry.async_remove_device(device_entry.id)
