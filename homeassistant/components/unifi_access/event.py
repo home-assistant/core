@@ -98,6 +98,17 @@ class UnifiAccessEventEntity(UnifiAccessEntity, EventEntity):
             self.coordinator.async_subscribe_door_events(self._async_handle_event)
         )
 
+    @override
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Clear stale event data when unavailable to prevent spurious triggers on reconnect."""
+        if not self.available:
+            instance_vars = vars(self)
+            instance_vars.pop("_EventEntity__last_event_triggered", None)
+            instance_vars.pop("_EventEntity__last_event_type", None)
+            instance_vars.pop("_EventEntity__last_event_attributes", None)
+        super()._handle_coordinator_update()
+
     @callback
     def _async_handle_event(self, event: DoorEvent) -> None:
         """Handle incoming event from coordinator."""

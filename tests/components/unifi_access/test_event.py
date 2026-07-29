@@ -1223,6 +1223,60 @@ async def test_insights_add_direction(
 
 
 @pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_stale_event_cleared_on_reconnect(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test that stale event data is cleared when the entity recovers from unavailable.
+
+    Regression test for https://github.com/home-assistant/core/issues/174923:
+    When the gateway reboots, the entity briefly goes unavailable and then comes
+    back. If _attr_event is not cleared during the unavailable phase, HA records
+    a state change from 'unavailable' to the old event timestamp, which fires any
+    automation listening on the entity.
+    """
+    handlers = _get_ws_handlers(mock_client)
+
+    insights_msg = InsightsAdd(
+        event="access.logs.insights.add",
+        data=InsightsAddData.model_construct(
+            event_type="access.door.unlock",
+            result="ACCESS",
+            metadata=InsightsMetadata(
+                door=[InsightsMetadataEntry(id="door-001", display_name="Front Door")],
+                actor=InsightsMetadataEntry(display_name="John Doe"),
+                authentication=InsightsMetadataEntry(display_name="NFC"),
+            ),
+        ),
+    )
+    await handlers["access.logs.insights.add"](insights_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "access_granted"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+    on_disconnect = mock_client.start_websocket.call_args[1]["on_disconnect"]
+    on_connect = mock_client.start_websocket.call_args[1]["on_connect"]
+    on_disconnect()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "unavailable"
+
+    on_connect()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+    assert state.attributes.get("event_type") is None
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
 async def test_logs_add_direction(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
