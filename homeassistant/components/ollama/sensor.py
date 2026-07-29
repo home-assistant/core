@@ -37,24 +37,24 @@ SENSORS: tuple[OllamaSensorEntityDescription, ...] = (
         key="loaded_models",
         translation_key="loaded_models",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: len(cast(ProcessResponse, data.loaded).models),
+        value_fn=lambda data: len(cast(ProcessResponse, data.ps_resp).models),
         attr_fn=lambda data: {
             "names": sorted(
                 model.model
-                for model in cast(ProcessResponse, data.loaded).models
+                for model in cast(ProcessResponse, data.ps_resp).models
                 if model.model
             )
         },
-        available_fn=lambda data: data.loaded is not None,
+        available_fn=lambda data: data.ps_resp is not None,
     ),
     OllamaSensorEntityDescription(
         key="installed_models",
         translation_key="installed_models",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: len(data.installed.models),
+        value_fn=lambda data: len(data.list_resp.models),
         attr_fn=lambda data: {
             "names": sorted(
-                model.model for model in data.installed.models if model.model
+                model.model for model in data.list_resp.models if model.model
             )
         },
     ),
@@ -67,9 +67,9 @@ SENSORS: tuple[OllamaSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda data: sum(
-            model.size or 0 for model in cast(ProcessResponse, data.loaded).models
+            model.size or 0 for model in cast(ProcessResponse, data.ps_resp).models
         ),
-        available_fn=lambda data: data.loaded is not None,
+        available_fn=lambda data: data.ps_resp is not None,
     ),
     OllamaSensorEntityDescription(
         key="loaded_model_gpu_memory",
@@ -80,9 +80,9 @@ SENSORS: tuple[OllamaSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda data: sum(
-            model.size_vram or 0 for model in cast(ProcessResponse, data.loaded).models
+            model.size_vram or 0 for model in cast(ProcessResponse, data.ps_resp).models
         ),
-        available_fn=lambda data: data.loaded is not None,
+        available_fn=lambda data: data.ps_resp is not None,
     ),
 )
 

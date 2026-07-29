@@ -26,8 +26,8 @@ UPDATE_INTERVAL: Final = timedelta(seconds=30)
 class OllamaData:
     """Data returned by Ollama."""
 
-    loaded: ollama.ProcessResponse | None
-    installed: ollama.ListResponse
+    list_resp: ollama.ListResponse
+    ps_resp: ollama.ProcessResponse | None
 
 
 class OllamaDataUpdateCoordinator(DataUpdateCoordinator[OllamaData]):
@@ -49,11 +49,11 @@ class OllamaDataUpdateCoordinator(DataUpdateCoordinator[OllamaData]):
     @override
     async def _async_update_data(self) -> OllamaData:
         """Fetch data from Ollama."""
-        installed, loaded = await asyncio.gather(
+        list_resp, ps_resp = await asyncio.gather(
             self._request(self.client.list()),
             self._optional_request(self.client.ps()),
         )
-        return OllamaData(loaded, installed)
+        return OllamaData(list_resp, ps_resp)
 
     async def _request[T](self, request: Awaitable[T]) -> T:
         """Make a required request to Ollama."""

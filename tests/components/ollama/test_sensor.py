@@ -83,8 +83,6 @@ async def test_loaded_model_sensors_unavailable(
     assert installed_entity_id is not None
     loaded_state = hass.states.get(loaded_entity_id)
     installed_state = hass.states.get(installed_entity_id)
-    assert loaded_state is not None
-    assert installed_state is not None
     assert loaded_state.state == STATE_UNAVAILABLE
     assert installed_state.state == "0"
 
@@ -116,8 +114,6 @@ async def test_model_sensors_recover(
 
     loaded_state = hass.states.get(loaded_entity_id)
     installed_state = hass.states.get(installed_entity_id)
-    assert loaded_state is not None
-    assert installed_state is not None
     assert loaded_state.state == "1"
     assert installed_state.state == "2"
     assert mock_ps.await_count == 2
