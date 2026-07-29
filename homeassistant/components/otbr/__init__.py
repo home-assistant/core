@@ -18,6 +18,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import homeassistant_hardware, websocket_api
 from .const import DOMAIN
+from .services import async_setup_services
 from .types import OTBRConfigEntry
 from .util import (
     GetBorderAgentIdNotSupported,
@@ -34,6 +35,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Open Thread Border Router component."""
     websocket_api.async_setup(hass)
+    async_setup_services(hass)
 
     async_register_firmware_info_provider(hass, DOMAIN, homeassistant_hardware)
 

@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
-from .util import OTBRData
+from .util import DATASET_LOCK, OTBRData
 
 if TYPE_CHECKING:
     from . import OTBRConfigEntry
@@ -70,13 +70,16 @@ async def async_change_channel(
 
     Does nothing if not configured.
     """
-    await data.set_channel(channel, delay)
+    # Held across the write and the read-back, so the dataset imported below
+    # is the one this call created.
+    async with DATASET_LOCK:
+        await data.set_channel(channel, delay)
 
-    # Import the new dataset
-    dataset_tlvs = await data.get_pending_dataset_tlvs()
-    if dataset_tlvs is None:
-        # The activation timer may have expired already
-        dataset_tlvs = await data.get_active_dataset_tlvs()
+        # Import the new dataset
+        dataset_tlvs = await data.get_pending_dataset_tlvs()
+        if dataset_tlvs is None:
+            # The activation timer may have expired already
+            dataset_tlvs = await data.get_active_dataset_tlvs()
     if dataset_tlvs is None:
         # Don't try to import a None dataset
         return
