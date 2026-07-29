@@ -11,7 +11,8 @@ from aiohttp.web_urldispatcher import StaticResource
 from lru import LRU
 
 CACHE_TIME: Final = 31 * 86400  # = 1 month
-CACHE_HEADER = f"public, max-age={CACHE_TIME}, immutable"
+CACHE_HEADER = f"public, max-age={CACHE_TIME}"
+IMMUTABLE_CACHE_HEADER = f"{CACHE_HEADER}, immutable"
 CACHE_HEADERS: Mapping[str, str] = {CACHE_CONTROL: CACHE_HEADER}
 RESPONSE_CACHE: LRU[tuple[str, Path], tuple[Path, str]] = LRU(512)
 
@@ -20,6 +21,8 @@ _GUESSER = CONTENT_TYPES.guess_file_type
 
 class CachingStaticResource(StaticResource):
     """Static Resource handler that will add cache headers."""
+
+    cache_header = CACHE_HEADER
 
     @override
     async def _handle(self, request: Request) -> StreamResponse:
@@ -43,5 +46,11 @@ class CachingStaticResource(StaticResource):
             content_type = response.headers[CONTENT_TYPE]
             RESPONSE_CACHE[key] = (file_path, content_type)
 
-        response.headers[CACHE_CONTROL] = CACHE_HEADER
+        response.headers[CACHE_CONTROL] = self.cache_header
         return response
+
+
+class ImmutableCachingStaticResource(CachingStaticResource):
+    """Static resource handler for content-addressed assets."""
+
+    cache_header = IMMUTABLE_CACHE_HEADER

@@ -61,5 +61,6 @@ async def test_async_register_static_paths(
     client = await hass_client()
     resp = await client.get("/something/__init__.py")
     assert resp.status == HTTPStatus.OK
+    assert "immutable" not in resp.headers["cache-control"]
     resp = await client.get("/something_else/__init__.py")
     assert resp.status == HTTPStatus.OK

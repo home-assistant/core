@@ -95,7 +95,7 @@ from .forwarded import async_setup_forwarded
 from .headers import setup_headers
 from .request_context import setup_request_context
 from .security_filter import setup_security_filter
-from .static import CACHE_HEADERS, CachingStaticResource
+from .static import CACHE_HEADERS, CachingStaticResource, ImmutableCachingStaticResource
 from .web_runner import HomeAssistantUnixSite
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -149,6 +149,7 @@ class StaticPathConfig:
     url_path: str
     path: str
     cache_headers: bool = True
+    immutable: bool = False
 
 
 _STATIC_CLASSES = {
@@ -606,9 +607,11 @@ class HomeAssistantHTTP:
     ) -> dict[str, CachingStaticResource | web.StaticResource | None]:
         """Create a list of static resources."""
         return {
-            config.url_path: _STATIC_CLASSES[config.cache_headers](
-                config.url_path, config.path
-            )
+            config.url_path: (
+                ImmutableCachingStaticResource
+                if config.cache_headers and config.immutable
+                else _STATIC_CLASSES[config.cache_headers]
+            )(config.url_path, config.path)
             if os.path.isdir(config.path)
             else None
             for config in configs

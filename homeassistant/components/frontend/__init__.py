@@ -528,20 +528,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     static_paths_configs: list[StaticPathConfig] = []
 
-    for path, should_cache in (
-        ("service_worker.js", False),
-        ("sw-modern.js", False),
-        ("sw-modern.js.map", False),
-        ("sw-legacy.js", False),
-        ("sw-legacy.js.map", False),
-        ("robots.txt", False),
-        ("onboarding.html", not is_dev),
-        ("static", not is_dev),
-        ("frontend_latest", not is_dev),
-        ("frontend_es5", not is_dev),
+    for path, should_cache, immutable in (
+        ("service_worker.js", False, False),
+        ("sw-modern.js", False, False),
+        ("sw-modern.js.map", False, False),
+        ("sw-legacy.js", False, False),
+        ("sw-legacy.js.map", False, False),
+        ("robots.txt", False, False),
+        ("onboarding.html", not is_dev, False),
+        ("static", not is_dev, False),
+        ("frontend_latest", not is_dev, True),
+        ("frontend_es5", not is_dev, True),
     ):
         static_paths_configs.append(
-            StaticPathConfig(f"/{path}", str(root_path / path), should_cache)
+            StaticPathConfig(f"/{path}", str(root_path / path), should_cache, immutable)
         )
 
     static_paths_configs.append(
@@ -772,8 +772,11 @@ async def _async_setup_themes(
 
 @callback
 @lru_cache(maxsize=1)
-def _async_render_index_cached(template: jinja2.Template, **kwargs: Any) -> str:
-    return template.render(**kwargs)
+def _async_render_index_cached(
+    template: jinja2.Template, **kwargs: Any
+) -> tuple[str, ETag]:
+    content = template.render(**kwargs)
+    return content, ETag(hashlib.sha256(content.encode()).hexdigest(), is_weak=True)
 
 
 class IndexView(web_urldispatcher.AbstractResource):
@@ -875,13 +878,12 @@ class IndexView(web_urldispatcher.AbstractResource):
             extra_modules = hass.data[DATA_EXTRA_MODULE_URL].urls
             extra_js_es5 = hass.data[DATA_EXTRA_JS_URL_ES5].urls
 
-        content = _async_render_index_cached(
+        content, etag = _async_render_index_cached(
             template,
             theme_color=MANIFEST_JSON["theme_color"],
             extra_modules=extra_modules,
             extra_js_es5=extra_js_es5,
         )
-        etag = ETag(hashlib.sha256(content.encode()).hexdigest(), is_weak=True)
 
         if request.if_none_match and any(
             tag.value in (etag.value, "*") for tag in request.if_none_match
