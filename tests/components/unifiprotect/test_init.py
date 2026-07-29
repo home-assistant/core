@@ -1,34 +1,48 @@
 """Test the UniFi Protect setup flow."""
 
+from collections.abc import Callable, Coroutine
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from uiprotect import NvrError, ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
-from uiprotect.data import NVR, Bootstrap, CloudAccount, Light
-from uiprotect.exceptions import BadRequest, NotAuthorized
+from uiprotect.data import NVR, Bootstrap, CloudAccount, Light, Version
+from uiprotect.data.public_devices import PublicCamera
+from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
+from homeassistant.components.unifiprotect import async_remove_config_entry_device
 from homeassistant.components.unifiprotect.const import (
     AUTH_RETRIES,
     CONF_ALLOW_EA,
     DOMAIN,
 )
 from homeassistant.components.unifiprotect.data import (
+    async_get_data_for_nvr_id,
     async_ufp_instance_for_config_entry_ids,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import _patch_discovery
+from .conftest import PUBLIC_ONLY_ALARM_ENTITY_ID, UNIFI_MAC
 from .utils import MockUFPFixture, init_entry, time_changed
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
+
+
+def _reauth_flow_started(hass: HomeAssistant) -> bool:
+    """Return whether a reauth flow is in progress."""
+    return any(
+        flow["context"]["source"] == SOURCE_REAUTH
+        for flow in hass.config_entries.flow.async_progress()
+    )
 
 
 @pytest.fixture
@@ -656,7 +670,255 @@ async def test_hybrid_auth_failed_triggers_reauth(
     ufp.devices_ws_state_subscription(WebsocketState.AUTH_FAILED)
     await hass.async_block_till_done()
 
-    assert any(
-        flow["context"]["source"] == SOURCE_REAUTH
-        for flow in hass.config_entries.flow.async_progress()
+    assert _reauth_flow_started(hass)
+
+
+async def test_public_only_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp_public_only_entry: MockConfigEntry,
+    ufp_public_only_client: Mock,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A public-only entry loads, creates the NVR device, and the alarm panel."""
+    await setup_public_only()
+
+    assert ufp_public_only_entry.state is ConfigEntryState.LOADED
+    # The private bootstrap is never fetched in this mode.
+    ufp_public_only_client.get_bootstrap.assert_not_called()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, UNIFI_MAC)})
+    assert device is not None
+    assert device.sw_version == "7.1.83"
+    # Name always, model on firmware newer than 7.1.
+    assert device.name == "Test NVR"
+    assert device.model == "UNVR4"
+    # Degraded identity: no market name / console url.
+    assert device.configuration_url is None
+
+    state = hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID)
+    assert state is not None
+    assert state.state == "disarmed"
+
+
+async def test_public_only_only_alarm_and_camera_platforms(
+    hass: HomeAssistant,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Only the alarm panel and camera are forwarded in public-only mode."""
+    await setup_public_only()
+
+    # No sensors / etc. — those still need the private bootstrap.
+    assert not hass.states.async_entity_ids(Platform.SENSOR.value)
+    assert not hass.states.async_entity_ids(Platform.BINARY_SENSOR.value)
+    assert len(hass.states.async_entity_ids(Platform.ALARM_CONTROL_PANEL.value)) == 1
+
+
+async def test_public_only_auth_failed_triggers_reauth(
+    hass: HomeAssistant,
+    ufp_public_only_client: Mock,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A revoked API key on the public websocket starts a reauth flow.
+
+    The library always emits DISCONNECTED before AUTH_FAILED (uiprotect
+    15.12.2+), so the stale public data is marked unavailable by the regular
+    disconnect path before reauth is triggered.
+    """
+    await setup_public_only()
+
+    state_cb = ufp_public_only_client.subs["devices_state"]
+    state_cb(WebsocketState.DISCONNECTED)
+    state_cb(WebsocketState.AUTH_FAILED)
+    await hass.async_block_till_done()
+
+    assert _reauth_flow_started(hass)
+    assert hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+def _mutate_backfill_missing(client: Mock) -> None:
+    client.public_bootstrap.nvr.mac = None
+
+
+def _mutate_prime_unauthorized(client: Mock) -> None:
+    client.update_public = AsyncMock(side_effect=NotAuthorized)
+
+
+def _mutate_old_version(client: Mock) -> None:
+    meta = Mock()
+    meta.version = Version("1.0.0")
+    client.get_meta_info = AsyncMock(return_value=meta)
+
+
+def _mutate_prime_transport_error(client: Mock) -> None:
+    client.update_public = AsyncMock(side_effect=ClientError)
+
+
+def _mutate_no_public_nvr(client: Mock) -> None:
+    client.public_bootstrap.nvr = None
+
+
+@pytest.mark.parametrize(
+    ("mutate", "expected_state"),
+    [
+        pytest.param(
+            _mutate_backfill_missing,
+            ConfigEntryState.SETUP_RETRY,
+            id="unresolved_mac_retries",
+        ),
+        pytest.param(
+            _mutate_prime_unauthorized,
+            ConfigEntryState.SETUP_RETRY,
+            id="rejected_key_buffered_like_private",
+        ),
+        pytest.param(
+            _mutate_old_version,
+            ConfigEntryState.SETUP_ERROR,
+            id="old_version_aborts",
+        ),
+        pytest.param(
+            _mutate_prime_transport_error,
+            ConfigEntryState.SETUP_RETRY,
+            id="transport_error_retries",
+        ),
+        pytest.param(
+            _mutate_no_public_nvr,
+            ConfigEntryState.SETUP_RETRY,
+            id="missing_public_nvr_retries",
+        ),
+    ],
+)
+async def test_public_only_setup_failures(
+    ufp_public_only_entry: MockConfigEntry,
+    ufp_public_only_client: Mock,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    mutate: Callable[[Mock], None],
+    expected_state: ConfigEntryState,
+) -> None:
+    """Each public-only setup failure lands in the right config-entry state."""
+    mutate(ufp_public_only_client)
+
+    await setup_public_only()
+
+    assert ufp_public_only_entry.state is expected_state
+
+
+async def test_public_only_rejected_key_exhausts_to_reauth(
+    ufp_public_only_entry: MockConfigEntry,
+    ufp_public_only_client: Mock,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Persistent 401s exhaust the retry buffer and abort to reauth."""
+    ufp_public_only_client.update_public = AsyncMock(side_effect=NotAuthorized)
+
+    with patch("homeassistant.components.unifiprotect.AUTH_RETRIES", 0):
+        await setup_public_only()
+
+    assert ufp_public_only_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_public_only_sets_unique_id_when_missing(
+    hass: HomeAssistant,
+    ufp_public_only_entry: MockConfigEntry,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Setup resolves and stores the unique id when the entry lacks one."""
+    hass.config_entries.async_update_entry(ufp_public_only_entry, unique_id=None)
+
+    await setup_public_only()
+
+    assert ufp_public_only_entry.state is ConfigEntryState.LOADED
+    assert ufp_public_only_entry.unique_id == UNIFI_MAC
+
+
+async def test_public_only_entry_skipped_by_nvr_id_lookup(
+    hass: HomeAssistant,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """The nvr-id lookup (thumbnail/video views) skips a public-only entry.
+
+    It iterates every loaded entry and reads the private bootstrap; a
+    public-only entry has none and must be skipped, not raise.
+    """
+    await setup_public_only()
+
+    assert async_get_data_for_nvr_id(hass, "nvr-id") is None
+
+
+async def test_public_only_device_removal(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp_public_only_entry: MockConfigEntry,
+    ufp_public_only_client: Mock,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Device removal works without a private bootstrap.
+
+    The NVR (a live device) must refuse removal; a stale device unknown to
+    the public cache must allow it.
+    """
+    await setup_public_only()
+
+    nvr_device = device_registry.async_get_device(identifiers={(DOMAIN, UNIFI_MAC)})
+    assert nvr_device is not None
+    assert not await async_remove_config_entry_device(
+        hass, ufp_public_only_entry, nvr_device
     )
+
+    stale = device_registry.async_get_or_create(
+        config_entry_id=ufp_public_only_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "FFEEDDCCBB99")},
+    )
+    assert await async_remove_config_entry_device(hass, ufp_public_only_entry, stale)
+
+    # A live camera must refuse removal even if its public mac is not in the
+    # registry's normalized (uppercase, no separator) format.
+    camera = Mock(spec=PublicCamera)
+    camera.mac = "aa:bb:cc:dd:ee:01"
+    ufp_public_only_client.public_bootstrap.cameras = {"cam-id": camera}
+    camera_device = device_registry.async_get_or_create(
+        config_entry_id=ufp_public_only_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "AABBCCDDEE01")},
+    )
+    assert not await async_remove_config_entry_device(
+        hass, ufp_public_only_entry, camera_device
+    )
+
+
+async def test_public_only_manual_refresh(
+    hass: HomeAssistant,
+    ufp_public_only_entry: MockConfigEntry,
+    ufp_public_only_client: Mock,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A manual refresh (update_entity action) runs publicly and stays healthy."""
+    await setup_public_only()
+    ufp_public_only_client.update_public.reset_mock()
+
+    await ufp_public_only_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    ufp_public_only_client.update_public.assert_awaited_once()
+    # The private update path must not run (it would poison the health flag).
+    assert ufp_public_only_entry.runtime_data.last_update_success is True
+    assert hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID).state == "disarmed"
+
+
+async def test_public_only_manual_refresh_revoked_key_triggers_reauth(
+    hass: HomeAssistant,
+    ufp_public_only_entry: MockConfigEntry,
+    ufp_public_only_client: Mock,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Persistent 401s on manual refresh buffer like the private path, then reauth."""
+    await setup_public_only()
+    ufp_public_only_client.update_public = AsyncMock(side_effect=NotAuthorized)
+
+    for _ in range(AUTH_RETRIES):
+        await ufp_public_only_entry.runtime_data.async_refresh()
+        assert not _reauth_flow_started(hass)
+
+    await ufp_public_only_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert _reauth_flow_started(hass)
