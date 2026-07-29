@@ -34,7 +34,6 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.data_entry_flow import SectionConfig, section
-from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
@@ -62,7 +61,6 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     METHODS,
-    MIN_SCAN_INTERVAL,
     OPTION_NONE,
 )
 from .data import DEFAULT_TIMEOUT
@@ -137,7 +135,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 RESOURCE_FLOW_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_RESOURCE): selector.TemplateSelector(),
         vol.Required(CONF_METHOD, default=DEFAULT_METHOD): selector.SelectSelector(
             selector.SelectSelectorConfig(
@@ -211,10 +208,7 @@ RESOURCE_FLOW_SCHEMA = vol.Schema(
 
 def _template_url(value: Any) -> Template:
     template = cv.template(value)
-    try:
-        cv.url(template.async_render(parse_result=False))
-    except TemplateError as ex:
-        raise vol.Invalid(str(ex), error_type="template error") from None
+    cv.url(template.async_render(parse_result=False))
     return template
 
 
@@ -228,7 +222,6 @@ def _valid_codec(value: Any) -> Any:
 
 RESOURCE_VALIDATION_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_RESOURCE): _template_url,
         vol.Required(CONF_METHOD): cv.string,
         vol.Required(CONF_AUTHENTICATION): vol.Schema(
@@ -253,19 +246,6 @@ RESOURCE_VALIDATION_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_ENCODING): _valid_codec,
-    }
-)
-
-
-OPTIONS_FLOW_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_SCAN_INTERVAL): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=MIN_SCAN_INTERVAL,
-                mode=selector.NumberSelectorMode.BOX,
-                unit_of_measurement=UnitOfTime.SECONDS,
-            )
-        )
     }
 )
 
@@ -295,7 +275,7 @@ SUBENTRY_FLOW_SCHEMA = vol.Schema(
     }
 )
 
-_AVAILABILTY_SCHEMA = {vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector()}
+_AVAILABILITY_SCHEMA = {vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector()}
 
 BINARY_SENSOR_SUBENTRY_FLOW_SCHEMA = SUBENTRY_FLOW_SCHEMA.extend(
     {
@@ -308,4 +288,4 @@ BINARY_SENSOR_SUBENTRY_FLOW_SCHEMA = SUBENTRY_FLOW_SCHEMA.extend(
             ),
         ),
     }
-).extend(_AVAILABILTY_SCHEMA)
+).extend(_AVAILABILITY_SCHEMA)

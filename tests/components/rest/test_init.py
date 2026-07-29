@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import ssl
+from typing import Any
 from unittest.mock import patch
 
 from aiohttp import ClientError
@@ -552,7 +553,9 @@ async def test_setup_minimum_payload_template(
 
 
 async def test_setup_entry_bad_resource(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, get_config_entry_data
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
 ) -> None:
     """Test setup entry with resource."""
     aioclient_mock.get("http://localhost", exc=ClientError("client error"))

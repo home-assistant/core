@@ -1,9 +1,10 @@
 """Tests for REST config_flow.py."""
 
+from typing import Any
 from unittest.mock import ANY
 
 from aiohttp import ClientError
-import voluptuous as vol
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.rest.const import (
@@ -17,7 +18,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PARAMS,
     CONF_PAYLOAD,
-    CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
     Platform,
 )
@@ -30,11 +30,11 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.usefixtures("async_mock_resource")
 async def test_entry_and_subentries(
     hass: HomeAssistant,
-    async_mock_resource,
-    get_config_entry_data,
-    get_subentry_data,
+    get_config_entry_data: dict[str, Any],
+    get_subentry_data: dict[str, Any],
 ) -> None:
     """Test the basic config flow and subentry flow."""
 
@@ -92,32 +92,9 @@ async def test_entry_and_subentries(
     assert len(hass.states.async_all(Platform.BINARY_SENSOR)) == 2
 
 
-async def test_options_flow(
-    hass: HomeAssistant, async_mock_resource, get_config_entry_data
-) -> None:
-    """Test an options flow."""
-
-    entry = await async_setup_entry(
-        hass,
-        get_config_entry_data,
-    )
-    assert entry.state == config_entries.ConfigEntryState.LOADED
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
-    key: vol.Marker = list(result["data_schema"].schema.keys())[0]
-    assert key.description["suggested_value"] == 30
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {CONF_SCAN_INTERVAL: 120}
-    )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert hass.config_entries.async_get_known_entry(
-        entry_id=entry.entry_id
-    ).options == {CONF_SCAN_INTERVAL: 120}
-
-
+@pytest.mark.usefixtures("async_mock_resource")
 async def test_config_reconfigure_flow(
-    hass: HomeAssistant, async_mock_resource, get_config_entry_data
+    hass: HomeAssistant, get_config_entry_data: dict[str, Any]
 ) -> None:
     """Test config entry reconfigure flow."""
     entry = await async_setup_entry(
@@ -165,7 +142,9 @@ async def test_subentry_reconfigure_flow(
 
 
 async def test_invalid_rest_resource(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, get_config_entry_data
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
 ) -> None:
     """Test any invalid resource."""
     aioclient_mock.get("http://localhost", exc=ClientError("client error"))
@@ -186,7 +165,7 @@ async def test_invalid_rest_resource(
 
 async def test_config_invalid_input(
     hass: HomeAssistant,
-    get_config_entry_data,
+    get_config_entry_data: dict[str, Any],
 ) -> None:
     """Test config entry reconfigure flow."""
 

@@ -10,18 +10,14 @@ DEFAULT_VERIFY_SSL = True
 DEFAULT_SSL_CIPHER_LIST = SSLCipherList.PYTHON_DEFAULT
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_ENCODING = "UTF-8"
-DEFAULT_SCAN_INTERVAL = 30  # seconds
 DEFAULT_BINARY_SENSOR_NAME = "REST Binary Sensor"
 DEFAULT_SENSOR_NAME = "REST Sensor"
 CONF_PAYLOAD_TEMPLATE = "payload_template"
 
 DOCS_URL_TEMPLATE_DATA_PROCESSING = "https://www.home-assistant.io/docs/templating/where-to-use/#processing-incoming-data"
-DOCS_URL_AVAILBILTY = (
+DOCS_URL_AVAILABILTY = (
     "https://www.home-assistant.io/integrations/template/#availability"
 )
-
-
-MIN_SCAN_INTERVAL = 5  # seconds
 
 CONF_ENCODING = "encoding"
 CONF_SSL_CIPHER_LIST = "ssl_cipher_list"

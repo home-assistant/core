@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 import ssl
+from typing import Any
 from unittest.mock import patch
 
 import aiohttp
@@ -706,12 +707,11 @@ async def test_setup_get_basic_auth_utf8(
     assert state.state == STATE_ON
 
 
+@pytest.mark.usefixtures("async_mock_resource")
 async def test_setup_from_config_entry(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    get_config_entry_data,
-    get_subentry_data,
-    async_mock_resource,
+    get_config_entry_data: dict[str, Any],
+    get_subentry_data: dict[str, Any],
 ) -> None:
     """Test platform setup from config_entry."""
     entry = await async_setup_entry(

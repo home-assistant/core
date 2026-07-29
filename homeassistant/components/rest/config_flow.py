@@ -13,23 +13,21 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     ConfigSubentryFlow,
     FlowType,
-    OptionsFlow,
     SubentryFlowContext,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_SCAN_INTERVAL, Platform
+from homeassistant.const import CONF_NAME, CONF_RESOURCE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers.template import Template
 
 from . import CONFIG_ENTRY_PLATFORMS, create_rest_data_from_config_entry
 from .const import (
     CONF_INITIAL_SUBENTRY_TYPE,
     DEFAULT_BINARY_SENSOR_NAME,
-    DEFAULT_SCAN_INTERVAL,
-    DOCS_URL_AVAILBILTY,
+    DOCS_URL_AVAILABILTY,
     DOCS_URL_TEMPLATE_DATA_PROCESSING,
     DOMAIN,
-    MIN_SCAN_INTERVAL,
     OPTION_NONE,
 )
 from .data import RestData
@@ -37,7 +35,6 @@ from .schema import (
     BINARY_SENSOR_SCHEMA,
     BINARY_SENSOR_SUBENTRY_FLOW_SCHEMA,
     CREATE_ENTRY_SCHEMA,
-    OPTIONS_FLOW_SCHEMA,
     RESOURCE_FLOW_SCHEMA,
     RESOURCE_VALIDATION_SCHEMA,
 )
@@ -59,7 +56,6 @@ async def _validate_input(
     hass: HomeAssistant, user_input: dict[str, Any]
 ) -> tuple[dict[str, str], dict[str, str]]:
     try:
-        # validate
         vol.Schema(RESOURCE_VALIDATION_SCHEMA)(user_input)
         rest: RestData = create_rest_data_from_config_entry(hass, user_input)
         await rest.async_update()
@@ -123,12 +119,10 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 if self.source == SOURCE_USER:
                     self._data = user_input
-                    # Display initial subentry type form
                     return await self.async_step_create_entry()
-                title: str = user_input.pop(CONF_NAME, user_input.get(CONF_RESOURCE))
                 return self.async_update_and_abort(
                     self._get_reconfigure_entry(),
-                    title=title,
+                    title=Template(user_input[CONF_RESOURCE], self.hass).async_render(),
                     data=user_input,
                 )
         return self.async_show_form(
@@ -139,12 +133,14 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.add_suggested_values_to_schema(
                     data_schema=RESOURCE_FLOW_SCHEMA,
                     suggested_values=user_input
-                    or {
-                        **self._get_reconfigure_entry().data,
-                        CONF_NAME: self._get_reconfigure_entry().title,
-                    }
-                    if self.source == SOURCE_RECONFIGURE
-                    else {},
+                    or (
+                        {
+                            **self._get_reconfigure_entry().data,
+                            CONF_NAME: self._get_reconfigure_entry().title,
+                        }
+                        if self.source == SOURCE_RECONFIGURE
+                        else {}
+                    ),
                 )
             ),
             last_step=self.source == SOURCE_RECONFIGURE,
@@ -155,13 +151,11 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Show menu for next flow."""
         if user_input:
-            title: str = self._data.pop(CONF_NAME, self._data.get(CONF_RESOURCE))
             if user_input[CONF_INITIAL_SUBENTRY_TYPE] != OPTION_NONE:
                 self._next_flow_platform = user_input[CONF_INITIAL_SUBENTRY_TYPE]
             return self.async_create_entry(
-                title=title,
+                title=Template(self._data[CONF_RESOURCE], self.hass).async_render(),
                 data=self._data,
-                options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
             )
         return self.async_show_form(
             step_id="create_entry", data_schema=CREATE_ENTRY_SCHEMA
@@ -173,15 +167,6 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
         """Reconfigure the config entry."""
         return await self.async_step_user(user_input)
 
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlow:
-        """Create the options flow."""
-        return RestOptionsFlow()
-
     @classmethod
     @callback
     @override
@@ -190,26 +175,6 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return dict.fromkeys(CONFIG_ENTRY_PLATFORMS, RestSubentryFlow)
-
-
-class RestOptionsFlow(OptionsFlow):
-    """Options flow for RESTful integration."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None
-    ) -> ConfigFlowResult:
-        """Manage RESTful options."""
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_FLOW_SCHEMA,
-                {CONF_SCAN_INTERVAL: self.config_entry.options[CONF_SCAN_INTERVAL]},
-            ),
-            description_placeholders={"min_interval": str(MIN_SCAN_INTERVAL)},
-        )
 
 
 class RestSubentryFlow(ConfigSubentryFlow):
@@ -223,7 +188,6 @@ class RestSubentryFlow(ConfigSubentryFlow):
             title: str = user_input.get(
                 CONF_NAME, SUBENTRY_CONFIG[Platform(self._subentry_type)][CONF_NAME]
             )
-            # generate a unique id
             if self.source == SOURCE_USER:
                 idx = 0
                 for subentry in self._get_entry().subentries.values():
@@ -244,7 +208,7 @@ class RestSubentryFlow(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             description_placeholders={
-                "docs_url_availability": DOCS_URL_AVAILBILTY,
+                "docs_url_availability": DOCS_URL_AVAILABILTY,
                 "docs_url_template_data_processing": DOCS_URL_TEMPLATE_DATA_PROCESSING,
                 "entry_title": self._get_entry().title,
             },

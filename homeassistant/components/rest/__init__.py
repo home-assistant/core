@@ -141,11 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: RestConfigEntry) 
         rest,
         resource_template,
         payload_template,
-        timedelta(
-            seconds=int(
-                config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-            )
-        ),
+        DEFAULT_SCAN_INTERVAL,
     )
 
     config_entry.runtime_data = RestRuntimeData(coordinator, rest)
@@ -167,10 +163,12 @@ async def _async_entry_updated(
 
 async def async_unload_entry(hass: HomeAssistant, entry: RestConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.coordinator.async_shutdown()
-    return await hass.config_entries.async_unload_platforms(
+    unloaded = await hass.config_entries.async_unload_platforms(
         entry, CONFIG_ENTRY_PLATFORMS
     )
+    if unloaded:
+        await entry.runtime_data.coordinator.async_shutdown()
+    return unloaded
 
 
 async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -270,7 +268,7 @@ def create_rest_data_from_config_entry(
     mutable_config[CONF_RESOURCE_TEMPLATE] = mutable_config.pop(CONF_RESOURCE)
     if mutable_config.get(CONF_PAYLOAD):
         mutable_config[CONF_PAYLOAD_TEMPLATE] = mutable_config.pop(CONF_PAYLOAD)
-    # Flatten
+    # Flatten to match .yaml format
     ssl: dict[str, Any] = mutable_config.pop(CONF_SSL_SECTION)
     auth: dict[str, Any] = mutable_config.pop(CONF_AUTHENTICATION)
     return create_rest_data_from_config(
