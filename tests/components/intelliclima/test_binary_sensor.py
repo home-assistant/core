@@ -45,13 +45,13 @@ async def test_all_binary_sensor_entities(
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    # There should be exactly one binary_sensor entity per description, per device
+    # There should be exactly one filter_cleaning binary_sensor entity per device
     binary_sensor_entries = [
         entry
         for entry in entity_registry.entities.values()
         if entry.platform == "intelliclima" and entry.domain == BINARY_SENSOR_DOMAIN
     ]
-    assert len(binary_sensor_entries) == 3
+    assert len(binary_sensor_entries) == 1
 
     for entity_entry in binary_sensor_entries:
         # Device should exist and match snapshot

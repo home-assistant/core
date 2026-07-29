@@ -1,7 +1,5 @@
 """Support for IntelliClima Binary Sensors."""
 
-from collections.abc import Callable
-from dataclasses import dataclass
 from typing import override
 
 from pyintelliclima.intelliclima_types import IntelliClimaECO
@@ -9,7 +7,6 @@ from pyintelliclima.intelliclima_types import IntelliClimaECO
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
-    BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -18,43 +15,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import (
-    IntelliClimaConfigEntry,
-    IntelliClimaCoordinator,
-    IntelliClimaFilterCoordinator,
-)
-from .entity import IntelliClimaECOEntity
+from .coordinator import IntelliClimaConfigEntry, IntelliClimaFilterCoordinator
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
-
-
-@dataclass(frozen=True)
-class IntelliClimaBinarySensorRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[IntelliClimaECO], bool | None]
-
-
-@dataclass(frozen=True)
-class IntelliClimaBinarySensorEntityDescription(
-    BinarySensorEntityDescription, IntelliClimaBinarySensorRequiredKeysMixin
-):
-    """Describes a binary sensor entity."""
-
-
-INTELLICLIMA_BINARY_SENSORS: tuple[IntelliClimaBinarySensorEntityDescription, ...] = (
-    IntelliClimaBinarySensorEntityDescription(
-        key="master_satellite",
-        translation_key="master_satellite",
-        value_fn=lambda device_data: device_data.role == "1",
-    ),
-    IntelliClimaBinarySensorEntityDescription(
-        key="winter_summer",
-        translation_key="winter_summer",
-        value_fn=lambda device_data: device_data.ws == "0",
-    ),
-)
 
 
 async def async_setup_entry(
@@ -65,48 +29,12 @@ async def async_setup_entry(
     """Set up a IntelliClima On/Off Sensor."""
     data = entry.runtime_data
 
-    entities: list[BinarySensorEntity] = []
-    for ecocomfort2 in data.devices_coordinator.data.ecocomfort2_devices.values():
-        entities.extend(
-            IntelliClimaBinarySensor(
-                coordinator=data.devices_coordinator,
-                device=ecocomfort2,
-                description=description,
-            )
-            for description in INTELLICLIMA_BINARY_SENSORS
+    async_add_entities(
+        IntelliClimaFilterCleaningBinarySensor(
+            coordinator=data.filter_coordinator, device=ecocomfort2
         )
-        entities.append(
-            IntelliClimaFilterCleaningBinarySensor(
-                coordinator=data.filter_coordinator, device=ecocomfort2
-            )
-        )
-
-    async_add_entities(entities)
-
-
-class IntelliClimaBinarySensor(IntelliClimaECOEntity, BinarySensorEntity):
-    """Extends IntelliClimaEntity with Binary Sensor specific logic."""
-
-    entity_description: IntelliClimaBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: IntelliClimaCoordinator,
-        device: IntelliClimaECO,
-        description: IntelliClimaBinarySensorEntityDescription,
-    ) -> None:
-        """Class initializer."""
-        super().__init__(coordinator, device)
-
-        self.entity_description = description
-
-        self._attr_unique_id = f"{device.id}_{description.key}"
-
-    @property
-    @override
-    def is_on(self) -> bool | None:
-        """Use this to get the correct value."""
-        return self.entity_description.value_fn(self._device_data)
+        for ecocomfort2 in data.devices_coordinator.data.ecocomfort2_devices.values()
+    )
 
 
 class IntelliClimaFilterCleaningBinarySensor(
