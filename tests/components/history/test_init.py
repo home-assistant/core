@@ -427,6 +427,7 @@ async def test_coalesce_in_flight_history_queries(hass: HomeAssistant) -> None:
         b'[["shared"]]',
         b'[["shared"]]',
     ]
+    assert query_key not in hass.data[history._IN_FLIGHT_HISTORY_QUERIES]
 
     retry_future.set_result(b'[["new"]]')
     assert (
