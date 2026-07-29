@@ -55,9 +55,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> b
     try:
         await client.get_account_info()
     except DropboxAuthException as err:
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        ) from err
     except (DropboxUnknownException, TimeoutError) as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
 
     entry.runtime_data = client
 

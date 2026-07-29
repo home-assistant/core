@@ -331,7 +331,10 @@ class HTML5PushCallbackView(HomeAssistantView):
         if target_check.get(ATTR_TARGET) in self.registrations:
             possible_target = self.registrations[target_check[ATTR_TARGET]]
             key = possible_target["subscription"]["keys"]["auth"]
-            with suppress(jwt.exceptions.DecodeError), warnings.catch_warnings():
+            with (
+                suppress(jwt.exceptions.DecodeError, jwt.exceptions.InvalidKeyError),
+                warnings.catch_warnings(),
+            ):
                 warnings.simplefilter("ignore", InsecureKeyLengthWarning)
                 return jwt.decode(token, key, algorithms=["ES256", "HS256"])
 

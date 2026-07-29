@@ -198,7 +198,7 @@ class PortainerCoordinator(
         """Initialize."""
         super().__init__(hass, config_entry, portainer)
         self._image_cache: dict[
-            tuple[int, str], tuple[float, DockerInspect, LocalImageInformation]
+            tuple[int, str], tuple[float, LocalImageInformation]
         ] = {}
 
     @override
@@ -274,6 +274,36 @@ class PortainerCoordinator(
                 for stack in stacks
             }
 
+            container_names = [
+                sanitize_container_name(container.names[0]) for container in containers
+            ]
+            container_inspects = dict(
+                zip(
+                    container_names,
+                    await asyncio.gather(
+                        *(
+                            self.portainer.inspect_container(endpoint.id, container.id)
+                            for container in containers
+                        )
+                    ),
+                    strict=False,
+                )
+            )
+            local_images = dict(
+                zip(
+                    container_inspects,
+                    await asyncio.gather(
+                        *(
+                            self._get_local_image(
+                                endpoint.id, str(container_inspect.image)
+                            )
+                            for container_inspect in container_inspects.values()
+                        )
+                    ),
+                    strict=False,
+                )
+            )
+
             # Map containers, started and stopped
             for container in containers:
                 container_name = sanitize_container_name(container.names[0])
@@ -283,10 +313,8 @@ class PortainerCoordinator(
                     else None
                 )
 
-                (
-                    container_inspect,
-                    local_image,
-                ) = await self._get_inspect_local_image(endpoint.id, container.id)
+                container_inspect = container_inspects[container_name]
+                local_image = local_images[container_name]
 
                 image_status = (
                     (
@@ -466,36 +494,30 @@ class PortainerCoordinator(
             for stack_callback in self.new_stacks_callbacks:
                 stack_callback(new_stack_data)
 
-    async def _get_inspect_local_image(
-        self, endpoint_id: int, container_id: str
-    ) -> tuple[DockerInspect, LocalImageInformation]:
-        """Fetch or retrieve cached container inspect and local image data."""
-        if cached := self._image_cache.get((endpoint_id, container_id)):
-            cached_at, container_inspect, local_image = cached
+    async def _get_local_image(
+        self, endpoint_id: int, image: str
+    ) -> LocalImageInformation:
+        """Fetch local image data, reusing the cache until the watcher checks again."""
+        if cached := self._image_cache.get((endpoint_id, image)):
+            cached_at, local_image = cached
             if (
                 self.watcher is None
                 or self.watcher.last_check is None
                 or cached_at >= self.watcher.last_check
             ):
                 _LOGGER.debug(
-                    "Using cached inspect and local image for endpoint %d, container %s",
+                    "Using cached local image for endpoint %d, image %s",
                     endpoint_id,
-                    container_id,
+                    image,
                 )
-                return container_inspect, local_image
+                return local_image
 
-        container_inspect = await self.portainer.inspect_container(
-            endpoint_id, container_id
-        )
-        local_image = await self.portainer.get_image(
-            endpoint_id, str(container_inspect.image)
-        )
-        self._image_cache[(endpoint_id, container_id)] = (
+        local_image = await self.portainer.get_image(endpoint_id, image)
+        self._image_cache[(endpoint_id, image)] = (
             time.monotonic(),
-            container_inspect,
             local_image,
         )
-        return container_inspect, local_image
+        return local_image
 
 
 class PortainerDockerDiskSpaceCoordinator(
