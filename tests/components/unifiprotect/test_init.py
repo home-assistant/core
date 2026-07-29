@@ -13,6 +13,7 @@ from uiprotect.data.public_devices import PublicCamera
 from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.unifiprotect import async_remove_config_entry_device
 from homeassistant.components.unifiprotect.const import (
     AUTH_RETRIES,
@@ -20,7 +21,6 @@ from homeassistant.components.unifiprotect.const import (
     DOMAIN,
 )
 from homeassistant.components.unifiprotect.data import (
-    async_get_data_for_nvr_id,
     async_ufp_instance_for_config_entry_ids,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
@@ -698,7 +698,7 @@ async def test_public_only_setup(
 
     state = hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID)
     assert state is not None
-    assert state.state == "disarmed"
+    assert state.state == AlarmControlPanelState.DISARMED
 
 
 async def test_public_only_only_alarm_and_camera_platforms(
@@ -831,20 +831,6 @@ async def test_public_only_sets_unique_id_when_missing(
     assert ufp_public_only_entry.unique_id == UNIFI_MAC
 
 
-async def test_public_only_entry_skipped_by_nvr_id_lookup(
-    hass: HomeAssistant,
-    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
-) -> None:
-    """The nvr-id lookup (thumbnail/video views) skips a public-only entry.
-
-    It iterates every loaded entry and reads the private bootstrap; a
-    public-only entry has none and must be skipped, not raise.
-    """
-    await setup_public_only()
-
-    assert async_get_data_for_nvr_id(hass, "nvr-id") is None
-
-
 async def test_public_only_device_removal(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -901,7 +887,10 @@ async def test_public_only_manual_refresh(
     ufp_public_only_client.update_public.assert_awaited_once()
     # The private update path must not run (it would poison the health flag).
     assert ufp_public_only_entry.runtime_data.last_update_success is True
-    assert hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID).state == "disarmed"
+    assert (
+        hass.states.get(PUBLIC_ONLY_ALARM_ENTITY_ID).state
+        == AlarmControlPanelState.DISARMED
+    )
 
 
 async def test_public_only_manual_refresh_revoked_key_triggers_reauth(

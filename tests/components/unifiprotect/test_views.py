@@ -10,6 +10,7 @@ import pytest
 from uiprotect.data import Camera, Event, EventType, ModelType
 from uiprotect.exceptions import ClientError
 
+from homeassistant.components.unifiprotect.data import async_get_data_for_nvr_id
 from homeassistant.components.unifiprotect.views import (
     ThumbnailProxyView,
     async_generate_event_video_url,
@@ -983,3 +984,17 @@ async def test_public_only_entry_id_lookup_404(
     result = view._get_data_or_404(ufp_public_only_entry.entry_id)
     assert isinstance(result, web.Response)
     assert result.status == 404
+
+
+async def test_public_only_entry_skipped_by_nvr_id_lookup(
+    hass: HomeAssistant,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """The nvr-id lookup (thumbnail/video views) skips a public-only entry.
+
+    It iterates every loaded entry and reads the private bootstrap; a
+    public-only entry has none and must be skipped, not raise.
+    """
+    await setup_public_only()
+
+    assert async_get_data_for_nvr_id(hass, "nvr-id") is None
