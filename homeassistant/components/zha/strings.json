@@ -881,6 +881,27 @@
       "minimum_on_level": {
         "name": "Minimum on level"
       },
+      "mmwave_depth_maximum_far": {
+        "name": "mmWave depth maximum (far)"
+      },
+      "mmwave_depth_minimum_near": {
+        "name": "mmWave depth minimum (near)"
+      },
+      "mmwave_height_maximum_ceiling": {
+        "name": "mmWave height maximum (ceiling)"
+      },
+      "mmwave_height_minimum_floor": {
+        "name": "mmWave height minimum (floor)"
+      },
+      "mmwave_hold_time": {
+        "name": "mmWave hold time"
+      },
+      "mmwave_width_maximum_right": {
+        "name": "mmWave width maximum (right)"
+      },
+      "mmwave_width_minimum_left": {
+        "name": "mmWave width minimum (left)"
+      },
       "motion_detection_sensitivity": {
         "name": "Motion detection sensitivity"
       },
@@ -1354,11 +1375,23 @@
       "led_scaling_mode": {
         "name": "LED scaling mode"
       },
+      "light_on_presence_behavior": {
+        "name": "Light on presence behavior"
+      },
       "liquid_state": {
         "name": "Liquid state"
       },
       "local_temperature_source": {
         "name": "Local temperature source"
+      },
+      "mmwave_detect_sensitivity": {
+        "name": "mmWave sensitivity"
+      },
+      "mmwave_detect_trigger": {
+        "name": "mmWave target speed"
+      },
+      "mmwave_room_size_preset": {
+        "name": "mmWave room size preset"
       },
       "mode": {
         "name": "Mode"
@@ -2163,6 +2196,9 @@
       },
       "relay_click_in_on_off_mode": {
         "name": "Disable relay click in on off mode"
+      },
+      "remote_protection": {
+        "name": "Remote protection"
       },
       "scale_protection": {
         "name": "Scale protection"
