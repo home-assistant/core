@@ -289,10 +289,13 @@ async def test_subscribe_does_not_busy_loop_on_clean_return(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert calls == 3
-    # A sleep must have been awaited before every single reconnect,
-    # including the clean-return ones.
-    assert mock_sleep.await_count >= 3
-    mock_sleep.assert_any_await(10)
+    # Only calls 1 and 2 (the clean returns) reach the loop's sleep(10);
+    # call 3 raises CancelledError before that line, so exactly two real
+    # reconnect delays are attributable to this code path.
+    ten_second_sleeps = [
+        call for call in mock_sleep.await_args_list if call.args == (10,)
+    ]
+    assert len(ten_second_sleeps) == 2
 
 
 async def test_subscribe_retries_on_unexpected_exception(
