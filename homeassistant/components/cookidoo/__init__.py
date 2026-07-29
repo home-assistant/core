@@ -72,7 +72,10 @@ def _migrate_identifiers(
                 )
             ) and existing_entity_id != ent.entity_id:
                 existing_ent = entity_registry.async_get(existing_entity_id)
-                if existing_ent and existing_ent.config_entry_id == config_entry.entry_id:
+                if (
+                    existing_ent
+                    and existing_ent.config_entry_id == config_entry.entry_id
+                ):
                     entity_registry.async_remove(ent.entity_id)
                     continue
 
