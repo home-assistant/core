@@ -1,6 +1,7 @@
 """Test OpenAQ initialization."""
 
 import asyncio
+from collections.abc import Callable
 import threading
 import time
 from unittest.mock import MagicMock, patch
@@ -221,6 +222,57 @@ async def test_unload_closes_client(
     await hass.async_block_till_done()
 
     mock_openaq_client.close.assert_called_once()
+
+
+async def test_unload_does_not_close_during_client_call(
+    hass: HomeAssistant,
+    mock_openaq_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unloading does not close the client during a client call."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    loop = asyncio.get_running_loop()
+    call_started = asyncio.Event()
+    close_started = asyncio.Event()
+    release_call = threading.Event()
+
+    async def run_in_thread(target: Callable[..., object], *args: object) -> object:
+        """Run executor jobs in separate threads for this race test."""
+        return await asyncio.to_thread(target, *args)
+
+    def latest(location_id: int) -> object:
+        """Block an SDK call until the test allows it to complete."""
+        loop.call_soon_threadsafe(call_started.set)
+        release_call.wait()
+        return make_response([])
+
+    def close_client() -> None:
+        """Record when the client close starts."""
+        loop.call_soon_threadsafe(close_started.set)
+
+    mock_openaq_client.locations.latest.side_effect = latest
+    mock_openaq_client.close.side_effect = close_client
+    with patch.object(hass, "async_add_executor_job", side_effect=run_in_thread):
+        refresh_task = asyncio.create_task(coordinator.async_refresh())
+        await asyncio.wait_for(call_started.wait(), timeout=1)
+        unload_task = asyncio.create_task(
+            hass.config_entries.async_unload(mock_config_entry.entry_id)
+        )
+        try:
+            await asyncio.wait_for(close_started.wait(), timeout=0.1)
+        except TimeoutError:
+            closed_during_call = False
+        else:
+            closed_during_call = True
+        finally:
+            release_call.set()
+
+        assert await asyncio.wait_for(unload_task, timeout=1)
+        await asyncio.wait_for(refresh_task, timeout=1)
+
+    assert not closed_during_call
+    assert close_started.is_set()
 
 
 async def test_failed_unload_does_not_close_client(

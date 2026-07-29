@@ -64,6 +64,7 @@ class OpenAQRuntimeData:
     """Runtime data for the OpenAQ integration."""
 
     client: OpenAQ
+    client_lock: asyncio.Lock
     coordinators: dict[str, OpenAQDataUpdateCoordinator]
 
 
