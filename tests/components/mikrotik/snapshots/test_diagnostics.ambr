@@ -1,0 +1,79 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'device_info': dict({
+      'firmware': '7.18.2',
+      'last_exception': 'None',
+      'last_update success': True,
+      'model': 'RB5009',
+      'sensors': dict({
+        'health': list([
+          dict({
+            'name': 'voltage',
+            'value': 24.2,
+          }),
+          dict({
+            'name': 'temperature',
+            'value': 50.0,
+          }),
+        ]),
+        'resource': list([
+          dict({
+            'cpu-load': 15,
+            'free-hdd-space': 25,
+            'free-memory': 200,
+            'total-hdd-space': 100,
+            'total-memory': 1000,
+            'uptime': '1w2d3h4m5s',
+          }),
+        ]),
+      }),
+      'support_capman': False,
+      'support_wifi': False,
+      'support_wifiwave2': False,
+      'support_wireless': True,
+      'system': dict({
+        'identity': dict({
+          'name': 'Mikrotik',
+        }),
+        'routerboard': dict({
+          'current-firmware': '7.18.2',
+          'model': 'RB5009',
+          'serial-number': 'ABC123',
+          'upgrade-firmware': '7.19.1',
+        }),
+        'update': dict({
+          'channel': 'stable',
+          'installed-version': '7.18.2',
+          'latest-version': '7.19.1',
+          'status': 'System is already up to date',
+        }),
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '0.0.0.0',
+        'name': 'Mikrotik',
+        'password': '**REDACTED**',
+        'port': 8278,
+        'username': 'user',
+        'verify_ssl': False,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'mikrotik',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---
