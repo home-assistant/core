@@ -101,12 +101,17 @@ class UnifiAccessEventEntity(UnifiAccessEntity, EventEntity):
     @override
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Clear stale event data when unavailable to prevent spurious triggers on reconnect."""
+        """Clear stale event data when unavailable to prevent spurious triggers on reconnect.
+
+        EventEntity stores its last event in private name-mangled attributes that have no
+        public reset API. Direct assignment is used here rather than vars().pop() so that
+        a future rename in the base class surfaces as a mypy attr-defined error rather
+        than a silent no-op.
+        """
         if not self.available:
-            instance_vars = vars(self)
-            instance_vars.pop("_EventEntity__last_event_triggered", None)
-            instance_vars.pop("_EventEntity__last_event_type", None)
-            instance_vars.pop("_EventEntity__last_event_attributes", None)
+            self._EventEntity__last_event_triggered = None  # type: ignore[attr-defined]
+            self._EventEntity__last_event_type = None  # type: ignore[attr-defined]
+            self._EventEntity__last_event_attributes = None  # type: ignore[attr-defined]
         super()._handle_coordinator_update()
 
     @callback
