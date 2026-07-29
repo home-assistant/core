@@ -1,5 +1,6 @@
 """The tests for the webdav todo component."""
 
+import asyncio
 from datetime import UTC, date, datetime
 from typing import Any
 from unittest.mock import MagicMock, Mock
@@ -165,6 +166,24 @@ def compact_ics(ics: str) -> list[str]:
         for line in ics.split("\n")
         if line and not any(filter(line.startswith, IGNORE_COMPONENTS))
     ]
+
+
+async def test_todo_without_data_is_skipped(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+) -> None:
+    """Test a to-do resource with no data is skipped without failing the update."""
+    calendar.search.return_value = [
+        Todo(client=None, url="0.ics", data=None, parent=calendar, id="0"),
+        create_todo(calendar, "1", TODO_NEEDS_ACTION),
+    ]
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
 
 
 @pytest.mark.parametrize(
@@ -803,13 +822,14 @@ async def test_subscribe(
     await hass.async_block_till_done()
 
     # An earlier state write may re-publish the pre-update list; read until the
-    # refreshed item arrives.
+    # refreshed item arrives, bounded so a missing update fails fast.
     items = []
-    while not items or items[0]["summary"] != "Milk":
-        msg = await client.receive_json()
-        assert msg["id"] == subscription_id
-        assert msg["type"] == "event"
-        items = msg["event"].get("items")
+    async with asyncio.timeout(1):
+        while not items or items[0]["summary"] != "Milk":
+            msg = await client.receive_json()
+            assert msg["id"] == subscription_id
+            assert msg["type"] == "event"
+            items = msg["event"].get("items")
 
     assert len(items) == 1
     assert items[0]["summary"] == "Milk"
