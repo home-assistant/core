@@ -55,6 +55,55 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     assert config_entry.title == "My tod"
 
 
+async def test_config_flow_sun_events(hass: HomeAssistant) -> None:
+    """Test the config flow with sunrise/sunset instead of a specific time."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.tod.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "after_mode": "sunrise",
+                "before_mode": "sunset",
+                "name": "Daytime",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {
+        "after_time": "sunrise",
+        "before_time": "sunset",
+        "name": "Daytime",
+    }
+
+
+async def test_config_flow_time_mode_requires_time(hass: HomeAssistant) -> None:
+    """Test that a time value is required when the mode is set to a specific time."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "after_mode": "time",
+            "before_mode": "sunset",
+            "name": "Daytime",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "after_time_required"}
+
+
 @pytest.mark.freeze_time("2022-03-16 17:37:00", tz_offset=-7)
 async def test_options(hass: HomeAssistant) -> None:
     """Test reconfiguring."""
@@ -112,3 +161,49 @@ async def test_options(hass: HomeAssistant) -> None:
     assert state.state == "off"
     assert state.attributes["after"] == "2022-03-16T10:00:00-07:00"
     assert state.attributes["before"] == "2022-03-16T17:05:00-07:00"
+
+
+@pytest.mark.freeze_time("2022-03-16 17:37:00", tz_offset=-7)
+async def test_options_sun_events(hass: HomeAssistant) -> None:
+    """Test reconfiguring to and from sunrise/sunset."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "after_time": "10:00",
+            "before_time": "18:05",
+            "name": "My tod",
+        },
+        title="My tod",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    schema = result["data_schema"].schema
+    assert get_schema_suggested_value(schema, "after_mode") == "time"
+    assert get_schema_suggested_value(schema, "after_time") == "10:00"
+    assert get_schema_suggested_value(schema, "before_mode") == "time"
+    assert get_schema_suggested_value(schema, "before_time") == "18:05"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "after_mode": "sunrise",
+            "before_mode": "sunset",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "after_time": "sunrise",
+        "before_time": "sunset",
+        "name": "My tod",
+    }
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    schema = result["data_schema"].schema
+    assert get_schema_suggested_value(schema, "after_mode") == "sunrise"
+    assert get_schema_suggested_value(schema, "after_time") is None
+    assert get_schema_suggested_value(schema, "before_mode") == "sunset"
+    assert get_schema_suggested_value(schema, "before_time") is None
