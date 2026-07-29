@@ -35,7 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> bo
         await hass.async_add_executor_job(client.close)
         raise
 
-    entry.runtime_data = OpenAQRuntimeData(client=client, coordinators=coordinators)
+    entry.runtime_data = OpenAQRuntimeData(
+        client=client, client_lock=client_lock, coordinators=coordinators
+    )
     entry.async_on_unload(entry.add_update_listener(async_update_entry))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -50,5 +52,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> b
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        await hass.async_add_executor_job(entry.runtime_data.client.close)
+        async with entry.runtime_data.client_lock:
+            await hass.async_add_executor_job(entry.runtime_data.client.close)
     return unload_ok
