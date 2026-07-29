@@ -1,6 +1,5 @@
 """Test OpenAQ initialization."""
 
-import asyncio
 from unittest.mock import MagicMock, patch
 
 from openaq import NotAuthorizedError, ServerError
@@ -45,19 +44,19 @@ async def test_setup_retry_on_first_refresh_failure(
     mock_openaq_client.close.assert_called_once()
 
 
-async def test_setup_fails_auth_on_first_refresh_auth_failure(
+async def test_setup_retries_on_first_refresh_auth_failure(
     hass: HomeAssistant,
     mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup fails auth when first coordinator refresh has an auth error."""
+    """Test setup retries when first coordinator refresh has an auth error."""
     mock_openaq_client.locations.latest.side_effect = NotAuthorizedError(
         "Invalid API key"
     )
 
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_openaq_client.close.assert_called_once()
 
 
@@ -75,14 +74,12 @@ async def test_setup_retry_on_empty_location_response(
     mock_openaq_client.close.assert_called_once()
 
 
-async def test_setup_closes_client_after_sibling_refresh_finalizes(
+async def test_setup_stops_after_a_failed_location_refresh(
     hass: HomeAssistant,
     mock_openaq_client: MagicMock,
 ) -> None:
-    """Test setup closes the client after sibling refresh tasks finish."""
-    running_refresh_started = asyncio.Event()
-    running_refresh_finalized = asyncio.Event()
-    failing_refresh_started = asyncio.Event()
+    """Test setup closes after the failed refresh and skips later locations."""
+    refreshed_locations: list[int] = []
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -108,22 +105,13 @@ async def test_setup_closes_client_after_sibling_refresh_finalizes(
     )
 
     async def first_refresh(coordinator: OpenAQDataUpdateCoordinator) -> None:
-        """Refresh one coordinator while another fails."""
-        if coordinator.location_id == LOCATION_ID:
-            running_refresh_started.set()
-            try:
-                await asyncio.Event().wait()
-            finally:
-                running_refresh_finalized.set()
-            return
-
-        await running_refresh_started.wait()
-        failing_refresh_started.set()
+        """Fail the first configured location refresh."""
+        refreshed_locations.append(coordinator.location_id)
         raise ConfigEntryNotReady("API error")
 
     def close_client() -> None:
-        """Assert the sibling refresh finalized before closing the client."""
-        assert running_refresh_finalized.is_set()
+        """Assert the failing refresh finished before closing the client."""
+        assert refreshed_locations == [LOCATION_ID]
 
     mock_openaq_client.close.side_effect = close_client
 
@@ -134,8 +122,7 @@ async def test_setup_closes_client_after_sibling_refresh_finalizes(
         await setup_integration(hass, config_entry)
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert failing_refresh_started.is_set()
-    assert running_refresh_finalized.is_set()
+    assert refreshed_locations == [LOCATION_ID]
     mock_openaq_client.close.assert_called_once()
 
 

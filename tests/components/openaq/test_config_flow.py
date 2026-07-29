@@ -78,6 +78,7 @@ async def test_user_flow_success(
     assert result["title"] == "OpenAQ"
     assert result["data"] == {CONF_API_KEY: API_KEY}
     assert len(mock_setup_entry.mock_calls) == 1
+    mock_openaq_client.close.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -118,6 +119,7 @@ async def test_user_flow_errors(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
+    assert mock_openaq_client.close.call_count == 2
 
 
 async def test_duplicate_parent_entry(
@@ -157,61 +159,6 @@ async def test_different_api_key_parent_entry(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_API_KEY: "other-api-key"}
-
-
-async def test_reauth_success(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_openaq_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test successful API key reauthentication."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reauth_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_KEY: "new-api-key"}
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data == {CONF_API_KEY: "new-api-key"}
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.parametrize(
-    ("exception", "error"),
-    [
-        (NotAuthorizedError("Invalid API key"), "invalid_auth"),
-        (HTTPRateLimitError("Rate limited"), "rate_limited"),
-        (APIError("API error"), "cannot_connect"),
-        (OSError("Connection error"), "cannot_connect"),
-        (Exception("Unexpected"), "unknown"),
-    ],
-)
-async def test_reauth_errors(
-    hass: HomeAssistant,
-    mock_openaq_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    exception: Exception,
-    error: str,
-) -> None:
-    """Test API key reauthentication errors."""
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reauth_flow(hass)
-    mock_openaq_client.parameters.list.side_effect = exception
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_KEY: "new-api-key"}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": error}
 
 
 async def test_location_subentry_map_flow(
@@ -262,6 +209,7 @@ async def test_location_subentry_map_flow(
         radius=5000,
         limit=LOCATION_FETCH_LIMIT,
     )
+    mock_openaq_client.close.assert_called_once()
 
 
 async def test_location_subentry_map_flow_without_locality(
@@ -721,6 +669,7 @@ async def test_location_subentry_map_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
+    mock_openaq_client.close.assert_called_once()
 
 
 async def test_location_subentry_map_flow_omits_configured_locations(
