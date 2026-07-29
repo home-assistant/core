@@ -105,9 +105,11 @@ class UnifiAccessEventEntity(UnifiAccessEntity, EventEntity):
         if not self.available:
             # EventEntity.state/_trigger_event are final and expose no public reset
             # API, so the mangled private attributes are cleared directly instead.
-            self._EventEntity__last_event_triggered = None  # type: ignore[attr-defined]
-            self._EventEntity__last_event_type = None  # type: ignore[attr-defined]
-            self._EventEntity__last_event_attributes = None  # type: ignore[attr-defined]
+            # pylint: disable=attribute-defined-outside-init
+            self._EventEntity__last_event_triggered = None
+            self._EventEntity__last_event_type = None
+            self._EventEntity__last_event_attributes = None
+            # pylint: enable=attribute-defined-outside-init
         super()._handle_coordinator_update()
 
     @callback
