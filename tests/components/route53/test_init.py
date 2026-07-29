@@ -409,6 +409,36 @@ async def test_setup_boto3_errors_are_wrapped(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_setup_boto3_client_error_is_wrapped(
+    hass: HomeAssistant,
+    mock_boto3_client: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a failure creating the boto3 client fails setup cleanly."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ACCESS_KEY_ID: "test-key",
+            CONF_SECRET_ACCESS_KEY: "test-secret",
+            CONF_ZONE: "test-zone",
+            CONF_DOMAIN: "example.com",
+            CONF_RECORDS: ["test1"],
+            CONF_TTL: DEFAULT_TTL,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
+    with patch(
+        "homeassistant.components.route53.boto3.client",
+        side_effect=botocore.exceptions.ConfigParseError(path="/etc/aws/config"),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_periodic_update(
     hass: HomeAssistant,
     mock_boto3_client: MagicMock,

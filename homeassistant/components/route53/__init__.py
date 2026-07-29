@@ -199,15 +199,16 @@ def _update_route53_records(
     zone: str,
     changes: list[dict[str, Any]],
 ) -> None:
-    client = boto3.client(
-        "route53",
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-    )
     _LOGGER.debug("Submitting the following changes to Route53")
     _LOGGER.debug(changes)
 
+    # Creating the client can raise too, for example on a malformed AWS config
     try:
+        client = boto3.client(
+            "route53",
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+        )
         response = client.change_resource_record_sets(
             HostedZoneId=zone, ChangeBatch={"Changes": changes}
         )
