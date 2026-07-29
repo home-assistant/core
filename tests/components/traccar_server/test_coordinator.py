@@ -235,25 +235,7 @@ async def test_subscribe_does_not_recurse_across_reconnects(
     mock_traccar_api_client: Generator[AsyncMock],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Subscribe must retry via a loop, not recursion.
-
-    Regression test for a bug where each reconnect attempt recursively
-    awaited `self.subscribe()` instead of looping. That grew the call
-    stack by one frame per reconnect, so after enough reconnects it
-    raised RecursionError - which isn't a TraccarException, so it wasn't
-    caught, and the background subscription task died silently for good.
-
-    We simulate far more consecutive failures than Python's default
-    recursion limit (sys.getrecursionlimit(), normally ~1000) to prove
-    the retry loop no longer grows the stack.
-
-    This drives the real background task created by async_setup_entry()
-    (see __init__.py) rather than manually re-invoking subscribe() - the
-    latter would run concurrently against that same background task,
-    racing for the same shared call counts and producing flaky results.
-    hass.async_block_till_done(wait_background_tasks=True) is the public
-    way to wait for it to actually finish before asserting.
-    """
+    """Subscribe retries must not grow the call stack."""
     attempts = 0
     target_attempts = sys.getrecursionlimit() * 2
 
