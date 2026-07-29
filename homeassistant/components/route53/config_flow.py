@@ -70,6 +70,8 @@ def _normalize(name: str) -> str:
     return name.rstrip(".").lower()
 
 
+# boto3 blocks twice here: creating the client reads its service model from
+# disk, and get_hosted_zone makes a network call. Both need the executor.
 def _validate_auth(
     aws_access_key_id: str, aws_secret_access_key: str, zone: str
 ) -> str:
