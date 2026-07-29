@@ -33,6 +33,18 @@ ZONE_ERROR_CODES = {"NoSuchHostedZone", "InvalidInput"}
 
 ERROR_FIELDS = {"invalid_zone": CONF_ZONE, "invalid_domain": CONF_DOMAIN}
 
+
+def _clean_records(value: list[str]) -> list[str]:
+    """Strip record names, rejecting a list without any usable entry.
+
+    An empty Changes batch is rejected by Route53, so catch it in the form.
+    """
+    records = [record.strip() for record in value]
+    if not records or not all(records):
+        raise vol.Invalid("every record must be non-empty")
+    return records
+
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ACCESS_KEY_ID): TextSelector(
@@ -47,8 +59,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_DOMAIN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT)
         ),
-        vol.Required(CONF_RECORDS): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.TEXT, multiple=True)
+        vol.Required(CONF_RECORDS): vol.All(
+            TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiple=True)),
+            _clean_records,
         ),
         vol.Optional(CONF_TTL, default=DEFAULT_TTL): vol.All(
             NumberSelector(

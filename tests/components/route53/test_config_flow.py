@@ -15,7 +15,7 @@ from homeassistant.components.route53.const import (
 )
 from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from tests.common import MockConfigEntry
 
@@ -60,6 +60,45 @@ async def test_full_flow(
         CONF_TTL: DEFAULT_TTL,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "records",
+    [
+        pytest.param([], id="empty_list"),
+        pytest.param([""], id="empty_string"),
+        pytest.param(["   "], id="whitespace_only"),
+    ],
+)
+async def test_records_must_not_be_empty(
+    hass: HomeAssistant, mock_boto3_client: MagicMock, records: list[str]
+) -> None:
+    """Test an entry cannot be created without at least one usable record."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.route53.config_flow.boto3.client",
+            return_value=mock_boto3_client.return_value,
+        ),
+        pytest.raises(InvalidData) as err,
+    ):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ACCESS_KEY_ID: "test-key",
+                CONF_SECRET_ACCESS_KEY: "test-secret",
+                CONF_ZONE: "test-zone",
+                CONF_DOMAIN: "example.com",
+                CONF_RECORDS: records,
+                CONF_TTL: DEFAULT_TTL,
+            },
+        )
+
+    assert CONF_RECORDS in err.value.schema_errors
+    assert not hass.config_entries.async_entries(DOMAIN)
 
 
 @pytest.mark.parametrize(
