@@ -28,6 +28,16 @@
     }
   },
   "entity": {
+    "select": {
+      "night_mode_preference": {
+        "name": "Night mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      }
+    },
     "sensor": {
       "bitrate": {
         "name": "Bitrate"
@@ -65,6 +75,9 @@
   "exceptions": {
     "cannot_connect": {
       "message": "Could not connect to the Harbor camera. It may be offline or unreachable."
+    },
+    "select_option_failed": {
+      "message": "Failed to select {option} for {select}."
     },
     "switch_turn_off_failed": {
       "message": "Failed to turn off {switch}."
