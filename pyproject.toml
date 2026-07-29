@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2026.8.0.dev0"
+version = "2026.9.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -784,7 +784,6 @@ ignore = [
   # Disabled to implement in follow up PRs after ruff 0.16 bump
   "ISC004",
   "LOG004",
-  "FURB192",
 ]
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
