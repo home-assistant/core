@@ -72,6 +72,8 @@ def mock_window() -> AsyncMock:
     window.rain_sensor = True
     window.serial_number = "123456789"
     window.get_limitation_min.return_value = MagicMock(position_percent=0)
+    window.get_limitation_max.return_value = MagicMock(position_percent=100)
+    window.set_position_limitations = AsyncMock()
     window.device_updated_cbs = []
     window.is_opening = False
     window.is_closing = False
@@ -98,6 +100,9 @@ def mock_dual_roller_shutter() -> AsyncMock:
         position_percent=30, closed=False, known=True
     )
     cover.position = MagicMock(position_percent=30, closed=False, known=True)
+    cover.get_limitation_min.return_value = MagicMock(position_percent=0)
+    cover.get_limitation_max.return_value = MagicMock(position_percent=100)
+    cover.set_position_limitations = AsyncMock()
     cover.pyvlx = MagicMock()
     return cover
 
@@ -120,6 +125,9 @@ def mock_blind() -> AsyncMock:
     blind.close_orientation = AsyncMock()
     blind.stop_orientation = AsyncMock()
     blind.set_orientation = AsyncMock()
+    blind.get_limitation_min.return_value = MagicMock(position_percent=0)
+    blind.get_limitation_max.return_value = MagicMock(position_percent=100)
+    blind.set_position_limitations = AsyncMock()
     blind.pyvlx = MagicMock()
     return blind
 
@@ -191,6 +199,9 @@ def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
     cover.position_lower_curtain = MagicMock(
         position_percent=30, closed=False, known=True
     )
+    cover.get_limitation_min.return_value = MagicMock(position_percent=0)
+    cover.get_limitation_max.return_value = MagicMock(position_percent=100)
+    cover.set_position_limitations = AsyncMock()
     cover.pyvlx = MagicMock()
     return cover
 

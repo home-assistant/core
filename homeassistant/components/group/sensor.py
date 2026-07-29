@@ -7,7 +7,7 @@ from collections.abc import Callable
 from datetime import datetime
 import logging
 import statistics
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -388,6 +388,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._valid_units = self._get_valid_units()
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Query all members and determine the sensor group state."""
         self.calculate_state_attributes(self._get_valid_entities())
@@ -480,11 +481,13 @@ class SensorGroup(GroupEntity, SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         return {ATTR_ENTITY_ID: self._entity_ids, **self._extra_state_attribute}
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon.
 

@@ -6,7 +6,7 @@ import os
 import shutil
 import subprocess
 import tempfile
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -81,6 +81,7 @@ class PicoTTSEntity(TextToSpeechEntity):
             name=f"Pico TTS {lang}",
         )
 
+    @override
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
@@ -127,15 +128,18 @@ class PicoProvider(Provider):
         self.name = "PicoTTS"
 
     @property
+    @override
     def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
+    @override
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:

@@ -1,7 +1,7 @@
 """Config flow for the Swisscom Internet-Box integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from swisscom_internet_box import (
     SwisscomAuthError,
@@ -33,6 +33,7 @@ class SwisscomConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

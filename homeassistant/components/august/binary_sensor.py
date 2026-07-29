@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import logging
+from typing import override
 
 from yalexs.activity import Activity, ActivityType
 from yalexs.doorbell import DoorbellDetail
@@ -122,6 +123,7 @@ class AugustDoorBinarySensor(AugustDescriptionEntity, BinarySensorEntity):
     description: BinarySensorEntityDescription
 
     @callback
+    @override
     def _update_from_data(self) -> None:
         """Get the latest state of the sensor and update activity."""
         if door_activity := self._get_latest({ActivityType.DOOR_OPERATION}):
@@ -142,6 +144,7 @@ class AugustDoorbellBinarySensor(AugustDescriptionEntity, BinarySensorEntity):
     _check_for_off_update_listener: Callable[[], None] | None = None
 
     @callback
+    @override
     def _update_from_data(self) -> None:
         """Get the latest state of the sensor."""
         self._cancel_any_pending_updates()
@@ -180,6 +183,7 @@ class AugustDoorbellBinarySensor(AugustDescriptionEntity, BinarySensorEntity):
         self._check_for_off_update_listener()
         self._check_for_off_update_listener = None
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """When removing cancel any scheduled updates."""
         self._cancel_any_pending_updates()

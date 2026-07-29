@@ -1,6 +1,6 @@
 """Support for MySensors switches."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -58,16 +58,19 @@ class MySensorsSwitch(MySensorsChildEntity, SwitchEntity):
     """Representation of the value of a MySensors Switch child node."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if switch is on."""
         return self._values.get(self.value_type) == STATE_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 1, ack=1
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.gateway.set_child_value(

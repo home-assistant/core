@@ -557,3 +557,23 @@ async def test_reload_migration_with_leading_zero_mac(
         len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
         == 1
     )
+
+
+async def test_options_listener(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test options update listener reloading the config entry."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Changing options triggers reload
+    with patch(
+        "homeassistant.components.rainbird.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        hass.config_entries.async_update_entry(config_entry, options={"duration": 5})
+        await hass.async_block_till_done()
+
+    # The entry should have been reloaded
+    assert len(mock_setup_entry.mock_calls) == 1

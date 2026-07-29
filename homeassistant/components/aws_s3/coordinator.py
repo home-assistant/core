@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiobotocore.client import AioBaseClient as S3Client
 from botocore.exceptions import BotoCoreError
@@ -54,6 +55,7 @@ class S3DataUpdateCoordinator(DataUpdateCoordinator[SensorData]):
         self._bucket: str = entry.data[CONF_BUCKET]
         self._prefix: str = entry.data.get(CONF_PREFIX, "")
 
+    @override
     async def _async_update_data(self) -> SensorData:
         """Fetch data from AWS S3."""
         try:

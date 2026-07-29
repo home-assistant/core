@@ -7,7 +7,7 @@ from http import HTTPStatus
 from itertools import groupby
 import logging
 import re
-from typing import Any, Final, cast, final
+from typing import Any, Final, cast, final, override
 
 from aiohttp import web
 from dateutil.rrule import rrulestr
@@ -68,6 +68,7 @@ from .const import (
     EVENT_UID,
     LIST_EVENT_FIELDS,
     CalendarEntityFeature,
+    CalendarEntityStateAttribute,
 )
 
 # mypy: disallow-any-generics
@@ -519,7 +520,9 @@ class CalendarEntity(Entity):
 
     entity_description: CalendarEntityDescription
 
-    _entity_component_unrecorded_attributes = frozenset({"description"})
+    _entity_component_unrecorded_attributes = frozenset(
+        {CalendarEntityStateAttribute.DESCRIPTION}
+    )
 
     _alarm_unsubs: list[CALLBACK_TYPE] | None = None
     _event_listeners: (
@@ -545,6 +548,7 @@ class CalendarEntity(Entity):
             return self.entity_description.initial_color
         return None
 
+    @override
     def get_initial_entity_options(self) -> er.EntityOptionsType | None:
         """Return initial entity options."""
         if self.initial_color is None:
@@ -565,22 +569,28 @@ class CalendarEntity(Entity):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the entity state attributes."""
         if (event := self.event) is None:
             return None
 
         return {
-            "message": event.summary,
-            "all_day": event.all_day,
-            "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
-            "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
-            "location": event.location or "",
-            "description": event.description or "",
+            CalendarEntityStateAttribute.MESSAGE: event.summary,
+            CalendarEntityStateAttribute.ALL_DAY: event.all_day,
+            CalendarEntityStateAttribute.START_TIME: event.start_datetime_local.strftime(
+                DATE_STR_FORMAT
+            ),
+            CalendarEntityStateAttribute.END_TIME: event.end_datetime_local.strftime(
+                DATE_STR_FORMAT
+            ),
+            CalendarEntityStateAttribute.LOCATION: event.location or "",
+            CalendarEntityStateAttribute.DESCRIPTION: event.description or "",
         }
 
     @final
     @property
+    @override
     def state(self) -> str:
         """Return the state of the calendar event."""
         if (event := self.event) is None:
@@ -594,6 +604,7 @@ class CalendarEntity(Entity):
         return STATE_OFF
 
     @callback
+    @override
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine.
 
@@ -652,6 +663,7 @@ class CalendarEntity(Entity):
             self._event_listener_debouncer.async_cancel()
             self._event_listener_debouncer = None
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
 

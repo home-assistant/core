@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from proxmoxer import AuthenticationError, ProxmoxAPI
 from proxmoxer.core import ResourceException
@@ -25,6 +25,9 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 
 from .common import sanitize_config_entry
@@ -58,7 +61,9 @@ BASE_SCHEMA = vol.Schema(
             )
         ),
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="username")
+        ),
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Required(CONF_TOKEN, default=False): cv.boolean,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
@@ -67,7 +72,12 @@ BASE_SCHEMA = vol.Schema(
 
 PASSWORD_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
     }
 )
 TOKEN_SCHEMA = vol.Schema(
@@ -167,6 +177,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
     _data: dict[str, Any] = {}
     _entry: ConfigEntry
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -344,30 +355,6 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Error: %s: %s", errors["base"], err)
 
         return proxmox_nodes, errors
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle a flow initiated by configuration file."""
-        self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
-
-        try:
-            proxmox_nodes = await self.hass.async_add_executor_job(
-                _get_nodes_data, import_data
-            )
-        except ProxmoxConnectTimeout:
-            return self.async_abort(reason="connect_timeout")
-        except ProxmoxAuthenticationError:
-            return self.async_abort(reason="invalid_auth")
-        except ProxmoxSSLError:
-            return self.async_abort(reason="ssl_error")
-        except ProxmoxNoNodesFound:
-            return self.async_abort(reason="no_nodes_found")
-        except ProxmoxConnectionError:
-            return self.async_abort(reason="cannot_connect")
-
-        return self.async_create_entry(
-            title=import_data[CONF_HOST],
-            data={**import_data, CONF_NODES: proxmox_nodes},
-        )
 
     def _get_auth_schema(
         self,

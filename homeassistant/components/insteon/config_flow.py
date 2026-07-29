@@ -1,7 +1,7 @@
 """Test config flow for Insteon."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyinsteon import async_connect
 
@@ -55,6 +55,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
     _device_name: str
     discovered_conf: dict[str, str] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -129,6 +130,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id=step_id, data_schema=data_schema, errors=errors
         )
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB discovery."""
         self._device_path = discovery_info.device
@@ -159,6 +161,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_NAME: self._device_name},
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

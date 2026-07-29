@@ -23,7 +23,11 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         super().__init__(coordinator)
 
         self._hostname = coordinator.data.system.hostname
-        self._key = f"{self._hostname}_{key}" if key is not None else self._hostname
+        self._attr_unique_id = (
+            f"{coordinator.data.system.uuid}_{key}"
+            if key is not None
+            else coordinator.data.system.uuid
+        )
         self._configuration_url = (
             f"http://{self._hostname}:{api_port}/app/settings.html"
         )
@@ -31,15 +35,7 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         self._uuid = coordinator.data.system.uuid
         self._version = coordinator.data.system.version
 
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self._key
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this System Bridge instance."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             configuration_url=self._configuration_url,
             connections={(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
             identifiers={(DOMAIN, self._uuid)},

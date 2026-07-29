@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Literal, cast
+from typing import Any, Literal, cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,6 +29,7 @@ from .const import (
     SENSOR_LAST_ORDER_SLOT_START,
     SENSOR_LAST_ORDER_STATUS,
     SENSOR_LAST_ORDER_TOTAL_PRICE,
+    SENSOR_NEXT_DELIVERY_ESTIMATED_ARRIVAL,
     SENSOR_NEXT_DELIVERY_ETA_END,
     SENSOR_NEXT_DELIVERY_ETA_START,
     SENSOR_NEXT_DELIVERY_SLOT_END,
@@ -167,6 +168,17 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         ),
     ),
     PicnicSensorEntityDescription(
+        key=SENSOR_NEXT_DELIVERY_ESTIMATED_ARRIVAL,
+        translation_key=SENSOR_NEXT_DELIVERY_ESTIMATED_ARRIVAL,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        data_type="next_delivery_data",
+        value_fn=lambda next_delivery: (
+            dt_util.utc_from_timestamp(next_delivery["estimated_arrival"] / 1000)
+            if next_delivery.get("estimated_arrival")
+            else None
+        ),
+    ),
+    PicnicSensorEntityDescription(
         key=SENSOR_NEXT_DELIVERY_SLOT_START,
         translation_key=SENSOR_NEXT_DELIVERY_SLOT_START,
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -228,6 +240,7 @@ class PicnicSensor(SensorEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
         )
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
         data_set = (

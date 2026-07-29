@@ -1,6 +1,7 @@
 """Add support for the Xiaomi TVs."""
 
 import logging
+from typing import override
 
 import pymitv
 import voluptuous as vol
@@ -73,6 +74,7 @@ class XiaomiTV(MediaPlayerEntity):
         self._attr_name = name
         self._attr_state = MediaPlayerState.OFF
 
+    @override
     def turn_off(self) -> None:
         """Instruct the TV to turn sleep.
 
@@ -85,6 +87,7 @@ class XiaomiTV(MediaPlayerEntity):
 
             self._attr_state = MediaPlayerState.OFF
 
+    @override
     def turn_on(self) -> None:
         """Wake the TV back up from sleep."""
         if self.state != MediaPlayerState.ON:

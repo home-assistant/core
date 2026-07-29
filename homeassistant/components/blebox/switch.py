@@ -1,6 +1,6 @@
 """BleBox switch implementation."""
 
-from typing import Any
+from typing import Any, override
 
 import blebox_uniapi.switch
 
@@ -46,16 +46,19 @@ class BleBoxSwitchEntity(BleBoxEntity[blebox_uniapi.switch.Switch], SwitchEntity
             self._attr_name = feature.name
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return whether switch is on."""
         return self._feature.is_on
 
     @blebox_command
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self._feature.async_turn_on()
 
     @blebox_command
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._feature.async_turn_off()

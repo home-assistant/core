@@ -32,7 +32,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_speed_list': list([
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'off',
         'quiet',
         'balanced',
@@ -65,7 +65,7 @@
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <VacuumEntityFeature: 13116>,
+    'supported_features': <VacuumEntityFeature: 29500>,
     'translation_key': 'roborock',
     'unique_id': 'q10_duid',
     'unit_of_measurement': None,
@@ -74,8 +74,8 @@
 # name: test_vacuum_state[vacuum.roborock_q10_s5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'fan_speed': 'balanced',
-      'fan_speed_list': list([
+      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'balanced',
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'off',
         'quiet',
         'balanced',
@@ -83,8 +83,8 @@
         'max',
         'max_plus',
       ]),
-      'friendly_name': 'Roborock Q10 S5+',
-      'supported_features': <VacuumEntityFeature: 13116>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock Q10 S5+',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 29500>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.roborock_q10_s5',
@@ -101,7 +101,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_speed_list': list([
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'quiet',
         'balanced',
         'turbo',
@@ -142,16 +142,16 @@
 # name: test_vacuum_state[vacuum.roborock_q7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'fan_speed': None,
-      'fan_speed_list': list([
+      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: None,
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'quiet',
         'balanced',
         'turbo',
         'max',
         'max_plus',
       ]),
-      'friendly_name': 'Roborock Q7',
-      'supported_features': <VacuumEntityFeature: 13116>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock Q7',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 13116>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.roborock_q7',
@@ -168,7 +168,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_speed_list': list([
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'gentle',
         'off',
         'quiet',
@@ -214,8 +214,8 @@
 # name: test_vacuum_state[vacuum.roborock_s7_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'fan_speed': 'balanced',
-      'fan_speed_list': list([
+      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'balanced',
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'gentle',
         'off',
         'quiet',
@@ -227,8 +227,8 @@
         'custom',
         'smart_mode',
       ]),
-      'friendly_name': 'Roborock S7 2',
-      'supported_features': <VacuumEntityFeature: 30524>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 30524>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.roborock_s7_2',
@@ -245,7 +245,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_speed_list': list([
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'gentle',
         'off',
         'quiet',
@@ -291,8 +291,8 @@
 # name: test_vacuum_state[vacuum.roborock_s7_maxv-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'fan_speed': 'balanced',
-      'fan_speed_list': list([
+      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'balanced',
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'gentle',
         'off',
         'quiet',
@@ -304,8 +304,8 @@
         'custom',
         'smart_mode',
       ]),
-      'friendly_name': 'Roborock S7 MaxV',
-      'supported_features': <VacuumEntityFeature: 30524>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 30524>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.roborock_s7_maxv',

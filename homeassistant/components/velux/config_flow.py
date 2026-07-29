@@ -1,7 +1,7 @@
 """Config flow for Velux integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pyvlx import PyVLX, PyVLXException
 import voluptuous as vol
@@ -62,6 +62,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.discovery_data: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -127,6 +128,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

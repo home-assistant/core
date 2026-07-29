@@ -1,6 +1,6 @@
 """Support for Abode Security System binary sensors."""
 
-from typing import cast
+from typing import cast, override
 
 from jaraco.abode.devices.binary_sensor import BinarySensor
 
@@ -45,11 +45,13 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
     _device: BinarySensor
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
         return cast(bool, self._device.is_on)
 
     @property
+    @override
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of the binary sensor."""
         if self._device.get_value("is_window") == "1":

@@ -1,6 +1,6 @@
 """Config flow for Droplet integration."""
 
-from typing import Any
+from typing import Any, override
 
 from pydroplet.droplet import DropletConnection, DropletDiscovery
 import voluptuous as vol
@@ -23,6 +23,7 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _droplet_discovery: DropletDiscovery
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -82,6 +83,7 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

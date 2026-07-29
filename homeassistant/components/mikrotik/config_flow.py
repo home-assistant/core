@@ -1,16 +1,11 @@
 """Config flow for Mikrotik."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -29,7 +24,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
-from .coordinator import get_api
+from .coordinator import MikrotikConfigEntry, get_api
 from .errors import CannotConnect, LoginError
 
 
@@ -40,12 +35,14 @@ class MikrotikFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: MikrotikConfigEntry,
     ) -> MikrotikOptionsFlowHandler:
         """Get the options flow for this handler."""
         return MikrotikOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
