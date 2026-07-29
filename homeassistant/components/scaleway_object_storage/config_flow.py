@@ -61,8 +61,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class ScalewayConfigFlow(ConfigFlow, domain=DOMAIN):
     """ConfigFlow for the Scaleway Object Storage integration."""
 
-    VERSION = 1
-
     @staticmethod
     def _generate_title(config: Mapping[str, Any]) -> str:
         prefix = config.get(CONF_OBJECT_PREFIX, "")
