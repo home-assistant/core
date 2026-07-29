@@ -1,6 +1,6 @@
 """Integration-internal helper functions that bundle common interactions with the underlying aiohttp_s3_client."""
 
-import asyncio
+from asyncio import Semaphore
 from collections.abc import AsyncGenerator, Generator, Mapping
 from http import HTTPStatus
 import json
@@ -101,7 +101,7 @@ async def read_object_metadata(
     *,
     client: S3Client,
     object_key: str,
-    limiter: asyncio.Semaphore | None,
+    limiter: Semaphore | None,
 ) -> AgentBackup:
     """Read the metadata for a backup object in object storage. Only headers will be requested and no files are downloaded.
 
@@ -110,7 +110,7 @@ async def read_object_metadata(
         object_key: the object key for the backup
         limiter: optional Semaphore to limit concurrent HEAD requests to Scaleway API
     """
-    limiter = limiter or asyncio.Semaphore()
+    limiter = limiter or Semaphore()
     async with limiter:
         _LOGGER.debug("Reading metadata for object %s", object_key)
         try:

@@ -1,6 +1,7 @@
 """BackupAgent implementation based on Scaleway Object Storage."""
 
 import asyncio
+from asyncio import Queue, QueueEmpty, QueueShutDown, Semaphore, Task, TaskGroup
 from collections.abc import (
     AsyncGenerator,
     AsyncIterator,
@@ -15,8 +16,7 @@ import json
 import logging
 from typing import Any, Self, override
 
-import aiohttp
-from aiohttp import ClientConnectionError
+from aiohttp import ClientConnectionError, ClientResponse
 from aiohttp_s3_client.client import AwsUploadError, MultipartUploader, S3Client
 
 from homeassistant.components.backup import (
@@ -141,7 +141,7 @@ class ScalewayBackupAgent(BackupAgent):
         return object_key
 
     @staticmethod
-    async def _yield_chunks(response: aiohttp.ClientResponse) -> AsyncGenerator[bytes]:
+    async def _yield_chunks(response: ClientResponse) -> AsyncGenerator[bytes]:
         """Yields byte chunks of arbitrary size from a response body, then closes the response."""
         try:
             content = response.content
@@ -260,12 +260,12 @@ class ScalewayBackupAgent(BackupAgent):
 
     @staticmethod
     async def _consume_upload_queue(
-        queue: asyncio.Queue[UploadJob],
+        queue: Queue[UploadJob],
     ) -> None:
         while True:
             try:
                 _, upload = await queue.get()
-            except asyncio.QueueShutDown:
+            except QueueShutDown:
                 # Queue is empty, exit worker function
                 return
 
@@ -288,13 +288,13 @@ class ScalewayBackupAgent(BackupAgent):
             queue.task_done()
 
     @staticmethod
-    async def _clean_up_queue(queue: asyncio.Queue[UploadJob]) -> None:
+    async def _clean_up_queue(queue: Queue[UploadJob]) -> None:
         while not queue.empty():
             # Make sure we leave no dangling coroutines
             try:
                 _, upload = queue.get_nowait()
                 upload.close()
-            except asyncio.QueueEmpty:
+            except QueueEmpty:
                 # Queue is already empty (likely due to a race condition)
                 return
 
@@ -317,8 +317,8 @@ class ScalewayBackupAgent(BackupAgent):
 
                 # Queue size is limited to avoid pre-reading the parts into memory faster than we
                 # can upload them.
-                queue: asyncio.Queue[UploadJob] = asyncio.Queue(maxsize=1)
-                workers: list[asyncio.Task[None]] = []
+                queue: Queue[UploadJob] = Queue(maxsize=1)
+                workers: list[Task[None]] = []
 
                 # Start our upload workers
                 for _ in range(MAX_PARALLEL_UPLOADS):
@@ -338,7 +338,7 @@ class ScalewayBackupAgent(BackupAgent):
                         )
                         try:
                             await queue.put((part, upload))
-                        except asyncio.QueueShutDown:
+                        except QueueShutDown:
                             # An upload failed so the queue was shut down by the worker.
                             upload.close()
                             for worker in workers:
@@ -400,7 +400,7 @@ class ScalewayBackupAgent(BackupAgent):
             response.release()
 
     async def _try_read_metadata(
-        self, *, object_key: str, limiter: asyncio.Semaphore
+        self, *, object_key: str, limiter: Semaphore
     ) -> AgentBackup | None:
         try:
             return await helpers.read_object_metadata(
@@ -422,10 +422,10 @@ class ScalewayBackupAgent(BackupAgent):
     @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         backups = []
-        limiter = asyncio.Semaphore(MAX_PARALLEL_HEAD_REQUESTS)
+        limiter = Semaphore(MAX_PARALLEL_HEAD_REQUESTS)
 
         try:
-            async with asyncio.TaskGroup() as tg:
+            async with TaskGroup() as tg:
                 async for object_key in helpers.list_objects(
                     client=self._client, prefix=self._prefix
                 ):
