@@ -2,9 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
-import ollama
+from ollama import ProcessResponse
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,21 +32,17 @@ class OllamaSensorEntityDescription(SensorEntityDescription):
     available_fn: Callable[[OllamaData], bool] = lambda _: True
 
 
-def _loaded_models(data: OllamaData) -> ollama.ProcessResponse:
-    """Return loaded model data."""
-    assert data.loaded is not None
-    return data.loaded
-
-
 SENSORS: tuple[OllamaSensorEntityDescription, ...] = (
     OllamaSensorEntityDescription(
         key="loaded_models",
         translation_key="loaded_models",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: len(_loaded_models(data).models),
+        value_fn=lambda data: len(cast(ProcessResponse, data.loaded).models),
         attr_fn=lambda data: {
             "names": sorted(
-                model.model for model in _loaded_models(data).models if model.model
+                model.model
+                for model in cast(ProcessResponse, data.loaded).models
+                if model.model
             )
         },
         available_fn=lambda data: data.loaded is not None,
@@ -61,7 +57,6 @@ SENSORS: tuple[OllamaSensorEntityDescription, ...] = (
                 model.model for model in data.installed.models if model.model
             )
         },
-        available_fn=lambda data: data.installed is not None,
     ),
     OllamaSensorEntityDescription(
         key="loaded_model_size",
@@ -72,7 +67,7 @@ SENSORS: tuple[OllamaSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda data: sum(
-            model.size or 0 for model in _loaded_models(data).models
+            model.size or 0 for model in cast(ProcessResponse, data.loaded).models
         ),
         available_fn=lambda data: data.loaded is not None,
     ),
@@ -85,7 +80,7 @@ SENSORS: tuple[OllamaSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda data: sum(
-            model.size_vram or 0 for model in _loaded_models(data).models
+            model.size_vram or 0 for model in cast(ProcessResponse, data.loaded).models
         ),
         available_fn=lambda data: data.loaded is not None,
     ),
@@ -144,9 +139,7 @@ class OllamaModelsSensor(CoordinatorEntity[OllamaDataUpdateCoordinator], SensorE
     @override
     def native_value(self) -> int | None:
         """Return the sensor value."""
-        if (data := self.coordinator.data) is None or not (
-            self.entity_description.available_fn(data)
-        ):
+        if (data := self.coordinator.data) is None:
             return None
         return self.entity_description.value_fn(data)
 
@@ -154,8 +147,6 @@ class OllamaModelsSensor(CoordinatorEntity[OllamaDataUpdateCoordinator], SensorE
     @override
     def extra_state_attributes(self) -> dict[str, list[str]] | None:
         """Return the model names."""
-        if (data := self.coordinator.data) is None or not (
-            self.entity_description.available_fn(data)
-        ):
+        if (data := self.coordinator.data) is None:
             return None
         return self.entity_description.attr_fn(data)

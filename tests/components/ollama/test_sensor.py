@@ -68,7 +68,7 @@ async def test_loaded_model_sensors_unavailable(
     entity_registry: EntityRegistry,
     side_effect: Exception,
 ) -> None:
-    """Test the model sensors are unavailable on connection failure."""
+    """Test only loaded model sensors are unavailable when ps fails."""
     mock_ps.side_effect = side_effect
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -86,7 +86,7 @@ async def test_loaded_model_sensors_unavailable(
     assert loaded_state is not None
     assert installed_state is not None
     assert loaded_state.state == STATE_UNAVAILABLE
-    assert installed_state.state == STATE_UNAVAILABLE
+    assert installed_state.state == "0"
 
 
 @patch("ollama.AsyncClient.list", return_value=ollama.ListResponse(models=[{}, {}]))
