@@ -32,7 +32,7 @@ class DomainSpec:
     Used by triggers and conditions.
     """
 
-    device_class: str | None | AnyDeviceClassType = ANY_DEVICE_CLASS
+    device_class: str | AnyDeviceClassType | None = ANY_DEVICE_CLASS
     value_source: str | None = None
     """Attribute name to extract the value from, or None for state.state."""
 
@@ -143,7 +143,7 @@ class ThresholdConfig:
     numerical: bool
     entity: str | None
     number: float | None
-    unit: str | None | UndefinedType
+    unit: str | UndefinedType | None
 
     @classmethod
     def from_config(cls, config: dict[str, Any] | None) -> Self | None:
@@ -153,7 +153,7 @@ class ThresholdConfig:
 
         entity: str | None = None
         number: float | None = None
-        unit: str | None | UndefinedType = UNDEFINED
+        unit: str | UndefinedType | None = UNDEFINED
         numerical = "number" in config
         if numerical:
             number = config["number"]

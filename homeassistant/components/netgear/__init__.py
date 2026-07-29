@@ -94,9 +94,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> 
             if device_entry.via_device_id is None:
                 router_id = device_entry.id
                 continue  # do not remove the router itself
-            device_registry.async_update_device(
-                device_entry.id, remove_config_entry_id=entry.entry_id
-            )
+            device_registry.async_remove_device(device_entry.id)
         # Remove entities that are no longer tracked
         entity_registry = er.async_get(hass)
         entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)

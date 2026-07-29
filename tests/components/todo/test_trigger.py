@@ -93,8 +93,12 @@ def target_todo_lists(
     label_list_one = label_registry.async_create("label_list_one")
     label_list_two = label_registry.async_create("label_list_two")
 
-    device_list_one = dr.DeviceEntry(id="device_list_one")
-    device_list_two = dr.DeviceEntry(id="device_list_two")
+    device_list_one = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device_list_one"
+    )
+    device_list_two = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device_list_two"
+    )
     mock_device_registry(
         hass,
         {

@@ -4,9 +4,11 @@ from itertools import chain, repeat
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
+from dsmr_parser.exceptions import DecryptionError
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.dsmr.config_flow import CannotCommunicate
 from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.usb import SerialDevice
 from homeassistant.core import HomeAssistant
@@ -197,6 +199,172 @@ async def test_setup_serial(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == port.device
     assert result["data"] == entry_data
+
+
+@pytest.mark.parametrize(
+    ("version", "serial_data"),
+    [
+        ("MSn", SERIAL_DATA),
+        ("SAGEMCOM_T210_D_R", SERIAL_DATA_SWEDEN),
+    ],
+)
+async def test_setup_serial_encrypted(
+    hass: HomeAssistant,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    version: str,
+    serial_data: dict[str, str | None],
+) -> None:
+    """Test we can setup an encrypted meter that asks for an encryption key."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_send_validate_fixture
+    port = com_port()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"port": port.device, "dsmr_version": version},
+    )
+
+    # An encrypted version asks for the encryption key in a second step
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"encryption_key": "aabbccddeeff00112233445566778899"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == port.device
+    assert result["data"] == {
+        "port": port.device,
+        "dsmr_version": version,
+        "protocol": "dsmr_protocol",
+        "encryption_key": "aabbccddeeff00112233445566778899",
+        **serial_data,
+    }
+    # The key is decrypted without verifying the GCM authentication tag
+    assert (
+        connection_factory.call_args.kwargs["encryption_key"]
+        == "aabbccddeeff00112233445566778899"
+    )
+    assert connection_factory.call_args.kwargs["authentication_key"] is None
+
+
+async def test_setup_serial_encrypted_invalid_key(
+    hass: HomeAssistant,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test an encrypted meter with a wrong encryption key reports an error."""
+    (_connection_factory, _transport, protocol) = dsmr_connection_send_validate_fixture
+    port = com_port()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"port": port.device, "dsmr_version": "MSn"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+
+    # A wrong key makes the protocol report a decryption error
+    protocol.decryption_error = DecryptionError("wrong key")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"encryption_key": "00000000000000000000000000000000"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+    assert result["errors"] == {"base": "invalid_key"}
+
+
+@pytest.mark.parametrize(
+    "encryption_key",
+    [
+        "tooshort",
+        "nothexnothexnothexnothexnothexgg",
+        "aabbccddeeff00112233445566778899ff",
+    ],
+    ids=["too_short", "non_hex", "too_long"],
+)
+async def test_setup_serial_encrypted_malformed_key(
+    hass: HomeAssistant,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    encryption_key: str,
+) -> None:
+    """Test a malformed encryption key is rejected without a connection attempt."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_send_validate_fixture
+    port = com_port()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"port": port.device, "dsmr_version": "MSn"},
+    )
+
+    assert result["step_id"] == "encryption_key"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"encryption_key": encryption_key},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+    assert result["errors"] == {"base": "invalid_key"}
+    # A malformed key must not reach the reader
+    connection_factory.assert_not_called()
+
+
+@pytest.mark.usefixtures("dsmr_connection_send_validate_fixture")
+async def test_setup_serial_encrypted_cannot_communicate(
+    hass: HomeAssistant,
+) -> None:
+    """Test an encrypted meter does not fall back to RFXtrx when it stays silent."""
+    port = com_port()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"port": port.device, "dsmr_version": "MSn"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+
+    with patch(
+        "homeassistant.components.dsmr.config_flow._validate_dsmr_connection",
+        side_effect=CannotCommunicate,
+    ) as validate:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"encryption_key": "aabbccddeeff00112233445566778899"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+    assert result["errors"] == {"base": "cannot_communicate"}
+    # Encrypted meters must not retry over the RFXtrx protocol
+    assert validate.call_count == 1
 
 
 async def test_setup_serial_rfxtrx(

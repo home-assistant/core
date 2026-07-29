@@ -11,6 +11,7 @@
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "wrong_account": "Wrong account: Please authenticate with the correct account."
     },
@@ -32,6 +33,12 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication with Dropbox failed"
+    },
+    "cannot_connect": {
+      "message": "Error communicating with Dropbox"
+    },
     "missing_refresh_token": {
       "message": "[%key:component::dropbox::config::step::reauth_confirm::description%]"
     },
