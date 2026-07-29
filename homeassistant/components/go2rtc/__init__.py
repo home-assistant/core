@@ -173,7 +173,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
         try:
             await server.start()
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.warning("Could not start go2rtc server", exc_info=True)
             await session.close()
             return False
