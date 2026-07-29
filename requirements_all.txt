@@ -2856,7 +2856,7 @@ pywemo==1.4.0
 pywilight==0.0.74
 
 # homeassistant.components.willow
-pywillow==0.1.0
+pywillow==0.1.2
 
 # homeassistant.components.wiz
 pywizlight==0.6.3
