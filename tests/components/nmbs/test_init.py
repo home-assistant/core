@@ -105,11 +105,12 @@ async def test_concurrent_setup_shares_station_fetch(
     # Release the fetch only after both entry setups are underway, so the
     # second entry sees the first entry's fetch in flight rather than a
     # completed task.
-    while (
-        mock_config_entry.state is not ConfigEntryState.SETUP_IN_PROGRESS
-        or second_entry.state is not ConfigEntryState.SETUP_IN_PROGRESS
-    ):
-        await asyncio.sleep(0)
+    async with asyncio.timeout(10):
+        while (
+            mock_config_entry.state is not ConfigEntryState.SETUP_IN_PROGRESS
+            or second_entry.state is not ConfigEntryState.SETUP_IN_PROGRESS
+        ):
+            await asyncio.sleep(0)
     release_fetch.set()
 
     assert await setup_task
