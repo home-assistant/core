@@ -14,12 +14,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import InsteonConfigEntry
 from .const import SIGNAL_ADD_ENTITIES
 from .entity import InsteonEntity
 from .utils import async_add_insteon_devices, async_add_insteon_entities
@@ -52,7 +52,7 @@ FAN_MODES = {4: FAN_AUTO, 8: FAN_ONLY}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: InsteonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Insteon climate entities from a config entry."""

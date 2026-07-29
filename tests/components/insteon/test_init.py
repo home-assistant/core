@@ -93,3 +93,22 @@ async def test_import_frontend_dev_url(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert insteon.devices.async_save.call_count == 1
         assert mock_close.called
+
+
+async def test_runtime_data(hass: HomeAssistant) -> None:
+    """Test the config entry runtime_data is the pyinsteon device manager."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
+    config_entry.add_to_hass(hass)
+
+    mock_devices = MockDevices()
+    with (
+        patch.object(insteon, "async_connect", new=mock_successful_connection),
+        patch.object(insteon, "async_close"),
+        patch.object(insteon, "devices", new=mock_devices),
+    ):
+        assert await async_setup_component(hass, insteon.DOMAIN, {})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    assert config_entry.runtime_data is mock_devices

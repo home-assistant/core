@@ -4,7 +4,6 @@ import math
 from typing import Any, override
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -14,6 +13,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
+from . import InsteonConfigEntry
 from .const import SIGNAL_ADD_ENTITIES
 from .entity import InsteonEntity
 from .utils import async_add_insteon_devices, async_add_insteon_entities
@@ -23,7 +23,7 @@ SPEED_RANGE = (1, 255)  # off is not included
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: InsteonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Insteon fans from a config entry."""

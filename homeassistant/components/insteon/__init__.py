@@ -5,6 +5,7 @@ import logging
 
 from pyinsteon import async_close, async_connect, devices
 from pyinsteon.constants import ReadWriteMode
+from pyinsteon.managers.device_manager import DeviceManager
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
@@ -34,8 +35,12 @@ from .utils import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type InsteonConfigEntry = ConfigEntry[DeviceManager]
 
-async def async_get_device_config(hass, config_entry):
+
+async def async_get_device_config(
+    hass: HomeAssistant, config_entry: InsteonConfigEntry
+) -> None:
     """Initiate the connection and services."""
     # Make a copy of addresses due to edge case where the list of devices could
     # change during status update
@@ -73,7 +78,7 @@ async def close_insteon_connection(*args):
     await async_close()
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: InsteonConfigEntry) -> bool:
     """Set up an Insteon entry."""
 
     api.async_load_api(hass)
@@ -91,6 +96,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_insteon_connection)
     )
+
+    entry.runtime_data = devices
 
     await devices.async_load(
         workdir=hass.config.config_dir, id_devices=0, load_modem_aldb=0

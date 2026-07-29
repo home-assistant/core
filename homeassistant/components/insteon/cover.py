@@ -8,12 +8,12 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import InsteonConfigEntry
 from .const import SIGNAL_ADD_ENTITIES
 from .entity import InsteonEntity
 from .utils import async_add_insteon_devices, async_add_insteon_entities
@@ -21,7 +21,7 @@ from .utils import async_add_insteon_devices, async_add_insteon_entities
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: InsteonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Insteon covers from a config entry."""
