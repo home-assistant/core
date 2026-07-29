@@ -1,7 +1,6 @@
 """Switch platform for Intertechno TriState on/off control."""
 
-from typing import Any
-from typing import override
+from typing import Any, override
 
 from rf_protocols.commands.pt2262 import PT2262Command
 
