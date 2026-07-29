@@ -8,7 +8,6 @@ from syrupy.assertion import SnapshotAssertion
 from teslemetry_stream import Signal
 
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
-from homeassistant.components.teslemetry.sensor import ATM_TO_BAR
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     STATE_UNAVAILABLE,
@@ -131,33 +130,29 @@ async def test_sensors_streaming(
             Signal.TPMS_PRESSURE_FL,
             "sensor.test_tire_pressure_front_left",
             2.7,
-            PressureConverter.convert(
-                2.7 * ATM_TO_BAR, UnitOfPressure.BAR, UnitOfPressure.PSI
-            ),
+            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
+            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
         ),
         (
             Signal.TPMS_PRESSURE_FR,
             "sensor.test_tire_pressure_front_right",
             2.7,
-            PressureConverter.convert(
-                2.7 * ATM_TO_BAR, UnitOfPressure.BAR, UnitOfPressure.PSI
-            ),
+            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
+            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
         ),
         (
             Signal.TPMS_PRESSURE_RL,
             "sensor.test_tire_pressure_rear_left",
             2.7,
-            PressureConverter.convert(
-                2.7 * ATM_TO_BAR, UnitOfPressure.BAR, UnitOfPressure.PSI
-            ),
+            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
+            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
         ),
         (
             Signal.TPMS_PRESSURE_RR,
             "sensor.test_tire_pressure_rear_right",
             2.7,
-            PressureConverter.convert(
-                2.7 * ATM_TO_BAR, UnitOfPressure.BAR, UnitOfPressure.PSI
-            ),
+            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
+            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
         ),
         (
             Signal.ISOLATION_RESISTANCE,
