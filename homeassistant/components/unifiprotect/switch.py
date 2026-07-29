@@ -324,6 +324,8 @@ PRIVACY_MODE_SWITCH = ProtectSwitchEntityDescription[Camera](
 )
 
 SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
+    # The public sensor object carries no led_settings, so the status light is
+    # the one setting that has to stay on the private API.
     ProtectSwitchEntityDescription(
         key="status_light",
         translation_key="status_light",
@@ -336,8 +338,8 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         key="motion",
         translation_key="detections_motion",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="motion_settings.is_enabled",
-        ufp_set_method="set_motion_status",
+        ufp_public_value="motion_settings.is_enabled",
+        ufp_set_method="set_motion_status_public",
         ufp_capability=SensorFeatureCapability.MOTION,
         ufp_perm=PermRequired.WRITE,
     ),
@@ -345,8 +347,8 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         key="temperature",
         translation_key="temperature_sensor",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="temperature_settings.is_enabled",
-        ufp_set_method="set_temperature_status",
+        ufp_public_value="temperature_settings.is_enabled",
+        ufp_set_method="set_temperature_status_public",
         ufp_capability=SensorFeatureCapability.TEMPERATURE,
         ufp_perm=PermRequired.WRITE,
     ),
@@ -354,8 +356,8 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         key="humidity",
         translation_key="humidity_sensor",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="humidity_settings.is_enabled",
-        ufp_set_method="set_humidity_status",
+        ufp_public_value="humidity_settings.is_enabled",
+        ufp_set_method="set_humidity_status_public",
         ufp_capability=SensorFeatureCapability.HUMIDITY,
         ufp_perm=PermRequired.WRITE,
     ),
@@ -363,8 +365,8 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         key="light",
         translation_key="light_sensor",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="light_settings.is_enabled",
-        ufp_set_method="set_light_status",
+        ufp_public_value="light_settings.is_enabled",
+        ufp_set_method="set_light_status_public",
         ufp_capability=SensorFeatureCapability.LIGHT,
         ufp_perm=PermRequired.WRITE,
     ),
@@ -372,8 +374,8 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         key="alarm",
         translation_key="alarm_sound_detection",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="alarm_settings.is_enabled",
-        ufp_set_method="set_alarm_status",
+        ufp_public_value="alarm_settings.is_enabled",
+        ufp_set_method="set_alarm_public",
         ufp_capability=SensorFeatureCapability.SMOKE,
         ufp_perm=PermRequired.WRITE,
     ),

@@ -48,6 +48,7 @@ from .utils import (
     ids_from_device_description,
     init_entry,
     make_public_light,
+    make_public_sensor,
     public_device_ws_message,
     remove_entities,
     setup_public_light,
@@ -762,3 +763,106 @@ async def test_switch_sense_no_capability_map_keeps_existing(
     await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
 
     assert entity_registry.async_get(existing.entity_id) is not None
+
+
+# The five sense settings the public API exposes, with the public-mock override
+# that flips them and the public setter each switch must write through.
+MIGRATED_SENSE_SWITCHES = [
+    ("motion", "motion_enabled", "set_motion_status_public"),
+    ("temperature", "temperature_enabled", "set_temperature_status_public"),
+    ("humidity", "humidity_enabled", "set_humidity_status_public"),
+    ("light", "light_enabled", "set_light_status_public"),
+    ("alarm", "alarm_enabled", "set_alarm_public"),
+]
+
+
+@pytest.mark.parametrize(("key", "public_kwarg", "set_method"), MIGRATED_SENSE_SWITCHES)
+async def test_switch_sense_public_value(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+    key: str,
+    public_kwarg: str,
+    set_method: str,
+) -> None:
+    """Each migrated sense switch reads its state from the public object."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    description = next(d for d in SENSE_SWITCHES if d.key == key)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, sensor_all, description
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # every setting is enabled on the private fixture, so a public OFF can only
+    # come from the public object
+    public = make_public_sensor(sensor_all, **{public_kwarg: False})
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+@pytest.mark.parametrize(("key", "public_kwarg", "set_method"), MIGRATED_SENSE_SWITCHES)
+async def test_switch_sense_set_public(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+    key: str,
+    public_kwarg: str,
+    set_method: str,
+) -> None:
+    """Each migrated sense switch writes through the public API."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    description = next(d for d in SENSE_SWITCHES if d.key == key)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, sensor_all, description
+    )
+
+    with patch_ufp_method(
+        sensor_all, set_method, new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        mock_method.assert_called_once_with(False)
+
+
+async def test_switch_sense_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """A migrated sense switch is unavailable without a public object."""
+    await init_entry(hass, ufp, [sensor_all])
+
+    description = next(d for d in SENSE_SWITCHES if d.key == "motion")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, sensor_all, description
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_switch_sense_status_light_stays_private(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """The status light has no public counterpart, so it reads the private object.
+
+    Unlike the migrated switches it must stay usable without a public object.
+    """
+    await init_entry(hass, ufp, [sensor_all])
+
+    description = next(d for d in SENSE_SWITCHES if d.key == "status_light")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, sensor_all, description
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    with patch_ufp_method(
+        sensor_all, "set_status_light", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        mock_method.assert_called_once_with(False)
