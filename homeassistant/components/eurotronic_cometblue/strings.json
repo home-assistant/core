@@ -48,6 +48,10 @@
       }
     }
   },
+  "exceptions": {
+    "device_not_found": {
+      "message": "Could not find Comet Blue device with address {address}: {reason}"
+    },
   "services": {
     "get_schedule": {
       "description": "Retrieves the configured heating time ranges of one or multiple devices.",
@@ -104,11 +108,6 @@
         }
       },
       "name": "Set schedule"
-    }
-  },
-  "exceptions": {
-    "device_not_found": {
-      "message": "Could not find Comet Blue device with address {address}: {reason}"
     }
   }
 }
