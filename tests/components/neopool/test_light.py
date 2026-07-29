@@ -213,14 +213,16 @@ async def test_light_maps_communication_error_to_home_assistant_error(
 @pytest.mark.usefixtures("mock_neopool_client")
 async def test_light_absent_when_option_off(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """No light entity is created while the use_light option is off."""
     await setup_integration(hass, mock_config_entry)
-    registry = er.async_get(hass)
     light_entries = [
         e
-        for e in er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
+        for e in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
         if e.domain == LIGHT_DOMAIN
     ]
     assert light_entries == []
@@ -228,6 +230,7 @@ async def test_light_absent_when_option_off(
 
 async def test_light_absent_when_gpio_unassigned(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry_light: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
@@ -238,11 +241,10 @@ async def test_light_absent_when_gpio_unassigned(
         "relay_light_enable": TimerRelayMode.ALWAYS_OFF,
     }
     await setup_integration(hass, mock_config_entry_light)
-    registry = er.async_get(hass)
     light_entries = [
         e
         for e in er.async_entries_for_config_entry(
-            registry, mock_config_entry_light.entry_id
+            entity_registry, mock_config_entry_light.entry_id
         )
         if e.domain == LIGHT_DOMAIN
     ]
