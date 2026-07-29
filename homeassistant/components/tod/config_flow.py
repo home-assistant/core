@@ -26,16 +26,16 @@ MODE_SELECTOR = selector.SelectSelector(
     selector.SelectSelectorConfig(
         options=MODE_OPTIONS,
         mode=selector.SelectSelectorMode.DROPDOWN,
-        translation_key="tod_mode"
+        translation_key="tod_mode",
     )
 )
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_AFTER_TIME, default=MODE_TIME): MODE_SELECTOR,
-        vol.Required(CONF_AFTER_TIME): selector.TimeSelector(),
-        vol.Required(CONF_BEFORE_TIME, default=MODE_TIME): MODE_SELECTOR,
-        vol.Required(CONF_BEFORE_TIME): selector.TimeSelector(),
+        vol.Required(CONF_AFTER_MODE, default=MODE_TIME): MODE_SELECTOR,
+        vol.Optional(CONF_AFTER_TIME): selector.TimeSelector(),
+        vol.Required(CONF_BEFORE_MODE, default=MODE_TIME): MODE_SELECTOR,
+        vol.Optional(CONF_BEFORE_TIME): selector.TimeSelector(),
     }
 )
 
@@ -46,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
 ).extend(OPTIONS_SCHEMA.schema)
 
 async def _validate_after_before(
-        handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Resolve the after/before mode and time fields to a single stored value."""
     for mode_key, time_key in (
@@ -68,7 +68,7 @@ async def _suggested_values(handler: SchemaCommonFlowHandler) -> dict[str, Any]:
     suggested_values = dict(handler.options)
     for mode_key, time_key in (
         (CONF_AFTER_MODE, CONF_AFTER_TIME),
-        (CONF_BEFORE_MODE, CONF_BEFORE_TIME)
+        (CONF_BEFORE_MODE, CONF_BEFORE_TIME),
     ):
         if (time_value := suggested_values.get(time_key)) is None:
             continue
@@ -83,15 +83,15 @@ CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
         CONFIG_SCHEMA,
         validate_user_input=_validate_after_before,
-        suggested_values=_suggested_values
-        ),
+        suggested_values=_suggested_values,
+    ),
 }
 
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
         OPTIONS_SCHEMA,
         validate_user_input=_validate_after_before,
-        suggested_values=_suggested_values
+        suggested_values=_suggested_values,
     ),
 }
 
