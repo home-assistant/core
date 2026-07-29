@@ -345,7 +345,7 @@ aiomealie==2.0.0
 aiomelcloudhome==0.2.1
 
 # homeassistant.components.modern_forms
-aiomodernforms==0.1.8
+aiomodernforms==0.2.0
 
 # homeassistant.components.yamaha_musiccast
 aiomusiccast==0.15.0
