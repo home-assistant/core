@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "installed_models": {
+        "default": "mdi:database"
+      },
+      "loaded_model_gpu_memory": {
+        "default": "mdi:expansion-card"
+      },
+      "loaded_model_size": {
+        "default": "mdi:memory"
+      },
+      "loaded_models": {
+        "default": "mdi:brain"
+      }
+    }
+  }
+}
