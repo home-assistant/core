@@ -246,7 +246,7 @@
     'routes': list([
     ]),
     'rssi': None,
-    'version': 2,
+    'version': 3,
     'zha_lib_entities': dict({
       'alarm_control_panel': list([
         dict({
