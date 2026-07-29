@@ -11,7 +11,7 @@ from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import general, homeautomation, hvac, measurement, smartenergy
 from zigpy.zcl.clusters.hvac import Thermostat
 
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
 from homeassistant.components.zha.helpers import get_zha_gateway
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -308,6 +308,8 @@ async def async_test_setpoint_change_source(
     )
     hass_state = hass.states.get(entity_id)
     assert hass_state.state == "Schedule"
+    assert hass_state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert hass_state.attributes[ATTR_OPTIONS] == ["Manual", "Schedule", "External"]
 
 
 async def async_test_pi_heating_demand(
