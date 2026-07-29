@@ -3,10 +3,9 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from wiim.models import WiimDeviceDiagnostics
 
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -22,6 +21,7 @@ async def test_config_entry_diagnostics_redacts_identifiers(
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     mock_wiim_device: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics include safe runtime data."""
     mock_wiim_device.as_diagnostics.return_value = WiimDeviceDiagnostics(
@@ -45,17 +45,7 @@ async def test_config_entry_diagnostics_redacts_identifiers(
 
     await setup_integration(hass, mock_config_entry)
 
-    diagnostics = await get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+        == snapshot
     )
-
-    assert diagnostics["entry"]["title"] == REDACTED
-    assert diagnostics["entry"]["data"][CONF_HOST] == REDACTED
-    assert diagnostics["device"]["name"] == REDACTED
-    assert diagnostics["device"]["udn"] == REDACTED
-    assert diagnostics["device"]["ip_address"] == REDACTED
-    assert diagnostics["device"]["model_name"] == "WiiM Pro"
-    assert diagnostics["device"]["supports_http_api"] is True
-    assert diagnostics["multiroom"]["role"] == "standalone"
-    assert diagnostics["multiroom"]["leader_udn"] == REDACTED
-    assert diagnostics["multiroom"]["member_udns"] == REDACTED
