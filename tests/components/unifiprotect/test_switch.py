@@ -866,3 +866,35 @@ async def test_switch_sense_status_light_stays_private(
             "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
         mock_method.assert_called_once_with(False)
+
+
+async def test_switch_sense_public_switches_ignore_local_permissions(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A read-only local user keeps the migrated switches but not the private one.
+
+    The migrated switches write through the API key, so the local user's write
+    bit must not gate them; the status light still uses a private setter and
+    stays behind PermRequired.WRITE.
+    """
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "sensor:read:*"})
+    ]
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    for key, _public_kwarg, _set_method in MIGRATED_SENSE_SWITCHES:
+        description = next(d for d in SENSE_SWITCHES if d.key == key)
+        _, entity_id = await ids_from_device_description(
+            hass, Platform.SWITCH, sensor_all, description
+        )
+        assert entity_registry.async_get(entity_id) is not None, key
+
+    description = next(d for d in SENSE_SWITCHES if d.key == "status_light")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, sensor_all, description
+    )
+    assert entity_registry.async_get(entity_id) is None

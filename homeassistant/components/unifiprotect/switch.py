@@ -341,7 +341,6 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_public_value="motion_settings.is_enabled",
         ufp_set_method="set_motion_status_public",
         ufp_capability=SensorFeatureCapability.MOTION,
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="temperature",
@@ -350,7 +349,6 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_public_value="temperature_settings.is_enabled",
         ufp_set_method="set_temperature_status_public",
         ufp_capability=SensorFeatureCapability.TEMPERATURE,
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="humidity",
@@ -359,7 +357,6 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_public_value="humidity_settings.is_enabled",
         ufp_set_method="set_humidity_status_public",
         ufp_capability=SensorFeatureCapability.HUMIDITY,
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="light",
@@ -368,7 +365,6 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_public_value="light_settings.is_enabled",
         ufp_set_method="set_light_status_public",
         ufp_capability=SensorFeatureCapability.LIGHT,
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="alarm",
@@ -377,7 +373,6 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_public_value="alarm_settings.is_enabled",
         ufp_set_method="set_alarm_public",
         ufp_capability=SensorFeatureCapability.SMOKE,
-        ufp_perm=PermRequired.WRITE,
     ),
 )
 
