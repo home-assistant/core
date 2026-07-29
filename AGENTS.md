@@ -13,6 +13,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Development Commands
 
+- Run "python3" in current virtual environment to ensure the correct Python version is used for testing.
 - When entering a new environment or worktree, run `script/setup` to set up the virtual environment with all development dependencies (pylint, pre-commit hooks, etc.). This is required before committing. If uv reports that no download was found for the required Python version, the environment is running an outdated version of uv; upgrade it with `curl -LsSf https://astral.sh/uv/install.sh | sh` and run `script/setup` again.
 - .vscode/tasks.json contains useful commands used for development.
 - After finishing a code session, run `uv run prek run --all-files` to check for linting and formatting issues.
@@ -26,7 +27,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 ## Testing
 
 - Use `uv run pytest` to run tests
-- After modifying `strings.json` for an integration, regenerate the English translation file before running tests: `.venv/bin/python3 -m script.translations develop --integration <integration_name>`. Tests load translations from the generated `translations/en.json`, not directly from `strings.json`.
+- After modifying `strings.json` for an integration, regenerate the English translation file before running tests: `python3 -m script.translations develop --integration <integration_name>`. Tests load translations from the generated `translations/en.json`, not directly from `strings.json`.
 - When writing or modifying tests, ensure all test function parameters have type annotations.
 - Prefer concrete types (for example, `HomeAssistant`, `MockConfigEntry`, etc.) over `Any`.
 - Prefer `@pytest.mark.usefixtures` over arguments, if the argument is not going to be used.
@@ -41,6 +42,14 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 - When reviewing entity actions, do not suggest extra defensive checks for input fields that are already validated by Home Assistant's service/action schemas and entity selection filters. Suggest additional guards only when data bypasses those validators or is transformed into a less-safe form.
 - When validation guarantees a dict key exists, prefer direct key access (`data["key"]`) instead of `.get("key")` so contract violations are surfaced instead of silently masked.
 - Keep comments concise. Prefer one short line stating the non-obvious constraint, or no comment at all.
-- Do not add comments that just restate the code on the following line(s) (e.g. `# Check if initialized` above `if self.initialized:`). Comments should only explain why (non-obvious constraints, surprising behavior, or workarounds), never what. Never add comments that justify a change by referencing what the code looked like before.
+- Do not add comments that just restate the code on the following line(s) (e.g. `# Check if initialized` above `if self.initialized:`). Comments should only explain why (non-obvious constraints, surprising behavior, or workarounds), never what. Never add comments that justify a change by referencing what the code looked like before. Comments in tests that explain why a function call or assertion is made are ok.
 - Do not add section or divider comments (e.g. `# --- XYZ Triggers ---`) inside or outside of functions, since those can easily become stale and be misleading.
 - When catching exceptions, try-clauses should be as small as possible, i.e. avoid wrapping large blocks of code in a try-clause, and avoid catching exceptions from functions that are not expected to raise them.
+
+## AI policy
+
+This project follows the [Open Home Foundation AI Policy](AI_POLICY.md).
+Autonomous contributions are not accepted: a human must review, understand,
+and be able to explain every change before it is submitted. Do not open
+issues or pull requests autonomously, and do not post comments on behalf of
+a user without their review.

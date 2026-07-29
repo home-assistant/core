@@ -2,12 +2,16 @@
 
 from typing import Any
 
+from freezegun import freeze_time
 import pytest
 
+from homeassistant.components.event import DOMAIN, EventEntity
 from homeassistant.components.event.const import ATTR_EVENT_TYPE
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
+from tests.common import MockEntity, setup_test_component_platform
 from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
@@ -16,6 +20,26 @@ from tests.components.common import (
     set_or_remove_state,
     target_entities,
 )
+
+
+class _MockEventEntity(MockEntity, EventEntity):
+    """Mock event entity that exposes its event types."""
+
+    @property
+    def event_types(self) -> list[str]:
+        """Return the supported event types."""
+        return self._handle("event_types")
+
+
+async def _setup_event_entity(hass: HomeAssistant) -> EventEntity:
+    """Set up a single event entity and return the instance."""
+    entity = _MockEventEntity(
+        name="Torrent", unique_id="torrent", event_types=["downloaded"]
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity])
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "test"}})
+    await hass.async_block_till_done()
+    return entity
 
 
 @pytest.fixture
@@ -298,3 +322,64 @@ async def test_event_state_trigger(
             await hass.async_block_till_done()
         assert len(calls) == (entities_in_target - 1) * state["count"]
         calls.clear()
+
+
+async def test_multiple_events_in_one_millisecond_each_fire(
+    hass: HomeAssistant,
+) -> None:
+    """Test each event fires the trigger even when they share a wall-clock time.
+
+    Reproduces the scenario where an integration emits several events
+    synchronously in a single update (e.g. multiple downloads completing in one
+    poll). All events share the same millisecond timestamp, but each must still
+    fire event.received once.
+    """
+    entity = await _setup_event_entity(hass)
+    calls: list[str] = []
+    await arm_trigger(
+        hass,
+        "event.received",
+        {"event_type": ["downloaded"]},
+        {"entity_id": entity.entity_id},
+        calls,
+    )
+
+    with freeze_time("2026-01-01T00:00:00+00:00"):
+        for torrent_id in (1, 2, 3):
+            entity._trigger_event("downloaded", {"id": torrent_id})
+            entity.async_write_ha_state()
+        await hass.async_block_till_done()
+
+    assert len(calls) == 3
+
+
+async def test_attribute_only_change_does_not_fire(hass: HomeAssistant) -> None:
+    """Test a cosmetic state re-write (e.g. rename) does not fire the trigger.
+
+    A rename re-writes the state in place with the same timestamp but a new
+    friendly_name; this must not be mistaken for a new event.
+    """
+    entity = await _setup_event_entity(hass)
+    with freeze_time("2026-01-01T00:00:00+00:00"):
+        entity._trigger_event("downloaded", {"id": 1})
+        entity.async_write_ha_state()
+        await hass.async_block_till_done()
+
+    calls: list[str] = []
+    await arm_trigger(
+        hass,
+        "event.received",
+        {"event_type": ["downloaded"]},
+        {"entity_id": entity.entity_id},
+        calls,
+    )
+
+    current = hass.states.get(entity.entity_id)
+    hass.states.async_set(
+        entity.entity_id,
+        current.state,
+        {**current.attributes, ATTR_FRIENDLY_NAME: "Renamed"},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
