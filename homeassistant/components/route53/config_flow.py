@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -86,16 +85,6 @@ def _validate_auth(
     return _normalize(response["HostedZone"]["Name"])
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
-    """Validate the user input allows us to connect, returning the zone name."""
-    return await hass.async_add_executor_job(
-        _validate_auth,
-        data[CONF_ACCESS_KEY_ID],
-        data[CONF_SECRET_ACCESS_KEY],
-        data[CONF_ZONE],
-    )
-
-
 class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Route53."""
 
@@ -104,7 +93,12 @@ class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_validate(self, user_input: dict[str, Any]) -> str | None:
         """Validate the input, returning an error key when it fails."""
         try:
-            zone_name = await validate_input(self.hass, user_input)
+            zone_name = await self.hass.async_add_executor_job(
+                _validate_auth,
+                user_input[CONF_ACCESS_KEY_ID],
+                user_input[CONF_SECRET_ACCESS_KEY],
+                user_input[CONF_ZONE],
+            )
         except botocore.exceptions.ClientError as err:
             _LOGGER.error("AWS rejected the request: %s", err)
             if err.response["Error"]["Code"] in ZONE_ERROR_CODES:
