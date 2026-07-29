@@ -1,8 +1,10 @@
 """Provide pre-made queries on top of the recorder component."""
 
+import asyncio
+from collections.abc import Callable
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
-from typing import cast
+from typing import NamedTuple
 
 from aiohttp import web
 import voluptuous as vol
@@ -13,12 +15,15 @@ from homeassistant.components import frontend
 from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistantView
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
+from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant, valid_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA
+from homeassistant.helpers.http import MIN_COMPRESSED_RESPONSE_SIZE
+from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from . import websocket_api
 from .const import DOMAIN
@@ -27,6 +32,23 @@ from .helpers import entities_may_have_state_changes_after, has_states_before
 CONF_ORDER = "use_include_order"
 
 _ONE_DAY = timedelta(days=1)
+
+
+class _HistoryQueryKey(NamedTuple):
+    """Identify a history query whose result can be shared."""
+
+    start_time: dt
+    end_time: dt
+    entity_ids: tuple[str, ...]
+    include_start_time_state: bool
+    significant_changes_only: bool
+    minimal_response: bool
+    no_attributes: bool
+
+
+_IN_FLIGHT_HISTORY_QUERIES: HassKey[dict[_HistoryQueryKey, asyncio.Future[bytes]]] = (
+    HassKey("history_in_flight_period_queries")
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -49,6 +71,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     frontend.async_register_built_in_panel(hass, "history", "history", "mdi:chart-box")
     websocket_api.async_setup(hass)
     return True
+
+
+async def _async_get_or_create_history_result(
+    hass: HomeAssistant,
+    query_key: _HistoryQueryKey,
+    create_result_future: Callable[[], asyncio.Future[bytes]],
+) -> bytes:
+    """Get an in-flight history result or start a new query."""
+    in_flight_queries = hass.data.setdefault(_IN_FLIGHT_HISTORY_QUERIES, {})
+    if (
+        result_future := in_flight_queries.get(query_key)
+    ) is None or result_future.done():
+        result_future = create_result_future()
+        in_flight_queries[query_key] = result_future
+
+        def remove_completed_query(future: asyncio.Future[bytes]) -> None:
+            if in_flight_queries.get(query_key) is future:
+                del in_flight_queries[query_key]
+            if not future.cancelled():
+                future.exception()
+
+        result_future.add_done_callback(remove_completed_query)
+
+    # A disconnected requester must not cancel a query used by other requesters.
+    return await asyncio.shield(result_future)
 
 
 class HistoryPeriodView(HomeAssistantView):
@@ -127,10 +174,22 @@ class HistoryPeriodView(HomeAssistantView):
         ):
             return self.json([])
 
-        return cast(
-            web.Response,
-            await get_instance(hass).async_add_executor_job(
-                self._sorted_significant_states_json,
+        # Permissions have already been applied, so matching authorized queries
+        # can share their result even when they originate from different users.
+        query_key = _HistoryQueryKey(
+            start_time=start_time,
+            end_time=end_time,
+            entity_ids=tuple(entity_ids),
+            include_start_time_state=include_start_time_state,
+            significant_changes_only=significant_changes_only,
+            minimal_response=minimal_response,
+            no_attributes=no_attributes,
+        )
+        body = await _async_get_or_create_history_result(
+            hass,
+            query_key,
+            lambda: get_instance(hass).async_add_executor_job(
+                self._sorted_significant_states_json_bytes,
                 hass,
                 start_time,
                 end_time,
@@ -141,8 +200,16 @@ class HistoryPeriodView(HomeAssistantView):
                 no_attributes,
             ),
         )
+        response = web.Response(
+            body=body,
+            content_type=CONTENT_TYPE_JSON,
+            zlib_executor_size=32768,
+        )
+        if len(body) > MIN_COMPRESSED_RESPONSE_SIZE:
+            response.enable_compression()
+        return response
 
-    def _sorted_significant_states_json(
+    def _sorted_significant_states_json_bytes(
         self,
         hass: HomeAssistant,
         start_time: dt,
@@ -152,10 +219,10 @@ class HistoryPeriodView(HomeAssistantView):
         significant_changes_only: bool,
         minimal_response: bool,
         no_attributes: bool,
-    ) -> web.Response:
+    ) -> bytes:
         """Fetch significant stats from the database as json."""
         with session_scope(hass=hass, read_only=True) as session:
-            return self.json(
+            return json_bytes(
                 list(
                     history.get_significant_states_with_session(
                         hass,
