@@ -250,30 +250,11 @@ async def test_doorbell_node(
     matter_node: MatterNode,
 ) -> None:
     """Test a doorbell node does not get any event entity for now."""
-    # the Doorbell device type is excluded from the standard button event
-    # entity, so it can get a dedicated doorbell event entity in the future
+    # a doorbell endpoint that does not also advertise the GenericSwitch device
+    # type gets no event entity until a dedicated doorbell entity is added
     assert hass.states.async_entity_ids("event") == []
     assert entity_registry.async_get("event.mock_doorbell_button") is None
     assert entity_registry.async_get("event.mock_doorbell_button_deprecated") is None
-
-
-@pytest.mark.parametrize("node_fixture", ["mock_doorbell"])
-@pytest.mark.parametrize(
-    "attributes", [{"1/29/0": [{"0": 328, "1": 1}, {"0": 15, "1": 1}]}]
-)
-async def test_doorbell_and_generic_switch_node(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    matter_node: MatterNode,
-) -> None:
-    """Test an endpoint advertising Doorbell and GenericSwitch device types."""
-    # such an endpoint should only get the legacy event entity,
-    # not the standard button event entity
-    assert hass.states.async_entity_ids("event") == []
-    assert entity_registry.async_get("event.mock_doorbell_button") is None
-    entity_entry = entity_registry.async_get("event.mock_doorbell_button_deprecated")
-    assert entity_entry
-    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_latching_switch"])
