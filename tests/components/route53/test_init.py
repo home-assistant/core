@@ -17,8 +17,7 @@ from homeassistant.components.route53.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -66,17 +65,25 @@ async def test_setup_entry(
     assert hass.services.has_service(DOMAIN, "update_records")
 
 
-async def test_setup_with_yaml_triggers_import(hass: HomeAssistant) -> None:
-    """Test setup with yaml triggers import."""
+async def test_yaml_import_creates_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_boto3_client: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test YAML configuration is imported into a config entry."""
+    aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
     with (
-        patch("homeassistant.components.route53.async_setup_entry", return_value=True),
-        patch.object(
-            hass.config_entries.flow,
-            "async_init",
-            return_value={"type": FlowResultType.CREATE_ENTRY},
-        ) as mock_init,
+        patch(
+            "homeassistant.components.route53.config_flow.boto3.client",
+            return_value=mock_boto3_client.return_value,
+        ),
+        patch(
+            "homeassistant.components.route53.boto3.client",
+            return_value=mock_boto3_client.return_value,
+        ),
     ):
-        await async_setup_component(
+        assert await async_setup_component(
             hass,
             DOMAIN,
             {
@@ -92,7 +99,14 @@ async def test_setup_with_yaml_triggers_import(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    mock_init.assert_called_once()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_DOMAIN] == "example.com"
+    assert entry.data[CONF_ZONE] == "test-zone"
+
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
 
 
 async def test_update_records_service(
