@@ -83,16 +83,17 @@ class TewkeNewSceneRepairFlow(RepairsFlow):
         )
 
         coordinator = self.entry.runtime_data.coordinator
-        scenes_all = coordinator.data.get("scenes_all", {})
-        configured_scenes = {
-            sid: scene for sid, scene in scenes_all.items() if sid in current_scenes
-        }
-        coordinator.async_set_updated_data(
-            {
-                **coordinator.data,
-                "scenes": configured_scenes,
+        if coordinator.data is not None:
+            scenes_all = coordinator.data.get("scenes_all", {})
+            configured_scenes = {
+                sid: scene for sid, scene in scenes_all.items() if sid in current_scenes
             }
-        )
+            coordinator.async_set_updated_data(
+                {
+                    **coordinator.data,
+                    "scenes": configured_scenes,
+                }
+            )
 
         if added_scenes:
             async_dispatcher_send(self.hass, DISPATCHER_ADD_SCENES, added_scenes)
