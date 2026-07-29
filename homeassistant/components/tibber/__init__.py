@@ -59,23 +59,40 @@ def _migrate_data_api_registry_entries(
     if not devices:
         return
 
+    entity_registry = er.async_get(hass)
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+
     device_registry = dr.async_get(hass)
-    if device_entry := device_registry.async_get_device_by_identifier(
+    legacy_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, ""), entry.entry_id
-    ):
-        device_registry.async_update_device(
-            device_entry.id, new_identifiers={(DOMAIN, devices[0].id)}
-        )
+    )
+    legacy_unique_ids = {
+        entity_entry.unique_id
+        for entity_entry in entity_entries
+        if legacy_device and entity_entry.device_id == legacy_device.id
+    }
 
     unique_id_migrations: dict[str, str] = {}
+    legacy_device_identifier: str | None = None
     for device in devices:
         for sensor in device.sensors:
-            unique_id_migrations.setdefault(f"_{sensor.id}", f"{device.id}_{sensor.id}")
+            legacy_unique_id = f"_{sensor.id}"
+            unique_id_migrations.setdefault(
+                legacy_unique_id, f"{device.id}_{sensor.id}"
+            )
+            if (
+                legacy_device_identifier is None
+                and legacy_unique_id in legacy_unique_ids
+            ):
+                legacy_device_identifier = device.id
 
-    entity_registry = er.async_get(hass)
-    for entity_entry in er.async_entries_for_config_entry(
-        entity_registry, entry.entry_id
-    ):
+    if legacy_device and legacy_device_identifier:
+        device_registry.async_update_device(
+            legacy_device.id,
+            new_identifiers={(DOMAIN, legacy_device_identifier)},
+        )
+
+    for entity_entry in entity_entries:
         if new_unique_id := unique_id_migrations.get(entity_entry.unique_id):
             entity_registry.async_update_entity(
                 entity_entry.entity_id, new_unique_id=new_unique_id

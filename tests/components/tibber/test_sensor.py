@@ -138,19 +138,27 @@ async def test_data_api_sensors_with_empty_external_ids(
         )
     }
     devices = {
-        device_id: create_tibber_device(
-            device_id=device_id,
+        "unsupported-device": create_tibber_device(
+            device_id="unsupported-device",
             external_id="",
-            name=name,
-            sensor_values={
-                "charging.current.max": 32.0,
-                "charging.current.offlineFallback": 16.0,
-            },
-        )
-        for device_id, name in (
-            ("charger-left", "Charger left"),
-            ("charger-right", "Charger right"),
-        )
+            name="Unsupported device",
+            sensor_values={"unknown.sensor.id": None},
+        ),
+        **{
+            device_id: create_tibber_device(
+                device_id=device_id,
+                external_id="",
+                name=name,
+                sensor_values={
+                    "charging.current.max": 32.0,
+                    "charging.current.offlineFallback": 16.0,
+                },
+            )
+            for device_id, name in (
+                ("charger-left", "Charger left"),
+                ("charger-right", "Charger right"),
+            )
+        },
     }
     data_api_client_mock.get_all_devices = AsyncMock(return_value=devices)
     data_api_client_mock.update_devices = AsyncMock(return_value=devices)
