@@ -13,12 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    UnitOfTime,
-)
+from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,7 +23,6 @@ from homeassistant.util import Throttle, dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_VERSION = "current_version"
-ATTR_LAST_RESTART = "last_restart"
 ATTR_LOCAL_IP = "local_ip"
 ATTR_NEW_VERSION = "new_version"
 ATTR_STATUS = "status"
@@ -65,13 +59,6 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
     ),
     GoogleWifiSensorEntityDescription(
         key=ATTR_UPTIME,
-        primary_key="system",
-        sensor_key="uptime",
-        native_unit_of_measurement=UnitOfTime.DAYS,
-        icon="mdi:timelapse",
-    ),
-    GoogleWifiSensorEntityDescription(
-        key=ATTR_LAST_RESTART,
         primary_key="system",
         sensor_key="uptime",
         icon="mdi:restart",
@@ -168,7 +155,6 @@ class GoogleWifiAPI:
             ATTR_CURRENT_VERSION: None,
             ATTR_NEW_VERSION: None,
             ATTR_UPTIME: None,
-            ATTR_LAST_RESTART: None,
             ATTR_LOCAL_IP: None,
             ATTR_STATUS: None,
         }
@@ -204,8 +190,6 @@ class GoogleWifiAPI:
                     if attr_key == ATTR_NEW_VERSION and sensor_value == "0.0.0.0":
                         sensor_value = "Latest"
                     elif attr_key == ATTR_UPTIME:
-                        sensor_value = round(sensor_value / (3600 * 24), 2)
-                    elif attr_key == ATTR_LAST_RESTART:
                         last_restart = dt_util.now() - timedelta(seconds=sensor_value)
                         sensor_value = last_restart.strftime("%Y-%m-%d %H:%M:%S")
                     elif attr_key == ATTR_STATUS:

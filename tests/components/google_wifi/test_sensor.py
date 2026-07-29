@@ -75,7 +75,6 @@ async def test_setup_get(
                     "current_version",
                     "new_version",
                     "uptime",
-                    "last_restart",
                     "local_ip",
                     "status",
                 ],
@@ -172,10 +171,8 @@ def test_state(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None
             sensor = value["sensor"]
             fake_delay(hass, 2)
             sensor.update()
-            if name == google_wifi.ATTR_LAST_RESTART:
+            if name == google_wifi.ATTR_UPTIME:
                 assert sensor.state == "1969-12-31 00:00:00"
-            elif name == google_wifi.ATTR_UPTIME:
-                assert sensor.state == 1
             elif name == google_wifi.ATTR_STATUS:
                 assert sensor.state == "Online"
             else:
@@ -205,10 +202,8 @@ def test_update_when_value_changed(
             sensor = value["sensor"]
             fake_delay(hass, 2)
             sensor.update()
-            if name == google_wifi.ATTR_LAST_RESTART:
+            if name == google_wifi.ATTR_UPTIME:
                 assert sensor.state == "1969-12-30 00:00:00"
-            elif name == google_wifi.ATTR_UPTIME:
-                assert sensor.state == 2
             elif name == google_wifi.ATTR_STATUS:
                 assert sensor.state == "Offline"
             elif name == google_wifi.ATTR_NEW_VERSION:
@@ -275,9 +270,6 @@ def test_update_recovers_after_failure(
     requests_mock.get(resource, text=MOCK_DATA, status_code=HTTPStatus.OK)
     api.update(no_throttle=True)
     assert api.available is True
-    sensor = sensor_dict[google_wifi.ATTR_UPTIME]["sensor"]
-    sensor.update()
-    assert sensor.state == 1
 
 
 def test_update_when_unavailable(
