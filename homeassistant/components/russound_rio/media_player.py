@@ -23,7 +23,12 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RussoundConfigEntry, media_browser
-from .const import DOMAIN, RUSSOUND_MEDIA_TYPE_PRESET, SELECT_SOURCE_DELAY
+from .const import (
+    CONF_ZONE_SOURCE_EXCLUSION,
+    DOMAIN,
+    RUSSOUND_MEDIA_TYPE_PRESET,
+    SELECT_SOURCE_DELAY,
+)
 from .entity import RussoundBaseEntity, command
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,8 +45,13 @@ async def async_setup_entry(
     client = entry.runtime_data
     sources = client.sources
 
+    zone_source_exclusion = entry.options.get(
+        CONF_ZONE_SOURCE_EXCLUSION,
+        True,
+    )
+
     async_add_entities(
-        RussoundZoneDevice(controller, zone_id, sources)
+        RussoundZoneDevice(controller, zone_id, sources, zone_source_exclusion)
         for controller in client.controllers.values()
         for zone_id in controller.zones
     )
@@ -77,13 +87,18 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     _attr_name = None
 
     def __init__(
-        self, controller: Controller, zone_id: int, sources: dict[int, Source]
+        self,
+        controller: Controller,
+        zone_id: int,
+        sources: dict[int, Source],
+        zone_source_exclusion: bool,
     ) -> None:
         """Initialize the zone device."""
         super().__init__(controller, zone_id)
         _zone = self._zone
         self._sources = sources
         self._attr_unique_id = f"{self._primary_mac_address}-{_zone.device_str}"
+        self._zone_source_exclusion = zone_source_exclusion
 
     @property
     def _source(self) -> Source:
@@ -125,8 +140,11 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
                 for source_id, source in self._sources.items()
                 if source_id in self._zone.enabled_sources
             ]
-            if is_feature_supported(
-                self._client.rio_version, FeatureFlag.SUPPORT_ZONE_SOURCE_EXCLUSION
+            if (
+                is_feature_supported(
+                    self._client.rio_version, FeatureFlag.SUPPORT_ZONE_SOURCE_EXCLUSION
+                )
+                and self._zone_source_exclusion
             )
             else self._sources.values()
         )

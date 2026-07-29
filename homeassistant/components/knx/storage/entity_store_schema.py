@@ -485,6 +485,15 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
 )
 
 
+NOTIFY_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_SEND): GASelector(
+            state=False, passive=False, write_required=True, dpt=["string"]
+        ),
+    }
+)
+
+
 def _number_limit_sub_validator(config: dict) -> dict:
     """Validate min, max, and step values for a number entity."""
     dpt = config[CONF_GA_SENSOR][CONF_DPT]
@@ -802,6 +811,7 @@ KNX_SCHEMA_FOR_PLATFORM = {
     Platform.DATETIME: DATETIME_KNX_SCHEMA,
     Platform.FAN: FAN_KNX_SCHEMA,
     Platform.LIGHT: LIGHT_KNX_SCHEMA,
+    Platform.NOTIFY: NOTIFY_KNX_SCHEMA,
     Platform.NUMBER: NUMBER_KNX_SCHEMA,
     Platform.SCENE: SCENE_KNX_SCHEMA,
     Platform.SENSOR: SENSOR_KNX_SCHEMA,
