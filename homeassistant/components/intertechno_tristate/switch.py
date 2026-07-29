@@ -1,6 +1,7 @@
 """Switch platform for Intertechno TriState on/off control."""
 
 from typing import Any
+from typing import override
 
 from rf_protocols.commands.pt2262 import PT2262Command
 
@@ -61,6 +62,7 @@ class IntertechnoTristateSwitch(SwitchEntity, RestoreEntity):
             ),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to transmitter state and restore last switch state."""
         await super().async_added_to_hass()
@@ -96,12 +98,14 @@ class IntertechnoTristateSwitch(SwitchEntity, RestoreEntity):
         if (last_state := await self.async_get_last_state()) is not None:
             self._attr_is_on = last_state.state == STATE_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_send(True)
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_send(False)

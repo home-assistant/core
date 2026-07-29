@@ -1,6 +1,7 @@
 """Config flow for the Intertechno TriState integration."""
 
 from typing import Any
+from typing import override
 
 from rf_protocols.commands import ModulationType
 from rf_protocols.commands.pt2262 import PT2262Command
@@ -44,6 +45,7 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self._device_data: dict[str, Any] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

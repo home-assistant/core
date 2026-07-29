@@ -14,6 +14,14 @@ rules:
     status: exempt
     comment: |
       This integration does not register custom service actions.
+  docs-conditions:
+    status: exempt
+    comment: |
+      This integration does not provide condition helpers.
+  docs-triggers:
+    status: exempt
+    comment: |
+      This integration does not provide trigger helpers.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
