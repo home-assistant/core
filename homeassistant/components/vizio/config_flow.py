@@ -134,46 +134,6 @@ async def _async_validate_config(
     return True
 
 
-def _get_device(
-    hass: HomeAssistant,
-    host: str,
-    device_class: str,
-    auth_token: str | None = None,
-) -> Vizio:
-    """Build a client for config flow validation calls."""
-    return Vizio(
-        host,
-        device_type=VIZIO_DEVICE_CLASSES[MediaPlayerDeviceClass(device_class)],
-        auth_token=auth_token,
-        session=async_get_clientsession(hass, False),
-    )
-
-
-async def _async_get_unique_id(
-    hass: HomeAssistant, host: str, device_class: str
-) -> str | None:
-    """Return the device serial number, or None if unavailable."""
-    try:
-        return await _get_device(hass, host, device_class).get_serial_number()
-    except VizioError:
-        return None
-
-
-async def _async_validate_config(
-    hass: HomeAssistant, host: str, auth_token: str | None, device_class: str
-) -> bool:
-    """Return whether the device is reachable (and the token valid, if any)."""
-    device = _get_device(hass, host, device_class, auth_token)
-    try:
-        if auth_token:
-            await device.ping_auth()
-        else:
-            await device.ping()
-    except VizioError:
-        return False
-    return True
-
-
 class VizioOptionsConfigFlow(OptionsFlow):
     """Handle Vizio options."""
 
