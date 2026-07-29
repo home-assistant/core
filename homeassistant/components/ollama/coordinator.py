@@ -1,6 +1,7 @@
 """Data update coordinator for the Ollama integration."""
 
 import asyncio
+from collections.abc import Awaitable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -48,9 +49,17 @@ class OllamaDataUpdateCoordinator(DataUpdateCoordinator[OllamaData]):
     @override
     async def _async_update_data(self) -> OllamaData:
         """Fetch data from Ollama."""
+        installed, loaded = await asyncio.gather(
+            self._request(self.client.list()),
+            self._optional_request(self.client.ps()),
+        )
+        return OllamaData(loaded, installed)
+
+    async def _request[T](self, request: Awaitable[T]) -> T:
+        """Make a required request to Ollama."""
         try:
             async with asyncio.timeout(DEFAULT_TIMEOUT):
-                installed = await self.client.list()
+                return await request
         except ollama.ResponseError as err:
             if err.status_code in (401, 403):
                 raise ConfigEntryAuthFailed from err
@@ -61,16 +70,12 @@ class OllamaDataUpdateCoordinator(DataUpdateCoordinator[OllamaData]):
         except (TimeoutError, httpx.HTTPError, ConnectionError) as err:
             raise UpdateFailed(f"Error communicating with Ollama: {err}") from err
 
+    async def _optional_request[T](self, request: Awaitable[T]) -> T | None:
+        """Make an optional request to Ollama."""
         try:
-            async with asyncio.timeout(DEFAULT_TIMEOUT):
-                loaded = await self.client.ps()
-        except ollama.ResponseError as err:
-            if err.status_code in (401, 403):
-                raise ConfigEntryAuthFailed from err
-            _LOGGER.error("Error fetching loaded models from Ollama: %s", err)
-            loaded = None
-        except (TimeoutError, httpx.HTTPError, ConnectionError) as err:
-            _LOGGER.error("Error fetching loaded models from Ollama: %s", err)
-            loaded = None
-
-        return OllamaData(loaded, installed)
+            return await self._request(request)
+        except ConfigEntryAuthFailed:
+            raise
+        except (ConfigEntryError, UpdateFailed) as err:
+            _LOGGER.debug("Optional Ollama request failed: %s", err)
+            return None
