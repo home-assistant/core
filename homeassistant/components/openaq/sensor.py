@@ -144,9 +144,4 @@ class OpenAQSensor(CoordinatorEntity[OpenAQDataUpdateCoordinator], SensorEntity)
     @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the native unit of measurement."""
-        metadata = self.coordinator.data.sensor_metadata.get(
-            self.entity_description.key
-        )
-        if metadata is None:
-            return None
-        return metadata.unit
+        return self.coordinator.data.sensor_metadata[self.entity_description.key].unit

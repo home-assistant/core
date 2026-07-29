@@ -1,7 +1,5 @@
 """Test OpenAQ sensors."""
 
-from dataclasses import replace
-from types import MappingProxyType
 from unittest.mock import MagicMock
 
 from openaq import NotAuthorizedError, TimeoutError as OpenAQTimeoutError
@@ -112,24 +110,6 @@ async def test_missing_latest_values_create_unknown_entity(
     assert entity_registry.async_get("sensor.del_norte_pm2_5") is not None
     assert (state := hass.states.get("sensor.del_norte_pm2_5")) is not None
     assert state.state == STATE_UNKNOWN
-
-
-@pytest.mark.usefixtures("mock_openaq_client")
-async def test_sensor_without_metadata_has_no_unit(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a sensor without metadata has no native unit."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
-    coordinator.async_set_updated_data(
-        replace(coordinator.data, sensor_metadata=MappingProxyType({}))
-    )
-
-    await hass.async_block_till_done()
-
-    assert (state := hass.states.get("sensor.del_norte_pm2_5")) is not None
-    assert "unit_of_measurement" not in state.attributes
 
 
 async def test_entity_unavailable_on_update_failure(
