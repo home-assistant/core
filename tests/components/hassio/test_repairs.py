@@ -1144,8 +1144,8 @@ async def test_supervisor_issue_app_port_conflict_repair_flow_menu(
             {
                 "type": "select",
                 "options": [
-                    ["addon_execute_start", "Start after manual unblock"],
-                    ["addon_clear_port_config", "Clear port configuration"],
+                    ["addon_execute_start", "addon_execute_start"],
+                    ["addon_clear_port_config", "addon_clear_port_config"],
                 ],
                 "required": False,
                 "name": "next_step_id",
