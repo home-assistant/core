@@ -31,7 +31,7 @@ from homeassistant.components.unifiprotect.event import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, Platform
 from homeassistant.core import Event as HAEvent, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .utils import (
@@ -1955,12 +1955,12 @@ async def test_sound_detection_absent_without_audio_types(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
+    entity_registry: EntityRegistry,
 ) -> None:
     """Object smart-detect without audio support creates no sound-detection entity."""
     doorbell.feature_flags.smart_detect_audio_types = []
     await init_entry(hass, ufp, [doorbell])
 
-    entity_registry = er.async_get(hass)
     smart = next(d for d in EVENT_DESCRIPTIONS if d.key == "smart_detection")
     sound = next(d for d in EVENT_DESCRIPTIONS if d.key == "sound_detection")
     _, smart_id = await ids_from_device_description(
