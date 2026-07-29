@@ -79,14 +79,6 @@ class ScalewayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return f"{base_name} ({region})"
 
-    @staticmethod
-    def _get_uniqueness_markers(config: Mapping[str, Any]) -> dict[str, Any]:
-        return {
-            CONF_REGION: config[CONF_REGION],
-            CONF_BUCKET: config[CONF_BUCKET],
-            CONF_OBJECT_PREFIX: config[CONF_OBJECT_PREFIX],
-        }
-
     async def _test_connection(
         self,
         *,
@@ -119,7 +111,13 @@ class ScalewayConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._async_abort_entries_match(self._get_uniqueness_markers(user_input))
+            self._async_abort_entries_match(
+                {
+                    CONF_REGION: user_input[CONF_REGION],
+                    CONF_BUCKET: user_input[CONF_BUCKET],
+                    CONF_OBJECT_PREFIX: user_input[CONF_OBJECT_PREFIX],
+                }
+            )
 
             if await self._test_connection(errors=errors, config=user_input):
                 return self.async_create_entry(
