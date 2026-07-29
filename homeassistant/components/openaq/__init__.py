@@ -1,10 +1,8 @@
 """The OpenAQ integration."""
 
-import asyncio
-
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import SUBENTRY_TYPE_LOCATION
 from .coordinator import (
@@ -20,24 +18,18 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> bool:
     """Set up OpenAQ from a config entry."""
     client = await async_create_openaq_client(hass, entry.data[CONF_API_KEY])
-    client_lock = asyncio.Lock()
     coordinators: dict[str, OpenAQDataUpdateCoordinator] = {}
 
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LOCATION):
         coordinators[subentry.subentry_id] = OpenAQDataUpdateCoordinator(
-            hass, entry, subentry, client, client_lock
+            hass, entry, subentry, client
         )
 
     try:
-        async with asyncio.TaskGroup() as tg:
-            for coordinator in coordinators.values():
-                tg.create_task(coordinator.async_config_entry_first_refresh())
-    except ExceptionGroup as err:
+        for coordinator in coordinators.values():
+            await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
         await hass.async_add_executor_job(client.close)
-        if (auth_subgroup := err.subgroup(ConfigEntryAuthFailed)) is not None:
-            raise auth_subgroup.exceptions[0] from err
-        if (not_ready_subgroup := err.subgroup(ConfigEntryNotReady)) is not None:
-            raise not_ready_subgroup.exceptions[0] from err
         raise
 
     entry.runtime_data = OpenAQRuntimeData(client=client, coordinators=coordinators)

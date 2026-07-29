@@ -171,10 +171,6 @@ def mock_openaq_client() -> Generator[MagicMock]:
             "homeassistant.components.openaq.async_create_openaq_client",
             new_callable=AsyncMock,
         ) as mock_init,
-        patch(
-            "homeassistant.components.openaq.config_flow.async_create_openaq_client",
-            new=mock_init,
-        ),
     ):
         client = mock_init.return_value
         client.close = MagicMock()
@@ -220,4 +216,8 @@ def mock_openaq_client() -> Generator[MagicMock]:
                 make_sensor(12, "unsupported"),
             ]
         )
-        yield client
+        with patch(
+            "homeassistant.components.openaq.config_flow.create_openaq_client",
+            return_value=client,
+        ):
+            yield client

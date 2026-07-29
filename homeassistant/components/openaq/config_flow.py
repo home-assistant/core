@@ -1,8 +1,7 @@
 """Config flow for the OpenAQ integration."""
 
-from collections.abc import Mapping
+from collections.abc import Sequence
 from dataclasses import dataclass
-from functools import partial
 from math import inf
 from typing import Any, override
 
@@ -43,7 +42,7 @@ from .const import (
     OPENAQ_RATE_LIMIT_EXCEPTIONS,
     SUBENTRY_TYPE_LOCATION,
 )
-from .coordinator import async_create_openaq_client, normalize_parameter
+from .coordinator import create_openaq_client, normalize_parameter
 from .sensor import SENSOR_DESCRIPTIONS
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
@@ -61,11 +60,7 @@ PARAMETER_DISPLAY_CODES = {
 async def _async_validate_api_key(hass: HomeAssistant, api_key: str) -> str | None:
     """Validate an OpenAQ API key and return an error key if validation fails."""
     try:
-        client = await async_create_openaq_client(hass, api_key)
-        try:
-            await hass.async_add_executor_job(partial(client.parameters.list, limit=1))
-        finally:
-            await hass.async_add_executor_job(client.close)
+        await hass.async_add_executor_job(_validate_api_key, api_key)
     except OPENAQ_AUTH_EXCEPTIONS:
         return "invalid_auth"
     except OPENAQ_RATE_LIMIT_EXCEPTIONS:
@@ -76,6 +71,15 @@ async def _async_validate_api_key(hass: HomeAssistant, api_key: str) -> str | No
         LOGGER.exception("Unexpected exception")
         return "unknown"
     return None
+
+
+def _validate_api_key(api_key: str) -> None:
+    """Validate an API key with a temporary OpenAQ client."""
+    client = create_openaq_client(api_key)
+    try:
+        client.parameters.list(limit=1)
+    finally:
+        client.close()
 
 
 @dataclass(slots=True)
@@ -206,34 +210,6 @@ class OpenAQConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle a reauthentication request."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reauthentication with a new API key."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            if error := await _async_validate_api_key(
-                self.hass, user_input[CONF_API_KEY]
-            ):
-                errors["base"] = error
-            else:
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
-                )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=STEP_USER_DATA_SCHEMA,
-            errors=errors,
-        )
-
 
 class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
     """Handle an OpenAQ location subentry flow."""
@@ -258,21 +234,16 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                     MAX_RADIUS,
                 ),
             )
-            client = await async_create_openaq_client(
-                self.hass, self._get_entry().data[CONF_API_KEY]
-            )
             try:
                 locations: dict[int, OpenAQLocationFlowData] = {}
-                for radius in _search_radii(max_radius):
-                    response = await self.hass.async_add_executor_job(
-                        partial(
-                            client.locations.list,
-                            coordinates=coordinates,
-                            radius=radius,
-                            limit=LOCATION_FETCH_LIMIT,
-                        )
-                    )
-                    for result_location in response.results:
+                responses = await self.hass.async_add_executor_job(
+                    _search_locations,
+                    self._get_entry().data[CONF_API_KEY],
+                    coordinates,
+                    _search_radii(max_radius),
+                )
+                for result_locations in responses:
+                    for result_location in result_locations:
                         location_data = _location_from_result(result_location)
                         if location_data is None or _is_location_configured(
                             self.hass, location_data.location_id
@@ -299,9 +270,6 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                     errors["base"] = "no_locations_found"
                 else:
                     return await self.async_step_select()
-            finally:
-                await self.hass.async_add_executor_job(client.close)
-
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
@@ -370,3 +338,19 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
             data={CONF_LOCATION_ID: location.location_id},
             unique_id=str(location.location_id),
         )
+
+
+def _search_locations(
+    api_key: str, coordinates: tuple[float, float], radii: tuple[int, ...]
+) -> list[Sequence[Location]]:
+    """Search all requested radii with a temporary OpenAQ client."""
+    client = create_openaq_client(api_key)
+    try:
+        return [
+            client.locations.list(
+                coordinates=coordinates, radius=radius, limit=LOCATION_FETCH_LIMIT
+            ).results
+            for radius in radii
+        ]
+    finally:
+        client.close()

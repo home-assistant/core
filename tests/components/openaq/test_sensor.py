@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfDensity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -145,11 +144,7 @@ async def test_entity_unavailable_on_auth_failure(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert any(
-        flow["handler"] == DOMAIN and flow["context"]["source"] == "reauth"
-        for flow in hass.config_entries.flow.async_progress()
-    )
+    assert hass.config_entries.flow.async_progress() == []
     assert (state := hass.states.get("sensor.del_norte_pm2_5")) is not None
     assert state.state == STATE_UNAVAILABLE
 

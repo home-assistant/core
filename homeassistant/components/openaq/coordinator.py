@@ -13,10 +13,9 @@ from openaq.core.responses import Latest, Location, Parameter, ParameterBase, Se
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import UnitOfDensity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_LOCATION_ID, DOMAIN, LOGGER, OPENAQ_AUTH_EXCEPTIONS
+from .const import CONF_LOCATION_ID, DOMAIN, LOGGER
 
 UPDATE_INTERVAL = timedelta(minutes=10)
 _T = TypeVar("_T")
@@ -175,11 +174,6 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
 
     def _raise_update_failed(self, err: Exception) -> NoReturn:
         """Raise a translated update failure."""
-        if isinstance(err, OPENAQ_AUTH_EXCEPTIONS):
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="authentication_failed",
-            ) from err
         raise UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="unable_to_fetch",
@@ -192,40 +186,50 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
         sensors: Sequence[Sensor]
         if self._location is None or self._sensors is None:
             try:
-                location_response = await self._async_run_openaq_job(
-                    self.client.locations.get, self.location_id
-                )
-                latest_response = await self._async_run_openaq_job(
-                    self.client.locations.latest, self.location_id
-                )
-                sensors_response = await self._async_run_openaq_job(
-                    self.client.locations.sensors, self.location_id
+                (
+                    location_results,
+                    latest_results,
+                    sensors,
+                ) = await self._async_run_openaq_job(
+                    _fetch_initial_location_data, self.client, self.location_id
                 )
             except Exception as err:  # noqa: BLE001
                 self._raise_update_failed(err)
-            if not location_response.results:
+            if not location_results:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="unable_to_fetch",
                 )
-            location = location_response.results[0]
-            sensors = sensors_response.results
+            location = location_results[0]
             self._location = location
             self._sensors = sensors
         else:
             location = self._location
             sensors = self._sensors
             try:
-                latest_response = await self._async_run_openaq_job(
-                    self.client.locations.latest, self.location_id
-                )
+                latest_results = (
+                    await self._async_run_openaq_job(
+                        self.client.locations.latest, self.location_id
+                    )
+                ).results
             except Exception as err:  # noqa: BLE001
                 self._raise_update_failed(err)
 
-        measurements = normalize_latest_measurements(latest_response.results, sensors)
+        measurements = normalize_latest_measurements(latest_results, sensors)
         return OpenAQLocationData(
             location_id=self.location_id,
             name=location.name,
             sensor_metadata=normalize_sensor_metadata(sensors),
             measurements=measurements,
         )
+
+
+def _fetch_initial_location_data(
+    client: OpenAQ, location_id: int
+) -> tuple[Sequence[Location], Sequence[Latest], Sequence[Sensor]]:
+    """Fetch all SDK data required for an initial location refresh."""
+    return (
+        client.locations.get(location_id).results,
+        client.locations.latest(location_id).results,
+        client.locations.sensors(location_id).results,
+    )
