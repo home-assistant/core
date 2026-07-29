@@ -8,6 +8,8 @@ from pyintelliclima.const import FanMode, FanSpeed
 from pyintelliclima.intelliclima_types import (
     IntelliClimaDevices,
     IntelliClimaECO,
+    IntelliClimaFilterStatsEntry,
+    IntelliClimaFilterStatus,
     IntelliClimaModelType,
 )
 import pytest
@@ -132,6 +134,22 @@ def mock_cloud_interface(single_eco_device) -> Generator[AsyncMock]:
         # Mock other async methods if needed
         mock_client.authenticate.return_value = True
         mock_client.get_all_device_status.return_value = single_eco_device
+        mock_client.get_filter_status.return_value = IntelliClimaFilterStatus(
+            serial="11223344",
+            is_active=True,
+            from_date="2025-11-18 10:22:51",
+            stats=[
+                IntelliClimaFilterStatsEntry(
+                    night_tot_hour="10",
+                    low_tot_hour="20",
+                    medium_tot_hour="30",
+                    high_tot_hour="5",
+                    boost_tot_hour="1",
+                )
+            ],
+            totale=66.0,
+            change_filter=True,
+        )
 
         # Sub-API used by the fan entity
         mock_client.ecocomfort = SimpleNamespace(
