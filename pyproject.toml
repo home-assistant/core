@@ -782,7 +782,6 @@ ignore = [
   "FURB116",
 
   # Disabled to implement in follow up PRs after ruff 0.16 bump
-  "RUF036",
   "ISC004",
   "LOG004",
   "FURB192",
