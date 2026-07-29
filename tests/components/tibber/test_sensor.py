@@ -98,6 +98,48 @@ async def test_data_api_sensors_are_created(
     assert float(state.state) == 83.0
 
 
+@pytest.mark.usefixtures("recorder_mock", "setup_credentials")
+async def test_data_api_sensors_with_empty_external_ids(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    data_api_client_mock: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test Data API sensors use the device ID when the external ID is empty."""
+    devices = {
+        device_id: create_tibber_device(
+            device_id=device_id,
+            external_id="",
+            name=name,
+            sensor_values={"charging.current.max": 32.0},
+        )
+        for device_id, name in (
+            ("charger-left", "Charger left"),
+            ("charger-right", "Charger right"),
+        )
+    }
+    data_api_client_mock.get_all_devices = AsyncMock(return_value=devices)
+    data_api_client_mock.update_devices = AsyncMock(return_value=devices)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    left_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "charger-left_charging.current.max"
+    )
+    right_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "charger-right_charging.current.max"
+    )
+    assert left_entity_id is not None
+    assert right_entity_id is not None
+
+    left_entity = entity_registry.async_get(left_entity_id)
+    right_entity = entity_registry.async_get(right_entity_id)
+    assert left_entity is not None
+    assert right_entity is not None
+    assert left_entity.device_id != right_entity.device_id
+
+
 @pytest.mark.parametrize(
     ("sensor_id", "expected_value", "description"),
     [
