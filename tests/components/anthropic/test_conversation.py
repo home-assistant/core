@@ -303,7 +303,7 @@ async def test_token_stats_reported(
     with patch(
         "anthropic.resources.messages.AsyncMessages.create",
         new_callable=AsyncMock,
-        side_effect=lambda **kwargs: mock_stream(**kwargs),
+        side_effect=mock_stream,
     ):
         await conversation.async_converse(
             hass,
