@@ -8,6 +8,7 @@ import datetime
 from io import SEEK_END, BytesIO
 import logging
 import math
+import re
 from threading import Event
 from typing import Any, Self, cast, override
 
@@ -47,10 +48,15 @@ from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
 NEGATIVE_INF = -math.inf
+URL_PATTERN = re.compile(r"[a-z][a-z0-9+.-]*://[^\s'\"<>()\[\]{},]+", re.IGNORECASE)
 
 
-def redact_av_error_string(err: av.FFmpegError) -> str:
+def redact_av_error_string(err: av.FFmpegError | ValueError) -> str:
     """Return an error string with credentials redacted from the url."""
+    if not isinstance(err, av.FFmpegError):
+        return URL_PATTERN.sub(
+            lambda match: redact_credentials(match.group()), str(err)
+        )
     parts = [err.strerror or ""]
     if err.filename:
         parts.append(redact_credentials(err.filename))
@@ -248,39 +254,52 @@ class StreamMuxer:
             format=SEGMENT_CONTAINER_FORMAT,
             container_options=container_options,
         )
-        output_vstream = cast(
-            av.VideoStream,
-            self._add_stream_from_template(container, input_vstream),
-        )
-        # Check if audio is requested
-        output_astream = None
-        if input_astream:
-            if self._audio_bsf:
-                self._audio_bsf_context = av.BitStreamFilterContext(
-                    self._audio_bsf, input_astream
-                )
-            output_astream = cast(
-                av.audio.AudioStream,
-                self._add_stream_from_template(container, input_astream),
+        try:
+            output_vstream = cast(
+                av.VideoStream,
+                self._add_stream_from_template(container, input_vstream),
             )
+            # Check if audio is requested
+            output_astream = None
+            if input_astream:
+                if self._audio_bsf:
+                    self._audio_bsf_context = av.BitStreamFilterContext(
+                        self._audio_bsf, input_astream
+                    )
+                output_astream = cast(
+                    av.audio.AudioStream,
+                    self._add_stream_from_template(container, input_astream),
+                )
+        except av.FFmpegError, ValueError:
+            with contextlib.suppress(av.FFmpegError, ValueError):
+                container.close()
+            raise
         return container, output_vstream, output_astream
 
     def reset(self, video_dts: int) -> None:
         """Initialize a new stream segment."""
         self._part_start_dts = self._segment_start_dts = video_dts
         self._segment = None
-        self._memory_file = BytesIO()
+        memory_file = BytesIO()
         self._memory_file_pos = 0
-        (
-            self._av_output,
-            self._output_video_stream,
-            self._output_audio_stream,
-        ) = self.make_new_av(
-            memory_file=self._memory_file,
-            sequence=self._stream_state.next_sequence(),
-            input_vstream=self._input_video_stream,
-            input_astream=self._input_audio_stream,
-        )
+        try:
+            (
+                av_output,
+                output_video_stream,
+                output_audio_stream,
+            ) = self.make_new_av(
+                memory_file=memory_file,
+                sequence=self._stream_state.next_sequence(),
+                input_vstream=self._input_video_stream,
+                input_astream=self._input_audio_stream,
+            )
+        except av.FFmpegError, ValueError:
+            memory_file.close()
+            raise
+        self._memory_file = memory_file
+        self._av_output = av_output
+        self._output_video_stream = output_video_stream
+        self._output_audio_stream = output_audio_stream
         if self._output_video_stream.name == "hevc":
             self._output_video_stream.codec_context.codec_tag = "hvc1"
 
@@ -438,14 +457,26 @@ def closing_stream_worker(
     try:
         yield
     except BaseException:
-        with contextlib.suppress(av.FFmpegError):
+        with contextlib.suppress(av.FFmpegError, ValueError):
             muxer.close()
-        with contextlib.suppress(av.FFmpegError):
+        with contextlib.suppress(av.FFmpegError, ValueError):
             container.close()
         raise
     else:
-        with contextlib.closing(container), contextlib.closing(muxer):
-            pass
+        close_error: av.FFmpegError | ValueError | None = None
+        try:
+            muxer.close()
+        except (av.FFmpegError, ValueError) as ex:
+            close_error = ex
+        try:
+            container.close()
+        except (av.FFmpegError, ValueError) as ex:
+            if close_error is None:
+                close_error = ex
+        if close_error is not None:
+            raise StreamWorkerError(
+                f"Error closing stream ({redact_av_error_string(close_error)})"
+            ) from close_error
 
 
 class PeekIterator(Iterator[av.Packet]):
@@ -729,13 +760,20 @@ def stream_worker(
         stream_state,
         stream_settings,
     )
-    muxer.reset(start_dts)
+    try:
+        muxer.reset(start_dts)
+    except (av.FFmpegError, ValueError) as ex:
+        with contextlib.suppress(av.FFmpegError, ValueError):
+            container.close()
+        raise StreamWorkerError(
+            f"Error initializing stream muxer ({redact_av_error_string(ex)})"
+        ) from ex
 
     with closing_stream_worker(container, muxer):
         # Mux the first keyframe, then proceed through the rest of the packets
         try:
             muxer.mux_packet(first_keyframe)
-        except av.FFmpegError as ex:
+        except (av.FFmpegError, ValueError) as ex:
             raise StreamWorkerError(
                 f"Error muxing first keyframe ({redact_av_error_string(ex)})"
             ) from ex
@@ -754,7 +792,7 @@ def stream_worker(
 
             try:
                 muxer.mux_packet(packet)
-            except av.FFmpegError as ex:
+            except (av.FFmpegError, ValueError) as ex:
                 raise StreamWorkerError(
                     f"Error muxing stream ({redact_av_error_string(ex)})"
                 ) from ex

@@ -48,6 +48,7 @@ from homeassistant.components.stream.worker import (
     StreamMuxer,
     StreamState,
     StreamWorkerError,
+    redact_av_error_string,
     stream_worker,
 )
 from homeassistant.core import HomeAssistant
@@ -193,6 +194,8 @@ class FakePyAvContainer:
         """Initialize the fake container."""
         # Tests can override this to trigger different worker behavior
         self.packets = PacketSequence(0)
+        self.close_side_effect = None
+        self.closed = False
 
         class FakePyAvStreams:
             video = [video_stream] if video_stream else []
@@ -211,7 +214,9 @@ class FakePyAvContainer:
 
     def close(self):
         """Close the container."""
-        return
+        self.closed = True
+        if self.close_side_effect:
+            raise self.close_side_effect
 
 
 class FakePyAvBuffer:
@@ -302,6 +307,7 @@ def run_worker(
     stream: Stream,
     stream_source: str,
     stream_settings: StreamSettings | None = None,
+    quit_event: threading.Event | None = None,
 ) -> None:
     """Run the stream worker under test."""
     stream_state = StreamState(hass, stream.outputs, stream._diagnostics)
@@ -311,7 +317,7 @@ def run_worker(
         stream_settings or hass.data[DOMAIN][ATTR_SETTINGS],
         stream_state,
         KeyFrameConverter(hass, stream_settings, dynamic_stream_settings()),
-        threading.Event(),
+        quit_event if quit_event is not None else threading.Event(),
     )
 
 
@@ -405,15 +411,29 @@ async def test_stream_worker_success(hass: HomeAssistant) -> None:
     assert len(decoded_stream.audio_packets) == 0
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        # pylint: disable-next=c-extension-no-member
+        pytest.param(av.error.ArgumentError(22, "Mux failed"), id="ffmpeg_error"),
+        pytest.param(ValueError("Mux failed"), id="value_error"),
+    ],
+)
+@pytest.mark.parametrize(
+    "close_exception",
+    [
+        # pylint: disable-next=c-extension-no-member
+        pytest.param(av.error.ArgumentError(22, "Close failed"), id="ffmpeg_close"),
+        pytest.param(ValueError("Close failed"), id="value_close"),
+    ],
+)
 async def test_stream_worker_first_keyframe_mux_fails(
-    hass: HomeAssistant,
+    hass: HomeAssistant, exception: Exception, close_exception: Exception
 ) -> None:
-    """Test an FFmpeg error muxing the first keyframe is handled."""
+    """Test stream worker errors muxing the first keyframe are handled."""
     py_av = MockPyAv()
-    # pylint: disable-next=c-extension-no-member
-    py_av.capture_buffer.mux_side_effects = [av.error.ArgumentError(22, "Mux failed")]
-    # pylint: disable-next=c-extension-no-member
-    py_av.capture_buffer.close_side_effect = av.error.ArgumentError(22, "Close failed")
+    py_av.capture_buffer.mux_side_effects = [exception]
+    py_av.capture_buffer.close_side_effect = close_exception
 
     with pytest.raises(
         StreamWorkerError, match="Error muxing first keyframe \\(Mux failed\\)"
@@ -424,22 +444,184 @@ async def test_stream_worker_first_keyframe_mux_fails(
     assert py_av.capture_buffer.memory_file.closed
 
 
-async def test_stream_worker_packet_mux_fails(hass: HomeAssistant) -> None:
-    """Test an FFmpeg error muxing a packet is handled."""
-    py_av = MockPyAv()
-    py_av.capture_buffer.mux_side_effects = [
-        None,
+@pytest.mark.parametrize(
+    "exception",
+    [
         # pylint: disable-next=c-extension-no-member
-        av.error.ArgumentError(22, "Mux failed"),
-    ]
-    # pylint: disable-next=c-extension-no-member
-    py_av.capture_buffer.close_side_effect = av.error.ArgumentError(22, "Close failed")
+        pytest.param(av.error.ArgumentError(22, "Mux failed"), id="ffmpeg_error"),
+        pytest.param(ValueError("Mux failed"), id="value_error"),
+    ],
+)
+@pytest.mark.parametrize(
+    "close_exception",
+    [
+        # pylint: disable-next=c-extension-no-member
+        pytest.param(av.error.ArgumentError(22, "Close failed"), id="ffmpeg_close"),
+        pytest.param(ValueError("Close failed"), id="value_close"),
+    ],
+)
+async def test_stream_worker_packet_mux_fails(
+    hass: HomeAssistant, exception: Exception, close_exception: Exception
+) -> None:
+    """Test stream worker errors muxing a packet are handled."""
+    py_av = MockPyAv()
+    py_av.capture_buffer.mux_side_effects = [None, exception]
+    py_av.capture_buffer.close_side_effect = close_exception
 
     with pytest.raises(StreamWorkerError, match="Error muxing stream \\(Mux failed\\)"):
         await async_decode_stream(
             hass, PacketSequence(TEST_SEQUENCE_LENGTH), py_av=py_av
         )
     assert py_av.capture_buffer.memory_file.closed
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        # pylint: disable-next=c-extension-no-member
+        pytest.param(
+            av.error.ArgumentError(22, "[mp4] dimensions not set"),
+            id="ffmpeg_error",
+        ),
+        pytest.param(ValueError("[mp4] dimensions not set"), id="value_error"),
+    ],
+)
+async def test_stream_worker_muxer_initialization_error(
+    hass: HomeAssistant, exception: Exception
+) -> None:
+    """Test muxer initialization errors are handled and close the input."""
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
+    stream.add_provider(HLS_PROVIDER)
+    py_av = MockPyAv()
+    py_av.container.packets = iter(PacketSequence(TEST_SEQUENCE_LENGTH))
+    py_av.container.close_side_effect = ValueError("Close failed")
+
+    with (
+        patch("av.open", new=py_av.open),
+        patch.object(StreamMuxer, "make_new_av", side_effect=exception),
+        pytest.raises(
+            StreamWorkerError,
+            match=r"Error initializing stream muxer \(\[mp4\] dimensions not set\)",
+        ),
+    ):
+        run_worker(hass, stream, STREAM_SOURCE)
+    assert py_av.container.closed
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        # pylint: disable-next=c-extension-no-member
+        pytest.param(av.error.ArgumentError(22, "Close failed"), id="ffmpeg_error"),
+        pytest.param(ValueError("Close failed"), id="value_error"),
+    ],
+)
+async def test_stream_worker_muxer_close_failure_is_handled(
+    hass: HomeAssistant, exception: Exception
+) -> None:
+    """Test muxer close failures are handled."""
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
+    stream.add_provider(HLS_PROVIDER)
+    py_av = MockPyAv()
+    py_av.container.packets = iter(PacketSequence(TEST_SEQUENCE_LENGTH))
+    py_av.capture_buffer.close_side_effect = exception
+    quit_event = threading.Event()
+    quit_event.set()
+
+    with (
+        patch("av.open", new=py_av.open),
+        pytest.raises(
+            StreamWorkerError, match=r"Error closing stream \(Close failed\)"
+        ),
+    ):
+        run_worker(hass, stream, STREAM_SOURCE, quit_event=quit_event)
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        # pylint: disable-next=c-extension-no-member
+        pytest.param(av.error.ArgumentError(22, "Close failed"), id="ffmpeg_error"),
+        pytest.param(ValueError("Close failed"), id="value_error"),
+    ],
+)
+async def test_stream_worker_container_close_failure_is_handled(
+    hass: HomeAssistant, exception: Exception
+) -> None:
+    """Test input-container close failures are handled."""
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
+    stream.add_provider(HLS_PROVIDER)
+    py_av = MockPyAv()
+    py_av.container.packets = iter(PacketSequence(TEST_SEQUENCE_LENGTH))
+    py_av.container.close_side_effect = exception
+    quit_event = threading.Event()
+    quit_event.set()
+
+    with (
+        patch("av.open", new=py_av.open),
+        pytest.raises(
+            StreamWorkerError, match=r"Error closing stream \(Close failed\)"
+        ),
+    ):
+        run_worker(hass, stream, STREAM_SOURCE, quit_event=quit_event)
+
+
+async def test_stream_worker_close_failures_preserve_first_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test both close operations run while preserving the muxer failure."""
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
+    stream.add_provider(HLS_PROVIDER)
+    py_av = MockPyAv()
+    py_av.container.packets = iter(PacketSequence(TEST_SEQUENCE_LENGTH))
+    py_av.capture_buffer.close_side_effect = ValueError("Muxer close failed")
+    py_av.container.close_side_effect = ValueError("Container close failed")
+    quit_event = threading.Event()
+    quit_event.set()
+
+    with (
+        patch("av.open", new=py_av.open),
+        pytest.raises(
+            StreamWorkerError,
+            match=r"Error closing stream \(Muxer close failed\)",
+        ),
+    ):
+        run_worker(hass, stream, STREAM_SOURCE, quit_event=quit_event)
+    assert py_av.container.closed
+
+
+def test_redact_value_error_url() -> None:
+    """Test credentials in a ValueError URL are redacted."""
+    assert (
+        redact_av_error_string(
+            ValueError("failed for rtsp://user:secret@example.invalid/live")
+        )
+        == "failed for rtsp://****:****@example.invalid/live"
+    )
 
 
 async def test_skip_out_of_order_packet(hass: HomeAssistant) -> None:
