@@ -11,6 +11,7 @@ from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
+from aiohomekit.testing import FakeController
 from bleak.exc import BleakError
 import pytest
 
@@ -393,7 +394,7 @@ async def test_discovery_ignored_hk_bridge(
 
 
 async def test_discovery_ignored_hk_bridge_shared_mac(
-    hass: HomeAssistant, controller, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant, controller: FakeController, device_registry: dr.DeviceRegistry
 ) -> None:
     """Ignore a homekit bridge even when another config entry shares its MAC.
 
