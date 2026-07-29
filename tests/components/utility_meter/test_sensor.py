@@ -1,6 +1,7 @@
 """The tests for the utility_meter sensor platform."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from freezegun import freeze_time
 import pytest
@@ -17,10 +18,13 @@ from homeassistant.components.sensor import (
 from homeassistant.components.utility_meter import DEFAULT_OFFSET
 from homeassistant.components.utility_meter.const import (
     ATTR_VALUE,
+    BIMONTHLY,
     DAILY,
     DOMAIN,
     HOURLY,
+    MONTHLY,
     QUARTER_HOURLY,
+    QUARTERLY,
     SERVICE_CALIBRATE_METER,
     SERVICE_RESET,
 )
@@ -30,6 +34,7 @@ from homeassistant.components.utility_meter.sensor import (
     COLLECTING,
     PAUSED,
     UtilityMeterSensor,
+    _month_aware_reset_scheduler,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -2118,3 +2123,201 @@ async def test_device_id(
     utility_meter_no_tariffs_entity = entity_registry.async_get("sensor.energy")
     assert utility_meter_no_tariffs_entity is not None
     assert utility_meter_no_tariffs_entity.device_id == source_entity.device_id
+
+
+@pytest.mark.parametrize(
+    ("start", "day", "expected"),
+    [
+        (
+            # Non-leap February with day 29 should clamp to Feb 28
+            "2026-02-05T12:00:00+00:00",
+            29,
+            [
+                "2026-02-28T00:00:00+00:00",
+                "2026-03-29T00:00:00+00:00",
+                "2026-04-29T00:00:00+00:00",
+            ],
+        ),
+        (
+            # Leap year February keeps day 29
+            "2024-02-05T12:00:00+00:00",
+            29,
+            [
+                "2024-02-29T00:00:00+00:00",
+                "2024-03-29T00:00:00+00:00",
+            ],
+        ),
+        (
+            # Day 31 clamps to last day of short months
+            "2026-01-05T00:00:00+00:00",
+            31,
+            [
+                "2026-01-31T00:00:00+00:00",
+                "2026-02-28T00:00:00+00:00",
+                "2026-03-31T00:00:00+00:00",
+                "2026-04-30T00:00:00+00:00",
+            ],
+        ),
+    ],
+)
+def test_month_aware_reset_scheduler(start: str, day: int, expected: list[str]) -> None:
+    """Monthly resets should clamp day-of-month to the length of each month."""
+    scheduler = _month_aware_reset_scheduler(
+        datetime.fromisoformat(start),
+        day=day,
+        hour=0,
+        minute=0,
+        period=MONTHLY,
+    )
+    for expected_reset in expected:
+        assert next(scheduler) == datetime.fromisoformat(expected_reset)
+
+
+@pytest.mark.parametrize(
+    ("period", "start", "expected"),
+    [
+        (
+            QUARTERLY,
+            "2017-03-31T23:59:00+00:00",
+            [
+                "2017-04-01T00:00:00+00:00",
+                "2017-07-01T00:00:00+00:00",
+                "2017-10-01T00:00:00+00:00",
+                "2018-01-01T00:00:00+00:00",
+            ],
+        ),
+        (
+            BIMONTHLY,
+            "2017-12-31T23:59:00+00:00",
+            [
+                "2018-01-01T00:00:00+00:00",
+                "2018-03-01T00:00:00+00:00",
+                "2018-05-01T00:00:00+00:00",
+            ],
+        ),
+        (
+            BIMONTHLY,
+            "2018-01-01T23:59:00+00:00",
+            [
+                "2018-03-01T00:00:00+00:00",
+                "2018-05-01T00:00:00+00:00",
+            ],
+        ),
+    ],
+)
+def test_month_aware_reset_scheduler_period_alignment(
+    period: str, start: str, expected: list[str]
+) -> None:
+    """Multi-month schedules should stay aligned to January like cron did."""
+    scheduler = _month_aware_reset_scheduler(
+        datetime.fromisoformat(start),
+        day=1,
+        hour=0,
+        minute=0,
+        period=period,
+    )
+    for expected_reset in expected:
+        assert next(scheduler) == datetime.fromisoformat(expected_reset)
+
+
+def test_month_aware_reset_scheduler_dst_gap() -> None:
+    """Spring-forward gaps should advance like CronSim instead of shifting by an hour."""
+    tz = ZoneInfo("Europe/Riga")
+    # 2021-03-28 jumps 03:00 -> 04:00; 03:30 is imaginary.
+    # CronSim yields 04:00, not the 04:30 that naive replace would become.
+    scheduler = _month_aware_reset_scheduler(
+        datetime(2021, 3, 1, 0, 0, tzinfo=tz),
+        day=28,
+        hour=3,
+        minute=30,
+        period=MONTHLY,
+    )
+    assert next(scheduler) == datetime(2021, 3, 28, 4, 0, tzinfo=tz)
+    assert next(scheduler) == datetime(2021, 4, 28, 3, 30, tzinfo=tz)
+
+
+def test_month_aware_reset_scheduler_dst_fold() -> None:
+    """Ambiguous fall-back times should use fold 0 like CronSim."""
+    tz = ZoneInfo("Europe/Riga")
+    # Start in fold 1 must not select the second 03:30 occurrence.
+    scheduler = _month_aware_reset_scheduler(
+        datetime(2021, 10, 30, 12, 0, tzinfo=tz, fold=1),
+        day=31,
+        hour=3,
+        minute=30,
+        period=MONTHLY,
+    )
+    reset = next(scheduler)
+    assert reset == datetime(2021, 10, 31, 3, 30, tzinfo=tz, fold=0)
+    assert reset.fold == 0
+
+
+async def test_monthly_offset_resets_in_february(hass: HomeAssistant) -> None:
+    """Config-entry monthly meter with offset 28 still resets in February."""
+    # YAML rejects offset >= 28 days; the UI/config-entry path allows 28 (day 29).
+    # Day 29 does not exist in non-leap February, so the scheduled reset must
+    # clamp to Feb 28 and fire through the normal timer path.
+    now = dt_util.parse_datetime("2026-02-27T23:59:00.000000+00:00")
+    with freeze_time(now):
+        config_entry = MockConfigEntry(
+            data={},
+            domain=DOMAIN,
+            options={
+                "cycle": "monthly",
+                "delta_values": False,
+                "name": "Energy bill",
+                "net_consumption": False,
+                "offset": 28,
+                "periodically_resetting": True,
+                "source": "sensor.energy",
+                "tariffs": [],
+            },
+            title="Energy bill",
+        )
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.energy_bill")
+        assert state is not None
+        assert state.attributes.get("next_reset") == "2026-02-28T00:00:00+00:00"
+
+        async_fire_time_changed(hass, now)
+        hass.states.async_set(
+            "sensor.energy",
+            1,
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+        )
+        await hass.async_block_till_done()
+
+    now += timedelta(seconds=30)
+    with freeze_time(now):
+        async_fire_time_changed(hass, now)
+        hass.states.async_set(
+            "sensor.energy",
+            3,
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+
+    now += timedelta(seconds=30)
+    with freeze_time(now):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        hass.states.async_set(
+            "sensor.energy",
+            6,
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.attributes.get("last_period") == "2"
+    assert state.attributes.get("last_reset") == dt_util.as_utc(now).isoformat()
+    assert state.state == "3"

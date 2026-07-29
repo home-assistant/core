@@ -1,8 +1,9 @@
 """Utility meter from sensors providing raw data."""
 
-from collections.abc import Mapping
+import calendar
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
 import math
@@ -98,6 +99,90 @@ PERIOD2CRON = {
     QUARTERLY: "{minute} {hour} {day} */3 *",
     YEARLY: "{minute} {hour} {day} 1/12 *",
 }
+
+_MONTH_PERIOD_STEPS = {
+    MONTHLY: 1,
+    BIMONTHLY: 2,
+    QUARTERLY: 3,
+    YEARLY: 12,
+}
+
+
+def _normalize_like_cronsim(candidate: datetime) -> datetime:
+    """Match CronSim DST handling for month-based reset times.
+
+    Reset fold so ambiguous fall-back times use the first occurrence, and
+    advance minute-by-minute through spring-forward gaps so imaginary wall
+    times (for example 03:30 in Europe/Riga) become the first valid minute.
+    """
+    if candidate.tzinfo is None:
+        return candidate
+
+    result = candidate.replace(fold=0)
+    while result != result.astimezone(UTC).astimezone(result.tzinfo):
+        result += timedelta(minutes=1)
+    return result
+
+
+def _month_aware_reset_scheduler(
+    start: datetime,
+    *,
+    day: int,
+    hour: int,
+    minute: int,
+    period: str,
+) -> Iterator[datetime]:
+    """Yield reset times for month-based periods with day clamping.
+
+    Cron day-of-month values such as 29 skip February in non-leap years.
+    Clamp the intended day to the last day of each target month so monthly
+    meters with large offsets still reset every month.
+
+    Multi-month periods stay aligned to January, matching the previous cron
+    patterns (`*/2`, `*/3`, and `1/12`).
+    """
+    month_step = _MONTH_PERIOD_STEPS[period]
+
+    current = start
+    year = current.year
+    month = current.month
+
+    # Align to the calendar cycle that starts in January.
+    # monthly: every month; bimonthly: 1,3,5,...; quarterly: 1,4,7,10; yearly: 1
+    remainder = (month - 1) % month_step
+    if remainder:
+        month = month - remainder + month_step
+        while month > 12:
+            month -= 12
+            year += 1
+
+    while True:
+        last_day = calendar.monthrange(year, month)[1]
+        target_day = min(day, last_day)
+        candidate = _normalize_like_cronsim(
+            current.replace(
+                year=year,
+                month=month,
+                day=target_day,
+                hour=hour,
+                minute=minute,
+                second=0,
+                microsecond=0,
+            )
+        )
+        if (
+            candidate > current
+            if candidate.tzinfo is None
+            else candidate.astimezone(UTC) > current.astimezone(UTC)
+        ):
+            yield candidate
+            current = candidate
+
+        month += month_step
+        while month > 12:
+            month -= 12
+            year += 1
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -396,6 +481,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._input_device_class = None
         self._attr_native_unit_of_measurement = None
         self._period = meter_type
+        self._meter_offset = meter_offset
         if meter_type is not None:
             # For backwards compatibility reasons we convert
             # the period and offset into a cron pattern
@@ -418,17 +504,26 @@ class UtilityMeterSensor(RestoreSensor):
         self._config_scheduler()
 
     def _config_scheduler(self, start_time: datetime | None = None) -> None:
-        self.scheduler = (
-            CronSim(
-                self._cron_pattern,
-                start_time
-                or dt_util.now(
-                    dt_util.get_default_time_zone()
-                ),  # we need timezone for DST purposes (see issue #102984)
+        start = start_time or dt_util.now(
+            dt_util.get_default_time_zone()
+        )  # we need timezone for DST purposes (see issue #102984)
+
+        scheduler: Iterator[datetime] | None
+        # Month-based periods need day-of-month clamping so offsets near the
+        # end of the month still reset in short months such as February.
+        if self._period in _MONTH_PERIOD_STEPS:
+            scheduler = _month_aware_reset_scheduler(
+                start,
+                day=self._meter_offset.days + 1,
+                hour=self._meter_offset.seconds // 3600,
+                minute=self._meter_offset.seconds % 3600 // 60,
+                period=self._period,
             )
-            if self._cron_pattern
-            else None
-        )
+        elif self._cron_pattern:
+            scheduler = CronSim(self._cron_pattern, start)
+        else:
+            scheduler = None
+        self.scheduler = scheduler
 
     def start(self, attributes: Mapping[str, Any]) -> None:
         """Initialize unit and state upon source initial update."""
