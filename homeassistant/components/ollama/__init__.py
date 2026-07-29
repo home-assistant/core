@@ -1,10 +1,8 @@
 """The Ollama integration."""
 
-import asyncio
 import logging
 from types import MappingProxyType
 
-import httpx
 import ollama
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
@@ -16,11 +14,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -36,7 +29,6 @@ from .const import (
     CONF_THINK,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_NAME,
-    DEFAULT_TIMEOUT,
     DOMAIN,
 )
 from .coordinator import OllamaDataUpdateCoordinator
@@ -80,24 +72,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
         ),
         verify=get_default_context(),
     )
-    try:
-        async with asyncio.timeout(DEFAULT_TIMEOUT):
-            await client.list()
-    except ollama.ResponseError as err:
-        if err.status_code in (401, 403):
-            raise ConfigEntryAuthFailed from err
-        if err.status_code >= 500 or err.status_code == 429:
-            raise ConfigEntryNotReady(err) from err
-        # If the response is a 4xx error other than 401 or 403,
-        # it likely means the URL is valid but not an Ollama
-        # instance, so we raise ConfigEntryError to show an error
-        # in the UI, instead of ConfigEntryNotReady which would
-        # just keep retrying.
-        raise ConfigEntryError(err) from err
-    except (TimeoutError, httpx.ConnectError, ConnectionError) as err:
-        raise ConfigEntryNotReady(err) from err
-
-    entry.runtime_data = OllamaDataUpdateCoordinator(hass, entry, client)
+    coordinator = OllamaDataUpdateCoordinator(hass, entry, client)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))

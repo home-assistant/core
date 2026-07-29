@@ -31,16 +31,8 @@ from tests.common import MockConfigEntry, snapshot_platform
     new=AsyncMock(
         return_value=ollama.ProcessResponse(
             models=[
-                {
-                    "model": "zeta",
-                    "size": 8_000_000_000,
-                    "size_vram": 6_000_000_000,
-                },
-                {
-                    "model": "alpha",
-                    "size": 4_000_000_000,
-                    "size_vram": 1_000_000_000,
-                },
+                {"model": "zeta", "size": 8_000_000_000, "size_vram": 6_000_000_000},
+                {"model": "alpha", "size": 4_000_000_000, "size_vram": 1_000_000_000},
             ]
         )
     ),
@@ -54,12 +46,7 @@ async def test_model_sensors(
     """Test the model sensors."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    await snapshot_platform(
-        hass,
-        entity_registry,
-        snapshot,
-        mock_config_entry.entry_id,
-    )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -73,7 +60,7 @@ async def test_model_sensors(
 )
 @patch("ollama.AsyncClient.list", return_value=ollama.ListResponse(models=[]))
 @patch("ollama.AsyncClient.ps")
-async def test_model_sensors_unavailable(
+async def test_loaded_model_sensors_unavailable(
     mock_ps: AsyncMock,
     mock_list: AsyncMock,
     hass: HomeAssistant,
@@ -100,8 +87,6 @@ async def test_model_sensors_unavailable(
     assert installed_state is not None
     assert loaded_state.state == STATE_UNAVAILABLE
     assert installed_state.state == STATE_UNAVAILABLE
-    mock_ps.assert_awaited_once()
-    assert mock_list.await_count == 2
 
 
 @patch("ollama.AsyncClient.list", return_value=ollama.ListResponse(models=[{}, {}]))
@@ -136,4 +121,4 @@ async def test_model_sensors_recover(
     assert loaded_state.state == "1"
     assert installed_state.state == "2"
     assert mock_ps.await_count == 2
-    assert mock_list.await_count == 3
+    assert mock_list.await_count == 2

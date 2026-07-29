@@ -4,6 +4,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
+import ollama
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -27,6 +29,13 @@ class OllamaSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[OllamaData], int]
     attr_fn: Callable[[OllamaData], dict[str, list[str]] | None] = lambda _: None
+    available_fn: Callable[[OllamaData], bool] = lambda _: True
+
+
+def _loaded_models(data: OllamaData) -> ollama.ProcessResponse:
+    """Return loaded model data."""
+    assert data.loaded is not None
+    return data.loaded
 
 
 SENSORS: tuple[OllamaSensorEntityDescription, ...] = (
@@ -34,10 +43,13 @@ SENSORS: tuple[OllamaSensorEntityDescription, ...] = (
         key="loaded_models",
         translation_key="loaded_models",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: len(data.loaded.models),
+        value_fn=lambda data: len(_loaded_models(data).models),
         attr_fn=lambda data: {
-            "names": sorted(model.model for model in data.loaded.models if model.model)
+            "names": sorted(
+                model.model for model in _loaded_models(data).models if model.model
+            )
         },
+        available_fn=lambda data: data.loaded is not None,
     ),
     OllamaSensorEntityDescription(
         key="installed_models",
@@ -49,6 +61,7 @@ SENSORS: tuple[OllamaSensorEntityDescription, ...] = (
                 model.model for model in data.installed.models if model.model
             )
         },
+        available_fn=lambda data: data.installed is not None,
     ),
     OllamaSensorEntityDescription(
         key="loaded_model_size",
@@ -58,7 +71,10 @@ SENSORS: tuple[OllamaSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: sum(model.size or 0 for model in data.loaded.models),
+        value_fn=lambda data: sum(
+            model.size or 0 for model in _loaded_models(data).models
+        ),
+        available_fn=lambda data: data.loaded is not None,
     ),
     OllamaSensorEntityDescription(
         key="loaded_model_gpu_memory",
@@ -68,7 +84,10 @@ SENSORS: tuple[OllamaSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: sum(model.size_vram or 0 for model in data.loaded.models),
+        value_fn=lambda data: sum(
+            model.size_vram or 0 for model in _loaded_models(data).models
+        ),
+        available_fn=lambda data: data.loaded is not None,
     ),
 )
 
@@ -80,7 +99,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Ollama sensors."""
     coordinator = entry.runtime_data
-    await coordinator.async_refresh()
     async_add_entities(
         [OllamaModelsSensor(entry, coordinator, description) for description in SENSORS]
     )
@@ -114,9 +132,21 @@ class OllamaModelsSensor(CoordinatorEntity[OllamaDataUpdateCoordinator], SensorE
 
     @property
     @override
+    def available(self) -> bool:
+        """Return whether the sensor is available."""
+        return (
+            super().available
+            and (data := self.coordinator.data) is not None
+            and self.entity_description.available_fn(data)
+        )
+
+    @property
+    @override
     def native_value(self) -> int | None:
         """Return the sensor value."""
-        if (data := self.coordinator.data) is None:
+        if (data := self.coordinator.data) is None or not (
+            self.entity_description.available_fn(data)
+        ):
             return None
         return self.entity_description.value_fn(data)
 
@@ -124,6 +154,8 @@ class OllamaModelsSensor(CoordinatorEntity[OllamaDataUpdateCoordinator], SensorE
     @override
     def extra_state_attributes(self) -> dict[str, list[str]] | None:
         """Return the model names."""
-        if (data := self.coordinator.data) is None:
+        if (data := self.coordinator.data) is None or not (
+            self.entity_description.available_fn(data)
+        ):
             return None
         return self.entity_description.attr_fn(data)
