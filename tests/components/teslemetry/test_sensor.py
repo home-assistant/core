@@ -8,10 +8,17 @@ from syrupy.assertion import SnapshotAssertion
 from teslemetry_stream import Signal
 
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
+from homeassistant.components.teslemetry.sensor import ATM_TO_BAR
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+    UnitOfPressure,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_conversion import PressureConverter
 
 from . import assert_entities, assert_entities_alt, setup_platform
 from .const import ENERGY_HISTORY_EMPTY, VEHICLE_DATA_ALT
@@ -114,6 +121,78 @@ async def test_sensors_streaming(
     assert hass.states.get("sensor.teslemetry_command_credits").state == "1980"
     assert (quota_state := hass.states.get("sensor.teslemetry_command_quota_used"))
     assert quota_state.state == "21.2"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("signal", "entity_id", "streamed_value", "expected_state"),
+    [
+        (
+            Signal.TPMS_PRESSURE_FL,
+            "sensor.test_tire_pressure_front_left",
+            2.7,
+            PressureConverter.convert(
+                2.7 * ATM_TO_BAR, UnitOfPressure.BAR, UnitOfPressure.PSI
+            ),
+        ),
+        (
+            Signal.TPMS_PRESSURE_FR,
+            "sensor.test_tire_pressure_front_right",
+            2.7,
+            PressureConverter.convert(
+                2.7 * ATM_TO_BAR, UnitOfPressure.BAR, UnitOfPressure.PSI
+            ),
+        ),
+        (
+            Signal.TPMS_PRESSURE_RL,
+            "sensor.test_tire_pressure_rear_left",
+            2.7,
+            PressureConverter.convert(
+                2.7 * ATM_TO_BAR, UnitOfPressure.BAR, UnitOfPressure.PSI
+            ),
+        ),
+        (
+            Signal.TPMS_PRESSURE_RR,
+            "sensor.test_tire_pressure_rear_right",
+            2.7,
+            PressureConverter.convert(
+                2.7 * ATM_TO_BAR, UnitOfPressure.BAR, UnitOfPressure.PSI
+            ),
+        ),
+        (
+            Signal.ISOLATION_RESISTANCE,
+            "sensor.test_isolation_resistance",
+            2.5,
+            2500,
+        ),
+    ],
+    ids=["tpms_fl", "tpms_fr", "tpms_rl", "tpms_rr", "isolation_resistance"],
+)
+async def test_sensors_streaming_unit_conversion(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+    signal: Signal,
+    entity_id: str,
+    streamed_value: float,
+    expected_state: float,
+) -> None:
+    """Test streamed TPMS pressure and isolation resistance are converted to their declared units."""
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {signal: streamed_value},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == pytest.approx(expected_state)
 
 
 async def test_energy_history_no_time_series(
