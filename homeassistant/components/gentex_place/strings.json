@@ -50,5 +50,11 @@
       }
     }
   },
-  "entity": {}
+  "entity": {
+    "binary_sensor": {
+      "heat_alarm": {
+        "name": "Heat alarm"
+      }
+    }
+  }
 }
