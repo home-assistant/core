@@ -17,6 +17,38 @@
       }
     }
   },
+  "exceptions": {
+    "channel_conflict": {
+      "message": "The target network uses channel {target_channel}, but another radio pins the Thread channel to {allowed_channel}."
+    },
+    "incomplete_dataset": {
+      "message": "The dataset must describe the target network completely; it is missing {missing}. A partial dataset would be filled in by the border router with settings nobody picked."
+    },
+    "invalid_dataset": {
+      "message": "The dataset must be Thread operational dataset TLVs in hex."
+    },
+    "no_active_network": {
+      "message": "The border router has no active network to migrate; join it to a network first."
+    },
+    "no_preferred_dataset": {
+      "message": "No dataset was given and no preferred Thread network is configured."
+    },
+    "pending_dataset_in_place": {
+      "message": "A pending dataset is already in place: a migration or channel change is propagating through the mesh. Wait for it to complete, then try again."
+    },
+    "pinned_router_unreachable": {
+      "message": "The border router {router} pins the Thread channel for another radio, but could not be read to check whether it is on this network. Try again once it is reachable."
+    },
+    "preferred_dataset_changed": {
+      "message": "The preferred Thread network changed while the border router was being read, so nothing was migrated. Try again."
+    },
+    "router_dataset_invalid": {
+      "message": "The border router returned a dataset that could not be parsed."
+    },
+    "timestamp_exhausted": {
+      "message": "The network's dataset timestamp cannot be increased any further."
+    }
+  },
   "issues": {
     "get_get_border_agent_id_unsupported": {
       "description": "Your OTBR does not support Border Agent ID.\n\nTo fix this issue, update the OTBR to the latest version and restart Home Assistant.\nIf you are using an OTBR integrated in Home Assistant, update either the OpenThread Border Router app or the Silicon Labs Multiprotocol app. Otherwise update your self-managed OTBR.",
@@ -29,6 +61,26 @@
     "otbr_zha_channel_collision": {
       "description": "When OTBR and ZHA share the radio, they must use the same network channel.\n\nIf OTBR and ZHA attempt to connect to networks on different channels, neither Thread/Matter nor Zigbee will work.\n\nOTBR is configured with a Thread network on channel {otbr_channel}, ZHA is configured with a Zigbee network on channel {zha_channel}.",
       "title": "OTBR and ZHA share the same radio but use different channels"
+    }
+  },
+  "services": {
+    "migrate_network": {
+      "description": "Moves the border router and every device on its Thread network onto another network, using a pending dataset that all devices apply together after a delay. Thread never goes down, and devices that hear about the change do not need to be re-joined; a device powered off for the whole delay misses it and may need to be re-joined. Warning: this migrates the entire network, including devices commissioned by other systems.",
+      "fields": {
+        "config_entry": {
+          "description": "The border router to migrate. Needed only when more than one is set up.",
+          "name": "Border router"
+        },
+        "dataset": {
+          "description": "Thread operational dataset of the target network as TLVs in hex. Defaults to the preferred network from the Thread settings.",
+          "name": "Dataset"
+        },
+        "delay": {
+          "description": "How long devices wait before switching, giving sleepy devices time to hear about the change.",
+          "name": "Delay"
+        }
+      },
+      "name": "Migrate Thread network"
     }
   }
 }
