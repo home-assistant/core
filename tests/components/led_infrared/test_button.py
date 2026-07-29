@@ -39,6 +39,16 @@ def button_only() -> Generator[None]:
         yield
 
 
+@pytest.mark.parametrize(
+    "config_entry",
+    [
+        LEDIrDeviceType.GENERIC_13_KEY,
+        LEDIrDeviceType.GENERIC_24_KEY,
+        LEDIrDeviceType.GENERIC_40_KEY,
+        LEDIrDeviceType.GENERIC_44_KEY,
+    ],
+    indirect=True,
+)
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_setup(
     hass: HomeAssistant,
