@@ -262,7 +262,7 @@ def test_update_recovers_after_failure(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker
 ) -> None:
     """Test the API recovers once the router responds again."""
-    api, sensor_dict = setup_api(hass, MOCK_DATA, requests_mock)
+    api, _ = setup_api(hass, MOCK_DATA, requests_mock)
     resource = f"http://localhost{google_wifi.ENDPOINT}"
     requests_mock.get(resource, exc=requests.exceptions.ReadTimeout)
     api.update(no_throttle=True)
