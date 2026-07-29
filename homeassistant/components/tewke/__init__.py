@@ -39,6 +39,10 @@ async def async_setup_entry(
         msg = f"Unable to connect to Tewke device at {entry.data[CONF_HOST]}"
         raise ConfigEntryNotReady(msg) from err
 
+    if tap.wall_dock_id is None:
+        msg = f"Tewke device at {entry.data[CONF_HOST]} missing wall_dock_id"
+        raise ConfigEntryNotReady(msg)
+
     entry.async_on_unload(tap.close)
 
     tewke_coordinator = TewkeCoordinator(
