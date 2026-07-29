@@ -48,6 +48,9 @@
       "reset_lifespan_station_filter": {
         "default": "mdi:air-filter"
       },
+      "reset_lifespan_trimmer_brush": {
+        "default": "mdi:broom"
+      },
       "reset_lifespan_unit_care": {
         "default": "mdi:robot-vacuum"
       },
@@ -56,6 +59,9 @@
       },
       "reset_lifespan_water_sink": {
         "default": "mdi:water-outline"
+      },
+      "reset_lifespan_weed_rope": {
+        "default": "mdi:grass"
       },
       "station_action_clean_base": {
         "default": "mdi:home"
@@ -140,6 +146,9 @@
       "lifespan_station_filter": {
         "default": "mdi:air-filter"
       },
+      "lifespan_trimmer_brush": {
+        "default": "mdi:broom"
+      },
       "lifespan_unit_care": {
         "default": "mdi:robot-vacuum"
       },
@@ -148,6 +157,9 @@
       },
       "lifespan_water_sink": {
         "default": "mdi:water-outline"
+      },
+      "lifespan_weed_rope": {
+        "default": "mdi:grass"
       },
       "network_ip": {
         "default": "mdi:ip-network-outline"
