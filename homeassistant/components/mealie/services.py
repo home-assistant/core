@@ -329,6 +329,12 @@ async def _async_delete_mealplan(call: ServiceCall) -> ServiceResponse:
             translation_domain=DOMAIN,
             translation_key="connection_error",
         ) from err
+    except MealieNotFoundError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="mealplan_not_found",
+            translation_placeholders={"mealplan_id": mealplan_id},
+        ) from err
     return None
 
 

@@ -432,6 +432,29 @@ async def test_service_delete_mealplan(
     mock_mealie_client.delete_mealplan.assert_called_with("another_mealplan_id")
 
 
+async def test_service_delete_mealplan_not_found(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the delete_mealplan service with invalid mealplan ID."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mealie_client.delete_mealplan.side_effect = MealieNotFoundError
+
+    with pytest.raises(ServiceValidationError, match="Mealplan with ID"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DELETE_MEALPLAN,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_MEALPLAN_ID: "invalid_mealplan_id",
+            },
+            blocking=True,
+        )
+    mock_mealie_client.delete_mealplan.assert_called_once()
+
+
 @pytest.mark.parametrize(
     ("payload", "kwargs"),
     [
