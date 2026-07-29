@@ -6,7 +6,9 @@ from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
+    CONF_EXCLUDE,
     CONF_HOST,
+    CONF_INCLUDE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -16,7 +18,13 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DEFAULT_TIMEOUT, DOMAIN, VIZIO_DEVICE_CLASSES
+from .const import (
+    CONF_APPS,
+    CONF_VOLUME_STEP,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+    VIZIO_DEVICE_CLASSES,
+)
 from .coordinator import (
     VizioAppsDataUpdateCoordinator,
     VizioConfigEntry,
@@ -34,6 +42,30 @@ PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the component."""
     async_setup_services(hass)
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> bool:
+    """Migrate old config entries."""
+    if entry.version == 1 and entry.minor_version == 1:
+        # Settings imported from YAML were stored in data; they belong in options
+        data = dict(entry.data)
+        options = dict(entry.options)
+        if (volume_step := data.pop(CONF_VOLUME_STEP, None)) is not None:
+            options.setdefault(CONF_VOLUME_STEP, volume_step)
+        if apps := dict(data.pop(CONF_APPS, {})):
+            include_or_exclude = {
+                key: apps.pop(key)
+                for key in (CONF_INCLUDE, CONF_EXCLUDE)
+                if key in apps
+            }
+            if include_or_exclude:
+                options.setdefault(CONF_APPS, include_or_exclude)
+            if apps:
+                data[CONF_APPS] = apps
+        hass.config_entries.async_update_entry(
+            entry, data=data, options=options, minor_version=2
+        )
     return True
 
 
