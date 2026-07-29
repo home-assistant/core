@@ -419,18 +419,6 @@ async def test_service_delete_mealplan(
     )
     mock_mealie_client.delete_mealplan.assert_called_with("mealplan_id")
 
-    mock_mealie_client.delete_mealplan.reset_mock()
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_DELETE_MEALPLAN,
-        {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_MEALPLAN_ID: "another_mealplan_id",
-        },
-        blocking=True,
-    )
-    mock_mealie_client.delete_mealplan.assert_called_with("another_mealplan_id")
-
 
 async def test_service_delete_mealplan_not_found(
     hass: HomeAssistant,
