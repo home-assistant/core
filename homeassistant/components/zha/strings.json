@@ -339,6 +339,9 @@
       "test": {
         "name": "Test"
       },
+      "tilt": {
+        "name": "Tilt"
+      },
       "valve_alarm": {
         "name": "Valve alarm"
       },
@@ -1121,6 +1124,9 @@
       "valve_opening_degree": {
         "name": "Valve opening degree"
       },
+      "valve_position": {
+        "name": "Valve position"
+      },
       "valve_state_auto_shutdown": {
         "name": "Valve state auto-shutdown"
       },
@@ -1399,6 +1405,9 @@
       "switch_actions": {
         "name": "Switch actions"
       },
+      "switch_actions_id": {
+        "name": "{id} switch actions"
+      },
       "switch_indication": {
         "name": "Switch indication"
       },
@@ -1407,6 +1416,9 @@
       },
       "switch_type": {
         "name": "Switch type"
+      },
+      "switch_type_id": {
+        "name": "{id} switch type"
       },
       "switch_type_l1": {
         "name": "Switch type L1"
@@ -2056,8 +2068,14 @@
       "linkage_alarm": {
         "name": "Linkage alarm"
       },
+      "local_control_id": {
+        "name": "{id} local control"
+      },
       "local_protection": {
         "name": "Local protection"
+      },
+      "manual_mode": {
+        "name": "Manual mode"
       },
       "mounting_mode": {
         "name": "Mounting mode"
