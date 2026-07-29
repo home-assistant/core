@@ -127,7 +127,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     entry.data[CONF_TTL],
                 )
             except HomeAssistantError as err:
-                errors.append(str(err))
+                errors.append(f"{entry.data[CONF_DOMAIN]}: {err}")
         if errors:
             raise HomeAssistantError(
                 f"Error(s) updating Route53 records: {', '.join(errors)}"

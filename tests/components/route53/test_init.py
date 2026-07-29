@@ -278,7 +278,7 @@ async def test_service_update_ipify_fails(
             "homeassistant.components.route53.boto3.client",
             return_value=mock_boto3_client.return_value,
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError, match="example.com"),
     ):
         await hass.services.async_call(DOMAIN, "update_records", blocking=True)
 
