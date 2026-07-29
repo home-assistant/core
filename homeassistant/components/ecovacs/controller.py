@@ -23,11 +23,7 @@ from sucks import EcoVacsAPI, VacBot
 
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util.ssl import get_default_no_verify_context
 
@@ -127,7 +123,7 @@ class EcovacsController:
         except DeviceVerificationRequiredError as ex:
             raise ConfigEntryAuthFailed("Device verification required") from ex
         except InvalidAuthenticationError as ex:
-            raise ConfigEntryError("Invalid credentials") from ex
+            raise ConfigEntryAuthFailed("Invalid credentials") from ex
         except DeebotError as ex:
             raise ConfigEntryNotReady("Error during setup") from ex
 

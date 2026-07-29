@@ -38,7 +38,7 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
-        "description": "Enter your Ecovacs password to reconnect the integration."
+        "description": "Enter the Ecovacs password for {username} to reconnect the integration."
       },
       "user": {
         "data": {

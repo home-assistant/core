@@ -25,3 +25,7 @@ VALID_ENTRY_DATA_SELF_HOSTED_WITH_VALIDATE_CERT = VALID_ENTRY_DATA_SELF_HOSTED |
 }
 
 IMPORT_DATA = VALID_ENTRY_DATA_CLOUD | {CONF_CONTINENT: "EU"}
+
+# Cloud device IDs are random, self-hosted ones are derived from the instance name
+CLOUD_DEVICE_ID = "AAAAAAAA"
+SELF_HOSTED_DEVICE_ID = "HA-test_home"
