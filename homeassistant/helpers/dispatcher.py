@@ -27,7 +27,7 @@ type _DispatcherDataType[*_Ts] = dict[
     SignalType[*_Ts] | str,
     dict[
         Callable[[*_Ts], Any] | Callable[..., Any],
-        HassJob[..., None | Coroutine[Any, Any, None]] | None,
+        HassJob[..., Coroutine[Any, Any, None] | None] | None,
     ],
 ]
 
