@@ -39,7 +39,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     VICARE_BAR,
@@ -52,7 +51,7 @@ from .const import (
     VICARE_WH,
 )
 from .coordinator import ViCareCoordinator
-from .entity import ViCareEntity
+from .entity import ViCareCoordinatorEntity
 from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixin
 from .utils import (
     filter_state,
@@ -1577,7 +1576,7 @@ async def async_setup_entry(
     )
 
 
-class ViCareSensor(CoordinatorEntity[ViCareCoordinator], ViCareEntity, SensorEntity):
+class ViCareSensor(ViCareCoordinatorEntity, SensorEntity):
     """Representation of a ViCare sensor."""
 
     entity_description: ViCareSensorEntityDescription
@@ -1592,11 +1591,25 @@ class ViCareSensor(CoordinatorEntity[ViCareCoordinator], ViCareEntity, SensorEnt
         component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the sensor."""
-        CoordinatorEntity.__init__(self, coordinator)
-        ViCareEntity.__init__(
-            self, description.key, device_serial, device_config, device, component
+        super().__init__(
+            coordinator,
+            description.key,
+            device_serial,
+            device_config,
+            device,
+            component,
         )
         self.entity_description = description
+        if description.unit_getter is not None:
+            with suppress(PyViCareNotSupportedFeatureError):
+                if (vicare_unit := description.unit_getter(self._api)) is not None:
+                    self._attr_native_unit_of_measurement = VICARE_UNIT_TO_HA_UNIT.get(
+                        vicare_unit
+                    )
+                    if vicare_unit in VICARE_UNIT_TO_DEVICE_CLASS:
+                        self._attr_device_class = VICARE_UNIT_TO_DEVICE_CLASS[
+                            vicare_unit
+                        ]
 
     @property
     @override
@@ -1605,29 +1618,3 @@ class ViCareSensor(CoordinatorEntity[ViCareCoordinator], ViCareEntity, SensorEnt
         with suppress(PyViCareNotSupportedFeatureError):
             return self.entity_description.value_getter(self._api)
         return None
-
-    @property
-    @override
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of the sensor."""
-        if self.entity_description.unit_getter is None:
-            return self.entity_description.native_unit_of_measurement
-        with suppress(PyViCareNotSupportedFeatureError):
-            vicare_unit = self.entity_description.unit_getter(self._api)
-            if vicare_unit is not None:
-                return VICARE_UNIT_TO_HA_UNIT.get(vicare_unit)
-        return self.entity_description.native_unit_of_measurement
-
-    @property
-    @override
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the device class of the sensor."""
-        if self.entity_description.unit_getter is not None:
-            with suppress(PyViCareNotSupportedFeatureError):
-                vicare_unit = self.entity_description.unit_getter(self._api)
-                if (
-                    vicare_unit is not None
-                    and vicare_unit in VICARE_UNIT_TO_DEVICE_CLASS
-                ):
-                    return VICARE_UNIT_TO_DEVICE_CLASS[vicare_unit]
-        return self.entity_description.device_class

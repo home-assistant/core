@@ -19,8 +19,10 @@ from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, VIESSMANN_DEVELOPER_PORTAL
+from .coordinator import ViCareCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,3 +99,22 @@ class ViCareEntity(Entity):
                 )
         else:
             self._attr_device_info["serial_number"] = device_serial
+
+
+class ViCareCoordinatorEntity(CoordinatorEntity[ViCareCoordinator], ViCareEntity):
+    """Base class for ViCare entities backed by the update coordinator."""
+
+    def __init__(
+        self,
+        coordinator: ViCareCoordinator,
+        unique_id_suffix: str,
+        device_serial: str | None,
+        device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
+        component: PyViCareHeatingDeviceComponent | None = None,
+    ) -> None:
+        """Initialize the entity."""
+        CoordinatorEntity.__init__(self, coordinator)
+        ViCareEntity.__init__(
+            self, unique_id_suffix, device_serial, device_config, device, component
+        )
