@@ -43,6 +43,32 @@ ENTITY_PLATFORMS = {
 }
 
 
+def _resolve_device_id(hass: HomeAssistant, device_id: str, domain: str) -> str:
+    """Resolve a device automation device id, following a composite device id.
+
+    A device automation created when a device could be connected to more than one
+    config entry stores the id of the (now removed) composite device. When the
+    automation's domain owns one of the split devices' config entries, resolve to that
+    device - an integration may look the device up in its own registry, which only
+    knows the current device id, not the removed composite id.
+    """
+    device_registry = dr.async_get(hass)
+    if device_id in device_registry.devices:
+        return device_id
+    if not (
+        split_devices := device_registry.async_get_devices_for_composite_device_id(
+            device_id
+        )
+    ):
+        return device_id
+    # Resolve to the device owned by a config entry of the automation's domain
+    for split_device in split_devices:
+        entry = hass.config_entries.async_get_entry(split_device.config_entry_id)
+        if entry is not None and entry.domain == domain:
+            return split_device.id
+    return device_id
+
+
 async def async_validate_device_automation_config(
     hass: HomeAssistant,
     config: ConfigType,
@@ -51,6 +77,17 @@ async def async_validate_device_automation_config(
 ) -> ConfigType:
     """Validate config."""
     validated_config: ConfigType = automation_schema(config)
+
+    # A device automation may reference a pre-migration composite device id; resolve it
+    # to the split device for its domain so the device and its entities exist and the
+    # integration platform (validation and attach/call) receives a live device id
+    resolved_device_id = _resolve_device_id(
+        hass, validated_config[CONF_DEVICE_ID], validated_config[CONF_DOMAIN]
+    )
+    if resolved_device_id != validated_config[CONF_DEVICE_ID]:
+        config = {**config, CONF_DEVICE_ID: resolved_device_id}
+        validated_config = {**validated_config, CONF_DEVICE_ID: resolved_device_id}
+
     platform = await async_get_device_automation_platform(
         hass, validated_config[CONF_DOMAIN], automation_type
     )

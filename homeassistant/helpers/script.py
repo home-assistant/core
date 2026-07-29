@@ -427,7 +427,7 @@ class _StopScript(_HaltScript):
         self,
         message: str,
         response: Any,
-        conversation_response: str | None | UndefinedType = UNDEFINED,
+        conversation_response: str | UndefinedType | None = UNDEFINED,
     ) -> None:
         """Initialize a halt exception."""
         super().__init__(message)
@@ -457,7 +457,7 @@ class _ScriptRun:
         self._started = False
         self._stop = hass.loop.create_future()
         self._stopped = asyncio.Event()
-        self._conversation_response: str | None | UndefinedType = UNDEFINED
+        self._conversation_response: str | UndefinedType | None = UNDEFINED
 
     def _changed(self) -> None:
         if not self._stop.done():
@@ -1494,7 +1494,7 @@ class _IfData(TypedDict):
 class ScriptRunResult:
     """Container with the result of a script run."""
 
-    conversation_response: str | None | UndefinedType
+    conversation_response: str | UndefinedType | None
     service_response: ServiceResponse
     variables: Mapping[str, Any]
 
@@ -1828,6 +1828,15 @@ class Script:
             elif action == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
                 for trigger in step[CONF_WAIT_FOR_TRIGGER]:
                     referenced |= set(trigger_helper.async_extract_entities(trigger))
+
+            elif action == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
+                # Only extract the entity if it has been resolved to an entity
+                # id during validation; unvalidated configs hold an entity
+                # registry id.
+                if isinstance(
+                    entity_id := step.get(ATTR_ENTITY_ID), str
+                ) and valid_entity_id(entity_id):
+                    referenced.add(entity_id)
 
             elif action == cv.SCRIPT_ACTION_ACTIVATE_SCENE:
                 referenced.add(step[CONF_SCENE])

@@ -2,7 +2,7 @@
   "domain": "overseerr",
   "name": "Seerr",
   "after_dependencies": ["cloud"],
-  "codeowners": ["@joostlek", "@AmGarera"],
+  "codeowners": ["@joostlek", "@AmGarera", "@felixschndr"],
   "config_flow": true,
   "dependencies": ["http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/overseerr",

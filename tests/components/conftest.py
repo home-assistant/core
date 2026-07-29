@@ -796,6 +796,7 @@ def os_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     supervisor_client.os.info.return_value = OSInfo(
         version="1.0.0",
         version_latest="1.0.0",
+        version_pending=None,
         update_available=False,
         board=None,
         boot=None,
@@ -893,10 +894,6 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.coordinator.get_supervisor_client",
-            return_value=supervisor_client,
-        ),
-        patch(
-            "homeassistant.components.hassio.issues.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(

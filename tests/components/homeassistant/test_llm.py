@@ -1,6 +1,8 @@
 """Tests for the homeassistant LLM tools platform."""
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
+from voluptuous_openapi import convert
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant import llm as ha_llm
@@ -66,7 +68,7 @@ async def test_prompt_no_entities(hass: HomeAssistant) -> None:
     """Test the platform contributes the no-entities prompt when nothing is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
-    assert result.prompt == llm.NO_ENTITIES_PROMPT
+    assert result.prompt == ha_llm.NO_ENTITIES_PROMPT
 
 
 async def test_get_live_context_no_exposed_entities(hass: HomeAssistant) -> None:
@@ -79,7 +81,7 @@ async def test_get_live_context_no_exposed_entities(hass: HomeAssistant) -> None
     response = await tool.async_call(
         hass, llm.ToolInput("GetLiveContext", {}), llm_context
     )
-    assert response == {"success": False, "error": llm.NO_ENTITIES_PROMPT}
+    assert response == {"success": False, "error": ha_llm.NO_ENTITIES_PROMPT}
 
 
 async def test_get_live_context_tool(hass: HomeAssistant) -> None:
@@ -393,3 +395,16 @@ async def test_get_live_context_tool_filter(
     assert result["result"].count("domain: climate") == 1
     assert "Kitchen" in result["result"]
     assert "Office" not in result["result"]
+
+
+async def test_get_live_context_schema(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test that GetLiveContext tool parameters convert to a sane OpenAPI schema."""
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    tool = next(t for t in result.tools if t.name == "GetLiveContext")
+
+    api = await llm.async_get_api(hass, "assist", _llm_context())
+    schema = convert(tool.parameters, custom_serializer=api.custom_serializer)
+
+    assert schema == snapshot
