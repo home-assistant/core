@@ -7,7 +7,11 @@ import pytest
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import create_tibber_device, create_tibber_home
@@ -103,15 +107,45 @@ async def test_data_api_sensors_with_empty_external_ids(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     data_api_client_mock: AsyncMock,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test Data API sensors use the device ID when the external ID is empty."""
+    """Test Data API sensors migrate empty external ID registry entries."""
+    area = area_registry.async_get_or_create("Outside")
+    legacy_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "")},
+        name="Charger left",
+    )
+    legacy_device = device_registry.async_update_device(
+        legacy_device.id, area_id=area.id
+    )
+    assert legacy_device is not None
+
+    legacy_entities = {
+        sensor_id: entity_registry.async_get_or_create(
+            "sensor",
+            DOMAIN,
+            f"_{sensor_id}",
+            suggested_object_id=f"legacy_{sensor_id}",
+            config_entry=config_entry,
+            device_id=legacy_device.id,
+        )
+        for sensor_id in (
+            "charging.current.max",
+            "charging.current.offlineFallback",
+        )
+    }
     devices = {
         device_id: create_tibber_device(
             device_id=device_id,
             external_id="",
             name=name,
-            sensor_values={"charging.current.max": 32.0},
+            sensor_values={
+                "charging.current.max": 32.0,
+                "charging.current.offlineFallback": 16.0,
+            },
         )
         for device_id, name in (
             ("charger-left", "Charger left"),
@@ -132,12 +166,28 @@ async def test_data_api_sensors_with_empty_external_ids(
     )
     assert left_entity_id is not None
     assert right_entity_id is not None
+    assert left_entity_id == legacy_entities["charging.current.max"].entity_id
+
+    fallback_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "charger-left_charging.current.offlineFallback"
+    )
+    assert (
+        fallback_entity_id
+        == legacy_entities["charging.current.offlineFallback"].entity_id
+    )
 
     left_entity = entity_registry.async_get(left_entity_id)
     right_entity = entity_registry.async_get(right_entity_id)
     assert left_entity is not None
     assert right_entity is not None
     assert left_entity.device_id != right_entity.device_id
+
+    left_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "charger-left"), config_entry.entry_id
+    )
+    assert left_device is not None
+    assert left_device.id == legacy_device.id
+    assert left_device.area_id == area.id
 
 
 @pytest.mark.parametrize(
