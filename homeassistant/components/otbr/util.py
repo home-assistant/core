@@ -1,5 +1,6 @@
 """Utility functions for the Open Thread Border Router integration."""
 
+import asyncio
 from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import wraps
@@ -30,6 +31,14 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+
+# Serializes dataset mutations across all config entries. Acquired by callers
+# rather than by the OTBRData methods, so a sequence that reads the router's
+# state and writes it back stays atomic: concurrent writers would otherwise
+# work from state the other has already replaced, and the mesh silently
+# ignores whichever pending dataset is not the newest while its writer still
+# reports success.
+DATASET_LOCK = asyncio.Lock()
 
 INSECURE_NETWORK_KEYS = (
     # Thread web UI default
@@ -68,6 +77,15 @@ def _handle_otbr_error[**_P, _R](
     async def _func(self: OTBRData, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
             return await func(self, *args, **kwargs)
+        except python_otbr_api.PendingDatasetConflictError as exc:
+            # A write the library refused because the mesh is already
+            # mid-change. Every caller of one gets the same answer -- wait
+            # the in-flight change out, do not retry -- so it is told here
+            # rather than reported as a generic API failure.
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="pending_dataset_in_place",
+            ) from exc
         except (python_otbr_api.OTBRError, aiohttp.ClientError, TimeoutError) as exc:
             raise HomeAssistantError("Failed to call OTBR API") from exc
 
@@ -142,6 +160,15 @@ class OTBRData:
     async def set_active_dataset_tlvs(self, dataset: bytes) -> None:
         """Set current active operational dataset in TLVS format."""
         await self.api.set_active_dataset_tlvs(dataset)
+
+    @_handle_otbr_error
+    async def set_pending_dataset_tlvs(self, dataset: bytes) -> None:
+        """Set the pending operational dataset in TLVS format.
+
+        Refused while a pending dataset is in place; the wrapper turns that
+        refusal into the error that says so.
+        """
+        await self.api.set_pending_dataset_tlvs(dataset)
 
     @_handle_otbr_error
     async def set_channel(

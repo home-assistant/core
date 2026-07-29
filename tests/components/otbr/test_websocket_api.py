@@ -807,6 +807,42 @@ async def test_set_channel_fails_1(
     assert msg["error"]["code"] == "set_channel_failed"
 
 
+async def test_set_channel_while_a_pending_dataset_is_in_flight(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_thread,
+    websocket_client,
+) -> None:
+    """Test a channel change refused because the mesh is already migrating.
+
+    The library refuses the write rather than superseding the dataset in
+    flight; the user is told to wait it out instead of getting the generic
+    API failure.
+    """
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "python_otbr_api.OTBR.set_channel",
+            side_effect=python_otbr_api.PendingDatasetConflictError,
+        ),
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/set_channel",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+                "channel": 12,
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "set_channel_failed"
+    assert "migration or channel change is propagating" in msg["error"]["message"]
+
+
 async def test_set_channel_fails_2(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
