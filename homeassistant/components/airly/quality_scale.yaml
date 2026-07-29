@@ -9,14 +9,22 @@ rules:
   config-flow-test-coverage:
     status: todo
     comment: The config flow test should either result in an entry being created or an abort.
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: Add data_description.
   dependency-transparency: done
   docs-actions:
     status: exempt
     comment: The integration does not register services.
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-removal-instructions: todo
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -41,7 +49,7 @@ rules:
   log-when-unavailable: done
   parallel-updates:
     status: todo
-    comment: PARALLEL_UPDATES should be changed to 0 as documetation suggests.
+    comment: PARALLEL_UPDATES should be changed to 0 as documentation suggests.
   reauthentication-flow: todo
   test-coverage: done
 
@@ -56,7 +64,9 @@ rules:
     comment: This integration is a cloud service and does not support discovery.
   docs-data-update: done
   docs-examples: todo
-  docs-known-limitations: done
+  docs-known-limitations:
+    status: todo
+    comment: Add "No known limitations."
   docs-supported-devices:
     status: exempt
     comment: This integration connects to a service, not supported devices.
@@ -85,4 +95,6 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: done
+  strict-typing:
+    status: todo
+    comment: The 'airly' library is not PEP-561 compliant.
