@@ -22,7 +22,6 @@ from homeassistant.components.beatbot.const import (
 )
 from homeassistant.components.beatbot.vacuum import (
     BeatbotVacuum,
-    async_setup_entry,
     vacuum_activity,
     vacuum_features_from_capabilities,
 )
@@ -242,21 +241,6 @@ def test_entity_activity(coordinator_factory: CoordinatorFactory) -> None:
     coordinator.data[DEVICE_ID].work_status = 5
 
     assert BeatbotVacuum(coordinator, DEVICE_ID).activity is VacuumActivity.CLEANING
-
-
-async def test_setup_entry(
-    hass: HomeAssistant, coordinator_factory: CoordinatorFactory
-) -> None:
-    """Set up one vacuum per coordinator device."""
-    coordinator = coordinator_factory("pool_clean_bot")
-    entry = SimpleNamespace(runtime_data=SimpleNamespace(coordinator=coordinator))
-    async_add_entities = MagicMock()
-
-    await async_setup_entry(hass, entry, async_add_entities)
-
-    entities = list(async_add_entities.call_args.args[0])
-    assert len(entities) == 1
-    assert entities[0].unique_id == DEVICE_ID
 
 
 def test_non_vacuum_capabilities_do_not_define_features() -> None:

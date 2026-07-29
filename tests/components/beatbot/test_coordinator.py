@@ -233,6 +233,19 @@ async def test_device_event_ignores_unknown_device(hass: HomeAssistant) -> None:
     assert coordinator.data == {}
 
 
+async def test_device_event_ignores_non_state_event(hass: HomeAssistant) -> None:
+    """Ignore topology events in the state coordinator."""
+    device = _device("dev-1", SUPPORTED_PRODUCT)
+    coordinator = BeatbotCoordinator(hass, SimpleNamespace(), _entry())
+    coordinator.async_set_updated_data({"dev-1": device})
+
+    coordinator.async_apply_device_event(
+        BeatbotEvent("event-1", "device_added", "dev-1", {"deviceId": "dev-1"})
+    )
+
+    assert coordinator.data == {"dev-1": device}
+
+
 async def test_post_control_refresh_fetches_only_target_device(
     hass: HomeAssistant,
     monkeypatch: pytest.MonkeyPatch,
@@ -469,4 +482,19 @@ def test_coordinator_finds_and_removes_registered_device(
     entity_registry.async_remove.assert_called_once_with("vacuum.beatbot")
     device_registry.async_update_device.assert_called_once_with(
         "registry-device-id", remove_config_entry_id="entry"
+    )
+
+
+def test_remove_missing_registry_device(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Ignore removal when no registry device exists."""
+    device_registry = SimpleNamespace(async_get_device=Mock(return_value=None))
+    monkeypatch.setattr(coord_mod.dr, "async_get", Mock(return_value=device_registry))
+    coordinator = BeatbotCoordinator(hass, SimpleNamespace(), _entry())
+
+    coordinator._remove_device_from_registries("missing")
+
+    device_registry.async_get_device.assert_called_once_with(
+        identifiers={(coord_mod.DOMAIN, "missing")}
     )
