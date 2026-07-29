@@ -834,7 +834,8 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
             identifiers={(DOMAIN, device_unique_id)},
             name=description.device_name,
             manufacturer="HomeWizard",
-            model=coordinator.data.device.product_type,
+            model_id=coordinator.data.device.product_type,
+            model=coordinator.data.device.model_name,
             serial_number=device_unique_id,
         )
         if coordinator.data.device.serial is not None:
