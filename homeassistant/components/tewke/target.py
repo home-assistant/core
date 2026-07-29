@@ -57,6 +57,8 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
         else:
             self._attr_color_mode = ColorMode.ONOFF
             self._attr_supported_color_modes = {ColorMode.ONOFF}
+        self._is_on = target.is_on
+        self._brightness = target.brightness
 
     @property
     def _target(self) -> Target | None:
@@ -85,7 +87,10 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
     def is_on(self) -> bool | None:
         """Return True when the output is on."""
         target = self._target
-        return target.is_on if target is not None else None
+        if target is not None:
+            self._is_on = target.is_on
+            self._brightness = target.brightness
+        return self._is_on
 
     @property
     @override
@@ -94,7 +99,7 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
         target = self._target
         if target is None or not target.is_dimmable:
             return None
-        return _tewke_to_ha_brightness(target.brightness)
+        return _tewke_to_ha_brightness(self._brightness)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -105,7 +110,7 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             tewke_brightness = _ha_to_tewke_brightness(int(kwargs[ATTR_BRIGHTNESS]))
         elif target.is_dimmable:
-            tewke_brightness = target.brightness if target.brightness > 0 else 100
+            tewke_brightness = self._brightness if self._brightness > 0 else 100
         else:
             tewke_brightness = 100
 
@@ -113,11 +118,9 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
             await self.coordinator.config_entry.runtime_data.tap.set_target(
                 target=self._target_index, brightness=tewke_brightness
             )
-            target = self._target
-            if target is not None:
-                target.is_on = tewke_brightness != 0
-                target.brightness = tewke_brightness
-                self.async_write_ha_state()
+            self._is_on = tewke_brightness != 0
+            self._brightness = tewke_brightness
+            self.async_write_ha_state()
             await self.coordinator.async_request_refresh()
         except PyTewkeInvalidWallDockError:
             LOGGER.error(
@@ -143,11 +146,9 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
             await self.coordinator.config_entry.runtime_data.tap.set_target(
                 target=self._target_index, brightness=0
             )
-            target = self._target
-            if target is not None:
-                target.is_on = False
-                target.brightness = 0
-                self.async_write_ha_state()
+            self._is_on = False
+            self._brightness = 0
+            self.async_write_ha_state()
             await self.coordinator.async_request_refresh()
         except PyTewkeInvalidWallDockError:
             LOGGER.error(
