@@ -23,13 +23,6 @@
       'udn': '**REDACTED**',
       'volume': 50,
     }),
-    'entry': dict({
-      'data': dict({
-        'host': '**REDACTED**',
-      }),
-      'source': 'user',
-      'title': '**REDACTED**',
-    }),
     'multiroom': dict({
       'leader_udn': '**REDACTED**',
       'member_udns': '**REDACTED**',
