@@ -3243,7 +3243,7 @@ async def _setup_numerical_condition(
     condition_options: dict[str, Any],
     target_config: dict[str, Any],
     domain_specs: Mapping[str, DomainSpec] | None = None,
-    valid_unit: str | None | UndefinedType = UNDEFINED,
+    valid_unit: str | UndefinedType | None = UNDEFINED,
     primary_entities_only: bool = True,
 ) -> condition.ConditionChecker:
     """Set up a numerical condition via a mock platform and return the test."""
@@ -3506,7 +3506,7 @@ async def test_numerical_condition_attribute_value_source_skips_unit_check(
 )
 async def test_numerical_condition_valid_unit(
     hass: HomeAssistant,
-    valid_unit: str | None | UndefinedType,
+    valid_unit: str | UndefinedType | None,
     entity_unit: str | None,
     expected: bool,
 ) -> None:

@@ -21,6 +21,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
     LanguageSelector,
     LanguageSelectorConfig,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -34,13 +37,18 @@ from .const import (
     CONF_LATENCY,
     CONF_SELF_ONLY,
     CONF_SORT_BY,
+    CONF_SPEED,
     CONF_TITLE,
     CONF_USER_ID,
     CONF_VOICE_ID,
+    DEFAULT_SPEED,
     DOMAIN,
     LATENCY_OPTIONS,
+    MAX_SPEED,
+    MIN_SPEED,
     SIGNUP_URL,
     SORT_BY_OPTIONS,
+    SPEED_STEP,
     TTS_SUPPORTED_LANGUAGES,
 )
 from .error import (
@@ -126,6 +134,17 @@ def get_model_selection_schema(
                         for opt in LATENCY_OPTIONS
                     ],
                     mode=SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            vol.Optional(
+                CONF_SPEED,
+                default=options.get(CONF_SPEED, DEFAULT_SPEED),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_SPEED,
+                    max=MAX_SPEED,
+                    step=SPEED_STEP,
+                    mode=NumberSelectorMode.SLIDER,
                 )
             ),
             # Name field is no longer allowed in config flow schemas
