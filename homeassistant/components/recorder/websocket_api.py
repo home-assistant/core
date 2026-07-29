@@ -1,9 +1,10 @@
 """The Recorder websocket API."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import datetime as dt
 import logging
-from typing import Any, Literal, cast
+from typing import Any, Literal, NamedTuple, cast
 
 import voluptuous as vol
 
@@ -15,6 +16,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import (
     ApparentPowerConverter,
     AreaConverter,
@@ -69,6 +71,27 @@ _LOGGER = logging.getLogger(__name__)
 
 CLEAR_STATISTICS_TIME_OUT = 10
 UPDATE_STATISTICS_METADATA_TIME_OUT = 10
+
+type _StatisticsPeriod = Literal["5minute", "day", "hour", "week", "month", "year"]
+type _StatisticsType = Literal[
+    "change", "last_reset", "max", "mean", "min", "state", "sum"
+]
+
+
+class _StatisticsQueryKey(NamedTuple):
+    """Identify a statistics query whose result can be shared."""
+
+    start_time: dt
+    end_time: dt | None
+    statistic_ids: frozenset[str]
+    period: _StatisticsPeriod
+    units: frozenset[tuple[str, str]]
+    types: frozenset[_StatisticsType]
+
+
+_IN_FLIGHT_STATISTICS_QUERIES: HassKey[
+    dict[_StatisticsQueryKey, asyncio.Future[bytes]]
+] = HassKey("recorder_in_flight_statistics_queries")
 
 UNIT_SCHEMA = vol.Schema(
     {
@@ -198,13 +221,12 @@ async def ws_get_statistic_during_period(
 
 def _ws_get_statistics_during_period(
     hass: HomeAssistant,
-    msg_id: int,
     start_time: dt,
     end_time: dt | None,
     statistic_ids: set[str] | None,
-    period: Literal["5minute", "day", "hour", "week", "month", "year"],
-    units: dict[str, str],
-    types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
+    period: _StatisticsPeriod,
+    units: dict[str, str] | None,
+    types: set[_StatisticsType],
 ) -> bytes:
     """Fetch statistics and convert them to json in the executor."""
     result = statistics_during_period(
@@ -223,7 +245,32 @@ def _ws_get_statistics_during_period(
             row["end"] = int(row["end"] * 1000)
             if include_last_reset and (last_reset := row["last_reset"]) is not None:
                 row["last_reset"] = int(last_reset * 1000)
-    return json_bytes(messages.result_message(msg_id, result))
+    return json_bytes(result)
+
+
+async def _async_get_or_create_statistics_result(
+    hass: HomeAssistant,
+    query_key: _StatisticsQueryKey,
+    create_result_future: Callable[[], asyncio.Future[bytes]],
+) -> bytes:
+    """Get an in-flight statistics result or start a new query."""
+    in_flight_queries = hass.data.setdefault(_IN_FLIGHT_STATISTICS_QUERIES, {})
+    if (
+        result_future := in_flight_queries.get(query_key)
+    ) is None or result_future.done():
+        result_future = create_result_future()
+        in_flight_queries[query_key] = result_future
+
+        def remove_completed_query(future: asyncio.Future[bytes]) -> None:
+            if in_flight_queries.get(query_key) is future:
+                del in_flight_queries[query_key]
+            if not future.cancelled():
+                future.exception()
+
+        result_future.add_done_callback(remove_completed_query)
+
+    # A disconnected requester must not cancel a query used by other requesters.
+    return await asyncio.shield(result_future)
 
 
 async def ws_handle_get_statistics_during_period(
@@ -250,19 +297,32 @@ async def ws_handle_get_statistics_during_period(
 
     if (types := msg.get("types")) is None:
         types = {"change", "last_reset", "max", "mean", "min", "state", "sum"}
-    connection.send_message(
-        await get_instance(hass).async_add_executor_job(
+    statistic_ids = set(msg["statistic_ids"])
+    period = msg["period"]
+    units = msg.get("units")
+    query_key = _StatisticsQueryKey(
+        start_time=start_time,
+        end_time=end_time,
+        statistic_ids=frozenset(statistic_ids),
+        period=period,
+        units=frozenset((units or {}).items()),
+        types=frozenset(types),
+    )
+    result = await _async_get_or_create_statistics_result(
+        hass,
+        query_key,
+        lambda: get_instance(hass).async_add_executor_job(
             _ws_get_statistics_during_period,
             hass,
-            msg["id"],
             start_time,
             end_time,
-            set(msg["statistic_ids"]),
-            msg.get("period"),
-            msg.get("units"),
+            statistic_ids,
+            period,
+            units,
             types,
-        )
+        ),
     )
+    connection.send_message(messages.construct_result_message(msg["id"], result))
 
 
 @websocket_api.websocket_command(
