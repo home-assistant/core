@@ -7,7 +7,7 @@ import botocore.exceptions
 from place.auth import decode_sub, login
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
@@ -71,10 +71,5 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Create an oauth config entry or update existing entry for reauth."""
         await self.async_set_unique_id(self.external_data[CONF_UNIQUE_ID])
         entry_title = self.context.get("title_placeholders", {"name": "Place"})["name"]
-        if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch()
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data_updates=data, title=entry_title
-            )
         self._abort_if_unique_id_configured()
         return self.async_create_entry(data=data, title=entry_title)
