@@ -1,11 +1,11 @@
 rules:
   # Bronze
   action-setup: todo
-  appropriate-polling: todo
+  appropriate-polling: N/A
   brands: todo
   common-modules: todo
   config-flow-test-coverage: todo
-  config-flow: todo
+  config-flow: done
   dependency-transparency: todo
   docs-actions: todo
   docs-conditions: todo
@@ -34,7 +34,7 @@ rules:
   test-coverage: todo
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery-update-info: todo
   discovery: todo
