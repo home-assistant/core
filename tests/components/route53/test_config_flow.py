@@ -63,24 +63,17 @@ async def test_full_flow(
 
 
 @pytest.mark.parametrize(
-    ("domain", "expected_type"),
+    "domain",
     [
-        pytest.param("example.com", FlowResultType.CREATE_ENTRY, id="zone_apex"),
-        pytest.param("EXAMPLE.COM.", FlowResultType.CREATE_ENTRY, id="case_and_dot"),
-        pytest.param(
-            "home.example.com", FlowResultType.CREATE_ENTRY, id="subdomain_of_zone"
-        ),
-        pytest.param("notexample.com", FlowResultType.FORM, id="suffix_near_miss"),
-        pytest.param("other.org", FlowResultType.FORM, id="outside_zone"),
+        pytest.param("example.com", id="zone_apex"),
+        pytest.param("EXAMPLE.COM.", id="case_and_trailing_dot"),
+        pytest.param("home.example.com", id="subdomain_of_zone"),
     ],
 )
-async def test_form_domain_must_be_in_zone(
-    hass: HomeAssistant,
-    mock_boto3_client: MagicMock,
-    domain: str,
-    expected_type: FlowResultType,
+async def test_domain_inside_zone_accepted(
+    hass: HomeAssistant, mock_boto3_client: MagicMock, domain: str
 ) -> None:
-    """Test the domain is validated against the hosted zone name."""
+    """Test domains belonging to the hosted zone are accepted."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -102,7 +95,61 @@ async def test_form_domain_must_be_in_zone(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] is expected_type
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    "domain",
+    [
+        pytest.param("notexample.com", id="suffix_near_miss"),
+        pytest.param("other.org", id="outside_zone"),
+    ],
+)
+async def test_domain_outside_zone_rejected(
+    hass: HomeAssistant, mock_boto3_client: MagicMock, domain: str
+) -> None:
+    """Test domains outside the hosted zone are rejected and can be corrected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.route53.config_flow.boto3.client",
+        return_value=mock_boto3_client.return_value,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ACCESS_KEY_ID: "test-key",
+                CONF_SECRET_ACCESS_KEY: "test-secret",
+                CONF_ZONE: "test-zone",
+                CONF_DOMAIN: domain,
+                CONF_RECORDS: ["test1"],
+                CONF_TTL: DEFAULT_TTL,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_DOMAIN: "invalid_domain"}
+
+    with patch(
+        "homeassistant.components.route53.config_flow.boto3.client",
+        return_value=mock_boto3_client.return_value,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ACCESS_KEY_ID: "test-key",
+                CONF_SECRET_ACCESS_KEY: "test-secret",
+                CONF_ZONE: "test-zone",
+                CONF_DOMAIN: "example.com",
+                CONF_RECORDS: ["test1"],
+                CONF_TTL: DEFAULT_TTL,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -168,6 +215,27 @@ async def test_form_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == expected_errors
+
+    mock_boto3_client.return_value.get_hosted_zone.side_effect = None
+
+    with patch(
+        "homeassistant.components.route53.config_flow.boto3.client",
+        return_value=mock_boto3_client.return_value,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ACCESS_KEY_ID: "test-key",
+                CONF_SECRET_ACCESS_KEY: "test-secret",
+                CONF_ZONE: "test-zone",
+                CONF_DOMAIN: "example.com",
+                CONF_RECORDS: ["test1", "test2"],
+                CONF_TTL: DEFAULT_TTL,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_import_flow_success(
@@ -434,6 +502,29 @@ async def test_reconfigure_flow_errors(
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == expected_errors
     assert entry.data[CONF_ZONE] == "test-zone"
+
+    mock_boto3_client.return_value.get_hosted_zone.side_effect = None
+
+    with patch(
+        "homeassistant.components.route53.config_flow.boto3.client",
+        return_value=mock_boto3_client.return_value,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ACCESS_KEY_ID: "new-key",
+                CONF_SECRET_ACCESS_KEY: "new-secret",
+                CONF_ZONE: "new-zone",
+                CONF_DOMAIN: "new.example.com",
+                CONF_RECORDS: ["test1"],
+                CONF_TTL: DEFAULT_TTL,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_ZONE] == "new-zone"
 
 
 async def test_reconfigure_flow_already_configured(
