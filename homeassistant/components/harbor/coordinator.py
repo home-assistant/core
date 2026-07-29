@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 from uuid import uuid4
 
 from harbor.config import HarborCameraConfig
@@ -151,8 +151,8 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
     @property
     def _client(self) -> HarborMQTTClient:
         """Return the active MQTT client."""
-        if self._mqtt_client is None:
-            raise ConnectionError("MQTT client is not connected")
+        if TYPE_CHECKING:
+            assert self._mqtt_client is not None
         return self._mqtt_client
 
     @property
