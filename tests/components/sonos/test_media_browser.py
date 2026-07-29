@@ -90,6 +90,48 @@ def test_build_item_response_container_art_uses_media_type(
     assert get_thumbnail_url.call_args.args[0] == expected_type
 
 
+@pytest.mark.parametrize(
+    ("idstring", "child_class", "expected_can_play"),
+    [
+        pytest.param(
+            "A:ALBUM/Abbey%20Road",
+            "object.item.audioItem.musicTrack",
+            True,
+            id="single_album",
+        ),
+        pytest.param(
+            "A:ALBUM",
+            "object.container.album.musicAlbum",
+            False,
+            id="album_listing",
+        ),
+    ],
+)
+def test_build_item_response_playable_only_for_a_single_album(
+    idstring: str, child_class: str, expected_can_play: bool
+) -> None:
+    """Test a resolved album is playable while the album listing is not.
+
+    can_play is passed a Sonos search type, which for the listing would otherwise
+    mark every library listing playable.
+    """
+    music_library = MagicMock()
+    music_library.browse_by_idstring.return_value = [
+        MockMusicServiceItem(
+            "Abbey Road", "A:ALBUM/Abbey%20Road", idstring, child_class
+        )
+    ]
+    music_library.get_music_library_information.return_value = []
+
+    response = build_item_response(
+        music_library,
+        {"search_type": MediaType.ALBUM, "idstring": idstring},
+        Mock(return_value="/thumb"),
+    )
+
+    assert response.can_play is expected_can_play
+
+
 async def test_build_item_response(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
