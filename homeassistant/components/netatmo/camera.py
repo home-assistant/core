@@ -37,11 +37,13 @@ from .const import (
     SERVICE_SET_PERSONS_HOME,
     WEBHOOK_PUSH_TYPE,
 )
-from .data_handler import EVENT, HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
+from .coordinator import EVENT, HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
 from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 DEFAULT_QUALITY = "high"
 
@@ -281,6 +283,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         self.data_handler.events[self.device.entity_id] = self.process_events(
             self.device.events
         )
+
+        self.async_write_ha_state()
 
     def process_events(self, event_list: list[NaEvent]) -> dict:
         """Add meta data to events."""

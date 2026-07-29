@@ -5,7 +5,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
-from .data_handler import NetatmoConfigEntry, async_get_loaded_entry
+from .coordinator import NetatmoConfigEntry, async_get_loaded_entry
 from .webhook import async_register_webhook, async_unregister_webhook
 
 SERVICE_REGISTER_WEBHOOK = "register_webhook"

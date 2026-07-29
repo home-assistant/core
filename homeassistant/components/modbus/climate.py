@@ -21,6 +21,7 @@ from homeassistant.components.climate import (
     SWING_VERTICAL,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
 )
@@ -41,7 +42,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .const import (
-    _LOGGER,
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_COIL,
@@ -103,6 +103,7 @@ from .const import (
     CONF_WRITE_REGISTERS,
     DEFAULT_OFFSET,
     DEFAULT_SCALE,
+    LOGGER,
     DataType,
 )
 from .entity import ModbusStructEntity
@@ -314,8 +315,12 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
-        if state and state.attributes.get(ATTR_TEMPERATURE):
-            self._attr_target_temperature = float(state.attributes[ATTR_TEMPERATURE])
+        if state and state.attributes.get(
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE
+        ):
+            self._attr_target_temperature = float(
+                state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE]
+            )
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -579,7 +584,7 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
                     f"{self.name}: No answer received from"
                     " Swing mode register. State is Unknown"
                 )
-                _LOGGER.error(_err)
+                LOGGER.error(_err)
 
         # Read the on/off register if defined. If the value in this
         # register is "OFF", it will take precedence over the value

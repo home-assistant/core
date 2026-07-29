@@ -30,7 +30,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import DOMAIN, PLATFORMS
-from .data_handler import NetatmoConfigEntry, NetatmoDataHandler
+from .coordinator import NetatmoConfigEntry, NetatmoDataHandler
 from .services import async_setup_services
 from .webhook import async_register_webhook, async_unregister_webhook
 

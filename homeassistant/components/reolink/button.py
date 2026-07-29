@@ -54,9 +54,7 @@ BUTTON_ENTITIES = (
         key="ptz_stop",
         translation_key="ptz_stop",
         enabled_default=lambda api, ch: api.supported(ch, "pan_tilt"),
-        supported=lambda api, ch: (
-            api.supported(ch, "pan_tilt") or api.supported(ch, "zoom_basic")
-        ),
+        supported=lambda api, ch: api.supported(ch, "ptz_stop"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.stop.value),
     ),
     ReolinkButtonEntityDescription(
@@ -172,6 +170,12 @@ BUTTON_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "reboot"),
         method=lambda api, ch: api.reboot(ch),
     ),
+    ReolinkButtonEntityDescription(
+        key="pre_siren",
+        translation_key="pre_siren",
+        supported=lambda api, ch: api.supported(ch, "pre_siren"),
+        method=lambda api, ch: api.baichuan.PreAlarm(ch),
+    ),
 )
 
 HOST_BUTTON_ENTITIES = (
@@ -198,7 +202,7 @@ async def async_setup_entry(
     entities: list[ReolinkButtonEntity | ReolinkHostButtonEntity] = [
         ReolinkButtonEntity(reolink_data, channel, entity_description)
         for entity_description in BUTTON_ENTITIES
-        for channel in reolink_data.host.api.channels
+        for channel in reolink_data.host.api.stream_channels
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(

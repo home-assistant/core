@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'camera_in_use',
-    'unique_id': 'hostname_camera_in_use',
+    'unique_id': 'uuid_camera_in_use',
     'unit_of_measurement': None,
   })
 # ---
@@ -82,7 +82,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'hostname_battery_is_charging',
+    'unique_id': 'uuid_battery_is_charging',
     'unit_of_measurement': None,
   })
 # ---
@@ -133,7 +133,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pending_reboot',
-    'unique_id': 'hostname_pending_reboot',
+    'unique_id': 'uuid_pending_reboot',
     'unit_of_measurement': None,
   })
 # ---
@@ -183,7 +183,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'hostname_version_available',
+    'unique_id': 'uuid_version_available',
     'unit_of_measurement': None,
   })
 # ---

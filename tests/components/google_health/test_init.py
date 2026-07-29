@@ -1,21 +1,26 @@
 """Tests for Google Health integration lifecycle (init/unloading)."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from google_health_api.exceptions import (
     GoogleHealthApiError,
     HealthApiForbiddenException,
+    HealthAuthException,
 )
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.google_health.coordinator import POLLING_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_google_health_client")
@@ -32,6 +37,10 @@ async def test_setup_and_unload(
     assert hass.states.get("sensor.google_health_distance") is not None
     assert hass.states.get("sensor.google_health_weight") is not None
     assert hass.states.get("sensor.google_health_resting_heart_rate") is not None
+    assert hass.states.get("sensor.google_health_time_asleep") is not None
+    assert hass.states.get("sensor.google_health_time_awake") is not None
+    assert hass.states.get("sensor.google_health_water_intake") is not None
+    assert hass.states.get("sensor.google_health_calories_consumed") is not None
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -64,7 +73,8 @@ async def test_setup_auth_error(
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 0
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
 
 
 @pytest.mark.usefixtures("mock_google_health_client")
@@ -81,7 +91,8 @@ async def test_setup_missing_scopes(
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 0
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
 
 
 @pytest.mark.usefixtures("mock_google_health_client")
@@ -105,9 +116,13 @@ async def test_setup_missing_activity_scope(
 
     assert hass.states.get("sensor.google_health_steps") is None
     assert hass.states.get("sensor.google_health_distance") is None
+    assert hass.states.get("sensor.google_health_active_calories") is None
+    assert hass.states.get("sensor.google_health_total_calories") is None
+    assert hass.states.get("sensor.google_health_floors") is None
 
     assert hass.states.get("sensor.google_health_weight") is not None
     assert hass.states.get("sensor.google_health_resting_heart_rate") is not None
+    assert hass.states.get("sensor.google_health_body_fat") is not None
 
 
 @pytest.mark.usefixtures("mock_google_health_client")
@@ -131,9 +146,62 @@ async def test_setup_missing_measurements_scope(
 
     assert hass.states.get("sensor.google_health_weight") is None
     assert hass.states.get("sensor.google_health_resting_heart_rate") is None
+    assert hass.states.get("sensor.google_health_body_fat") is None
 
     assert hass.states.get("sensor.google_health_steps") is not None
     assert hass.states.get("sensor.google_health_distance") is not None
+    assert hass.states.get("sensor.google_health_active_calories") is not None
+    assert hass.states.get("sensor.google_health_total_calories") is not None
+    assert hass.states.get("sensor.google_health_floors") is not None
+
+
+@pytest.mark.usefixtures("mock_google_health_client")
+@pytest.mark.parametrize(
+    "scopes",
+    [
+        [
+            "https://www.googleapis.com/auth/googlehealth.profile.readonly",
+            "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
+            "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly",
+        ]
+    ],
+)
+async def test_setup_missing_sleep_scope(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test setup succeeds but sleep sensor is not added if sleep scope is missing."""
+    assert await integration_setup()
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+
+    assert hass.states.get("sensor.google_health_time_asleep") is None
+    assert hass.states.get("sensor.google_health_time_awake") is None
+
+
+@pytest.mark.usefixtures("mock_google_health_client")
+@pytest.mark.parametrize(
+    "scopes",
+    [
+        [
+            "https://www.googleapis.com/auth/googlehealth.profile.readonly",
+            "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
+            "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly",
+            "https://www.googleapis.com/auth/googlehealth.sleep.readonly",
+        ]
+    ],
+)
+async def test_setup_missing_nutrition_scope(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test setup succeeds but nutrition sensors are not added if nutrition scope is missing."""
+    assert await integration_setup()
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+
+    assert hass.states.get("sensor.google_health_water_intake") is None
+    assert hass.states.get("sensor.google_health_calories_consumed") is None
 
 
 async def test_setup_oauth_implementation_unavailable(
@@ -151,3 +219,36 @@ async def test_setup_oauth_implementation_unavailable(
         await hass.async_block_till_done()
 
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_google_health_client")
+async def test_runtime_auth_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    mock_google_health_client: AsyncMock,
+) -> None:
+    """Test runtime auth failure triggers a reauth flow."""
+    # Setup the integration
+    assert await integration_setup()
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+
+    # Mock an authorization error on subsequent update refresh
+    mock_google_health_client.steps.today.side_effect = HealthAuthException(
+        "Token expired"
+    )
+
+    # Trigger update by advancing time
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + POLLING_INTERVAL + timedelta(seconds=1),
+    )
+    await hass.async_block_till_done()
+    # Yield to let untracked asyncio.gather tasks run
+    await asyncio.sleep(0)
+    await hass.async_block_till_done()
+
+    # Verify that the flow was initiated
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
