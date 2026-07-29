@@ -9,7 +9,11 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from .conftest import create_tibber_device
 
@@ -53,10 +57,30 @@ async def test_binary_sensors_with_empty_external_ids(
     config_entry: MockConfigEntry,
     data_api_client_mock: AsyncMock,
     setup_credentials: None,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test binary sensors use separate devices when external IDs are empty."""
+    """Test binary sensors migrate empty external ID registry entries."""
+    area = area_registry.async_get_or_create("Outside")
+    legacy_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "")},
+        name="Charger left",
+    )
+    legacy_device = device_registry.async_update_device(
+        legacy_device.id, area_id=area.id
+    )
+    assert legacy_device is not None
+
+    legacy_entity = entity_registry.async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        "charger-left_connector.status",
+        suggested_object_id="legacy_connector_status",
+        config_entry=config_entry,
+        device_id=legacy_device.id,
+    )
     devices = {
         device_id: create_tibber_device(
             device_id=device_id,
@@ -83,6 +107,7 @@ async def test_binary_sensors_with_empty_external_ids(
     )
     assert left_entity_id is not None
     assert right_entity_id is not None
+    assert left_entity_id == legacy_entity.entity_id
 
     left_entity = entity_registry.async_get(left_entity_id)
     right_entity = entity_registry.async_get(right_entity_id)
@@ -98,6 +123,8 @@ async def test_binary_sensors_with_empty_external_ids(
     )
     assert left_device is not None
     assert right_device is not None
+    assert left_device.id == legacy_device.id
+    assert left_device.area_id == area.id
     assert left_entity.device_id == left_device.id
     assert right_entity.device_id == right_device.id
 

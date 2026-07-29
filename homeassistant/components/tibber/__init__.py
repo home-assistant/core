@@ -77,12 +77,11 @@ def _migrate_data_api_registry_entries(
     for device in devices:
         for sensor in device.sensors:
             legacy_unique_id = f"_{sensor.id}"
-            unique_id_migrations.setdefault(
-                legacy_unique_id, f"{device.id}_{sensor.id}"
-            )
-            if (
-                legacy_device_identifier is None
-                and legacy_unique_id in legacy_unique_ids
+            device_unique_id = f"{device.id}_{sensor.id}"
+            unique_id_migrations.setdefault(legacy_unique_id, device_unique_id)
+            if legacy_device_identifier is None and (
+                legacy_unique_id in legacy_unique_ids
+                or device_unique_id in legacy_unique_ids
             ):
                 legacy_device_identifier = device.id
 
