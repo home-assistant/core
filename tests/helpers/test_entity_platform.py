@@ -1,7 +1,7 @@
 """Tests for the EntityPlatform helper."""
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import timedelta
 import logging
 import types
@@ -2822,6 +2822,90 @@ async def test_device_type_error_checking(
     assert len(device_registry.devices) == 0
     assert len(entity_registry.entities) == number_of_entities
     assert len(hass.states.async_all()) == number_of_entities
+
+
+def _mock_entity_implementing_device_info(
+    device: dr.DeviceEntry, unique_id: str | None
+) -> MockEntity:
+    """Return an entity attaching a device by implementing device_info."""
+    return MockEntity(
+        unique_id=unique_id, device_info=DeviceInfo(identifiers={("test", "dev1")})
+    )
+
+
+def _mock_entity_setting_attr_device_info(
+    device: dr.DeviceEntry, unique_id: str | None
+) -> MockEntity:
+    """Return an entity attaching a device by setting _attr_device_info."""
+    ent = MockEntity(unique_id=unique_id)
+    ent._attr_device_info = DeviceInfo(identifiers={("test", "dev1")})
+    return ent
+
+
+def _mock_entity_setting_device_entry(
+    device: dr.DeviceEntry, unique_id: str | None
+) -> MockEntity:
+    """Return an entity attaching a device by setting device_entry."""
+    ent = MockEntity(unique_id=unique_id)
+    ent.device_entry = device
+    return ent
+
+
+@pytest.mark.parametrize(
+    "make_entity",
+    [
+        pytest.param(_mock_entity_implementing_device_info, id="device_info"),
+        pytest.param(_mock_entity_setting_attr_device_info, id="attr_device_info"),
+        pytest.param(_mock_entity_setting_device_entry, id="device_entry"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("unique_id", "reason"),
+    [
+        ("qwer", "without a config entry"),
+        (None, "without a unique ID"),
+    ],
+)
+async def test_reject_device_attach_reports_usage(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    make_entity: Callable[[dr.DeviceEntry, str | None], MockEntity],
+    unique_id: str | None,
+    reason: str,
+) -> None:
+    """Test attaching a device is rejected and reports usage.
+
+    A device can only be attached to an entity which has a unique ID and belongs
+    to a config entry. The platform here has no config entry, so an entity that
+    attaches a device is rejected: the attempt is reported and device_entry is
+    cleared.
+    """
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("test", "dev1")}
+    )
+
+    ent = make_entity(device, unique_id)
+    platform = MockEntityPlatform(hass)
+
+    mock_integration = Mock(is_built_in=True, domain="test_platform")
+    with (
+        caplog.at_level(logging.WARNING),
+        patch(
+            "homeassistant.helpers.frame.async_get_issue_integration",
+            return_value=mock_integration,
+        ),
+    ):
+        await platform.async_add_entities([ent])
+
+    assert (
+        f"Detected that integration 'test_platform' "
+        f"attempts to attach a device to an entity {reason}. "
+        f"This will stop working in Home Assistant 2027.8.0"
+    ) in caplog.text
+    assert ent.device_entry is None
 
 
 async def test_add_entity_unknown_subentry(

@@ -83,6 +83,38 @@
     }
   },
   "entity": {
+    "image": {
+      "app_icon": {
+        "name": "App icon"
+      },
+      "avatar": {
+        "name": "Avatar"
+      },
+      "header_capsule": {
+        "name": "Header capsule"
+      },
+      "library_capsule": {
+        "name": "Library capsule"
+      },
+      "library_hero": {
+        "name": "Library hero capsule"
+      },
+      "library_logo": {
+        "name": "Library logo"
+      },
+      "main_capsule": {
+        "name": "Main capsule"
+      },
+      "page_background": {
+        "name": "Page background"
+      },
+      "small_capsule": {
+        "name": "Small capsule"
+      },
+      "vertical_capsule": {
+        "name": "Vertical capsule"
+      }
+    },
     "sensor": {
       "account": {
         "state": {

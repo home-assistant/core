@@ -114,6 +114,7 @@ async def test_deleted_pot_does_not_change_another_pot(
         "id": "pot_holiday",
         "name": "Holiday",
         "balance": 12345,
+        "currency": "EUR",
     }
     basic_monzo.user_account.pots.return_value = [TEST_POTS[0], holiday_pot]
     await setup_integration(hass, polling_config_entry)

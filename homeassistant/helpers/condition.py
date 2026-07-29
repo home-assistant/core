@@ -1727,6 +1727,7 @@ def state(
         req_state = [req_state]
 
     is_state = False
+    state_value: Any = None
     for req_state_value in req_state:
         state_value = req_state_value
         if (
