@@ -5,8 +5,15 @@ Exposes a restart (reboot) button for the Tewke Tap Panel.
 
 from typing import TYPE_CHECKING, override
 
+from pytewke.error import (
+    PyTewkeCoapError,
+    PyTewkeInvalidRequestError,
+    PyTewkeUnknownError,
+)
+
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.const import EntityCategory
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import TewkeEntity
@@ -48,4 +55,15 @@ class TewkeRestartButton(TewkeEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Send a restart command to the Tap Panel."""
         tap = self.coordinator.config_entry.runtime_data.tap
-        await tap.restart()
+        try:
+            await tap.restart()
+        except (PyTewkeInvalidRequestError, RuntimeError) as err:
+            raise HomeAssistantError(
+                "Internal error restarting Tewke Tap Panel"
+            ) from err
+        except (
+            PyTewkeCoapError,
+            PyTewkeUnknownError,
+            TimeoutError,
+        ) as err:
+            raise HomeAssistantError("Error restarting Tewke Tap Panel") from err
