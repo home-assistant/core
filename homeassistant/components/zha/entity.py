@@ -2,11 +2,14 @@
 
 import asyncio
 from collections.abc import Callable
+import dataclasses
+from enum import IntFlag
 from functools import partial
 import logging
 from typing import Any, override
 
 from propcache.api import cached_property
+from zha.application.platforms import EntityStateChangedEvent
 from zha.mixins import LogMixin
 
 from homeassistant.const import (
@@ -47,12 +50,13 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         super().__init__(*args, **kwargs)
         self.entity_data: EntityData = entity_data
         self._unsubs: list[Callable[[], None]] = []
+        self._zha_state = self.entity_data.entity.state
 
         if self.entity_data.entity.icon is not None:
             # Only custom quirks will realistically set an icon
             self._attr_icon = self.entity_data.entity.icon
 
-        meta = self.entity_data.entity.info_object
+        meta = self._zha_state
         self._attr_unique_id = meta.unique_id
 
         if self.entity_data.is_group_entity:
@@ -60,7 +64,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             assert group_proxy is not None
             platform = self.entity_data.entity.PLATFORM
             unique_ids = [
-                entity.info_object.unique_id
+                entity.identifiers.unique_id
                 for member in group_proxy.group.members
                 for entity in member.associated_entities
                 if platform == entity.PLATFORM
@@ -80,6 +84,8 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         if meta.translation_placeholders is not None:
             self._attr_translation_placeholders = meta.translation_placeholders
 
+        self._update_capability_attrs()
+
     @cached_property
     @override
     def name(self) -> str | UndefinedType | None:
@@ -91,7 +97,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         If a device class is set but no translation key,
         the device class name is used.
         """
-        meta = self.entity_data.entity.info_object
+        meta = self._zha_state
         if meta.primary:
             self._attr_name = None
             return super().name
@@ -120,7 +126,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     @override
     def available(self) -> bool:
         """Return entity availability."""
-        return self.entity_data.entity.available
+        return self._zha_state.available
 
     @property
     @override
@@ -144,19 +150,21 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             )
         return device_info
 
+    def _update_capability_attrs(self) -> None:
+        """Re-derive capability `_attr_*` attributes from the cached state."""
+
     @callback
-    def _handle_entity_events(self, event: Any) -> None:
-        """Entity state changed."""
+    def _handle_zha_entity_state_changed(self, event: EntityStateChangedEvent) -> None:
+        """Handle a state change reported by the ZHA library entity."""
         self.debug("Handling event from entity: %s", event)
+        self._zha_state = dataclasses.replace(self._zha_state, **event.state_diff)
+        self._update_capability_attrs()
         self.async_write_ha_state()
 
     @override
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         self.remove_future = self.hass.loop.create_future()
-        self._unsubs.append(
-            self.entity_data.entity.on_all_events(self._handle_entity_events)
-        )
         remove_signal = (
             f"{SIGNAL_REMOVE_ENTITIES}_group_{self.entity_data.group_proxy.group.group_id}"
             if self.entity_data.is_group_entity
@@ -187,10 +195,16 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             self.remove_future,
         )
 
-        if (state := await self.async_get_last_state()) is None:
-            return
+        if (state := await self.async_get_last_state()) is not None:
+            self.restore_external_state_attributes(state)
 
-        self.restore_external_state_attributes(state)
+        # The subscription synchronously delivers the full current state as its
+        # first event, establishing a baseline coherent with subsequent diffs.
+        self._unsubs.append(
+            self.entity_data.entity.subscribe_state(
+                self._handle_zha_entity_state_changed
+            )
+        )
 
     @callback
     def restore_external_state_attributes(self, state: State) -> None:
@@ -221,8 +235,25 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         """Log a message."""
         if not _LOGGER.isEnabledFor(level):
             # Avoid building the prefixed message and args tuple for disabled
-            # levels; this runs for every entity event via _handle_entity_events.
+            # levels; this runs for every entity event via
+            # _handle_zha_entity_state_changed.
             return
         msg = f"%s: {msg}"
         args = (self.entity_id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)
+
+
+class ZHASupportedFeaturesEntity(ZHAEntity):
+    """ZHA entity whose state carries a `supported_features` flag to translate."""
+
+    @override
+    def _update_capability_attrs(self) -> None:
+        """Re-derive capability `_attr_*` attributes from the cached state."""
+        self._attr_supported_features = self._convert_supported_features(
+            self._zha_state.supported_features
+        )
+
+    @staticmethod
+    def _convert_supported_features(zha_features: IntFlag) -> IntFlag:
+        """Translate ZHA feature flags into their HA equivalents."""
+        raise NotImplementedError
