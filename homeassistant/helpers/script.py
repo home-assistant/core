@@ -431,7 +431,7 @@ class _StopScript(_HaltScript):
         self,
         message: str,
         response: Any,
-        conversation_response: str | None | UndefinedType = UNDEFINED,
+        conversation_response: str | UndefinedType | None = UNDEFINED,
     ) -> None:
         """Initialize a halt exception."""
         super().__init__(message)
@@ -461,7 +461,7 @@ class _ScriptRun:
         self._started = False
         self._stop = hass.loop.create_future()
         self._stopped = asyncio.Event()
-        self._conversation_response: str | None | UndefinedType = UNDEFINED
+        self._conversation_response: str | UndefinedType | None = UNDEFINED
 
     def _changed(self) -> None:
         if not self._stop.done():
@@ -1500,7 +1500,7 @@ class _IfData(TypedDict):
 class ScriptRunResult:
     """Container with the result of a script run."""
 
-    conversation_response: str | None | UndefinedType
+    conversation_response: str | UndefinedType | None
     service_response: ServiceResponse
     variables: Mapping[str, Any]
 
