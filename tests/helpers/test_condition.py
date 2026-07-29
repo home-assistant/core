@@ -6354,3 +6354,18 @@ async def test_async_unload_invokes_async_unload_hook(
 
     unload_hook.assert_called_once()
     assert checker._unloaded is True
+
+
+async def test_state_condition_empty_state_value(hass: HomeAssistant) -> None:
+    """Test that async_from_config does not raise an error for an empty state value."""
+    hass.states.async_set("sensor.temperature", "100")
+
+    config = {
+        "condition": "state",
+        "entity_id": "sensor.temperature",
+        "state": [],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    assert not test.async_check()
