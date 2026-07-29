@@ -1,4 +1,4 @@
-"""Tests for the Beatbot coordinator (productId allow-list gating)."""
+"""Tests for the Beatbot coordinator."""
 
 from __future__ import annotations
 
@@ -46,21 +46,19 @@ def _device(device_id: str, product_id: str) -> BeatbotDeviceData:
     )
 
 
-async def test_coordinator_only_keeps_supported_products(hass: HomeAssistant) -> None:
-    """Devices whose productId is not on the allow-list are dropped."""
+async def test_coordinator_keeps_all_pool_cleaners(hass: HomeAssistant) -> None:
+    """Keep pool cleaners without restricting their product identifiers."""
     supported = _device("dev-supported", SUPPORTED_PRODUCT)
-    unsupported = _device("dev-unsupported", "other-product-id")
+    newly_released = _device("dev-new", "new-product-id")
     api = SimpleNamespace(
-        get_devices=AsyncMock(return_value=[supported, unsupported]),
+        get_devices=AsyncMock(return_value=[supported, newly_released]),
         get_device_states=AsyncMock(return_value={}),
     )
     coordinator = BeatbotCoordinator(hass, api, _entry())
 
     data = await coordinator._async_update_data()
 
-    assert "dev-supported" in data
-    assert "dev-unsupported" not in data
-    # Batch state endpoint still runs; unsupported device's state is simply ignored.
+    assert data == {"dev-supported": supported, "dev-new": newly_released}
     api.get_device_states.assert_awaited_once()
 
 
@@ -163,23 +161,6 @@ async def test_coordinator_applies_batch_device_state(
 
     assert data["dev-1"].battery_level == 42
     assert data["dev-1"].is_online is False
-
-
-async def test_coordinator_empty_allow_list_drops_everything(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """With an empty allow-list no device is retained."""
-    monkeypatch.setattr(coord_mod, "SUPPORTED_PRODUCT_IDS", set())
-    supported = _device("dev-supported", SUPPORTED_PRODUCT)
-    api = SimpleNamespace(
-        get_devices=AsyncMock(return_value=[supported]),
-        get_device_states=AsyncMock(return_value={}),
-    )
-    coordinator = BeatbotCoordinator(hass, api, _entry())
-
-    data = await coordinator._async_update_data()
-
-    assert data == {}
 
 
 async def test_device_event_overlays_state_without_resetting_poll(

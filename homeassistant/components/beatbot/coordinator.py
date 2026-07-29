@@ -19,12 +19,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    DOMAIN,
-    NETWORK_REFRESH_INTERVAL,
-    POST_CONTROL_REFRESH_DELAY,
-    SUPPORTED_PRODUCT_IDS,
-)
+from .const import DOMAIN, NETWORK_REFRESH_INTERVAL, POST_CONTROL_REFRESH_DELAY
 
 if TYPE_CHECKING:
     from . import BeatbotConfigEntry
@@ -73,7 +68,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        # Gate first by supported product line, then by verified model.
+        # The Core integration exposes only pool cleaners in its initial platform.
         result: dict[str, BeatbotDeviceData] = {}
         for d in devices:
             if d.product_category != ProductCategory.POOL_CLEAN_BOT:
@@ -83,14 +78,6 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
                     d.device_id,
                     d.product_id,
                     d.product_category,
-                )
-                continue
-            if d.product_id not in SUPPORTED_PRODUCT_IDS:
-                _LOGGER.debug(
-                    "Skipping device %s: productId %r is not on the verified "
-                    "allow-list (add it to SUPPORTED_PRODUCT_IDS to enable)",
-                    d.device_id,
-                    d.product_id,
                 )
                 continue
             result[d.device_id] = d

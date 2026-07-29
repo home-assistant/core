@@ -5,18 +5,20 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
-from beatbot_cloud import BeatbotAuthenticationError
+from beatbot_cloud import BeatbotAuthenticationError, BeatbotDeviceData
 import pytest
 
 from homeassistant.components.beatbot import config_entry_oauth2_flow
 from homeassistant.components.beatbot.const import DOMAIN, PLATFORMS
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     OAuth2TokenRequestReauthError,
 )
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -85,6 +87,49 @@ async def test_async_setup_entry_starts_runtime_objects(
     event_client.async_start.assert_called_once()
     assert entry.runtime_data.coordinator is coordinator
     assert entry.runtime_data.event_client is event_client
+
+
+@pytest.mark.parametrize("ignore_missing_translations", ["component.vacuum.services."])
+async def test_async_setup_entry_loads_vacuum_platform(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Load pool cleaners through the config entry vacuum platform."""
+    entry = _entry()
+    entry.add_to_hass(hass)
+    device = BeatbotDeviceData(
+        device_id="pool-cleaner-1",
+        product_id="new-product-id",
+        product_category="pool_clean_bot",
+        work_status=0,
+        work_mode=0,
+        error_code=0,
+        battery_level=80,
+        versions=[],
+        is_online=True,
+    )
+    api = SimpleNamespace(
+        get_devices=AsyncMock(return_value=[device]),
+        get_device_states=AsyncMock(return_value={}),
+    )
+    event_client = Mock()
+    event_client.async_start = Mock()
+    event_client.async_stop = AsyncMock()
+
+    with (
+        patch("homeassistant.components.beatbot.BeatbotClient", return_value=api),
+        patch(
+            "homeassistant.components.beatbot.BeatbotEventClient",
+            return_value=event_client,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.VACUUM, DOMAIN, "pool-cleaner-1"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id) is not None
 
 
 async def test_request_adapter_translates_oauth_refresh_rejection(
