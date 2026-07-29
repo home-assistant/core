@@ -1,4 +1,5 @@
 """Support for Todoist task management (https://todoist.com)."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import date, datetime, timedelta
 import logging
