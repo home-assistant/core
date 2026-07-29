@@ -4,6 +4,7 @@ from copy import deepcopy
 from typing import Any
 from unittest.mock import patch
 
+from ollama import ListResponse, ProcessResponse
 import pytest
 
 from homeassistant.components import ollama
@@ -46,6 +47,7 @@ def mock_config_entry(
 ) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
+        entry_id="test",
         domain=ollama.DOMAIN,
         data=mock_config_entry_data,
         version=3,
@@ -108,8 +110,9 @@ async def mock_init_component(hass: HomeAssistant, mock_config_entry: MockConfig
     """Initialize integration."""
     assert await async_setup_component(hass, "homeassistant", {})
 
-    with patch(
-        "ollama.AsyncClient.list",
+    with (
+        patch("ollama.AsyncClient.list", return_value=ListResponse(models=[])),
+        patch("ollama.AsyncClient.ps", return_value=ProcessResponse(models=[])),
     ):
         assert await async_setup_component(hass, ollama.DOMAIN, {})
         await hass.async_block_till_done()

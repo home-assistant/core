@@ -105,6 +105,22 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "installed_models": {
+        "name": "Installed models"
+      },
+      "loaded_model_gpu_memory": {
+        "name": "Loaded model GPU memory"
+      },
+      "loaded_model_size": {
+        "name": "Loaded model size"
+      },
+      "loaded_models": {
+        "name": "Loaded models"
+      }
+    }
+  },
   "exceptions": {
     "unsupported_attachment_type": {
       "message": "Ollama only supports image attachments in user content, but received non-image attachment."

@@ -207,7 +207,7 @@ class OllamaBaseLLMEntity(Entity):
         """Generate an answer for the chat log."""
         settings = {**self.entry.data, **self.subentry.data}
 
-        client = self.entry.runtime_data
+        client = self.entry.runtime_data.client
         model = settings[CONF_MODEL]
 
         tools: list[dict[str, Any]] | None = None

@@ -39,6 +39,7 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
+from .coordinator import OllamaDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,9 +55,9 @@ __all__ = [
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
+PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION, Platform.SENSOR)
 
-type OllamaConfigEntry = ConfigEntry[ollama.AsyncClient]
+type OllamaConfigEntry = ConfigEntry[OllamaDataUpdateCoordinator]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -96,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
     except (TimeoutError, httpx.ConnectError, ConnectionError) as err:
         raise ConfigEntryNotReady(err) from err
 
-    entry.runtime_data = client
+    entry.runtime_data = OllamaDataUpdateCoordinator(hass, entry, client)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
