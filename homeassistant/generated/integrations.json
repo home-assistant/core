@@ -8425,6 +8425,12 @@
     }
   },
   "helper": {
+    "color": {
+      "name": "Color",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "counter": {
       "integration_type": "helper",
       "config_flow": false

@@ -1,0 +1,153 @@
+{
+  "config": {
+    "step": {
+      "chromatic": {
+        "data": {
+          "initial_brightness": "Initial brightness",
+          "initial_color": "Initial color"
+        },
+        "data_description": {
+          "initial_brightness": "Optional brightness (0-255) stored alongside the color.",
+          "initial_color": "The starting color. You can change it later with the 'Set color' action."
+        },
+        "description": "Pick the starting color.",
+        "title": "Initial chromatic color"
+      },
+      "user": {
+        "data": {
+          "icon": "Icon",
+          "initial_mode": "Color kind",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "initial_mode": "Whether this helper stores a chromatic color or a white color temperature."
+        },
+        "description": "Create a reusable color value. Pick a name and choose whether this color is a chromatic color or a white color (color temperature).",
+        "title": "Add color helper"
+      },
+      "white": {
+        "data": {
+          "initial_brightness": "[%key:component::color::config::step::chromatic::data::initial_brightness%]",
+          "initial_kelvin": "Color temperature"
+        },
+        "data_description": {
+          "initial_brightness": "[%key:component::color::config::step::chromatic::data_description::initial_brightness%]",
+          "initial_kelvin": "The starting color temperature. You can change it later with the 'Set color' action."
+        },
+        "description": "Pick the starting color temperature.",
+        "title": "Initial color temperature"
+      }
+    }
+  },
+  "entity_component": {
+    "_": {
+      "name": "Color",
+      "state_attributes": {
+        "brightness": {
+          "name": "Brightness"
+        },
+        "color_params": {
+          "name": "Color parameters"
+        },
+        "color_temp_kelvin": {
+          "name": "Color temperature"
+        },
+        "hex_color": {
+          "name": "Hex color"
+        },
+        "hs_color": {
+          "name": "HS color"
+        },
+        "kind": {
+          "name": "Kind",
+          "state": {
+            "chromatic": "Chromatic",
+            "white": "White"
+          }
+        },
+        "rgb_color": {
+          "name": "RGB color"
+        },
+        "source_hex": {
+          "name": "Source hex"
+        },
+        "xy_color": {
+          "name": "CIE xy color"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_color_value": {
+      "message": "Invalid color value: {error}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "icon": "[%key:component::color::config::step::user::data::icon%]"
+        },
+        "title": "Edit color helper"
+      }
+    }
+  },
+  "selector": {
+    "initial_mode": {
+      "options": {
+        "chromatic": "Chromatic color",
+        "white": "White (color temperature)"
+      }
+    }
+  },
+  "services": {
+    "clear_brightness": {
+      "description": "Clears the stored brightness.",
+      "name": "Clear brightness"
+    },
+    "set_brightness": {
+      "description": "Sets the stored brightness.",
+      "fields": {
+        "brightness": {
+          "description": "Brightness 0-255.",
+          "name": "Brightness"
+        }
+      },
+      "name": "Set brightness"
+    },
+    "set_color": {
+      "description": "Sets the stored color. Provide exactly one of hex, RGB, HS, XY, color temperature, or color name.",
+      "fields": {
+        "brightness": {
+          "description": "Optional brightness 0-255 stored alongside the color.",
+          "name": "Brightness"
+        },
+        "color_name": {
+          "description": "CSS3 color name, for example crimson.",
+          "name": "Color name"
+        },
+        "color_temp_kelvin": {
+          "description": "Color temperature in Kelvin.",
+          "name": "Color temperature"
+        },
+        "hex_value": {
+          "description": "Hex color, for example #FF8000.",
+          "name": "Hex"
+        },
+        "hs_color": {
+          "description": "Hue (0-360) and saturation (0-100).",
+          "name": "HS"
+        },
+        "rgb_color": {
+          "description": "RGB triplet, components 0-255.",
+          "name": "RGB"
+        },
+        "xy_color": {
+          "description": "CIE 1931 chromaticity (x, y), each 0-1.",
+          "name": "CIE xy"
+        }
+      },
+      "name": "Set color"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "domain": "color",
+  "name": "Color",
+  "codeowners": ["@kkilchrist"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/color",
+  "integration_type": "helper",
+  "iot_class": "calculated"
+}
