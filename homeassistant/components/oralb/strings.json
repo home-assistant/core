@@ -32,6 +32,7 @@
           "off": "[%key:common::state::off%]",
           "sensitive": "Sensitive",
           "settings": "Settings",
+          "smart_adapt": "Smart adapt",
           "super_sensitive": "Super sensitive",
           "tongue_cleaning": "Tongue clean",
           "turbo": "Turbo",
@@ -60,7 +61,9 @@
           "sector_2": "Sector 2",
           "sector_3": "Sector 3",
           "sector_4": "Sector 4",
-          "success": "Success"
+          "sector_5": "Sector 5",
+          "sector_6": "Sector 6",
+          "sector_7": "Sector 7"
         }
       },
       "sector_timer": {
@@ -75,6 +78,7 @@
           "initializing": "Initializing",
           "off": "[%key:common::state::off%]",
           "pcb_test": "PCB test",
+          "post_brushing_statistics": "Post-brushing statistics",
           "running": "Running",
           "selection_menu": "Selection menu",
           "setup": "Setup",
