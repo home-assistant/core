@@ -24,7 +24,9 @@ def _is_casper_glow_discovery(discovery_info: BluetoothServiceInfoBleak) -> bool
     """Return whether the Bluetooth discovery looks like a Casper Glow."""
     return bool(
         discovery_info.name
-        and any(discovery_info.name.startswith(local_name) for local_name in LOCAL_NAMES)
+        and any(
+            discovery_info.name.startswith(local_name) for local_name in LOCAL_NAMES
+        )
     )
 
 
