@@ -322,12 +322,7 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
         FILTER_INSTEON_TYPE: ["4.8", TYPE_CATEGORY_CLIMATE],
         FILTER_ZWAVE_CAT: ["140"],
     },
-    # Parallel classification: nodes that emit Insteon press / fast / fade
-    # control events. A matching node still gets primary classification as a
-    # switch, light, etc. FILTER_UOM and FILTER_STATES are unused for the
-    # parallel pass and kept empty for structural consistency with the other
-    # NODE_FILTERS entries. FILTER_ZWAVE_CAT is left for future expansion
-    # once Z-Wave button-emitter categories are verified.
+    # Additive: a node matching here still gets its primary classification.
     Platform.EVENT: {
         FILTER_UOM: [],
         FILTER_STATES: [],

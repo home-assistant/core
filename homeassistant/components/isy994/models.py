@@ -97,9 +97,8 @@ class IsyData:
         for node in self.net_resources:
             current_unique_ids.add((Platform.BUTTON, self.uid_base(node)))
 
-        # EVENT-specific unique-id format. If more NODE_PARALLEL_PLATFORMS
-        # are added with their own suffixes, generalize this loop to dispatch
-        # by platform.
+        # Separate from the NODE_PLATFORMS loop above: event unique ids carry
+        # a suffix, since the same node also has a primary-platform entity.
         for node in self.nodes[Platform.EVENT]:
             current_unique_ids.add(
                 (

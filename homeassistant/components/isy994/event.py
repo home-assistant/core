@@ -87,12 +87,10 @@ def _sub_button_name(node: Node) -> str:
     """Return the sub-button label with the parent device prefix stripped.
 
     ISY users commonly label KeypadLinc sub-buttons as ``"<device> <suffix>"``
-    (e.g. ``"Hallway Keypad B"``). With ``has_entity_name=True``, Home
-    Assistant prepends the device name to the entity name when rendering the
-    friendly name, so we strip the prefix here to avoid duplication like
-    ``"Hallway Keypad Hallway Keypad B"``. Falls back to the raw node name
-    when the prefix doesn't match. The label is user-supplied in the ISY
-    admin console and is not translatable.
+    (e.g. ``"Hallway Keypad B"``), which would render as ``"Hallway Keypad
+    Hallway Keypad B"`` under ``has_entity_name=True``. Falls back to the raw
+    node name when the prefix doesn't match. The label is user-supplied in the
+    ISY admin console and is not translatable.
     """
     parent_name: str = node.parent_node.name
     name: str = node.name
@@ -133,7 +131,6 @@ class ISYButtonEvent(ISYNodeEntity, EventEntity):
         if node.parent_node is None:
             self._attr_name = None
         else:
-            # Sub-button:
             self._attr_name = _sub_button_name(node)
             # Disabled by default — a typical KeypadLinc exposes 6-8 of
             # these and most users only automate a few.
