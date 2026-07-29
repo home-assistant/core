@@ -72,18 +72,6 @@ class _Part:
         )
 
 
-class _ProgressTracker:
-    def __init__(self, on_progress: OnProgressCallback) -> None:
-        self._on_progress = on_progress
-        self._lock = asyncio.Lock()
-        self._progress = 0
-
-    async def report_done(self, part: _Part) -> None:
-        async with self._lock:
-            self._progress += part.size
-            self._on_progress(bytes_uploaded=self._progress)
-
-
 async def async_get_backup_agents(
     hass: HomeAssistant,
 ) -> list[BackupAgent]:
@@ -198,12 +186,10 @@ class ScalewayBackupAgent(BackupAgent):
     ) -> None:
         if backup.size < MULTIPART_MIN_SIZE:
             await self._upload_object(backup=backup, open_stream=open_stream)
-            on_progress(bytes_uploaded=backup.size)
         else:
             await self._upload_multipart_object(
                 backup=backup,
                 open_stream=open_stream,
-                progress_tracker=_ProgressTracker(on_progress),
             )
 
     @staticmethod
@@ -275,11 +261,10 @@ class ScalewayBackupAgent(BackupAgent):
     @staticmethod
     async def _consume_upload_queue(
         queue: asyncio.Queue[UploadJob],
-        progress_tracker: _ProgressTracker,
     ) -> None:
         while True:
             try:
-                part, upload = await queue.get()
+                _, upload = await queue.get()
             except asyncio.QueueShutDown:
                 # Queue is empty, exit worker function
                 return
@@ -300,7 +285,6 @@ class ScalewayBackupAgent(BackupAgent):
                 queue.shutdown()
                 helpers.raise_for_status(e.status)
 
-            await progress_tracker.report_done(part)
             queue.task_done()
 
     @staticmethod
@@ -318,7 +302,6 @@ class ScalewayBackupAgent(BackupAgent):
         self,
         *,
         open_stream: OpenStream,
-        progress_tracker: _ProgressTracker,
         backup: AgentBackup,
     ) -> None:
         _LOGGER.debug("Uploading backup as multiple parts")
@@ -339,9 +322,7 @@ class ScalewayBackupAgent(BackupAgent):
 
                 # Start our upload workers
                 for _ in range(MAX_PARALLEL_UPLOADS):
-                    worker = asyncio.create_task(
-                        self._consume_upload_queue(queue, progress_tracker)
-                    )
+                    worker = asyncio.create_task(self._consume_upload_queue(queue))
                     workers.append(worker)
 
                 # Create all parts

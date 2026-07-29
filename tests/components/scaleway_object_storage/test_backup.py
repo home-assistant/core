@@ -1,14 +1,12 @@
 """Tests for the Scaleway Object Storage BackupAgent implementation."""
 
 from collections.abc import AsyncGenerator, Iterable
-from datetime import UTC, datetime
 import hashlib
 from http import HTTPStatus
 from io import BytesIO
 import json
 from math import ceil
 import random
-from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 import uuid
 
@@ -30,8 +28,6 @@ from homeassistant.components.scaleway_object_storage import (
 )
 from homeassistant.components.scaleway_object_storage.backup import (
     ScalewayBackupAgent,
-    _Part,
-    _ProgressTracker,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.scaleway_object_storage.const import (
@@ -43,6 +39,7 @@ from homeassistant.components.scaleway_object_storage.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import utcnow
 
 from .conftest import MockS3ResponseFactory
 
@@ -115,7 +112,7 @@ def _create_aws_metadata(key: str) -> AwsObjectMeta:
     return AwsObjectMeta(
         etag=str(uuid.uuid4()),
         key=key,
-        last_modified=datetime.now(UTC),
+        last_modified=utcnow(),
         size=42,
         storage_class="STANDARD",
     )
@@ -644,28 +641,6 @@ async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
     remove_listener()
 
     assert DATA_BACKUP_AGENT_LISTENERS not in hass.data
-
-
-async def test_progress_tracker() -> None:
-    """Test the ProgressTracker helper."""
-    parts = [
-        _Part.from_data(b"testdata"),
-        _Part.from_data(b"moretestdata"),
-    ]
-
-    updates: list[int] = []
-
-    def on_progress(*, bytes_uploaded: int, **kwargs: Any) -> None:
-        updates.append(bytes_uploaded)
-
-    tracker = _ProgressTracker(on_progress)
-    assert updates == []
-
-    await tracker.report_done(parts[0])
-    assert updates == [parts[0].size]
-
-    await tracker.report_done(parts[1])
-    assert updates == [parts[0].size, sum(part.size for part in parts)]
 
 
 async def _upload_backup(
