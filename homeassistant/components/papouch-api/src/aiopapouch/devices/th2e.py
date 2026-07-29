@@ -79,7 +79,7 @@ class TH2E(PapouchDevice):
                 f"The device doesn't have box status tag in fresh.xml, device: {self.name} ({self.location}) - {self.api_client.ip_address}"
             )
 
-        self.type_sensor = int(status_tag.attrib.get("typesens", ""))
+        self.type_sensor = int(status_tag.attrib.get("typesens", "0"))
 
         for element in root.iter():
             if not element.tag.endswith("sns"):
@@ -224,7 +224,11 @@ class TH2E(PapouchDevice):
             request, f"{self.name} ({self.location})"
         )
 
-        return self._check_response_fetch_sens(response)
+        return self._check_sensor_response(
+            response,
+            expected_status="4",
+            action_msg="fetching the type of the sensor",
+        )
 
     async def _set_sensor_type(self, type_idx: int) -> None:
         settings = await self.api_client.fetch_settings()
@@ -294,9 +298,16 @@ class TH2E(PapouchDevice):
         final_response = await self.api_client.send_command_POST(
             xml_payload, f"{self.name} ({self.location})"
         )
-        self._check_response_post_sens(final_response)
 
-    def _check_response_fetch_sens(self, response_text: str) -> int:
+        self._check_sensor_response(
+            final_response,
+            expected_status="2",
+            action_msg="setting the type of the sensor",
+        )
+
+    def _check_sensor_response(
+        self, response_text: str, expected_status: str, action_msg: str
+    ) -> int:
         try:
             root = defused_ET.fromstring(response_text)
             result_tag = find_tag(root, "result")
@@ -306,32 +317,12 @@ class TH2E(PapouchDevice):
                     f"Response doesn't have result tag!, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
                 )
 
-            if result_tag.attrib.get("status") != "4":
+            if result_tag.attrib.get("status") != expected_status:
                 raise DeviceResponseError(
-                    f"{self.name} ({self.location}) - {self.api_client.ip_address} returned a status error while fetching the type of the sensor, whole response: {response_text}"
+                    f"{self.name} ({self.location}) - {self.api_client.ip_address} returned an error while {action_msg}, whole response: {response_text}"
                 )
 
             return int(result_tag.attrib.get("typesens", "0"))
-
-        except defused_ET.ParseError as exception:
-            raise DeviceParseError(
-                f"Invalid XML response from device: {exception}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
-            ) from exception
-
-    def _check_response_post_sens(self, response_text: str) -> None:
-        try:
-            root = defused_ET.fromstring(response_text)
-            result_tag = find_tag(root, "result")
-
-            if result_tag is None:
-                raise DeviceParseError(
-                    f"Response doesn't have result tag!, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
-                )
-
-            if result_tag.attrib.get("status") != "2":
-                raise DeviceResponseError(
-                    f"{self.name} ({self.location}) - {self.api_client.ip_address} returned an error while settings the type of the sensor, whole response: {response_text}"
-                )
 
         except defused_ET.ParseError as exception:
             raise DeviceParseError(
@@ -368,6 +359,41 @@ class TH2E(PapouchDevice):
     @override
     async def switch_to_web_mode(self) -> None:
         """Switch the device network mode to WEB using its current settings."""
+        box = self.settings_root.find(
+            ".//{http://www.papouch.com/xml/th2e/set}set[@box='1']"
+        )
+        if box is None:
+            raise DeviceParseError(
+                f"Box for network mode is not found, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            )
+
+        def pad_ip(ip_str: str) -> str:
+            return ".".join(part.zfill(3) for part in ip_str.split("."))
+
+        save_root = ET.Element("root")
+        ET.SubElement(
+            save_root,
+            "set",
+            box="1",
+            ip1=pad_ip(box.get("ip", "0.0.0.0")),
+            ip2=pad_ip(box.get("mask", "0.0.0.0")),
+            ip3=pad_ip(box.get("gate", "0.0.0.0")),
+            ip5=pad_ip(box.get("dip", "0.0.0.0")),
+            num2=box.get("wport", "80").zfill(5),
+            num4="3",
+            num5=box.get("com", "0"),
+            num7=box.get("mport", "502").zfill(5),
+            num1=box.get("lport", "10001").zfill(5),
+            ip4=pad_ip(box.get("rip", "0.0.0.0")),
+            num3=box.get("rport", "0").zfill(5),
+        )
+
+        xml_payload = ET.tostring(save_root, encoding="unicode")
+        response = await self.api_client.send_command_POST(
+            xml_payload, f"{self.name} ({self.location})"
+        )
+
+        self._check_sensor_response(response, "2", "setting to WEB mode")
 
     @override
     def _parse_initial_settings(self) -> None:

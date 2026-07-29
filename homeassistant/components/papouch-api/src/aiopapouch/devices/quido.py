@@ -258,7 +258,9 @@ class Quido(PapouchDevice):
         """Switch the device network mode to WEB using its current settings."""
         box = self.settings_root.find(".//set[@box='1']")
         if box is None:
-            raise ValueError("Network settings not found")
+            raise DeviceParseError(
+                f"Box for network mode is not found, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            )
 
         def pad_ip(ip_str: str) -> str:
             return ".".join(part.zfill(3) for part in ip_str.split("."))
