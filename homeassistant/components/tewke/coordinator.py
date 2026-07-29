@@ -68,11 +68,12 @@ async def _fetch_with_retries[T](fn: Callable[[], Awaitable[T]]) -> T:
             LOGGER.debug(
                 "Transient Tap error (attempt %d/%d), retrying in %.0fs: %s",
                 attempt + 1,
-                len(_RETRY_DELAYS) + 1,
+                len(_RETRY_DELAYS),
                 delay,
                 err,
             )
-            await asyncio.sleep(delay)
+            if attempt < len(_RETRY_DELAYS) - 1:
+                await asyncio.sleep(delay)
         except PyTewkeInvalidResponseError, Exception:
             # Non-transient or unexpected error — fail immediately.
             raise
