@@ -12,7 +12,6 @@ DEFAULT_FORCE_UPDATE = False
 DEFAULT_ENCODING = "UTF-8"
 DEFAULT_BINARY_SENSOR_NAME = "REST Binary Sensor"
 DEFAULT_SENSOR_NAME = "REST Sensor"
-CONF_PAYLOAD_TEMPLATE = "payload_template"
 
 DOCS_URL_TEMPLATE_DATA_PROCESSING = "https://www.home-assistant.io/docs/templating/where-to-use/#processing-incoming-data"
 DOCS_URL_AVAILABILTY = (
@@ -20,11 +19,12 @@ DOCS_URL_AVAILABILTY = (
 )
 
 CONF_ENCODING = "encoding"
-CONF_SSL_CIPHER_LIST = "ssl_cipher_list"
-CONF_SSL_SECTION = "ssl_section"
 CONF_INITIAL_SUBENTRY_TYPE = "initial_subentry_type"
 CONF_JSON_ATTRS = "json_attributes"
 CONF_JSON_ATTRS_PATH = "json_attributes_path"
+CONF_PAYLOAD_TEMPLATE = "payload_template"
+CONF_SSL_CIPHER_LIST = "ssl_cipher_list"
+CONF_SSL_SECTION = "ssl_section"
 
 OPTION_NONE = "z_none"  # sort last
 
