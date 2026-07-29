@@ -966,13 +966,13 @@ async def async_setup_entry(
     entities: list[NumberEntity] = [
         ReolinkNumberEntity(reolink_data, channel, entity_description)
         for entity_description in NUMBER_ENTITIES
-        for channel in api.channels
+        for channel in api.stream_channels
         if entity_description.supported(api, channel)
     ]
     entities.extend(
         ReolinkSmartAINumberEntity(reolink_data, channel, location, entity_description)
         for entity_description in SMART_AI_NUMBER_ENTITIES
-        for channel in api.channels
+        for channel in api.stream_channels
         for location in api.baichuan.smart_location_list(
             channel, entity_description.smart_type
         )

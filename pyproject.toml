@@ -28,7 +28,7 @@ dependencies = [
   # module level in `bootstrap.py` and its requirements thus need to be in
   # requirements.txt to ensure they are always installed
   "aiogithubapi==26.0.0",
-  "aiohttp==3.14.1",
+  "aiohttp==3.14.3",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
   "aiohttp-asyncmdnsresolver==0.2.0",
@@ -74,11 +74,11 @@ dependencies = [
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.11.28",
+  "uv==0.11.31",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.4.1",
-  "yarl==1.24.2",
+  "yarl==1.24.5",
   "webrtc-models==0.3.0",
   "zeroconf==0.150.0",
 ]
@@ -645,7 +645,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.15.21"
+required-version = ">=0.16.0"
 
 [tool.ruff.lint]
 select = [
@@ -736,6 +736,7 @@ ignore = [
   "PLR0912", # Too many branches ({branches} > {max_branches})
   "PLR0913", # Too many arguments to function call ({c_args} > {max_args})
   "PLR0915", # Too many statements ({statements} > {max_statements})
+  "PLR0917", # Too many positional arguments defined for a function ({p_args} > {max_args})
   "PLR2004", # Magic value used in comparison, consider replacing {value} with a constant variable
   "PLW0108", # Unnecessary lambda wrapping a function call; can often be replaced by the function itself
   "PLW1641", # __eq__ without __hash__
@@ -779,6 +780,10 @@ ignore = [
   "PLE0605",
 
   "FURB116",
+
+  # Disabled to implement in follow up PRs after ruff 0.16 bump
+  "ISC004",
+  "LOG004",
 ]
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
