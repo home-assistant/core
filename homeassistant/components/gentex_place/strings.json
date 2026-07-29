@@ -50,41 +50,5 @@
       }
     }
   },
-  "entity": {
-    "sensor": {
-      "co_alarm_status": {
-        "name": "CO alarm",
-        "state": {
-          "alarm": "Alarm",
-          "critical_alarm": "Critical alarm",
-          "hushed": "Hushed",
-          "idle": "Idle",
-          "pre_alarm": "Pre-alarm",
-          "test": "Test"
-        }
-      },
-      "heat_alarm_status": {
-        "name": "Heat alarm",
-        "state": {
-          "alarm": "Alarm",
-          "critical_alarm": "Critical alarm",
-          "hushed": "Hushed",
-          "idle": "Idle",
-          "pre_alarm": "Pre-alarm",
-          "test": "Test"
-        }
-      },
-      "smoke_alarm_status": {
-        "name": "Smoke alarm",
-        "state": {
-          "alarm": "Alarm",
-          "critical_alarm": "Critical alarm",
-          "hushed": "Hushed",
-          "idle": "Idle",
-          "pre_alarm": "Pre-alarm",
-          "test": "Test"
-        }
-      }
-    }
-  }
+  "entity": {}
 }
