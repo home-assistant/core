@@ -1,6 +1,7 @@
 """Support for the Switchbot Image."""
 
 import datetime
+from typing import override
 
 from switchbot_api import Device, Remote, SwitchBotAPI
 from switchbot_api.utils import get_file_stream_from_cloud
@@ -42,6 +43,7 @@ class SwitchBotCloudImage(SwitchBotCloudEntity, ImageEntity):
         ImageEntity.__init__(self, self.coordinator.hass)
         self._image_content = b""
 
+    @override
     async def async_image(self) -> bytes | None:
         """Async image."""
         if (
@@ -53,11 +55,12 @@ class SwitchBotCloudImage(SwitchBotCloudEntity, ImageEntity):
         self._image_content = await get_file_stream_from_cloud(self._attr_image_url, 5)
         return self._image_content
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
-        self._attr_image_last_updated = datetime.datetime.now()
+        self._attr_image_last_updated = datetime.datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         self._attr_image_url = self.coordinator.data.get("imageUrl")
 
 

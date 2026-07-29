@@ -39,7 +39,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_anti_legionella-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Anti-legionella',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Anti-legionella',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_anti_legionella',
@@ -89,8 +89,8 @@
 # name: test_entities[binary_sensor.qube_heat_pump_anti_legionella_timeout_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Anti-legionella timeout alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Anti-legionella timeout alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_anti_legionella_timeout_alarm',
@@ -140,7 +140,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_booster_security-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Booster security',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Booster security',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_booster_security',
@@ -190,7 +190,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_buffer_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Buffer pump',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Buffer pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_buffer_pump',
@@ -240,7 +240,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_buffer_sensor_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Buffer sensor enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Buffer sensor enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_buffer_sensor_enabled',
@@ -290,8 +290,8 @@
 # name: test_entities[binary_sensor.qube_heat_pump_central_heating_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Central heating alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Central heating alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_central_heating_alarm',
@@ -341,8 +341,8 @@
 # name: test_entities[binary_sensor.qube_heat_pump_compressor_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Compressor alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Compressor alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_compressor_alarm',
@@ -392,8 +392,8 @@
 # name: test_entities[binary_sensor.qube_heat_pump_cooling_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Cooling alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Cooling alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_cooling_alarm',
@@ -443,7 +443,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_cooling_output-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Cooling output',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Cooling output',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_cooling_output',
@@ -493,7 +493,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_day_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Day mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Day mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_day_mode',
@@ -543,7 +543,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_dewpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Dewpoint',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Dewpoint',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_dewpoint',
@@ -593,8 +593,8 @@
 # name: test_entities[binary_sensor.qube_heat_pump_dewpoint_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Dewpoint alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Dewpoint alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_dewpoint_alarm',
@@ -644,7 +644,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_dhw_controller_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump DHW controller enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump DHW controller enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_dhw_controller_enabled',
@@ -694,8 +694,8 @@
 # name: test_entities[binary_sensor.qube_heat_pump_dhw_timeout_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump DHW timeout alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump DHW timeout alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_dhw_timeout_alarm',
@@ -745,7 +745,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_external_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump External demand',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump External demand',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_external_demand',
@@ -795,8 +795,8 @@
 # name: test_entities[binary_sensor.qube_heat_pump_flow_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Flow alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Flow alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_flow_alarm',
@@ -846,7 +846,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_four_way_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Four-way valve',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Four-way valve',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_four_way_valve',
@@ -896,8 +896,8 @@
 # name: test_entities[binary_sensor.qube_heat_pump_global_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Global alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Global alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_global_alarm',
@@ -947,7 +947,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_heater_step_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Heater step 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Heater step 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_heater_step_1',
@@ -997,7 +997,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_heater_step_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Heater step 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Heater step 2',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_heater_step_2',
@@ -1047,7 +1047,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_heater_step_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Heater step 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Heater step 3',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_heater_step_3',
@@ -1097,8 +1097,8 @@
 # name: test_entities[binary_sensor.qube_heat_pump_heating_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Heating alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Heating alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_heating_alarm',
@@ -1148,7 +1148,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_keypad-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Keypad',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Keypad',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_keypad',
@@ -1198,7 +1198,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_plant_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Plant demand',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Plant demand',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_plant_demand',
@@ -1248,7 +1248,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_plant_sensor_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Plant sensor enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Plant sensor enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_plant_sensor_enabled',
@@ -1298,7 +1298,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_pv_surplus-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump PV surplus',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump PV surplus',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_pv_surplus',
@@ -1348,7 +1348,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_room_sensor_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Room sensor enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Room sensor enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_room_sensor_enabled',
@@ -1398,8 +1398,8 @@
 # name: test_entities[binary_sensor.qube_heat_pump_source_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Source alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Source alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_source_alarm',
@@ -1449,7 +1449,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_source_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Source flow',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Source flow',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_source_flow',
@@ -1499,7 +1499,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_source_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Source pump',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Source pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_source_pump',
@@ -1549,7 +1549,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_summer_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Summer mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Summer mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_summer_mode',
@@ -1599,8 +1599,8 @@
 # name: test_entities[binary_sensor.qube_heat_pump_supply_too_hot_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Supply too hot alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Supply too hot alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_supply_too_hot_alarm',
@@ -1650,7 +1650,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_thermostat_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Thermostat demand',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Thermostat demand',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_thermostat_demand',
@@ -1700,7 +1700,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_three_way_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Three-way valve',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Three-way valve',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_three_way_valve',
@@ -1750,7 +1750,7 @@
 # name: test_entities[binary_sensor.qube_heat_pump_user_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump User pump',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump User pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_user_pump',
@@ -1800,8 +1800,8 @@
 # name: test_entities[binary_sensor.qube_heat_pump_working_hours_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Qube heat pump Working hours alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Working hours alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.qube_heat_pump_working_hours_alarm',

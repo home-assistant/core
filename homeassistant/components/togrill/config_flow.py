@@ -1,6 +1,6 @@
 """Config flow for the ToGrill integration."""
 
-from typing import Any
+from typing import Any, override
 
 from bleak.exc import BleakError
 from togrill_bluetooth import SUPPORTED_DEVICES
@@ -71,6 +71,7 @@ class ToGrillBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             data=config_data,
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -101,6 +102,7 @@ class ToGrillBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

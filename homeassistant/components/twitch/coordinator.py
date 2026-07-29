@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from twitchAPI.helper import first
 from twitchAPI.object.api import FollowedChannel, Stream, TwitchUser, UserSubscription
@@ -68,6 +69,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
         )
         self.session = session
 
+    @override
     async def _async_setup(self) -> None:
         channels = self.config_entry.options[CONF_CHANNELS]
         self.users = []
@@ -81,6 +83,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
         self.current_user = user
         self.users.append(self.current_user)  # Add current_user to users list.
 
+    @override
     async def _async_update_data(self) -> dict[str, TwitchUpdate]:
         await self.session.async_ensure_token_valid()
         await self.twitch.set_user_authentication(

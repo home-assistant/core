@@ -25,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "locative"
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
+type LocativeConfigEntry = ConfigEntry[set[str]]
+
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
 ATTR_DEVICE_ID = "device"
@@ -108,12 +110,9 @@ async def handle_webhook(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LocativeConfigEntry) -> bool:
     """Configure based on config entry."""
-    if DOMAIN not in hass.data:
-        # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=home-assistant-use-runtime-data
-        hass.data[DOMAIN] = {"devices": set(), "unsub_device_tracker": {}}
+    entry.runtime_data = set()
     webhook.async_register(
         hass, DOMAIN, "Locative", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
@@ -122,10 +121,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LocativeConfigEntry) -> bool:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

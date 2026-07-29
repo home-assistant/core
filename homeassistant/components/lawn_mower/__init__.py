@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import final
+from typing import final, override
 
 from propcache.api import cached_property
 
@@ -84,6 +84,7 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state(self) -> str | None:
         """Return the current state."""
         return self.activity
@@ -94,6 +95,7 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_activity
 
     @cached_property
+    @override
     def supported_features(self) -> LawnMowerEntityFeature:
         """Flag lawn mower features that are supported."""
         return self._attr_supported_features

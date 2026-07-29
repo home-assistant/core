@@ -15,6 +15,7 @@ from .const import (
     CONF_KNX_ROUTING_BACKBONE_KEY,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
     CONF_KNX_SECURE_USER_PASSWORD,
+    CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     DOMAIN,
     KNX_MODULE_KEY,
 )
@@ -24,6 +25,7 @@ TO_REDACT = {
     CONF_KNX_KNXKEY_PASSWORD,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
+    CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
 }
 
 
@@ -39,6 +41,9 @@ async def async_get_config_entry_diagnostics(
     }
 
     diag["config_entry_data"] = async_redact_data(dict(config_entry.data), TO_REDACT)
+    diag["config_entry_options"] = async_redact_data(
+        dict(config_entry.options), TO_REDACT
+    )
 
     if proj_info := knx_module.project.info:
         diag["project_info"] = async_redact_data(proj_info, "name")

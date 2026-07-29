@@ -2,7 +2,9 @@
 
 from unittest.mock import AsyncMock
 
-from openai import OpenAIError
+import httpx
+from openai import AuthenticationError, BadRequestError, OpenAIError
+import pytest
 
 from homeassistant.components.ovhcloud_ai_endpoints.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
@@ -29,16 +31,47 @@ async def test_setup_unload(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_cannot_connect(
+@pytest.mark.parametrize(
+    ("exception", "state"),
+    [
+        (
+            AuthenticationError(
+                message="invalid key",
+                response=httpx.Response(
+                    status_code=401,
+                    request=httpx.Request(method="POST", url="https://example.com"),
+                ),
+                body=None,
+            ),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            BadRequestError(
+                message="invalid parameter",
+                response=httpx.Response(
+                    status_code=400,
+                    request=httpx.Request(method="POST", url="https://example.com"),
+                ),
+                body=None,
+            ),
+            ConfigEntryState.LOADED,
+        ),
+        (OpenAIError("boom"), ConfigEntryState.SETUP_RETRY),
+        (Exception("boom"), ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_setup_errors(
     hass: HomeAssistant,
     mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    state: ConfigEntryState,
 ) -> None:
-    """Test that a connection error surfaces a setup retry."""
-    mock_openai_client.chat.completions.create.side_effect = OpenAIError("boom")
+    """Assert appropriate behavior according to various HTTP responses."""
+    mock_openai_client.chat.completions.create.side_effect = exception
 
     await setup_integration(hass, mock_config_entry, mock_openai_client)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is state
 
 
 async def test_new_subentry_creates_entity_and_device(

@@ -1,7 +1,7 @@
 """Support for Freebox Delta, Revolution and Mini 4K."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from freebox_api.exceptions import InsufficientPermissionsError
 
@@ -60,10 +60,12 @@ class FreeboxSwitch(SwitchEntity):
                 " settings. Please refer to documentation"
             )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_set_state(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_set_state(False)

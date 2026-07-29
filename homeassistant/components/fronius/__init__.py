@@ -35,7 +35,7 @@ from .coordinator import (
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
-PLATFORMS: Final = [Platform.SENSOR]
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 type FroniusConfigEntry = ConfigEntry[FroniusSolarNet]
 
@@ -259,7 +259,11 @@ class FroniusSolarNet:
                     "model", inverter["device_type"]["value"]
                 ),
                 name=inverter.get("custom_name", {}).get("value"),
-                via_device=(DOMAIN, self.solar_net_device_id),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    self.hass,
+                    (DOMAIN, self.solar_net_device_id),
+                    config_entry_id=self.config_entry.entry_id,
+                ),
             )
             inverter_infos.append(
                 FroniusDeviceInfo(

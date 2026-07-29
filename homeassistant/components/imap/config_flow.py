@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import ssl
-from typing import Any
+from typing import Any, override
 
 from aioimaplib import AioImapException
 import voluptuous as vol
@@ -142,6 +142,7 @@ class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -200,6 +201,7 @@ class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ImapConfigEntry,
     ) -> ImapOptionsFlow:

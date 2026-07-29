@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.service import entity_service_call
 from homeassistant.helpers.typing import VolDictType
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 from .models import IsyConfigEntry
 
 # Common Services for All Platforms:
@@ -156,7 +156,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             if program is not None:
                 await getattr(program, command)()
                 return
-        _LOGGER.error("Could not send program command; not found or enabled on the ISY")
+        LOGGER.error("Could not send program command; not found or enabled on the ISY")
 
     hass.services.async_register(
         domain=DOMAIN,

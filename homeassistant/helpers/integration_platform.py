@@ -12,6 +12,7 @@ from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import Event, HassJob, HomeAssistant, callback
 from homeassistant.loader import (
     Integration,
+    async_get_integration,
     async_get_integrations,
     async_get_loaded_integration,
     async_register_preload_platform,
@@ -150,6 +151,25 @@ def _format_err(name: str, platform_name: str, *args: Any) -> str:
     return f"Exception in {name} when processing platform '{platform_name}': {args}"
 
 
+async def _async_import_platform(
+    integration: Integration, platform_name: str
+) -> ModuleType | None:
+    """Import a single platform for an integration.
+
+    Returns None if the integration does not provide the platform or it could
+    not be imported.
+    """
+    if not integration.platforms_exists((platform_name,)):
+        return None
+    try:
+        return await integration.async_get_platform(platform_name)
+    except ImportError:
+        _LOGGER.debug(
+            "Error importing %s platform for %s", platform_name, integration.domain
+        )
+        return None
+
+
 async def async_process_integration_platforms(
     hass: HomeAssistant,
     platform_name: str,
@@ -232,18 +252,10 @@ async def _async_process_integration_platforms(
     # this could be a bottleneck.
     futures: list[asyncio.Future[None]] = []
     for integration in loaded_integrations:
-        if not integration.platforms_exists((platform_name,)):
+        if (
+            platform := await _async_import_platform(integration, platform_name)
+        ) is None:
             continue
-        try:
-            platform = await integration.async_get_platform(platform_name)
-        except ImportError:
-            _LOGGER.debug(
-                "Unexpected error importing %s for %s",
-                platform_name,
-                integration.domain,
-            )
-            continue
-
         if future := hass.async_run_hass_job(
             process_job, hass, integration.domain, platform
         ):
@@ -251,3 +263,120 @@ async def _async_process_integration_platforms(
 
     if futures:
         await asyncio.gather(*futures)
+
+
+# Any = platform.
+type ProcessPlatform[_R] = Callable[[HomeAssistant, str, Any], _R | Awaitable[_R]]
+
+
+class LazyIntegrationPlatforms[_R]:
+    """Lazily load and process an integration platform on demand.
+
+    Unlike async_process_integration_platforms, which imports and processes the
+    platform for every loaded integration up front (and as integrations load),
+    this only imports and processes the platform for an integration the first
+    time it is requested, and only for integrations that are loaded.
+
+    The process callback may be a coroutine function; its result is awaited.
+
+    The platform is intentionally not registered for preloading, since for a
+    rarely used platform that would import it for every integration during
+    loading, defeating the point of loading it lazily.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        platform_name: str,
+        process_platform: ProcessPlatform[_R],
+    ) -> None:
+        """Initialize the lazy integration platforms."""
+        self._hass = hass
+        self._platform_name = platform_name
+        self._process_platform = process_platform
+        # A cached value of None means the integration does not provide the
+        # platform (or it failed to import).
+        self._processed: dict[str, _R | None] = {}
+        # In-flight processing per domain, so concurrent callers share the work.
+        self._processing: dict[str, asyncio.Future[_R | None]] = {}
+
+    async def async_get_platform(self, domain: str) -> _R | None:
+        """Return the processed platform for a loaded integration.
+
+        Returns None if the integration is not loaded or does not provide the
+        platform. The result for a loaded integration is cached.
+        """
+        if domain in self._processed:
+            return self._processed[domain]
+        # Only process integrations whose component is loaded, matching
+        # async_process_integration_platforms.
+        if domain not in self._hass.config.top_level_components:
+            # Don't cache, the integration may be loaded later.
+            return None
+        integration = await async_get_integration(self._hass, domain)
+        return await self._async_process(integration)
+
+    async def async_get_platforms(self) -> dict[str, _R]:
+        """Return the processed platform for all loaded integrations that have it."""
+        integrations = await async_get_integrations(
+            self._hass, self._hass.config.top_level_components
+        )
+        to_process = [
+            integration
+            for integration in integrations.values()
+            if not isinstance(integration, Exception)
+            and integration.platforms_exists((self._platform_name,))
+        ]
+        if missing := [
+            integration
+            for integration in to_process
+            if integration.domain not in self._processed
+        ]:
+            await asyncio.gather(
+                *(self._async_process(integration) for integration in missing)
+            )
+        return {
+            integration.domain: result
+            for integration in to_process
+            if (result := self._processed[integration.domain]) is not None
+        }
+
+    async def _async_process(self, integration: Integration) -> _R | None:
+        """Import, process and cache the platform for a loaded integration.
+
+        Concurrent callers for the same domain wait on a shared future so the
+        platform is imported and processed at most once.
+        """
+        domain = integration.domain
+        if domain in self._processed:
+            return self._processed[domain]
+        if (processing := self._processing.get(domain)) is not None:
+            return await processing
+
+        future: asyncio.Future[_R | None] = self._hass.loop.create_future()
+        self._processing[domain] = future
+        try:
+            platform = await _async_import_platform(integration, self._platform_name)
+            result: _R | None = None
+            if platform is not None:
+                try:
+                    processed = self._process_platform(self._hass, domain, platform)
+                    if isinstance(processed, Awaitable):
+                        processed = await processed
+                    result = processed
+                except Exception:
+                    _LOGGER.exception(
+                        "Error processing %s platform for %s",
+                        self._platform_name,
+                        domain,
+                    )
+            self._processed[domain] = result
+        except BaseException as err:
+            future.set_exception(err)
+            # Retrieve so an unawaited future does not log the exception.
+            future.exception()
+            raise
+        finally:
+            del self._processing[domain]
+        future.set_result(result)
+        return result

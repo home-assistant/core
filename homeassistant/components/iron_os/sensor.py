@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
+from typing import override
 
 from pynecil import LiveDataResponse, OperatingMode, PowerSource
 
@@ -206,6 +207,7 @@ class IronOSSensorEntity(IronOSBaseEntity, SensorEntity):
     coordinator: IronOSLiveDataCoordinator
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return sensor state."""
         return self.entity_description.value_fn(

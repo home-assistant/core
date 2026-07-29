@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pysyncthru import SyncThru, SyncthruState
 
@@ -68,6 +69,7 @@ class SyncThruBinarySensor(SyncthruEntity, BinarySensorEntity):
     entity_description: SyncThruBinarySensorDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self.coordinator.data)

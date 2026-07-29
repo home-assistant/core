@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from opower import (
     Account,
@@ -97,6 +97,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         # is needed for _insert_statistics.
         self.async_add_listener(_dummy_listener)
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[str, OpowerData]:
@@ -111,8 +112,11 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             raise ConfigEntryAuthFailed from err
         except CannotConnect as err:
             _LOGGER.error("Error during login: %s", err)
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise UpdateFailed(f"Error during login: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="login_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         try:
             accounts = await self.api.async_get_accounts()
