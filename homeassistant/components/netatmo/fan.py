@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_FAN
 from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
-from .entity import NetatmoModuleEntity
+from .entity import NetatmoReachabilityEntity
 from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ async def async_setup_entry(
     )
 
 
-class NetatmoFan(NetatmoModuleEntity, FanEntity):
+class NetatmoFan(NetatmoReachabilityEntity, FanEntity):
     """Representation of a Netatmo fan."""
 
     _attr_preset_modes = ["slow", "fast"]
@@ -78,7 +78,9 @@ class NetatmoFan(NetatmoModuleEntity, FanEntity):
     @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        if self.device.fan_speed is None:
-            self._attr_preset_mode = None
-            return
-        self._attr_preset_mode = PRESETS.get(self.device.fan_speed)
+        if self.device.reachable is not False:
+            if self.device.fan_speed is None:
+                self._attr_preset_mode = None
+            else:
+                self._attr_preset_mode = PRESETS.get(self.device.fan_speed)
+        self.async_write_ha_state()

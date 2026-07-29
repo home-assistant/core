@@ -1313,8 +1313,9 @@ class SonosSpeaker:
                 translation_key="announcement_connection_error",
                 translation_placeholders={"error": "websocket not available"},
             )
+        announcement_id = self.last_announce_id
         try:
-            response, _ = await self.websocket.cancel_clip(self.last_announce_id)
+            response, _ = await self.websocket.cancel_clip(announcement_id)
         except SonosWebsocketError as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -1327,7 +1328,8 @@ class SonosSpeaker:
                 translation_key="cancel_announcement_error",
                 translation_placeholders={"response": str(response)},
             )
-        self.last_announce_id = None
+        if announcement_id == self.last_announce_id:
+            self.last_announce_id = None
 
     #
     # Media and playback state handlers

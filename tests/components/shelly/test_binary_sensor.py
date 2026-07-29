@@ -877,3 +877,50 @@ async def test_rpc_occupancy_component(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
+
+
+async def test_rpc_cb_binary_sensors(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test RPC circuit breaker binary sensor entities."""
+    config = deepcopy(mock_rpc_device.config)
+    config["cb:0"] = {"id": 0, "name": None}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["cb:0"] = {"id": 0, "output": False, "safety": False}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2)
+
+    output_entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_output"
+    safety_entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_safety_switch"
+
+    assert (state := hass.states.get(output_entity_id))
+    assert state.state == STATE_OFF
+
+    # safety=False means safety switch is ON (unlocked)
+    assert (state := hass.states.get(safety_entity_id))
+    assert state.state == STATE_ON
+
+    assert (entry := entity_registry.async_get(output_entity_id))
+    assert entry.unique_id == "123456789ABC-cb:0-cb_output"
+
+    assert (entry := entity_registry.async_get(safety_entity_id))
+    assert entry.unique_id == "123456789ABC-cb:0-cb_safety"
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cb:0", "output", True)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(output_entity_id))
+    assert state.state == STATE_ON
+
+    # safety=True means safety switch is OFF (locked)
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cb:0", "safety", True)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(safety_entity_id))
+    assert state.state == STATE_OFF

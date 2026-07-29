@@ -21,6 +21,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -48,6 +49,7 @@ SWITCH_MOCK_DEVICES = [
 ]
 
 
+@pytest.mark.parametrize("platforms", [[Platform.SWITCH]], indirect=True)
 @pytest.mark.parametrize("imou_mock_devices", [SWITCH_MOCK_DEVICES], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_switch_entities_snapshot(
@@ -83,7 +85,7 @@ async def test_setup_ignores_unknown_switch_types(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Unknown switch keys from the API are not turned into entities."""
-    registry = er.async_get(hass)
+    registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entries = er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
     switch_entries = [entry for entry in entries if entry.domain == SWITCH_DOMAIN]
     assert len(switch_entries) == 1

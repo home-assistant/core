@@ -3,7 +3,7 @@
 import logging
 from unittest.mock import MagicMock
 
-from pynobo import nobo as pynobo_nobo
+from pynobo import PynoboConnectionError, nobo as pynobo_nobo
 import pytest
 
 from homeassistant.components.nobo_hub.const import (
@@ -61,7 +61,7 @@ async def test_setup_rediscovery_updates_ip(
     """A failed direct connect falls back to rediscovery and persists the new IP."""
     mock_config_entry.add_to_hass(hass)
     failing_hub = MagicMock(spec=pynobo_nobo)
-    failing_hub.connect.side_effect = OSError("Unreachable")
+    failing_hub.connect.side_effect = PynoboConnectionError("Unreachable")
     mock_nobo_class.side_effect = [failing_hub, mock_nobo_class.return_value]
     mock_nobo_class.async_discover_hubs.return_value = {(NEW_IP, SERIAL)}
 
@@ -83,7 +83,7 @@ async def test_setup_retries_when_rediscovery_finds_nothing(
     """Setup retries when stored IP fails and rediscovery is empty."""
     mock_config_entry.add_to_hass(hass)
     failing_hub = MagicMock(spec=pynobo_nobo)
-    failing_hub.connect.side_effect = OSError("Unreachable")
+    failing_hub.connect.side_effect = PynoboConnectionError("Unreachable")
     mock_nobo_class.side_effect = [failing_hub]
     mock_nobo_class.async_discover_hubs.return_value = set()
 
@@ -106,9 +106,9 @@ async def test_setup_retries_when_rediscovered_ip_also_fails(
     """Setup retries when both stored and rediscovered IPs fail."""
     mock_config_entry.add_to_hass(hass)
     first_failing_hub = MagicMock(spec=pynobo_nobo)
-    first_failing_hub.connect.side_effect = OSError("Unreachable")
+    first_failing_hub.connect.side_effect = PynoboConnectionError("Unreachable")
     second_failing_hub = MagicMock(spec=pynobo_nobo)
-    second_failing_hub.connect.side_effect = OSError("Unreachable")
+    second_failing_hub.connect.side_effect = PynoboConnectionError("Unreachable")
     mock_nobo_class.side_effect = [first_failing_hub, second_failing_hub]
     mock_nobo_class.async_discover_hubs.return_value = {(NEW_IP, SERIAL)}
 
@@ -121,6 +121,27 @@ async def test_setup_retries_when_rediscovered_ip_also_fails(
         "serial": SERIAL,
         "ip": NEW_IP,
     }
+
+
+async def test_setup_does_not_catch_plain_os_error_on_rediscovered_ip(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nobo_class: MagicMock,
+) -> None:
+    """A plain OSError from the rediscovered IP is not caught by the fallback."""
+    mock_config_entry.add_to_hass(hass)
+    first_failing_hub = MagicMock(spec=pynobo_nobo)
+    first_failing_hub.connect.side_effect = PynoboConnectionError("Unreachable")
+    second_failing_hub = MagicMock(spec=pynobo_nobo)
+    second_failing_hub.connect.side_effect = OSError("boom")
+    mock_nobo_class.side_effect = [first_failing_hub, second_failing_hub]
+    mock_nobo_class.async_discover_hubs.return_value = {(NEW_IP, SERIAL)}
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_nobo_class.call_count == 2
 
 
 @pytest.mark.parametrize(
