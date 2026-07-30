@@ -2029,3 +2029,17 @@ def test_update_clears_names_missing_from_the_update() -> None:
         temperature_key: "Custom name",
         pressure_key: "Pressure",
     }
+
+    update_with_partial_names = PassiveBluetoothDataUpdate(
+        devices={None: DeviceInfo(name="Test Device")},
+        entity_descriptions={temperature_key: temperature_description},
+        entity_names={pressure_key: "Pressure"},
+        entity_data={temperature_key: 15.5, pressure_key: 1234},
+    )
+
+    # An update naming only some keys does not clear the other names
+    assert data.update(update_with_partial_names) == set()
+    assert data.entity_names == {
+        temperature_key: "Custom name",
+        pressure_key: "Pressure",
+    }
