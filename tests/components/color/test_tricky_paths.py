@@ -11,6 +11,8 @@ or break promised semantics:
 - source_hex semantics per input shape
 """
 
+import math
+
 import pytest
 
 from homeassistant.components.color.const import (
@@ -363,12 +365,12 @@ async def test_source_hex_for_color_name(hass: HomeAssistant) -> None:
         {"version": STATE_SCHEMA_VERSION, "xy": [0.4], "kind": KIND_CHROMATIC},
         {
             "version": STATE_SCHEMA_VERSION,
-            "xy": [float("nan"), 0.4],
+            "xy": [math.nan, 0.4],
             "kind": KIND_CHROMATIC,
         },
         {
             "version": STATE_SCHEMA_VERSION,
-            "xy": [float("inf"), 0.4],
+            "xy": [math.inf, 0.4],
             "kind": KIND_CHROMATIC,
         },
         {"version": STATE_SCHEMA_VERSION, "xy": [0.4, 0.4], "kind": "bogus"},
