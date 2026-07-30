@@ -222,10 +222,9 @@ class UniversalFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
         _LOGGER.warning(
             (
-                "Universal media player '%s' is configured via YAML, which is "
-                "deprecated. Remove it from your configuration.yaml and recreate "
-                "it through the UI (Settings → Devices & services → Add integration "
-                "→ Universal media player)"
+                "Universal media player '%s' has been migrated from YAML to a "
+                "config entry. Remove it from your configuration.yaml; you can "
+                "now manage it from Settings → Devices & services"
             ),
             import_data[CONF_NAME],
         )
