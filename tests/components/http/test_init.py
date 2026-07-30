@@ -1518,10 +1518,10 @@ async def test_setup_migrates_v1_storage_to_v2(
     await hass.async_start()
     await hass.async_block_till_done()
 
-    # The migrated v1 store config is only used in recovery mode. Since this
-    # test isn't running in recovery mode, the YAML migration runs on first
-    # boot after store migration. With no YAML http config, the default config is migrated to the pending slot and used. Therefore we assert below the default port (8123)
-    assert hass.config.api.port == 8123
+    # With no YAML http config there is nothing to migrate: the stable slot
+    # from the v1 store stays the source of truth and no pending trial is
+    # staged.
+    assert hass.config.api.port == 9876
     assert hass_storage[DOMAIN]["version"] == 2
     assert hass_storage[DOMAIN]["minor_version"] == 2
     data = hass_storage[DOMAIN]["data"]
@@ -1530,10 +1530,58 @@ async def test_setup_migrates_v1_storage_to_v2(
     assert data["stable"] == _stored_config(
         {"server_port": 9876}, created_at=dt_util.utcnow().isoformat()
     )
-    assert data["pending"] == _stored_config(
-        {}, created_at=dt_util.utcnow().isoformat()
-    )
+    assert data["pending"] is None
     assert data["yaml_migration_done"] is True
+
+
+async def test_upgrade_with_stored_old_default_config_keeps_port(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A stored old default config keeps its port under the new Supervisor default.
+
+    Releases up to 2026.7 persisted the fully expanded config — including the
+    explicit default server_port 8123 — to the v1 store on every boot. When
+    such an install is upgraded under Supervisor (where the default port is
+    now 80), the new default must not be staged as a pending trial: nothing
+    promotes it, so the trial would auto-revert with a restart five minutes
+    later and flip the port back to 8123.
+    """
+    hass_storage[DOMAIN] = {
+        "version": 1,
+        "key": DOMAIN,
+        "data": {
+            "server_port": 8123,
+            "cors_allowed_origins": ["https://cast.home-assistant.io"],
+            "use_x_frame_options": True,
+            "ip_ban_enabled": True,
+            "login_attempts_threshold": -1,
+            "ssl_profile": "modern",
+        },
+    }
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    with _supervisor_default_config():
+        await _setup_http_with_onboarding(hass)
+
+        assert hass.config.api.port == 8123
+        store = await async_get_and_load_store(hass)
+        assert store.active_config_type is ActiveConfigType.STABLE
+        assert store.revert_deadline is None
+        data = hass_storage[DOMAIN]["data"]
+        assert data["pending"] is None
+        assert data["stable"]["server_port"] == 8123
+        assert data["yaml_migration_done"] is True
+        # The stored config differs from the new default config, so the
+        # legacy-port transition does not apply.
+        assert hass.http._legacy_redirect_server is None
+
+        # Nothing was staged for trial: no auto-revert restart fires.
+        freezer.tick(AUTO_REVERT_DELAY)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert len(restart_calls) == 0
 
 
 @pytest.mark.usefixtures("freezer")
@@ -1615,23 +1663,30 @@ def test_default_server_port(
         assert default_server_port() == expected_port
 
 
-@pytest.mark.usefixtures("freezer")
 async def test_setup_port_env_var_used_as_default(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test SETUP_PORT is used as the default server port without YAML config."""
+    """Test SETUP_PORT is used as the default server port without YAML config.
+
+    In production SETUP_PORT is set before the process starts, so it is baked
+    into _DEFAULT_CONFIG at import; the constant is patched to reproduce that.
+    A fresh install serves the default config from the stable slot directly,
+    without staging it as a pending trial.
+    """
     with (
         patch.dict(os.environ, {ENV_SETUP_PORT: "80"}),
+        patch(
+            "homeassistant.components.http.config._DEFAULT_CONFIG", DEFAULT_80_CONFIG
+        ),
     ):
         assert await async_setup_component(hass, "http", {})
         await hass.async_start()
         await hass.async_block_till_done()
 
     assert hass.config.api.port == 80
-    assert hass_storage["http"]["data"]["pending"] == _stored_config(
-        {"server_port": 80}, created_at=dt_util.utcnow().isoformat()
-    )
+    assert hass_storage["http"]["data"]["pending"] is None
+    assert hass_storage["http"]["data"]["stable"]["server_port"] == 80
 
 
 async def test_default_config_under_supervisor_starts_redirect(
