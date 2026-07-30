@@ -924,59 +924,33 @@ async def test_ssl_issue_urls_configured(
 
 
 @pytest.mark.parametrize(
-    (
-        "hassio",
-        "http_config",
-        "expected_serverhost",
-        "expected_issues",
-    ),
+    ("http_config", "expected_serverhost"),
     [
-        (False, {}, ["0.0.0.0", "::"], {("http", "deprecated_yaml")}),
-        (
-            False,
-            {"server_host": "0.0.0.0"},
-            ["0.0.0.0"],
-            {("http", "deprecated_yaml")},
-        ),
-        (True, {}, ["0.0.0.0", "::"], {("http", "deprecated_yaml")}),
-        (
-            True,
-            {"server_host": "0.0.0.0"},
-            [
-                "0.0.0.0",
-            ],
-            {
-                ("http", "server_host_deprecated_hassio"),
-                ("http", "deprecated_yaml"),
-            },
-        ),
+        pytest.param({}, ["0.0.0.0", "::"], id="default"),
+        pytest.param({"server_host": "0.0.0.0"}, ["0.0.0.0"], id="server_host"),
     ],
 )
 async def test_server_host(
     hass: HomeAssistant,
-    hassio: bool,
     issue_registry: ir.IssueRegistry,
     http_config: dict,
     expected_serverhost: list,
-    expected_issues: set[tuple[str, str]],
-    caplog: pytest.LogCaptureFixture,
     mock_create_server: Mock,
 ) -> None:
     """Test server_host behavior."""
-    with patch("homeassistant.components.http.is_hassio", return_value=hassio):
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {"http": http_config},
-        )
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {"http": http_config},
+    )
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     mock_create_server.assert_called_once()
     assert hass.http.server_host == expected_serverhost
     assert hass.http.server_port == 8123
 
-    assert set(issue_registry.issues) == expected_issues
+    assert set(issue_registry.issues) == {("http", "deprecated_yaml")}
 
 
 async def test_unix_socket_started_with_supervisor(
@@ -1849,6 +1823,88 @@ async def test_legacy_redirect_serves_method_preserving_307(
             # the default HTTP port, so it is omitted from the URL).
             assert resp.status == 307
             assert resp.headers["Location"] == "http://127.0.0.1/api/foo?bar=1"
+
+
+async def test_legacy_redirect_stops_with_connection_open(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the redirect tears down while a client holds a connection open.
+
+    A client keeps its connection alive after the redirect response, so
+    awaiting the server's wait_closed() before the runner has closed the open
+    connections never returned, hanging every shutdown stage in turn.
+    """
+    captured: dict[str, int] = {}
+
+    async def _bind_serving(self: http.HomeAssistantHTTP) -> asyncio.Server:
+        assert self._legacy_redirect_runner is not None
+        server = await self.hass.loop.create_server(
+            self._legacy_redirect_runner.server, "127.0.0.1", 0
+        )
+        captured["port"] = server.sockets[0].getsockname()[1]
+        return server
+
+    with (
+        patch.dict(os.environ, {ENV_SUPERVISOR: "core"}, clear=True),
+        patch(
+            "homeassistant.components.http.config._DEFAULT_CONFIG", DEFAULT_80_CONFIG
+        ),
+        patch(
+            "homeassistant.components.http.server._DEFAULT_CONFIG", DEFAULT_80_CONFIG
+        ),
+        patch(
+            "homeassistant.components.http.server.HomeAssistantHTTP._async_create_redirect_server",
+            autospec=True,
+            side_effect=_bind_serving,
+        ),
+    ):
+        await _setup_http_with_onboarding(hass)
+        server = hass.http
+        assert server._legacy_redirect_server is not None
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                f"http://127.0.0.1:{captured['port']}/", allow_redirects=False
+            ) as resp:
+                assert resp.status == 307
+
+            # The connection is returned to the pool, not closed, so the
+            # redirect still has an open connection at teardown.
+            _complete_onboarding(hass)
+            async with asyncio.timeout(10):
+                await hass.async_block_till_done()
+
+        assert server._legacy_redirect_server is None
+        assert server._legacy_redirect_runner is None
+
+
+async def test_legacy_redirect_stop_is_reentrant(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test overlapping redirect teardowns do not wait on each other.
+
+    Onboarding completing and the stop event both tear the redirect down, so
+    the second call must not await the first call's server again.
+    """
+    with _supervisor_default_config():
+        await _setup_http_with_onboarding(hass)
+        server = hass.http
+        assert server._legacy_redirect_server is not None
+
+        async with asyncio.timeout(10):
+            await asyncio.gather(
+                server._async_stop_legacy_redirect(),
+                server._async_stop_legacy_redirect(),
+            )
+
+        assert server._legacy_redirect_server is None
+        assert server._legacy_redirect_runner is None
+
+        # The stop event fires the same teardown once more.
+        async with asyncio.timeout(10):
+            await server._async_stop_legacy_redirect()
 
 
 @pytest.mark.usefixtures("freezer")
