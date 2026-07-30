@@ -80,23 +80,25 @@ SENSOR_DESCRIPTIONS = {
 }
 
 PROBE_SENSOR_DESCRIPTIONS = {
-    key: SensorEntityDescription(
-        key=key,
-        translation_key=key,
+    f"{translation_key}_{probe_id}": SensorEntityDescription(
+        key=f"{translation_key}_{probe_id}",
+        translation_key=translation_key,
+        translation_placeholders={"probe_id": str(probe_id)},
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     )
     for probe_id in range(1, 7)
-    for key in (
-        f"temperature_probe_{probe_id}",
-        f"temperature_alarm_probe_{probe_id}",
-        f"low_temperature_alarm_probe_{probe_id}",
+    for translation_key in (
+        "temperature_probe",
+        "temperature_alarm_probe",
+        "low_temperature_alarm_probe",
     )
 } | {
     "humidity_probe_1": SensorEntityDescription(
         key="humidity_probe_1",
-        translation_key="humidity_probe_1",
+        translation_key="humidity_probe",
+        translation_placeholders={"probe_id": "1"},
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,

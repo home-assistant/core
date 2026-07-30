@@ -101,62 +101,17 @@
       }
     },
     "sensor": {
-      "humidity_probe_1": {
-        "name": "Humidity probe 1"
+      "humidity_probe": {
+        "name": "Humidity probe {probe_id}"
       },
-      "low_temperature_alarm_probe_1": {
-        "name": "Low temperature alarm probe 1"
+      "low_temperature_alarm_probe": {
+        "name": "Low temperature alarm probe {probe_id}"
       },
-      "low_temperature_alarm_probe_2": {
-        "name": "Low temperature alarm probe 2"
+      "temperature_alarm_probe": {
+        "name": "Temperature alarm probe {probe_id}"
       },
-      "low_temperature_alarm_probe_3": {
-        "name": "Low temperature alarm probe 3"
-      },
-      "low_temperature_alarm_probe_4": {
-        "name": "Low temperature alarm probe 4"
-      },
-      "low_temperature_alarm_probe_5": {
-        "name": "Low temperature alarm probe 5"
-      },
-      "low_temperature_alarm_probe_6": {
-        "name": "Low temperature alarm probe 6"
-      },
-      "temperature_alarm_probe_1": {
-        "name": "Temperature alarm probe 1"
-      },
-      "temperature_alarm_probe_2": {
-        "name": "Temperature alarm probe 2"
-      },
-      "temperature_alarm_probe_3": {
-        "name": "Temperature alarm probe 3"
-      },
-      "temperature_alarm_probe_4": {
-        "name": "Temperature alarm probe 4"
-      },
-      "temperature_alarm_probe_5": {
-        "name": "Temperature alarm probe 5"
-      },
-      "temperature_alarm_probe_6": {
-        "name": "Temperature alarm probe 6"
-      },
-      "temperature_probe_1": {
-        "name": "Temperature probe 1"
-      },
-      "temperature_probe_2": {
-        "name": "Temperature probe 2"
-      },
-      "temperature_probe_3": {
-        "name": "Temperature probe 3"
-      },
-      "temperature_probe_4": {
-        "name": "Temperature probe 4"
-      },
-      "temperature_probe_5": {
-        "name": "Temperature probe 5"
-      },
-      "temperature_probe_6": {
-        "name": "Temperature probe 6"
+      "temperature_probe": {
+        "name": "Temperature probe {probe_id}"
       }
     }
   }
