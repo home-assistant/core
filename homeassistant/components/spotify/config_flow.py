@@ -58,6 +58,7 @@ class SpotifyFlowHandler(
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), title=name, data=data
             )
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(title=name, data={**data, CONF_NAME: name})
 
     async def async_step_reauth(
