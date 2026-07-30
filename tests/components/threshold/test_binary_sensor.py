@@ -454,8 +454,8 @@ async def test_sensor_in_range_inverted_no_hysteresis(
     config = {
         Platform.BINARY_SENSOR: {
             CONF_PLATFORM: "threshold",
-            CONF_LOWER: "10",
-            CONF_UPPER: "20",
+            CONF_LOWER: "20",
+            CONF_UPPER: "10",
             CONF_ENTITY_ID: "sensor.test_monitored",
         }
     }
@@ -546,8 +546,8 @@ async def test_sensor_in_range_inverted_with_hysteresis(
     config = {
         Platform.BINARY_SENSOR: {
             CONF_PLATFORM: "threshold",
-            CONF_LOWER: "10",
-            CONF_UPPER: "20",
+            CONF_LOWER: "20",
+            CONF_UPPER: "10",
             CONF_HYSTERESIS: "2",
             CONF_ENTITY_ID: "sensor.test_monitored",
         }
