@@ -48,7 +48,6 @@ class TewkeNewSceneRepairFlow(RepairsFlow):
         self,
     ) -> FlowResult:
         """Commit all configured scene control types and update HA state."""
-        # Small amount of code name reuse similarly to what was done in the main config flow
         scene_configs: list[str] = []
         for i, _ in enumerate(self._pending_list):
             scene_configs.append(f"scene_section_{i}")
