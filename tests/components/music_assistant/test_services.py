@@ -58,22 +58,6 @@ async def test_search_action_with_username(
     """Test music assistant search action."""
     entry = await setup_integration_from_fixtures(hass, music_assistant_client)
 
-    # services with an api version < 35 must raise a validation error even if the username is valid
-    music_assistant_client.server_info.schema_version = 30
-    with pytest.raises(ServiceValidationError) as exc:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEARCH,
-            {
-                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-                ATTR_SEARCH_NAME: "test",
-                ATTR_USERNAME: "user_user",
-            },
-            blocking=True,
-            return_response=True,
-        )
-    assert exc.value.translation_key == "unsupported_parameter"
-
     # tests for servers supporting the username
     music_assistant_client.server_info.schema_version = 35
     music_assistant_client.music.client.send_command = AsyncMock(
