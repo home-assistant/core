@@ -3,7 +3,6 @@
 from contextlib import suppress
 from datetime import time as dt_time
 import logging
-import re
 from typing import Any, override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
@@ -22,6 +21,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
+from homeassistant.util import snakecase
 
 from .const import DOMAIN
 from .entity import ViCareEntity
@@ -102,11 +102,6 @@ def _serialize_slot(slot: dict[str, Any]) -> dict[str, Any]:
         "mode": slot["mode"],
         "position": slot["position"],
     }
-
-
-def _to_snake_case(vicare_mode: str) -> str:
-    """Convert a camelCase ViCare circuit mode into a translatable operation mode."""
-    return re.sub(r"(?<!^)(?=[A-Z])", "_", vicare_mode).lower()
 
 
 def _build_entities(
@@ -266,7 +261,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         """Return the operation-mode-to-ViCare-circuit-mode mapping."""
         if self._circuit_modes is None:
             return {}
-        return {_to_snake_case(mode): mode for mode in self._circuit_modes}
+        return {snakecase(mode): mode for mode in self._circuit_modes}
 
     @property
     @override
@@ -289,16 +284,12 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         """Return the currently active ViCare circuit mode."""
         if self._current_mode is None:
             return None
-        return _to_snake_case(self._current_mode)
+        return snakecase(self._current_mode)
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
-        return {
-            k: v
-            for k, v in {
-                "circulation_schedule": self._circulation_schedule,
-            }.items()
-            if v is not None
-        }
+        if self._circulation_schedule is None:
+            return {}
+        return {"circulation_schedule": self._circulation_schedule}
