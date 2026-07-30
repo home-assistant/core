@@ -19,10 +19,6 @@
           "host": "Hostname or IP address of your Hot Spring Home Network Adapter (HNA)."
         },
         "description": "Set up your Hot Spring Home Network Adapter (HNA) to integrate with Home Assistant."
-      },
-      "zeroconf_confirm": {
-        "description": "Do you want to add the Hot Spring spa named `{name}` to Home Assistant?",
-        "title": "Discovered Hot Spring spa"
       }
     }
   }

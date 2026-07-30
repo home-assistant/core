@@ -7,11 +7,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["hotspring"],
-  "requirements": ["python-hotspring==1.0.0"],
-  "zeroconf": [
-    {
-      "type": "_ws._tcp.local.",
-      "name": "ConnectedSpa*"
-    }
-  ]
+  "requirements": ["python-hotspring==1.0.0"]
 }
