@@ -8,6 +8,7 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
+from aiohttp.client_exceptions import ServerDisconnectedError
 from uiprotect import EventChange, ProtectApiClient, ProtectEvent
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
@@ -19,8 +20,10 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     PTZPatrol,
     PublicDeviceModel,
+    WSAction,
     WSSubscriptionMessage,
 )
+from uiprotect.data.public_devices import PublicCamera
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.utils import log_event
 from uiprotect.websocket import WebsocketState
@@ -95,6 +98,7 @@ class ProtectData:
         self.auth_retries = 0
         self.last_update_success = False
         self.last_public_update_success = False
+        self.last_events_update_success = False
         self.api = protect
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
@@ -152,6 +156,37 @@ class ProtectData:
             Generator[Camera], self.get_by_types({ModelType.CAMERA}, ignore_unadopted)
         )
 
+    def get_public_cameras(
+        self,
+    ) -> Generator[tuple[PublicCamera | None, Camera | None]]:
+        """Iterate cameras public-master with private-fill.
+
+        The public bootstrap is the master list; the matching private camera is
+        paired by shared id when present (hybrid) and ``None`` in public-only
+        mode. An adopted private camera not (yet) mirrored into the public
+        bootstrap is yielded as ``(None, private)`` so the caller can defer it.
+        Adopted-filtering mirrors ``get_cameras`` whenever a private object is
+        available.
+        """
+        api = self.api
+        if not api.has_public_bootstrap:
+            return
+        # An API-key-only client never initializes the private bootstrap;
+        # accessing it would raise.
+        private_cameras: dict[str, Camera] = (
+            {} if api.is_public_only else api.bootstrap.cameras
+        )
+        public_cameras = api.public_bootstrap.cameras
+        for camera_id, public in public_cameras.items():
+            private = private_cameras.get(camera_id)
+            if private is not None and not private.is_adopted_by_us:
+                continue
+            yield public, private
+        for camera_id, private in private_cameras.items():
+            if camera_id in public_cameras or not private.is_adopted_by_us:
+                continue
+            yield None, private
+
     async def async_load_ptz_patrols(self) -> None:
         """Load PTZ patrols for all PTZ cameras."""
         await asyncio.gather(
@@ -178,6 +213,7 @@ class ProtectData:
         """Subscribe and do the refresh."""
         self.last_update_success = True
         self.last_public_update_success = True
+        self.last_events_update_success = True
         self._async_update_change(True, force_update=True)
         api = self.api
         self._unsubs = [
@@ -193,6 +229,7 @@ class ProtectData:
                 self._async_process_public_devices_ws_message
             ),
             api.subscribe_devices_websocket_state(self._async_public_ws_state_changed),
+            api.subscribe_events_websocket_state(self._async_events_ws_state_changed),
         ]
 
     @callback
@@ -232,10 +269,43 @@ class ProtectData:
                 self._async_signal_public_update(old_obj.mac, None)
             return
         if new_obj.model is ModelType.NVR:
-            self._async_signal_device_update(self.api.bootstrap.nvr)
+            # An API-key-only client has no private NVR (reading it would raise).
+            if not self.api.is_public_only:
+                self._async_signal_device_update(self.api.bootstrap.nvr)
             return
         if isinstance(new_obj, PublicDeviceModel):
+            if new_obj.model is ModelType.CAMERA:
+                self._async_reenumerate_camera_on_public_change(new_obj, message)
             self._async_signal_public_update(new_obj.mac, new_obj)
+
+    @callback
+    def _async_reenumerate_camera_on_public_change(
+        self, new_obj: PublicDeviceModel, message: WSSubscriptionMessage
+    ) -> None:
+        """Re-run camera enumeration when a public frame can add entities.
+
+        Three cases dispatch the public camera to the channels signal:
+
+        - A camera deferred at enumeration because its public mirror had not
+          arrived yet (the private channels-update path cannot be relied on to
+          fire again).
+        - A camera whose RTSPS streams the library primes in the background
+          after it comes online or is added, announced by an ``rtsps_streams``
+          change: the quality tiers that just became active still need their
+          entities.
+        - In public-only mode, a newly added camera — there is no private
+          adopt path that could discover it.
+
+        The platform adds only entities that do not exist yet, so overlapping
+        re-enumerations are safe.
+        """
+        if new_obj.id in self._pending_camera_ids:
+            self._pending_camera_ids.remove(new_obj.id)
+        elif "rtsps_streams" not in message.changed_data and not (
+            self.api.is_public_only and message.action is WSAction.ADD
+        ):
+            return
+        async_dispatcher_send(self._hass, self.channels_signal, new_obj)
 
     @callback
     def _async_process_public_event(
@@ -243,14 +313,14 @@ class ProtectData:
     ) -> None:
         """Dispatch a public events websocket event to its subscribers.
 
-        Only the start of an event is dispatched, routed to the subscribers that
-        registered for this device and event type; an entity that cares about a
-        sub-type (e.g. a smart-detect object type) filters further itself.
-        Subscriptions are keyed by ``device_id`` (the stable cross-API join key,
-        shared by the private and public bootstraps), so the event routes
-        directly without a bootstrap lookup.
+        Each non-eviction change is dispatched — a detection type may surface at
+        the event start, on a later update, or only as it ends — routed to the
+        subscribers registered for this device and event type; entities fire each
+        ``(event, type)`` once. Subscriptions are keyed by ``device_id`` (the
+        stable cross-API join key, shared by the private and public bootstraps),
+        so the event routes directly without a bootstrap lookup.
         """
-        if change is not EventChange.STARTED:
+        if change is EventChange.REMOVED:
             return
         if not (
             subscriptions := self._public_event_subscriptions.get(
@@ -274,6 +344,52 @@ class ProtectData:
             return
         self.last_public_update_success = success
         self._async_process_public_updates()
+        if success:
+            # The library resyncs its public bootstrap on reconnect, but the
+            # resync applies silently and races this callback, so the re-read
+            # above may see the pre-disconnect cache. Refresh again behind a
+            # guaranteed-fresh snapshot (``update_public`` is serialized) so a
+            # change from the disconnect gap cannot stay stale.
+            self._entry.async_create_background_task(
+                self._hass,
+                self._async_resignal_after_public_resync(),
+                "unifiprotect public reconnect refresh",
+            )
+
+    async def _async_resignal_after_public_resync(self) -> None:
+        """Re-signal public entities once a fresh public snapshot is applied."""
+        try:
+            await self.api.update_public()
+        except NotAuthorized:
+            # A revoked API key cannot self-recover.
+            self._entry.async_start_reauth(self._hass)
+            return
+        except (TimeoutError, ClientError, ServerDisconnectedError) as err:
+            # Transport errors retry on the next reconnect.
+            _LOGGER.debug("Public refresh after reconnect failed: %s", err)
+            return
+        self._async_process_public_updates()
+        # Existing subscriptions are refreshed above, but a camera that
+        # appeared (or gained streams) during the gap still needs its
+        # entities; the platform adds only the missing ones.
+        if self.api.has_public_bootstrap:
+            for public in list(self.api.public_bootstrap.cameras.values()):
+                async_dispatcher_send(self._hass, self.channels_signal, public)
+
+    @callback
+    def _async_events_ws_state_changed(self, state: WebsocketState) -> None:
+        """Handle a change in the public events websocket state.
+
+        Entities whose values are derived from the events stream (the
+        detection booleans and the public event entities) include this in
+        their availability, since the devices websocket alone cannot tell
+        whether detections still flow.
+        """
+        success = state is WebsocketState.CONNECTED
+        if success == self.last_events_update_success:
+            return
+        self.last_events_update_success = success
+        self._async_process_public_updates()
 
     @callback
     def _async_process_public_updates(self) -> None:
@@ -282,7 +398,9 @@ class ProtectData:
         if not api.has_public_bootstrap:
             return
         # The NVR alarm panel reads the public arm_mode, so refresh it too.
-        self._async_signal_device_update(api.bootstrap.nvr)
+        # An API-key-only client has no private NVR (reading it would raise).
+        if not api.is_public_only:
+            self._async_signal_device_update(api.bootstrap.nvr)
         # Subscribers recompute from the public bootstrap on ``None``.
         for subscriptions in self._public_subscriptions.values():
             for update_callback in subscriptions:
@@ -370,14 +488,12 @@ class ProtectData:
     @callback
     def _async_remove_device(self, device: ProtectAdoptableDeviceModel) -> None:
         registry = dr.async_get(self._hass)
-        device_entry = registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)}
+        device_entry = registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, device.mac), self._entry.entry_id
         )
         if device_entry:
             _LOGGER.debug("Device removed: %s", device.id)
-            registry.async_update_device(
-                device_entry.id, remove_config_entry_id=self._entry.entry_id
-            )
+            registry.async_remove_device(device_entry.id)
 
     @callback
     def _async_update_device(
@@ -529,7 +645,7 @@ class ProtectData:
 
     @callback
     def async_get_public_device(
-        self, device: ProtectDeviceType
+        self, device: ProtectDeviceType | PublicDeviceModel
     ) -> PublicDeviceModel | None:
         """Return the public-API object matching a device, if available."""
         api = self.api

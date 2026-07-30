@@ -53,8 +53,20 @@ CONF_KNX_DEFAULT_RATE_LIMIT: Final = 0
 
 DEFAULT_ROUTING_IA: Final = "0.0.240"
 
+CONF_KNX_TELEGRAM_DB_BACKEND: Final = "telegram_db_backend"
 CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: Final = "telegram_db_retention_days"
 CONF_KNX_TELEGRAM_DB_LOAD_HOURS: Final = "telegram_db_load_hours"
+CONF_KNX_TELEGRAM_DB_POSTGRES_DSN: Final = "telegram_db_postgres_dsn"
+
+CONF_KNX_TELEGRAM_DB_HOST: Final = "host"
+CONF_KNX_TELEGRAM_DB_PORT: Final = "port"
+CONF_KNX_TELEGRAM_DB_USER: Final = "user"
+CONF_KNX_TELEGRAM_DB_PASSWORD: Final = "password"
+CONF_KNX_TELEGRAM_DB_DATABASE: Final = "database"
+CONF_KNX_TELEGRAM_DB_TLS: Final = "tls"
+
+KNX_TELEGRAM_BACKEND_SQLITE: Final = "sqlite"
+KNX_TELEGRAM_BACKEND_POSTGRES: Final = "postgres"
 
 KNX_TELEGRAM_DB_RETENTION_DEFAULT: Final = 10  # days
 KNX_TELEGRAM_LOAD_HOURS_DEFAULT: Final = 24  # 1 day
@@ -78,6 +90,7 @@ CONF_KNX_SECURE_USER_PASSWORD: Final = "user_password"
 CONF_KNX_SECURE_DEVICE_AUTHENTICATION: Final = "device_authentication"
 
 
+CONF_DEFAULT_ENTITY_ID: Final = "default_entity_id"
 CONF_CONTEXT_TIMEOUT: Final = "context_timeout"
 CONF_IGNORE_INTERNAL_STATE: Final = "ignore_internal_state"
 CONF_PAYLOAD_LENGTH: Final = "payload_length"
@@ -139,6 +152,8 @@ class KNXConfigEntryOptions(TypedDict, total=False):
     #   Integration only (not forwarded to xknx)
     telegram_db_retention_days: int
     telegram_db_load_hours: int
+    telegram_db_backend: str  # sqlite | postgres
+    telegram_db_postgres_dsn: str
 
 
 class ColorTempModes(Enum):
@@ -186,6 +201,7 @@ SUPPORTED_PLATFORMS_UI: Final = {
     Platform.FAN,
     Platform.DATETIME,
     Platform.LIGHT,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SCENE,
     Platform.SENSOR,

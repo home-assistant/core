@@ -394,9 +394,7 @@ def _remove_via_devices(
     devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
     for device in devices:
         if device.via_device_id == device_entry.id:
-            device_registry.async_update_device(
-                device.id, remove_config_entry_id=config_entry.entry_id
-            )
+            device_registry.async_remove_device(device.id)
 
 
 async def async_remove_config_entry_device(

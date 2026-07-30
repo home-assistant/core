@@ -28,7 +28,7 @@ class PropertySensorEntityDescription(SensorEntityDescription):
 
     client_property: str
     property_map: dict[StateType, str] | None = None
-    presence_flag: None | str = None
+    presence_flag: str | None = None
 
 
 PROPERTY_SENSOR_DESCRIPTIONS: list[PropertySensorEntityDescription] = [

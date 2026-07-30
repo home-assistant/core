@@ -222,18 +222,18 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
             client = Client(conn)
             try:
                 device_info = client.device.information()
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.debug("Could not get device.information", exc_info=True)
                 try:
                     device_info = client.device.basic_information()
-                except Exception:  # noqa: BLE001
+                except Exception:
                     _LOGGER.debug(
                         "Could not get device.basic_information", exc_info=True
                     )
                     device_info = {}
             try:
                 wlan_settings = client.wlan.multi_basic_settings()
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.debug("Could not get wlan.multi_basic_settings", exc_info=True)
                 wlan_settings = {}
             return device_info, wlan_settings
