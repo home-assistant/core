@@ -1,8 +1,6 @@
 """The LG webOS TV integration."""
 
-from contextlib import suppress
-
-from aiowebostv import WebOsClient, WebOsTvPairError
+from aiowebostv import WebOsClient
 
 from homeassistant.components import notify as hass_notify
 from homeassistant.const import (
@@ -14,17 +12,12 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS, WEBOSTV_EXCEPTIONS
-from .coordinator import (
-    WebOsTvConfigEntry,
-    WebOsTvDataUpdateCoordinator,
-    update_client_key,
-)
+from .const import DOMAIN, PLATFORMS
+from .coordinator import WebOsTvConfigEntry, WebOsTvDataUpdateCoordinator
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -42,23 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
     host = entry.data[CONF_HOST]
     key = entry.data[CONF_CLIENT_SECRET]
 
-    # Attempt a connection, but fail gracefully if tv is off for example.
     client = WebOsClient(host, key, client_session=async_get_clientsession(hass))
-    with suppress(*WEBOSTV_EXCEPTIONS):
-        try:
-            await client.connect()
-        except WebOsTvPairError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="auth_failed",
-                translation_placeholders={"device": entry.title},
-            ) from err
-
-    # If pairing request accepted there will be no error
-    # Update the stored key without triggering reauth
-    update_client_key(hass, entry, client)
-
     entry.runtime_data = coordinator = WebOsTvDataUpdateCoordinator(hass, entry, client)
+    await coordinator.async_config_entry_first_refresh()
     await client.register_state_update_callback(coordinator.async_handle_update)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
