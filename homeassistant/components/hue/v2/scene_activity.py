@@ -20,19 +20,21 @@ UpdateListener = Callable[[str], None]
 class GroupSceneState:
     """Hold active scene data for a Hue group.
 
-    A smart scene and its effective regular scene can be active at the same time.
-    In that case, both ``smart_scene_id`` and ``scene_id`` are set.
+    - ``scene_id``: smart scene if active, else regular scene, else ``None``
+    - ``effective_scene_id``: the regular scene currently in effect, else ``None``
+
+    When any scene is active both IDs are set. For a regular scene they match;
+    for a smart scene, ``scene_id`` is the smart scene and ``effective_scene_id``
+    is the underlying regular scene. Mode/speed/brightness describe the
+    effective scene.
     """
 
-    # Regular scene state
     scene_id: str | None = None
+    effective_scene_id: str | None = None
     scene_mode: SceneActiveStatus | None = None
     scene_last_recall: datetime | None = None
     scene_speed: float | None = None
     scene_brightness: float | None = None
-
-    # Smart scene state
-    smart_scene_id: str | None = None
 
 
 class SceneActivityTracker:
@@ -102,15 +104,12 @@ class SceneActivityTracker:
         if group_state is None:
             return
         changed = False
-        if isinstance(scene, Scene) and group_state.scene_id == scene.id:
-            group_state.scene_id = None
-            group_state.scene_mode = None
-            group_state.scene_last_recall = None
-            group_state.scene_speed = None
-            group_state.scene_brightness = None
+        if isinstance(scene, Scene) and group_state.effective_scene_id == scene.id:
+            self._clear_effective_scene(group_state)
             changed = True
-        elif isinstance(scene, SmartScene) and group_state.smart_scene_id == scene.id:
-            group_state.smart_scene_id = None
+        elif isinstance(scene, SmartScene) and group_state.scene_id == scene.id:
+            # Fall back to the effective regular scene, if any.
+            group_state.scene_id = group_state.effective_scene_id
             changed = True
         if changed:
             for listener in list(self._listeners.get(group_id, [])):
@@ -134,7 +133,13 @@ class SceneActivityTracker:
         if scene.status is None:
             return False
         if scene.status.active != SceneActiveStatus.INACTIVE:
-            group_state.scene_id = scene.id
+            # scene_id differs from effective_scene_id only while a smart scene
+            # is selected; keep that selection when the effective regular changes.
+            smart_active = (
+                group_state.scene_id is not None
+                and group_state.scene_id != group_state.effective_scene_id
+            )
+            group_state.effective_scene_id = scene.id
             group_state.scene_mode = scene.status.active
             group_state.scene_last_recall = scene.status.last_recall
             group_state.scene_speed = scene.speed
@@ -146,13 +151,11 @@ class SceneActivityTracker:
                 ),
                 None,
             )
+            if not smart_active:
+                group_state.scene_id = scene.id
             return True
-        if group_state.scene_id == scene.id:
-            group_state.scene_id = None
-            group_state.scene_mode = None
-            group_state.scene_last_recall = None
-            group_state.scene_speed = None
-            group_state.scene_brightness = None
+        if group_state.effective_scene_id == scene.id:
+            self._clear_effective_scene(group_state)
             return True
         return False
 
@@ -161,9 +164,20 @@ class SceneActivityTracker:
     ) -> bool:
         """Update group state from a smart scene event."""
         if scene.state == SmartSceneState.ACTIVE:
-            group_state.smart_scene_id = scene.id
+            group_state.scene_id = scene.id
             return True
-        if group_state.smart_scene_id == scene.id:
-            group_state.smart_scene_id = None
+        if group_state.scene_id == scene.id:
+            group_state.scene_id = group_state.effective_scene_id
             return True
         return False
+
+    @staticmethod
+    def _clear_effective_scene(group_state: GroupSceneState) -> None:
+        """Clear effective regular-scene fields on a group state."""
+        if group_state.scene_id == group_state.effective_scene_id:
+            group_state.scene_id = None
+        group_state.effective_scene_id = None
+        group_state.scene_mode = None
+        group_state.scene_last_recall = None
+        group_state.scene_speed = None
+        group_state.scene_brightness = None

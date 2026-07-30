@@ -144,9 +144,7 @@ class HueSceneSelectEntity(SceneActivityBaseEntity, SelectEntity):
     @override
     def current_option(self) -> str | None:
         """Return the name of the currently active scene."""
-        if not (
-            scene_id := self._group_state.smart_scene_id or self._group_state.scene_id
-        ):
+        if not (scene_id := self._group_state.scene_id):
             return None
         return self._scene_id_to_option.get(scene_id)
 
