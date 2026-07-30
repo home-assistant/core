@@ -187,17 +187,6 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
     search_album = call.data.get(ATTR_SEARCH_ALBUM)
     search_username = call.data.get(ATTR_USERNAME)
     if search_username is not None:
-        if TYPE_CHECKING:
-            assert mass.server_info
-        if mass.server_info.schema_version < 35:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="unsupported_parameter",
-                translation_placeholders={
-                    "parameter": ATTR_USERNAME,
-                    "version": "2.10",
-                },
-            )
         await async_verify_mass_username_availability(
             mass=mass, username=search_username
         )
