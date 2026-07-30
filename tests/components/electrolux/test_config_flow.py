@@ -1,5 +1,6 @@
 """Unit test for Electrolux config flow."""
 
+from collections.abc import Callable
 from unittest.mock import AsyncMock
 
 from electrolux_group_developer_sdk.auth.invalid_credentials_exception import (
@@ -305,6 +306,116 @@ async def test_reauth_mismatched_entry(
 
     mock_token_manager.get_user_id.return_value = "different_user_id"
     mock_appliance_client.test_connection.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=valid_user_input
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+
+@pytest.mark.usefixtures("mock_appliance_client", "mock_token_manager")
+async def test_reconfigure_successful(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reconfigure step succeeds and updates the config entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=valid_user_input
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert mock_config_entry.data == valid_user_input
+
+
+def _get_ensure_credentials(*, mock_token_manager: AsyncMock, **_) -> AsyncMock:
+    """Get the ensure_credentials method from the mock token manager."""
+    return mock_token_manager.ensure_credentials
+
+
+def _get_test_connection(*, mock_appliance_client: AsyncMock, **_) -> AsyncMock:
+    """Get the test_connection method from the mock appliance client."""
+    return mock_appliance_client.test_connection
+
+
+@pytest.mark.parametrize(
+    ("get_mock", "exception", "error_name"),
+    [
+        (_get_ensure_credentials, InvalidCredentialsException(), "invalid_auth"),
+        (_get_test_connection, BadCredentialsException(), "invalid_auth"),
+        (_get_test_connection, FailedConnectionException(), "cannot_connect"),
+    ],
+)
+async def test_reconfigure_error(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_token_manager: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    get_mock: Callable[..., AsyncMock],
+    exception: Exception,
+    error_name: str,
+) -> None:
+    """Test reconfigure flow with bad credentials."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    get_mock(
+        mock_appliance_client=mock_appliance_client,
+        mock_token_manager=mock_token_manager,
+    ).side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=invalid_user_input
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error_name}
+
+    get_mock(
+        mock_appliance_client=mock_appliance_client,
+        mock_token_manager=mock_token_manager,
+    ).side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=valid_user_input
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert mock_config_entry.data == valid_user_input
+
+
+@pytest.mark.usefixtures("mock_appliance_client")
+async def test_reconfigure_mismatched_entry(
+    hass: HomeAssistant,
+    mock_token_manager: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow mismatched user id error."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_token_manager.get_user_id.return_value = "different_user_id"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=valid_user_input
