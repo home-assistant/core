@@ -150,7 +150,7 @@ def _event_data_filter_matches(
     filters: dict[str, tuple[tuple[tuple[str, object], ...], ...]],
 ) -> bool:
     """Return if an event matches an event data filter."""
-    if not (rules := filters.get(event.event_type)) or not isinstance(
+    if not (rules := filters.get(cast(str, event.event_type))) or not isinstance(
         event.data, Mapping
     ):
         return False
