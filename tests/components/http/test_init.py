@@ -1584,6 +1584,100 @@ async def test_upgrade_with_stored_old_default_config_keeps_port(
         assert len(restart_calls) == 0
 
 
+async def test_upgrade_yaml_without_port_keeps_stable_port(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A YAML config without an explicit port keeps its port on upgrade.
+
+    A YAML config without server_port (e.g. a reverse proxy setup) has been
+    running on the old default port 8123, which the v1 store recorded
+    explicitly. Migrating it with the port filled from the new Supervisor
+    default (80) instead of the historical YAML default would stage an
+    otherwise unchanged config as a pending trial: nothing promotes it, so
+    the trial would auto-revert with a restart five minutes later.
+    """
+    hass_storage[DOMAIN] = {
+        "version": 1,
+        "key": DOMAIN,
+        "data": {
+            "server_port": 8123,
+            "use_x_forwarded_for": True,
+            "trusted_proxies": ["10.0.0.0/24"],
+            "cors_allowed_origins": ["https://cast.home-assistant.io"],
+            "use_x_frame_options": True,
+            "ip_ban_enabled": True,
+            "login_attempts_threshold": -1,
+            "ssl_profile": "modern",
+        },
+    }
+    yaml_conf = {
+        "use_x_forwarded_for": True,
+        "trusted_proxies": ["10.0.0.0/24"],
+    }
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    with _supervisor_default_config():
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: yaml_conf})
+        assert await async_setup_component(hass, "onboarding", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+        assert hass.config.api.port == 8123
+        store = await async_get_and_load_store(hass)
+        assert store.active_config_type is ActiveConfigType.STABLE
+        assert store.revert_deadline is None
+        data = hass_storage[DOMAIN]["data"]
+        assert data["pending"] is None
+        assert data["stable"]["server_port"] == 8123
+        assert data["stable"]["trusted_proxies"] == ["10.0.0.0/24"]
+        assert data["yaml_migration_done"] is True
+        assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml") is not None
+
+        # Nothing was staged for trial: no auto-revert restart fires.
+        freezer.tick(AUTO_REVERT_DELAY)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert len(restart_calls) == 0
+
+
+@pytest.mark.usefixtures("freezer")
+async def test_yaml_without_port_means_historical_default_without_store(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """An absent YAML port means 8123 even when there is no store.
+
+    Without a store (e.g. a YAML-only backup restored to a fresh install),
+    stable is the built-in default config — port 80 under Supervisor. The
+    absent YAML port must still be interpreted as the historical YAML
+    default 8123, not as the environment-dependent default the YAML author
+    never expressed.
+    """
+    yaml_conf = {
+        "use_x_forwarded_for": True,
+        "trusted_proxies": ["10.0.0.0/24"],
+    }
+
+    with _supervisor_default_config():
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: yaml_conf})
+        assert await async_setup_component(hass, "onboarding", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+        # The YAML config differs from the default stable, so it is trialed
+        # as pending — on the port the YAML config always meant.
+        assert hass.config.api.port == 8123
+        store = await async_get_and_load_store(hass)
+        assert store.active_config_type is ActiveConfigType.PENDING
+        data = hass_storage[DOMAIN]["data"]
+        assert data["pending"]["server_port"] == 8123
+        assert data["pending"]["trusted_proxies"] == ["10.0.0.0/24"]
+        assert data["stable"]["server_port"] == 80
+
+
 @pytest.mark.usefixtures("freezer")
 async def test_setup_migrates_v2_1_storage_to_v2_2(
     hass: HomeAssistant,

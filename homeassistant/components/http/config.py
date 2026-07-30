@@ -477,6 +477,13 @@ class HTTPConfigStore:
     async def async_migrate_yaml(self, config: ConfData) -> None:
         """Migrate YAML config to storage as pending if not the same as the config used for recovery."""
         await self.async_load()
+        if CONF_SERVER_PORT not in config:
+            # An absent port in YAML has always meant SERVER_PORT (8123).
+            # Filling in the current default instead would reinterpret the
+            # config now that the default depends on the environment (port 80
+            # under Supervisor) and stage an unwanted port change as a
+            # pending trial.
+            config = cast(ConfData, {**config, CONF_SERVER_PORT: SERVER_PORT})
         validated_config = cast(ConfData, HTTP_STORAGE_SCHEMA(config))
         if self._stable_differs_only_by_lost_proxy_masks(validated_config):
             # Releases up to 2026.7.1 dropped the network mask when storing
