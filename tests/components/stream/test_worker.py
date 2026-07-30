@@ -228,6 +228,7 @@ class FakePyAvBuffer:
         self.audio_packets = []
         self.video_packets = []
         self.memory_file: io.BytesIO | None = None
+        self.closed = False
         self.mux_side_effects = []
         self.close_side_effect = None
 
@@ -267,6 +268,7 @@ class FakePyAvBuffer:
 
     def close(self):
         """Close the buffer."""
+        self.closed = True
         if self.close_side_effect:
             raise self.close_side_effect
         # Make the final segment data available to the worker
@@ -504,13 +506,16 @@ async def test_stream_worker_muxer_initialization_error(
 
     with (
         patch("av.open", new=py_av.open),
-        patch.object(StreamMuxer, "make_new_av", side_effect=exception),
+        patch.object(StreamMuxer, "_add_stream_from_template", side_effect=exception),
         pytest.raises(
             StreamWorkerError,
             match=r"Error initializing stream muxer \(\[mp4\] dimensions not set\)",
         ),
     ):
         run_worker(hass, stream, STREAM_SOURCE)
+    assert py_av.capture_buffer.closed
+    assert py_av.capture_buffer.memory_file is not None
+    assert py_av.capture_buffer.memory_file.closed
     assert py_av.container.closed
 
 
@@ -638,6 +643,21 @@ async def test_stream_worker_close_failures_preserve_first_error(
             id="ipv6_auth_query",
         ),
         pytest.param(
+            "rtsp://example.invalid/live?AUTH=query-secret",
+            "rtsp://example.invalid/live?AUTH=****",
+            id="uppercase_auth_query",
+        ),
+        pytest.param(
+            "rtsp://example.invalid/live?USER=query-secret",
+            "rtsp://example.invalid/live?USER=****",
+            id="uppercase_user_query",
+        ),
+        pytest.param(
+            "rtsp://example.invalid/live?PASSWORD=query-secret",
+            "rtsp://example.invalid/live?PASSWORD=****",
+            id="uppercase_password_query",
+        ),
+        pytest.param(
             "rtsp://user:secret@example.invalid:notaport/live?auth=query-secret",
             "rtsp://****:****@example.invalid:notaport/live?auth=****",
             id="malformed_port",
@@ -646,6 +666,41 @@ async def test_stream_worker_close_failures_preserve_first_error(
             "rtsp://:secret@example.invalid:notaport/live?auth=query-secret",
             "rtsp://****:****@example.invalid:notaport/live?auth=****",
             id="malformed_port_empty_username",
+        ),
+        pytest.param(
+            "rtsp://user:secret@",
+            "rtsp://****:****@",
+            id="malformed_url_without_host",
+        ),
+        pytest.param(
+            "rtsp://:secret@",
+            "rtsp://:****@",
+            id="malformed_url_without_host_empty_username",
+        ),
+        pytest.param(
+            "rtsp://u!$&'()*+,;=:p!$&'()*+,;=@",
+            "rtsp://****:****@",
+            id="userinfo_with_rfc_punctuation",
+        ),
+        pytest.param(
+            "rtsp://user%40name:pa%3Ass%40word@",
+            "rtsp://****:****@",
+            id="percent_encoded_userinfo",
+        ),
+        pytest.param(
+            "rtsp://user:secret@[::1?auth=query-secret",
+            "rtsp://****:****@[::1?auth=****",
+            id="malformed_ipv6_with_auth_query",
+        ),
+        pytest.param(
+            "rtsp://user:pa?ss@",
+            "rtsp://****:****@",
+            id="malformed_userinfo_with_question_mark",
+        ),
+        pytest.param(
+            "rtsp://user:pa#ss@",
+            "rtsp://****:****@",
+            id="malformed_userinfo_with_fragment_marker",
         ),
     ],
 )

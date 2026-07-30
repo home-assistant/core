@@ -48,18 +48,9 @@ from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
 NEGATIVE_INF = -math.inf
-URL_PATTERN = re.compile(
-    r"[a-z][a-z0-9+.-]*://"
-    r"(?:[^\s@/?#]*@)?"
-    r"(?:\[[^\s/'\"<>()\[\]{},]+\](?::[^\s/'\"<>()\[\]{},]+)?"
-    r"|[^\s/@'\"<>()\[\]{},]+)"
-    r"(?:[/?#][^\s'\"<>()\[\]{}]*)?",
-    re.IGNORECASE,
-)
+URL_PATTERN = re.compile(r"[a-z][a-z0-9+.-]*://\S+", re.IGNORECASE)
 URL_USERINFO_PATTERN = re.compile(
-    r"(?P<scheme>[a-z][a-z0-9+.-]*://)[^\s@/?#:]*"
-    r"(?::(?P<password>[^\s@/?#]*))?@",
-    re.IGNORECASE,
+    r"(?P<scheme>[a-z][a-z0-9+.-]*://)(?P<userinfo>\S*)@", re.IGNORECASE
 )
 SENSITIVE_QUERY_PARAM_PATTERN = re.compile(
     r"(?P<prefix>[?&](?:auth|user|password)=)[^&#\s]*", re.IGNORECASE
@@ -68,7 +59,7 @@ SENSITIVE_QUERY_PARAM_PATTERN = re.compile(
 
 def _redact_url_userinfo(match: re.Match[str]) -> str:
     """Redact URL userinfo without parsing the URL."""
-    if match["password"] is None:
+    if ":" not in match["userinfo"]:
         return f"{match['scheme']}****@"
     return f"{match['scheme']}****:****@"
 
@@ -76,10 +67,10 @@ def _redact_url_userinfo(match: re.Match[str]) -> str:
 def redact_url(url: str) -> str:
     """Redact credentials from a URL, including malformed URLs."""
     try:
-        return redact_credentials(url)
+        redacted_url = redact_credentials(url)
     except ValueError:
-        url = URL_USERINFO_PATTERN.sub(_redact_url_userinfo, url)
-        return SENSITIVE_QUERY_PARAM_PATTERN.sub(r"\g<prefix>****", url)
+        redacted_url = URL_USERINFO_PATTERN.sub(_redact_url_userinfo, url)
+    return SENSITIVE_QUERY_PARAM_PATTERN.sub(r"\g<prefix>****", redacted_url)
 
 
 def redact_av_error_string(err: av.FFmpegError | ValueError) -> str:
