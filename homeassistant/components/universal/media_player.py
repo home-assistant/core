@@ -194,7 +194,10 @@ async def async_setup_entry(
         CONF_CHILDREN: options.get(CONF_CHILDREN, []),
         CONF_COMMANDS: commands,
         CONF_ATTRS: raw_attrs,
-        CONF_UNIQUE_ID: config_entry.entry_id,
+        # Entries imported from YAML keep their original unique_id so the
+        # entity registry entry (and any user customisations) survive the
+        # migration; UI-created entries fall back to the entry_id.
+        CONF_UNIQUE_ID: config_entry.unique_id or config_entry.entry_id,
         CONF_BROWSE_MEDIA_ENTITY: options.get(CONF_BROWSE_MEDIA_ENTITY),
         CONF_DEVICE_CLASS: options.get(CONF_DEVICE_CLASS),
         CONF_ACTIVE_CHILD_TEMPLATE: options.get(CONF_ACTIVE_CHILD_TEMPLATE),

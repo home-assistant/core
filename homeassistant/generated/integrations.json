@@ -7650,12 +7650,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "universal": {
-      "name": "Universal media player",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "calculated"
-    },
     "upb": {
       "name": "Universal Powerline Bus (UPB)",
       "integration_type": "hub",
@@ -8526,6 +8520,12 @@
       "iot_class": "calculated"
     },
     "trend": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
+    "universal": {
+      "name": "Universal media player",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"

@@ -1,15 +1,13 @@
 """Config flow for the Universal media player integration."""
 
-from __future__ import annotations
-
-import logging
 from collections.abc import Mapping
-from typing import Any
+import logging
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import SERVICE_SELECT_SOURCE
-from homeassistant.config_entries import ConfigFlowResult, SOURCE_IMPORT
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_NAME,
     SERVICE_TURN_OFF,
@@ -25,7 +23,12 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
 )
 
-from .media_player import CONF_ATTRS, CONF_BROWSE_MEDIA_ENTITY, CONF_CHILDREN, CONF_COMMANDS
+from .media_player import (
+    CONF_ATTRS,
+    CONF_BROWSE_MEDIA_ENTITY,
+    CONF_CHILDREN,
+    CONF_COMMANDS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,15 +101,16 @@ class UniversalFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return options[CONF_NAME]
 
-    async def async_step_import(
-        self, import_data: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a Universal media player from YAML configuration."""
-        unique_id: str = import_data.get("unique_id") or f"yaml_{import_data[CONF_NAME]}"
+        unique_id: str = (
+            import_data.get("unique_id") or f"yaml_{import_data[CONF_NAME]}"
+        )
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
@@ -137,7 +141,7 @@ class UniversalFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
                 "Universal media player '%s' is configured via YAML, which is "
                 "deprecated. Remove it from your configuration.yaml and recreate "
                 "it through the UI (Settings → Devices & services → Add integration "
-                "→ Universal media player)."
+                "→ Universal media player)"
             ),
             import_data[CONF_NAME],
         )

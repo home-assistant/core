@@ -22,6 +22,7 @@ FLOWS = {
         "threshold",
         "tod",
         "trend",
+        "universal",
         "utility_meter",
     ],
     "integration": [

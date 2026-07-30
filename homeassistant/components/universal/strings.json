@@ -1,71 +1,72 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
     "step": {
-      "user": {
-        "title": "Universal media player",
+      "commands": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "children": "Child media players"
+          "select_source": "Select source",
+          "turn_off": "Turn off",
+          "turn_on": "Turn on",
+          "volume_down": "Volume down",
+          "volume_mute": "Volume mute",
+          "volume_up": "Volume up"
+        },
+        "data_description": {
+          "select_source": "Action to run when a source is selected. Receives variable `source`.",
+          "turn_off": "Action to run when the player is turned off.",
+          "turn_on": "Action to run when the player is turned on (e.g. power on an AV receiver or run a script).",
+          "volume_down": "Action to run when volume down is pressed.",
+          "volume_mute": "Action to run when muting or unmuting. Receives variable `media_player_volume_muted` (boolean).",
+          "volume_up": "Action to run when volume up is pressed (e.g. route to a dedicated amplifier)."
+        },
+        "description": "Map each media command to an action on a specific device. Leave empty to delegate the command to the active child player.",
+        "title": "Command routing"
+      },
+      "user": {
+        "data": {
+          "children": "Child media players",
+          "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
           "children": "Media player entities whose state and playback commands this player will aggregate."
-        }
-      },
-      "commands": {
-        "title": "Command routing",
-        "description": "Map each media command to an action on a specific device. Leave empty to delegate the command to the active child player.",
-        "data": {
-          "turn_on": "Turn on",
-          "turn_off": "Turn off",
-          "volume_up": "Volume up",
-          "volume_down": "Volume down",
-          "volume_mute": "Volume mute",
-          "select_source": "Select source"
         },
-        "data_description": {
-          "turn_on": "Action to run when the player is turned on (e.g. power on an AV receiver or run a script).",
-          "turn_off": "Action to run when the player is turned off.",
-          "volume_up": "Action to run when volume up is pressed (e.g. route to a dedicated amplifier).",
-          "volume_down": "Action to run when volume down is pressed.",
-          "volume_mute": "Action to run when muting or unmuting. Receives variable `media_player_volume_muted` (boolean).",
-          "select_source": "Action to run when a source is selected. Receives variable `source`."
-        }
+        "description": "Combine one or more media players into a single media player entity.",
+        "title": "Universal media player"
       }
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "options": {
     "step": {
+      "commands": {
+        "data": {
+          "select_source": "[%key:component::universal::config::step::commands::data::select_source%]",
+          "turn_off": "[%key:component::universal::config::step::commands::data::turn_off%]",
+          "turn_on": "[%key:component::universal::config::step::commands::data::turn_on%]",
+          "volume_down": "[%key:component::universal::config::step::commands::data::volume_down%]",
+          "volume_mute": "[%key:component::universal::config::step::commands::data::volume_mute%]",
+          "volume_up": "[%key:component::universal::config::step::commands::data::volume_up%]"
+        },
+        "data_description": {
+          "select_source": "[%key:component::universal::config::step::commands::data_description::select_source%]",
+          "turn_off": "[%key:component::universal::config::step::commands::data_description::turn_off%]",
+          "turn_on": "[%key:component::universal::config::step::commands::data_description::turn_on%]",
+          "volume_down": "[%key:component::universal::config::step::commands::data_description::volume_down%]",
+          "volume_mute": "[%key:component::universal::config::step::commands::data_description::volume_mute%]",
+          "volume_up": "[%key:component::universal::config::step::commands::data_description::volume_up%]"
+        },
+        "description": "[%key:component::universal::config::step::commands::description%]",
+        "title": "[%key:component::universal::config::step::commands::title%]"
+      },
       "init": {
-        "title": "Universal media player",
         "data": {
           "children": "[%key:component::universal::config::step::user::data::children%]"
         },
         "data_description": {
           "children": "[%key:component::universal::config::step::user::data_description::children%]"
-        }
-      },
-      "commands": {
-        "title": "[%key:component::universal::config::step::commands::title%]",
-        "description": "[%key:component::universal::config::step::commands::description%]",
-        "data": {
-          "turn_on": "[%key:component::universal::config::step::commands::data::turn_on%]",
-          "turn_off": "[%key:component::universal::config::step::commands::data::turn_off%]",
-          "volume_up": "[%key:component::universal::config::step::commands::data::volume_up%]",
-          "volume_down": "[%key:component::universal::config::step::commands::data::volume_down%]",
-          "volume_mute": "[%key:component::universal::config::step::commands::data::volume_mute%]",
-          "select_source": "[%key:component::universal::config::step::commands::data::select_source%]"
         },
-        "data_description": {
-          "turn_on": "[%key:component::universal::config::step::commands::data_description::turn_on%]",
-          "turn_off": "[%key:component::universal::config::step::commands::data_description::turn_off%]",
-          "volume_up": "[%key:component::universal::config::step::commands::data_description::volume_up%]",
-          "volume_down": "[%key:component::universal::config::step::commands::data_description::volume_down%]",
-          "volume_mute": "[%key:component::universal::config::step::commands::data_description::volume_mute%]",
-          "select_source": "[%key:component::universal::config::step::commands::data_description::select_source%]"
-        }
+        "title": "Universal media player"
       }
     }
   },

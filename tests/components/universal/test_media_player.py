@@ -28,7 +28,12 @@ from homeassistant.helpers.entity import EntityPlatformState
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockEntityPlatform, async_mock_service, get_fixture_path
+from tests.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    async_mock_service,
+    get_fixture_path,
+)
 
 CONFIG_CHILDREN_ONLY = {
     "name": "test",
@@ -1414,3 +1419,60 @@ async def test_reload(hass: HomeAssistant) -> None:
         "device_class" not in hass.states.get("media_player.master_bed_tv").attributes
     )
     assert "unique_id" not in hass.states.get("media_player.master_bed_tv").attributes
+
+
+async def test_async_setup_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_states: Mock
+) -> None:
+    """Test setting up the platform from a config entry."""
+    config_entry = MockConfigEntry(
+        domain=universal.DOMAIN,
+        title="Config entry TV",
+        options={
+            "name": "Config entry TV",
+            "children": [
+                media_player.ENTITY_ID_FORMAT.format("mock1"),
+                media_player.ENTITY_ID_FORMAT.format("mock2"),
+            ],
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        media_player.DOMAIN, universal.DOMAIN, config_entry.entry_id
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    mock_states.mock_mp_1._state = STATE_PLAYING
+    mock_states.mock_mp_1.async_schedule_update_ha_state()
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_PLAYING
+
+
+async def test_async_setup_entry_commands(hass: HomeAssistant) -> None:
+    """Test commands configured through a config entry are routed correctly."""
+    service = async_mock_service(hass, "test", "turn_off")
+
+    config_entry = MockConfigEntry(
+        domain=universal.DOMAIN,
+        title="Entry commands",
+        options={
+            "name": "Entry commands",
+            "children": [],
+            "turn_off": [{"action": "test.turn_off", "data": {}}],
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_TURN_OFF,
+        {"entity_id": "media_player.entry_commands"},
+        blocking=True,
+    )
+    assert len(service) == 1
