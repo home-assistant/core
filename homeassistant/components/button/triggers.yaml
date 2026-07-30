@@ -1,4 +1,17 @@
+.event_button_target: &event_button_target
+  entity:
+    domain: event
+    device_class: button
+
 pressed:
   target:
     entity:
-      domain: button
+      - domain: button
+      - domain: event
+        device_class: button
+double_pressed:
+  target: *event_button_target
+hold_started:
+  target: *event_button_target
+hold_ended:
+  target: *event_button_target
