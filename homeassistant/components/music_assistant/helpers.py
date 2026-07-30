@@ -90,26 +90,3 @@ async def async_verify_mass_username_availability(
                 "available_usernames": ", ".join(available_usernames),
             },
         )
-
-
-def verify_parameter_support(
-    mass: MusicAssistantClient,
-    parameter: str,
-    min_schema_version: int,
-    min_stable_version: str,
-) -> None:
-    """Raise if the API schema is too low for a parameter.
-
-    The exception message gives the minimum required stable version.
-    """
-    if TYPE_CHECKING:
-        assert mass.server_info
-    if mass.server_info.schema_version < min_schema_version:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="unsupported_parameter",
-            translation_placeholders={
-                "parameter": parameter,
-                "version": min_stable_version,
-            },
-        )

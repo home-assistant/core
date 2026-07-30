@@ -54,11 +54,7 @@ from .const import (
     ATTR_USERNAME,
     DOMAIN,
 )
-from .helpers import (
-    async_verify_mass_username_availability,
-    get_music_assistant_client,
-    verify_parameter_support,
-)
+from .helpers import async_verify_mass_username_availability, get_music_assistant_client
 from .schemas import (
     LIBRARY_RESULTS_SCHEMA,
     SEARCH_RESULT_SCHEMA,
@@ -191,7 +187,17 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
     search_album = call.data.get(ATTR_SEARCH_ALBUM)
     search_username = call.data.get(ATTR_USERNAME)
     if search_username is not None:
-        verify_parameter_support(mass, ATTR_USERNAME, 35, "2.10")
+        if TYPE_CHECKING:
+            assert mass.server_info
+        if mass.server_info.schema_version < 35:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_parameter",
+                translation_placeholders={
+                    "parameter": ATTR_USERNAME,
+                    "version": "2.10",
+                },
+            )
         await async_verify_mass_username_availability(
             mass=mass, username=search_username
         )
