@@ -47,15 +47,20 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def default_server_port() -> int:
+def default_server_port(ignore_supervisor_default_port: bool = False) -> int:
     """Return the default HTTP server port.
 
     Under Supervisor the default is port 80, since Supervisor fronts Core on
     the standard HTTP port; otherwise the default is ``SERVER_PORT``. The
     default can be overridden via the ``SETUP_PORT`` environment variable; an
     invalid value is ignored in favor of the default.
+    If ``ignore_supervisor_default_port`` is True, the Supervisor default port is ignored and the previous default port (``SERVER_PORT``) is returned instead.
     """
-    default = SUPERVISOR_DEFAULT_PORT if ENV_SUPERVISOR in os.environ else SERVER_PORT
+    default = (
+        SUPERVISOR_DEFAULT_PORT
+        if ENV_SUPERVISOR in os.environ and not ignore_supervisor_default_port
+        else SERVER_PORT
+    )
     if (env_value := os.environ.get(ENV_SETUP_PORT)) is None:
         return default
     try:
@@ -477,7 +482,12 @@ class HTTPConfigStore:
     async def async_migrate_yaml(self, config: ConfData) -> None:
         """Migrate YAML config to storage as pending if not the same as the config used for recovery."""
         await self.async_load()
-        validated_config = cast(ConfData, HTTP_STORAGE_SCHEMA(config))
+        validated_config = cast(
+            ConfData,
+            HTTP_STORAGE_SCHEMA(
+                {CONF_SERVER_PORT: default_server_port(True), **config}
+            ),
+        )
         if self._stable_differs_only_by_lost_proxy_masks(validated_config):
             # Releases up to 2026.7.1 dropped the network mask when storing
             # trusted proxies, and the v1->v2 store migration turned those
