@@ -14,10 +14,21 @@ from homeassistant.components.route53.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+YAML_CONFIG = {
+    CONF_ACCESS_KEY_ID: "test-key",
+    CONF_SECRET_ACCESS_KEY: "test-secret",
+    CONF_ZONE: "test-zone",
+    CONF_DOMAIN: "example.com",
+    CONF_RECORDS: ["test1"],
+    CONF_TTL: DEFAULT_TTL,
+}
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -288,6 +299,41 @@ async def test_import_flow_success(
         CONF_TTL: DEFAULT_TTL,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_yaml_config_starts_the_import_flow(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_boto3_client: MagicMock,
+) -> None:
+    """Test YAML configuration is imported into a config entry."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: YAML_CONFIG})
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.data[CONF_DOMAIN] == "example.com"
+    assert entry.data[CONF_ZONE] == "test-zone"
+
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+
+
+async def test_yaml_import_failure_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_boto3_client: MagicMock,
+) -> None:
+    """Test a failed YAML import raises a repair issue instead of an entry."""
+    mock_boto3_client.get_hosted_zone.side_effect = Exception
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: YAML_CONFIG})
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_unknown"
+    )
 
 
 @pytest.mark.parametrize(

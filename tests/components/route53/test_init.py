@@ -18,10 +18,8 @@ from homeassistant.components.route53.const import (
 from homeassistant.components.route53.helpers import IPIFY_URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
@@ -58,40 +56,6 @@ async def test_setup_and_unload(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     # The action stays registered; it is shared by every loaded entry
     assert hass.services.has_service(DOMAIN, "update_records")
-
-
-async def test_yaml_import_creates_entry(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test YAML configuration is imported into a config entry."""
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: YAML_CONFIG})
-    await hass.async_block_till_done()
-
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.data[CONF_DOMAIN] == "example.com"
-    assert entry.data[CONF_ZONE] == "test-zone"
-
-    assert issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
-
-
-async def test_yaml_import_failure_creates_issue(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_boto3_client: MagicMock,
-) -> None:
-    """Test a failed YAML import raises a repair issue."""
-    mock_boto3_client.get_hosted_zone.side_effect = Exception
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: YAML_CONFIG})
-    await hass.async_block_till_done()
-
-    assert not hass.config_entries.async_entries(DOMAIN)
-    assert issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_unknown"
-    )
 
 
 async def test_action_updates_records(
