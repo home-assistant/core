@@ -376,8 +376,10 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
             )
             or not (results := entity_response.result)
         ):
-            # No results found
-            return intent_obj.create_response()
+            # Nothing was found to play. Reporting that as done leaves the
+            # assistant telling the user it is playing something that was
+            # never found, because the response is a plain success otherwise.
+            raise intent.IntentHandleError(f"No results found for {search_query}")
 
         # 2. Play Media (first result)
         first_result = results[0]
