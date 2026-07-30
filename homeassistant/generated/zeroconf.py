@@ -1062,6 +1062,12 @@ ZEROCONF = {
             "domain": "wled",
         },
     ],
+    "_ws._tcp.local.": [
+        {
+            "domain": "hotspring",
+            "name": "ConnectedSpa*",
+        },
+    ],
     "_wyoming._tcp.local.": [
         {
             "domain": "wyoming",
