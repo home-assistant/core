@@ -1,6 +1,7 @@
 """Viessmann ViCare water_heater device."""
 
 from contextlib import suppress
+from datetime import time as dt_time
 import logging
 import re
 from typing import Any, override
@@ -44,26 +45,33 @@ CIRCULATION_SCHEDULE_DAYS = (
     ("saturday", "sat"),
     ("sunday", "sun"),
 )
-CIRCULATION_SCHEDULE_TIME_PATTERN = r"^([01]\d|2[0-3]):[0-5]\d$"
 # ViCare represents midnight as the end of a slot using "24:00" rather than "00:00".
-CIRCULATION_SCHEDULE_END_TIME_PATTERN = r"^([01]\d|2[0-3]):[0-5]\d$|^24:00$"
+# The native time selector cannot express that, so an end time of exactly midnight
+# is treated as the sentinel for "24:00" once serialized back to the ViCare API.
+CIRCULATION_SCHEDULE_MIDNIGHT_END = "24:00"
+
+
+def _parse_end_time(value: Any) -> dt_time:
+    """Parse a slot end time, accepting the literal "24:00" for midnight."""
+    if value == CIRCULATION_SCHEDULE_MIDNIGHT_END:
+        return dt_time(0, 0)
+    return cv.time(value)
 
 
 def _validate_slot_resolution(slot: dict[str, Any]) -> dict[str, Any]:
     """Validate that start/end times fall on a 10-minute resolution."""
-    for key in ("start", "end"):
-        if int(slot[key].split(":")[1]) % 10 != 0:
-            raise vol.Invalid(f"{key} must be at a 10-minute resolution: {slot[key]}")
+    for key in ("start_time", "end_time"):
+        value: dt_time = slot[key]
+        if value.second or value.minute % 10 != 0:
+            raise vol.Invalid(f"{key} must be at a 10-minute resolution: {value}")
     return slot
 
 
 CIRCULATION_SCHEDULE_SLOT_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Required("start"): cv.matches_regex(CIRCULATION_SCHEDULE_TIME_PATTERN),
-            vol.Required("end"): cv.matches_regex(
-                CIRCULATION_SCHEDULE_END_TIME_PATTERN
-            ),
+            vol.Required("start_time"): cv.time,
+            vol.Required("end_time"): _parse_end_time,
             vol.Required("mode"): cv.string,
             vol.Required("position"): vol.All(int, vol.Range(min=0)),
         }
@@ -78,6 +86,22 @@ CIRCULATION_SCHEDULE_SCHEMA: VolDictType = {
     )
     for day_name, _ in CIRCULATION_SCHEDULE_DAYS
 }
+
+
+def _serialize_slot(slot: dict[str, Any]) -> dict[str, Any]:
+    """Convert a validated schedule slot into the ViCare API's wire format."""
+    end_time: dt_time = slot["end_time"]
+    end = (
+        CIRCULATION_SCHEDULE_MIDNIGHT_END
+        if end_time == dt_time(0, 0)
+        else end_time.strftime("%H:%M")
+    )
+    return {
+        "start": slot["start_time"].strftime("%H:%M"),
+        "end": end,
+        "mode": slot["mode"],
+        "position": slot["position"],
+    }
 
 
 def _to_snake_case(vicare_mode: str) -> str:
@@ -232,7 +256,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
                         )
 
         schedule = {
-            short_day: schedule_by_day[full_day]
+            short_day: [_serialize_slot(slot) for slot in schedule_by_day[full_day]]
             for full_day, short_day in CIRCULATION_SCHEDULE_DAYS
         }
         self._api.setDomesticHotWaterCirculationSchedule(schedule)

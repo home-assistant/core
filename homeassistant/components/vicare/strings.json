@@ -716,32 +716,32 @@
       "description": "Sets the DHW circulation pump weekly schedule.",
       "fields": {
         "friday": {
-          "description": "Circulation slots for Friday. Each slot has a start time (HH:MM), an end time (HH:MM, or 24:00 for midnight), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the entity's circulation_schedule attribute.",
-          "name": "Friday"
+          "description": "Circulation slots for Friday. Each slot has a start time, an end time (use 24:00 for midnight in YAML/scripts), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the entity's circulation_schedule attribute.",
+          "name": "[%key:common::time::friday%]"
         },
         "monday": {
-          "description": "Circulation slots for Monday. Each slot has a start time (HH:MM), an end time (HH:MM, or 24:00 for midnight), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the entity's circulation_schedule attribute.",
-          "name": "Monday"
+          "description": "Circulation slots for Monday. Each slot has a start time, an end time (use 24:00 for midnight in YAML/scripts), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the entity's circulation_schedule attribute.",
+          "name": "[%key:common::time::monday%]"
         },
         "saturday": {
-          "description": "Circulation slots for Saturday. Each slot has a start time (HH:MM), an end time (HH:MM, or 24:00 for midnight), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the entity's circulation_schedule attribute.",
-          "name": "Saturday"
+          "description": "Circulation slots for Saturday. Each slot has a start time, an end time (use 24:00 for midnight in YAML/scripts), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the entity's circulation_schedule attribute.",
+          "name": "[%key:common::time::saturday%]"
         },
         "sunday": {
-          "description": "Circulation slots for Sunday. Each slot has a start time (HH:MM), an end time (HH:MM, or 24:00 for midnight), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the entity's circulation_schedule attribute.",
-          "name": "Sunday"
+          "description": "Circulation slots for Sunday. Each slot has a start time, an end time (use 24:00 for midnight in YAML/scripts), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the entity's circulation_schedule attribute.",
+          "name": "[%key:common::time::sunday%]"
         },
         "thursday": {
-          "description": "Circulation slots for Thursday. Each slot has a start time (HH:MM), an end time (HH:MM, or 24:00 for midnight), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the entity's circulation_schedule attribute.",
-          "name": "Thursday"
+          "description": "Circulation slots for Thursday. Each slot has a start time, an end time (use 24:00 for midnight in YAML/scripts), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the entity's circulation_schedule attribute.",
+          "name": "[%key:common::time::thursday%]"
         },
         "tuesday": {
-          "description": "Circulation slots for Tuesday. Each slot has a start time (HH:MM), an end time (HH:MM, or 24:00 for midnight), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the entity's circulation_schedule attribute.",
-          "name": "Tuesday"
+          "description": "Circulation slots for Tuesday. Each slot has a start time, an end time (use 24:00 for midnight in YAML/scripts), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the entity's circulation_schedule attribute.",
+          "name": "[%key:common::time::tuesday%]"
         },
         "wednesday": {
-          "description": "Circulation slots for Wednesday. Each slot has a start time (HH:MM), an end time (HH:MM, or 24:00 for midnight), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the entity's circulation_schedule attribute.",
-          "name": "Wednesday"
+          "description": "Circulation slots for Wednesday. Each slot has a start time, an end time (use 24:00 for midnight in YAML/scripts), a mode, and a position. The number of slots per day, the 10-minute time resolution, and the supported modes are limited by the device; see the entity's circulation_schedule attribute.",
+          "name": "[%key:common::time::wednesday%]"
         }
       },
       "name": "Set circulation schedule"

@@ -8,24 +8,25 @@ set_circulation_schedule:
       selector:
         object:
           multiple: true
-          label_field: start
-          description_field: end
+          label_field: start_time
+          description_field: end_time
           fields:
-            start:
+            start_time:
               required: true
               selector:
-                text:
-            end:
+                time:
+            end_time:
               required: true
               selector:
-                text:
+                time:
             mode:
               required: true
               selector:
                 select:
                   options:
                     - "on"
-                    - "off"
+                    - "5/25-cycles"
+                    - "5/10-cycles"
                   custom_value: true
                   mode: dropdown
             position:
@@ -38,17 +39,17 @@ set_circulation_schedule:
       selector:
         object:
           multiple: true
-          label_field: start
-          description_field: end
+          label_field: start_time
+          description_field: end_time
           fields:
-            start:
+            start_time:
               required: true
               selector:
-                text:
-            end:
+                time:
+            end_time:
               required: true
               selector:
-                text:
+                time:
             mode:
               required: true
               selector:
@@ -69,17 +70,17 @@ set_circulation_schedule:
       selector:
         object:
           multiple: true
-          label_field: start
-          description_field: end
+          label_field: start_time
+          description_field: end_time
           fields:
-            start:
+            start_time:
               required: true
               selector:
-                text:
-            end:
+                time:
+            end_time:
               required: true
               selector:
-                text:
+                time:
             mode:
               required: true
               selector:
@@ -100,17 +101,17 @@ set_circulation_schedule:
       selector:
         object:
           multiple: true
-          label_field: start
-          description_field: end
+          label_field: start_time
+          description_field: end_time
           fields:
-            start:
+            start_time:
               required: true
               selector:
-                text:
-            end:
+                time:
+            end_time:
               required: true
               selector:
-                text:
+                time:
             mode:
               required: true
               selector:
@@ -131,17 +132,17 @@ set_circulation_schedule:
       selector:
         object:
           multiple: true
-          label_field: start
-          description_field: end
+          label_field: start_time
+          description_field: end_time
           fields:
-            start:
+            start_time:
               required: true
               selector:
-                text:
-            end:
+                time:
+            end_time:
               required: true
               selector:
-                text:
+                time:
             mode:
               required: true
               selector:
@@ -162,17 +163,17 @@ set_circulation_schedule:
       selector:
         object:
           multiple: true
-          label_field: start
-          description_field: end
+          label_field: start_time
+          description_field: end_time
           fields:
-            start:
+            start_time:
               required: true
               selector:
-                text:
-            end:
+                time:
+            end_time:
               required: true
               selector:
-                text:
+                time:
             mode:
               required: true
               selector:
@@ -193,17 +194,17 @@ set_circulation_schedule:
       selector:
         object:
           multiple: true
-          label_field: start
-          description_field: end
+          label_field: start_time
+          description_field: end_time
           fields:
-            start:
+            start_time:
               required: true
               selector:
-                text:
-            end:
+                time:
+            end_time:
               required: true
               selector:
-                text:
+                time:
             mode:
               required: true
               selector:

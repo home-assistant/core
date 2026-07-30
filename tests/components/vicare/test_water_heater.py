@@ -386,7 +386,12 @@ async def test_set_circulation_schedule_service(
                 ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
                 **_EMPTY_CIRCULATION_SCHEDULE_DAYS,
                 "monday": [
-                    {"start": "06:00", "end": "22:00", "mode": "on", "position": 0}
+                    {
+                        "start_time": "06:00",
+                        "end_time": "22:00",
+                        "mode": "on",
+                        "position": 0,
+                    }
                 ],
             },
             blocking=True,
@@ -435,7 +440,12 @@ async def test_set_circulation_schedule_service_midnight_end(
                 ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
                 **_EMPTY_CIRCULATION_SCHEDULE_DAYS,
                 "monday": [
-                    {"start": "16:30", "end": "24:00", "mode": "on", "position": 0}
+                    {
+                        "start_time": "16:30",
+                        "end_time": "24:00",
+                        "mode": "on",
+                        "position": 0,
+                    }
                 ],
             },
             blocking=True,
@@ -462,6 +472,10 @@ async def test_set_circulation_schedule_service_at_device_max_entries(
 ) -> None:
     """Test set_circulation_schedule accepts a schedule at the device's maxEntries."""
     monday_slots = [
+        {"start_time": "06:00", "end_time": "07:00", "mode": "on", "position": i}
+        for i in range(8)
+    ]
+    expected_monday_slots = [
         {"start": "06:00", "end": "07:00", "mode": "on", "position": i}
         for i in range(8)
     ]
@@ -499,7 +513,7 @@ async def test_set_circulation_schedule_service_at_device_max_entries(
         )
         mock_set.assert_called_once_with(
             {
-                "mon": monday_slots,
+                "mon": expected_monday_slots,
                 "tue": [],
                 "wed": [],
                 "thu": [],
@@ -517,7 +531,7 @@ async def test_set_circulation_schedule_service_exceeds_device_max_entries(
 ) -> None:
     """Test set_circulation_schedule rejects a schedule exceeding the device's maxEntries."""
     monday_slots = [
-        {"start": "06:00", "end": "07:00", "mode": "on", "position": i}
+        {"start_time": "06:00", "end_time": "07:00", "mode": "on", "position": i}
         for i in range(9)
     ]
     with (
@@ -591,8 +605,8 @@ async def test_set_circulation_schedule_service_unsupported_mode(
                     **_EMPTY_CIRCULATION_SCHEDULE_DAYS,
                     "monday": [
                         {
-                            "start": "06:00",
-                            "end": "07:00",
+                            "start_time": "06:00",
+                            "end_time": "07:00",
                             "mode": "unsupported-mode",
                             "position": 0,
                         }
