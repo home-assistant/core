@@ -235,7 +235,6 @@ async def test_setup_too_old(
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
     assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
-    # assert the version gate is what failed, not some later step
     assert ufp.entry.error_reason_translation_key == "protect_version"
 
 
