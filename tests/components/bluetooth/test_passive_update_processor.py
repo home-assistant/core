@@ -1982,3 +1982,50 @@ def test_deserialize_entity_description(
     """Test deserializing an entity description."""
     description = deserialize_entity_description(description_type, description_dict)
     assert description == expected_description
+
+
+def test_update_clears_names_missing_from_the_update() -> None:
+    """Test stored entity names are cleared when an update stops providing them.
+
+    Names restored from storage must not stick around once the integration
+    stops naming its entities, else entities keep stale names forever.
+    """
+    temperature_key = PassiveBluetoothEntityKey("temperature", None)
+    pressure_key = PassiveBluetoothEntityKey("pressure", None)
+    temperature_description = SensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    )
+    data = PassiveBluetoothDataUpdate(
+        devices={None: DeviceInfo(name="Test Device")},
+        entity_descriptions={temperature_key: temperature_description},
+        entity_names={temperature_key: "Temperature", pressure_key: "Pressure"},
+        entity_data={temperature_key: 14.5, pressure_key: 1234},
+    )
+    update_without_names = PassiveBluetoothDataUpdate(
+        devices={None: DeviceInfo(name="Test Device")},
+        entity_descriptions={temperature_key: temperature_description},
+        entity_names={},
+        entity_data={temperature_key: 15.5},
+    )
+
+    # The pressure name is untouched since the update does not include the key
+    assert data.update(update_without_names) == {temperature_key}
+    assert data.entity_names == {temperature_key: None, pressure_key: "Pressure"}
+
+    # A repeated update reports no changes
+    assert data.update(update_without_names) == set()
+
+    update_with_name = PassiveBluetoothDataUpdate(
+        devices={None: DeviceInfo(name="Test Device")},
+        entity_descriptions={temperature_key: temperature_description},
+        entity_names={temperature_key: "Custom name"},
+        entity_data={temperature_key: 15.5},
+    )
+
+    assert data.update(update_with_name) == {temperature_key}
+    assert data.entity_names == {
+        temperature_key: "Custom name",
+        pressure_key: "Pressure",
+    }
