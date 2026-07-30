@@ -123,20 +123,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ColorConfigEntry) -> bool:
-    """Add one entity per config entry."""
-    component = hass.data[DATA_COMPONENT]
-    entity = ColorEntity(entry)
+    """Set up the entity through a config-entry-backed platform.
+
+    Routing through EntityComponent.async_setup_entry links the entity
+    registry entry to the config entry, so registry cleanup on entry
+    removal is automatic.
+    """
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    await component.async_add_entities([entity])
-    entry.runtime_data = entity
-    return True
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ColorConfigEntry) -> bool:
-    """Remove the entity when the config entry is unloaded."""
-    component = hass.data[DATA_COMPONENT]
-    await component.async_remove_entity(entry.runtime_data.entity_id)
-    return True
+    """Unload the platform backing the config entry."""
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ColorConfigEntry) -> None:

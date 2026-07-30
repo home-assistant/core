@@ -19,6 +19,7 @@ from homeassistant.components.color.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -91,3 +92,31 @@ async def test_chromatic_entry_without_initial_color(hass: HomeAssistant) -> Non
     assert state is not None
     assert state.attributes[ATTR_KIND] == KIND_CHROMATIC
     assert state.attributes[ATTR_SOURCE_HEX] is None
+
+
+async def test_registry_entry_linked_to_config_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """The entity registry entry is linked to and cleaned up with the entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Couch Color",
+        data={
+            CONF_NAME: "Couch Color",
+            CONF_INITIAL_MODE: MODE_CHROMATIC,
+            CONF_INITIAL_COLOR: "#FF8000",
+        },
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry_entry = entity_registry.async_get(ENTITY_ID)
+    assert registry_entry is not None
+    assert registry_entry.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(ENTITY_ID) is None
+    assert hass.states.get(ENTITY_ID) is None
