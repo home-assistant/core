@@ -175,9 +175,7 @@ async def test_internal_behavior_instance_not_added(
 
     await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
 
-    # the internal instance is not exposed
     assert hass.states.get("switch.philips_hue_automation_wall_switch_hallway") is None
-    # while a regular automation still is
     assert hass.states.get("switch.philips_hue_automation_timer_test") is not None
     assert len(hass.states.async_all()) == 4
 
