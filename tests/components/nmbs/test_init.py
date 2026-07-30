@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import AsyncMock
 
 from pyrail.models import StationsApiResponse
+import pytest
 
 from homeassistant.components.nmbs.const import (
     CONF_STATION_FROM,
@@ -46,6 +47,44 @@ async def test_setup_entry_api_unavailable(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    ("station_from", "station_to", "missing_station"),
+    [
+        pytest.param(
+            "BE.NMBS.000000000",
+            "BE.NMBS.008814001",
+            "BE.NMBS.000000000",
+            id="departure",
+        ),
+        pytest.param(
+            "BE.NMBS.008812005", "BE.NMBS.000000000", "BE.NMBS.000000000", id="arrival"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_nmbs_client")
+async def test_setup_entry_unknown_station(
+    hass: HomeAssistant,
+    station_from: str,
+    station_to: str,
+    missing_station: str,
+) -> None:
+    """Test the entry errors when a configured station is not in the station list."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Train from an unknown station",
+        data={CONF_STATION_FROM: station_from, CONF_STATION_TO: station_to},
+        unique_id=f"{station_from}_{station_to}",
+    )
+    entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.error_reason_translation_key == "station_not_found"
+    assert entry.error_reason_translation_placeholders == {"station": missing_station}
+
+
 async def test_second_entry_reuses_station_list(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
@@ -70,7 +109,12 @@ async def test_second_entry_reuses_station_list(
     await hass.async_block_till_done()
 
     assert second_entry.state is ConfigEntryState.LOADED
-    assert second_entry.runtime_data is mock_config_entry.runtime_data
+    # The two entries use the same stations swapped, so resolving both against
+    # the same shared list yields the very same station objects.
+    assert (
+        second_entry.runtime_data.station_from
+        is mock_config_entry.runtime_data.station_to
+    )
     mock_nmbs_client.get_stations.assert_called_once()
 
 
@@ -118,7 +162,10 @@ async def test_concurrent_setup_shares_station_fetch(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert second_entry.state is ConfigEntryState.LOADED
-    assert second_entry.runtime_data is mock_config_entry.runtime_data
+    assert (
+        second_entry.runtime_data.station_from
+        is mock_config_entry.runtime_data.station_to
+    )
     mock_nmbs_client.get_stations.assert_called_once()
 
 

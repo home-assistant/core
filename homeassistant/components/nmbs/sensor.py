@@ -27,7 +27,6 @@ from .const import (  # noqa: F401
     CONF_STATION_TO,
     DOMAIN,
     PLATFORMS,
-    find_station,
     find_station_by_name,
 )
 
@@ -70,9 +69,8 @@ async def async_setup_entry(
     show_on_map = config_entry.data.get(CONF_SHOW_ON_MAP, False)
     excl_vias = config_entry.data.get(CONF_EXCLUDE_VIAS, False)
 
-    stations = config_entry.runtime_data
-    station_from = find_station(stations, config_entry.data[CONF_STATION_FROM])
-    station_to = find_station(stations, config_entry.data[CONF_STATION_TO])
+    station_from = config_entry.runtime_data.station_from
+    station_to = config_entry.runtime_data.station_to
 
     # setup the connection from station to station
     # setup a disabled liveboard for both from and to station
