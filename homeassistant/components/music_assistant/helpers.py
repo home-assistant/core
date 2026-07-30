@@ -77,8 +77,8 @@ async def async_resolve_mass_username(
 
 
 async def async_verify_mass_username_availability(
-    mass: MusicAssistantClient, username: str, raise_on_error: bool = False
-) -> bool:
+    mass: MusicAssistantClient, username: str
+) -> None:
     """Verify Music Assistant username availability for service calls."""
     available_usernames = await async_get_available_mass_usernames(mass)
     if username not in available_usernames and raise_on_error:
