@@ -69,7 +69,7 @@
           "turn_off": "Action to run when the player is turned off.",
           "turn_on": "Action to run when the player is turned on (e.g. power on an AV receiver or run a script).",
           "volume_down": "Action to run when volume down is pressed.",
-          "volume_mute": "Action to run when muting or unmuting. Receives variable `media_player_volume_muted` (boolean).",
+          "volume_mute": "Action to run when muting or unmuting. Receives variable `is_volume_muted` (boolean).",
           "volume_set": "Action to run when the volume is set to a specific level. Receives variable `volume_level`.",
           "volume_up": "Action to run when volume up is pressed (e.g. route to a dedicated amplifier)."
         },
