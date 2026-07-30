@@ -15,12 +15,8 @@
               'min': 2,
               'name': 'Fridge',
               'set_temperature_steps': list([
-                2,
-                4,
-                6,
-                8,
               ]),
-              'set_temperature_steps_enabled': True,
+              'set_temperature_steps_enabled': None,
               'target': 4,
               'type': 'fridge',
               'unit': '°C',
