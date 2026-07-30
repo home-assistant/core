@@ -3,21 +3,27 @@
 from binascii import unhexlify
 from collections.abc import Callable, Coroutine
 from copy import deepcopy
-from typing import TYPE_CHECKING
+import re
+from typing import TYPE_CHECKING, Any
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest
 import voluptuous as vol
 from zha.application.const import (
+    ATTR_ATTRIBUTE,
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
+    ATTR_COMMAND_TYPE,
     ATTR_ENDPOINT_ID,
     ATTR_ENDPOINT_NAMES,
     ATTR_IEEE,
     ATTR_MANUFACTURER,
     ATTR_NEIGHBORS,
+    ATTR_PARAMS,
     ATTR_QUIRK_APPLIED,
     ATTR_TYPE,
+    ATTR_VALUE,
+    CLUSTER_COMMAND_SERVER,
     CLUSTER_TYPE_IN,
 )
 from zha.zigbee.device import (
@@ -28,6 +34,7 @@ from zha.zigbee.device import (
 )
 import zigpy.backups
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+import zigpy.exceptions
 import zigpy.profiles.zha
 import zigpy.types
 from zigpy.types.named import EUI64
@@ -37,6 +44,7 @@ from zigpy.zcl.clusters.general import Groups
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.components.websocket_api import (
+    ERR_HOME_ASSISTANT_ERROR,
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     TYPE_RESULT,
@@ -51,6 +59,7 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.components.zha.websocket_api import (
     ATTR_DURATION,
+    ATTR_GROUP,
     ATTR_INSTALL_CODE,
     ATTR_QR_CODE,
     ATTR_SOURCE_IEEE,
@@ -60,12 +69,18 @@ from homeassistant.components.zha.websocket_api import (
     GROUP_IDS,
     GROUP_NAME,
     ID,
+    SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
+    SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND,
     SERVICE_PERMIT,
+    SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE,
+    SERVICE_WARNING_DEVICE_SQUAWK,
+    SERVICE_WARNING_DEVICE_WARN,
     TYPE,
     async_load_api,
 )
-from homeassistant.const import ATTR_MODEL, ATTR_NAME, Platform
+from homeassistant.const import ATTR_COMMAND, ATTR_MODEL, ATTR_NAME, Platform
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
 from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
@@ -75,6 +90,7 @@ from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
+IEEE_UNKNOWN_DEVICE = "01:2d:6f:00:0a:90:69:ff"
 
 if TYPE_CHECKING:
     from zigpy.application import ControllerApplication
@@ -1271,3 +1287,232 @@ async def test_websocket_reconfigure_device_not_found(
     assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_FOUND
+
+
+ISSUE_CLUSTER_COMMAND_DATA = {
+    ATTR_ENDPOINT_ID: 1,
+    ATTR_CLUSTER_ID: general.OnOff.cluster_id,
+    ATTR_COMMAND: general.OnOff.ServerCommandDefs.on.id,
+    ATTR_COMMAND_TYPE: CLUSTER_COMMAND_SERVER,
+    ATTR_PARAMS: {},
+}
+SET_CLUSTER_ATTRIBUTE_DATA = {
+    ATTR_ENDPOINT_ID: 1,
+    ATTR_CLUSTER_ID: general.OnOff.cluster_id,
+    ATTR_ATTRIBUTE: general.OnOff.AttributeDefs.start_up_on_off.id,
+    ATTR_VALUE: 1,
+}
+
+
+@pytest.mark.parametrize(
+    ("service", "data", "method", "side_effect", "message"),
+    [
+        pytest.param(
+            SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
+            ISSUE_CLUSTER_COMMAND_DATA,
+            "issue_cluster_command",
+            zigpy.exceptions.DeliveryError(
+                "Failed to deliver packet: <TXStatus.MAC_CHANNEL_ACCESS_FAILURE: 225>",
+                225,
+            ),
+            (
+                "Failed to send request: Failed to deliver packet: "
+                "<TXStatus.MAC_CHANNEL_ACCESS_FAILURE: 225>"
+            ),
+            id="issue_cluster_command_delivery_error",
+        ),
+        pytest.param(
+            SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
+            ISSUE_CLUSTER_COMMAND_DATA,
+            "issue_cluster_command",
+            TimeoutError(),
+            "Failed to send request: device did not respond",
+            id="issue_cluster_command_timeout",
+        ),
+        pytest.param(
+            SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE,
+            SET_CLUSTER_ATTRIBUTE_DATA,
+            "write_zigbee_attribute",
+            zigpy.exceptions.DeliveryError("Failed to deliver packet", 225),
+            "Failed to send request: Failed to deliver packet",
+            id="write_attribute_delivery_error",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("zha_client")
+async def test_service_radio_failure(
+    service: str,
+    data: dict[str, Any],
+    method: str,
+    side_effect: Exception,
+    message: str,
+    hass: HomeAssistant,
+) -> None:
+    """Test that a radio failure surfaces as a readable HomeAssistantError."""
+    gateway = get_zha_gateway(hass)
+    device = gateway.get_device(EUI64.convert(IEEE_SWITCH_DEVICE))
+
+    with (
+        patch.object(device, method, side_effect=side_effect),
+        pytest.raises(HomeAssistantError, match=re.escape(message)),
+    ):
+        await hass.services.async_call(
+            DOMAIN, service, {ATTR_IEEE: IEEE_SWITCH_DEVICE} | data, blocking=True
+        )
+
+
+@pytest.mark.usefixtures("zha_client")
+async def test_permit_radio_failure(
+    hass: HomeAssistant, app_controller: ControllerApplication
+) -> None:
+    """Test that a failed permit surfaces as a readable HomeAssistantError."""
+    app_controller.permit.side_effect = zigpy.exceptions.DeliveryError(
+        "Failed to deliver packet", 225
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="Failed to send request: Failed to deliver packet"
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_PERMIT, {ATTR_DURATION: 30}, blocking=True
+        )
+
+
+@pytest.mark.parametrize(
+    ("service", "data"),
+    [
+        pytest.param(
+            SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE,
+            SET_CLUSTER_ATTRIBUTE_DATA,
+            id="set_zigbee_cluster_attribute",
+        ),
+        pytest.param(
+            SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
+            ISSUE_CLUSTER_COMMAND_DATA,
+            id="issue_zigbee_cluster_command",
+        ),
+        pytest.param(SERVICE_WARNING_DEVICE_SQUAWK, {}, id="warning_device_squawk"),
+        pytest.param(SERVICE_WARNING_DEVICE_WARN, {}, id="warning_device_warn"),
+    ],
+)
+@pytest.mark.usefixtures("zha_client")
+async def test_service_device_not_found(
+    service: str, data: dict[str, Any], hass: HomeAssistant
+) -> None:
+    """Test that an unknown IEEE raises a validation error instead of crashing."""
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Device with IEEE address {IEEE_UNKNOWN_DEVICE} not found",
+    ):
+        await hass.services.async_call(
+            DOMAIN, service, {ATTR_IEEE: IEEE_UNKNOWN_DEVICE} | data, blocking=True
+        )
+
+
+@pytest.mark.parametrize(
+    "service", [SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN]
+)
+@pytest.mark.usefixtures("zha_client")
+async def test_warning_device_service_without_siren(
+    service: str, hass: HomeAssistant
+) -> None:
+    """Test that a device without a siren entity raises a validation error."""
+    with pytest.raises(
+        ServiceValidationError,
+        match=(
+            f"Device with IEEE address {IEEE_SWITCH_DEVICE} "
+            "is not an IAS warning device"
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN, service, {ATTR_IEEE: IEEE_SWITCH_DEVICE}, blocking=True
+        )
+
+
+@pytest.mark.usefixtures("zha_client")
+async def test_issue_zigbee_group_command_group_not_found(hass: HomeAssistant) -> None:
+    """Test that an unknown group raises a validation error instead of doing nothing."""
+    with pytest.raises(ServiceValidationError, match="Group with ID 1234 not found"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND,
+            {
+                ATTR_GROUP: 1234,
+                ATTR_CLUSTER_ID: general.OnOff.cluster_id,
+                ATTR_COMMAND: general.OnOff.ServerCommandDefs.on.id,
+            },
+            blocking=True,
+        )
+
+
+async def test_websocket_read_cluster_attribute_radio_failure(
+    hass: HomeAssistant, zha_client: MockHAClientWebSocket
+) -> None:
+    """Test that a failed attribute read is reported to the frontend, not swallowed."""
+    gateway = get_zha_gateway(hass)
+    device = gateway.get_device(EUI64.convert(IEEE_SWITCH_DEVICE))
+    cluster = device.async_get_cluster(1, general.OnOff.cluster_id)
+
+    with patch.object(
+        cluster,
+        "read_attributes",
+        side_effect=zigpy.exceptions.DeliveryError("Failed to deliver packet", 225),
+    ):
+        await zha_client.send_json(
+            {
+                ID: 31,
+                TYPE: "zha/devices/clusters/attributes/value",
+                ATTR_IEEE: IEEE_SWITCH_DEVICE,
+                ATTR_ENDPOINT_ID: 1,
+                ATTR_CLUSTER_ID: general.OnOff.cluster_id,
+                ATTR_CLUSTER_TYPE: CLUSTER_TYPE_IN,
+                ATTR_ATTRIBUTE: general.OnOff.AttributeDefs.on_off.id,
+            }
+        )
+        msg = await zha_client.receive_json()
+
+    assert msg["id"] == 31
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_HOME_ASSISTANT_ERROR
+    assert msg["error"]["message"] == "Failed to send request: Failed to deliver packet"
+
+
+BIND_PAYLOAD = {
+    ATTR_SOURCE_IEEE: IEEE_UNKNOWN_DEVICE,
+    ATTR_TARGET_IEEE: IEEE_GROUPABLE_DEVICE,
+}
+GROUP_BIND_PAYLOAD = {
+    ATTR_SOURCE_IEEE: IEEE_UNKNOWN_DEVICE,
+    GROUP_ID: 0x0001,
+    BINDINGS: [{ATTR_ENDPOINT_ID: 1, ID: 6, ATTR_NAME: "OnOff", ATTR_TYPE: "out"}],
+}
+
+
+@pytest.mark.parametrize(
+    ("command", "payload"),
+    [
+        pytest.param("zha/devices/bind", BIND_PAYLOAD, id="devices_bind"),
+        pytest.param("zha/devices/unbind", BIND_PAYLOAD, id="devices_unbind"),
+        pytest.param("zha/groups/bind", GROUP_BIND_PAYLOAD, id="groups_bind"),
+        pytest.param("zha/groups/unbind", GROUP_BIND_PAYLOAD, id="groups_unbind"),
+        pytest.param(
+            "zha/devices/bindable",
+            {ATTR_IEEE: IEEE_UNKNOWN_DEVICE},
+            id="devices_bindable",
+        ),
+    ],
+)
+async def test_websocket_bind_device_not_found(
+    command: str, payload: dict[str, Any], zha_client: MockHAClientWebSocket
+) -> None:
+    """Test that an unknown IEEE is reported to the frontend instead of asserting."""
+    await zha_client.send_json({ID: 32, TYPE: command} | payload)
+    msg = await zha_client.receive_json()
+
+    assert msg["id"] == 32
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_HOME_ASSISTANT_ERROR
+    assert (
+        msg["error"]["message"]
+        == f"Device with IEEE address {IEEE_UNKNOWN_DEVICE} not found"
+    )
