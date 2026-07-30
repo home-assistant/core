@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 
-class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
+class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):  # pylint: disable=home-assistant-missing-test-before-configure
     """Handle a config flow for Tewke."""
 
     VERSION = 1
