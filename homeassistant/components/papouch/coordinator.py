@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 import aiohttp
 from aiopapouch import PapouchDevice, PapouchTransport
@@ -37,6 +38,7 @@ class PapouchDataUpdateCoordinator(DataUpdateCoordinator):
         self.api_client = api_client
         self.device = device
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch data from the device."""
         try:

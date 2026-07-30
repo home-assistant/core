@@ -38,15 +38,20 @@ class PapouchTransport(ABC):
         """Fetch the latest sensor readings."""
 
     @abstractmethod
-    async def read_command(self, params: dict, context: str) -> str:
-        """Send a simple command with key-value parameters.
+    async def read_command(
+        self, params: dict, context: str, endpoint: str = SET_URL
+    ) -> str:
+        """Command for communicating with any device by using GET request.
 
+        Parameters are GET queries that will be added to the request.
         Context string is used for error message
         and it will be populated with a device information.
         """
 
     @abstractmethod
-    async def write_command(self, payload: str, context: str) -> str:
+    async def write_command(
+        self, payload: str, context: str, endpoint: str = SAVE_URL
+    ) -> str:
         """Send a complex payload (like XML settings).
 
         Context string is used for error message
@@ -54,7 +59,7 @@ class PapouchTransport(ABC):
         """
 
     @abstractmethod
-    async def get_device_name(self) -> str:
+    async def get_device_name(self) -> str | None:
         """Return name of the device."""
 
     @property
@@ -119,7 +124,7 @@ class PapouchHTTPClient(PapouchTransport):
         if not device:
             return None
 
-        return device
+        return str(device)
 
     async def _send_request(
         self, method: str, endpoint: str, context: str, **kwargs: Any
@@ -143,22 +148,31 @@ class PapouchHTTPClient(PapouchTransport):
             ) from exception
 
     @override
-    async def read_command(self, params: dict, context: str) -> str:
+    async def read_command(
+        self, params: dict, context: str, endpoint: str = SET_URL
+    ) -> str:
         """Command for communicating with any device by using GET request.
 
         Parameters are GET queries that will be added to the request.
         """
 
-        return await self._send_request("GET", SET_URL, context, params=params)
+        return await self._send_request("GET", endpoint, context, params=params)
 
     @override
-    async def write_command(self, data: str, context: str) -> str:
+    async def write_command(
+        self, payload: str, context: str, endpoint: str = SAVE_URL
+    ) -> str:
         """Command for communicating with any device by using POST request.
 
         Data contains the POST payload that will be sent in the request body.
+        Context is a information about the device:
+
+        e.g. f"{self.name} ({self.location})"
+
+        Return response text.
         """
 
-        return await self._send_request("POST", SAVE_URL, context, data=data)
+        return await self._send_request("POST", endpoint, context, data=payload)
 
     async def get_device_mode(self) -> int:
         """Function is used for the resolving the mode of the device."""

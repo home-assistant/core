@@ -4,6 +4,7 @@ import logging
 
 from ..client import PapouchTransport
 from .base import PapouchDevice
+from .papago import async_setup_papago
 from .quido import async_setup_quido
 from .th2e import async_setup_th2e
 from .tme import async_setup_tme
@@ -28,8 +29,8 @@ async def create_device(api_client: PapouchTransport) -> PapouchDevice | None:
         return await async_setup_th2e(api_client)
     if "TME" in device_name:
         return await async_setup_tme(api_client)
-    # if "Papago" in device:
-    #     return None
+    if "Papago" in device_name:
+        return await async_setup_papago(api_client)
 
     return None
 

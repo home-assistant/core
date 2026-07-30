@@ -1,12 +1,12 @@
 """This file contains definition of the TH2E device."""
 
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 import xml.etree.ElementTree as ET
 
 import defusedxml.ElementTree as defused_ET
 
-from ..client import PapouchTransport
+from ..client import PapouchHTTPClient, PapouchTransport
 from ..exceptions import DeviceLogicError, DeviceParseError, DeviceResponseError
 from .base import PapouchDevice, find_tag
 
@@ -50,7 +50,7 @@ class TH2E(PapouchDevice):
 
     def __init__(self, api_client: PapouchTransport, settings: str, info: str) -> None:
         """Constructor for TH2E device."""
-        self.api_client = api_client
+        self.api_client = cast(PapouchHTTPClient, api_client)
 
         self.info_root = defused_ET.fromstring(info)
         self.settings_root = defused_ET.fromstring(settings)

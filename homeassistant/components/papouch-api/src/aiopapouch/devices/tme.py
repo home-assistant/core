@@ -1,11 +1,11 @@
 """This file contains classes that define Papouch devices."""
 
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
 import defusedxml.ElementTree as defused_ET
 
-from ..client import PapouchTransport
+from ..client import PapouchHTTPClient, PapouchTransport
 from ..exceptions import DeviceParseError
 from .base import PapouchDevice, find_tag
 
@@ -46,7 +46,7 @@ class TME(PapouchDevice):
     def __init__(self, api_client: PapouchTransport, info: str, fresh: str) -> None:
         """Constructor for TME device."""
 
-        self.api_client = api_client
+        self.api_client = cast(PapouchHTTPClient, api_client)
 
         self.info_root = defused_ET.fromstring(info)
         self.fresh_root = defused_ET.fromstring(fresh)

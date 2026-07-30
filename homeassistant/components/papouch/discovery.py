@@ -1,6 +1,7 @@
 """File used for discovering Papouch devices on the local network."""
 
 import asyncio
+from typing import cast, override
 
 import aiohttp
 from aiopapouch import PapouchHTTPClient, create_device
@@ -24,11 +25,13 @@ class PapouchDiscoveryProtocol(asyncio.DatagramProtocol):
         self.discovered_ips: set[str] = set()
         self.transport: asyncio.DatagramTransport | None = None
 
-    def connection_made(self, transport: asyncio.DatagramTransport) -> None:
+    @override
+    def connection_made(self, transport: asyncio.BaseTransport) -> None:
         """Send the magic broadcast packet when the UDP connection is established."""
-        self.transport = transport
-        transport.sendto(self.magic_packet, ("255.255.255.255", self.target_port))
+        self.transport = cast(asyncio.DatagramTransport, transport)
+        self.transport.sendto(self.magic_packet, ("255.255.255.255", self.target_port))
 
+    @override
     def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         """Process incoming replies from Papouch devices."""
         ip_address = addr[0]
@@ -40,7 +43,7 @@ async def _is_supported_device(
 ) -> tuple[str, str] | None:
     """Return tuple (location, name) of the device.
 
-    If it is an unsupported device the fuction returns None.
+    If it is an unsupported device the function returns None.
     """
 
     session = async_get_clientsession(hass)

@@ -1,12 +1,11 @@
 """This file contains definition of the TH2E device."""
 
 import logging
-from typing import Any, override
-import xml.etree.ElementTree as ET
+from typing import Any, cast, override
 
 import defusedxml.ElementTree as defused_ET
 
-from ..client import PapouchTransport
+from ..client import PapouchHTTPClient, PapouchTransport
 from ..exceptions import DeviceLogicError, DeviceParseError, DeviceResponseError
 from .base import PapouchDevice, find_tag
 
@@ -25,6 +24,8 @@ class PapagoETH(PapouchDevice):
     for every concrete device. YAGNI.
     """
 
+    api_client: PapouchHTTPClient
+
     SENSOR_TYPES = [
         "Unused",
         "Temperature / Humidity (TH15)",
@@ -32,6 +33,9 @@ class PapagoETH(PapouchDevice):
         "Temperature / Humidity (TH3x)",
         "Temperature (TMP)",
     ]
+
+    BOX_SENSOR_BASE = 30
+    SAVE_ENDPOINT = "savesettings.xml"
 
     @override
     @property
@@ -57,62 +61,73 @@ class PapagoETH(PapouchDevice):
         """Return device's MAC address."""
         return self._mac_address
 
-    def __init__(self, api_client: PapouchTransport, info: str) -> None:
+    def __init__(self, api_client: PapouchTransport, settings: str, info: str) -> None:
         """Constructor for Papago device.
 
         Note that every Papago has a different settings XML
         so unlike other devices we don't need it here.
         """
 
-        self.api_client = api_client
+        self.api_client = cast(PapouchHTTPClient, api_client)
 
         self.info_root = defused_ET.fromstring(info)
+        self.settings_root = defused_ET.fromstring(settings)
 
         self._name = self.get_name()
         self._location = self.get_location()
         self._mac_address = self.get_mac_address()
 
-        # self.units_sensors: dict[str, dict[str, str]] = {}
-        # self.type_sensor = 0
+        self.units_sensors: dict[str, dict[str, Any]] = {}
+        self.type_sensors: dict[str, str] = {}
+
+        self._parse_initial_settings()
 
     @override
     def parse_fresh_data(self, xml_data: str) -> dict:
-        """Parse XML data into dictionary to feed the coordinator.
-
-        Note that it also sets the type of the sensor. (Global one)
-        """
-
         root = defused_ET.fromstring(xml_data)
         parsed_data: dict[str, dict[str, Any]] = {"sensor": {}}
-
-        status_tag = find_tag(root, "status")
-
-        if status_tag is None:
-            raise DeviceParseError(
-                f"The device doesn't have box status tag in fresh.xml, device: {self.name} ({self.location}) - {self.api_client.ip_address}"
-            )
-
-        self.type_sensor = int(status_tag.attrib.get("typesens", "0"))
 
         for element in root.iter():
             if not element.tag.endswith("sns"):
                 continue
 
-            item_id = element.attrib.get("id")
-            sns_type = element.attrib.get("type")
-            unit_code = element.attrib.get("unit", "0")
-            status = element.attrib.get("status", "0")
+            base_item_id = element.attrib.get("id")
+            base_name = element.attrib.get("name", "Unknown")
 
-            self.units_sensors[item_id] = {
-                "id": item_id,
-                "type": sns_type,
-                "unit": unit_code,
-            }
+            if not base_item_id:
+                continue
 
-            if status in ("1", "4"):
-                parsed_data["sensor"][item_id] = None
-            else:
-                parsed_data["sensor"][item_id] = float(element.attrib.get("val", "0"))
+            if base_item_id not in self.units_sensors:
+                self.units_sensors[base_item_id] = {
+                    "name": base_name,
+                    "sub_sensors": dict[str, str](),
+                }
+
+            idx = 1
+            while True:
+                suffix = "" if idx == 1 else str(idx)
+                sns_type = element.attrib.get(f"type{suffix}")
+
+                if sns_type is None:
+                    break
+
+                item_id = base_item_id if idx == 1 else f"{base_item_id}_{idx}"
+                unit_code = element.attrib.get(f"unit{suffix}", "0")
+                status = element.attrib.get(f"status{suffix}", "0")
+
+                self.units_sensors[base_item_id]["sub_sensors"][item_id] = {
+                    "type": sns_type,
+                    "unit": unit_code,
+                }
+
+                if status in ("1", "4"):
+                    parsed_data["sensor"][item_id] = None
+                else:
+                    parsed_data["sensor"][item_id] = float(
+                        element.attrib.get(f"val{suffix}", "0")
+                    )
+
+                idx += 1
 
         return parsed_data
 
@@ -135,9 +150,7 @@ class PapagoETH(PapouchDevice):
     @override
     def get_mac_address(self) -> str:
         """Return the MAC address of the device."""
-        box = self.settings_root.find(
-            ".//{http://www.papouch.com/xml/th2e/set}set[@box='12']"
-        )
+        box = self.settings_root.find(".//set[@box='12']")
 
         if box is not None:
             return str(box.attrib.get("mac", ""))
@@ -148,8 +161,18 @@ class PapagoETH(PapouchDevice):
 
     @override
     def get_supported_buttons(self) -> list[dict[str, Any]]:
-        """Unused in TH2E."""
-        return [{"name": "Set sensor automatically", "cmd": "set_sensor"}]
+        buttons = []
+
+        for base_id, sensor_data in self.units_sensors.items():
+            sensor_name = sensor_data.get("name", f"Sensor {base_id}")
+            buttons.append(
+                {
+                    "name": f"Set {sensor_name} automatically",
+                    "cmd": f"set_sensor_{base_id}",
+                }
+            )
+
+        return buttons
 
     @override
     def get_supported_binary_sensors(self) -> list[dict[str, Any]]:
@@ -166,41 +189,43 @@ class PapagoETH(PapouchDevice):
         sensors = []
         unit_map = {"0": "°C", "1": "°F", "2": "K"}
 
-        for sns in self.units_sensors.values():
-            item_id = sns["id"]
-            sns_type = sns["type"]
-            unit_code = sns["unit"]
+        for sensor_data in self.units_sensors.values():
+            sensor_name = sensor_data["name"]
 
-            if sns_type == "1":
-                sensors.append(
-                    {
-                        "item_id": item_id,
-                        "type": "sensor",
-                        "name": "Temperature",
-                        "device_class": "temperature",
-                        "unit": unit_map.get(unit_code, "°C"),
-                    }
-                )
-            elif sns_type == "2":
-                sensors.append(
-                    {
-                        "item_id": item_id,
-                        "type": "sensor",
-                        "name": "Humidity",
-                        "device_class": "humidity",
-                        "unit": "%",
-                    }
-                )
-            elif sns_type == "3":
-                sensors.append(
-                    {
-                        "item_id": item_id,
-                        "type": "sensor",
-                        "name": "Dew Point",
-                        "device_class": "temperature",
-                        "unit": unit_map.get(unit_code, "°C"),
-                    }
-                )
+            for sub_id, sub_data in sensor_data["sub_sensors"].items():
+                sns_type = sub_data["type"]
+                unit_code = sub_data["unit"]
+
+                if sns_type == "1":
+                    sensors.append(
+                        {
+                            "item_id": sub_id,
+                            "type": "sensor",
+                            "name": f"{sensor_name} Temperature",
+                            "device_class": "temperature",
+                            "unit": unit_map.get(unit_code, "°C"),
+                        }
+                    )
+                elif sns_type == "2":
+                    sensors.append(
+                        {
+                            "item_id": sub_id,
+                            "type": "sensor",
+                            "name": f"{sensor_name} Humidity",
+                            "device_class": "humidity",
+                            "unit": "%",
+                        }
+                    )
+                elif sns_type == "3":
+                    sensors.append(
+                        {
+                            "item_id": sub_id,
+                            "type": "sensor",
+                            "name": f"{sensor_name} Dew Point",
+                            "device_class": "temperature",
+                            "unit": unit_map.get(unit_code, "°C"),
+                        }
+                    )
 
         return sensors
 
@@ -211,39 +236,62 @@ class PapagoETH(PapouchDevice):
 
     @override
     def get_supported_selects(self) -> list[dict[str, Any]]:
-        """Get supported modes of the sensors."""
-        return [
-            {
-                "item_id": 1,
-                "category": "sensor_type",
-                "name": "Sensor type:",
-                "options": self.SENSOR_TYPES,
-            }
-        ]
+        selects = []
+
+        for base_id, sensor_data in self.units_sensors.items():
+            sensor_name = sensor_data.get("name", f"Sensor {base_id}")
+            selects.append(
+                {
+                    "item_id": base_id,
+                    "category": "sensor_type",
+                    "name": f"{sensor_name} type",
+                    "options": self.SENSOR_TYPES,
+                }
+            )
+
+        return selects
 
     @override
     async def execute_button_command(self, cmd_type: str) -> None:
-        if cmd_type != "set_sensor":
+        if "set_sensor" not in cmd_type:
             raise DeviceLogicError(
                 f"Unsupported command: {cmd_type}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
             )
 
-        self.type_sensor = await self._get_sensor_type()
-        await self._set_sensor_type(self.type_sensor)
+        sensor_id = cmd_type.split("_")[2]
+        await self._auto_detect_sensor(sensor_id)
 
-    async def _get_sensor_type(self) -> int:
-        request = '<root><set box="19" num1="00001" /></root>'
+    async def _auto_detect_sensor(self, sensor_id: str) -> None:
+        """Send command to automatically detect the connected sensor."""
+        result_id = str(int(sensor_id) + 3)
+        payload = f'<root><set box="98" num01="{result_id}" /></root>'
+
         response = await self.api_client.write_command(
-            request, f"{self.name} ({self.location})"
+            payload, f"{self.name} ({self.location})", self.SAVE_ENDPOINT
         )
 
-        return self._check_sensor_response(
-            response,
-            expected_status="4",
-            action_msg="fetching the type of the sensor",
-        )
+        if not response:
+            return
 
-    async def _set_sensor_type(self, type_idx: int) -> None:
+        root = defused_ET.fromstring(response)
+
+        result_tag = find_tag(root, "result")
+        if result_tag is not None and result_tag.attrib.get("status") not in ("1", "4"):
+            raise DeviceResponseError(
+                f"{self.name} ({self.location}) - {self.api_client.ip_address} returned an error while auto-detecting sensor, whole response: {response}"
+            )
+
+        for element in root.iter("set"):
+            box_id = element.attrib.get("box")
+            sns_type = element.attrib.get("type")
+
+            if box_id and box_id.isdigit() and sns_type is not None:
+                box_num = int(box_id)
+                if self.BOX_SENSOR_BASE <= box_num <= self.BOX_SENSOR_BASE + 1:
+                    s_id = str(box_num - self.BOX_SENSOR_BASE + 1)
+                    self.type_sensors[s_id] = sns_type
+
+    async def _set_sensor_type(self, item_id: str, type_idx: str) -> None:
         settings = await self.api_client.fetch_settings()
 
         try:
@@ -253,74 +301,107 @@ class PapagoETH(PapouchDevice):
                 f"Invalid settings XML: {exception}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
             ) from exception
 
-        def format_str_val(val: str) -> str:
-            clean_val = val.removesuffix(".0")
-            return clean_val.rjust(10, " ")
+        def format_val(val: str) -> str:
+            return val.removesuffix(".0")
 
-        set_attrs = {
-            "box": "9",
-            "num1": str(type_idx),
-            "num2": "0",
-            "str1": format_str_val("-40"),
-            "str2": format_str_val("125"),
-            "str3": format_str_val("0"),
-            "num3": "00020",
-            "str4": format_str_val("0"),
-            "str5": format_str_val("100"),
-            "str6": format_str_val("0"),
-            "num4": "00001",
-            "str7": format_str_val("-40"),
-            "str8": format_str_val("125"),
-            "str9": format_str_val("0"),
-            "num5": "00001",
+        box_num = int(item_id) - 1 + self.BOX_SENSOR_BASE
+        target_box = None
+
+        for element in settings_root.iter("set"):
+            if element.attrib.get("box") == str(box_num):
+                target_box = element
+                break
+
+        if target_box is None:
+            raise DeviceParseError(
+                f"Box {box_num} not found in settings, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            )
+
+        ordered_keys = [
+            ("num01", "type"),
+            ("num02", "watch"),
+            ("num03", "watch2"),
+            ("num04", "watch3"),
+            ("str00", "name"),
+            ("str01", "min"),
+            ("str02", "max"),
+            ("str03", "hyst"),
+            ("str04", "min2"),
+            ("str05", "max2"),
+            ("str06", "hyst2"),
+            ("str07", "min3"),
+            ("str08", "max3"),
+            ("str09", "hyst3"),
+        ]
+
+        safe_defaults = {
+            "name": f"Sensor {item_id}",
+            "watch": "0",
+            "watch2": "0",
+            "watch3": "0",
+            "min": "-40",
+            "max": "125",
+            "hyst": "0",
+            "min2": "0",
+            "max2": "100",
+            "hyst2": "0",
+            "min3": "-40",
+            "max3": "125",
+            "hyst3": "0",
         }
 
-        num2_val = 0
+        payload_parts = [f'<set box="{box_num}"']
 
-        for i in range(1, 4):
-            item = None
-            for element in settings_root.iter():
-                if element.tag.endswith("sns") and element.attrib.get("id") == str(i):
-                    item = element
-                    break
+        for post_key, read_key in ordered_keys:
+            if read_key == "type":
+                val = str(type_idx)
+            else:
+                raw_val = target_box.attrib.get(
+                    read_key, safe_defaults.get(read_key, "0")
+                )
+                val = format_val(raw_val)
 
-            if item is None:
-                continue
+            payload_parts.append(f'{post_key}="{val}"')
 
-            if item.get("sns2mem", "0") == "1":
-                num2_val += 1 << (i + 3)
+        payload_parts.append("/>")
 
-            str_base = (i - 1) * 3
+        xml_payload = f'<?xml version="1.0" encoding="iso-8859-2"?>\n<root>{" ".join(payload_parts)}</root>'
 
-            if "min" in item.attrib:
-                set_attrs[f"str{str_base + 1}"] = format_str_val(item.attrib["min"])
-            if "max" in item.attrib:
-                set_attrs[f"str{str_base + 2}"] = format_str_val(item.attrib["max"])
-            if "hyst" in item.attrib:
-                set_attrs[f"str{str_base + 3}"] = format_str_val(item.attrib["hyst"])
-            if "memhyst" in item.attrib:
-                set_attrs[f"num{i + 2}"] = item.attrib["memhyst"].zfill(5)
-
-        set_attrs["num2"] = str(num2_val)
-
-        save_root = ET.Element("root", xmlns="http://www.papouch.com/xml/th2e/save")
-        ET.SubElement(save_root, "set", attrib=set_attrs)
-
-        xml_payload = ET.tostring(save_root, encoding="unicode")
-
-        final_response = await self.api_client.write_command(
-            xml_payload, f"{self.name} ({self.location})"
+        resp_start = await self.api_client.write_command(
+            '<root><set box="0" /></root>',
+            f"{self.name} ({self.location})",
+            self.SAVE_ENDPOINT,
         )
 
         self._check_sensor_response(
-            final_response,
-            expected_status="2",
-            action_msg="setting the type of the sensor",
+            resp_start,
+            expected_status="1",
+            action_msg="opening configuration transaction",
         )
+
+        resp_data = await self.api_client.write_command(
+            xml_payload, f"{self.name} ({self.location})", self.SAVE_ENDPOINT
+        )
+        self._check_sensor_response(
+            resp_data, expected_status="1", action_msg="setting the type of the sensor"
+        )
+
+        resp_save = await self.api_client.write_command(
+            '<root><set box="99" /></root>',
+            f"{self.name} ({self.location})",
+            self.SAVE_ENDPOINT,
+        )
+        self._check_sensor_response(
+            resp_save,
+            expected_status="2",
+            action_msg="saving and restarting the device",
+        )
+
+        self.type_sensors[item_id] = str(type_idx)
 
     def _check_sensor_response(
         self, response_text: str, expected_status: str, action_msg: str
-    ) -> int:
+    ) -> None:
         try:
             root = defused_ET.fromstring(response_text)
             result_tag = find_tag(root, "result")
@@ -335,8 +416,6 @@ class PapagoETH(PapouchDevice):
                     f"{self.name} ({self.location}) - {self.api_client.ip_address} returned an error while {action_msg}, whole response: {response_text}"
                 )
 
-            return int(result_tag.attrib.get("typesens", "0"))
-
         except defused_ET.ParseError as exception:
             raise DeviceParseError(
                 f"Invalid XML response from device: {exception}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
@@ -344,70 +423,73 @@ class PapagoETH(PapouchDevice):
 
     @override
     async def turn_on_switch(self, item_id: str) -> None:
-        """Unused in TH2E."""
+        """Unused in Papago."""
         return
 
     @override
     async def turn_off_switch(self, item_id: str) -> None:
-        """Unused in TH2E."""
+        """Unused in Papago."""
         return
 
     @override
     async def set_number_value(self, category: str, item_id: str, value: float) -> None:
-        """Unused in TH2E."""
+        """Unused in Papago."""
         return
 
     @override
     def get_select_option(self, category: str, item_id: str) -> str | None:
         if category == "sensor_type":
-            return self.SENSOR_TYPES[self.type_sensor]
+            sns_type = self.type_sensors.get(item_id)
+            if sns_type is not None and sns_type.isdigit():
+                type_idx = int(sns_type)
+                if 0 <= type_idx < len(self.SENSOR_TYPES):
+                    return self.SENSOR_TYPES[type_idx]
+
         return None
 
     @override
     async def set_select_option(self, category: str, item_id: str, option: str) -> None:
-        type_idx = self.SENSOR_TYPES.index(option)
-        await self._set_sensor_type(type_idx)
-        self.type_sensor = type_idx
+        if category == "sensor_type":
+            try:
+                type_idx = str(self.SENSOR_TYPES.index(option))
+            except ValueError:
+                return
+
+            await self._set_sensor_type(item_id, type_idx)
 
     @override
     async def switch_to_web_mode(self) -> None:
-        """Switch the device network mode to WEB using its current settings."""
-        box = self.settings_root.find(
-            ".//{http://www.papouch.com/xml/th2e/set}set[@box='1']"
-        )
-        if box is None:
-            raise DeviceParseError(
-                f"Box for network mode is not found, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
-            )
-
-        def pad_ip(ip_str: str) -> str:
-            return ".".join(part.zfill(3) for part in ip_str.split("."))
-
-        save_root = ET.Element("root")
-        ET.SubElement(
-            save_root,
-            "set",
-            box="1",
-            ip1=pad_ip(box.get("ip", "0.0.0.0")),
-            ip2=pad_ip(box.get("mask", "0.0.0.0")),
-            ip3=pad_ip(box.get("gate", "0.0.0.0")),
-            ip5=pad_ip(box.get("dip", "0.0.0.0")),
-            num2=box.get("wport", "80").zfill(5),
-            num4="3",
-            num5=box.get("com", "0"),
-            num7=box.get("mport", "502").zfill(5),
-            num1=box.get("lport", "10001").zfill(5),
-            ip4=pad_ip(box.get("rip", "0.0.0.0")),
-            num3=box.get("rport", "0").zfill(5),
-        )
-
-        xml_payload = ET.tostring(save_root, encoding="unicode")
-        response = await self.api_client.write_command(
-            xml_payload, f"{self.name} ({self.location})"
-        )
-
-        self._check_sensor_response(response, "2", "setting to WEB mode")
+        """Unused in Papago."""
 
     @override
     def _parse_initial_settings(self) -> None:
-        pass
+        """For now it sets types of the sensors."""
+        for element in self.settings_root.iter():
+            if element.tag != "set":
+                continue
+
+            box_id = element.attrib.get("box")
+            if not box_id or not box_id.isdigit():
+                continue
+
+            box_num = int(box_id)
+
+            if self.BOX_SENSOR_BASE <= box_num <= self.BOX_SENSOR_BASE + 1:
+                sns_type = element.attrib.get("type")
+
+                if sns_type is not None:
+                    sensor_id = str(box_num - self.BOX_SENSOR_BASE + 1)
+                    self.type_sensors[sensor_id] = str(sns_type)
+
+
+async def async_setup_papago(transport: PapouchTransport) -> PapagoETH:
+    """Async factory for Papago devices."""
+    settings = await transport.fetch_settings()
+    info = await transport.fetch_info()
+
+    return PapagoETH(transport, settings, info)
+
+    # if transport.protocol == "http":
+    #     return PapagoETH(transport, settings, info)
+
+    # return PapagoRS485(transport, settings, info)

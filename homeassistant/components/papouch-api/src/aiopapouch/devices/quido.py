@@ -2,12 +2,12 @@
 
 from abc import ABC, abstractmethod
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 import xml.etree.ElementTree as ET
 
 import defusedxml.ElementTree as defused_ET
 
-from ..client import PapouchTransport
+from ..client import PapouchHTTPClient, PapouchTransport
 from ..exceptions import DeviceLogicError, DeviceParseError, DeviceResponseError
 from .base import PapouchDevice, find_tag
 
@@ -29,12 +29,13 @@ class QuidoBase(PapouchDevice, ABC):
         """Constructor for the base of the Quido."""
 
         # These variables should be populated by the child classes
+        self.api_client: PapouchTransport
         self.number_inputs = -1
         self.number_outputs = -1
         self.number_temp = 1
         self.counter_states: dict[str, str] = {}
         self.temperature_unit = "°C"
-
+        self.size_counter_bits = -1
         self._name = ""
         self._location = ""
         self._mac_address = ""
@@ -184,7 +185,7 @@ class QuidoBase(PapouchDevice, ABC):
             await self._reset_all_counters()
         else:
             raise DeviceLogicError(
-                f"Unsupported command: {cmd_type}. in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+                f"Unsupported command: {cmd_type}, in the device: {self.name} ({self.location})"
             )
 
     @override
@@ -227,11 +228,13 @@ class QuidoBase(PapouchDevice, ABC):
 class QuidoETH(QuidoBase):
     """Represents devices of Quido family."""
 
+    api_client: PapouchHTTPClient
+
     def __init__(self, api_client: PapouchTransport, settings: str, info: str) -> None:
         """Constructor for Quido device."""
 
         super().__init__()
-        self.api_client = api_client
+        self.api_client = cast(PapouchHTTPClient, api_client)
 
         self.info_root = defused_ET.fromstring(info)
         self.settings_root = defused_ET.fromstring(settings)
@@ -339,18 +342,22 @@ class QuidoETH(QuidoBase):
         )
         self._check_response(response)
 
+    @override
     async def _connect_all_coils(self) -> None:
         """Command for connecting all the coils."""
         await self._send_command("S")
 
+    @override
     async def _disconnect_all_coils(self) -> None:
         """Command for disconnecting all the coils."""
         await self._send_command("R")
 
+    @override
     async def _reset_all_counters(self) -> None:
         """Command for resetting all the counters."""
         await self._send_command("C")
 
+    @override
     async def _decrease_value_counter(self, item_id: str, value: int) -> None:
         """Command for decreasing specific counter."""
         await self._send_command("c", item_id, str(value))
@@ -487,10 +494,12 @@ class QuidoETH(QuidoBase):
             f"The device doesn't have box 12 with MAC address, device: {self.name} ({self.location}) - {self.api_client.ip_address}"
         )
 
+    @override
     async def _turn_on_coil(self, item_id: str) -> None:
         """Command for turning on the coil by its id."""
         await self._send_command("s", item_id)
 
+    @override
     async def _turn_off_coil(self, item_id: str) -> None:
         """Command for turning off the coil by its id."""
         await self._send_command("r", item_id)
@@ -543,8 +552,9 @@ async def async_setup_quido(transport: PapouchTransport) -> QuidoBase:
     """Async factory for Quido devices."""
     settings = await transport.fetch_settings()
     info = await transport.fetch_info()
+    return QuidoETH(transport, settings, info)
 
-    if transport.protocol == "http":
-        return QuidoETH(transport, settings, info)
+    # if transport.protocol == "http":
+    #     return QuidoETH(transport, settings, info)
 
-    return QuidoRS485(transport, settings, info)
+    # return QuidoRS485(transport, settings, info)
