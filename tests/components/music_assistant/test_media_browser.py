@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from music_assistant_models.enums import MediaType as MASSMediaType
 import pytest
 
 from homeassistant.components.media_player import (
@@ -30,6 +31,8 @@ from homeassistant.components.music_assistant.media_browser import (
 from homeassistant.core import HomeAssistant
 
 from .common import setup_integration_from_fixtures
+
+from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(
@@ -303,6 +306,181 @@ async def test_search_media_within_album(
         # Verify search results
         assert isinstance(search_results, SearchMedia)
         assert len(search_results.result) > 0  # Should have results
+
+
+async def test_search_media_within_playlist(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test searching within a playlist context."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    playlist = MagicMock()
+    playlist.item_id = "40"
+    playlist.provider = "library"
+
+    with (
+        patch.object(
+            music_assistant_client.music, "get_item_by_uri", return_value=playlist
+        ),
+        patch.object(music_assistant_client.music, "search") as mock_search,
+    ):
+        query = SearchMediaQuery(
+            search_query="fooled",
+            media_content_id="library://playlist/40",
+        )
+        search_results = await async_search_media(music_assistant_client, query)
+
+    # the playlist tracks are filtered locally, without hitting the search api
+    mock_search.assert_not_called()
+    assert [item.title for item in search_results.result] == [
+        "The Who - Won't Get Fooled Again"
+    ]
+
+
+@pytest.mark.parametrize(
+    ("media_content_id", "expected_media_type"),
+    [
+        (LIBRARY_ARTISTS, MASSMediaType.ARTIST),
+        (LIBRARY_ALBUMS, MASSMediaType.ALBUM),
+        (LIBRARY_TRACKS, MASSMediaType.TRACK),
+        (LIBRARY_PLAYLISTS, MASSMediaType.PLAYLIST),
+        (LIBRARY_RADIO, MASSMediaType.RADIO),
+        (LIBRARY_PODCASTS, MASSMediaType.PODCAST),
+        (LIBRARY_AUDIOBOOKS, MASSMediaType.AUDIOBOOK),
+    ],
+)
+async def test_search_media_scoped_to_library(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    media_content_id: str,
+    expected_media_type: MASSMediaType,
+) -> None:
+    """Test that searching from a library listing only searches that library.
+
+    The browse tree reports the library listings as our own domain instead of a
+    concrete media type, so the listing id is what scopes the search.
+    """
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    mock_results = MockSearchResults([expected_media_type.value])
+
+    with patch.object(
+        music_assistant_client.music, "search", return_value=mock_results
+    ) as mock_search:
+        query = SearchMediaQuery(
+            search_query="test",
+            media_content_type=DOMAIN,
+            media_content_id=media_content_id,
+        )
+        search_results = await async_search_media(music_assistant_client, query)
+
+    assert mock_search.call_args.kwargs["media_types"] == [expected_media_type]
+    assert len(search_results.result) == 5
+
+
+@pytest.mark.parametrize(
+    ("media_content_id", "media_content_type"),
+    [
+        (LIBRARY_ARTISTS, MediaType.ARTIST),
+        (LIBRARY_ALBUMS, MediaType.ALBUM),
+        (LIBRARY_TRACKS, MediaType.TRACK),
+        (LIBRARY_PLAYLISTS, MediaType.PLAYLIST),
+        (LIBRARY_RADIO, DOMAIN),
+        (LIBRARY_PODCASTS, MediaType.PODCAST),
+        (LIBRARY_AUDIOBOOKS, DOMAIN),
+        ("artist", MediaType.ARTIST),
+        ("album", MediaType.ALBUM),
+        ("playlist", DOMAIN),
+    ],
+)
+async def test_browse_media_can_search(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    media_content_id: str,
+    media_content_type: str,
+) -> None:
+    """Test that browse listings tell the media browser they can be searched."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    browse_item = await async_browse_media(
+        hass, music_assistant_client, media_content_id, media_content_type
+    )
+
+    assert browse_item.can_search is True
+
+
+async def test_browse_media_root_cannot_search(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that the root listing does not offer search."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    browse_item = await async_browse_media(hass, music_assistant_client, None, None)
+
+    assert browse_item.can_search is False
+
+
+async def test_browse_artist_search_media_classes(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that an artist listing offers its searchable media classes."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    browse_item = await async_browse_media(
+        hass, music_assistant_client, "artist", MediaType.ARTIST
+    )
+
+    assert browse_item.search_media_classes == [MediaClass.ALBUM, MediaClass.TRACK]
+
+
+async def test_search_media_websocket_from_library_listing(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test searching a library listing the way the media browser does.
+
+    The media browser reports the listing as the child that its parent built, so
+    it sends our domain as the content type and the listing id as the content id.
+    """
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    root = await async_browse_media(hass, music_assistant_client, None, None)
+    artists_child = next(
+        child for child in root.children if child.media_content_id == LIBRARY_ARTISTS
+    )
+    listing = await async_browse_media(
+        hass,
+        music_assistant_client,
+        artists_child.media_content_id,
+        artists_child.media_content_type,
+    )
+    assert listing.can_search is True
+
+    client = await hass_ws_client(hass)
+    with patch.object(
+        music_assistant_client.music,
+        "search",
+        return_value=MockSearchResults(["artist"]),
+    ) as mock_search:
+        await client.send_json_auto_id(
+            {
+                "type": "media_player/search_media",
+                "entity_id": "media_player.test_player_1",
+                "search_query": "test",
+                "media_content_id": artists_child.media_content_id,
+                "media_content_type": artists_child.media_content_type,
+            }
+        )
+        msg = await client.receive_json()
+
+    assert msg["success"]
+    assert mock_search.call_args.kwargs["media_types"] == [MASSMediaType.ARTIST]
+    assert len(msg["result"]["result"]) == 5
+    assert all(item["media_class"] == "artist" for item in msg["result"]["result"])
 
 
 async def test_search_media_error(
