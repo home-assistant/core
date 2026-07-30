@@ -171,3 +171,24 @@ async def test_options_flow_form_shows_previous_option_icon(
     assert result["type"] is FlowResultType.FORM
     schema_key = next(iter(result["data_schema"].schema))
     assert schema_key.description == {"suggested_value": "mdi:lightbulb"}
+
+
+async def test_flow_chromatic_defaults(hass: HomeAssistant) -> None:
+    """Submitting the chromatic step untouched uses the default color."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_NAME: "Default Color",
+            CONF_INITIAL_MODE: MODE_CHROMATIC,
+        },
+    )
+    assert result["step_id"] == "chromatic"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_INITIAL_COLOR] == DEFAULT_HEX

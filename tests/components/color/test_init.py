@@ -54,7 +54,7 @@ async def test_setup_and_unload_chromatic_entry(hass: HomeAssistant) -> None:
 
 
 async def test_white_entry_with_invalid_kelvin_falls_back(hass: HomeAssistant) -> None:
-    """An unparseable stored kelvin falls back to the default white."""
+    """An unparsable stored kelvin falls back to the default white."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Couch Color",

@@ -45,6 +45,7 @@ FIELD_RGB: Final = "rgb_color"
 FIELD_XY: Final = "xy_color"
 
 DEFAULT_HEX: Final = "#FFFFFF"
+DEFAULT_RGB: Final = [255, 255, 255]
 DEFAULT_KELVIN: Final = 4000
 
 # Kelvin range accepted on input. Targets clamp to their own min/max.

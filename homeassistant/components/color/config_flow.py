@@ -27,6 +27,7 @@ from .const import (
     CONF_INITIAL_MODE,
     DEFAULT_HEX,
     DEFAULT_KELVIN,
+    DEFAULT_RGB,
     DOMAIN,
     MAX_KELVIN,
     MIN_KELVIN,
@@ -59,7 +60,7 @@ USER_SCHEMA = vol.Schema(
 CHROMATIC_SCHEMA = vol.Schema(
     {
         vol.Required(
-            CONF_INITIAL_COLOR, default=DEFAULT_HEX
+            CONF_INITIAL_COLOR, default=DEFAULT_RGB
         ): selector.ColorRGBSelector(),
         vol.Optional(CONF_INITIAL_BRIGHTNESS): _BRIGHTNESS_SELECTOR,
     }
