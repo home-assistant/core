@@ -2,7 +2,7 @@
 
 from typing import override
 
-from hotspring import HotSpring, HotSpringError, Spa
+from hotspring import HotSpring, HotSpringConnectionError, HotSpringError, Spa
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -39,5 +39,7 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[Spa]):
         """Fetch data from Hot Spring."""
         try:
             return await self.hotspring.update()
+        except HotSpringConnectionError as error:
+            raise UpdateFailed(f"Error communicating with API: {error}") from error
         except HotSpringError as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
