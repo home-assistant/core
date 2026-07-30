@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,8 +41,8 @@
 # name: test_all_entities[sensor.joost_blitz_chess_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Blitz chess rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Blitz chess rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_blitz_chess_rating',
@@ -59,7 +59,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -94,8 +94,8 @@
 # name: test_all_entities[sensor.joost_bullet_chess_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Bullet chess rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Bullet chess rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_bullet_chess_rating',
@@ -112,7 +112,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -147,8 +147,8 @@
 # name: test_all_entities[sensor.joost_daily_chess960_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Daily Chess960 rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Daily Chess960 rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_daily_chess960_rating',
@@ -165,7 +165,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -200,8 +200,8 @@
 # name: test_all_entities[sensor.joost_daily_chess_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Daily chess rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Daily chess rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_daily_chess_rating',
@@ -218,7 +218,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -253,9 +253,9 @@
 # name: test_all_entities[sensor.joost_followers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Followers',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'followers',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Followers',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'followers',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_followers',
@@ -272,7 +272,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -307,8 +307,8 @@
 # name: test_all_entities[sensor.joost_rapid_chess_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Rapid chess rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Rapid chess rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_rapid_chess_rating',
@@ -325,7 +325,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -360,9 +360,9 @@
 # name: test_all_entities[sensor.joost_total_blitz_chess_games_drawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total blitz chess games drawn',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Total blitz chess games drawn',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_total_blitz_chess_games_drawn',
@@ -379,7 +379,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -414,9 +414,9 @@
 # name: test_all_entities[sensor.joost_total_blitz_chess_games_lost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total blitz chess games lost',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Total blitz chess games lost',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_total_blitz_chess_games_lost',
@@ -433,7 +433,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -468,9 +468,9 @@
 # name: test_all_entities[sensor.joost_total_blitz_chess_games_won-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total blitz chess games won',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Total blitz chess games won',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_total_blitz_chess_games_won',
@@ -487,7 +487,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -522,9 +522,9 @@
 # name: test_all_entities[sensor.joost_total_bullet_chess_games_drawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total bullet chess games drawn',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Total bullet chess games drawn',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_total_bullet_chess_games_drawn',
@@ -541,7 +541,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -576,9 +576,9 @@
 # name: test_all_entities[sensor.joost_total_bullet_chess_games_lost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total bullet chess games lost',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Total bullet chess games lost',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_total_bullet_chess_games_lost',
@@ -595,7 +595,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -630,9 +630,9 @@
 # name: test_all_entities[sensor.joost_total_bullet_chess_games_won-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total bullet chess games won',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Total bullet chess games won',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_total_bullet_chess_games_won',
@@ -649,7 +649,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -684,9 +684,9 @@
 # name: test_all_entities[sensor.joost_total_daily_chess960_games_drawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total daily Chess960 games drawn',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Total daily Chess960 games drawn',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_total_daily_chess960_games_drawn',
@@ -703,7 +703,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -738,9 +738,9 @@
 # name: test_all_entities[sensor.joost_total_daily_chess960_games_lost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total daily Chess960 games lost',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Total daily Chess960 games lost',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_total_daily_chess960_games_lost',
@@ -757,7 +757,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -792,9 +792,9 @@
 # name: test_all_entities[sensor.joost_total_daily_chess960_games_won-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total daily Chess960 games won',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Total daily Chess960 games won',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_total_daily_chess960_games_won',
@@ -811,7 +811,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -846,9 +846,9 @@
 # name: test_all_entities[sensor.joost_total_daily_chess_games_drawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total daily chess games drawn',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Total daily chess games drawn',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_total_daily_chess_games_drawn',
@@ -865,7 +865,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -900,9 +900,9 @@
 # name: test_all_entities[sensor.joost_total_daily_chess_games_lost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total daily chess games lost',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Total daily chess games lost',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_total_daily_chess_games_lost',
@@ -919,7 +919,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -954,9 +954,9 @@
 # name: test_all_entities[sensor.joost_total_daily_chess_games_won-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total daily chess games won',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Total daily chess games won',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_total_daily_chess_games_won',
@@ -973,7 +973,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1008,9 +1008,9 @@
 # name: test_all_entities[sensor.joost_total_rapid_chess_games_drawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total rapid chess games drawn',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Total rapid chess games drawn',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_total_rapid_chess_games_drawn',
@@ -1027,7 +1027,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1062,9 +1062,9 @@
 # name: test_all_entities[sensor.joost_total_rapid_chess_games_lost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total rapid chess games lost',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Total rapid chess games lost',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_total_rapid_chess_games_lost',
@@ -1081,7 +1081,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1116,9 +1116,9 @@
 # name: test_all_entities[sensor.joost_total_rapid_chess_games_won-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Joost Total rapid chess games won',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Joost Total rapid chess games won',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.joost_total_rapid_chess_games_won',

@@ -8,7 +8,7 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .common import mock_dsm_information
+from .common import mock_dsm_hardware, mock_dsm_information
 
 
 @pytest.fixture
@@ -35,6 +35,7 @@ def fixture_dsm():
 
         dsm.information = mock_dsm_information()
         dsm.network.update = AsyncMock(return_value=True)
+        dsm.hardware = mock_dsm_hardware()
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))

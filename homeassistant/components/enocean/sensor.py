@@ -1,6 +1,7 @@
 """Support for EnOcean sensors."""
 
 from datetime import UTC, datetime
+from typing import override
 
 from enocean_async import EURID, EntityType, Gateway, Observable, Observation
 from enocean_async.semantics.value_kind import ValueKind
@@ -133,6 +134,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         else:
             self._attr_state_class = SensorStateClass.MEASUREMENT
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Seed initial value for the connection-status sensor."""
         await super().async_added_to_hass()
@@ -141,6 +143,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
                 "connected" if self.gateway.is_connected else "disconnected"
             )
 
+    @override
     def _update_from_observation(self, observation: Observation) -> None:
         """Update sensor state from a matched observation."""
         if self._observable not in observation.values:

@@ -1,5 +1,7 @@
 """Representation of an EnOcean device."""
 
+from typing import override
+
 from enocean_async import EURID, Gateway, Observable, Observation
 from enocean_async.semantics.entity import EntityCategory as LibEntityCategory
 
@@ -44,6 +46,7 @@ class EnOceanEntity(Entity):
         self.entity_key: str = entity_key
         self.gateway: Gateway = gateway
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to gateway observations and seed initial availability."""
         await super().async_added_to_hass()
@@ -79,6 +82,7 @@ class EnOceanEntity(Entity):
         """Update entity state from a matched observation (override in subclasses)."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Get device info."""
         gateway_eurid = self.gateway.eurid

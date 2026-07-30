@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from letpot.deviceclient import LetPotDeviceClient
 from letpot.models import DeviceFeature, LetPotDeviceStatus, LetPotGardenStatus
@@ -119,11 +119,13 @@ class LetPotSwitchEntity[_DataT: LetPotDeviceStatus](
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return if the entity is on."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.set_value_fn(
@@ -131,6 +133,7 @@ class LetPotSwitchEntity[_DataT: LetPotDeviceStatus](
         )
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.set_value_fn(

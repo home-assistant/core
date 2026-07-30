@@ -1,5 +1,7 @@
 """Support for buttons."""
 
+from typing import override
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -49,6 +51,7 @@ class SyncButton(ButtonEntity):
             name="Google Assistant",
         )
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         assert self._context

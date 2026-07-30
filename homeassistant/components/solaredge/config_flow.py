@@ -1,7 +1,7 @@
 """Config flow for the SolarEdge platform."""
 
 import socket
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError, ClientResponseError
 import aiosolaredge
@@ -90,6 +90,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
             return False
         return True
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -210,7 +210,7 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
             "homeassistant.components.esphome.manager.ReconnectLogic",
             BaseMockReconnectLogic,
         ),
-        patch("homeassistant.components.esphome.APIClient", mock_client),
+        patch("homeassistant.components.esphome.manager.APIClient", mock_client),
         patch("homeassistant.components.esphome.config_flow.APIClient", mock_client),
     ):
         yield mock_client

@@ -1,6 +1,6 @@
 """Support for EnOcean light sources."""
 
-from typing import Any
+from typing import Any, override
 
 from enocean_async import CentralDim, EntityType, Gateway, Observable, Observation
 
@@ -43,15 +43,17 @@ class EnOceanLight(EnOceanEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_supported_features = LightEntityFeature.TRANSITION
 
+    @override
     def _update_from_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
         if Observable.OUTPUT_VALUE in observation.values:
             pct = observation.values[Observable.OUTPUT_VALUE]
             self._attr_is_on = pct > 0
-            # Convert 0–100 % to HA brightness 0–255.
+            # Convert 0 to 100 % to HA brightness 0 to 255.
             self._attr_brightness = round(pct * 255 / 100)
             self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on or dim the light."""
         brightness: int = kwargs.get(ATTR_BRIGHTNESS, 255)
@@ -59,7 +61,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         await self.gateway.send_command(
             self.address,
             CentralDim(
-                # Convert HA brightness 0–255 to 0–100 %.
+                # Convert HA brightness 0 to 255 to 0 to 100 %.
                 dim_value=brightness * 100 / 255,
                 ramp_time=round(transition),
                 entity_id=self.entity_key,
@@ -70,6 +72,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         transition: float = kwargs.get(ATTR_TRANSITION, 0)

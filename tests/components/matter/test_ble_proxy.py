@@ -22,7 +22,7 @@ from homeassistant.components.matter.ble_proxy import (
 from homeassistant.core import HomeAssistant
 
 
-def _make_service_info() -> BluetoothServiceInfoBleak:
+def _make_service_info(time: float | None = None) -> BluetoothServiceInfoBleak:
     """Return a real BluetoothServiceInfoBleak with realistic field values."""
     address = "AA:BB:CC:DD:EE:FF"
     name = "TestDevice"
@@ -37,7 +37,7 @@ def _make_service_info() -> BluetoothServiceInfoBleak:
         device=BLEDevice(name=name, address=address, details={}),
         advertisement=None,
         connectable=True,
-        time=monotonic_time_coarse(),
+        time=monotonic_time_coarse() if time is None else time,
         tx_power=0,
         raw=None,
     )
@@ -150,6 +150,44 @@ async def test_scan_source_callback_forwards_advertisement(
 
     assert len(forwarded) == 1
     assert forwarded[0].address == "AA:BB:CC:DD:EE:FF"
+
+
+@pytest.mark.parametrize(
+    ("advert_time", "expected_count"),
+    [
+        pytest.param(969.0, 0, id="stale-31s-old-dropped"),
+        pytest.param(970.0, 1, id="boundary-30s-old-forwarded"),
+        pytest.param(990.0, 1, id="recent-10s-old-forwarded"),
+        pytest.param(1001.0, 1, id="live-after-scan-start-forwarded"),
+    ],
+)
+async def test_scan_source_drops_replayed_history(
+    hass: HomeAssistant, advert_time: float, expected_count: int
+) -> None:
+    """History older than _MAX_STALE_ADVERTISEMENT_SECONDS is dropped; fresher entries pass."""
+    forwarded: list[AdvertisementData] = []
+    captured: dict[str, object] = {}
+
+    def fake_register(hass_, cb, _matcher, _mode):
+        captured["cb"] = cb
+        return MagicMock()
+
+    source = HaBluetoothScanSource(hass)
+    with (
+        patch(
+            "homeassistant.components.matter.ble_proxy.async_register_callback",
+            side_effect=fake_register,
+        ),
+        patch(
+            "homeassistant.components.matter.ble_proxy.MONOTONIC_TIME",
+            return_value=1000.0,
+        ),
+    ):
+        await source.start(forwarded.append)
+
+    captured["cb"](_make_service_info(time=advert_time), object())
+
+    assert len(forwarded) == expected_count
 
 
 async def test_scan_source_callback_swallows_exceptions(

@@ -61,11 +61,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: VerisureConfigEntry) ->
     if not unload_ok:
         return False
 
+    return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
+    """Erase session cookie when the config entry is deleted."""
     cookie_file = hass.config.path(STORAGE_DIR, f"verisure_{entry.data[CONF_EMAIL]}")
     with suppress(FileNotFoundError):
         await hass.async_add_executor_job(os.unlink, cookie_file)
-
-    return True
 
 
 def migrate_cookie_files(hass: HomeAssistant, entry: ConfigEntry) -> None:

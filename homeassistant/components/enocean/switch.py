@@ -1,6 +1,6 @@
 """Support for EnOcean switches."""
 
-from typing import Any
+from typing import Any, override
 
 from enocean_async import EntityType, Gateway, Observable, Observation, SetSwitchOutput
 
@@ -35,12 +35,14 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
     _attr_device_class = SwitchDeviceClass.SWITCH
 
+    @override
     def _update_from_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
         if Observable.SWITCH_STATE in observation.values:
             self._attr_is_on = bool(observation.values[Observable.SWITCH_STATE])
             self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.gateway.send_command(
@@ -48,6 +50,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
             SetSwitchOutput(output_value=100, entity_id=self.entity_key),
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.gateway.send_command(

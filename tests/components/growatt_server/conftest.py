@@ -138,10 +138,12 @@ def mock_growatt_v1_api():
         }
 
         # Called by total coordinator during refresh
+        # Note: V1 API returns current_power in kW; the coordinator
+        # converts it to W when mapping to invTodayPpv.
         mock_v1_api.plant_energy_overview.return_value = {
             "today_energy": 12.5,
             "total_energy": 1250.0,
-            "current_power": 2500,
+            "current_power": 2.5,
         }
 
         # Called by switch/number entities during turn_on/turn_off/set_value

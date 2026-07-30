@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.exceptions.device import DeviceNotFound, DevicePasswordProtected
@@ -64,6 +64,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
     host: str
     _reauth_entry: DevoloHomeNetworkConfigEntry
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -91,6 +92,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

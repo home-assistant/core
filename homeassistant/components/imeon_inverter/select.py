@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -60,6 +61,7 @@ class InverterSelect(InverterEntity, SelectEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the state of the select."""
         value = self.coordinator.data.get(self.data_key)
@@ -67,6 +69,7 @@ class InverterSelect(InverterEntity, SelectEntity):
             return None
         return self.entity_description.values.get(value)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.set_value_fn(self.coordinator.api, option)

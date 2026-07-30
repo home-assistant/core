@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 import glob
-from typing import Any
+from typing import Any, override
 
 from enocean_async import DEVICE_TYPES, DeviceType, Gateway
 from enocean_async.address import EURID, Address
@@ -85,6 +85,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the EnOcean config flow."""
         self.data: dict[str, Any] = {}
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
         unique_id = usb_unique_id_from_service_info(discovery_info)
@@ -126,6 +127,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -195,12 +197,13 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             return False
         finally:
             if gateway:
-                gateway.stop()
+                await gateway.stop()
 
         return True
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: EnOceanConfigEntry,
     ) -> OptionsFlow:

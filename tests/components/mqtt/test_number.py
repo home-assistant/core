@@ -6,7 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt, number
+from homeassistant.components import number
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.number import (
     CONF_MAX,
     CONF_MIN,
@@ -69,7 +70,7 @@ from tests.common import async_fire_mqtt_message, mock_restore_cache_with_extra_
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {number.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+    DOMAIN: {number.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
 
 
@@ -78,7 +79,7 @@ DEFAULT_CONFIG = {
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -95,7 +96,7 @@ DEFAULT_CONFIG = {
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -112,7 +113,7 @@ DEFAULT_CONFIG = {
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -163,7 +164,7 @@ async def test_run_number_setup(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "state_topic": "test/state_number",
                     "command_topic": "test/cmd_number",
@@ -260,7 +261,7 @@ async def test_native_value_validation(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "name": "test",
                     "command_topic": "test-topic-cmd",
@@ -316,7 +317,7 @@ async def test_equivalent_unit_of_measurement(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "state_topic": "test/state_number",
                     "command_topic": "test/cmd_number",
@@ -368,7 +369,7 @@ async def test_value_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "command_topic": "test/number",
                     "device_class": "temperature",
@@ -406,7 +407,7 @@ async def test_restore_native_value(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "command_topic": "test/number",
                     "name": "Test Number",
@@ -489,7 +490,7 @@ async def test_run_number_service_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "command_topic": "test/number",
                     "name": "Test Number",
@@ -572,7 +573,7 @@ async def test_run_number_service_optimistic_with_command_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "command_topic": "test/number/set",
                     "state_topic": "test/number",
@@ -612,7 +613,7 @@ async def test_run_number_service(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "command_topic": "test/number/set",
                     "state_topic": "test/number",
@@ -753,7 +754,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -783,7 +784,7 @@ async def test_discovery_removal_number(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered number."""
-    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][number.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[DOMAIN][number.DOMAIN])
     await help_test_discovery_removal(hass, mqtt_mock_entry, number.DOMAIN, data)
 
 
@@ -910,7 +911,7 @@ async def test_entity_debug_info_message(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -927,7 +928,7 @@ async def test_entity_debug_info_message(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -963,7 +964,7 @@ async def test_min_max_step_attributes(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "state_topic": "test/state_number",
                     "command_topic": "test/cmd_number",
@@ -988,7 +989,7 @@ async def test_invalid_min_max_attributes(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "state_topic": "test/state_number",
                     "command_topic": "test/cmd_number",
@@ -1013,7 +1014,7 @@ async def test_default_mode(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -1026,7 +1027,7 @@ async def test_default_mode(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -1039,7 +1040,7 @@ async def test_default_mode(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -1069,7 +1070,7 @@ async def test_mode(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -1082,7 +1083,7 @@ async def test_mode(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -1110,7 +1111,7 @@ async def test_invalid_mode(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "state_topic": "test/state_number",
                     "command_topic": "test/cmd_number",
@@ -1141,7 +1142,7 @@ async def test_mqtt_payload_not_a_number_warning(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "state_topic": "test/state_number",
                     "command_topic": "test/cmd_number",
@@ -1242,7 +1243,7 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
         number.DOMAIN,
-        DEFAULT_CONFIG[mqtt.DOMAIN][number.DOMAIN],
+        DEFAULT_CONFIG[DOMAIN][number.DOMAIN],
         topic,
         value,
         attribute,

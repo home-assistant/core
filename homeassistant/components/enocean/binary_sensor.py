@@ -1,5 +1,7 @@
 """Support for EnOcean binary sensors."""
 
+from typing import override
+
 from enocean_async import EURID, EntityType, Gateway, Observation
 from enocean_async.semantics.value_kind import ValueKind
 
@@ -66,6 +68,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         if not track_gateway_availability:
             self._attr_available = True
 
+    @override
     def _update_from_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
         # Pick the first binary-kinded observable value present.

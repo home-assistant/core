@@ -1,6 +1,6 @@
 """Support for Toon thermostat."""
 
-from typing import Any
+from typing import Any, override
 
 from toonapi import (
     ACTIVE_STATE_AWAY,
@@ -66,10 +66,11 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
             PRESET_SLEEP,
         ]
         self._attr_unique_id = (
-            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_climate"
+            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_climate"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
         )
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation."""
         if self.coordinator.data.thermostat.heating:
@@ -77,6 +78,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         return HVACAction.IDLE
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         mapping = {
@@ -88,29 +90,32 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         return mapping.get(self.coordinator.data.thermostat.active_state)
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.coordinator.data.thermostat.current_display_temperature
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.coordinator.data.thermostat.current_setpoint
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the current state of the burner."""
         return {"heating_type": self.coordinator.data.agreement.heating_type}
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @toon_exception_handler
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Change the setpoint of the thermostat."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         await self.coordinator.toon.set_current_setpoint(temperature)
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @toon_exception_handler
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         mapping = {
@@ -122,6 +127,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         if preset_mode in mapping:
             await self.coordinator.toon.set_active_state(mapping[preset_mode])
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         # Intentionally left empty

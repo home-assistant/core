@@ -1,6 +1,6 @@
 """Config flow to configure the RainMachine component."""
 
-from typing import Any
+from typing import Any, override
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -57,18 +57,21 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> RainMachineOptionsFlowHandler:
         """Define the config flow to handle options."""
         return RainMachineOptionsFlowHandler()
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by homekit discovery."""
         return await self.async_step_homekit_zeroconf(discovery_info)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -120,6 +123,7 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
             }
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
