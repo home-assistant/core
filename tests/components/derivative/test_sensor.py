@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -1136,6 +1137,75 @@ async def test_unavailable_boot(
         # we can calculate derivative
         assert state.state == "5.00"
         assert state.attributes.get("unit_of_measurement") == "kW"
+
+
+async def test_restore_state_with_custom_unit(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a unit set by the user is applied to the restored state."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "name": "derivative",
+            "round": 2,
+            "source": "sensor.energy",
+            "time_window": {"seconds": 0.0},
+            "unit_time": "h",
+        },
+        title="derivative",
+    )
+    config_entry.add_to_hass(hass)
+
+    # The source is an energy sensor in Wh and no unit prefix is configured, so the
+    # native unit is W. The user has overridden the displayed unit to kW.
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        config_entry.entry_id,
+        config_entry=config_entry,
+        suggested_object_id="derivative",
+    )
+    entity_registry.async_update_entity_options(
+        "sensor.derivative", "sensor", {"unit_of_measurement": UnitOfPower.KILO_WATT}
+    )
+
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    "sensor.derivative",
+                    "1.00",
+                    {
+                        ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
+                    },
+                ),
+                {
+                    "native_value": "1000.00",
+                    "native_unit_of_measurement": UnitOfPower.WATT,
+                },
+            ),
+        ],
+    )
+
+    hass.states.async_set(
+        "sensor.energy",
+        "5",
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.WATT_HOUR,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.derivative")
+    assert state
+    assert state.state == "1.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.KILO_WATT
 
 
 async def test_source_unit_change(

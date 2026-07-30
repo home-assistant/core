@@ -50,6 +50,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 
 from .const import (
     CONF_MAX_SUB_INTERVAL,
@@ -417,17 +418,16 @@ class IntegrationSensor(RestoreSensor):
         self._last_valid_state = self._state
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-
+    async def async_internal_added_to_hass(self) -> None:
+        """Restore the unit and device class before the entity options are read."""
+        # The base class reads the unit set by the user from the entity registry, which
+        # is only applied once the device class and the native unit are known.
         if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
             self._state = (
                 Decimal(str(last_sensor_data.native_value))
                 if last_sensor_data.native_value
                 else last_sensor_data.last_valid_state
             )
-            self._attr_native_value = last_sensor_data.native_value
             self._unit_of_measurement = last_sensor_data.native_unit_of_measurement
             self._last_valid_state = last_sensor_data.last_valid_state
 
@@ -436,6 +436,31 @@ class IntegrationSensor(RestoreSensor):
                 self._state,
                 self._last_valid_state,
             )
+
+        if (
+            (last_state := await self.async_get_last_state())
+            and (
+                device_class := try_parse_enum(
+                    SensorDeviceClass,
+                    last_state.attributes.get(EntityStateAttribute.DEVICE_CLASS),
+                )
+            )
+            and self._unit_of_measurement in DEVICE_CLASS_UNITS.get(device_class, set())
+        ):
+            self._attr_device_class = device_class
+            self._attr_icon = None
+
+        if (
+            state := self.hass.states.get(self._source_entity)
+        ) and state.state != STATE_UNAVAILABLE:
+            self._derive_and_set_attributes_from_state(state)
+
+        await super().async_internal_added_to_hass()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
 
         if self._max_sub_interval is not None:
             source_state = self.hass.states.get(self._sensor_source_id)
@@ -446,11 +471,6 @@ class IntegrationSensor(RestoreSensor):
         else:
             handle_state_change = self._integrate_on_state_change_callback
             handle_state_report = self._integrate_on_state_report_callback
-
-        if (
-            state := self.hass.states.get(self._source_entity)
-        ) and state.state != STATE_UNAVAILABLE:
-            self._derive_and_set_attributes_from_state(state)
 
         self.async_on_remove(
             async_track_state_change_event(

@@ -44,6 +44,7 @@ from tests.common import (
 )
 
 DEFAULT_MAX_SUB_INTERVAL = {"minutes": 1}
+INTEGRATION_ENTITY_ID = "sensor.integration"
 
 
 @pytest.mark.parametrize(
@@ -249,6 +250,71 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.integration")
     assert state
     assert state.state == "100.00"
+
+
+async def test_restore_state_with_custom_unit(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a unit set by the user is applied to the restored state."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "method": "trapezoidal",
+            "name": "integration",
+            "round": 3,
+            "source": "sensor.power",
+            "unit_time": UnitOfTime.HOURS,
+        },
+        title="integration",
+    )
+    config_entry.add_to_hass(hass)
+
+    # The source is a power sensor in W and no unit prefix is configured, so the
+    # native unit is Wh. The user has overridden the displayed unit to kWh.
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        config_entry.entry_id,
+        config_entry=config_entry,
+        suggested_object_id="integration",
+    )
+    entity_registry.async_update_entity_options(
+        INTEGRATION_ENTITY_ID,
+        "sensor",
+        {"unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR},
+    )
+
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    INTEGRATION_ENTITY_ID,
+                    "734.213",
+                    {
+                        ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+                    },
+                ),
+                {
+                    "native_value": 734213.0,
+                    "native_unit_of_measurement": UnitOfEnergy.WATT_HOUR,
+                    "source_entity": "sensor.power",
+                    "last_valid_state": "734213.0",
+                },
+            ),
+        ],
+    )
+
+    # The source has no state yet, replicating a restart where the source
+    # integration has not been set up yet
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(INTEGRATION_ENTITY_ID)
+    assert state
+    assert state.state == "734.213"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.KILO_WATT_HOUR
 
 
 @pytest.mark.parametrize(

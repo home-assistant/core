@@ -50,6 +50,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.enum import try_parse_enum
 
 from .const import (
     CONF_MAX_SUB_INTERVAL,
@@ -365,19 +366,34 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 self._attr_native_value = None
 
         last_state = await self.async_get_last_state()
-        if last_state:
-            self._attr_device_class = last_state.attributes.get(
-                EntityStateAttribute.DEVICE_CLASS
+        if (
+            last_state
+            and (
+                device_class := try_parse_enum(
+                    SensorDeviceClass,
+                    last_state.attributes.get(EntityStateAttribute.DEVICE_CLASS),
+                )
             )
+            and self._attr_native_unit_of_measurement
+            in DEVICE_CLASS_UNITS.get(device_class, set())
+        ):
+            self._attr_device_class = device_class
+
+    @override
+    async def async_internal_added_to_hass(self) -> None:
+        """Restore the unit and device class before the entity options are read."""
+        # The base class reads the unit set by the user from the entity registry, which
+        # is only applied once the device class and the native unit are known.
+        await self._handle_restore()
+        self._derive_and_set_attributes_from_state(
+            self.hass.states.get(self._sensor_source_id)
+        )
+        await super().async_internal_added_to_hass()
 
     @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        await self._handle_restore()
-
-        source_state = self.hass.states.get(self._sensor_source_id)
-        self._derive_and_set_attributes_from_state(source_state)
 
         def schedule_max_sub_interval_exceeded(source_state: State | None) -> None:
             """Schedule calculation using the source state and max_sub_interval.
