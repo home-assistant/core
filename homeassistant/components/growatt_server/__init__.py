@@ -179,8 +179,9 @@ async def async_migrate_entry(
                     )
                     return False
 
-                # plant_list() is annotated as list by the library, but the classic
-                # API returns a dict {"data": [...]}; guard the runtime shape.
+                # plant_list() is annotated as list, but the classic API returns
+                # {"data": [...]}. Remove once the annotation is fixed upstream:
+                # https://github.com/indykoning/PyPi_GrowattServer/issues/157
                 if not isinstance(plant_info, dict) or not plant_info.get("data"):
                     _LOGGER.error(
                         "No plants found for this account. "
