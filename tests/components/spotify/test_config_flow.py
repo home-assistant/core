@@ -57,6 +57,7 @@ async def test_full_flow(
         "&scope=user-modify-playback-state,user-read-playback-state,user-read-private,"
         "playlist-read-private,playlist-read-collaborative,user-library-read,"
         "user-top-read,user-read-playback-position,user-read-recently-played,user-follow-read"
+        "&show_dialog=true"
     )
 
     client = await hass_client_no_auth()
