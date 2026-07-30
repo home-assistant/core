@@ -39,7 +39,7 @@
           "state": "Entity used to override the reported state, taking precedence over the active child's state.",
           "volume_level": "Entity used to override the reported volume level."
         },
-        "description": "Override specific attributes using another entity's state. Use the format `entity_id|attribute`, or just `entity_id` to use its state. Leave a field blank to use the active child's value.",
+        "description": "Override specific attributes using another entity's state. Use the format `entity_id|attribute` to use a specific attribute (for example, `media_player.receiver|volume_level`), or just `entity_id` to use its state (for example, `switch.tv_power`). Leave a field blank to use the active child's value.",
         "title": "Attribute overrides"
       },
       "commands": {
