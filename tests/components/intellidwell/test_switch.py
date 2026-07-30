@@ -42,14 +42,17 @@ async def test_switches(
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_status",
             return_value=status_data,
+            create=True,
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_rain_delay",
             return_value={"days_remaining": 0},
+            create=True,
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_schedules",
             return_value=[{"enabled": True}, {"enabled": False}],
+            create=True,
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -85,7 +88,8 @@ async def test_switches(
         assert sched_state2.state == "off"
 
         with patch(
-            "homeassistant.components.intellidwell.IntelliDwellClient.set_relay"
+            "homeassistant.components.intellidwell.IntelliDwellClient.set_relay",
+            create=True,
         ) as mock_set_relay:
             await hass.services.async_call(
                 SWITCH_DOMAIN,
@@ -96,7 +100,8 @@ async def test_switches(
             mock_set_relay.assert_called_once_with(0, "on")
 
         with patch(
-            "homeassistant.components.intellidwell.IntelliDwellClient.set_relay"
+            "homeassistant.components.intellidwell.IntelliDwellClient.set_relay",
+            create=True,
         ) as mock_set_relay:
             await hass.services.async_call(
                 SWITCH_DOMAIN,
@@ -107,7 +112,8 @@ async def test_switches(
             mock_set_relay.assert_called_once_with(1, "off")
 
         with patch(
-            "homeassistant.components.intellidwell.IntelliDwellClient.set_schedule_enabled"
+            "homeassistant.components.intellidwell.IntelliDwellClient.set_schedule_enabled",
+            create=True,
         ) as mock_set_sched:
             await hass.services.async_call(
                 SWITCH_DOMAIN,
@@ -122,7 +128,8 @@ async def test_switches(
             mock_set_sched.assert_called_once_with(0, False)
 
         with patch(
-            "homeassistant.components.intellidwell.IntelliDwellClient.set_schedule_enabled"
+            "homeassistant.components.intellidwell.IntelliDwellClient.set_schedule_enabled",
+            create=True,
         ) as mock_set_sched:
             await hass.services.async_call(
                 SWITCH_DOMAIN,
@@ -150,14 +157,17 @@ async def test_switch_setup_failure(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_status",
             side_effect=IntelliDwellConnectionError,
+            create=True,
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_rain_delay",
             side_effect=IntelliDwellConnectionError,
+            create=True,
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_schedules",
             side_effect=IntelliDwellConnectionError,
+            create=True,
         ),
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
@@ -183,14 +193,17 @@ async def _setup_entry(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_status",
             return_value=status_data,
+            create=True,
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_rain_delay",
             return_value={"days_remaining": 0},
+            create=True,
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_schedules",
             return_value=[],
+            create=True,
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -205,6 +218,7 @@ async def test_turn_on_connection_error(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.set_relay",
             side_effect=IntelliDwellConnectionError("timeout"),
+            create=True,
         ),
         pytest.raises(HomeAssistantError, match="Error turning on zone 1"),
     ):
@@ -224,6 +238,7 @@ async def test_turn_off_connection_error(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.set_relay",
             side_effect=IntelliDwellConnectionError("timeout"),
+            create=True,
         ),
         pytest.raises(HomeAssistantError, match="Error turning off zone 1"),
     ):
@@ -243,6 +258,7 @@ async def test_schedule_switch_connection_errors(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.set_schedule_enabled",
             side_effect=IntelliDwellConnectionError("timeout"),
+            create=True,
         ),
         pytest.raises(HomeAssistantError, match="Error enabling schedule for zone 1"),
     ):
@@ -261,6 +277,7 @@ async def test_schedule_switch_connection_errors(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.set_schedule_enabled",
             side_effect=IntelliDwellConnectionError("timeout"),
+            create=True,
         ),
         pytest.raises(HomeAssistantError, match="Error disabling schedule for zone 1"),
     ):
