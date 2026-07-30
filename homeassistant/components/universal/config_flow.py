@@ -209,6 +209,17 @@ class UniversalFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
                 [_flatten_templates(yaml_commands[cmd])] if cmd in yaml_commands else []
             )
 
+        # YAML commands accept arbitrary slug keys (play_media, toggle,
+        # repeat_set, shuffle_set, clear_playlist, etc.), not just
+        # EXPOSED_COMMANDS; preserve anything outside that bounded list so
+        # migration doesn't silently turn them into delegation to the active
+        # child.
+        options[CONF_COMMANDS] = {
+            cmd: _flatten_templates(action)
+            for cmd, action in yaml_commands.items()
+            if cmd not in EXPOSED_COMMANDS
+        }
+
         _LOGGER.warning(
             (
                 "Universal media player '%s' is configured via YAML, which is "

@@ -1480,6 +1480,41 @@ async def test_async_setup_entry_commands(hass: HomeAssistant) -> None:
     assert len(service) == 1
 
 
+async def test_async_setup_entry_extra_command(hass: HomeAssistant) -> None:
+    """Test a command preserved outside EXPOSED_COMMANDS via a config entry.
+
+    Commands like play_media don't have a UI field of their own, so
+    async_step_import preserves them under CONF_COMMANDS instead of a flat
+    per-command key; this verifies async_setup_entry still wires them up.
+    """
+    service = async_mock_service(hass, "test", "play_media")
+
+    config_entry = MockConfigEntry(
+        domain=universal.DOMAIN,
+        title="Entry extra command",
+        options={
+            "name": "Entry extra command",
+            "children": [],
+            "commands": {"play_media": {"action": "test.play_media"}},
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_PLAY_MEDIA,
+        {
+            "entity_id": "media_player.entry_extra_command",
+            "media_content_id": "some_id",
+            "media_content_type": "movie",
+        },
+        blocking=True,
+    )
+    assert len(service) == 1
+
+
 async def test_async_setup_entry_device_class_and_attributes(
     hass: HomeAssistant,
 ) -> None:

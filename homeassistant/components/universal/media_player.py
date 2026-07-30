@@ -210,6 +210,12 @@ async def async_setup_entry(
             # Preserved from a YAML import that stored a raw service-call dict.
             commands[cmd] = cv.SERVICE_SCHEMA(actions)
 
+    # Commands outside EXPOSED_COMMANDS (play_media, toggle, repeat_set, etc.)
+    # are preserved by the YAML import under CONF_COMMANDS instead of a flat
+    # per-command key, since they don't have a UI field of their own.
+    for cmd, action in options.get(CONF_COMMANDS, {}).items():
+        commands[cmd] = cv.SERVICE_SCHEMA(action)
+
     raw_attrs = options.get(CONF_ATTRS, {})
     if isinstance(raw_attrs, list):
         merged: dict[str, str] = {}

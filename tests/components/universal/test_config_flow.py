@@ -188,6 +188,7 @@ async def test_import_with_unique_id(hass: HomeAssistant) -> None:
                     "action": "test.turn_on",
                     "data": {"level": "{{ volume_level }}"},
                 },
+                "play_media": {"action": "test.play_media"},
             },
             CONF_ATTRS: {"state": "switch.state"},
             CONF_BROWSE_MEDIA_ENTITY: "media_player.mock1",
@@ -214,6 +215,9 @@ async def test_import_with_unique_id(hass: HomeAssistant) -> None:
         CONF_DEVICE_CLASS: "tv",
         CONF_ACTIVE_CHILD_TEMPLATE: "{{ 'media_player.mock1' }}",
         CONF_STATE_TEMPLATE: "{{ states('media_player.mock1') }}",
+        # play_media isn't in EXPOSED_COMMANDS (no UI field for it), so it's
+        # preserved separately rather than dropped.
+        CONF_COMMANDS: {"play_media": {"action": "test.play_media"}},
         **{
             cmd: [{"action": "test.turn_on", "data": {"level": "{{ volume_level }}"}}]
             if cmd == "turn_on"
