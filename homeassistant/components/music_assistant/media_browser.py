@@ -261,7 +261,6 @@ async def build_artist_items_listing(
         can_play=True,
         can_expand=True,
         can_search=True,
-        # searching an artist looks through their albums and tracks
         search_media_classes=[MediaClass.ALBUM, MediaClass.TRACK],
         children_media_class=MediaClass.ALBUM,
         children=[
@@ -617,7 +616,9 @@ def _process_search_results(
 
 def _should_expand_media_type(media_type: str) -> bool:
     """Determine if a media type should be expandable."""
-    return media_type in ("artist", "album", "playlist", "podcast")
+    # podcasts are left out because we cannot browse their episodes,
+    # which is also why the podcasts listing builds them non-expandable
+    return media_type in ("artist", "album", "playlist")
 
 
 def _get_media_class_for_type(media_type: str) -> MediaClass | None:

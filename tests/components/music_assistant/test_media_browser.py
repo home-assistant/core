@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from music_assistant_models.enums import MediaType as MASSMediaType
+from music_assistant_models.media_items import SearchResults
 import pytest
 
 from homeassistant.components.media_player import (
@@ -434,6 +435,38 @@ async def test_browse_artist_search_media_classes(
     )
 
     assert browse_item.search_media_classes == [MediaClass.ALBUM, MediaClass.TRACK]
+
+
+async def test_search_media_results_are_browsable(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that every expandable search result can actually be browsed."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    media_types = ["artist", "album", "track", "playlist", "radio", "podcast"]
+    mock = MockSearchResults(media_types)
+    results = SearchResults(
+        artists=mock.artists,
+        albums=mock.albums,
+        tracks=mock.tracks,
+        playlists=mock.playlists,
+        radio=mock.radio,
+        podcasts=mock.podcasts,
+    )
+
+    with patch.object(music_assistant_client.music, "search", return_value=results):
+        search_results = await async_search_media(
+            music_assistant_client, SearchMediaQuery(search_query="test")
+        )
+
+    expandable = [item for item in search_results.result if item.can_expand]
+    assert expandable
+    for item in expandable:
+        # raises BrowseError if the browse tree has no route for this item
+        await async_browse_media(
+            hass, music_assistant_client, item.media_content_id, item.media_content_type
+        )
 
 
 async def test_search_media_websocket_from_library_listing(
