@@ -1476,3 +1476,56 @@ async def test_async_setup_entry_commands(hass: HomeAssistant) -> None:
         blocking=True,
     )
     assert len(service) == 1
+
+
+async def test_async_setup_entry_device_class_and_attributes(
+    hass: HomeAssistant,
+) -> None:
+    """Test device_class and attribute overrides configured through a config entry."""
+    hass.states.async_set("switch.tv_state", STATE_ON)
+
+    config_entry = MockConfigEntry(
+        domain=universal.DOMAIN,
+        title="Entry advanced",
+        options={
+            "name": "Entry advanced",
+            "children": [],
+            "device_class": "speaker",
+            "attributes": {"state": "switch.tv_state"},
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.entry_advanced")
+    assert state.attributes["device_class"] == "speaker"
+    assert state.state == STATE_ON
+
+
+async def test_async_setup_entry_templates(hass: HomeAssistant) -> None:
+    """Test active_child_template and state_template configured through a config entry."""
+    hass.states.async_set("media_player.mock1", STATE_OFF)
+    hass.states.async_set("media_player.mock2", STATE_PLAYING)
+
+    config_entry = MockConfigEntry(
+        domain=universal.DOMAIN,
+        title="Entry templates",
+        options={
+            "name": "Entry templates",
+            "children": [
+                media_player.ENTITY_ID_FORMAT.format("mock1"),
+                media_player.ENTITY_ID_FORMAT.format("mock2"),
+            ],
+            "active_child_template": "{{ 'media_player.mock1' }}",
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # active_child_template forces mock1 (off) to be treated as active,
+    # overriding the default of picking mock2 (playing).
+    assert hass.states.get("media_player.entry_templates").state == STATE_OFF

@@ -81,6 +81,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,6 +95,35 @@ CONF_ATTRS = "attributes"
 CONF_CHILDREN = "children"
 CONF_COMMANDS = "commands"
 CONF_BROWSE_MEDIA_ENTITY = "browse_media_entity"
+
+# Config/options flow commands and attributes exposed via ActionSelector/
+# TextSelector fields; kept here (rather than in config_flow.py) so
+# async_setup_entry can share the same list without a circular import.
+EXPOSED_COMMANDS = (
+    SERVICE_TURN_ON,
+    SERVICE_TURN_OFF,
+    SERVICE_VOLUME_UP,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
+    SERVICE_SELECT_SOURCE,
+    SERVICE_SELECT_SOUND_MODE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_STOP,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+)
+
+EXPOSED_ATTRIBUTES = (
+    "state",
+    "is_volume_muted",
+    "volume_level",
+    "source",
+    "source_list",
+    "sound_mode",
+    "sound_mode_list",
+)
 
 STATES_ORDER = [
     STATE_UNKNOWN,
@@ -167,14 +197,7 @@ async def async_setup_entry(
     # dict that async_call_from_config expects.  Empty lists mean the command
     # was not configured and should be omitted from the commands dict entirely.
     commands: dict[str, Any] = {}
-    for cmd in (
-        SERVICE_TURN_ON,
-        SERVICE_TURN_OFF,
-        SERVICE_VOLUME_UP,
-        SERVICE_VOLUME_DOWN,
-        SERVICE_VOLUME_MUTE,
-        SERVICE_SELECT_SOURCE,
-    ):
+    for cmd in EXPOSED_COMMANDS:
         actions = options.get(cmd, [])
         if isinstance(actions, list) and actions:
             commands[cmd] = actions[0]
@@ -189,6 +212,15 @@ async def async_setup_entry(
             merged.update(item)
         raw_attrs = merged
 
+    # TemplateSelector (and YAML import) store templates as raw strings;
+    # compile them here since UniversalMediaPlayer expects Template objects.
+    active_child_template = None
+    if raw_template := options.get(CONF_ACTIVE_CHILD_TEMPLATE):
+        active_child_template = Template(raw_template, hass)
+    state_template = None
+    if raw_template := options.get(CONF_STATE_TEMPLATE):
+        state_template = Template(raw_template, hass)
+
     config: ConfigType = {
         CONF_NAME: config_entry.title,
         CONF_CHILDREN: options.get(CONF_CHILDREN, []),
@@ -200,8 +232,8 @@ async def async_setup_entry(
         CONF_UNIQUE_ID: config_entry.unique_id or config_entry.entry_id,
         CONF_BROWSE_MEDIA_ENTITY: options.get(CONF_BROWSE_MEDIA_ENTITY),
         CONF_DEVICE_CLASS: options.get(CONF_DEVICE_CLASS),
-        CONF_ACTIVE_CHILD_TEMPLATE: options.get(CONF_ACTIVE_CHILD_TEMPLATE),
-        CONF_STATE_TEMPLATE: options.get(CONF_STATE_TEMPLATE),
+        CONF_ACTIVE_CHILD_TEMPLATE: active_child_template,
+        CONF_STATE_TEMPLATE: state_template,
     }
 
     async_add_entities([UniversalMediaPlayer(hass, config)])
