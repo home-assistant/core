@@ -29,7 +29,7 @@
     'name': 'UnifiProtect',
     'name_by_user': None,
     'serial_number': None,
-    'sw_version': '6.0.0',
+    'sw_version': '7.1.0',
     'via_device_id': None,
   })
 # ---
