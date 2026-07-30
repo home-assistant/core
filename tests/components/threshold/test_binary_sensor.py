@@ -20,6 +20,7 @@ from homeassistant.components.threshold.const import (
     POSITION_UNKNOWN,
     TYPE_LOWER,
     TYPE_RANGE,
+    TYPE_RANGE_INVERTED,
     TYPE_UPPER,
 )
 from homeassistant.const import (
@@ -407,6 +408,164 @@ async def test_sensor_in_range_with_hysteresis(
     )
     assert state.attributes[ATTR_HYSTERESIS] == 2.0
     assert state.attributes[ATTR_TYPE] == TYPE_RANGE
+
+    for val in vals:
+        hass.states.async_set("sensor.test_monitored", val)
+        await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.threshold")
+    assert state.attributes[ATTR_POSITION] == expected_position
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("vals", "expected_position", "expected_state"),
+    [
+        ([10], POSITION_IN_RANGE, STATE_OFF),  # at lower threshold
+        ([10, 20], POSITION_IN_RANGE, STATE_OFF),  # lower threshold -> upper threshold
+        ([10, 20, 16], POSITION_IN_RANGE, STATE_OFF),
+        ([10, 20, 16, 9], POSITION_BELOW, STATE_ON),
+        ([10, 20, 16, 9, 21], POSITION_ABOVE, STATE_ON),
+        ([10, 20, 16, 9, 21, "cat"], POSITION_UNKNOWN, STATE_UNKNOWN),
+        ([10, 20, 16, 9, 21, "cat", 21], POSITION_ABOVE, STATE_ON),
+        ([21, None], POSITION_UNKNOWN, STATE_UNKNOWN),
+        # upper threshold -> lower threshold
+        ([20, 10], POSITION_IN_RANGE, STATE_OFF),
+        # in-range -> upper threshold
+        ([15, 20], POSITION_IN_RANGE, STATE_OFF),
+        # in-range -> lower threshold
+        ([15, 10], POSITION_IN_RANGE, STATE_OFF),
+        # below -> above
+        ([5, 25], POSITION_ABOVE, STATE_ON),
+        # above -> below
+        ([25, 5], POSITION_BELOW, STATE_ON),
+        # in-range -> above
+        ([15, 25], POSITION_ABOVE, STATE_ON),
+        # in-range -> below
+        ([15, 5], POSITION_BELOW, STATE_ON),
+    ],
+)
+async def test_sensor_in_range_inverted_no_hysteresis(
+    hass: HomeAssistant,
+    vals: list[float | str | None],
+    expected_position: str,
+    expected_state: str,
+) -> None:
+    """Test if source is within the range."""
+    config = {
+        Platform.BINARY_SENSOR: {
+            CONF_PLATFORM: "threshold",
+            CONF_LOWER: "10",
+            CONF_UPPER: "20",
+            CONF_ENTITY_ID: "sensor.test_monitored",
+        }
+    }
+
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.threshold")
+    assert state.attributes[ATTR_ENTITY_ID] == "sensor.test_monitored"
+    assert state.attributes[ATTR_LOWER] == float(
+        config[Platform.BINARY_SENSOR][CONF_LOWER]
+    )
+    assert state.attributes[ATTR_UPPER] == float(
+        config[Platform.BINARY_SENSOR][CONF_UPPER]
+    )
+    assert state.attributes[ATTR_HYSTERESIS] == 0.0
+    assert state.attributes[ATTR_TYPE] == TYPE_RANGE_INVERTED
+
+    for val in vals:
+        hass.states.async_set("sensor.test_monitored", val)
+        await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.threshold")
+    assert state.attributes[ATTR_POSITION] == expected_position
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("vals", "expected_position", "expected_state"),
+    [
+        ([12], POSITION_IN_RANGE, STATE_OFF),  # lower threshold + hysteresis
+        ([12, 22], POSITION_IN_RANGE, STATE_OFF),  # upper threshold + hysteresis
+        ([12, 22, 18], POSITION_IN_RANGE, STATE_OFF),  # upper threshold - hysteresis
+        ([12, 22, 18, 16], POSITION_IN_RANGE, STATE_OFF),
+        ([12, 22, 18, 16, 8], POSITION_IN_RANGE, STATE_OFF),
+        ([12, 22, 18, 16, 8, 7], POSITION_BELOW, STATE_ON),
+        ([12, 22, 18, 16, 8, 7, 12], POSITION_BELOW, STATE_ON),
+        ([12, 22, 18, 16, 8, 7, 12, 13], POSITION_IN_RANGE, STATE_OFF),
+        ([12, 22, 18, 16, 8, 7, 12, 13, 22], POSITION_IN_RANGE, STATE_OFF),
+        ([12, 22, 18, 16, 8, 7, 12, 13, 22, 23], POSITION_ABOVE, STATE_ON),
+        ([12, 22, 18, 16, 8, 7, 12, 13, 22, 23, 18], POSITION_ABOVE, STATE_ON),
+        ([12, 22, 18, 16, 8, 7, 12, 13, 22, 23, 18, 17], POSITION_IN_RANGE, STATE_OFF),
+        (
+            [12, 22, 18, 16, 8, 7, 12, 13, 22, 23, 18, 17, "cat"],
+            POSITION_UNKNOWN,
+            STATE_UNKNOWN,
+        ),
+        (
+            [12, 22, 18, 16, 8, 7, 12, 13, 22, 23, 18, 17, "cat", 17],
+            POSITION_IN_RANGE,
+            STATE_OFF,
+        ),
+        ([17, None], POSITION_UNKNOWN, STATE_UNKNOWN),
+        # upper threshold -> lower threshold
+        ([20, 10], POSITION_IN_RANGE, STATE_OFF),
+        # in-range -> upper threshold
+        ([15, 20], POSITION_IN_RANGE, STATE_OFF),
+        # in-range -> lower threshold
+        ([15, 10], POSITION_IN_RANGE, STATE_OFF),
+        # below -> above
+        ([5, 25], POSITION_ABOVE, STATE_ON),
+        # above -> below
+        ([25, 5], POSITION_BELOW, STATE_ON),
+        # in-range -> above
+        ([15, 25], POSITION_ABOVE, STATE_ON),
+        # in-range -> below
+        ([15, 5], POSITION_BELOW, STATE_ON),
+        # below -> lower threshold
+        ([5, 10], POSITION_BELOW, STATE_ON),
+        # below -> in-range -> lower threshold
+        ([5, 15, 10], POSITION_IN_RANGE, STATE_OFF),
+        # above -> upper threshold
+        ([25, 20], POSITION_ABOVE, STATE_ON),
+        # above -> in-range -> upper threshold
+        ([25, 15, 20], POSITION_IN_RANGE, STATE_OFF),
+        ([15, 22.1], POSITION_ABOVE, STATE_ON),  # in-range -> above hysteresis edge
+        ([15, 7.9], POSITION_BELOW, STATE_ON),  # in-range -> below hysteresis edge
+        ([7, 11.9], POSITION_BELOW, STATE_ON),
+        ([23, 18.1], POSITION_ABOVE, STATE_ON),
+    ],
+)
+async def test_sensor_in_range_inverted_with_hysteresis(
+    hass: HomeAssistant,
+    vals: list[float | str | None],
+    expected_position: str,
+    expected_state: str,
+) -> None:
+    """Test if source is within the range."""
+    config = {
+        Platform.BINARY_SENSOR: {
+            CONF_PLATFORM: "threshold",
+            CONF_LOWER: "10",
+            CONF_UPPER: "20",
+            CONF_HYSTERESIS: "2",
+            CONF_ENTITY_ID: "sensor.test_monitored",
+        }
+    }
+
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.threshold")
+    assert state.attributes[ATTR_ENTITY_ID] == "sensor.test_monitored"
+    assert state.attributes[ATTR_LOWER] == float(
+        config[Platform.BINARY_SENSOR][CONF_LOWER]
+    )
+    assert state.attributes[ATTR_UPPER] == float(
+        config[Platform.BINARY_SENSOR][CONF_UPPER]
+    )
+    assert state.attributes[ATTR_HYSTERESIS] == 2.0
+    assert state.attributes[ATTR_TYPE] == TYPE_RANGE_INVERTED
 
     for val in vals:
         hass.states.async_set("sensor.test_monitored", val)

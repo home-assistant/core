@@ -24,4 +24,5 @@ POSITION_UNKNOWN: Final = "unknown"
 
 TYPE_LOWER: Final = "lower"
 TYPE_RANGE: Final = "range"
+TYPE_RANGE_INVERTED: Final = "range_inverted"
 TYPE_UPPER: Final = "upper"
