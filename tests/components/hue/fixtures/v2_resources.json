@@ -2235,6 +2235,7 @@
     "description": "Countdown Timer",
     "id": "e73bc72d-96b1-46f8-aa57-729861f80c78",
     "metadata": {
+      "category": "automation",
       "name": "Timers"
     },
     "state_schema": {

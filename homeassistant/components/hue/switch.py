@@ -28,15 +28,6 @@ from .bridge import HueConfigEntry
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
 
-# Behavior instances of these script categories are internal device
-# configuration (button mappings, entertainment cleanup) rather than user
-# facing automations. The bridge accepts a change to their `enabled` flag but
-# keeps running them regardless, so exposing them as switches is misleading.
-INTERNAL_SCRIPT_CATEGORIES = {
-    BehaviorScriptCategory.ACCESSORY,
-    BehaviorScriptCategory.ENTERTAINMENT,
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -85,11 +76,16 @@ async def async_setup_entry(
 
     @callback
     def is_user_automation(resource: BehaviorInstance) -> bool:
-        """Return if the behavior instance is a user facing automation."""
-        # older bridges do not report a category, keep the instance in that case
+        """Return if the behavior instance is an automation from the Hue app.
+
+        Anything else is device configuration, which the bridge keeps running
+        even after it accepts switching it off. Categories we do not recognise
+        are skipped too, better no switch than one that does nothing.
+        """
         script = api.config.behavior_script.get(resource.script_id)
         return (
-            script is None or script.metadata.category not in INTERNAL_SCRIPT_CATEGORIES
+            script is not None
+            and script.metadata.category is BehaviorScriptCategory.AUTOMATION
         )
 
     # clean up entities previously created for internal behavior instances

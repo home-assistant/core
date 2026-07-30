@@ -143,22 +143,32 @@ async def test_switch_added(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
     assert test_entity.state == "off"
 
 
-@pytest.mark.parametrize("category", ["accessory", "entertainment"])
+@pytest.mark.parametrize(
+    "metadata",
+    [
+        pytest.param(
+            {"name": "Hue Accessories", "category": "accessory"}, id="accessory"
+        ),
+        pytest.param(
+            {"name": "Light state after streaming", "category": "entertainment"},
+            id="entertainment",
+        ),
+        pytest.param({"name": "Old bridge script"}, id="no_category"),
+    ],
+)
 async def test_internal_behavior_instance_not_added(
     hass: HomeAssistant,
     mock_bridge_v2: Mock,
     v2_resources_test_data: JsonArrayType,
-    category: str,
+    metadata: dict,
 ) -> None:
     """Test internal behavior instances are not exposed as switches.
 
     The bridge accepts a change to `enabled` on these but keeps running them,
-    so a switch for them would silently do nothing.
+    so a switch for them would silently do nothing. Bridges that do not report
+    a category at all are skipped for the same reason.
     """
-    internal_script = {
-        **FAKE_BEHAVIOR_SCRIPT,
-        "metadata": {**FAKE_BEHAVIOR_SCRIPT["metadata"], "category": category},
-    }
+    internal_script = {**FAKE_BEHAVIOR_SCRIPT, "metadata": metadata}
     await mock_bridge_v2.api.load_test_data(
         [*v2_resources_test_data, internal_script, FAKE_BEHAVIOR_INSTANCE]
     )
