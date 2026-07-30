@@ -197,7 +197,7 @@ async def test_gv5140(hass: HomeAssistant) -> None:
     co2_sensor = hass.states.get("sensor.5140eeff_carbon_dioxide")
     co2_sensor_attributes = co2_sensor.attributes
     assert co2_sensor.state == "531"
-    assert co2_sensor_attributes[ATTR_FRIENDLY_NAME] == "5140EEFF Carbon Dioxide"
+    assert co2_sensor_attributes[ATTR_FRIENDLY_NAME] == "5140EEFF Carbon dioxide"
     assert co2_sensor_attributes[ATTR_UNIT_OF_MEASUREMENT] == "ppm"
     assert co2_sensor_attributes[ATTR_STATE_CLASS] == "measurement"
 
@@ -221,10 +221,10 @@ async def test_gvh5106(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 3
 
-    pm25_sensor = hass.states.get("sensor.h5106_4e05_pm25")
+    pm25_sensor = hass.states.get("sensor.h5106_4e05_pm2_5")
     pm25_sensor_attributes = pm25_sensor.attributes
     assert pm25_sensor.state == "0"
-    assert pm25_sensor_attributes[ATTR_FRIENDLY_NAME] == "H5106 4E05 Pm25"
+    assert pm25_sensor_attributes[ATTR_FRIENDLY_NAME] == "H5106 4E05 PM2.5"
     assert pm25_sensor_attributes[ATTR_UNIT_OF_MEASUREMENT] == "μg/m³"
     assert pm25_sensor_attributes[ATTR_STATE_CLASS] == "measurement"
 
