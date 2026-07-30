@@ -186,7 +186,7 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
     search_artist = call.data.get(ATTR_SEARCH_ARTIST)
     search_album = call.data.get(ATTR_SEARCH_ALBUM)
     search_username = call.data.get(ATTR_USERNAME)
-    if search_username:
+    if search_username is not None:
         if TYPE_CHECKING:
             assert mass.server_info
         if mass.server_info.schema_version < 35:
@@ -199,7 +199,7 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
                 },
             )
         await async_verify_mass_username_availability(
-            mass=mass, username=search_username, raise_on_error=True
+            mass=mass, username=search_username
         )
     if search_album and search_artist:
         search_name = f"{search_artist} - {search_album} - {search_name}"
