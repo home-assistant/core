@@ -1144,6 +1144,17 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
+        key="lifetime_energy_gained_regen",
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_LifetimeEnergyGainedRegen(callback)
+        ),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
         key="lifetime_energy_used",
         streaming_listener=lambda vehicle, callback: vehicle.listen_LifetimeEnergyUsed(
             callback
@@ -1161,6 +1172,18 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         ),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="g",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="miles_since_reset",
+        streaming_listener=lambda vehicle, callback: vehicle.listen_MilesSinceReset(
+            callback
+        ),
+        streaming_firmware="2025.44.25.5",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -1311,6 +1334,20 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         ),
         device_class=SensorDeviceClass.ENUM,
         options=list(SCHEDULED_CHARGING_MODES.values()),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="self_driving_miles_since_reset",
+        streaming_listener=(
+            lambda vehicle, callback: vehicle.listen_SelfDrivingMilesSinceReset(
+                callback
+            )
+        ),
+        streaming_firmware="2025.44.25.5",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),

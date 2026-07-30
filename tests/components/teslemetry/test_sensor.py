@@ -9,7 +9,12 @@ from teslemetry_stream import Signal
 
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -50,6 +55,8 @@ async def test_sensors(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_streaming(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
     mock_add_listener: AsyncMock,
@@ -72,6 +79,9 @@ async def test_sensors_streaming(
                 Signal.CHARGING_CABLE_TYPE: None,
                 Signal.TIME_TO_FULL_CHARGE: 0.166666667,
                 Signal.MINUTES_TO_ARRIVAL: None,
+                Signal.LIFETIME_ENERGY_GAINED_REGEN: 1234.5,
+                Signal.MILES_SINCE_RESET: 678.9,
+                Signal.SELF_DRIVING_MILES_SINCE_RESET: 123.4,
             },
             "credits": {
                 "type": "wake_up",
@@ -114,6 +124,65 @@ async def test_sensors_streaming(
     assert hass.states.get("sensor.teslemetry_command_credits").state == "1980"
     assert (quota_state := hass.states.get("sensor.teslemetry_command_quota_used"))
     assert quota_state.state == "21.2"
+
+    assert (regen := hass.states.get("sensor.test_lifetime_energy_gained_regen"))
+    assert regen.state == "1234.5"
+    assert regen.attributes["device_class"] == "energy"
+    assert regen.attributes["state_class"] == "total_increasing"
+    assert regen.attributes["unit_of_measurement"] == "kWh"
+
+    # Distance sensors are declared in native miles, HA displays them in the
+    # hass unit system's default (km in tests).
+    assert (miles := hass.states.get("sensor.test_miles_since_reset"))
+    assert miles.state == "1092.5836416"
+    assert miles.attributes["device_class"] == "distance"
+    assert miles.attributes["state_class"] == "total_increasing"
+    assert miles.attributes["unit_of_measurement"] == "km"
+
+    assert (fsd_miles := hass.states.get("sensor.test_self_driving_miles_since_reset"))
+    assert fsd_miles.state == "198.5930496"
+    assert fsd_miles.attributes["device_class"] == "distance"
+    assert fsd_miles.attributes["state_class"] == "total_increasing"
+    assert fsd_miles.attributes["unit_of_measurement"] == "km"
+
+    assert [
+        entity_registry.async_get(entity_id)
+        for entity_id in (
+            "sensor.test_lifetime_energy_gained_regen",
+            "sensor.test_miles_since_reset",
+            "sensor.test_self_driving_miles_since_reset",
+        )
+    ] == snapshot
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param(
+            "sensor.test_lifetime_energy_gained_regen",
+            id="lifetime_energy_gained_regen",
+        ),
+        pytest.param("sensor.test_miles_since_reset", id="miles_since_reset"),
+        pytest.param(
+            "sensor.test_self_driving_miles_since_reset",
+            id="self_driving_miles_since_reset",
+        ),
+    ],
+)
+async def test_new_streaming_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_add_listener: AsyncMock,
+    entity_id: str,
+) -> None:
+    """Test the new firmware-2025.44 streaming sensors are disabled-by-default diagnostics."""
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
 async def test_energy_history_no_time_series(
