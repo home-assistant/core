@@ -16,6 +16,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.universal import media_player as universal
 from homeassistant.const import (
     SERVICE_RELOAD,
+    STATE_IDLE,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
@@ -23,6 +24,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityPlatformState
 from homeassistant.helpers.event import async_track_state_change_event
@@ -1568,3 +1570,55 @@ async def test_async_setup_entry_command_data_template(hass: HomeAssistant) -> N
     )
     assert len(service) == 1
     assert service[0].data["level"] == 0.42
+
+
+async def test_options_flow_reloads_entity(hass: HomeAssistant) -> None:
+    """Test that completing the options flow reloads the entity.
+
+    Without options_flow_reloads set on the flow handler, the config entry's
+    options are updated in storage but the running entity keeps its old
+    in-memory configuration until Home Assistant restarts.
+    """
+    hass.states.async_set("media_player.mock1", STATE_IDLE)
+    hass.states.async_set("media_player.mock2", STATE_IDLE)
+
+    config_entry = MockConfigEntry(
+        domain=universal.DOMAIN,
+        title="Reload test",
+        options={
+            "name": "Reload test",
+            "children": ["media_player.mock1"],
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # _child_state is only populated by state-change events, not an initial
+    # read, so the child must actually change after setup for the entity to
+    # pick it up.
+    hass.states.async_set("media_player.mock1", STATE_PLAYING)
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.reload_test").state == STATE_PLAYING
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"children": ["media_player.mock2"]}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    # If the entity didn't reload, it would still be watching mock1 (stuck on
+    # "playing") and never react to mock2 changing at all.
+    hass.states.async_set("media_player.mock2", STATE_PAUSED)
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.reload_test").state == STATE_PAUSED
