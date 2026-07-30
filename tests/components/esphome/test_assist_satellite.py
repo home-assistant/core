@@ -2229,7 +2229,7 @@ async def test_custom_wake_words(
 
     Expects 2 models in testing_config/custom_wake_words:
     - hey_home_assistant
-    - choo_choo_homie
+    - choo_choo_homie (in choo_choo_homie sub-directory)
     """
     http_client = await hass_client()
     expected_config = AssistSatelliteConfiguration(
@@ -2261,7 +2261,7 @@ async def test_custom_wake_words(
 
     assert {external_wake_words[0].id, external_wake_words[1].id} == {
         "hey_home_assistant",
-        "choo_choo_homie",
+        "choo_choo_homie/choo_choo_homie",
     }
 
     # Verify details

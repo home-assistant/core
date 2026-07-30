@@ -904,13 +904,13 @@ def _get_custom_wake_words(
     wake_words: dict[str, VoiceAssistantExternalWakeWord] = {}
 
     # Look for config/model files
-    for config_path in wake_words_dir.glob("*.json"):
-        wake_word_id = config_path.stem
-        model_path = config_path.with_suffix(".tflite")
-        if not model_path.exists():
-            # Missing model file
-            continue
+    for config_path in wake_words_dir.rglob("*.json"):
+        # Use relative path to deconflict ids:
+        # custom_wake_words/my_wake_word.json -> my_wake_word
+        # custom_wake_words/sub_dir/my_wake_word.json -> sub_dir/my_wake_word
+        wake_word_id = str(config_path.relative_to(wake_words_dir).with_suffix(""))
 
+        # Inspect config file and load model
         with open(config_path, encoding="utf-8") as config_file:
             config_dict = json.load(config_file)
             try:
@@ -924,6 +924,16 @@ def _get_custom_wake_words(
                 )
                 continue
 
+            model_path = config_path.parent / config["model"]
+            if not model_path.exists():
+                # Missing model file
+                _LOGGER.debug(
+                    "Missing custom wake word model file: %s (config=%s)",
+                    model_path,
+                    config_path,
+                )
+                continue
+
             with open(model_path, "rb") as model_file:
                 model_hash = hashlib.sha256(model_file.read()).hexdigest()
 
@@ -933,10 +943,11 @@ def _get_custom_wake_words(
             # Only intended for the internal network
             base_url = get_url(hass, prefer_external=False, allow_cloud=False)
 
+            wake_word = config["wake_word"]
             wake_words[wake_word_id] = VoiceAssistantExternalWakeWord.from_dict(
                 {
                     "id": wake_word_id,
-                    "wake_word": config["wake_word"],
+                    "wake_word": wake_word,
                     "trained_languages": config_dict.get("trained_languages", []),
                     "model_type": config["type"],
                     "model_size": model_size,
