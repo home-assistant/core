@@ -6,10 +6,9 @@ from unittest.mock import AsyncMock, Mock, patch
 from besen.models import BesenData, ChargerConfig, ChargerInfo, ChargeStatus
 import pytest
 
-from homeassistant.components.besen import PLATFORMS
 from homeassistant.components.besen.const import DOMAIN
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN, Platform
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
 
 from . import publish_besen_state
@@ -177,17 +176,12 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-async def setup_with_selected_platforms(
+async def setup_integration(
     hass: HomeAssistant,
     entry: MockConfigEntry,
-    platforms: list[Platform] | None = None,
 ) -> None:
-    """Set up the Besen integration with selected platforms."""
+    """Set up the Besen integration."""
 
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.besen.PLATFORMS",
-        platforms or PLATFORMS,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
