@@ -32,7 +32,7 @@
         "data": {
           "verification_code": "Verification code"
         },
-        "description": "Enter the verification code Ecovacs sent to your email address to confirm Home Assistant as a trusted device."
+        "description": "Enter the verification code Ecovacs sent to {username} to confirm Home Assistant as a trusted device."
       },
       "reauth_confirm": {
         "data": {
