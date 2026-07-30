@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 import logging
+import re
 from typing import Any, override
 
 import aiohttp
@@ -85,7 +86,8 @@ class PapouchHTTPClient(PapouchTransport):
     async def _fetch(self, endpoint: str) -> str:
         async with self.session.get(self.base_url + endpoint) as response:
             response.raise_for_status()
-            return await response.text()
+            raw_xml = await response.text()
+            return re.sub(r'\s+xmlns="[^"]+"', "", raw_xml)
 
     @override
     async def fetch_info(self) -> str:

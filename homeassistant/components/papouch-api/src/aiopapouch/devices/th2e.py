@@ -122,9 +122,7 @@ class TH2E(PapouchDevice):
     @override
     def get_mac_address(self) -> str:
         """Return the MAC address of the device."""
-        box = self.settings_root.find(
-            ".//{http://www.papouch.com/xml/th2e/set}set[@box='12']"
-        )
+        box = self.settings_root.find(".//set[@box='12']")
 
         if box is not None:
             return str(box.attrib.get("mac", ""))
@@ -359,9 +357,7 @@ class TH2E(PapouchDevice):
     @override
     async def switch_to_web_mode(self) -> None:
         """Switch the device network mode to WEB using its current settings."""
-        box = self.settings_root.find(
-            ".//{http://www.papouch.com/xml/th2e/set}set[@box='1']"
-        )
+        box = self.settings_root.find(".//set[@box='1']")
         if box is None:
             raise DeviceParseError(
                 f"Box for network mode is not found, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
