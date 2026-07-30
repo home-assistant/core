@@ -203,6 +203,11 @@ UNKNOWN_POWER_STATE = "UNKNOWN"
 # a suggestion that activating it will turn something else off.
 DISABLED_REASONS_FIELD = "DisabledReasons"
 
+# Known DisabledReasons values; any other entry is the UUID of the pool
+# cover holding the control closed.
+WINTERIZED_REASON = "WINTERIZED"
+FREEZE_PROTECT_REASON = "FREEZE_PROTECT"
+
 # Per-control desired-state fields. Not (yet, as far as observed) pushed by
 # Device.setStatus; tracked optimistically from our own successful
 # Device.setDesiredState2 writes instead.

@@ -79,6 +79,15 @@
           "on": "Running"
         }
       },
+      "disabled_reason": {
+        "name": "{control_name} disabled reason",
+        "state": {
+          "freeze_protect": "Freeze protection",
+          "none": "None",
+          "pool_cover": "Pool cover closed",
+          "winterized": "Winterized"
+        }
+      },
       "dissolved_oxygen_concentration": {
         "name": "Dissolved oxygen concentration"
       },
@@ -105,6 +114,13 @@
       },
       "total_chlorine": {
         "name": "Total chlorine"
+      },
+      "winterized": {
+        "name": "Winterized",
+        "state": {
+          "false": "False",
+          "true": "True"
+        }
       }
     }
   }

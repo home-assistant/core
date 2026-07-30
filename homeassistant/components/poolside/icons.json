@@ -23,6 +23,14 @@
       "current_state": {
         "default": "mdi:state-machine"
       },
+      "disabled_reason": {
+        "default": "mdi:check-circle-outline",
+        "state": {
+          "freeze_protect": "mdi:snowflake-alert",
+          "pool_cover": "mdi:window-shutter",
+          "winterized": "mdi:snowflake"
+        }
+      },
       "dissolved_oxygen_concentration": {
         "default": "mdi:gas-cylinder"
       },
@@ -51,6 +59,9 @@
       },
       "total_chlorine": {
         "default": "mdi:beaker"
+      },
+      "winterized": {
+        "default": "mdi:snowflake"
       }
     },
     "switch": {

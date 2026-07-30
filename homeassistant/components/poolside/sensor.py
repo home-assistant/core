@@ -43,15 +43,23 @@ from .const import (
     FIELD_NAME_KEY,
     FIELD_PROCESSING_LOGIC_KEY,
     FIELD_TYPES_KEY,
+    FREEZE_PROTECT_REASON,
     INFORMATION_FIELD_TYPE,
     INFORMATION_FIELDS_FIELD,
     LOGGER,
     SITE_MODE_KEY,
+    WINTERIZED_FIELD,
+    WINTERIZED_REASON,
     BodyOfWaterState,
     SiteMode,
 )
-from .entity import PoolsideBaseEntity, PoolsideDeviceEntity, PoolsideGroupEntity
-from .models import PoolsideDevice, PoolsideGroup, PoolsideSite
+from .entity import (
+    PoolsideBaseEntity,
+    PoolsideDeviceEntity,
+    PoolsideEntity,
+    PoolsideGroupEntity,
+)
+from .models import PoolsideControl, PoolsideDevice, PoolsideGroup, PoolsideSite
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -155,16 +163,23 @@ def _on_off_value(value: Any) -> str | None:
     return None
 
 
-def _yes_no_value(value: Any) -> str | None:
-    """Map a BOOLEAN value (booleans or true/false strings) to yes/no."""
+def _bool_value(value: Any) -> bool | None:
+    """Coerce a BOOLEAN value (booleans or true/false strings) to a bool."""
     if isinstance(value, bool):
-        return "yes" if value else "no"
+        return value
     text = str(value).strip().lower()
     if text in ("true", "yes"):
-        return "yes"
+        return True
     if text in ("false", "no"):
-        return "no"
+        return False
     return None
+
+
+def _yes_no_value(value: Any) -> str | None:
+    """Map a BOOLEAN value (booleans or true/false strings) to yes/no."""
+    if (result := _bool_value(value)) is None:
+        return None
+    return "yes" if result else "no"
 
 
 def _datetime_value(value: Any) -> datetime | None:
@@ -395,10 +410,18 @@ async def async_setup_entry(
             PoolsideBodySensor(client, group, body_of_water_uuid, TEMPERATURE_SENSOR)
         )
         entities.append(PoolsideBodyStateSensor(client, group, body_of_water_uuid))
-    # ActualPowerState is pushed for every pool device regardless of what its
-    # InformationFields document lists, so its sensor is created eagerly.
+    entities.extend(
+        PoolsideControlDisabledReasonSensor(client, control)
+        for control in data.controls
+    )
+    # ActualPowerState and Winterized are pushed for every pool device
+    # regardless of what its InformationFields document lists, so their
+    # sensors are created eagerly.
     entities.extend(
         PoolsideDevicePowerSensor(client, device) for device in data.pool_devices
+    )
+    entities.extend(
+        PoolsideDeviceWinterizedSensor(client, device) for device in data.pool_devices
     )
     if (site_uuid := data.site.uuid) is not None:
         entities.append(PoolsideSiteModeSensor(client, data.site, site_uuid))
@@ -430,10 +453,12 @@ async def async_setup_entry(
             client.subscribe_status(body_of_water_uuid, _async_add_reported_chemistry)
         )
 
-    # Pre-seeded so a descriptor that lists ActualPowerState itself doesn't
-    # collide with the dedicated power state sensor created above.
+    # Pre-seeded so a descriptor that lists ActualPowerState or Winterized
+    # itself doesn't collide with the dedicated sensors created above.
     added_device_fields: set[str] = {
-        f"{device.uuid}_{ACTUAL_POWER_STATE_FIELD}" for device in data.pool_devices
+        f"{device.uuid}_{dedicated_field}"
+        for device in data.pool_devices
+        for dedicated_field in (ACTUAL_POWER_STATE_FIELD, WINTERIZED_FIELD)
     }
 
     @callback
@@ -587,6 +612,80 @@ class PoolsideDevicePowerSensor(PoolsideDeviceEntity, SensorEntity):
         if value is None:
             return None
         return _on_off_value(value)
+
+
+class PoolsideDeviceWinterizedSensor(PoolsideDeviceEntity, SensorEntity):
+    """Whether a physical pool device has been taken offline for the season.
+
+    Winterized is pushed for every pool device independent of its
+    InformationFields document, so this sensor exists from setup rather
+    than waiting on the descriptor.
+    """
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "winterized"
+    _attr_options = ["true", "false"]
+
+    def __init__(self, client: PoolsideClient, device: PoolsideDevice) -> None:
+        """Set up the winterized sensor for a pool device."""
+        super().__init__(client, device)
+        self._attr_unique_id = (
+            f"{client.controller_uuid}_{device.uuid}_{WINTERIZED_FIELD}"
+        )
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return true/false, or no data if the field is absent or malformed."""
+        value = self._client.get_status(self._device.uuid, WINTERIZED_FIELD)
+        if (winterized := _bool_value(value)) is None:
+            return None
+        return "true" if winterized else "false"
+
+
+class PoolsideControlDisabledReasonSensor(PoolsideEntity, SensorEntity):
+    """Why a control is out of service, or none while it is operable.
+
+    Deliberately NOT gated on the control's own availability - it exists to
+    explain why the control's entity went unavailable, so it only follows
+    the connection. Site-wide INSTALLER mode is explained by the site mode
+    sensor instead, and covers every control at once, so it isn't repeated
+    here.
+    """
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "disabled_reason"
+    _attr_options = ["none", "winterized", "freeze_protect", "pool_cover"]
+    _use_translated_name = True
+
+    def __init__(self, client: PoolsideClient, control: PoolsideControl) -> None:
+        """Set up the disabled reason sensor for a control."""
+        super().__init__(client, control)
+        self._attr_unique_id = (
+            f"{client.controller_uuid}_{control.uuid}_disabled_reason"
+        )
+        self._attr_translation_placeholders = {"control_name": control.name}
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True while connected, regardless of the control's own state."""
+        return self._client.available
+
+    @property
+    @override
+    def native_value(self) -> str:
+        """Return the strongest reason the control is out of service."""
+        reasons = self._disabled_reasons()
+        if self._control.winterized or WINTERIZED_REASON in reasons:
+            return "winterized"
+        if FREEZE_PROTECT_REASON in reasons:
+            return "freeze_protect"
+        if reasons:
+            return "pool_cover"
+        return "none"
 
 
 class PoolsideSiteModeSensor(PoolsideBaseEntity, SensorEntity):

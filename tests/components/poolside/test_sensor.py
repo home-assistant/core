@@ -28,11 +28,12 @@ from tests.common import MockConfigEntry
 ENTITY_ID = "sensor.pool_temperature"
 MODE_ENTITY_ID = "sensor.test_residence_controller_mode"
 WATER_STATE_ENTITY_ID = "sensor.pool_water_state"
+DISABLED_REASON_ENTITY_ID = "sensor.pool_heater_disabled_reason"
 
 
 @pytest.fixture
 def controls(hass: HomeAssistant) -> list[PoolsideControl]:
-    """Two controls sharing the pool group, plus one on a landscape group.
+    """Controls sharing the pool group (one winterized), plus one on a landscape group.
 
     Only the pool (a group with a BodyOfWaterUUID) should get a temperature
     sensor, and only one of it. Uses imperial units so the sensor's Fahrenheit
@@ -44,12 +45,13 @@ def controls(hass: HomeAssistant) -> list[PoolsideControl]:
         make_control("heater-1", "Heater", ControlType.TEMPERATURE),
         make_control("light-1", "Pool Light", ControlType.LIGHT),
         make_control("light-2", "Yard Light", ControlType.LIGHT, group=landscape),
+        make_control("cleaner-1", "Cleaner", ControlType.CLEANER, Winterized=True),
     ]
 
 
 @pytest.mark.usefixtures("setup_integration")
 async def test_expected_sensors_created(hass: HomeAssistant) -> None:
-    """Temperature and water state per body of water (none for landscape groups), plus the site mode sensor.
+    """Temperature and water state per body of water (none for landscape groups), a disabled reason sensor per control, plus the site mode sensor.
 
     Chemistry sensors are absent until their fields are actually reported.
     """
@@ -57,6 +59,10 @@ async def test_expected_sensors_created(hass: HomeAssistant) -> None:
         ENTITY_ID,
         WATER_STATE_ENTITY_ID,
         MODE_ENTITY_ID,
+        DISABLED_REASON_ENTITY_ID,
+        "sensor.pool_pool_light_disabled_reason",
+        "sensor.yard_yard_light_disabled_reason",
+        "sensor.pool_cleaner_disabled_reason",
     }
 
 
@@ -248,7 +254,64 @@ async def test_no_mode_sensor_without_site_uuid(
     assert set(hass.states.async_entity_ids("sensor")) == {
         ENTITY_ID,
         WATER_STATE_ENTITY_ID,
+        DISABLED_REASON_ENTITY_ID,
     }
+
+
+@pytest.mark.parametrize(
+    ("raw_reasons", "expected_state"),
+    [
+        pytest.param('["WINTERIZED"]', "winterized", id="winterized"),
+        pytest.param('["FREEZE_PROTECT"]', "freeze_protect", id="freeze-protect"),
+        pytest.param('["cover-uuid-1"]', "pool_cover", id="pool-cover"),
+        pytest.param(
+            '["cover-uuid-1", "WINTERIZED"]', "winterized", id="winterized-wins"
+        ),
+        pytest.param("[]", "none", id="cleared"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_disabled_reason_sensor_reflects_pushes(
+    hass: HomeAssistant,
+    fake_client: FakePoolsideClient,
+    raw_reasons: str,
+    expected_state: str,
+) -> None:
+    """The disabled reason sensor renders DisabledReasons pushes.
+
+    Unrecognized reasons are the UUID of the pool cover holding the control
+    closed; WINTERIZED wins when several reasons are listed at once.
+    """
+    state = hass.states.get(DISABLED_REASON_ENTITY_ID)
+    assert state is not None
+    assert state.state == "none"
+    assert state.attributes[ATTR_OPTIONS] == [
+        "none",
+        "winterized",
+        "freeze_protect",
+        "pool_cover",
+    ]
+
+    fake_client.set_status("heater-1", "DisabledReasons", raw_reasons)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(DISABLED_REASON_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_disabled_reason_reflects_layout_winterized_flag(
+    hass: HomeAssistant,
+) -> None:
+    """A control winterized in the layout reports it from setup, while its own entity is unavailable."""
+    state = hass.states.get("sensor.pool_cleaner_disabled_reason")
+    assert state is not None
+    assert state.state == "winterized"
+
+    state = hass.states.get("switch.pool_cleaner")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -256,12 +319,15 @@ async def test_unavailable_while_disconnected(
     hass: HomeAssistant,
     fake_client: FakePoolsideClient,
 ) -> None:
-    """The sensor mirrors the controller connection's availability."""
+    """The sensors mirror the controller connection's availability."""
     fake_client.set_status(TEST_BODY_OF_WATER_UUID, "Temperature", 79)
     fake_client.set_connected(False)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get(DISABLED_REASON_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -271,3 +337,6 @@ async def test_unavailable_while_disconnected(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == "79.0"
+    state = hass.states.get(DISABLED_REASON_ENTITY_ID)
+    assert state is not None
+    assert state.state == "none"

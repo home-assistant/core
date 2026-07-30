@@ -178,6 +178,8 @@ def _async_prune_stale_registry_entries(
     for control in controls:
         domains = allowed_domains.setdefault(control.uuid, set())
         domains.add(control.platform.value)
+        # Every control also carries diagnostic sensors (disabled reason).
+        domains.add(Platform.SENSOR.value)
         if control.control_type is ControlType.TEMPERATURE:
             domains.add(Platform.SELECT.value)
         valid_identifiers.add((DOMAIN, control.group.uuid))

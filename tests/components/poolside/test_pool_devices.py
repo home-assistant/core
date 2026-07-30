@@ -28,6 +28,7 @@ PUMP_UUID = "device-pump-1"
 MODE_ENTITY_ID = "sensor.test_residence_controller_mode"
 POWER_ENTITY_ID = "sensor.pump_power"
 POWER_STATE_ENTITY_ID = "sensor.pump_power_state"
+WINTERIZED_ENTITY_ID = "sensor.pump_winterized"
 
 # A pump descriptor exercising every DisplayProcessingLogic the integration
 # renders, plus an unrecognized logic and one control-typed entry that must
@@ -218,6 +219,7 @@ async def test_sensors_created_from_initial_snapshot(
         MODE_ENTITY_ID,
         POWER_ENTITY_ID,
         POWER_STATE_ENTITY_ID,
+        WINTERIZED_ENTITY_ID,
         "sensor.pump_rpm",
         "sensor.pump_flow",
         "sensor.pump_pressure",
@@ -485,12 +487,12 @@ async def test_actual_power_state_sensor(
     assert state.state == expected_state
 
 
-async def test_descriptor_actual_power_state_not_duplicated(
+async def test_descriptor_dedicated_fields_not_duplicated(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_poolside_client: FakePoolsideClient,
 ) -> None:
-    """A descriptor that lists ActualPowerState doesn't clash with the dedicated sensor."""
+    """A descriptor listing ActualPowerState or Winterized doesn't clash with the dedicated sensors."""
     fields = json.dumps(
         [
             {
@@ -499,7 +501,14 @@ async def test_descriptor_actual_power_state_not_duplicated(
                 "DisplayOrder": 1,
                 "DisplayProcessingLogic": "ONOFF",
                 "FieldTypes": ["INFORMATION"],
-            }
+            },
+            {
+                "Name": "Winterized",
+                "DisplayName": "Winterized",
+                "DisplayOrder": 2,
+                "DisplayProcessingLogic": "BOOLEAN",
+                "FieldTypes": ["INFORMATION"],
+            },
         ]
     )
     mock_poolside_client.set_status(PUMP_UUID, "InformationFields", fields)
@@ -509,10 +518,46 @@ async def test_descriptor_actual_power_state_not_duplicated(
     assert set(hass.states.async_entity_ids("sensor")) == {
         MODE_ENTITY_ID,
         POWER_STATE_ENTITY_ID,
+        WINTERIZED_ENTITY_ID,
     }
     state = hass.states.get(POWER_STATE_ENTITY_ID)
     assert state is not None
     assert state.state == "on"
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "expected_state"),
+    [
+        pytest.param(True, "true", id="boolean-true"),
+        pytest.param(False, "false", id="boolean-false"),
+        pytest.param("true", "true", id="string-true"),
+        pytest.param("false", "false", id="string-false"),
+        pytest.param("garbage", STATE_UNKNOWN, id="unrecognized"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_winterized_sensor(
+    hass: HomeAssistant,
+    fake_client: FakePoolsideClient,
+    raw_value: Any,
+    expected_state: str,
+) -> None:
+    """Every pool device gets a winterized sensor, present from setup.
+
+    The sensor exists before any telemetry (or the InformationFields
+    descriptor) arrives and renders the pushed Winterized flag as
+    true/false.
+    """
+    state = hass.states.get(WINTERIZED_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    fake_client.set_status(PUMP_UUID, "Winterized", raw_value)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(WINTERIZED_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
 
 
 async def test_pool_device_registered_under_controller(
