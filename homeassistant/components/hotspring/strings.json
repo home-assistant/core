@@ -16,9 +16,9 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "Hostname or IP address of your Hot Spring spa Network Adapter."
+          "host": "Hostname or IP address of your Hot Spring Home Network Adapter (HNA)."
         },
-        "description": "Set up your Hot Spring spa Network Adapter to integrate with Home Assistant."
+        "description": "Set up your Hot Spring Home Network Adapter (HNA) to integrate with Home Assistant."
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the Hot Spring spa named `{name}` to Home Assistant?",
