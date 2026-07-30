@@ -472,6 +472,9 @@ async def test_search_within_artist_with_filter_classes(
             music_assistant_client,
             SearchMediaQuery(
                 search_query="test",
+                # the media browser navigates using the item its parent listing
+                # built, and those are all reported as plain music
+                media_content_type=MediaType.MUSIC,
                 media_content_id="library://artist/127",
                 media_filter_classes=media_filter_classes,
             ),
@@ -479,6 +482,11 @@ async def test_search_within_artist_with_filter_classes(
 
     # the artist name scopes the query that is sent to the search api
     assert mock_search.call_args.args[0] == "Test Artist - test"
+    # the response is only useful as long as it holds what we asked for
+    assert mock_search.call_args.kwargs["media_types"] == [
+        MASSMediaType.ALBUM,
+        MASSMediaType.TRACK,
+    ]
     assert {item.media_class for item in search_results.result} == expected_classes
 
 
