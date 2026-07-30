@@ -1,1 +1,3 @@
-# Empty file, ESPHome services are dynamically created (user-defined services)
+# Most ESPHome services are dynamically created (user-defined services)
+
+reload_custom_wake_words:

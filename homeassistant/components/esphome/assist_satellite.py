@@ -39,8 +39,12 @@ from homeassistant.components.intent import (
 )
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.singleton import singleton
@@ -126,6 +130,12 @@ _WAKE_WORD_CONFIG_SCHEMA = vol.Schema(
 _DATA_WAKE_WORDS: HassKey[dict[str, VoiceAssistantExternalWakeWord]] = HassKey(
     "wake_word_cache"
 )
+
+SERVICE_RELOAD_CUSTOM_WAKE_WORDS = "reload_custom_wake_words"
+
+# Dispatched after the custom wake word inventory changes on disk so that
+# satellites re-push their configuration without a restart.
+_SIGNAL_WAKE_WORDS_CHANGED = "esphome_custom_wake_words_changed"
 
 
 async def async_setup_entry(
@@ -259,6 +269,10 @@ class EsphomeAssistSatellite(
         # Inform listeners that config has been updated
         self._entry_data.async_assist_satellite_config_updated(self._satellite_config)
 
+    async def _handle_custom_wake_words_changed(self) -> None:
+        """Re-push satellite config when the custom wake word inventory changes."""
+        await self._update_satellite_config()
+
     @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -312,6 +326,17 @@ class EsphomeAssistSatellite(
             # If the device supports announcements, it will return a config.
             _LOGGER.debug("Waiting for satellite configuration")
             await self._update_satellite_config()
+
+            # Re-push configuration when the custom wake word inventory changes
+            # (e.g. HACS installs, updates or removes a model) so new models
+            # become available without restarting Home Assistant.
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass,
+                    _SIGNAL_WAKE_WORDS_CHANGED,
+                    self._handle_custom_wake_words_changed,
+                )
+            )
 
         if not (feature_flags & VoiceAssistantFeature.SPEAKER):
             # Will use media player for TTS/announcements
@@ -969,4 +994,19 @@ async def async_setup(hass: HomeAssistant) -> None:
                 path=str(wake_words_dir),
             )
         ]
+    )
+
+    async def _async_reload_custom_wake_words(call: ServiceCall) -> None:
+        """Invalidate the cached inventory and refresh satellites."""
+        # The inventory is cached for the lifetime of the process, so drop it
+        # and re-warm it once here (rather than in every satellite) so that a
+        # fan-out of refreshes shares a single directory scan.
+        hass.data.pop(_DATA_WAKE_WORDS, None)
+        await async_get_custom_wake_words(hass)
+        async_dispatcher_send(hass, _SIGNAL_WAKE_WORDS_CHANGED)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RELOAD_CUSTOM_WAKE_WORDS,
+        _async_reload_custom_wake_words,
     )
