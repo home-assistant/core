@@ -632,6 +632,16 @@ async def test_stream_worker_close_failures_preserve_first_error(
             "rtsp://****:****@example.invalid/live?auth=****",
             id="credentials_with_comma_and_auth_query",
         ),
+        pytest.param(
+            "rtsp://[::1]:8554/live?auth=query-secret",
+            "rtsp://[::1]:8554/live?auth=****",
+            id="ipv6_auth_query",
+        ),
+        pytest.param(
+            "rtsp://user:secret@example.invalid:notaport/live?auth=query-secret",
+            "rtsp://****:****@example.invalid:notaport/live?auth=****",
+            id="malformed_port",
+        ),
     ],
 )
 def test_redact_value_error_url(value: str, redacted_value: str) -> None:
