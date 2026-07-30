@@ -34,7 +34,7 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
@@ -168,19 +168,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the universal media players."""
-    if config.get(CONF_UNIQUE_ID):
-        # Migrate YAML entries that carry a unique_id to a config entry so they
-        # become manageable via the UI.  The entity is created by async_setup_entry
-        # once the import flow completes; return early to avoid a duplicate.
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config,
-            )
-        )
-        return
-
     await async_setup_reload_service(hass, DOMAIN, [Platform.MEDIA_PLAYER])
     async_add_entities([UniversalMediaPlayer(hass, config)])
 
@@ -197,34 +184,18 @@ async def async_setup_entry(
     # dict that async_call_from_config expects.  Empty lists mean the command
     # was not configured and should be omitted from the commands dict entirely.
     # Re-validate through SERVICE_SCHEMA to compile any templated data/target
-    # values back into Template objects: config entry storage is JSON, so
-    # both the UI and YAML-import paths only ever persist raw strings, but
-    # _async_call_service calls async_call_from_config with
-    # validate_config=False and expects templates pre-compiled.
+    # values back into Template objects: config entry storage is JSON and can
+    # only ever hold raw strings, but _async_call_service calls
+    # async_call_from_config with validate_config=False and expects templates
+    # pre-compiled.
     commands: dict[str, Any] = {}
     for cmd in EXPOSED_COMMANDS:
         actions = options.get(cmd, [])
         if isinstance(actions, list) and actions:
             commands[cmd] = cv.SERVICE_SCHEMA(actions[0])
-        elif isinstance(actions, dict):
-            # Preserved from a YAML import that stored a raw service-call dict.
-            commands[cmd] = cv.SERVICE_SCHEMA(actions)
 
-    # Commands outside EXPOSED_COMMANDS (play_media, toggle, repeat_set, etc.)
-    # are preserved by the YAML import under CONF_COMMANDS instead of a flat
-    # per-command key, since they don't have a UI field of their own.
-    for cmd, action in options.get(CONF_COMMANDS, {}).items():
-        commands[cmd] = cv.SERVICE_SCHEMA(action)
-
-    raw_attrs = options.get(CONF_ATTRS, {})
-    if isinstance(raw_attrs, list):
-        merged: dict[str, str] = {}
-        for item in raw_attrs:
-            merged.update(item)
-        raw_attrs = merged
-
-    # TemplateSelector (and YAML import) store templates as raw strings;
-    # compile them here since UniversalMediaPlayer expects Template objects.
+    # TemplateSelector stores templates as raw strings; compile them here
+    # since UniversalMediaPlayer expects Template objects.
     active_child_template = None
     if raw_template := options.get(CONF_ACTIVE_CHILD_TEMPLATE):
         active_child_template = Template(raw_template, hass)
@@ -236,11 +207,8 @@ async def async_setup_entry(
         CONF_NAME: config_entry.title,
         CONF_CHILDREN: options.get(CONF_CHILDREN, []),
         CONF_COMMANDS: commands,
-        CONF_ATTRS: raw_attrs,
-        # Entries imported from YAML keep their original unique_id so the
-        # entity registry entry (and any user customisations) survive the
-        # migration; UI-created entries fall back to the entry_id.
-        CONF_UNIQUE_ID: config_entry.unique_id or config_entry.entry_id,
+        CONF_ATTRS: options.get(CONF_ATTRS, {}),
+        CONF_UNIQUE_ID: config_entry.entry_id,
         CONF_BROWSE_MEDIA_ENTITY: options.get(CONF_BROWSE_MEDIA_ENTITY),
         CONF_DEVICE_CLASS: options.get(CONF_DEVICE_CLASS),
         CONF_ACTIVE_CHILD_TEMPLATE: active_child_template,
