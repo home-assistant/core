@@ -437,6 +437,51 @@ async def test_browse_artist_search_media_classes(
     assert browse_item.search_media_classes == [MediaClass.ALBUM, MediaClass.TRACK]
 
 
+@pytest.mark.parametrize(
+    ("media_filter_classes", "expected_classes"),
+    [
+        (None, {MediaClass.ALBUM, MediaClass.TRACK}),
+        ({MediaClass.ALBUM}, {MediaClass.ALBUM}),
+        ({MediaClass.TRACK}, {MediaClass.TRACK}),
+    ],
+)
+async def test_search_within_artist_with_filter_classes(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    media_filter_classes: set[MediaClass] | None,
+    expected_classes: set[MediaClass],
+) -> None:
+    """Test that the filters offered on an artist listing narrow its results."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    artist = MagicMock()
+    artist.name = "Test Artist"
+    mock = MockSearchResults(["album", "track"])
+
+    with (
+        patch.object(
+            music_assistant_client.music, "get_item_by_uri", return_value=artist
+        ),
+        patch.object(
+            music_assistant_client.music,
+            "search",
+            return_value=SearchResults(albums=mock.albums, tracks=mock.tracks),
+        ) as mock_search,
+    ):
+        search_results = await async_search_media(
+            music_assistant_client,
+            SearchMediaQuery(
+                search_query="test",
+                media_content_id="library://artist/127",
+                media_filter_classes=media_filter_classes,
+            ),
+        )
+
+    # the artist name scopes the query that is sent to the search api
+    assert mock_search.call_args.args[0] == "Test Artist - test"
+    assert {item.media_class for item in search_results.result} == expected_classes
+
+
 async def test_search_media_results_are_browsable(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
