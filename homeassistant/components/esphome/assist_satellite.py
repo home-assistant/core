@@ -119,6 +119,7 @@ _WAKE_WORD_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required("type"): str,
         vol.Required("wake_word"): str,
+        vol.Required("model"): str,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -910,13 +911,11 @@ def _get_custom_wake_words(
         # custom_wake_words/sub_dir/my_wake_word.json -> sub_dir/my_wake_word
         wake_word_id = str(config_path.relative_to(wake_words_dir).with_suffix(""))
 
-        # Inspect config file and load model
         with open(config_path, encoding="utf-8") as config_file:
             config_dict = json.load(config_file)
             try:
                 config = _WAKE_WORD_CONFIG_SCHEMA(config_dict)
             except vol.Invalid as err:
-                # Invalid config
                 _LOGGER.debug(
                     "Invalid wake word config: path=%s, error=%s",
                     config_path,
@@ -926,7 +925,6 @@ def _get_custom_wake_words(
 
             model_path = config_path.parent / config["model"]
             if not model_path.exists():
-                # Missing model file
                 _LOGGER.debug(
                     "Missing custom wake word model file: %s (config=%s)",
                     model_path,
