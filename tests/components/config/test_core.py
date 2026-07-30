@@ -279,3 +279,19 @@ async def test_detect_config_fail(hass: HomeAssistant, client) -> None:
 
     assert msg["success"] is True
     assert msg["result"] == {"unit_system": "metric", "time_zone": "Europe/Amsterdam"}
+
+
+async def test_slugify(hass: HomeAssistant, client) -> None:
+    """Test slugify."""
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "config/core/slugify",
+            "text": "Living room Thermostat Temperature",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"] is True
+    assert msg["result"] == {"slug": "living_room_thermostat_temperature"}
