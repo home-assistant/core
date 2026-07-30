@@ -19,7 +19,7 @@ from homeassistant.components.ecovacs.controller import EcovacsController
 from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CLOUD_DEVICE_ID, VALID_ENTRY_DATA_CLOUD
+from .const import CLOUD_DEVICE_ID, STORED_ENTRY_DATA_CLOUD
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -46,7 +46,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_config_entry_data() -> dict[str, Any]:
     """Return the default mocked config entry data."""
-    return VALID_ENTRY_DATA_CLOUD
+    return STORED_ENTRY_DATA_CLOUD
 
 
 @pytest.fixture

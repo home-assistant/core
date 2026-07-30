@@ -4,6 +4,7 @@
     'config': dict({
       'data': dict({
         'country': 'IT',
+        'device_id': 'AAAAAAAA',
         'password': '**REDACTED**',
         'username': '**REDACTED**',
       }),
@@ -57,6 +58,7 @@
     'config': dict({
       'data': dict({
         'country': 'IT',
+        'device_id': 'HA-test_home',
         'override_mqtt_url': '**REDACTED**',
         'override_rest_url': '**REDACTED**',
         'password': '**REDACTED**',

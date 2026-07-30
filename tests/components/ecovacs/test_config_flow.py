@@ -33,6 +33,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from .const import (
     CLOUD_DEVICE_ID,
     SELF_HOSTED_DEVICE_ID,
+    STORED_ENTRY_DATA_CLOUD,
+    STORED_ENTRY_DATA_SELF_HOSTED,
     VALID_ENTRY_DATA_CLOUD,
     VALID_ENTRY_DATA_SELF_HOSTED,
     VALID_ENTRY_DATA_SELF_HOSTED_WITH_VALIDATE_CERT,
@@ -98,11 +100,11 @@ async def _test_reauth_flow(
     [
         (
             _TestFnUserInput(VALID_ENTRY_DATA_CLOUD),
-            VALID_ENTRY_DATA_CLOUD | {CONF_DEVICE_ID: CLOUD_DEVICE_ID},
+            STORED_ENTRY_DATA_CLOUD,
         ),
         (
             _TestFnUserInput(VALID_ENTRY_DATA_SELF_HOSTED, _USER_STEP_SELF_HOSTED),
-            VALID_ENTRY_DATA_SELF_HOSTED | {CONF_DEVICE_ID: SELF_HOSTED_DEVICE_ID},
+            STORED_ENTRY_DATA_SELF_HOSTED,
         ),
     ],
     ids=["cloud", "self_hosted"],
@@ -157,7 +159,7 @@ def _cannot_connect_error(user_input: dict[str, Any]) -> dict[str, str]:
     [
         (
             _TestFnUserInput(VALID_ENTRY_DATA_CLOUD),
-            VALID_ENTRY_DATA_CLOUD | {CONF_DEVICE_ID: CLOUD_DEVICE_ID},
+            STORED_ENTRY_DATA_CLOUD,
         ),
         (
             _TestFnUserInput(VALID_ENTRY_DATA_SELF_HOSTED, _USER_STEP_SELF_HOSTED),
@@ -310,11 +312,11 @@ async def test_already_exists(
     [
         (
             _TestFnUserInput(VALID_ENTRY_DATA_CLOUD),
-            VALID_ENTRY_DATA_CLOUD | {CONF_DEVICE_ID: CLOUD_DEVICE_ID},
+            STORED_ENTRY_DATA_CLOUD,
         ),
         (
             _TestFnUserInput(VALID_ENTRY_DATA_SELF_HOSTED, _USER_STEP_SELF_HOSTED),
-            VALID_ENTRY_DATA_SELF_HOSTED | {CONF_DEVICE_ID: SELF_HOSTED_DEVICE_ID},
+            STORED_ENTRY_DATA_SELF_HOSTED,
         ),
     ],
     ids=["cloud", "self_hosted"],
@@ -464,10 +466,6 @@ async def test_mqtt_retry_after_device_verification(
     mock_setup_entry.assert_called_once()
 
 
-@pytest.mark.parametrize(
-    "mock_config_entry_data",
-    [VALID_ENTRY_DATA_CLOUD | {CONF_DEVICE_ID: CLOUD_DEVICE_ID}],
-)
 @pytest.mark.usefixtures("mock_mqtt_client")
 async def test_reauth(
     hass: HomeAssistant,
@@ -485,9 +483,8 @@ async def test_reauth(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     # The already verified device ID is kept, so no new verification is required
-    assert mock_config_entry.data == VALID_ENTRY_DATA_CLOUD | {
-        CONF_PASSWORD: "new-password",
-        CONF_DEVICE_ID: CLOUD_DEVICE_ID,
+    assert mock_config_entry.data == STORED_ENTRY_DATA_CLOUD | {
+        CONF_PASSWORD: "new-password"
     }
     mock_authenticator.request_device_verification_code.assert_not_called()
     mock_authenticator.verify_device.assert_not_called()
@@ -513,11 +510,10 @@ async def test_reauth_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "invalid_auth"}
-    assert mock_config_entry.data == VALID_ENTRY_DATA_CLOUD
+    assert mock_config_entry.data == STORED_ENTRY_DATA_CLOUD
     mock_setup_entry.assert_not_called()
 
 
-@pytest.mark.usefixtures("mock_device_id")
 async def test_reauth_device_verification(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -550,7 +546,6 @@ async def test_reauth_device_verification(
     mock_setup_entry.assert_called_once()
 
 
-@pytest.mark.usefixtures("mock_device_id")
 async def test_reauth_mqtt_retry_after_device_verification(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
