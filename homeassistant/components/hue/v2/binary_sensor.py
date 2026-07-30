@@ -186,7 +186,7 @@ class HueMotionAwareSensor(HueMotionSensor):
     A MotionAware zone owns both a ConvenienceAreaMotion and a SecurityAreaMotion
     service, and which of the two carries the motion state depends on how the zone
     is set up in the Hue app. The source is therefore resolved from the zone, and
-    the sensor is unavailable while neither service reports a valid state.
+    the state is unknown while neither service reports a valid one.
     """
 
     controller: SecurityAreaMotionController
@@ -204,15 +204,25 @@ class HueMotionAwareSensor(HueMotionSensor):
 
     @property
     @override
-    def available(self) -> bool:
-        """Return entity availability."""
-        return super().available and self._motion_value is not None
-
-    @property
-    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self._motion_value
+        zone = self._motion_area_configuration
+        # switching a zone off leaves the `enabled` flag of its services untouched,
+        # so the zone is the only reliable signal that it stopped reporting motion
+        if not zone.enabled or zone.health == MotionAreaHealth.NOT_RUNNING:
+            return None
+        # a zone that is bound to lights enables its convenience service, and that
+        # service is then the only one reporting: the security service goes on
+        # advertising a valid reading that never changes again
+        convenience = self._convenience_service
+        source = (
+            convenience
+            if convenience is not None and convenience.enabled
+            else self.resource
+        )
+        if not source.enabled or source.motion is None:
+            return None
+        return source.motion.value
 
     def __init__(
         self,
@@ -262,24 +272,6 @@ class HueMotionAwareSensor(HueMotionSensor):
             ),
             None,
         )
-
-    @property
-    def _motion_value(self) -> bool | None:
-        """Return the motion state of this zone, or None if it reports none."""
-        zone = self._motion_area_configuration
-        # switching a zone off leaves the `enabled` flag of its services untouched,
-        # so the zone is the only reliable signal that it stopped reporting motion
-        if not zone.enabled or zone.health == MotionAreaHealth.NOT_RUNNING:
-            return None
-        # the convenience service comes first: a zone that is bound to lights enables it
-        # and it is then the only one still reporting, while the security service keeps
-        # advertising a valid reading that never changes again
-        for source in (self._convenience_service, self.resource):
-            if source is None or not source.enabled or source.motion is None:
-                continue
-            if (value := source.motion.value) is not None:
-                return value
-        return None
 
 
 # pylint: disable-next=home-assistant-enforce-class-module

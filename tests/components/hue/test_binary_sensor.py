@@ -319,10 +319,20 @@ async def test_motion_aware_sensor(
         pytest.param(
             [
                 area_motion_service("security_area_motion", motion=MOTION_INVALID),
+                area_motion_service(
+                    "convenience_area_motion", enabled=False, motion=MOTION_DETECTED
+                ),
+            ],
+            "unknown",
+            id="not_bound_to_lights_without_valid_reading",
+        ),
+        pytest.param(
+            [
+                area_motion_service("security_area_motion", motion=MOTION_DETECTED),
                 area_motion_service("convenience_area_motion", motion=MOTION_INVALID),
             ],
-            "unavailable",
-            id="no_service_reports_motion",
+            "unknown",
+            id="bound_to_lights_does_not_fall_back_to_security",
         ),
     ],
 )
@@ -372,7 +382,7 @@ async def test_motion_aware_sensor_follows_convenience_service(
 async def test_motion_aware_sensor_zone_disabled(
     hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
 ) -> None:
-    """Test the MotionAware sensor is unavailable while its zone is switched off."""
+    """Test the MotionAware sensor reports unknown while its zone is switched off."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, Platform.BINARY_SENSOR)
 
@@ -389,7 +399,7 @@ async def test_motion_aware_sensor_zone_disabled(
         },
     )
     await hass.async_block_till_done()
-    assert hass.states.get(MOTION_AWARE_ENTITY_ID).state == "unavailable"
+    assert hass.states.get(MOTION_AWARE_ENTITY_ID).state == "unknown"
 
     mock_bridge_v2.api.emit_event(
         "update",
