@@ -11,6 +11,8 @@ or break promised semantics:
 - source_hex semantics per input shape
 """
 
+import pytest
+
 from homeassistant.components.color.const import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_PARAMS,
@@ -352,3 +354,44 @@ async def test_source_hex_for_color_name(hass: HomeAssistant) -> None:
     )
     # CSS3 "red" is exactly #FF0000 — no gamut math involved.
     assert hass.states.get(ENTITY_ID).attributes[ATTR_SOURCE_HEX] == "#FF0000"
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        {"version": STATE_SCHEMA_VERSION, "xy": [], "kind": KIND_CHROMATIC},
+        {"version": STATE_SCHEMA_VERSION, "xy": [0.4], "kind": KIND_CHROMATIC},
+        {
+            "version": STATE_SCHEMA_VERSION,
+            "xy": [float("nan"), 0.4],
+            "kind": KIND_CHROMATIC,
+        },
+        {
+            "version": STATE_SCHEMA_VERSION,
+            "xy": [float("inf"), 0.4],
+            "kind": KIND_CHROMATIC,
+        },
+        {"version": STATE_SCHEMA_VERSION, "xy": [0.4, 0.4], "kind": "bogus"},
+    ],
+)
+async def test_restore_rejects_invalid_payload_shapes(
+    hass: HomeAssistant, extra: dict
+) -> None:
+    """Short, non-finite, or wrong-kind restore payloads fall back to initial."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [(State(ENTITY_ID, "#FFFFFF", {}), extra)],
+    )
+
+    await _setup_entity(
+        hass,
+        data={
+            CONF_NAME: "Test Color",
+            CONF_INITIAL_MODE: MODE_CHROMATIC,
+            CONF_INITIAL_COLOR: "#FF0000",
+        },
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    r, _g, _b = state.attributes[ATTR_RGB_COLOR]
+    assert r > 200

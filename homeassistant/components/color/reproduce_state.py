@@ -13,10 +13,12 @@ from .const import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_KIND,
+    ATTR_XY_COLOR,
     DOMAIN,
     FIELD_BRIGHTNESS,
     FIELD_HEX,
     FIELD_KELVIN,
+    FIELD_XY,
     KIND_WHITE,
     SERVICE_CLEAR_BRIGHTNESS,
     SERVICE_SET_BRIGHTNESS,
@@ -48,8 +50,12 @@ async def _async_reproduce_state(
     attrs = state.attributes
 
     color_data: dict[str, Any] | None = None
+    xy = attrs.get(ATTR_XY_COLOR)
     if attrs.get(ATTR_KIND) == KIND_WHITE and attrs.get(ATTR_COLOR_TEMP_KELVIN):
         color_data = {FIELD_KELVIN: attrs[ATTR_COLOR_TEMP_KELVIN]}
+    elif isinstance(xy, (list, tuple)) and len(xy) == 2:
+        # Canonical xy beats the derived hex state (hex -> xy is lossy).
+        color_data = {FIELD_XY: list(xy)}
     elif isinstance(state.state, str) and _HEX_RE.match(state.state):
         color_data = {FIELD_HEX: state.state}
     else:

@@ -16,7 +16,7 @@ from homeassistant.components.color.const import (
     MODE_WHITE,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_ICON, CONF_NAME
+from homeassistant.const import ATTR_ICON, CONF_ICON, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -116,3 +116,33 @@ async def test_options_flow_updates_icon(hass: HomeAssistant) -> None:
 def test_coerce_color_input(raw: Any, expected: str) -> None:
     """Test coercion of ColorRGBSelector results to hex strings."""
     assert _coerce_color_input(raw) == expected
+
+
+async def test_options_flow_clears_icon(hass: HomeAssistant) -> None:
+    """Clearing the icon in the options flow must not resurrect the original."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Icon Clear",
+        data={
+            CONF_NAME: "Icon Clear",
+            CONF_INITIAL_MODE: MODE_CHROMATIC,
+            CONF_INITIAL_COLOR: "#FFFFFF",
+            CONF_ICON: "mdi:palette",
+        },
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "color.icon_clear"
+    assert hass.states.get(entity_id).attributes.get(ATTR_ICON) == "mdi:palette"
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options == {CONF_ICON: None}
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).attributes.get(ATTR_ICON) is None

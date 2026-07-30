@@ -1,6 +1,7 @@
 """Entity class for the Color helper."""
 
 import logging
+from math import isfinite
 from typing import Any, Self, override
 
 from homeassistant.components import light
@@ -36,6 +37,7 @@ from .const import (
     DEFAULT_KELVIN,
     FIELD_HEX,
     FIELD_KELVIN,
+    KIND_CHROMATIC,
     KIND_WHITE,
     MODE_WHITE,
     STATE_SCHEMA_VERSION,
@@ -76,10 +78,11 @@ class _StoredColor(ExtraStoredData):
     def from_dict(cls, data: dict[str, Any]) -> Self | None:
         """Create stored color data from a dict."""
         try:
-            xy = data["xy"]
+            x, y = (float(value) for value in data["xy"])
+            kind = str(data["kind"])
             canonical = CanonicalColor(
-                xy=(float(xy[0]), float(xy[1])),
-                kind=str(data["kind"]),
+                xy=(x, y),
+                kind=kind,
                 kelvin=int(data["kelvin"]) if data.get("kelvin") is not None else None,
             )
             brightness = data.get("brightness")
@@ -89,6 +92,11 @@ class _StoredColor(ExtraStoredData):
             if source_hex is not None:
                 source_hex = str(source_hex)
         except KeyError, TypeError, ValueError:
+            return None
+        if not (isfinite(x) and isfinite(y)) or kind not in (
+            KIND_CHROMATIC,
+            KIND_WHITE,
+        ):
             return None
         return cls(canonical, brightness, source_hex)
 
@@ -106,7 +114,11 @@ class ColorEntity(RestoreEntity):
         # The update listener reloads the entry on rename/options change, so
         # name and icon can be set once here.
         self._attr_name = entry.title
-        self._attr_icon = entry.options.get(CONF_ICON) or entry.data.get(CONF_ICON)
+        # Options (which store None for "cleared") win over the creation icon.
+        if CONF_ICON in entry.options:
+            self._attr_icon = entry.options[CONF_ICON]
+        else:
+            self._attr_icon = entry.data.get(CONF_ICON)
         self._canonical = self._initial_canonical(entry)
         self._brightness = self._initial_brightness(entry)
         self._source_hex = self._initial_source_hex(entry)

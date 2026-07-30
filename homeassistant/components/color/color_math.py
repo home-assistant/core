@@ -157,6 +157,11 @@ def normalize(inputs: dict[str, Any]) -> CanonicalColor:
         except ValueError as err:
             raise ColorInputError(f"Unknown color name: {value!r}") from err
 
+    if (int(r), int(g), int(b)) == (0, 0, 0):
+        # Zero intensity has no chromaticity; xy (0, 0) would render as blue.
+        raise ColorInputError(
+            "Pure black has no color value; store a color and use brightness 0"
+        )
     x, y = color_util.color_RGB_to_xy(int(r), int(g), int(b))
     return CanonicalColor(xy=(x, y), kind=KIND_CHROMATIC)
 

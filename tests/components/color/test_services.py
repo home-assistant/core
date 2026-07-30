@@ -207,3 +207,25 @@ async def test_color_params_white(hass: HomeAssistant) -> None:
     )
     params = hass.states.get(ENTITY_ID).attributes[ATTR_COLOR_PARAMS]
     assert params == {"color_temp_kelvin": 3000, "brightness": 200}
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"hex_value": "#000000"},
+        {"rgb_color": [0, 0, 0]},
+        {"color_name": "black"},
+    ],
+)
+async def test_set_color_rejects_pure_black(hass: HomeAssistant, payload: dict) -> None:
+    """Zero-intensity inputs have no chromaticity and must be rejected."""
+    await _create_entry(hass)
+    before = hass.states.get(ENTITY_ID).state
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_COLOR,
+            {ATTR_ENTITY_ID: ENTITY_ID, **payload},
+            blocking=True,
+        )
+    assert hass.states.get(ENTITY_ID).state == before

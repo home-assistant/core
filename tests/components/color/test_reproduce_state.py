@@ -5,6 +5,7 @@ from homeassistant.components.color.const import (
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_KIND,
     ATTR_RGB_COLOR,
+    ATTR_XY_COLOR,
     CONF_INITIAL_COLOR,
     CONF_INITIAL_MODE,
     DOMAIN,
@@ -77,3 +78,24 @@ async def test_reproduce_unknown_entity_is_a_noop(hass: HomeAssistant) -> None:
     await async_reproduce_states(hass, [snapshot])
     await hass.async_block_till_done()
     assert hass.states.get("color.does_not_exist") is None
+
+
+async def test_reproduce_chromatic_prefers_xy_attribute(
+    hass: HomeAssistant,
+) -> None:
+    """A snapshot's canonical xy wins over the derived (lossy) hex state."""
+    await _setup_entity(hass)
+    snapshot = State(
+        ENTITY_ID,
+        "#00FF00",
+        {
+            ATTR_KIND: KIND_CHROMATIC,
+            ATTR_XY_COLOR: [0.1234, 0.4567],
+            ATTR_BRIGHTNESS: None,
+        },
+    )
+    await async_reproduce_states(hass, [snapshot])
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_XY_COLOR] == [0.1234, 0.4567]

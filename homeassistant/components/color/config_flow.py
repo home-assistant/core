@@ -169,10 +169,12 @@ class ColorOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(data=user_input)
-        current_icon = self.config_entry.options.get(
-            CONF_ICON
-        ) or self.config_entry.data.get(CONF_ICON)
+            # Store None for "cleared" so it is distinct from "never set".
+            return self.async_create_entry(data={CONF_ICON: user_input.get(CONF_ICON)})
+        if CONF_ICON in self.config_entry.options:
+            current_icon = self.config_entry.options[CONF_ICON]
+        else:
+            current_icon = self.config_entry.data.get(CONF_ICON)
         schema = vol.Schema(
             {
                 vol.Optional(

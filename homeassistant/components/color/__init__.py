@@ -16,6 +16,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.service import remove_entity_service_fields
 from homeassistant.helpers.typing import ConfigType, VolDictType
+from homeassistant.util.hass_dict import HassKey
 
 from .color_math import COLOR_SHAPE_FIELDS, ColorInputError
 from .const import (
@@ -36,6 +37,8 @@ from .const import (
 from .entity import ColorConfigEntry, ColorEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+DATA_COMPONENT: HassKey[EntityComponent[ColorEntity]] = HassKey(DOMAIN)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -88,7 +91,7 @@ SET_BRIGHTNESS_SCHEMA: VolDictType = {
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the entity component and entity services."""
     component = EntityComponent[ColorEntity](_LOGGER, DOMAIN, hass)
-    hass.data[DOMAIN] = component
+    hass.data[DATA_COMPONENT] = component
 
     async def set_color(entity: ColorEntity, call: ServiceCall) -> None:
         """Set a color from a service call."""
@@ -121,7 +124,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ColorConfigEntry) -> bool:
     """Add one entity per config entry."""
-    component: EntityComponent[ColorEntity] = hass.data[DOMAIN]
+    component = hass.data[DATA_COMPONENT]
     entity = ColorEntity(entry)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await component.async_add_entities([entity])
@@ -131,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ColorConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: ColorConfigEntry) -> bool:
     """Remove the entity when the config entry is unloaded."""
-    component: EntityComponent[ColorEntity] = hass.data[DOMAIN]
+    component = hass.data[DATA_COMPONENT]
     await component.async_remove_entity(entry.runtime_data.entity_id)
     return True
 
