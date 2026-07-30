@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import CharacteristicEntity, HomeKitEntity
-from .utils import service_feature_scope, service_feature_translation
+from .utils import folded_name
 
 
 @dataclass(frozen=True)
@@ -181,13 +181,13 @@ REJECT_CHAR_BY_TYPE = {
 CHARACTERISTIC_BINARY_SENSORS: dict[str, HomeKitBinarySensorEntityDescription] = {
     CharacteristicsTypes.STATUS_LO_BATT: HomeKitBinarySensorEntityDescription(
         key=CharacteristicsTypes.STATUS_LO_BATT,
-        has_entity_name=True,
+        name="Low Battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     CharacteristicsTypes.STATUS_FAULT: HomeKitBinarySensorEntityDescription(
         key=CharacteristicsTypes.STATUS_FAULT,
-        has_entity_name=True,
+        name="Problem",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -209,16 +209,14 @@ class CharacteristicBinarySensor(CharacteristicEntity, BinarySensorEntity):
         """Initialise a HomeKit characteristic binary sensor."""
         self.entity_description = description
         super().__init__(conn, info, char)
-        feature_translation_key = description.translation_key or (
-            str(description.device_class) if description.device_class else None
-        )
-        if description.has_entity_name and (
-            translation := service_feature_translation(
-                char.service, feature_translation_key
-            )
-        ):
-            self._attr_translation_key, translation_placeholders = translation
-            self._attr_translation_placeholders = translation_placeholders
+
+    @property
+    @override
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        if name := self.accessory.name:
+            return f"{name} {self.entity_description.name}"
+        return f"{self.entity_description.name}"
 
     @override
     def get_characteristic_types(self) -> list[str]:
@@ -308,6 +306,14 @@ def _has_earlier_low_battery_characteristic(char: Characteristic) -> bool:
 
 def _low_battery_source_key(service: Service) -> str | None:
     """Return the low battery source key for the service."""
-    if scope := service_feature_scope(service):
-        return scope.key
+    if (
+        service_label_index := service.value(CharacteristicsTypes.SERVICE_LABEL_INDEX)
+    ) is not None:
+        return f"label:{service.type}:{service_label_index}"
+
+    service_name = service.value(CharacteristicsTypes.NAME)
+    if service_name is not None and folded_name(str(service_name)) != folded_name(
+        service.accessory.name
+    ):
+        return f"name:{folded_name(str(service_name))}"
     return None

@@ -20,12 +20,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, ConfigType
+from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import CharacteristicEntity
-from .utils import service_feature_translation
 
 NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
     CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: (
@@ -68,7 +67,7 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
     ),
     CharacteristicsTypes.SET_DURATION: NumberEntityDescription(
         key=CharacteristicsTypes.SET_DURATION,
-        has_entity_name=True,
+        name="Duration",
         device_class=NumberDeviceClass.DURATION,
         translation_key="duration",
         entity_category=EntityCategory.CONFIG,
@@ -120,27 +119,11 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         """Initialise a HomeKit number control."""
         self.entity_description = description
         super().__init__(conn, info, char)
-        feature_translation_key = description.translation_key or (
-            str(description.device_class) if description.device_class else None
-        )
-        if description.has_entity_name and (
-            translation := service_feature_translation(
-                char.service, feature_translation_key
-            )
-        ):
-            self._attr_translation_key, translation_placeholders = translation
-            self._attr_translation_placeholders = translation_placeholders
 
     @property
     @override
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the name of the device if any."""
-        if (translated_name := self._get_translated_name()) is not UNDEFINED:
-            return translated_name
-
-        if self.entity_description.name is UNDEFINED:
-            return super().name
-
         if name := self.accessory.name:
             return f"{name} {self.entity_description.name}"
         return f"{self.entity_description.name}"
