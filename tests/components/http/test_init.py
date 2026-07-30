@@ -32,7 +32,7 @@ from homeassistant.components.http.config import (
     default_server_port,
 )
 from homeassistant.components.http.const import ENV_SETUP_PORT, ENV_SUPERVISOR
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HASSIO_USER_NAME
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HASSIO_USER_NAME, SERVER_PORT
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -1127,6 +1127,39 @@ async def test_yaml_migration_to_storage(
     assert stored["stable"] == _DEFAULT_CONFIG  # untouched defaults
     assert stored["pending"] == _stored_config(
         yaml_conf, created_at=dt_util.utcnow().isoformat()
+    )
+
+
+@pytest.mark.usefixtures("freezer")
+async def test_yaml_migration_without_port_keeps_previous_default_port(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """YAML that configures something else than the port migrates to port 8123.
+
+    A YAML install ran on the previous default port 8123, so the migration must
+    keep that port instead of silently moving the user to the new Supervisor
+    default of port 80.
+    """
+    yaml_conf = {
+        "use_x_forwarded_for": True,
+        "trusted_proxies": ["10.11.12.0/24"],
+    }
+
+    with _supervisor_default_config():
+        assert await async_setup_component(hass, DOMAIN, {"http": yaml_conf})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+        assert hass.config.api.port == SERVER_PORT
+        store = await async_get_and_load_store(hass)
+        assert store.active_config_type is ActiveConfigType.PENDING
+
+    stored = hass_storage[DOMAIN]["data"]
+    assert stored["yaml_migration_done"] is True
+    assert stored["pending"] == _stored_config(
+        {**yaml_conf, "server_port": SERVER_PORT},
+        created_at=dt_util.utcnow().isoformat(),
     )
 
 
