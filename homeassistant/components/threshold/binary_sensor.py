@@ -328,18 +328,20 @@ class ThresholdSensor(BinarySensorEntity):
 
         if self.threshold_type == TYPE_RANGE_INVERTED:
             if self._attr_is_on is None:
-                self._attr_is_on = True
+                self._attr_is_on = False
                 self._state_position = POSITION_IN_RANGE
 
             if below(self.sensor_value, self._threshold_upper):
                 self._state_position = POSITION_BELOW
-                self._attr_is_on = False
-            elif above(self.sensor_value, self._threshold_lower):
-                self._state_position = POSITION_ABOVE
-                self._attr_is_on = False
-            else:
-                self._state_position = POSITION_IN_RANGE
                 self._attr_is_on = True
+            if above(self.sensor_value, self._threshold_lower):
+                self._state_position = POSITION_ABOVE
+                self._attr_is_on = True
+            elif above(self.sensor_value, self._threshold_upper) and below(
+                self.sensor_value, self._threshold_lower
+            ):
+                self._state_position = POSITION_IN_RANGE
+                self._attr_is_on = False
             return
 
     @callback
