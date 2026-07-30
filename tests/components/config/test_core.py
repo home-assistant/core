@@ -281,7 +281,7 @@ async def test_detect_config_fail(hass: HomeAssistant, client) -> None:
     assert msg["result"] == {"unit_system": "metric", "time_zone": "Europe/Amsterdam"}
 
 
-async def test_slugify(hass: HomeAssistant, client) -> None:
+async def test_slugify(client: MockHAClientWebSocket) -> None:
     """Test slugify."""
     await client.send_json(
         {
