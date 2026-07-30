@@ -175,7 +175,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "ld2410_ble": {"ld2410-ble": {"async-timeout"}},
     "led_ble": {"flux-led": {"async-timeout"}},
     "lektrico": {"lektricowifi": {"async-timeout"}},
-    "lifx": {"aiolifx": {"async-timeout"}},
     "linkplay": {
         "python-linkplay": {"async-timeout"},
     },

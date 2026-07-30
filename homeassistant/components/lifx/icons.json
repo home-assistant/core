@@ -1,4 +1,19 @@
 {
+  "entity": {
+    "number": {
+      "infrared_brightness": {
+        "default": "mdi:lightbulb-night"
+      }
+    },
+    "select": {
+      "infrared_brightness": {
+        "default": "mdi:lightbulb-night"
+      },
+      "theme": {
+        "default": "mdi:palette"
+      }
+    }
+  },
   "services": {
     "effect_colorloop": {
       "service": "mdi:looks"
