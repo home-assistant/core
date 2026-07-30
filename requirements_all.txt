@@ -151,7 +151,7 @@ adguardhome==0.8.1
 advantage-air==0.4.4
 
 # homeassistant.components.frontier_silicon
-afsapi==1.0.1
+afsapi==1.0.2
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.24
@@ -1278,7 +1278,7 @@ hole==0.9.2
 holidays==0.101
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260729.1
+home-assistant-frontend==20260729.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.7.30
