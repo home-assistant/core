@@ -370,6 +370,7 @@ FLOWS = {
         "inkbird",
         "insteon",
         "intelliclima",
+        "intellidwell",
         "intellifire",
         "iometer",
         "ios",

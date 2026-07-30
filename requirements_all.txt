@@ -2269,6 +2269,9 @@ pyinsteon==1.6.4
 # homeassistant.components.intelliclima
 pyintelliclima==0.3.1
 
+# homeassistant.components.intellidwell
+pyintellidwell==1.0.0
+
 # homeassistant.components.intesishome
 pyintesishome==2.0.3
 
