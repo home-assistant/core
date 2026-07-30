@@ -1,6 +1,5 @@
 """Base entity for Midea."""
 
-import logging
 from typing import Any, override
 
 from midealocal.device import MideaDevice
@@ -9,10 +8,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .device_catalog import MIDEA_DEVICE_NAMES
-
-_LOGGER = logging.getLogger(__name__)
 
 type MideaConfigEntry = ConfigEntry[MideaDevice]
 
@@ -68,7 +65,7 @@ class MideaEntity(Entity):
     def update_state(self, status: Any) -> None:
         """Update entity state."""
         if self.hass.is_stopping:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "MideaEntity update_state for %s [%s] with status %s: HASS is stopping",
                 self.name,
                 type(self),

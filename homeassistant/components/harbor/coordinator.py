@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 from uuid import uuid4
 
 from harbor.config import HarborCameraConfig
@@ -149,6 +149,13 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
         self.device.shutdown()
 
     @property
+    def _client(self) -> HarborMQTTClient:
+        """Return the active MQTT client."""
+        if TYPE_CHECKING:
+            assert self._mqtt_client is not None
+        return self._mqtt_client
+
+    @property
     def device_info(self) -> DeviceInfo:
         """Return device info for the Harbor camera."""
         state = self.data
@@ -160,6 +167,18 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
             serial_number=state.serial,
             sw_version=state.os_version,
         )
+
+    async def async_set_camera_on(self, camera_on: bool) -> None:
+        """Turn the camera stream on or off."""
+        await self._client.set_camera_on(camera_on)
+
+    async def async_set_video_flip(self, video_flip: bool) -> None:
+        """Rotate the camera image 180 degrees, or restore it upright."""
+        await self._client.set_video_flip(video_flip)
+
+    async def async_set_clock_display(self, clock_display: bool) -> None:
+        """Show or hide the clock overlay burned into the video."""
+        await self._client.set_clock_display(clock_display)
 
     def _handle_device_update(self, state: HarborDeviceState) -> None:
         """Mirror a library device update into Home Assistant."""

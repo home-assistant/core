@@ -24,6 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data coordinator for Aqualink systems."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, system: Any
     ) -> None:
