@@ -13,6 +13,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
+import voluptuous as vol
 
 from homeassistant.components import recorder
 from homeassistant.components.lock import LockState
@@ -718,6 +719,162 @@ async def test_saving_event_exclude_event_type(
     events = await instance.async_add_executor_job(_get_events, hass, ["test", "test2"])
     assert len(events) == 1
     assert events[0].event_type == "test2"
+
+
+async def test_saving_event_exclude_event_data(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Test event data filters exclude only matching events from Recorder."""
+    config = {
+        "exclude": {
+            "event_data": [
+                {
+                    "event_type": "zha_event",
+                    "match": {"command": "vibration_strength"},
+                },
+                {
+                    "event_type": "zha_event",
+                    "match": {"command": "drop", "device_id": "sensor-1"},
+                },
+                {
+                    "event_type": "scalar_event",
+                    "match": {
+                        "text": "value",
+                        "boolean": True,
+                        "integer": 2,
+                        "float": 1.5,
+                    },
+                },
+            ]
+        }
+    }
+    instance = await async_setup_recorder_instance(hass, config)
+    received_events: list[Event] = []
+    hass.bus.async_listen("zha_event", received_events.append)
+
+    hass.bus.async_fire("zha_event", {"command": "vibration_strength"})
+    hass.bus.async_fire("zha_event", {"command": "tilt"})
+    hass.bus.async_fire("other_event", {"command": "vibration_strength"})
+    hass.bus.async_fire("zha_event", {"command": "drop", "device_id": "sensor-1"})
+    hass.bus.async_fire("zha_event", {"command": "drop"})
+    hass.bus.async_fire("zha_event", {"device_id": "sensor-1"})
+    hass.bus.async_fire(
+        "scalar_event",
+        {"text": "value", "boolean": True, "integer": 2, "float": 1.5},
+    )
+    hass.bus.async_fire(
+        "scalar_event",
+        {"text": "value", "boolean": True, "integer": 2, "float": 2.5},
+    )
+
+    await async_wait_recording_done(hass)
+
+    def _get_events(hass: HomeAssistant) -> list[Event]:
+        with session_scope(hass=hass, read_only=True) as session:
+            events = []
+            for event, event_data, event_types in (
+                session.query(Events, EventData, EventTypes)
+                .outerjoin(
+                    EventTypes, (Events.event_type_id == EventTypes.event_type_id)
+                )
+                .outerjoin(EventData, Events.data_id == EventData.data_id)
+                .where(
+                    EventTypes.event_type.in_(
+                        (
+                            "zha_event",
+                            "other_event",
+                            "scalar_event",
+                        )
+                    )
+                )
+            ):
+                native_event = db_event_to_native(event)
+                if event_data:
+                    native_event.data = db_event_data_to_native(event_data)
+                native_event.event_type = event_types.event_type
+                events.append(native_event)
+            return events
+
+    stored_events = await instance.async_add_executor_job(_get_events, hass)
+    assert {
+        (event.event_type, tuple(sorted(event.data.items()))) for event in stored_events
+    } == {
+        ("zha_event", (("command", "tilt"),)),
+        ("other_event", (("command", "vibration_strength"),)),
+        ("zha_event", (("command", "drop"),)),
+        ("zha_event", (("device_id", "sensor-1"),)),
+        (
+            "scalar_event",
+            (
+                ("boolean", True),
+                ("float", 2.5),
+                ("integer", 2),
+                ("text", "value"),
+            ),
+        ),
+    }
+    assert len(received_events) == 5
+
+
+async def test_event_data_filter_include_exclude_precedence(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Test excludes take precedence over event data includes."""
+    config = {
+        "include": {
+            "event_data": [
+                {"event_type": "test_event", "match": {"command": "include"}}
+            ]
+        },
+        "exclude": {
+            "event_types": ["excluded_event"],
+            "event_data": [
+                {"event_type": "test_event", "match": {"command": "include"}}
+            ],
+        },
+    }
+    instance = await async_setup_recorder_instance(hass, config)
+
+    hass.bus.async_fire("test_event", {"command": "include"})
+    hass.bus.async_fire("test_event", {"command": "not_included"})
+    hass.bus.async_fire("excluded_event", {"command": "include"})
+    hass.bus.async_fire("unfiltered_event", {"command": "include"})
+
+    await async_wait_recording_done(hass)
+
+    def _get_event_count(hass: HomeAssistant) -> int:
+        with session_scope(hass=hass, read_only=True) as session:
+            return (
+                session.query(Events)
+                .join(EventTypes)
+                .where(
+                    EventTypes.event_type.in_(
+                        ("test_event", "excluded_event", "unfiltered_event")
+                    )
+                )
+                .count()
+            )
+
+    event_count = await instance.async_add_executor_job(_get_event_count, hass)
+    assert event_count == 1
+
+
+@pytest.mark.parametrize(
+    "event_data_filter",
+    [
+        {"event_data": [{"match": {"command": "vibration_strength"}}]},
+        {"event_data": [{"event_type": "zha_event"}]},
+        {"event_data": [{"event_type": "zha_event", "match": {}}]},
+        {"event_data": [{"event_type": "zha_event", "match": {"value": []}}]},
+        {"event_data": [{"event_type": "zha_event", "match": "not-a-mapping"}]},
+    ],
+)
+def test_invalid_event_data_filter_config(event_data_filter: dict[str, object]) -> None:
+    """Test invalid event data filters are rejected by the configuration schema."""
+    with pytest.raises(vol.Invalid):
+        CONFIG_SCHEMA({DOMAIN: {"exclude": event_data_filter}})
 
 
 async def test_saving_state_exclude_domains(
