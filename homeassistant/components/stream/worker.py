@@ -48,7 +48,12 @@ from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
 NEGATIVE_INF = -math.inf
-URL_PATTERN = re.compile(r"[a-z][a-z0-9+.-]*://[^\s'\"<>()\[\]{},]+", re.IGNORECASE)
+URL_PATTERN = re.compile(
+    r"[a-z][a-z0-9+.-]*://[^\s@]*@[^\s/'\"<>()\[\]{},]+"
+    r"(?:[/?#][^\s'\"<>()\[\]{}]*)?"
+    r"|[a-z][a-z0-9+.-]*://[^\s'\"<>()\[\]{},]+",
+    re.IGNORECASE,
+)
 
 
 def redact_av_error_string(err: av.FFmpegError | ValueError) -> str:

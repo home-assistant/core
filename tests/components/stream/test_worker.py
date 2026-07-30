@@ -478,8 +478,8 @@ async def test_stream_worker_packet_mux_fails(
 @pytest.mark.parametrize(
     "exception",
     [
-        # pylint: disable-next=c-extension-no-member
         pytest.param(
+            # pylint: disable-next=c-extension-no-member
             av.error.ArgumentError(22, "[mp4] dimensions not set"),
             id="ffmpeg_error",
         ),
@@ -614,13 +614,30 @@ async def test_stream_worker_close_failures_preserve_first_error(
     assert py_av.container.closed
 
 
-def test_redact_value_error_url() -> None:
+@pytest.mark.parametrize(
+    ("value", "redacted_value"),
+    [
+        pytest.param(
+            "rtsp://user:secret@example.invalid/live",
+            "rtsp://****:****@example.invalid/live",
+            id="simple_credentials",
+        ),
+        pytest.param(
+            "rtsp://user:sec,ret@example.invalid/live",
+            "rtsp://****:****@example.invalid/live",
+            id="credentials_with_comma",
+        ),
+        pytest.param(
+            "rtsp://user:sec,ret@example.invalid/live?auth=query-secret",
+            "rtsp://****:****@example.invalid/live?auth=****",
+            id="credentials_with_comma_and_auth_query",
+        ),
+    ],
+)
+def test_redact_value_error_url(value: str, redacted_value: str) -> None:
     """Test credentials in a ValueError URL are redacted."""
-    assert (
-        redact_av_error_string(
-            ValueError("failed for rtsp://user:secret@example.invalid/live")
-        )
-        == "failed for rtsp://****:****@example.invalid/live"
+    assert redact_av_error_string(ValueError(f"failed for {value}")) == (
+        f"failed for {redacted_value}"
     )
 
 
