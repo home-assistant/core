@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 # Without these, a mistyped zone ID surfaces as an authentication failure
 ZONE_ERROR_CODES = {"NoSuchHostedZone", "InvalidInput"}
 
-ERROR_FIELDS = {"invalid_zone": CONF_ZONE, "invalid_domain": CONF_DOMAIN}
+ERROR_FIELDS = {"invalid_zone": CONF_ZONE}
 
 
 def _clean_records(value: list[str]) -> list[str]:
@@ -86,16 +86,15 @@ def _normalize(name: str) -> str:
 # disk, and get_hosted_zone makes a network call. Both need the executor.
 def _validate_auth(
     aws_access_key_id: str, aws_secret_access_key: str, zone: str
-) -> str:
-    """Validate we can access Route53, returning the hosted zone name."""
+) -> None:
+    """Validate we can access Route53."""
     client = boto3.client(
         "route53",
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key,
     )
     # Fetching the hosted zone verifies both the credentials and the zone ID
-    response = client.get_hosted_zone(Id=zone)
-    return _normalize(response["HostedZone"]["Name"])
+    client.get_hosted_zone(Id=zone)
 
 
 class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -106,7 +105,7 @@ class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_validate(self, user_input: dict[str, Any]) -> str | None:
         """Validate the input, returning an error key when it fails."""
         try:
-            zone_name = await self.hass.async_add_executor_job(
+            await self.hass.async_add_executor_job(
                 _validate_auth,
                 user_input[CONF_ACCESS_KEY_ID],
                 user_input[CONF_SECRET_ACCESS_KEY],
@@ -123,12 +122,6 @@ class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Unexpected exception")
             return "unknown"
-
-        # Route53 rejects records outside the zone, so catch it before setup
-        domain = _normalize(user_input[CONF_DOMAIN])
-        if domain != zone_name and not domain.endswith(f".{zone_name}"):
-            _LOGGER.error("Domain %s is not inside hosted zone %s", domain, zone_name)
-            return "invalid_domain"
         return None
 
     @override

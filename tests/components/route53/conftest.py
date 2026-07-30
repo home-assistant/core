@@ -22,7 +22,7 @@ def mock_boto3_client() -> Generator[MagicMock]:
         "homeassistant.components.route53.config_flow.boto3.client"
     ) as mock_client:
         mock_client.return_value.get_hosted_zone.return_value = {
-            "HostedZone": {"Id": "/hostedzone/test-zone", "Name": "example.com."}
+            "HostedZone": {"Id": "/hostedzone/test-zone"}
         }
         mock_client.return_value.change_resource_record_sets.return_value = {
             "ResponseMetadata": {"HTTPStatusCode": 200}
