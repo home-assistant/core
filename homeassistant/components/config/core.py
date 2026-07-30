@@ -11,7 +11,7 @@ from homeassistant.components.sensor import async_update_suggested_units
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import check_config, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import location as location_util, slugify, unit_system
+from homeassistant.util import location as location_util, unit_system
 
 
 @callback
@@ -20,7 +20,6 @@ def async_setup(hass: HomeAssistant) -> bool:
     hass.http.register_view(CheckConfigView)
     websocket_api.async_register_command(hass, websocket_update_config)
     websocket_api.async_register_command(hass, websocket_detect_config)
-    websocket_api.async_register_command(hass, websocket_slugify)
     return True
 
 
@@ -131,16 +130,3 @@ async def websocket_detect_config(
         info["country"] = location_info.country_code
 
     connection.send_result(msg["id"], info)
-
-
-@websocket_api.websocket_command(
-    {vol.Required("type"): "config/core/slugify", vol.Required("text"): str}
-)
-@callback
-def websocket_slugify(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Handle slugify websocket command."""
-    connection.send_result(msg["id"], {"slug": slugify(msg["text"])})
