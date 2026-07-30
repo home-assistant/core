@@ -1,10 +1,12 @@
 """Tests for the WiiM integration initialization."""
 
+from socket import AddressFamily  # pylint: disable=no-name-in-module
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from wiim.exceptions import WiimDeviceException, WiimRequestException
 
+from homeassistant.components.wiim.util import async_get_event_callback_host
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
@@ -79,6 +81,23 @@ async def test_setup_uses_route_to_device_for_event_callback(
 
     mock_local_ip.assert_awaited_once_with(
         "http://192.168.1.100:49152/description.xml", hass.loop
+    )
+
+
+@pytest.mark.parametrize("local_ip", ["192.168.1.10", "2001:db8::5"])
+async def test_event_callback_host_preserves_address_family(
+    hass: HomeAssistant,
+    mock_local_ip: AsyncMock,
+    local_ip: str,
+) -> None:
+    """Test the resolved address is used as-is for both IPv4 and IPv6."""
+    mock_local_ip.return_value = (AddressFamily.AF_INET, local_ip)
+
+    assert (
+        await async_get_event_callback_host(
+            hass, "http://192.168.1.100:49152/description.xml"
+        )
+        == local_ip
     )
 
 
