@@ -530,17 +530,29 @@ async def _search_within_artist(
 
 
 def _get_media_types_from_query(query: SearchMediaQuery) -> list[MASSMediaType]:
-    """Map query to Music Assistant media types."""
+    """Map query to Music Assistant media types.
+
+    Returns nothing when the query rules out everything we could look for.
+    """
     media_types: list[MASSMediaType] = []
 
-    # an explicit filter is the only thing the user picked themselves,
-    # so it wins from the media type that merely surrounds the search
+    # searching inside an artist can never turn up more than their own
+    # albums and tracks, whatever the rest of the query asks for
+    allowed = (
+        ARTIST_MASS_MEDIA_TYPES
+        if "artist/" in (query.media_content_id or "")
+        else SEARCHABLE_MASS_MEDIA_TYPES
+    )
+
+    # an explicit filter is the only thing the user picked themselves, so it
+    # wins from the media type that merely surrounds the search, and asking
+    # for something unsearchable leaves nothing rather than everything
     if query.media_filter_classes:
         return [
             MEDIA_CLASS_MASS_MEDIA_TYPE_MAP[cls]
             for cls in query.media_filter_classes
-            if cls in MEDIA_CLASS_MASS_MEDIA_TYPE_MAP
-        ] or SEARCHABLE_MASS_MEDIA_TYPES
+            if MEDIA_CLASS_MASS_MEDIA_TYPE_MAP.get(cls) in allowed
+        ]
 
     match query.media_content_type:
         case MediaType.ARTIST:
@@ -567,8 +579,10 @@ def _get_media_types_from_query(query: SearchMediaQuery) -> list[MASSMediaType]:
                 # rather than as a concrete media type.
                 media_types = [library_media_type]
 
-    # Default to all types if none specified
-    return media_types or SEARCHABLE_MASS_MEDIA_TYPES
+    # Default to everything we are allowed to look for if none specified
+    return [
+        media_type for media_type in media_types if media_type in allowed
+    ] or allowed
 
 
 def _process_search_results(
@@ -658,6 +672,9 @@ async def async_search_media(
 
         # Determine which media types to search
         media_types = _get_media_types_from_query(query)
+        if not media_types:
+            # the query ruled out everything we could have looked for
+            return SearchMedia(result=[])
 
         # Handle media_content_id if provided (for contextual searches)
         if query.media_content_id:
@@ -670,14 +687,6 @@ async def async_search_media(
                     mass, query.media_content_id, search_query, limit
                 )
             if "artist/" in query.media_content_id:
-                # we can only make sense of what we asked for, so drop anything
-                # an artist cannot hold instead of searching for it and
-                # discarding the entire response
-                media_types = [
-                    media_type
-                    for media_type in media_types
-                    if media_type in ARTIST_MASS_MEDIA_TYPES
-                ] or ARTIST_MASS_MEDIA_TYPES
                 # For artists, we already run a search, so save the results
                 search_results = await _search_within_artist(
                     mass, query.media_content_id, search_query, limit, media_types

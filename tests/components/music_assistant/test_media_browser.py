@@ -549,6 +549,39 @@ async def test_search_within_artist_with_filter_classes(
     assert {item.media_class for item in search_results.result} == expected_classes
 
 
+@pytest.mark.parametrize(
+    ("media_content_id", "media_filter_classes"),
+    [
+        # an artist holds no playlists, so there is nothing to find
+        ("library://artist/127", {MediaClass.PLAYLIST}),
+        # nothing we can search for is an image
+        ("library://artist/127", {MediaClass.IMAGE}),
+        (None, {MediaClass.IMAGE}),
+    ],
+)
+async def test_search_media_with_unsearchable_filter(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    media_content_id: str | None,
+    media_filter_classes: set[MediaClass],
+) -> None:
+    """Test that a filter we cannot honour returns nothing, not everything."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    with patch.object(music_assistant_client.music, "search") as mock_search:
+        search_results = await async_search_media(
+            music_assistant_client,
+            SearchMediaQuery(
+                search_query="test",
+                media_content_id=media_content_id,
+                media_filter_classes=media_filter_classes,
+            ),
+        )
+
+    mock_search.assert_not_called()
+    assert search_results.result == []
+
+
 async def test_search_media_results_are_browsable(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
