@@ -310,6 +310,12 @@
       "battery_discharge_phase": {
         "name": "Current battery discharge {phase_name}"
       },
+      "comm_level_2_4_ghz": {
+        "name": "Communication level 2.4 GHz"
+      },
+      "comm_level_sub_ghz": {
+        "name": "Communication level sub-GHz"
+      },
       "configured_reserve_soc": {
         "name": "Configured reserve battery level"
       },
