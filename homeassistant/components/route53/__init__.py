@@ -3,13 +3,9 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from http import HTTPStatus
 import logging
 from typing import Any
 
-import aiohttp
-import boto3
-import botocore.exceptions
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -22,7 +18,6 @@ from homeassistant.core import (
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -34,6 +29,7 @@ from .const import (
     DOMAIN,
     INTERVAL,
 )
+from .helpers import async_update_records
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,15 +113,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         errors = []
         for entry in hass.config_entries.async_loaded_entries(DOMAIN):
             try:
-                await _async_update_route53(
-                    hass,
-                    entry.data[CONF_ACCESS_KEY_ID],
-                    entry.data[CONF_SECRET_ACCESS_KEY],
-                    entry.data[CONF_ZONE],
-                    entry.data[CONF_DOMAIN],
-                    entry.data[CONF_RECORDS],
-                    entry.data[CONF_TTL],
-                )
+                await async_update_records(hass, entry.data)
             except HomeAssistantError as err:
                 errors.append(f"{entry.data[CONF_DOMAIN]}: {err}")
         if errors:
@@ -143,32 +131,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: Route53ConfigEntry) -> bool:
     """Set up Route53 from a config entry."""
-    domain = entry.data[CONF_DOMAIN]
-    records = entry.data[CONF_RECORDS]
-    zone = entry.data[CONF_ZONE]
-    aws_access_key_id = entry.data[CONF_ACCESS_KEY_ID]
-    aws_secret_access_key = entry.data[CONF_SECRET_ACCESS_KEY]
-    ttl = entry.data[CONF_TTL]
 
     async def update_records_interval(now: datetime) -> None:
         """Set up recurring update."""
         try:
-            await _async_update_route53(
-                hass,
-                aws_access_key_id,
-                aws_secret_access_key,
-                zone,
-                domain,
-                records,
-                ttl,
-            )
+            await async_update_records(hass, entry.data)
         except HomeAssistantError as err:
             _LOGGER.warning(err)
 
     try:
-        await _async_update_route53(
-            hass, aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl
-        )
+        await async_update_records(hass, entry.data)
     except HomeAssistantError as err:
         raise ConfigEntryNotReady from err
 
@@ -185,82 +157,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: Route53ConfigEntry) -> 
     """Unload a config entry."""
     entry.runtime_data.remove_interval()
     return True
-
-
-def _get_fqdn(record: str, domain: str) -> str:
-    if record == ".":
-        return domain
-    return f"{record}.{domain}"
-
-
-def _update_route53_records(
-    aws_access_key_id: str,
-    aws_secret_access_key: str,
-    zone: str,
-    changes: list[dict[str, Any]],
-) -> None:
-    _LOGGER.debug("Submitting the following changes to Route53")
-    _LOGGER.debug(changes)
-
-    # Creating the client can raise too, for example on a malformed AWS config
-    try:
-        client = boto3.client(
-            "route53",
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-        )
-        response = client.change_resource_record_sets(
-            HostedZoneId=zone, ChangeBatch={"Changes": changes}
-        )
-    except (
-        botocore.exceptions.BotoCoreError,
-        botocore.exceptions.ClientError,
-    ) as err:
-        raise HomeAssistantError(f"Error updating Route53 records: {err}") from err
-    _LOGGER.debug("Response is %s", response)
-
-    if response["ResponseMetadata"]["HTTPStatusCode"] != HTTPStatus.OK:
-        raise HomeAssistantError(f"Error updating Route53 records: {response}")
-
-
-async def _async_update_route53(
-    hass: HomeAssistant,
-    aws_access_key_id: str,
-    aws_secret_access_key: str,
-    zone: str,
-    domain: str,
-    records: list[str],
-    ttl: int,
-) -> None:
-    _LOGGER.debug("Starting update for zone %s", zone)
-
-    session = async_get_clientsession(hass)
-    try:
-        async with session.get(
-            "https://api.ipify.org/", timeout=aiohttp.ClientTimeout(total=5)
-        ) as resp:
-            resp.raise_for_status()
-            ipaddress = await resp.text()
-
-    except (aiohttp.ClientError, TimeoutError) as err:
-        raise HomeAssistantError("Unable to reach the ipify service") from err
-
-    changes = []
-    for record in records:
-        _LOGGER.debug("Processing record: %s", record)
-
-        changes.append(
-            {
-                "Action": "UPSERT",
-                "ResourceRecordSet": {
-                    "Name": _get_fqdn(record, domain),
-                    "Type": "A",
-                    "TTL": ttl,
-                    "ResourceRecords": [{"Value": ipaddress}],
-                },
-            }
-        )
-
-    await hass.async_add_executor_job(
-        _update_route53_records, aws_access_key_id, aws_secret_access_key, zone, changes
-    )

@@ -48,7 +48,7 @@ async def test_setup_entry(
 
     aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
     with patch(
-        "homeassistant.components.route53.boto3.client",
+        "homeassistant.components.route53.helpers.boto3.client",
         return_value=mock_boto3_client.return_value,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -79,7 +79,7 @@ async def test_yaml_import_creates_entry(
             return_value=mock_boto3_client.return_value,
         ),
         patch(
-            "homeassistant.components.route53.boto3.client",
+            "homeassistant.components.route53.helpers.boto3.client",
             return_value=mock_boto3_client.return_value,
         ),
     ):
@@ -130,7 +130,7 @@ async def test_update_records_service(
 
     aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
     with patch(
-        "homeassistant.components.route53.boto3.client",
+        "homeassistant.components.route53.helpers.boto3.client",
         return_value=mock_boto3_client.return_value,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -142,7 +142,7 @@ async def test_update_records_service(
     aioclient_mock.clear_requests()
     aioclient_mock.get("https://api.ipify.org/", text="5.6.7.8")
     with patch(
-        "homeassistant.components.route53.boto3.client",
+        "homeassistant.components.route53.helpers.boto3.client",
         return_value=mock_boto3_client.return_value,
     ):
         await hass.services.async_call(DOMAIN, "update_records", blocking=True)
@@ -196,7 +196,7 @@ async def test_update_ipify_fails(
 
     aioclient_mock.get("https://api.ipify.org/", exc=ClientError())
     with patch(
-        "homeassistant.components.route53.boto3.client",
+        "homeassistant.components.route53.helpers.boto3.client",
         return_value=mock_boto3_client.return_value,
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
@@ -234,7 +234,7 @@ async def test_update_boto3_fails(
 
     aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
     with patch(
-        "homeassistant.components.route53.boto3.client",
+        "homeassistant.components.route53.helpers.boto3.client",
         return_value=mock_boto3_client.return_value,
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
@@ -265,7 +265,7 @@ async def test_service_update_ipify_fails(
 
     aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
     with patch(
-        "homeassistant.components.route53.boto3.client",
+        "homeassistant.components.route53.helpers.boto3.client",
         return_value=mock_boto3_client.return_value,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -275,7 +275,7 @@ async def test_service_update_ipify_fails(
     aioclient_mock.get("https://api.ipify.org/", exc=ClientError())
     with (
         patch(
-            "homeassistant.components.route53.boto3.client",
+            "homeassistant.components.route53.helpers.boto3.client",
             return_value=mock_boto3_client.return_value,
         ),
         pytest.raises(HomeAssistantError, match="example.com"),
@@ -304,7 +304,7 @@ async def test_service_update_boto3_fails(
 
     aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
     with patch(
-        "homeassistant.components.route53.boto3.client",
+        "homeassistant.components.route53.helpers.boto3.client",
         return_value=mock_boto3_client.return_value,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -318,7 +318,7 @@ async def test_service_update_boto3_fails(
     aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
     with (
         patch(
-            "homeassistant.components.route53.boto3.client",
+            "homeassistant.components.route53.helpers.boto3.client",
             return_value=mock_boto3_client.return_value,
         ),
         pytest.raises(HomeAssistantError),
@@ -355,7 +355,7 @@ async def test_setup_ipify_errors_are_wrapped(
 
     aioclient_mock.get("https://api.ipify.org/", exc=exc)
     with patch(
-        "homeassistant.components.route53.boto3.client",
+        "homeassistant.components.route53.helpers.boto3.client",
         return_value=mock_boto3_client.return_value,
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
@@ -400,7 +400,7 @@ async def test_setup_boto3_errors_are_wrapped(
 
     aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
     with patch(
-        "homeassistant.components.route53.boto3.client",
+        "homeassistant.components.route53.helpers.boto3.client",
         return_value=mock_boto3_client.return_value,
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
@@ -430,7 +430,7 @@ async def test_setup_boto3_client_error_is_wrapped(
 
     aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
     with patch(
-        "homeassistant.components.route53.boto3.client",
+        "homeassistant.components.route53.helpers.boto3.client",
         side_effect=botocore.exceptions.ConfigParseError(path="/etc/aws/config"),
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
@@ -461,7 +461,7 @@ async def test_periodic_update(
 
     aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
     with patch(
-        "homeassistant.components.route53.boto3.client",
+        "homeassistant.components.route53.helpers.boto3.client",
         return_value=mock_boto3_client.return_value,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -480,7 +480,7 @@ async def test_periodic_update(
     aioclient_mock.clear_requests()
     aioclient_mock.get("https://api.ipify.org/", exc=ClientError())
     with patch(
-        "homeassistant.components.route53.boto3.client",
+        "homeassistant.components.route53.helpers.boto3.client",
         return_value=mock_boto3_client.return_value,
     ):
         async_fire_time_changed(
