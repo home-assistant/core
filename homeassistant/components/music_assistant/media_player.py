@@ -466,14 +466,12 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         # An explicit username is validated strictly; when omitted we default to
         # the Home Assistant user that made the call (best-effort, never raises).
         user_id = self._context.user_id if self._context is not None else None
-            if username is not None:
-                await async_verify_mass_username_availability(
-                    mass=self.mass, username=username, raise_on_error=True
-                )
-            elif user_id is not None:
-                username = await async_resolve_mass_username(
-                    self.hass, self.mass, user_id
-                )
+        if username is not None:
+            await async_verify_mass_username_availability(
+                mass=self.mass, username=username
+            )
+        elif user_id is not None:
+            username = await async_resolve_mass_username(self.hass, self.mass, user_id)
 
         media_uris: list[str] = []
         item: MediaItemType | ItemMapping | None = None
