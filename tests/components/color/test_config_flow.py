@@ -146,3 +146,28 @@ async def test_options_flow_clears_icon(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).attributes.get(ATTR_ICON) is None
+
+
+async def test_options_flow_form_shows_previous_option_icon(
+    hass: HomeAssistant,
+) -> None:
+    """Re-opening the options flow suggests the icon stored in options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Icon Reopen",
+        data={
+            CONF_NAME: "Icon Reopen",
+            CONF_INITIAL_MODE: MODE_CHROMATIC,
+            CONF_INITIAL_COLOR: "#FFFFFF",
+            CONF_ICON: "mdi:palette",
+        },
+        options={CONF_ICON: "mdi:lightbulb"},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    schema_key = next(iter(result["data_schema"].schema))
+    assert schema_key.description == {"suggested_value": "mdi:lightbulb"}

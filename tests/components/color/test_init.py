@@ -1,14 +1,20 @@
 """Setup/unload tests for the Color helper config entry."""
 
 from homeassistant.components.color.const import (
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_KIND,
     ATTR_RGB_COLOR,
+    ATTR_SOURCE_HEX,
     ATTR_XY_COLOR,
     CONF_INITIAL_COLOR,
+    CONF_INITIAL_KELVIN,
     CONF_INITIAL_MODE,
+    DEFAULT_KELVIN,
     DOMAIN,
     KIND_CHROMATIC,
+    KIND_WHITE,
     MODE_CHROMATIC,
+    MODE_WHITE,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
@@ -44,3 +50,44 @@ async def test_setup_and_unload_chromatic_entry(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_white_entry_with_invalid_kelvin_falls_back(hass: HomeAssistant) -> None:
+    """An unparseable stored kelvin falls back to the default white."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Couch Color",
+        data={
+            CONF_NAME: "Couch Color",
+            CONF_INITIAL_MODE: MODE_WHITE,
+            CONF_INITIAL_KELVIN: "warmish",
+        },
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_KIND] == KIND_WHITE
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == DEFAULT_KELVIN
+
+
+async def test_chromatic_entry_without_initial_color(hass: HomeAssistant) -> None:
+    """A chromatic entry without an initial color uses the default, no source hex."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Couch Color",
+        data={
+            CONF_NAME: "Couch Color",
+            CONF_INITIAL_MODE: MODE_CHROMATIC,
+        },
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_KIND] == KIND_CHROMATIC
+    assert state.attributes[ATTR_SOURCE_HEX] is None

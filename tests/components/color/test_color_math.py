@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.color.color_math import (
     ColorInputError,
+    compute_source_hex,
     derive_hex,
     derive_hs,
     derive_kelvin,
@@ -155,3 +156,40 @@ def test_derive_hs_in_expected_ranges() -> None:
     hue, sat = derive_hs(canonical)
     assert 0 <= hue <= 360
     assert 0 <= sat <= 100
+
+
+@pytest.mark.parametrize(
+    "inputs",
+    [
+        pytest.param({FIELD_HS: "not-a-pair"}, id="hs-not-a-sequence"),
+        pytest.param({FIELD_HS: [180]}, id="hs-wrong-length"),
+        pytest.param({FIELD_XY: [0.4]}, id="xy-wrong-length"),
+        pytest.param({FIELD_XY: [1.5, 0.4]}, id="xy-out-of-range"),
+        pytest.param({FIELD_KELVIN: "warmish"}, id="kelvin-not-an-int"),
+        pytest.param({FIELD_KELVIN: None}, id="kelvin-none-explicit"),
+    ],
+)
+def test_normalize_rejects_malformed_shapes(inputs: dict) -> None:
+    """Test malformed input shapes raise ColorInputError."""
+    with pytest.raises(ColorInputError):
+        normalize(inputs)
+
+
+@pytest.mark.parametrize(
+    ("inputs", "expected"),
+    [
+        pytest.param({FIELD_HEX: "#FF8000"}, "#FF8000", id="hex-echoed"),
+        pytest.param({FIELD_HEX: "nope"}, None, id="hex-invalid"),
+        pytest.param({FIELD_RGB: [255, 128, 0]}, "#FF8000", id="rgb-converted"),
+        pytest.param({FIELD_RGB: [999, 0, 0]}, None, id="rgb-invalid"),
+        pytest.param({FIELD_HS: [0, 100]}, "#FF0000", id="hs-converted"),
+        pytest.param({FIELD_HS: [999, 100]}, None, id="hs-invalid"),
+        pytest.param({FIELD_COLOR_NAME: "red"}, "#FF0000", id="name-converted"),
+        pytest.param({FIELD_COLOR_NAME: "not-a-color"}, None, id="name-invalid"),
+        pytest.param({FIELD_XY: [0.4, 0.4]}, None, id="xy-has-no-source-hex"),
+        pytest.param({FIELD_KELVIN: 4000}, None, id="kelvin-has-no-source-hex"),
+    ],
+)
+def test_compute_source_hex(inputs: dict, expected: str | None) -> None:
+    """Test source hex derivation per input shape."""
+    assert compute_source_hex(inputs) == expected
