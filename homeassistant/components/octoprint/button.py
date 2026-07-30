@@ -1,5 +1,7 @@
 """Support for Octoprint buttons."""
 
+from typing import override
+
 from pyoctoprintapi import OctoprintClient, OctoprintPrinterInfo
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
@@ -57,6 +59,7 @@ class OctoprintPrinterButton(
         self._attr_device_info = coordinator.device_info
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success and self.coordinator.data["printer"]
@@ -85,6 +88,7 @@ class OctoprintSystemButton(
         self._attr_device_info = coordinator.device_info
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success
@@ -102,6 +106,7 @@ class OctoprintPauseJobButton(OctoprintPrinterButton):
         """Initialize a new OctoPrint button."""
         super().__init__(coordinator, "Pause Job", device_id, client)
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         printer: OctoprintPrinterInfo = self.coordinator.data["printer"]
@@ -124,6 +129,7 @@ class OctoprintResumeJobButton(OctoprintPrinterButton):
         """Initialize a new OctoPrint button."""
         super().__init__(coordinator, "Resume Job", device_id, client)
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         printer: OctoprintPrinterInfo = self.coordinator.data["printer"]
@@ -146,6 +152,7 @@ class OctoprintStopJobButton(OctoprintPrinterButton):
         """Initialize a new OctoPrint button."""
         super().__init__(coordinator, "Stop Job", device_id, client)
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         printer: OctoprintPrinterInfo = self.coordinator.data["printer"]
@@ -166,6 +173,7 @@ class OctoprintShutdownSystemButton(OctoprintSystemButton):
         """Initialize a new OctoPrint button."""
         super().__init__(coordinator, "Shutdown System", device_id, client)
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.client.shutdown()
@@ -185,6 +193,7 @@ class OctoprintRebootSystemButton(OctoprintSystemButton):
         """Initialize a new OctoPrint button."""
         super().__init__(coordinator, "Reboot System", device_id, client)
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.client.reboot_system()
@@ -204,6 +213,7 @@ class OctoprintRestartOctoprintButton(OctoprintSystemButton):
         """Initialize a new OctoPrint button."""
         super().__init__(coordinator, "Restart Octoprint", device_id, client)
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.client.restart()

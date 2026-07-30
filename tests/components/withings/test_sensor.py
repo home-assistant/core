@@ -449,3 +449,58 @@ async def test_device_two_config_entries(
     await hass.async_block_till_done()
 
     assert "Platform withings does not generate unique IDs" not in caplog.text
+
+
+async def test_old_device_removal_only_removes_own_device(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    second_polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Removing an old device only removes the processing entry's own device.
+
+    Two config entries can each own a device registry entry for the same shared sub-device.
+    When the sub-device disappears from one entry, it must remove its own device, not
+    another entry's device sharing the identifier.
+    """
+    identifiers = {(DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d")}
+
+    def _device_for_entry(entry: MockConfigEntry) -> dr.DeviceEntry | None:
+        return next(
+            (
+                device
+                for device in device_registry.devices.get_entries(
+                    identifiers=identifiers
+                )
+                if device.config_entry_id == entry.entry_id
+            ),
+            None,
+        )
+
+    # The first entry creates the sub-device and owns its device registry entry.
+    await setup_integration(hass, polling_config_entry, False)
+    assert _device_for_entry(polling_config_entry) is not None
+
+    # Unload it, then set up a second entry: with the first entry unloaded it no longer
+    # provides the sub-device, so the second entry creates and owns its own device.
+    await hass.config_entries.async_unload(polling_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    second_polling_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(second_polling_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert _device_for_entry(polling_config_entry) is not None
+    assert _device_for_entry(second_polling_config_entry) is not None
+
+    # The sub-device disappears from the (still loaded) second entry's data.
+    withings.get_devices.return_value = []
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Only the second entry's own device was removed; the first entry's remains.
+    assert _device_for_entry(second_polling_config_entry) is None
+    assert _device_for_entry(polling_config_entry) is not None

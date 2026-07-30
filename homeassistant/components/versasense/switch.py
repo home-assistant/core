@@ -1,7 +1,7 @@
 """Support for VersaSense actuator peripheral."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -69,10 +69,12 @@ class VActuator(SwitchEntity):
         self._measurement = measurement
         self.consumer = consumer
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the actuator."""
         await self.update_state(0)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the actuator."""
         await self.update_state(1)

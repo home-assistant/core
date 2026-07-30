@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine, Mapping
 import dataclasses
 import logging
 from logging import Logger
-from typing import Any, TypeGuard
+from typing import Any, TypeGuard, override
 
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -206,8 +206,19 @@ def async_extract_referenced_entity_ids(
             selected.missing_areas.add(area_id)
 
     for device_id in target_selection.device_ids:
-        if device_id not in dev_reg.devices:
+        if device_id in dev_reg.devices:
+            selected.referenced_devices.add(device_id)
+        elif split_devices := dev_reg.async_get_devices_for_composite_device_id(
+            device_id
+        ):
+            # A multi config entry composite device id is no longer a device itself;
+            # it resolves to the devices it was split into so actions targeting it
+            # still trickle down. Only the splits are referenced, not the composite id,
+            # so a device-id consumer does not act on the same underlying device twice.
+            selected.referenced_devices.update(device.id for device in split_devices)
+        else:
             selected.missing_devices.add(device_id)
+            selected.referenced_devices.add(device_id)
 
     if target_selection.label_ids:
         label_reg = lr.async_get(hass)
@@ -234,7 +245,6 @@ def async_extract_referenced_entity_ids(
         )
 
     selected.referenced_areas.update(target_selection.area_ids)
-    selected.referenced_devices.update(target_selection.device_ids)
 
     if not selected.referenced_areas and not selected.referenced_devices:
         return selected
@@ -397,6 +407,7 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         self._tracked_entity_states: dict[str, State | None] = {}
         self._update_tasks: set[asyncio.Task[None]] = set()
 
+    @override
     async def async_setup(self) -> Callable[[], None]:
         """Set up tracking, awaiting the update for the initial entity set.
 
@@ -410,6 +421,7 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         return self._unsubscribe
 
     @callback
+    @override
     def _handle_entities_update(self, tracked_entities: set[str]) -> None:
         """Handle a registry-driven change to the tracked entity set."""
         if (coro := self._apply_entities_update(tracked_entities)) is None:
@@ -473,6 +485,7 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
             previous_unsub()
         return result
 
+    @override
     def _unsubscribe(self) -> None:
         """Unsubscribe from all events."""
         super()._unsubscribe()

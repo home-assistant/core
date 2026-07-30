@@ -16,7 +16,6 @@ from tests.components.common import (
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     other_states,
     parametrize_target_entities,
@@ -31,26 +30,6 @@ async def target_alarm_control_panels(hass: HomeAssistant) -> dict[str, list[str
     return await target_entities(hass, "alarm_control_panel")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "alarm_control_panel.armed",
-        "alarm_control_panel.armed_away",
-        "alarm_control_panel.armed_home",
-        "alarm_control_panel.armed_night",
-        "alarm_control_panel.armed_vacation",
-        "alarm_control_panel.disarmed",
-        "alarm_control_panel.triggered",
-    ],
-)
-async def test_alarm_control_panel_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the ACP triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -80,7 +59,6 @@ async def test_alarm_control_panel_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("alarm_control_panel"),
@@ -180,7 +158,6 @@ async def test_alarm_control_panel_state_trigger_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("alarm_control_panel"),
@@ -280,7 +257,6 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("alarm_control_panel"),

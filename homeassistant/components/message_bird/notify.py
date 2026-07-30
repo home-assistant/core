@@ -1,7 +1,7 @@
 """MessageBird platform for notify component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import messagebird
 from messagebird.client import ErrorException
@@ -54,6 +54,7 @@ class MessageBirdNotificationService(BaseNotificationService):
         self.sender = sender
         self.client = client
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a specified target."""
         if not (targets := kwargs.get(ATTR_TARGET)):

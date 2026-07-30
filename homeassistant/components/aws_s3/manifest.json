@@ -9,5 +9,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["aiobotocore"],
   "quality_scale": "bronze",
-  "requirements": ["aiobotocore==2.21.1"]
+  "requirements": ["aiobotocore==3.7.0"]
 }

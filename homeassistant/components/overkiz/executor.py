@@ -2,25 +2,14 @@
 
 from typing import Any
 
-from pyoverkiz.enums import OverkizCommand, Protocol
+from aiohttp import ClientConnectorError, ServerDisconnectedError
+from pyoverkiz.enums import OverkizCommand
 from pyoverkiz.exceptions import BaseOverkizError
 from pyoverkiz.models import Action, Command, Device, StateDefinition
 
 from homeassistant.exceptions import HomeAssistantError
 
 from .coordinator import OverkizDataUpdateCoordinator
-
-# Commands that don't support setting
-# the delay to another value
-COMMANDS_WITHOUT_DELAY = [
-    OverkizCommand.IDENTIFY,
-    OverkizCommand.OFF,
-    OverkizCommand.ON,
-    OverkizCommand.ON_WITH_TIMER,
-    OverkizCommand.TEST,
-    OverkizCommand.TILT_POSITIVE,
-    OverkizCommand.TILT_NEGATIVE,
-]
 
 
 class OverkizExecutor:
@@ -61,13 +50,6 @@ class OverkizExecutor:
             commands are executed, it will be refreshed only once.
         """
         parameters = [arg for arg in args if arg is not None]
-        # Set the execution duration to 0 seconds for RTS devices on supported commands
-        # Default execution duration is 30 seconds and will block consecutive commands
-        if (
-            self.device.identifier.protocol == Protocol.RTS
-            and command_name not in COMMANDS_WITHOUT_DELAY
-        ):
-            parameters.append(0)
 
         try:
             exec_id = await self.coordinator.client.execute_action_group(
@@ -82,13 +64,22 @@ class OverkizExecutor:
         # Catch Overkiz exceptions to support `continue_on_error` functionality
         except BaseOverkizError as exception:
             raise HomeAssistantError(exception) from exception
+        except (
+            TimeoutError,
+            ClientConnectorError,
+            ServerDisconnectedError,
+        ) as exception:
+            raise HomeAssistantError("Failed to connect") from exception
 
-        # ExecutionRegisteredEvent doesn't contain the
-        # device_url, thus we need to register it here
-        self.coordinator.executions[exec_id] = {
-            "device_url": self.device.device_url,
-            "command_name": command_name,
-        }
+        # ExecutionRegisteredEvent doesn't contain the device_url, thus we need
+        # to register it here. The action queue can merge concurrent action
+        # groups under one exec_id, so accumulate rather than overwrite.
+        self.coordinator.executions.setdefault(exec_id, []).append(
+            {
+                "device_url": self.device.device_url,
+                "command_name": command_name,
+            }
+        )
         if refresh_afterwards:
             await self.coordinator.async_refresh()
 
@@ -115,11 +106,19 @@ class OverkizExecutor:
         # Catch Overkiz exceptions to support `continue_on_error` functionality
         except BaseOverkizError as exception:
             raise HomeAssistantError(exception) from exception
+        except (
+            TimeoutError,
+            ClientConnectorError,
+            ServerDisconnectedError,
+        ) as exception:
+            raise HomeAssistantError("Failed to connect") from exception
 
-        self.coordinator.executions[exec_id] = {
-            "device_url": self.device.device_url,
-            "command_name": commands[-1].name,
-        }
+        self.coordinator.executions.setdefault(exec_id, []).append(
+            {
+                "device_url": self.device.device_url,
+                "command_name": commands[-1].name,
+            }
+        )
         if refresh_afterwards:
             await self.coordinator.async_refresh()
 
@@ -135,7 +134,8 @@ class OverkizExecutor:
             (
                 exec_id
                 # Reverse dictionary to cancel the last added execution
-                for exec_id, execution in reversed(self.coordinator.executions.items())
+                for exec_id, executions in reversed(self.coordinator.executions.items())
+                for execution in executions
                 if execution.get("device_url") == self.device.device_url
                 and execution.get("command_name") in commands_to_cancel
             ),

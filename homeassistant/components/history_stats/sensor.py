@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 import datetime
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -196,11 +196,13 @@ class HistoryStatsSensorBase(
         super().__init__(coordinator)
         self._attr_name = name
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity has been added to hass."""
         await super().async_added_to_hass()
         self.async_on_remove(self.coordinator.async_setup_state_listener())
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Set attrs from value and count."""
         self._process_update()
@@ -246,6 +248,7 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
             self._attr_suggested_display_precision = 2
 
     @callback
+    @override
     def _process_update(self) -> None:
         """Process an update from the coordinator."""
         state = self.coordinator.data

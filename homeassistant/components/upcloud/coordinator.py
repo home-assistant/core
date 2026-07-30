@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 import upcloud_api
 
@@ -46,6 +47,7 @@ class UpCloudDataUpdateCoordinator(
             seconds=config_entry.options[CONF_SCAN_INTERVAL]
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, upcloud_api.Server]:
         return {
             x.uuid: x

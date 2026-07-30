@@ -1,5 +1,7 @@
 """Sensor platform for the WattWächter Plus integration."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -248,6 +250,7 @@ class WattwaechterObisSensor(WattwaechterEntity, SensorEntity):
             self._attr_translation_placeholders = {"phase": OBIS_PHASE[obis_code]}
 
     @property
+    @override
     def native_value(self) -> float | str | None:
         """Return the current sensor value."""
         obis = self.coordinator.data.values.get(self._obis_code)

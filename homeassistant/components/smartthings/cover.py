@@ -1,6 +1,6 @@
 """Support for covers through the SmartThings cloud API."""
 
-from typing import Any
+from typing import Any, override
 
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
@@ -89,14 +89,17 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         elif self.supports_capability(Capability.WINDOW_SHADE):
             self._attr_device_class = CoverDeviceClass.SHADE
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self.execute_device_command(self.capability, Command.CLOSE)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.execute_device_command(self.capability, Command.OPEN)
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.execute_device_command(
@@ -105,6 +108,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
             argument=kwargs[ATTR_POSITION],
         )
 
+    @override
     def _update_attr(self) -> None:
         """Update the attrs of the cover."""
         attribute = {
@@ -132,16 +136,19 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
             )
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self._state == CoverState.OPENING
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self._state == CoverState.CLOSING
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         if self._state == CoverState.CLOSED:

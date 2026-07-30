@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pynuki import NukiBridge
 from pynuki.bridge import InvalidCredentialsException
@@ -71,12 +71,14 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovery_schema: vol.Schema | None = None
         self._data: Mapping[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         return await self.async_step_validate(user_input)
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

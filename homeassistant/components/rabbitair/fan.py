@@ -1,6 +1,6 @@
 """Support for Rabbit Air fan entity."""
 
-from typing import Any
+from typing import Any, override
 
 from rabbitair import Mode, Model, Speed
 
@@ -76,6 +76,7 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
         self._get_state_from_coordinator_data()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._get_state_from_coordinator_data()
@@ -106,12 +107,14 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
                 k for k, v in PRESET_MODES.items() if v is data.mode
             )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self._set_state(power=True, mode=PRESET_MODES[preset_mode])
         self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         if percentage > 0:
@@ -124,6 +127,7 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
             self._attr_preset_mode = None
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -144,6 +148,7 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
             self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._set_state(power=False)

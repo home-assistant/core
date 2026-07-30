@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiopyarr import ArrAuthenticationException, ArrException
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
@@ -61,6 +61,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> SonarrOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SonarrOptionsFlowHandler()
@@ -86,6 +87,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -98,12 +100,14 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
             )
 
-            # aiopyarr defaults to the service port if one isn't given
-            # this is counter to standard practice where http = 80
-            # and https = 443.
+            # Ensure an explicit port is present in the URL so that
+            # aiopyarr does not fall back to its own service-port default
+            # (which differs from the standard HTTP/HTTPS ports).
             if CONF_URL in user_input:
                 url = yarl.URL(user_input[CONF_URL])
-                user_input[CONF_URL] = f"{url.scheme}://{url.host}:{url.port}{url.path}"
+                if url.explicit_port is None:
+                    url = url.with_port(url.port)
+                user_input[CONF_URL] = url.human_repr()
 
             if self.source == SOURCE_REAUTH:
                 user_input = {**self._get_reauth_entry().data, **user_input}

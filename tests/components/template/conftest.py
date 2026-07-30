@@ -7,13 +7,18 @@ import pytest
 
 from homeassistant.components import template
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, async_mock_service
+from tests.common import (
+    assert_setup_component,
+    async_mock_service,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 from tests.conftest import WebSocketGenerator
 
 
@@ -322,3 +327,89 @@ async def async_get_flow_preview_state(
 
     msg = await client.receive_json()
     return msg["event"]
+
+
+def assert_state_and_attributes(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    expected_state: str | None = None,
+    expected_attributes: ConfigType | None = None,
+) -> State:
+    """Assert expected state and attributes."""
+
+    state = hass.states.get(platform_setup.entity_id)
+    assert state is not None
+    assert state.state == expected_state or expected_state is None
+
+    expected_attributes = expected_attributes or {}
+    for attribute, value in expected_attributes.items():
+        assert state.attributes.get(attribute) == value
+    return state
+
+
+RESTORE_STATE_SAVED_ATTRIBUTES = {
+    "friendly_name": "Restored Name",
+    "icon": "mdi:restored",
+    "entity_picture": "local/restored.png",
+}
+RESTORE_STATE_UPDATED_ATTRIBUTES = {
+    "friendly_name": "Updated Name",
+    "icon": "mdi:updated",
+    "entity_picture": "local/updated.png",
+}
+
+
+def make_restore_state_built_in_attribute_templates(jinja_test: str) -> dict:
+    """Make built in attribute templates for restore state testing."""
+    return {
+        "name": f"{{% if {jinja_test} %}}Updated Name{{% endif %}}",
+        "picture": f"{{% if {jinja_test} %}}local/updated.png{{% endif %}}",
+        "icon": f"{{% if {jinja_test} %}}mdi:updated{{% endif %}}",
+    }
+
+
+def setup_mock_template_entity_restore_state(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    saved_state: str,
+    saved_extra_data: ConfigType | None = None,
+    saved_attributes: ConfigType | None = None,
+) -> None:
+    """Setup an entity and verify state is restored."""
+    saved_attributes = {
+        **RESTORE_STATE_SAVED_ATTRIBUTES,
+        **(saved_attributes or {}),
+    }
+
+    fake_state = State(
+        platform_setup.entity_id,
+        saved_state,
+        saved_attributes,
+    )
+    if saved_extra_data is not None:
+        mock_restore_cache_with_extra_data(hass, ((fake_state, saved_extra_data),))
+    else:
+        mock_restore_cache(hass, (fake_state,))
+
+
+async def setup_restore_template_entity(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    jinja_test: str = "is_state('sensor.test_restore', 'on')",
+) -> None:
+    """Test that state and attributes are restored from the last state."""
+    default_entity_id = platform_setup.entity_id
+
+    await setup_entity(
+        hass,
+        platform_setup,
+        style,
+        1,
+        config={
+            "default_entity_id": default_entity_id,
+            **make_restore_state_built_in_attribute_templates(jinja_test),
+            **config,
+        },
+    )

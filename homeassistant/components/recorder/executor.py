@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from concurrent.futures.thread import _threads_queues, _worker
 import threading
-from typing import Any
+from typing import Any, override
 import weakref
 
 from homeassistant.util.executor import InterruptibleThreadPoolExecutor
@@ -32,6 +32,7 @@ class DBInterruptibleThreadPoolExecutor(InterruptibleThreadPoolExecutor):
         self.recorder_and_worker_thread_ids = recorder_and_worker_thread_ids
         super().__init__(*args, **kwargs)
 
+    @override
     def _adjust_thread_count(self) -> None:
         """Overridden to add support for shutdown hook.
 

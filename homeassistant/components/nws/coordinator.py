@@ -2,13 +2,13 @@
 
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import aiohttp
 from aiohttp import ClientResponseError
 from pynws import NwsError, NwsNoDataError, SimpleNWS, call_with_retry
 
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -90,8 +90,8 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
                 self._location_entity_id,
             )
             return
-        new_lat = state.attributes[ATTR_LATITUDE]
-        new_lon = state.attributes[ATTR_LONGITUDE]
+        new_lat = state.attributes[EntityStateAttribute.LATITUDE]
+        new_lon = state.attributes[EntityStateAttribute.LONGITUDE]
         if self._previous_position is not None:
             prev_lat, prev_lon = self._previous_position
             if new_lat == prev_lat and new_lon == prev_lon:
@@ -135,6 +135,7 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
         await runtime_data.coordinator_forecast.async_refresh()
         await runtime_data.coordinator_forecast_hourly.async_refresh()
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data via library."""
         if self._location_entity_id:

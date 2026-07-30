@@ -207,6 +207,9 @@
     "reboot_failed": {
       "message": "The device did not accept the reboot request. Try again, or check your device web interface for errors."
     },
+    "unknown": {
+      "message": "[%key:common::config_flow::error::unknown%]"
+    },
     "update_connection_authentication_error": {
       "message": "Authentication or connection failed during firmware update"
     },

@@ -1,6 +1,6 @@
 """Base entity for Watts Vision integration."""
 
-from typing import cast
+from typing import cast, override
 
 from visionpluspython.models import Device
 
@@ -38,6 +38,7 @@ class WattsVisionEntity[_T: Device](CoordinatorEntity[WattsVisionDeviceCoordinat
         return cast(_T, self.coordinator.data.device)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.coordinator.data.device.is_online

@@ -1,6 +1,6 @@
 """Support for AtlanticDomesticHotWaterProductionV2IOComponent."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -44,6 +44,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     ]
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
 
@@ -55,6 +56,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         return DEFAULT_MIN_TEMP
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
 
@@ -66,6 +68,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         return DEFAULT_MAX_TEMP
 
     @property
+    @override
     def current_temperature(self) -> float:
         """Return the current temperature."""
 
@@ -77,6 +80,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         )
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Return the temperature corresponding to the PRESET."""
 
@@ -85,6 +89,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             self.device.states.get_value(OverkizState.CORE_TARGET_TEMPERATURE),
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
 
@@ -125,6 +130,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         )
 
     @property
+    @override
     def is_away_mode_on(self) -> bool:
         """Return true if away mode is on."""
 
@@ -146,6 +152,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         return False
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return current operation."""
 
@@ -176,6 +183,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
 
         return cast(int, boost_mode_duration) > 0
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
 
@@ -245,6 +253,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
                 await self.async_turn_boost_mode_on(refresh_afterwards=False)
             await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_away_mode_on(self, refresh_afterwards: bool = True) -> None:
         """Turn away mode on."""
 
@@ -264,6 +273,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         if refresh_afterwards:
             await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_away_mode_off(self, refresh_afterwards: bool = True) -> None:
         """Turn away mode off."""
 

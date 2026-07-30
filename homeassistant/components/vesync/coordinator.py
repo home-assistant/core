@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from pyvesync import VeSync
 from pyvesync.utils.errors import VeSyncError
@@ -46,6 +47,7 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
             seconds=UPDATE_INTERVAL_ENERGY
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         try:

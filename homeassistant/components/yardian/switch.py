@@ -1,7 +1,7 @@
 """Support for Yardian integration."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -55,15 +55,18 @@ class YardianSwitch(YardianZoneEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.yid}-{zone_id}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._zone_id in self.coordinator.data.active_zones
 
     @property
+    @override
     def available(self) -> bool:
         """Return the switch is available or not."""
         return self.coordinator.data.zones[self._zone_id].is_enabled
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.controller.start_irrigation(
@@ -73,8 +76,9 @@ class YardianSwitch(YardianZoneEntity, SwitchEntity):
         await asyncio.sleep(SWITCH_REFRESH_DELAY)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.coordinator.controller.stop_irrigation()
+        await self.coordinator.controller.stop_zone(self._zone_id)
         await asyncio.sleep(SWITCH_REFRESH_DELAY)
         await self.coordinator.async_request_refresh()

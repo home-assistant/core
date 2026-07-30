@@ -39,7 +39,7 @@
 # name: test_all_entities[da_ks_hood_01001][time.range_hood_do_not_disturb_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Range hood Do not disturb end time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Range hood Do not disturb end time',
     }),
     'context': <ANY>,
     'entity_id': 'time.range_hood_do_not_disturb_end_time',
@@ -89,7 +89,7 @@
 # name: test_all_entities[da_ks_hood_01001][time.range_hood_do_not_disturb_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Range hood Do not disturb start time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Range hood Do not disturb start time',
     }),
     'context': <ANY>,
     'entity_id': 'time.range_hood_do_not_disturb_start_time',
@@ -139,7 +139,7 @@
 # name: test_all_entities[da_rvc_map_01011][time.robot_vacuum_do_not_disturb_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Do not disturb end time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot Vacuum Do not disturb end time',
     }),
     'context': <ANY>,
     'entity_id': 'time.robot_vacuum_do_not_disturb_end_time',
@@ -189,7 +189,7 @@
 # name: test_all_entities[da_rvc_map_01011][time.robot_vacuum_do_not_disturb_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Do not disturb start time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot Vacuum Do not disturb start time',
     }),
     'context': <ANY>,
     'entity_id': 'time.robot_vacuum_do_not_disturb_start_time',

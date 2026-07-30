@@ -1,6 +1,6 @@
 """Support for Somfy Smart Thermostat."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -75,6 +75,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         )
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if derogation_activation := self.device.states.get_value(
@@ -85,6 +86,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         return HVACMode.AUTO
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Return the current preset mode, e.g., home, away, temp."""
         if self.hvac_mode == HVACMode.AUTO:
@@ -98,6 +100,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         return PRESET_NONE
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
@@ -109,6 +112,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.AUTO:
@@ -125,6 +129,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
             ),
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
@@ -141,6 +146,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         )
         await self.executor.async_execute_command(OverkizCommand.REFRESH_STATE)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.AUTO:
@@ -149,6 +155,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         else:
             await self.async_set_preset_mode(PRESET_NONE)
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode in [PRESET_FREEZE, PRESET_NIGHT, PRESET_AWAY, PRESET_HOME]:

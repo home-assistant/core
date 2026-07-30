@@ -51,6 +51,7 @@ from .const import (
     ATTR_TRACKS,
     ATTR_URL,
     ATTR_USE_PRE_ANNOUNCE,
+    ATTR_USERNAME,
     DOMAIN,
 )
 from .helpers import get_music_assistant_client
@@ -138,6 +139,7 @@ def register_actions(hass: HomeAssistant) -> None:
             vol.Optional(ATTR_ARTIST): cv.string,
             vol.Optional(ATTR_ALBUM): cv.string,
             vol.Optional(ATTR_RADIO_MODE): vol.Coerce(bool),
+            vol.Optional(ATTR_USERNAME): cv.string,
         },
         func="_async_handle_play_media",
     )
