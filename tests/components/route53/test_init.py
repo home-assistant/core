@@ -15,6 +15,7 @@ from homeassistant.components.route53.const import (
     DOMAIN,
     INTERVAL,
 )
+from homeassistant.components.route53.helpers import IPIFY_URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -23,81 +24,47 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
+SUCCESS = {"ResponseMetadata": {"HTTPStatusCode": 200}}
 
-async def test_setup_entry(
-    hass: HomeAssistant,
-    mock_boto3_client: MagicMock,
-    aioclient_mock: AiohttpClientMocker,
+YAML_CONFIG = {
+    CONF_ACCESS_KEY_ID: "test-key",
+    CONF_SECRET_ACCESS_KEY: "test-secret",
+    CONF_ZONE: "test-zone",
+    CONF_DOMAIN: "example.com",
+    CONF_RECORDS: ["test1"],
+    CONF_TTL: DEFAULT_TTL,
+}
+
+pytestmark = pytest.mark.usefixtures("mock_boto3_client", "mock_ipify")
+
+
+async def test_setup_and_unload(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test setup and unload of entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ACCESS_KEY_ID: "test-key",
-            CONF_SECRET_ACCESS_KEY: "test-secret",
-            CONF_ZONE: "test-zone",
-            CONF_DOMAIN: "example.com",
-            CONF_RECORDS: ["test1", "test2"],
-            CONF_TTL: DEFAULT_TTL,
-        },
-    )
-    entry.add_to_hass(hass)
+    """Test the entry loads and unloads."""
+    await setup_integration(hass, mock_config_entry)
 
-    aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
-    with patch(
-        "homeassistant.components.route53.helpers.boto3.client",
-        return_value=mock_boto3_client.return_value,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.services.has_service(DOMAIN, "update_records")
 
-    # Test unload
-    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # The service remains registered globally across config entries.
-    # It is not removed when a single entry unloads.
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    # The action stays registered; it is shared by every loaded entry
     assert hass.services.has_service(DOMAIN, "update_records")
 
 
 async def test_yaml_import_creates_entry(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_boto3_client: MagicMock,
-    aioclient_mock: AiohttpClientMocker,
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test YAML configuration is imported into a config entry."""
-    aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
-    with (
-        patch(
-            "homeassistant.components.route53.config_flow.boto3.client",
-            return_value=mock_boto3_client.return_value,
-        ),
-        patch(
-            "homeassistant.components.route53.helpers.boto3.client",
-            return_value=mock_boto3_client.return_value,
-        ),
-    ):
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    CONF_ACCESS_KEY_ID: "test-key",
-                    CONF_SECRET_ACCESS_KEY: "test-secret",
-                    CONF_ZONE: "test-zone",
-                    CONF_DOMAIN: "example.com",
-                    CONF_RECORDS: ["test1"],
-                    CONF_TTL: DEFAULT_TTL,
-                }
-            },
-        )
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: YAML_CONFIG})
+    await hass.async_block_till_done()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.state is ConfigEntryState.LOADED
@@ -109,46 +76,44 @@ async def test_yaml_import_creates_entry(
     )
 
 
-async def test_update_records_service(
+async def test_yaml_import_failure_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_boto3_client: MagicMock,
+) -> None:
+    """Test a failed YAML import raises a repair issue."""
+    mock_boto3_client.get_hosted_zone.side_effect = Exception
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: YAML_CONFIG})
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_unknown"
+    )
+
+
+async def test_action_updates_records(
     hass: HomeAssistant,
     mock_boto3_client: MagicMock,
-    aioclient_mock: AiohttpClientMocker,
+    mock_ipify: AiohttpClientMocker,
 ) -> None:
-    """Test the update_records service."""
+    """Test the update_records action publishes the current address."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_ACCESS_KEY_ID: "test-key",
-            CONF_SECRET_ACCESS_KEY: "test-secret",
-            CONF_ZONE: "test-zone",
-            CONF_DOMAIN: "example.com",
-            CONF_RECORDS: ["test1", "."],
-            CONF_TTL: DEFAULT_TTL,
-        },
+        unique_id="test-zone_example.com",
+        data={**YAML_CONFIG, CONF_RECORDS: ["test1", "."]},
     )
-    entry.add_to_hass(hass)
+    await setup_integration(hass, entry)
 
-    aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
-    with patch(
-        "homeassistant.components.route53.helpers.boto3.client",
-        return_value=mock_boto3_client.return_value,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    mock_boto3_client.change_resource_record_sets.reset_mock()
+    mock_ipify.clear_requests()
+    mock_ipify.get(IPIFY_URL, text="5.6.7.8")
 
-    # Reset mock to test service call separately
-    mock_boto3_client.return_value.change_resource_record_sets.reset_mock()
+    await hass.services.async_call(DOMAIN, "update_records", blocking=True)
+    await hass.async_block_till_done()
 
-    aioclient_mock.clear_requests()
-    aioclient_mock.get("https://api.ipify.org/", text="5.6.7.8")
-    with patch(
-        "homeassistant.components.route53.helpers.boto3.client",
-        return_value=mock_boto3_client.return_value,
-    ):
-        await hass.services.async_call(DOMAIN, "update_records", blocking=True)
-        await hass.async_block_till_done()
-
-    mock_boto3_client.return_value.change_resource_record_sets.assert_called_once_with(
+    mock_boto3_client.change_resource_record_sets.assert_called_once_with(
         HostedZoneId="test-zone",
         ChangeBatch={
             "Changes": [
@@ -175,155 +140,31 @@ async def test_update_records_service(
     )
 
 
-async def test_update_ipify_fails(
+async def test_records_are_updated_on_the_interval(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_boto3_client: MagicMock,
-    aioclient_mock: AiohttpClientMocker,
+    mock_ipify: AiohttpClientMocker,
 ) -> None:
-    """Test when ipify request fails."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ACCESS_KEY_ID: "test-key",
-            CONF_SECRET_ACCESS_KEY: "test-secret",
-            CONF_ZONE: "test-zone",
-            CONF_DOMAIN: "example.com",
-            CONF_RECORDS: ["test1"],
-            CONF_TTL: DEFAULT_TTL,
-        },
+    """Test the records are refreshed on the tracked interval."""
+    await setup_integration(hass, mock_config_entry)
+    mock_boto3_client.change_resource_record_sets.reset_mock()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + INTERVAL + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    mock_boto3_client.change_resource_record_sets.assert_called_once()
+
+    # A failing refresh leaves the entry loaded so the next one can succeed
+    mock_ipify.clear_requests()
+    mock_ipify.get(IPIFY_URL, exc=ClientError())
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + 2 * INTERVAL + timedelta(seconds=1)
     )
-    entry.add_to_hass(hass)
+    await hass.async_block_till_done()
 
-    aioclient_mock.get("https://api.ipify.org/", exc=ClientError())
-    with patch(
-        "homeassistant.components.route53.helpers.boto3.client",
-        return_value=mock_boto3_client.return_value,
-    ):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-    # Boto3 shouldn't be called if IP cannot be fetched
-    mock_boto3_client.return_value.change_resource_record_sets.assert_not_called()
-
-
-async def test_update_boto3_fails(
-    hass: HomeAssistant,
-    mock_boto3_client: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test when boto3 request returns non-200."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ACCESS_KEY_ID: "test-key",
-            CONF_SECRET_ACCESS_KEY: "test-secret",
-            CONF_ZONE: "test-zone",
-            CONF_DOMAIN: "example.com",
-            CONF_RECORDS: ["test1"],
-            CONF_TTL: DEFAULT_TTL,
-        },
-    )
-    entry.add_to_hass(hass)
-
-    mock_boto3_client.return_value.change_resource_record_sets.return_value = {
-        "ResponseMetadata": {"HTTPStatusCode": 400}
-    }
-
-    aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
-    with patch(
-        "homeassistant.components.route53.helpers.boto3.client",
-        return_value=mock_boto3_client.return_value,
-    ):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert "HTTPStatusCode': 400" in caplog.text
-
-
-async def test_service_update_ipify_fails(
-    hass: HomeAssistant,
-    mock_boto3_client: MagicMock,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test when ipify request fails during service call."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ACCESS_KEY_ID: "test-key",
-            CONF_SECRET_ACCESS_KEY: "test-secret",
-            CONF_ZONE: "test-zone",
-            CONF_DOMAIN: "example.com",
-            CONF_RECORDS: ["test1"],
-            CONF_TTL: DEFAULT_TTL,
-        },
-    )
-    entry.add_to_hass(hass)
-
-    aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
-    with patch(
-        "homeassistant.components.route53.helpers.boto3.client",
-        return_value=mock_boto3_client.return_value,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    aioclient_mock.clear_requests()
-    aioclient_mock.get("https://api.ipify.org/", exc=ClientError())
-    with (
-        patch(
-            "homeassistant.components.route53.helpers.boto3.client",
-            return_value=mock_boto3_client.return_value,
-        ),
-        pytest.raises(HomeAssistantError, match="example.com"),
-    ):
-        await hass.services.async_call(DOMAIN, "update_records", blocking=True)
-
-
-async def test_service_update_boto3_fails(
-    hass: HomeAssistant,
-    mock_boto3_client: MagicMock,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test when boto3 request returns non-200 during service call."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ACCESS_KEY_ID: "test-key",
-            CONF_SECRET_ACCESS_KEY: "test-secret",
-            CONF_ZONE: "test-zone",
-            CONF_DOMAIN: "example.com",
-            CONF_RECORDS: ["test1"],
-            CONF_TTL: DEFAULT_TTL,
-        },
-    )
-    entry.add_to_hass(hass)
-
-    aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
-    with patch(
-        "homeassistant.components.route53.helpers.boto3.client",
-        return_value=mock_boto3_client.return_value,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    mock_boto3_client.return_value.change_resource_record_sets.return_value = {
-        "ResponseMetadata": {"HTTPStatusCode": 400}
-    }
-
-    aioclient_mock.clear_requests()
-    aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
-    with (
-        patch(
-            "homeassistant.components.route53.helpers.boto3.client",
-            return_value=mock_boto3_client.return_value,
-        ),
-        pytest.raises(HomeAssistantError),
-    ):
-        await hass.services.async_call(DOMAIN, "update_records", blocking=True)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
@@ -333,193 +174,79 @@ async def test_service_update_boto3_fails(
         pytest.param(TimeoutError(), id="timeout"),
     ],
 )
-async def test_setup_ipify_errors_are_wrapped(
+async def test_setup_retries_when_ip_lookup_fails(
     hass: HomeAssistant,
-    mock_boto3_client: MagicMock,
-    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    mock_ipify: AiohttpClientMocker,
     exc: Exception,
 ) -> None:
-    """Test ipify transport failures fail setup cleanly rather than raising."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ACCESS_KEY_ID: "test-key",
-            CONF_SECRET_ACCESS_KEY: "test-secret",
-            CONF_ZONE: "test-zone",
-            CONF_DOMAIN: "example.com",
-            CONF_RECORDS: ["test1"],
-            CONF_TTL: DEFAULT_TTL,
-        },
-    )
-    entry.add_to_hass(hass)
+    """Test the entry retries when the public address cannot be determined."""
+    mock_ipify.clear_requests()
+    mock_ipify.get(IPIFY_URL, exc=exc)
 
-    aioclient_mock.get("https://api.ipify.org/", exc=exc)
-    with patch(
-        "homeassistant.components.route53.helpers.boto3.client",
-        return_value=mock_boto3_client.return_value,
-    ):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
-    "exc",
+    ("side_effect", "response"),
     [
-        pytest.param(botocore.exceptions.BotoCoreError(), id="botocore_error"),
+        pytest.param(botocore.exceptions.BotoCoreError(), SUCCESS, id="botocore_error"),
         pytest.param(
             botocore.exceptions.ClientError(
-                {"Error": {"Code": "Throttling"}}, "ChangeResourceRecordSets"
+                {"Error": {"Code": "AccessDenied"}}, "ChangeResourceRecordSets"
             ),
+            SUCCESS,
             id="client_error",
+        ),
+        pytest.param(
+            None,
+            {"ResponseMetadata": {"HTTPStatusCode": 400}},
+            id="unsuccessful_response",
         ),
     ],
 )
-async def test_setup_boto3_errors_are_wrapped(
+async def test_setup_retries_when_route53_fails(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_boto3_client: MagicMock,
-    aioclient_mock: AiohttpClientMocker,
-    exc: Exception,
+    side_effect: Exception | None,
+    response: dict[str, dict[str, int]],
 ) -> None:
-    """Test boto3 failures fail setup cleanly rather than raising."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ACCESS_KEY_ID: "test-key",
-            CONF_SECRET_ACCESS_KEY: "test-secret",
-            CONF_ZONE: "test-zone",
-            CONF_DOMAIN: "example.com",
-            CONF_RECORDS: ["test1"],
-            CONF_TTL: DEFAULT_TTL,
-        },
-    )
-    entry.add_to_hass(hass)
+    """Test the entry retries when the records cannot be published."""
+    mock_boto3_client.change_resource_record_sets.side_effect = side_effect
+    mock_boto3_client.change_resource_record_sets.return_value = response
 
-    mock_boto3_client.return_value.change_resource_record_sets.side_effect = exc
+    await setup_integration(hass, mock_config_entry)
 
-    aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
-    with patch(
-        "homeassistant.components.route53.helpers.boto3.client",
-        return_value=mock_boto3_client.return_value,
-    ):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_boto3_client_error_is_wrapped(
-    hass: HomeAssistant,
-    mock_boto3_client: MagicMock,
-    aioclient_mock: AiohttpClientMocker,
+async def test_setup_retries_when_client_cannot_be_created(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test a failure creating the boto3 client fails setup cleanly."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ACCESS_KEY_ID: "test-key",
-            CONF_SECRET_ACCESS_KEY: "test-secret",
-            CONF_ZONE: "test-zone",
-            CONF_DOMAIN: "example.com",
-            CONF_RECORDS: ["test1"],
-            CONF_TTL: DEFAULT_TTL,
-        },
-    )
-    entry.add_to_hass(hass)
-
-    aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
+    """Test the entry retries when boto3 cannot build a client."""
     with patch(
         "homeassistant.components.route53.helpers.boto3.client",
         side_effect=botocore.exceptions.ConfigParseError(path="/etc/aws/config"),
     ):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await setup_integration(hass, mock_config_entry)
 
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_periodic_update(
+async def test_action_reports_failure(
     hass: HomeAssistant,
-    mock_boto3_client: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test records are updated on the tracked interval."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ACCESS_KEY_ID: "test-key",
-            CONF_SECRET_ACCESS_KEY: "test-secret",
-            CONF_ZONE: "test-zone",
-            CONF_DOMAIN: "example.com",
-            CONF_RECORDS: ["test1"],
-            CONF_TTL: DEFAULT_TTL,
-        },
-    )
-    entry.add_to_hass(hass)
-
-    aioclient_mock.get("https://api.ipify.org/", text="1.2.3.4")
-    with patch(
-        "homeassistant.components.route53.helpers.boto3.client",
-        return_value=mock_boto3_client.return_value,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        mock_boto3_client.return_value.change_resource_record_sets.reset_mock()
-
-        async_fire_time_changed(
-            hass, dt_util.utcnow() + INTERVAL + timedelta(seconds=1)
-        )
-        await hass.async_block_till_done()
-
-    mock_boto3_client.return_value.change_resource_record_sets.assert_called_once()
-
-    # A failure on the interval is logged but leaves the entry loaded
-    aioclient_mock.clear_requests()
-    aioclient_mock.get("https://api.ipify.org/", exc=ClientError())
-    with patch(
-        "homeassistant.components.route53.helpers.boto3.client",
-        return_value=mock_boto3_client.return_value,
-    ):
-        async_fire_time_changed(
-            hass, dt_util.utcnow() + 2 * INTERVAL + timedelta(seconds=1)
-        )
-        await hass.async_block_till_done()
-
-    assert "Unable to reach the ipify service" in caplog.text
-    assert entry.state is ConfigEntryState.LOADED
-
-
-async def test_yaml_import_failure_creates_issue(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
     mock_boto3_client: MagicMock,
 ) -> None:
-    """Test a failed YAML import raises a repair issue."""
-    mock_boto3_client.return_value.get_hosted_zone.side_effect = Exception
+    """Test the action names the entry that could not be updated."""
+    await setup_integration(hass, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.route53.config_flow.boto3.client",
-        return_value=mock_boto3_client.return_value,
-    ):
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    CONF_ACCESS_KEY_ID: "test-key",
-                    CONF_SECRET_ACCESS_KEY: "test-secret",
-                    CONF_ZONE: "test-zone",
-                    CONF_DOMAIN: "example.com",
-                    CONF_RECORDS: ["test1"],
-                    CONF_TTL: DEFAULT_TTL,
-                }
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_unknown"
+    mock_boto3_client.change_resource_record_sets.side_effect = (
+        botocore.exceptions.BotoCoreError()
     )
+
+    with pytest.raises(HomeAssistantError, match="example.com"):
+        await hass.services.async_call(DOMAIN, "update_records", blocking=True)

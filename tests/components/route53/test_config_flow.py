@@ -34,7 +34,7 @@ async def test_full_flow(
 
     with patch(
         "homeassistant.components.route53.config_flow.boto3.client",
-        return_value=mock_boto3_client.return_value,
+        return_value=mock_boto3_client,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -81,7 +81,7 @@ async def test_records_must_not_be_empty(
     with (
         patch(
             "homeassistant.components.route53.config_flow.boto3.client",
-            return_value=mock_boto3_client.return_value,
+            return_value=mock_boto3_client,
         ),
         pytest.raises(InvalidData) as err,
     ):
@@ -102,7 +102,7 @@ async def test_records_must_not_be_empty(
 
     with patch(
         "homeassistant.components.route53.config_flow.boto3.client",
-        return_value=mock_boto3_client.return_value,
+        return_value=mock_boto3_client,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -151,7 +151,7 @@ async def test_duplicate_domain_variants_abort(
 
     with patch(
         "homeassistant.components.route53.config_flow.boto3.client",
-        return_value=mock_boto3_client.return_value,
+        return_value=mock_boto3_client,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -212,11 +212,11 @@ async def test_form_errors(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_boto3_client.return_value.get_hosted_zone.side_effect = side_effect
+    mock_boto3_client.get_hosted_zone.side_effect = side_effect
 
     with patch(
         "homeassistant.components.route53.config_flow.boto3.client",
-        return_value=mock_boto3_client.return_value,
+        return_value=mock_boto3_client,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -233,11 +233,11 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == expected_errors
 
-    mock_boto3_client.return_value.get_hosted_zone.side_effect = None
+    mock_boto3_client.get_hosted_zone.side_effect = None
 
     with patch(
         "homeassistant.components.route53.config_flow.boto3.client",
-        return_value=mock_boto3_client.return_value,
+        return_value=mock_boto3_client,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -261,7 +261,7 @@ async def test_import_flow_success(
     """Test a successful import of yaml."""
     with patch(
         "homeassistant.components.route53.config_flow.boto3.client",
-        return_value=mock_boto3_client.return_value,
+        return_value=mock_boto3_client,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -304,7 +304,7 @@ async def test_import_flow_without_records_aborts(
     """Test YAML without usable records aborts instead of creating an entry."""
     with patch(
         "homeassistant.components.route53.config_flow.boto3.client",
-        return_value=mock_boto3_client.return_value,
+        return_value=mock_boto3_client,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -331,7 +331,7 @@ async def test_import_flow_strips_records(
     """Test imported record names are stripped."""
     with patch(
         "homeassistant.components.route53.config_flow.boto3.client",
-        return_value=mock_boto3_client.return_value,
+        return_value=mock_boto3_client,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -372,7 +372,7 @@ async def test_import_flow_already_configured(
 
     with patch(
         "homeassistant.components.route53.config_flow.boto3.client",
-        return_value=mock_boto3_client.return_value,
+        return_value=mock_boto3_client,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -429,11 +429,11 @@ async def test_import_flow_errors(
     reason: str,
 ) -> None:
     """Test import aborts with the matching reason when validation fails."""
-    mock_boto3_client.return_value.get_hosted_zone.side_effect = side_effect
+    mock_boto3_client.get_hosted_zone.side_effect = side_effect
 
     with patch(
         "homeassistant.components.route53.config_flow.boto3.client",
-        return_value=mock_boto3_client.return_value,
+        return_value=mock_boto3_client,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -478,7 +478,7 @@ async def test_user_flow_already_configured(
 
     with patch(
         "homeassistant.components.route53.config_flow.boto3.client",
-        return_value=mock_boto3_client.return_value,
+        return_value=mock_boto3_client,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
