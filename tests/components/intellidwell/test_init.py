@@ -1,6 +1,6 @@
 """Test the IntelliDwell Sprinkler Controller init module."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.intellidwell.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -29,17 +29,17 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_status",
             return_value=status_data,
-            create=True,
+            new_callable=AsyncMock, create=True,
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_rain_delay",
             return_value={"days_remaining": 0},
-            create=True,
+            new_callable=AsyncMock, create=True,
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_schedules",
             return_value=[],
-            create=True,
+            new_callable=AsyncMock, create=True,
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)

@@ -1,6 +1,6 @@
 """Test the IntelliDwell Sprinkler Controller config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from pyintellidwell import IntelliDwellConnectionError
 
