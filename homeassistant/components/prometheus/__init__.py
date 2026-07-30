@@ -39,8 +39,6 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
     PERCENTAGE,
@@ -770,14 +768,18 @@ class PrometheusMetrics:
                 "Distance of the geo location event from home in meters",
                 labels,
             ).set(value)
-        if (latitude := state.attributes.get(ATTR_LATITUDE)) is not None:
+        if (
+            latitude := state.attributes.get(EntityStateAttribute.LATITUDE)
+        ) is not None:
             self._metric(
                 "geo_location_latitude_degrees",
                 prometheus_client.Gauge,
                 "Latitude of the geo location event in degrees",
                 labels,
             ).set(latitude)
-        if (longitude := state.attributes.get(ATTR_LONGITUDE)) is not None:
+        if (
+            longitude := state.attributes.get(EntityStateAttribute.LONGITUDE)
+        ) is not None:
             self._metric(
                 "geo_location_longitude_degrees",
                 prometheus_client.Gauge,
@@ -829,7 +831,7 @@ class PrometheusMetrics:
     def _handle_climate(self, state: State) -> None:
         self._temperature_metric(
             state,
-            ClimateEntityStateAttribute.TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE,
             "climate_target_temperature_celsius",
             "Target temperature in degrees Celsius",
         )

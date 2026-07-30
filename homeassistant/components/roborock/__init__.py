@@ -183,10 +183,7 @@ def _remove_stale_devices(
             "Removing device: %s because it no longer exists in your account",
             device.name,
         )
-        device_registry.async_update_device(
-            device_id=device.id,
-            remove_config_entry_id=entry.entry_id,
-        )
+        device_registry.async_remove_device(device.id)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:

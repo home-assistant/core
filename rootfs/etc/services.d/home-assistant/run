@@ -5,9 +5,14 @@
 
 cd /config || bashio::exit.nok "Can't find config folder!"
 
-# Enable mimalloc for Home Assistant Core, unless disabled
-if [[ -z "${DISABLE_JEMALLOC+x}" ]]; then
-  export LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
-  export MALLOC_CONF="background_thread:true,metadata_thp:auto,dirty_decay_ms:20000,muzzy_decay_ms:20000"
+# Use mimalloc as Python's object allocator by default. It is bundled in CPython
+# (3.13+), so no LD_PRELOAD or extra library is required, and it uses noticeably
+# less memory than the previously preloaded jemalloc. Override or disable via
+# PYTHONMALLOC, e.g. `PYTHONMALLOC=pymalloc` for the default allocator.
+export PYTHONMALLOC="${PYTHONMALLOC:-mimalloc}"
+
+if [[ -n "${DISABLE_JEMALLOC+x}" ]]; then
+  bashio::log.warning "DISABLE_JEMALLOC is set but no longer has any effect: jemalloc has been replaced by mimalloc. Set PYTHONMALLOC=pymalloc to use the default allocator instead."
 fi
+
 exec python3 -m homeassistant --config /config

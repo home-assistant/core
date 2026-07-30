@@ -187,19 +187,9 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
     search_artist = call.data.get(ATTR_SEARCH_ARTIST)
     search_album = call.data.get(ATTR_SEARCH_ALBUM)
     search_username = call.data.get(ATTR_USERNAME)
-    if search_username:
-        assert mass.server_info  # for type checking
-        if mass.server_info.schema_version < 35:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="unsupported_parameter",
-                translation_placeholders={
-                    "parameter": ATTR_USERNAME,
-                    "version": "2.10",
-                },
-            )
+    if search_username is not None:
         await async_verify_mass_username_availability(
-            mass=mass, username=search_username, raise_on_error=True
+            mass=mass, username=search_username
         )
     if search_album and search_artist:
         search_name = f"{search_artist} - {search_album} - {search_name}"
@@ -258,19 +248,7 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
     order_by = call.data.get(ATTR_ORDER_BY, DEFAULT_SORT_ORDER)
     username = call.data.get(ATTR_USERNAME)
     if username:
-        assert mass.server_info  # for type checking
-        if mass.server_info.schema_version < 35:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="unsupported_parameter",
-                translation_placeholders={
-                    "parameter": ATTR_USERNAME,
-                    "version": "2.10",
-                },
-            )
-        await async_verify_mass_username_availability(
-            mass=mass, username=username, raise_on_error=True
-        )
+        await async_verify_mass_username_availability(mass=mass, username=username)
     base_params = {
         "favorite": call.data.get(ATTR_FAVORITE),
         "search": call.data.get(ATTR_SEARCH),

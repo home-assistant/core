@@ -155,7 +155,7 @@ async def test_setup_config_entry(
         options={
             "name": TEST_TRACKER.object_id,
             **TEST_MINIMUM_REQUIREMENTS,
-            "advanced_options": {"location_accuracy": "{{ 10 }}"},
+            "additional_options": {"location_accuracy": "{{ 10 }}"},
             "template_type": device_tracker.DOMAIN,
         },
         title="My template",
@@ -682,6 +682,21 @@ async def test_flow_preview(
                 "latitude": 15.0,
                 "longitude": 15.0,
                 "gps_accuracy": 10.0,
+            },
+        ),
+        (
+            # Missing Key
+            STATE_HOME,
+            {
+                "in_zones": [],
+                "location_accuracy": 10.0,
+            },
+            STATE_UNKNOWN,
+            {
+                "in_zones": [],
+                "latitude": None,
+                "longitude": None,
+                "gps_accuracy": None,
             },
         ),
         (
