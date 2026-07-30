@@ -282,7 +282,7 @@ async def test_probe_sensors(
     service_info: BluetoothServiceInfo,
     expected_sensors: list[tuple[str, str, str]],
 ) -> None:
-    """Test grill thermometer probe sensors get translated names."""
+    """Test grill thermometer probe sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
