@@ -19,9 +19,11 @@ from aiohue.v2.controllers.sensors import (
 )
 from aiohue.v2.models.camera_motion import CameraMotion
 from aiohue.v2.models.contact import Contact, ContactState
+from aiohue.v2.models.convenience_area_motion import ConvenienceAreaMotion
 from aiohue.v2.models.entertainment_configuration import EntertainmentStatus
 from aiohue.v2.models.grouped_motion import GroupedMotion
 from aiohue.v2.models.motion import Motion
+from aiohue.v2.models.motion_area_configuration import MotionAreaHealth
 from aiohue.v2.models.resource import ResourceTypes
 from aiohue.v2.models.security_area_motion import SecurityAreaMotion
 from aiohue.v2.models.tamper import Tamper, TamperState
@@ -181,11 +183,10 @@ class HueGroupedMotionSensor(HueMotionSensor):
 class HueMotionAwareSensor(HueMotionSensor):
     """Representation of a Motion sensor based on Hue Motion Aware.
 
-    Note that we only create sensors for the SecurityAreaMotion resource
-    and not for the ConvenienceAreaMotion resource, because the latter
-    does not have a state when it's not directly controlling lights.
-    The SecurityAreaMotion resource is always available with a state, allowing
-    Home Assistant users to actually use it as a motion sensor in their HA automations.
+    A MotionAware zone owns both a ConvenienceAreaMotion and a SecurityAreaMotion
+    service, and which of the two carries the motion state depends on how the zone
+    is set up in the Hue app. The source is therefore resolved from the zone, and
+    the sensor is unavailable while neither service reports a valid state.
     """
 
     controller: SecurityAreaMotionController
@@ -200,6 +201,18 @@ class HueMotionAwareSensor(HueMotionSensor):
     def name(self) -> str:
         """Return sensor name."""
         return self.controller.get_motion_area_configuration(self.resource.id).name
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return entity availability."""
+        return super().available and self._motion_value is not None
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        return self._motion_value
 
     def __init__(
         self,
@@ -229,6 +242,44 @@ class HueMotionAwareSensor(HueMotionSensor):
                 self._handle_event, self._motion_area_configuration.id
             )
         )
+        # zones that are bound to lights report their motion on the convenience service
+        if (convenience := self._convenience_service) is not None:
+            self.async_on_remove(
+                self.bridge.api.sensors.convenience_area_motion.subscribe(
+                    self._handle_event, convenience.id
+                )
+            )
+
+    @property
+    def _convenience_service(self) -> ConvenienceAreaMotion | None:
+        """Return the ConvenienceAreaMotion service of this zone, if it has one."""
+        controller = self.bridge.api.sensors.convenience_area_motion
+        return next(
+            (
+                resource
+                for service in self._motion_area_configuration.services
+                if (resource := controller.get(service.rid)) is not None
+            ),
+            None,
+        )
+
+    @property
+    def _motion_value(self) -> bool | None:
+        """Return the motion state of this zone, or None if it reports none."""
+        zone = self._motion_area_configuration
+        # switching a zone off leaves the `enabled` flag of its services untouched,
+        # so the zone is the only reliable signal that it stopped reporting motion
+        if not zone.enabled or zone.health == MotionAreaHealth.NOT_RUNNING:
+            return None
+        # the convenience service comes first: a zone that is bound to lights enables it
+        # and it is then the only one still reporting, while the security service keeps
+        # advertising a valid reading that never changes again
+        for source in (self._convenience_service, self.resource):
+            if source is None or not source.enabled or source.motion is None:
+                continue
+            if (value := source.motion.value) is not None:
+                return value
+        return None
 
 
 # pylint: disable-next=home-assistant-enforce-class-module
