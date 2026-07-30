@@ -62,7 +62,8 @@ async def async_setup_entry(
     await tewke_coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+    remove_listener_callback = entry.add_update_listener(async_reload_entry)
+    entry.async_on_unload(remove_listener_callback)
     entry.async_on_unload(tewke_coordinator.cancel_observation_timeout)
 
     return True
