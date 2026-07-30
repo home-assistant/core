@@ -76,6 +76,26 @@ LIBRARY_MASS_MEDIA_TYPE_MAP = {
     LIBRARY_AUDIOBOOKS: MASSMediaType.AUDIOBOOK,
 }
 
+MEDIA_CLASS_MASS_MEDIA_TYPE_MAP = {
+    MediaClass.ARTIST: MASSMediaType.ARTIST,
+    MediaClass.ALBUM: MASSMediaType.ALBUM,
+    MediaClass.TRACK: MASSMediaType.TRACK,
+    MediaClass.PLAYLIST: MASSMediaType.PLAYLIST,
+    MediaClass.MUSIC: MASSMediaType.RADIO,
+    MediaClass.DIRECTORY: MASSMediaType.AUDIOBOOK,
+    MediaClass.PODCAST: MASSMediaType.PODCAST,
+}
+
+SEARCHABLE_MASS_MEDIA_TYPES = [
+    MASSMediaType.ARTIST,
+    MASSMediaType.ALBUM,
+    MASSMediaType.TRACK,
+    MASSMediaType.PLAYLIST,
+    MASSMediaType.RADIO,
+    MASSMediaType.AUDIOBOOK,
+    MASSMediaType.PODCAST,
+]
+
 # an artist holds nothing else we can search or browse
 ARTIST_MASS_MEDIA_TYPES = [MASSMediaType.ALBUM, MASSMediaType.TRACK]
 
@@ -513,6 +533,15 @@ def _get_media_types_from_query(query: SearchMediaQuery) -> list[MASSMediaType]:
     """Map query to Music Assistant media types."""
     media_types: list[MASSMediaType] = []
 
+    # an explicit filter is the only thing the user picked themselves,
+    # so it wins from the media type that merely surrounds the search
+    if query.media_filter_classes:
+        return [
+            MEDIA_CLASS_MASS_MEDIA_TYPE_MAP[cls]
+            for cls in query.media_filter_classes
+            if cls in MEDIA_CLASS_MASS_MEDIA_TYPE_MAP
+        ] or SEARCHABLE_MASS_MEDIA_TYPES
+
     match query.media_content_type:
         case MediaType.ARTIST:
             media_types = [MASSMediaType.ARTIST]
@@ -530,21 +559,7 @@ def _get_media_types_from_query(query: SearchMediaQuery) -> list[MASSMediaType]:
             media_types = [MASSMediaType.PODCAST]
         case _:
             # No specific type selected
-            if query.media_filter_classes:
-                # Map MediaClass to search types
-                mapping = {
-                    MediaClass.ARTIST: MASSMediaType.ARTIST,
-                    MediaClass.ALBUM: MASSMediaType.ALBUM,
-                    MediaClass.TRACK: MASSMediaType.TRACK,
-                    MediaClass.PLAYLIST: MASSMediaType.PLAYLIST,
-                    MediaClass.MUSIC: MASSMediaType.RADIO,
-                    MediaClass.DIRECTORY: MASSMediaType.AUDIOBOOK,
-                    MediaClass.PODCAST: MASSMediaType.PODCAST,
-                }
-                media_types = [
-                    mapping[cls] for cls in query.media_filter_classes if cls in mapping
-                ]
-            elif library_media_type := LIBRARY_MASS_MEDIA_TYPE_MAP.get(
+            if library_media_type := LIBRARY_MASS_MEDIA_TYPE_MAP.get(
                 query.media_content_id or ""
             ):
                 # Searching from a library listing scopes to that library,
@@ -553,18 +568,7 @@ def _get_media_types_from_query(query: SearchMediaQuery) -> list[MASSMediaType]:
                 media_types = [library_media_type]
 
     # Default to all types if none specified
-    if not media_types:
-        media_types = [
-            MASSMediaType.ARTIST,
-            MASSMediaType.ALBUM,
-            MASSMediaType.TRACK,
-            MASSMediaType.PLAYLIST,
-            MASSMediaType.RADIO,
-            MASSMediaType.AUDIOBOOK,
-            MASSMediaType.PODCAST,
-        ]
-
-    return media_types
+    return media_types or SEARCHABLE_MASS_MEDIA_TYPES
 
 
 def _process_search_results(

@@ -487,6 +487,10 @@ async def test_search_within_artist_ignores_surrounding_media_type(
 
 
 @pytest.mark.parametrize(
+    "media_content_type",
+    [MediaType.MUSIC, MediaType.ARTIST],
+)
+@pytest.mark.parametrize(
     ("media_filter_classes", "expected_media_types", "expected_classes"),
     [
         (
@@ -501,11 +505,16 @@ async def test_search_within_artist_ignores_surrounding_media_type(
 async def test_search_within_artist_with_filter_classes(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
+    media_content_type: str,
     media_filter_classes: set[MediaClass] | None,
     expected_media_types: list[MASSMediaType],
     expected_classes: set[MediaClass],
 ) -> None:
-    """Test that the filters offered on an artist listing narrow its results."""
+    """Test that the filters offered on an artist listing narrow its results.
+
+    A filter is picked by the user, so it has to win from whatever media type
+    happens to surround the search.
+    """
     await setup_integration_from_fixtures(hass, music_assistant_client)
 
     artist = MagicMock()
@@ -526,9 +535,7 @@ async def test_search_within_artist_with_filter_classes(
             music_assistant_client,
             SearchMediaQuery(
                 search_query="test",
-                # the media browser navigates using the item its parent listing
-                # built, and those are all reported as plain music
-                media_content_type=MediaType.MUSIC,
+                media_content_type=media_content_type,
                 media_content_id="library://artist/127",
                 media_filter_classes=media_filter_classes,
             ),
