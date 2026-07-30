@@ -67,12 +67,29 @@ async def test_setup_raises_config_entry_not_ready(
     }
 
 
+async def test_setup_uses_route_to_device_for_event_callback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: AsyncMock,
+    mock_wiim_controller: AsyncMock,
+    mock_local_ip: AsyncMock,
+) -> None:
+    """Test the callback address is resolved from the route to the device."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_local_ip.assert_awaited_once_with(
+        "http://192.168.1.100:49152/description.xml", hass.loop
+    )
+
+
 async def test_setup_raises_config_entry_not_ready_when_no_url(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wiim_controller: AsyncMock,
+    mock_local_ip: AsyncMock,
 ) -> None:
     """Test a missing internal URL raises a translated ConfigEntryNotReady."""
+    mock_local_ip.side_effect = OSError("network is unreachable")
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

@@ -2,6 +2,8 @@
 
 from urllib.parse import urlparse
 
+from async_upnp_client.utils import async_get_local_ip
+
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import NoURLAvailableError, get_url
@@ -30,3 +32,13 @@ def get_homeassistant_local_host(hass: HomeAssistant) -> str:
         translation_domain=DOMAIN,
         translation_key="missing_homeassistant_url",
     )
+
+
+async def async_get_event_callback_host(hass: HomeAssistant, upnp_location: str) -> str:
+    """Return the address a WiiM device should send UPnP events to."""
+    try:
+        _, local_ip = await async_get_local_ip(upnp_location, hass.loop)
+    except OSError:
+        return get_homeassistant_local_host(hass)
+
+    return local_ip

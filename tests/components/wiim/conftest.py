@@ -1,6 +1,7 @@
 """Pytest fixtures and shared setup for the WiiM integration tests."""
 
 from collections.abc import Generator
+from socket import AddressFamily  # pylint: disable=no-name-in-module
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -20,6 +21,16 @@ from homeassistant.components.wiim import DOMAIN
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def mock_local_ip() -> Generator[AsyncMock]:
+    """Mock the route lookup that picks the UPnP event callback address."""
+    with patch(
+        "homeassistant.components.wiim.util.async_get_local_ip",
+        return_value=(AddressFamily.AF_INET, "192.168.1.10"),
+    ) as mock_get_local_ip:
+        yield mock_get_local_ip
 
 
 @pytest.fixture

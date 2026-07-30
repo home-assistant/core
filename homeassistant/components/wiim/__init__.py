@@ -11,7 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DATA_WIIM, DOMAIN, LOGGER, PLATFORMS, UPNP_PORT, WiimConfigEntry
 from .models import WiimData
-from .util import InvalidHomeAssistantURLError, get_homeassistant_local_host
+from .util import InvalidHomeAssistantURLError, async_get_event_callback_host
 
 DEFAULT_AVAILABILITY_POLLING_INTERVAL = 60
 
@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
     upnp_location = f"http://{host}:{UPNP_PORT}/description.xml"
 
     try:
-        local_host = get_homeassistant_local_host(hass)
+        local_host = await async_get_event_callback_host(hass, upnp_location)
     except InvalidHomeAssistantURLError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
