@@ -1,6 +1,7 @@
 """Basic checks for HomeKit sensor."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
+from unittest.mock import patch
 
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
@@ -70,6 +71,48 @@ async def test_migrate_unique_id(
         entity_registry.async_get(number.entity_id).unique_id
         == f"00:00:00:00:00:00_{aid}_8_9"
     )
+
+
+async def test_translated_name_uses_english_object_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
+) -> None:
+    """Test translated names use English for non-native entity IDs."""
+    hass.config.language = "ja"
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, str]:
+        """Return translations for the spray quantity entity."""
+        if (
+            category != "entity"
+            or integrations is None
+            or "homekit_controller" not in integrations
+        ):
+            return {}
+        name = "噴霧量" if language == "ja" else "Spray quantity"
+        return {"component.homekit_controller.entity.number.spray_quantity.name": name}
+
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await setup_test_component(hass, get_next_aid(), create_switch_with_spray_level)
+
+    entity_id = "number.testdevice_spray_quantity"
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.has_entity_name
+    assert entry.original_name == "噴霧量"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["friendly_name"] == "TestDevice 噴霧量"
 
 
 async def test_read_number(
