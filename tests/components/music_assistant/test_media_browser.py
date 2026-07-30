@@ -438,17 +438,71 @@ async def test_browse_artist_search_media_classes(
 
 
 @pytest.mark.parametrize(
-    ("media_filter_classes", "expected_classes"),
+    "media_content_type",
+    [MediaType.MUSIC, MediaType.ARTIST, None],
+)
+async def test_search_within_artist_ignores_surrounding_media_type(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    media_content_type: str | None,
+) -> None:
+    """Test that an artist search returns its albums and tracks either way.
+
+    An artist holds no artists, so a surrounding artist media type must not be
+    taken as the thing to look for, or the whole response gets discarded.
+    """
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    artist = MagicMock()
+    artist.name = "Test Artist"
+    mock = MockSearchResults(["album", "track"])
+
+    with (
+        patch.object(
+            music_assistant_client.music, "get_item_by_uri", return_value=artist
+        ),
+        patch.object(
+            music_assistant_client.music,
+            "search",
+            return_value=SearchResults(albums=mock.albums, tracks=mock.tracks),
+        ) as mock_search,
+    ):
+        search_results = await async_search_media(
+            music_assistant_client,
+            SearchMediaQuery(
+                search_query="test",
+                media_content_type=media_content_type,
+                media_content_id="library://artist/127",
+            ),
+        )
+
+    assert mock_search.call_args.kwargs["media_types"] == [
+        MASSMediaType.ALBUM,
+        MASSMediaType.TRACK,
+    ]
+    assert {item.media_class for item in search_results.result} == {
+        MediaClass.ALBUM,
+        MediaClass.TRACK,
+    }
+
+
+@pytest.mark.parametrize(
+    ("media_filter_classes", "expected_media_types", "expected_classes"),
     [
-        (None, {MediaClass.ALBUM, MediaClass.TRACK}),
-        ({MediaClass.ALBUM}, {MediaClass.ALBUM}),
-        ({MediaClass.TRACK}, {MediaClass.TRACK}),
+        (
+            None,
+            [MASSMediaType.ALBUM, MASSMediaType.TRACK],
+            {MediaClass.ALBUM, MediaClass.TRACK},
+        ),
+        ({MediaClass.ALBUM}, [MASSMediaType.ALBUM], {MediaClass.ALBUM}),
+        ({MediaClass.TRACK}, [MASSMediaType.TRACK], {MediaClass.TRACK}),
     ],
 )
 async def test_search_within_artist_with_filter_classes(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
     media_filter_classes: set[MediaClass] | None,
+    expected_media_types: list[MASSMediaType],
     expected_classes: set[MediaClass],
 ) -> None:
     """Test that the filters offered on an artist listing narrow its results."""
@@ -482,11 +536,9 @@ async def test_search_within_artist_with_filter_classes(
 
     # the artist name scopes the query that is sent to the search api
     assert mock_search.call_args.args[0] == "Test Artist - test"
-    # the response is only useful as long as it holds what we asked for
-    assert mock_search.call_args.kwargs["media_types"] == [
-        MASSMediaType.ALBUM,
-        MASSMediaType.TRACK,
-    ]
+    # a filter narrows what we ask for, instead of asking for everything
+    # an artist can hold and dropping most of the response again
+    assert mock_search.call_args.kwargs["media_types"] == expected_media_types
     assert {item.media_class for item in search_results.result} == expected_classes
 
 

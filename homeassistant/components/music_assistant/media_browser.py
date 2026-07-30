@@ -76,6 +76,9 @@ LIBRARY_MASS_MEDIA_TYPE_MAP = {
     LIBRARY_AUDIOBOOKS: MASSMediaType.AUDIOBOOK,
 }
 
+# an artist holds nothing else we can search or browse
+ARTIST_MASS_MEDIA_TYPES = [MASSMediaType.ALBUM, MASSMediaType.TRACK]
+
 MEDIA_CONTENT_TYPE_FLAC = "audio/flac"
 THUMB_SIZE = 200
 SORT_NAME = "sort_name"
@@ -490,14 +493,18 @@ async def _search_within_playlist(
 
 
 async def _search_within_artist(
-    mass: MusicAssistantClient, artist_uri: str, search_query: str, limit: int
+    mass: MusicAssistantClient,
+    artist_uri: str,
+    search_query: str,
+    limit: int,
+    media_types: list[MASSMediaType],
 ) -> SearchResults:
     """Search for content within an artist's catalog."""
     artist = await mass.music.get_item_by_uri(artist_uri)
     search_query = f"{artist.name} - {search_query}"
     return await mass.music.search(
         search_query,
-        media_types=[MASSMediaType.ALBUM, MASSMediaType.TRACK],
+        media_types=media_types,
         limit=limit,
     )
 
@@ -645,6 +652,9 @@ async def async_search_media(
         limit = 5  # Default limit per media type
         search_results: SearchResults | None = None
 
+        # Determine which media types to search
+        media_types = _get_media_types_from_query(query)
+
         # Handle media_content_id if provided (for contextual searches)
         if query.media_content_id:
             if "album/" in query.media_content_id:
@@ -656,13 +666,18 @@ async def async_search_media(
                     mass, query.media_content_id, search_query, limit
                 )
             if "artist/" in query.media_content_id:
+                # we can only make sense of what we asked for, so drop anything
+                # an artist cannot hold instead of searching for it and
+                # discarding the entire response
+                media_types = [
+                    media_type
+                    for media_type in media_types
+                    if media_type in ARTIST_MASS_MEDIA_TYPES
+                ] or ARTIST_MASS_MEDIA_TYPES
                 # For artists, we already run a search, so save the results
                 search_results = await _search_within_artist(
-                    mass, query.media_content_id, search_query, limit
+                    mass, query.media_content_id, search_query, limit, media_types
                 )
-
-        # Determine which media types to search
-        media_types = _get_media_types_from_query(query)
 
         # Execute search using the Music Assistant API if we haven't already done so
         if search_results is None:
