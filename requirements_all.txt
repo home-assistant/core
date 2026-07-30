@@ -2779,9 +2779,6 @@ python-technove==2.1.1
 # homeassistant.components.telegram_bot
 python-telegram-bot[socks]==22.7
 
-# homeassistant.components.vlc
-python-vlc==3.0.18122
-
 # homeassistant.components.xbox
 python-xbox==0.2.0
 
