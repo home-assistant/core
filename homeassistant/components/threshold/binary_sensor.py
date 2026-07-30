@@ -157,8 +157,7 @@ def _threshold_type(lower: float | None, upper: float | None) -> str:
     if lower is not None and upper is not None:
         if lower <= upper:
             return TYPE_RANGE
-        else:
-            return TYPE_RANGE_INVERTED
+        return TYPE_RANGE_INVERTED
     if lower is not None:
         return TYPE_LOWER
     return TYPE_UPPER
