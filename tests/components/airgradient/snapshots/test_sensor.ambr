@@ -157,7 +157,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_all_entities[indoor][sensor.airgradient_display_pm_standard-entry]

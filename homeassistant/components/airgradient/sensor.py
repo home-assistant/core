@@ -217,7 +217,7 @@ CONFIG_DISPLAY_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...
         translation_key="display_brightness",
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda config: config.led_bar_brightness,
+        value_fn=lambda config: config.display_brightness,
     ),
 )
 
