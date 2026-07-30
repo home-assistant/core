@@ -22,6 +22,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.template import Template
 
 from . import CONFIG_ENTRY_PLATFORMS, create_rest_data_from_config_entry
@@ -84,12 +85,16 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
         if user_input is not None:
-            rest = create_rest_data_from_config_entry(self.hass, user_input)
-            await rest.async_update()
-            if rest.last_exception:
-                errors["base"] = "endpoint_error"
-                placeholders["error_message"] = str(rest.last_exception)
-            else:
+            try:
+                rest = create_rest_data_from_config_entry(self.hass, user_input)
+                await rest.async_update()
+                if rest.last_exception:
+                    errors["base"] = "endpoint_error"
+                    placeholders["error_message"] = str(rest.last_exception)
+            except TemplateError as ex:
+                errors["base"] = "template_error"
+                placeholders["error_message"] = str(ex)
+            if not errors:
                 if self.source == SOURCE_USER:
                     self._data = user_input
                     return await self.async_step_create_entry()

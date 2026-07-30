@@ -34,6 +34,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.data_entry_flow import SectionConfig, section
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
@@ -140,7 +141,10 @@ class _TemplateURLSelector(selector.TemplateSelector):
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
         template = cv.template(data)
-        cv.url(template.async_render())
+        try:
+            cv.url(template.async_render())
+        except TemplateError as ex:
+            raise vol.Invalid(f"template render error: {ex!s}") from ex
         return template.template
 
 

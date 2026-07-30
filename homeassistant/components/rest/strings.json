@@ -22,7 +22,8 @@
       "codec not found": "Encoding not supported",
       "credentials_missing": "Username and password are both required",
       "endpoint_error": "Error communicating with resource: {error_message}",
-      "invalid url": "Invalid URL"
+      "invalid url": "Invalid URL",
+      "template_error": "Template error: {error_message}"
     },
     "initiate_flow": {
       "user": "Add RESTful Resource"
