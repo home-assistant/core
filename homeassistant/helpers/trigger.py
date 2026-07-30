@@ -817,7 +817,7 @@ NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 class EntityNumericalStateTriggerBase(EntityTriggerBase):
     """Base class for numerical state and state attribute triggers."""
 
-    _valid_unit: str | None | UndefinedType = UNDEFINED
+    _valid_unit: str | UndefinedType | None = UNDEFINED
     _threshold_type: NumericThresholdType
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
@@ -1282,7 +1282,7 @@ def make_entity_origin_state_trigger(
 
 def make_entity_numerical_state_changed_trigger(
     domain_specs: Mapping[str, DomainSpec],
-    valid_unit: str | None | UndefinedType = UNDEFINED,
+    valid_unit: str | UndefinedType | None = UNDEFINED,
     *,
     primary_entities_only: bool = True,
 ) -> type[EntityNumericalStateChangedTriggerBase]:
@@ -1300,7 +1300,7 @@ def make_entity_numerical_state_changed_trigger(
 
 def make_entity_numerical_state_crossed_threshold_trigger(
     domain_specs: Mapping[str, DomainSpec],
-    valid_unit: str | None | UndefinedType = UNDEFINED,
+    valid_unit: str | UndefinedType | None = UNDEFINED,
     *,
     primary_entities_only: bool = True,
 ) -> type[EntityNumericalStateCrossedThresholdTriggerBase]:

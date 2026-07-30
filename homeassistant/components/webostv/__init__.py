@@ -20,7 +20,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS, WEBOSTV_EXCEPTIONS
-from .helpers import WebOsTvConfigEntry, update_client_key
+from .coordinator import (
+    WebOsTvConfigEntry,
+    WebOsTvDataUpdateCoordinator,
+    update_client_key,
+)
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -39,9 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
     key = entry.data[CONF_CLIENT_SECRET]
 
     # Attempt a connection, but fail gracefully if tv is off for example.
-    entry.runtime_data = client = WebOsClient(
-        host, key, client_session=async_get_clientsession(hass)
-    )
+    client = WebOsClient(host, key, client_session=async_get_clientsession(hass))
     with suppress(*WEBOSTV_EXCEPTIONS):
         try:
             await client.connect()
@@ -49,11 +51,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
+                translation_placeholders={"device": entry.title},
             ) from err
 
     # If pairing request accepted there will be no error
     # Update the stored key without triggering reauth
-    update_client_key(hass, entry)
+    update_client_key(hass, entry, client)
+
+    entry.runtime_data = coordinator = WebOsTvDataUpdateCoordinator(hass, entry, client)
+    await client.register_state_update_callback(coordinator.async_handle_update)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -86,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        client = entry.runtime_data
+        client = entry.runtime_data.client
         await hass_notify.async_reload(hass, DOMAIN)
         client.clear_state_update_callbacks()
         await client.disconnect()
