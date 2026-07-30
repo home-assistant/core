@@ -10,6 +10,17 @@
       "wifi_strength": {
         "default": "mdi:wifi"
       }
+    },
+    "switch": {
+      "camera_on": {
+        "default": "mdi:cctv"
+      },
+      "clock_display": {
+        "default": "mdi:clock-outline"
+      },
+      "video_flip": {
+        "default": "mdi:flip-vertical"
+      }
     }
   }
 }

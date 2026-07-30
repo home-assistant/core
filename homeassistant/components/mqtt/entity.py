@@ -1601,7 +1601,7 @@ class MqttEntity(
 
     def _set_entity_name(self, config: ConfigType) -> None:
         """Help setting the entity name if needed."""
-        entity_name: str | None | UndefinedType = config.get(CONF_NAME, UNDEFINED)
+        entity_name: str | UndefinedType | None = config.get(CONF_NAME, UNDEFINED)
         # Only set _attr_name if it is needed
         if entity_name is not UNDEFINED:
             self._attr_name = entity_name
