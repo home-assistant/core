@@ -165,17 +165,6 @@ class PassiveBluetoothDataUpdate[_T]:
                 if current.get(key, UNDEFINED) != data:
                     changed_entity_keys.add(key)
                     current[key] = data  # type: ignore[assignment]
-        # An update without any names means the integration does not name its
-        # entities; clear stale names restored from storage for the updated keys.
-        # Updates that provide names for only some keys are left untouched since
-        # the missing names may be provided by other partial updates.
-        if not new_data.entity_names:
-            for key in (
-                new_data.entity_data.keys() | new_data.entity_descriptions.keys()
-            ):
-                if self.entity_names.get(key) is not None:
-                    changed_entity_keys.add(key)
-                    self.entity_names[key] = None
         # If the device changed we don't need to return the changed
         # entity keys as all entities will be updated
         return None if device_change else changed_entity_keys
