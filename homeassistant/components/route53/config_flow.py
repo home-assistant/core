@@ -77,11 +77,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def _normalize(name: str) -> str:
-    """Normalize a DNS name for comparison; DNS is case-insensitive."""
-    return name.rstrip(".").lower()
-
-
 # boto3 blocks twice here: creating the client reads its service model from
 # disk, and get_hosted_zone makes a network call. Both need the executor.
 def _validate_auth(
@@ -131,7 +126,7 @@ class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            user_input[CONF_DOMAIN] = _normalize(user_input[CONF_DOMAIN])
+            user_input[CONF_DOMAIN] = user_input[CONF_DOMAIN].rstrip(".").lower()
             await self.async_set_unique_id(
                 f"{user_input[CONF_ZONE]}_{user_input[CONF_DOMAIN]}"
             )
@@ -157,7 +152,7 @@ class Route53ConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("No usable records in the YAML configuration")
             return self.async_abort(reason="invalid_records")
 
-        user_input[CONF_DOMAIN] = _normalize(user_input[CONF_DOMAIN])
+        user_input[CONF_DOMAIN] = user_input[CONF_DOMAIN].rstrip(".").lower()
         await self.async_set_unique_id(
             f"{user_input[CONF_ZONE]}_{user_input[CONF_DOMAIN]}"
         )
