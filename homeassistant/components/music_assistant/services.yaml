@@ -156,6 +156,10 @@ search:
           default: false
           selector:
             boolean:
+    username:
+      example: "john"
+      selector:
+        text:
 
 get_library:
   fields:
