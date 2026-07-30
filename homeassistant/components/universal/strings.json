@@ -46,6 +46,7 @@
         "data": {
           "media_next_track": "Next track",
           "media_pause": "Pause",
+          "media_play": "Play",
           "media_previous_track": "Previous track",
           "media_stop": "Stop",
           "select_sound_mode": "Select sound mode",
@@ -60,6 +61,7 @@
         "data_description": {
           "media_next_track": "Action to run when skipping to the next track.",
           "media_pause": "Action to run when playback is paused.",
+          "media_play": "Action to run when playback is started.",
           "media_previous_track": "Action to run when skipping to the previous track.",
           "media_stop": "Action to run when playback is stopped.",
           "select_sound_mode": "Action to run when a sound mode is selected. Receives variable `sound_mode`.",
@@ -131,6 +133,7 @@
         "data": {
           "media_next_track": "[%key:component::universal::config::step::commands::data::media_next_track%]",
           "media_pause": "[%key:component::universal::config::step::commands::data::media_pause%]",
+          "media_play": "[%key:component::universal::config::step::commands::data::media_play%]",
           "media_previous_track": "[%key:component::universal::config::step::commands::data::media_previous_track%]",
           "media_stop": "[%key:component::universal::config::step::commands::data::media_stop%]",
           "select_sound_mode": "[%key:component::universal::config::step::commands::data::select_sound_mode%]",
@@ -145,6 +148,7 @@
         "data_description": {
           "media_next_track": "[%key:component::universal::config::step::commands::data_description::media_next_track%]",
           "media_pause": "[%key:component::universal::config::step::commands::data_description::media_pause%]",
+          "media_play": "[%key:component::universal::config::step::commands::data_description::media_play%]",
           "media_previous_track": "[%key:component::universal::config::step::commands::data_description::media_previous_track%]",
           "media_stop": "[%key:component::universal::config::step::commands::data_description::media_stop%]",
           "select_sound_mode": "[%key:component::universal::config::step::commands::data_description::select_sound_mode%]",
