@@ -12,11 +12,12 @@ from homeassistant.components.universal.media_player import (
     CONF_CHILDREN,
     CONF_COMMANDS,
     EXPOSED_COMMANDS,
+    PLATFORM_SCHEMA,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_STATE_TEMPLATE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.template import Template
+from homeassistant.helpers.json import json_bytes_sorted
 
 from tests.common import MockConfigEntry
 
@@ -168,23 +169,38 @@ async def test_options_flow_edit(hass: HomeAssistant) -> None:
 
 
 async def test_import_with_unique_id(hass: HomeAssistant) -> None:
-    """Test importing a YAML config that has a unique_id."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
+    """Test importing a YAML config that has a unique_id.
+
+    The raw config is run through PLATFORM_SCHEMA first, like a real YAML
+    config would be, so device_class and the templates arrive as the coerced
+    types (a MediaPlayerDeviceClass StrEnum and Template objects) rather than
+    plain strings; this is what previously caused the config entry storage
+    write to fail (StrEnum members are not accepted by the JSON encoder).
+    """
+    raw_config = PLATFORM_SCHEMA(
+        {
+            "platform": "universal",
             CONF_NAME: "Master bed TV",
             "unique_id": "master_bed_tv",
             CONF_CHILDREN: ["media_player.mock1"],
             CONF_COMMANDS: {
-                "turn_on": {"action": "test.turn_on", "data": {}},
+                "turn_on": {
+                    "action": "test.turn_on",
+                    "data": {"level": "{{ volume_level }}"},
+                },
             },
             CONF_ATTRS: {"state": "switch.state"},
             CONF_BROWSE_MEDIA_ENTITY: "media_player.mock1",
             CONF_DEVICE_CLASS: "tv",
-            CONF_ACTIVE_CHILD_TEMPLATE: Template("{{ 'media_player.mock1' }}", hass),
-            CONF_STATE_TEMPLATE: Template("{{ states('media_player.mock1') }}", hass),
-        },
+            CONF_ACTIVE_CHILD_TEMPLATE: "{{ 'media_player.mock1' }}",
+            CONF_STATE_TEMPLATE: "{{ states('media_player.mock1') }}",
+        }
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=raw_config,
     )
     await hass.async_block_till_done()
 
@@ -199,10 +215,22 @@ async def test_import_with_unique_id(hass: HomeAssistant) -> None:
         CONF_ACTIVE_CHILD_TEMPLATE: "{{ 'media_player.mock1' }}",
         CONF_STATE_TEMPLATE: "{{ states('media_player.mock1') }}",
         **{
-            cmd: [{"action": "test.turn_on", "data": {}}] if cmd == "turn_on" else []
+            cmd: [{"action": "test.turn_on", "data": {"level": "{{ volume_level }}"}}]
+            if cmd == "turn_on"
+            else []
             for cmd in EXPOSED_COMMANDS
         },
     }
+    # Dict equality alone doesn't catch a StrEnum smuggled in for
+    # device_class, since MediaPlayerDeviceClass.TV == "tv"; config entry
+    # options must be plain, JSON-serialisable types. Likewise, CMD_SCHEMA
+    # compiles a templated command "data" value into a Template object, which
+    # must be flattened back to its raw text for the same reason.
+    assert type(result["options"][CONF_DEVICE_CLASS]) is str
+    assert type(result["options"][CONF_ACTIVE_CHILD_TEMPLATE]) is str
+    assert type(result["options"][CONF_STATE_TEMPLATE]) is str
+    assert type(result["options"]["turn_on"][0]["data"]["level"]) is str
+    json_bytes_sorted(hass.config_entries.async_entries(DOMAIN)[0].as_dict())
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.unique_id == "master_bed_tv"

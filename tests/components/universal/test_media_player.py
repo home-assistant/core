@@ -1529,3 +1529,42 @@ async def test_async_setup_entry_templates(hass: HomeAssistant) -> None:
     # active_child_template forces mock1 (off) to be treated as active,
     # overriding the default of picking mock2 (playing).
     assert hass.states.get("media_player.entry_templates").state == STATE_OFF
+
+
+async def test_async_setup_entry_command_data_template(hass: HomeAssistant) -> None:
+    """Test a templated value in a command's data configured through a config entry.
+
+    Config entry options are JSON, so command data can only ever be stored as
+    a plain template string, never a compiled Template object; this verifies
+    async_setup_entry recompiles it so the template still renders correctly
+    when the command runs (regression test: the recompiled command must also
+    remain usable with async_call_from_config's validate_config=False).
+    """
+    service = async_mock_service(hass, "test", "set_volume")
+
+    config_entry = MockConfigEntry(
+        domain=universal.DOMAIN,
+        title="Entry volume template",
+        options={
+            "name": "Entry volume template",
+            "children": [],
+            "volume_set": [
+                {"action": "test.set_volume", "data": {"level": "{{ volume_level }}"}}
+            ],
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_VOLUME_SET,
+        {
+            "entity_id": "media_player.entry_volume_template",
+            "volume_level": 0.42,
+        },
+        blocking=True,
+    )
+    assert len(service) == 1
+    assert service[0].data["level"] == 0.42

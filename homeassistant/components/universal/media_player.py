@@ -196,14 +196,19 @@ async def async_setup_entry(
     # ActionSelector stores actions as lists; unwrap to the single service-call
     # dict that async_call_from_config expects.  Empty lists mean the command
     # was not configured and should be omitted from the commands dict entirely.
+    # Re-validate through SERVICE_SCHEMA to compile any templated data/target
+    # values back into Template objects: config entry storage is JSON, so
+    # both the UI and YAML-import paths only ever persist raw strings, but
+    # _async_call_service calls async_call_from_config with
+    # validate_config=False and expects templates pre-compiled.
     commands: dict[str, Any] = {}
     for cmd in EXPOSED_COMMANDS:
         actions = options.get(cmd, [])
         if isinstance(actions, list) and actions:
-            commands[cmd] = actions[0]
+            commands[cmd] = cv.SERVICE_SCHEMA(actions[0])
         elif isinstance(actions, dict):
             # Preserved from a YAML import that stored a raw service-call dict.
-            commands[cmd] = actions
+            commands[cmd] = cv.SERVICE_SCHEMA(actions)
 
     raw_attrs = options.get(CONF_ATTRS, {})
     if isinstance(raw_attrs, list):

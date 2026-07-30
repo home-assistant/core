@@ -15,6 +15,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
 )
+from homeassistant.helpers.template import Template
 
 from .media_player import (
     CONF_ACTIVE_CHILD_TEMPLATE,
@@ -136,6 +137,23 @@ OPTIONS_FLOW = {
 }
 
 
+def _flatten_templates(value: Any) -> Any:
+    """Recursively convert Template objects back to their raw template text.
+
+    CMD_SCHEMA (via cv.SERVICE_SCHEMA) compiles any templated `data`/`target`
+    values within a YAML command into Template objects, which config entry
+    storage (JSON) can't hold; media_player.async_setup_entry recompiles them
+    when constructing the entity.
+    """
+    if isinstance(value, Template):
+        return value.template
+    if isinstance(value, list):
+        return [_flatten_templates(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _flatten_templates(item) for key, item in value.items()}
+    return value
+
+
 class UniversalFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a Universal media player config and options flow."""
 
@@ -164,8 +182,12 @@ class UniversalFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
             # Preserve JSON-serialisable advanced options so they survive the
             # round-trip through config entry storage unchanged.
             CONF_BROWSE_MEDIA_ENTITY: import_data.get(CONF_BROWSE_MEDIA_ENTITY),
-            CONF_DEVICE_CLASS: import_data.get(CONF_DEVICE_CLASS),
         }
+        # DEVICE_CLASSES_SCHEMA coerces this to a MediaPlayerDeviceClass
+        # (StrEnum); unwrap to a plain string since config entry storage is
+        # JSON and StrEnum members are not accepted by the JSON encoder.
+        if device_class := import_data.get(CONF_DEVICE_CLASS):
+            options[CONF_DEVICE_CLASS] = device_class.value
 
         # Templates are cv.template-validated Template objects at this point;
         # store the raw template text, matching what TemplateSelector returns.
@@ -182,7 +204,9 @@ class UniversalFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         options[CONF_ATTRS] = raw_attrs
 
         for cmd in EXPOSED_COMMANDS:
-            options[cmd] = [yaml_commands[cmd]] if cmd in yaml_commands else []
+            options[cmd] = (
+                [_flatten_templates(yaml_commands[cmd])] if cmd in yaml_commands else []
+            )
 
         _LOGGER.warning(
             (
