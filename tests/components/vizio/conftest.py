@@ -4,7 +4,14 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from vizaio import AppConfig, InputInfo, SettingInfo, SettingType, VizioConnectionError
+from vizaio import (
+    AppConfig,
+    InputInfo,
+    SettingInfo,
+    SettingType,
+    VizioAuthError,
+    VizioConnectionError,
+)
 from vizaio.profiles import SOUNDBAR_PROFILE
 
 from homeassistant.components.vizio.const import DOMAIN
@@ -228,6 +235,16 @@ def vizio_bypass_update_fixture() -> Generator[None]:
         yield
 
 
+@pytest.fixture(name="vizio_detect_tv", autouse=True)
+def vizio_detect_tv_fixture() -> Generator[None]:
+    """Mock vizio device type probe to report a TV."""
+    with patch(
+        "homeassistant.components.vizio.config_flow.async_is_tv",
+        return_value=True,
+    ):
+        yield
+
+
 @pytest.fixture(name="vizio_guess_device_type")
 def vizio_guess_device_type_fixture() -> Generator[None]:
     """Mock vizio device type probe to report a speaker."""
@@ -238,12 +255,18 @@ def vizio_guess_device_type_fixture() -> Generator[None]:
         yield
 
 
-@pytest.fixture(name="vizio_detect_tv")
-def vizio_detect_tv_fixture() -> Generator[None]:
-    """Mock vizio device type probe to report a TV."""
-    with patch(
-        "homeassistant.components.vizio.config_flow.async_is_tv",
-        return_value=True,
+@pytest.fixture(name="vizio_invalid_auth")
+def vizio_invalid_auth_fixture() -> Generator[None]:
+    """Mock a reachable device that rejects the stored auth token."""
+    with (
+        patch(
+            "homeassistant.components.vizio.config_flow.Vizio.ping",
+            AsyncMock(return_value=None),
+        ),
+        patch(
+            "homeassistant.components.vizio.config_flow.Vizio.ping_auth",
+            side_effect=VizioAuthError("invalid token"),
+        ),
     ):
         yield
 

@@ -4,6 +4,8 @@
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device.",
       "updated_entry": "This entry has already been set up but the name, apps, and/or options defined in the configuration do not match the previously imported configuration, so the configuration entry has been updated accordingly."
     },
     "error": {
@@ -30,6 +32,15 @@
       "reauth_confirm": {
         "description": "The stored access token is no longer valid, so the device needs to be paired again. Make sure the TV is powered on and connected to the network, then continue to display a pairing code on the TV screen.",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::vizio::config::step::user::data_description::host%]"
+        },
+        "description": "Update the address of your VIZIO SmartCast device. If your TV requires a new access token, you will be guided through the pairing process again."
       },
       "user": {
         "data": {
