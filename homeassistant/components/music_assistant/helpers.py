@@ -49,7 +49,7 @@ def get_music_assistant_client(
     return entry.runtime_data.mass
 
 
-async def async_get_available_mass_usernames(mass: MusicAssistantClient) -> list[str]:
+async def _async_get_available_mass_usernames(mass: MusicAssistantClient) -> list[str]:
     """Get available Music Assistant usernames which can be used in Home Assistant."""
     users = await mass.auth.list_users()
     return [
