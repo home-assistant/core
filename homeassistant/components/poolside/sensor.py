@@ -1,6 +1,8 @@
 """Sensor platform for Poolside site, body-of-water, and pool device telemetry."""
 
-from dataclasses import dataclass
+from collections.abc import Callable
+import contextlib
+from dataclasses import dataclass, replace
 from datetime import datetime
 import json
 from typing import Any, override
@@ -15,11 +17,13 @@ from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     EntityCategory,
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfPower,
     UnitOfPressure,
     UnitOfRatio,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -30,6 +34,7 @@ from homeassistant.util import dt as dt_util
 from . import PoolsideConfigEntry
 from .client import PoolsideClient
 from .const import (
+    ACTUAL_POWER_STATE_FIELD,
     CURRENT_STATE_FIELD,
     CURRENT_TEMPERATURE_FIELD,
     DOMAIN,
@@ -121,43 +126,213 @@ CHEMISTRY_SENSORS = (
 )
 
 
-# DisplayProcessingLogic values that mark numeric telemetry, mapped to the
-# device class and unit they render with.
-NUMERIC_PROCESSING_LOGIC: dict[str, tuple[SensorDeviceClass | None, str | None]] = {
-    "WATTAGE": (SensorDeviceClass.POWER, UnitOfPower.WATT),
-    "RPM": (None, REVOLUTIONS_PER_MINUTE),
-    "GPM": (
-        SensorDeviceClass.VOLUME_FLOW_RATE,
-        UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+def _float_value(value: Any) -> float | None:
+    """Coerce a telemetry value to a number, or None if it isn't one."""
+    try:
+        return float(value)
+    except TypeError, ValueError:
+        return None
+
+
+def _string_value(value: Any) -> str:
+    """Pass a telemetry value through as text."""
+    return str(value)
+
+
+def _on_off_value(value: Any) -> str | None:
+    """Map an ONOFF value (ON/OFF/UNKNOWN strings or booleans) to its option.
+
+    UNKNOWN (or anything unrecognized) is a "can't confirm" sentinel, not a
+    real state, so it maps to no data.
+    """
+    if isinstance(value, bool):
+        return "on" if value else "off"
+    text = str(value).strip().upper()
+    if text == "ON":
+        return "on"
+    if text == "OFF":
+        return "off"
+    return None
+
+
+def _yes_no_value(value: Any) -> str | None:
+    """Map a BOOLEAN value (booleans or true/false strings) to yes/no."""
+    if isinstance(value, bool):
+        return "yes" if value else "no"
+    text = str(value).strip().lower()
+    if text in ("true", "yes"):
+        return "yes"
+    if text in ("false", "no"):
+        return "no"
+    return None
+
+
+def _datetime_value(value: Any) -> datetime | None:
+    """Parse an ISO datetime, tolerating double-JSON-encoded values.
+
+    Pump's PrimingUntil arrives as a JSON string encoded inside the string
+    value ('"2026-..."'), so one layer of quoting is stripped first.
+    """
+    if isinstance(value, str) and value.startswith('"'):
+        with contextlib.suppress(ValueError):
+            value = json.loads(value)
+    parsed = dt_util.parse_datetime(str(value))
+    if parsed is not None and parsed.tzinfo is None:
+        # Naive timestamps are in the controller's (= HA's) local time.
+        parsed = parsed.replace(tzinfo=dt_util.get_default_time_zone())
+    return parsed
+
+
+@dataclass(frozen=True, kw_only=True)
+class PoolsideFieldSensorDescription(SensorEntityDescription):
+    """Describes how one DisplayProcessingLogic renders as a sensor."""
+
+    value_fn: Callable[[Any], float | str | datetime | None] = _string_value
+
+
+ON_OFF_OPTIONS = ["on", "off"]
+
+# One template per DisplayProcessingLogic value, matching how the vendor UI
+# renders each; the per-field description is the template re-keyed to the
+# field's Name. Unlisted logics (STRING, LONG_STRING, and any new
+# controller-side additions) render as plain text, so they degrade
+# gracefully instead of being dropped.
+PROCESSING_LOGIC_DESCRIPTIONS: dict[str, PoolsideFieldSensorDescription] = {
+    "ONOFF": PoolsideFieldSensorDescription(
+        key="ONOFF",
+        device_class=SensorDeviceClass.ENUM,
+        options=ON_OFF_OPTIONS,
+        value_fn=_on_off_value,
     ),
-    "PSI": (SensorDeviceClass.PRESSURE, UnitOfPressure.PSI),
+    "TEMP_F": PoolsideFieldSensorDescription(
+        key="TEMP_F",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_float_value,
+    ),
+    "GPM": PoolsideFieldSensorDescription(
+        key="GPM",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_float_value,
+    ),
+    "PSI": PoolsideFieldSensorDescription(
+        key="PSI",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.PSI,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_float_value,
+    ),
+    "PERCENT": PoolsideFieldSensorDescription(
+        key="PERCENT",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_float_value,
+    ),
+    "MG_L": PoolsideFieldSensorDescription(
+        key="MG_L",
+        native_unit_of_measurement="mg/L",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=_float_value,
+    ),
+    "PPM": PoolsideFieldSensorDescription(
+        key="PPM",
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        value_fn=_float_value,
+    ),
+    "WATTAGE": PoolsideFieldSensorDescription(
+        key="WATTAGE",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_float_value,
+    ),
+    "RPM": PoolsideFieldSensorDescription(
+        key="RPM",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_float_value,
+    ),
+    "AMP": PoolsideFieldSensorDescription(
+        key="AMP",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_float_value,
+    ),
+    "UA": PoolsideFieldSensorDescription(
+        key="UA",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.MICROAMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_float_value,
+    ),
+    "MV": PoolsideFieldSensorDescription(
+        key="MV",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_float_value,
+    ),
+    "VOLT": PoolsideFieldSensorDescription(
+        key="VOLT",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_float_value,
+    ),
+    "MS_TO_S": PoolsideFieldSensorDescription(
+        key="MS_TO_S",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        suggested_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_float_value,
+    ),
+    "DATETIME": PoolsideFieldSensorDescription(
+        key="DATETIME",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=_datetime_value,
+    ),
+    "BOOLEAN": PoolsideFieldSensorDescription(
+        key="BOOLEAN",
+        device_class=SensorDeviceClass.ENUM,
+        options=["yes", "no"],
+        value_fn=_yes_no_value,
+    ),
+    "FLOAT": PoolsideFieldSensorDescription(
+        key="FLOAT",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_float_value,
+    ),
+    "INTEGER": PoolsideFieldSensorDescription(
+        key="INTEGER",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=_float_value,
+    ),
+    "X": PoolsideFieldSensorDescription(
+        key="X",
+        native_unit_of_measurement="x",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_float_value,
+    ),
 }
 
-DATETIME_PROCESSING_LOGIC = "DATETIME"
+DEFAULT_FIELD_DESCRIPTION = PoolsideFieldSensorDescription(key="STRING")
 
 
-def _device_field_description(field: dict[str, Any]) -> SensorEntityDescription:
-    """Build the sensor description for one InformationFields entry.
-
-    LONG_STRING and any processing logic this integration doesn't recognize
-    render as plain text, so new controller-side field types degrade
-    gracefully instead of being dropped.
-    """
-    name: str = field[FIELD_NAME_KEY]
-    logic = field.get(FIELD_PROCESSING_LOGIC_KEY)
-    if logic in NUMERIC_PROCESSING_LOGIC:
-        device_class, unit = NUMERIC_PROCESSING_LOGIC[logic]
-        return SensorEntityDescription(
-            key=name,
-            device_class=device_class,
-            native_unit_of_measurement=unit,
-            state_class=SensorStateClass.MEASUREMENT,
-        )
-    if logic == DATETIME_PROCESSING_LOGIC:
-        return SensorEntityDescription(
-            key=name, device_class=SensorDeviceClass.TIMESTAMP
-        )
-    return SensorEntityDescription(key=name)
+def _device_field_description(field: dict[str, Any]) -> PoolsideFieldSensorDescription:
+    """Build the sensor description for one InformationFields entry."""
+    logic = str(field.get(FIELD_PROCESSING_LOGIC_KEY) or "")
+    template = PROCESSING_LOGIC_DESCRIPTIONS.get(logic, DEFAULT_FIELD_DESCRIPTION)
+    return replace(template, key=field[FIELD_NAME_KEY])
 
 
 def _information_fields(
@@ -220,6 +395,11 @@ async def async_setup_entry(
             PoolsideBodySensor(client, group, body_of_water_uuid, TEMPERATURE_SENSOR)
         )
         entities.append(PoolsideBodyStateSensor(client, group, body_of_water_uuid))
+    # ActualPowerState is pushed for every pool device regardless of what its
+    # InformationFields document lists, so its sensor is created eagerly.
+    entities.extend(
+        PoolsideDevicePowerSensor(client, device) for device in data.pool_devices
+    )
     if (site_uuid := data.site.uuid) is not None:
         entities.append(PoolsideSiteModeSensor(client, data.site, site_uuid))
     async_add_entities(entities)
@@ -250,7 +430,11 @@ async def async_setup_entry(
             client.subscribe_status(body_of_water_uuid, _async_add_reported_chemistry)
         )
 
-    added_device_fields: set[str] = set()
+    # Pre-seeded so a descriptor that lists ActualPowerState itself doesn't
+    # collide with the dedicated power state sensor created above.
+    added_device_fields: set[str] = {
+        f"{device.uuid}_{ACTUAL_POWER_STATE_FIELD}" for device in data.pool_devices
+    }
 
     @callback
     def _async_add_described_device_sensors() -> None:
@@ -354,6 +538,8 @@ class PoolsideDeviceSensor(PoolsideDeviceEntity, SensorEntity):
     it, and the value itself streams in under the device's UUID.
     """
 
+    entity_description: PoolsideFieldSensorDescription
+
     def __init__(
         self, client: PoolsideClient, device: PoolsideDevice, field: dict[str, Any]
     ) -> None:
@@ -371,18 +557,36 @@ class PoolsideDeviceSensor(PoolsideDeviceEntity, SensorEntity):
         value = self._client.get_status(self._device.uuid, self.entity_description.key)
         if value is None:
             return None
-        if self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
-            parsed = dt_util.parse_datetime(str(value))
-            if parsed is not None and parsed.tzinfo is None:
-                # Naive timestamps are in the controller's (= HA's) local time.
-                parsed = parsed.replace(tzinfo=dt_util.get_default_time_zone())
-            return parsed
-        if self.entity_description.state_class is SensorStateClass.MEASUREMENT:
-            try:
-                return float(value)
-            except TypeError, ValueError:
-                return None
-        return str(value)
+        return self.entity_description.value_fn(value)
+
+
+class PoolsideDevicePowerSensor(PoolsideDeviceEntity, SensorEntity):
+    """Whether a physical pool device is actually running.
+
+    ActualPowerState is ground truth from the hardware, pushed for every
+    pool device independent of its InformationFields document, so this
+    sensor exists from setup rather than waiting on the descriptor.
+    """
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_translation_key = "actual_power_state"
+    _attr_options = ON_OFF_OPTIONS
+
+    def __init__(self, client: PoolsideClient, device: PoolsideDevice) -> None:
+        """Set up the power state sensor for a pool device."""
+        super().__init__(client, device)
+        self._attr_unique_id = (
+            f"{client.controller_uuid}_{device.uuid}_{ACTUAL_POWER_STATE_FIELD}"
+        )
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return on/off ground truth; UNKNOWN means the hardware can't confirm."""
+        value = self._client.get_status(self._device.uuid, ACTUAL_POWER_STATE_FIELD)
+        if value is None:
+            return None
+        return _on_off_value(value)
 
 
 class PoolsideSiteModeSensor(PoolsideBaseEntity, SensorEntity):

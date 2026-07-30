@@ -59,6 +59,13 @@
       }
     },
     "sensor": {
+      "actual_power_state": {
+        "name": "Power state",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
       "current_state": {
         "name": "Water state",
         "state": {

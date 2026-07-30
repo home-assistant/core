@@ -17,6 +17,9 @@
       }
     },
     "sensor": {
+      "actual_power_state": {
+        "default": "mdi:power"
+      },
       "current_state": {
         "default": "mdi:state-machine"
       },
