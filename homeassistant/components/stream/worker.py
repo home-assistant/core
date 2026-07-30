@@ -57,7 +57,7 @@ URL_PATTERN = re.compile(
     re.IGNORECASE,
 )
 URL_USERINFO_PATTERN = re.compile(
-    r"(?P<scheme>[a-z][a-z0-9+.-]*://)[^\s@/?#:]+"
+    r"(?P<scheme>[a-z][a-z0-9+.-]*://)[^\s@/?#:]*"
     r"(?::(?P<password>[^\s@/?#]*))?@",
     re.IGNORECASE,
 )

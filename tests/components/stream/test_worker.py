@@ -642,6 +642,11 @@ async def test_stream_worker_close_failures_preserve_first_error(
             "rtsp://****:****@example.invalid:notaport/live?auth=****",
             id="malformed_port",
         ),
+        pytest.param(
+            "rtsp://:secret@example.invalid:notaport/live?auth=query-secret",
+            "rtsp://****:****@example.invalid:notaport/live?auth=****",
+            id="malformed_port_empty_username",
+        ),
     ],
 )
 def test_redact_value_error_url(value: str, redacted_value: str) -> None:
