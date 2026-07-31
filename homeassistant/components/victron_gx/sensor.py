@@ -120,8 +120,8 @@ class VictronSensor(VictronBaseEntity, RestoreSensor):
     @callback
     @override
     def _on_update_cb(self, value: Any) -> None:
-        # FormulaMetric emits None when a dependency is unavailable or stale;
-        # only add the baseline to numeric values.
+        # Enum sensors emit non-numeric values; only add the baseline to numeric
+        # cumulative values.
         if self._baseline is not None and isinstance(value, int | float):
             value += self._baseline
         self._attr_native_value = VictronSensor._normalize_value(value)

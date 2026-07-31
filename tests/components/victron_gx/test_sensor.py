@@ -8,10 +8,17 @@ import pytest
 from victron_mqtt import FormulaMetric, Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.components.victron_gx.const import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import DATA_INSTANCES, EntityComponent
 
 from .const import MOCK_INSTALLATION_ID
 
@@ -277,7 +284,7 @@ async def test_formula_sensor_none_update_after_restore(
     hass: HomeAssistant,
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
 ) -> None:
-    """Test a None update after restore does not add the baseline."""
+    """Test a None update marks the sensor unavailable but keeps its value."""
     victron_hub, _mock_config_entry = init_integration
 
     mock_restore_cache_with_extra_data(hass, (_restore_energy(5.0),))
@@ -290,8 +297,9 @@ async def test_formula_sensor_none_update_after_restore(
     assert state is not None
     assert state.state == "5.0"
 
-    # A None update (stale/unavailable dependency) must not add the baseline,
-    # which would otherwise raise a TypeError.
+    # A None update (stale/unavailable dependency) marks the entity unavailable
+    # while keeping the last known value, so the restored total is not persisted
+    # as None and lost on the next restart.
     with patch.object(
         FormulaMetric, "value", new_callable=PropertyMock, return_value=None
     ):
@@ -300,7 +308,14 @@ async def test_formula_sensor_none_update_after_restore(
 
     state = hass.states.get(ENERGY_ENTITY_ID)
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNAVAILABLE
+
+    # The last known value is retained on the entity, so RestoreSensor persists
+    # the accumulated total instead of None.
+    component: EntityComponent[SensorEntity] = hass.data[DATA_INSTANCES][SENSOR_DOMAIN]
+    entity = component.get_entity(ENERGY_ENTITY_ID)
+    assert entity is not None
+    assert entity.native_value == 5.0
 
 
 @pytest.mark.parametrize(
@@ -374,5 +389,5 @@ async def test_formula_sensor_non_numeric_value(
 
     state = hass.states.get(ENERGY_ENTITY_ID)
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNAVAILABLE
     assert "Cannot restore baseline" in caplog.text
