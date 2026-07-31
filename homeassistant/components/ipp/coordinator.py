@@ -5,13 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
-from pyipp import (
-    IPP,
-    IPPConnectionError,
-    IPPError,
-    IPPResponseError,
-    Printer as IPPPrinter,
-)
+from pyipp import IPP, IPPError, Printer as IPPPrinter
 from pyipp.enums import IppOperation
 
 from homeassistant.config_entries import ConfigEntry
@@ -107,7 +101,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPData]):
                     },
                 },
             )
-        except IPPError, IPPConnectionError, IPPResponseError, TimeoutError:
+        except IPPError, TimeoutError:
             _LOGGER.debug(
                 "Failed to fetch page count attributes from printer", exc_info=True
             )
@@ -120,10 +114,9 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPData]):
             if (value := parsed.get(attr)) is not None:
                 page_counts[attr] = value
 
+        # pyipp parses collection attributes into dicts of member name to value
         for attr in PAGE_COUNT_COLLECTION_ATTRIBUTES:
-            if isinstance(collection := parsed.get(attr), dict):
-                for sub_key, sub_value in collection.items():
-                    if sub_value is not None:
-                        page_counts[f"{attr}/{sub_key}"] = sub_value
+            for sub_key, sub_value in parsed.get(attr, {}).items():
+                page_counts[f"{attr}/{sub_key}"] = sub_value
 
         return page_counts
