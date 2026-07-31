@@ -400,6 +400,34 @@ async def test_new_container_creates_entity(
     )
 
 
+@pytest.mark.parametrize(
+    "child_identifier",
+    ["vm_100", "vm_101", "container_200", "container_201", "storage_local"],
+)
+async def test_child_devices_link_to_node(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    child_identifier: str,
+) -> None:
+    """Test that VM/container/storage devices link to their node via via_device_id."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    entry_id = mock_config_entry.entry_id
+    node_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{entry_id}_node_node/pve1")}
+    )
+    assert node_device is not None
+
+    child_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{entry_id}_{child_identifier}")}
+    )
+    assert child_device is not None
+    assert child_device.via_device_id == node_device.id
+
+
 async def test_stale_devices_removed(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
