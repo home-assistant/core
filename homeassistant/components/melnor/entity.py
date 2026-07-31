@@ -7,6 +7,7 @@ from melnor_bluetooth.device import Device, Valve
 
 from homeassistant.components.number import EntityDescription
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -73,10 +74,14 @@ class MelnorZoneEntity(MelnorBluetoothEntity):
         self._valve = valve
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self._device.mac}-zone{self._valve.id}")},
+            identifiers={(DOMAIN, f"{self._device.mac}-zone{valve.id}")},
             manufacturer="Melnor",
             name=f"Zone {valve.id + 1}",
-            via_device=(DOMAIN, self._device.mac),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, self._device.mac),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
 
 
