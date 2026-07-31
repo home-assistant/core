@@ -90,11 +90,8 @@ def mock_connector():
         return all_devices.get(device_id)
 
     def get_current_value(device_id: int, parameter_code: CompitParameter):
-        # Mirrors CompitApiConnector._resolve_parameter_code: a device code
-        # missing from PARAMS[parameter_code] falls back to the parameter's
-        # own value instead of raising, since not every device supports
-        # every parameter (e.g. device 224/R 900 has no CURRENT_TEMPERATURE
-        # mapping).
+        # Not every device supports every parameter; fall back instead of
+        # raising when this device has no mapping for it.
         code = PARAMS.get(parameter_code, {}).get(
             all_devices[device_id].definition.code, parameter_code.value
         )
