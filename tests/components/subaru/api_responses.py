@@ -8,6 +8,7 @@ from homeassistant.components.subaru.const import (
     API_GEN_3,
     API_GEN_4,
     VEHICLE_API_GEN,
+    VEHICLE_FEATURES,
     VEHICLE_HAS_EV,
     VEHICLE_HAS_REMOTE_SERVICE,
     VEHICLE_HAS_REMOTE_START,
@@ -92,6 +93,11 @@ VEHICLE_STATUS_EV = {
         "EV_STATE_OF_CHARGE_MODE": "EV_MODE",
         "EV_STATE_OF_CHARGE_PERCENT": 20,
         "EV_TIME_TO_FULLY_CHARGED_UTC": MOCK_DATETIME,
+        "LOCK_BOOT_STATUS": "LOCKED",
+        "LOCK_FRONT_LEFT_STATUS": "LOCKED",
+        "LOCK_FRONT_RIGHT_STATUS": "LOCKED",
+        "LOCK_REAR_LEFT_STATUS": "LOCKED",
+        "LOCK_REAR_RIGHT_STATUS": "LOCKED",
         "ODOMETER": 1234,
         "TIMESTAMP": 1595560000.0,
         "TRANSMISSION_MODE": "UNKNOWN",
@@ -111,7 +117,13 @@ VEHICLE_STATUS_EV = {
     },
     VEHICLE_HEALTH: {
         "RECOMMENDED_TIRE_PRESSURE": {"FRONT_TIRES": 35, "REAR_TIRES": 33},
+        "ISTROUBLE": False,
+        "FEATURES": {
+            "TPMS_MIL": {"ISTROUBLE": False, "ONDATE": None},
+            "CEL_MIL": {"ISTROUBLE": True, "ONDATE": None},
+        },
     },
+    VEHICLE_FEATURES: ["TPMS_MIL", "CEL_MIL"],
 }
 
 
