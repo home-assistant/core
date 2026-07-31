@@ -376,8 +376,6 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
             )
             or not (results := entity_response.result)
         ):
-            # anything short of an error reads as a successful play, which is
-            # how this used to claim it was playing what it never found
             raise intent.IntentHandleError(f"No results found for {search_query}")
 
         # 2. Play Media (first result)
