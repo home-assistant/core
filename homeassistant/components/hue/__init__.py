@@ -2,13 +2,12 @@
 
 from aiohue.util import normalize_bridge_id
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .bridge import HueBridge, HueConfigEntry
+from .bridge import HueBridge, HueConfigEntry, _async_register_bridge_device
 from .const import DOMAIN
 from .migration import check_migration
 from .services import async_setup_services
@@ -71,46 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
             return False
 
     # add bridge device to device registry
-    device_registry = dr.async_get(hass)
-    if bridge.api_version == 1:
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, api.config.mac_address)},
-            identifiers={(DOMAIN, api.config.bridge_id)},
-            manufacturer="Signify",
-            name=api.config.name,
-            model_id=api.config.model_id,
-            sw_version=api.config.software_version,
-        )
-        # create persistent notification if we found a bridge version
-        # with security vulnerability
-        if (
-            api.config.model_id == "BSB002"
-            and api.config.software_version < "1935144040"
-        ):
-            persistent_notification.async_create(
-                hass,
-                (
-                    "Your Hue hub has a known security vulnerability ([CVE-2020-6007] "
-                    "(https://cve.circl.lu/cve/CVE-2020-6007)). "
-                    "Go to the Hue app and check for software updates."
-                ),
-                "Signify Hue",
-                "hue_hub_firmware",
-            )
-    else:
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, api.config.mac_address)},
-            identifiers={
-                (DOMAIN, api.config.bridge_id),
-                (DOMAIN, api.config.bridge_device.id),
-            },
-            manufacturer=api.config.bridge_device.product_data.manufacturer_name,
-            name=api.config.name,
-            model_id=api.config.model_id,
-            sw_version=api.config.software_version,
-        )
+    _async_register_bridge_device(hass, entry, api, bridge.api_version)
 
     return True
 
