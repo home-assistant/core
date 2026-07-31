@@ -17,6 +17,7 @@ from pyliebherrhomeapi.exceptions import LiebherrConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.liebherr.number import _temperature_step
 from homeassistant.components.number import (
     ATTR_VALUE,
     DEFAULT_MAX_VALUE,
@@ -26,7 +27,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_DEVICE
@@ -43,6 +44,28 @@ def platforms() -> list[Platform]:
 @pytest.fixture(autouse=True)
 def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
+
+
+@pytest.mark.parametrize(
+    ("steps", "enabled", "expected"),
+    [
+        ([2, 4, 6, 8], True, 2),
+        ([2, 4, 6, 8], False, 1),
+        ([2], True, 1),
+        ([2, 4, 8], True, 1),
+    ],
+)
+def test_temperature_step(steps: list[int], enabled: bool, expected: float) -> None:
+    """Test deriving a supported number increment from temperature steps."""
+    control = TemperatureControl(
+        name="temperature",
+        type="TemperatureControl",
+        zone_id=1,
+        set_temperature_steps=steps,
+        set_temperature_steps_enabled=enabled,
+    )
+
+    assert _temperature_step(control) == expected
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -126,6 +149,29 @@ async def test_set_temperature(
 
     # Verify coordinator refresh was triggered
     assert mock_liebherr_client.get_device_state.call_count > initial_call_count
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_not_in_allowed_steps(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+) -> None:
+    """Test setting a temperature outside the allowed steps."""
+    with pytest.raises(
+        ServiceValidationError,
+        match="Temperature 5.0 is not supported. Allowed values: 2, 4, 6, 8",
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                ATTR_VALUE: 5,
+            },
+            blocking=True,
+        )
+
+    mock_liebherr_client.set_temperature.assert_not_called()
 
 
 @pytest.mark.usefixtures("init_integration")
