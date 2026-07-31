@@ -696,11 +696,15 @@ class ControllerEvents:
         node_id_device = self.dev_reg.async_get_device_by_identifier(
             device_id, self.config_entry.entry_id
         )
-        via_identifier = None
+        via_device_id: str | None = None
         controller = driver.controller
         # Get the controller node device ID if this node is not the controller
         if controller.own_node and controller.own_node != node:
-            via_identifier = get_device_id(driver, controller.own_node)
+            via_device_id = dr.async_get_device_id_by_identifier(
+                self.hass,
+                get_device_id(driver, controller.own_node),
+                config_entry_id=self.config_entry.entry_id,
+            )
 
         if device_id_ext:
             # If there is a device with this node ID but with a different hardware
@@ -747,7 +751,7 @@ class ControllerEvents:
             model=node.device_config.label,
             manufacturer=node.device_config.manufacturer,
             suggested_area=node.location or UNDEFINED,
-            via_device=via_identifier,
+            via_device_id=via_device_id,
         )
 
         async_dispatcher_send(self.hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
