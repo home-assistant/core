@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from pyportainer import Portainer, PortainerImageWatcher
 from pyportainer.exceptions import PortainerError
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -21,12 +22,12 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryType
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
-from .const import API_MAX_RETRIES, DOMAIN
+from .const import API_MAX_RETRIES, DEFAULT_NAME, DOMAIN
 from .coordinator import PortainerCoordinator, PortainerDockerDiskSpaceCoordinator
 from .services import async_setup_services
 
@@ -90,6 +91,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     entry.async_on_unload(async_at_started(hass, _defer_docker_disk_space_refresh))
 
     entry.runtime_data = coordinator
+
+    # Register the endpoint and stack devices up front so that container, stack and
+    # volume entities can deterministically resolve them as their via device when
+    # their platforms are set up below, regardless of platform/entity add order.
+    device_registry = dr.async_get(hass)
+    base_url = entry.data[CONF_URL]
+    for endpoint_data in coordinator.data.values():
+        endpoint_id = endpoint_data.endpoint.id
+        endpoint_device = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, f"{entry.entry_id}_{endpoint_id}")},
+            configuration_url=URL(f"{base_url}#!/{endpoint_id}/docker/dashboard"),
+            manufacturer=DEFAULT_NAME,
+            model="Endpoint",
+            name=endpoint_data.endpoint.name,
+            entry_type=DeviceEntryType.SERVICE,
+        )
+        for stack_data in endpoint_data.stacks.values():
+            stack = stack_data.stack
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={
+                    (DOMAIN, f"{entry.entry_id}_{endpoint_id}_stack_{stack.id}")
+                },
+                configuration_url=URL(
+                    f"{base_url}#!/{endpoint_id}/docker/stacks/{stack.name}"
+                ),
+                manufacturer=DEFAULT_NAME,
+                model="Stack",
+                name=stack.name,
+                via_device_id=endpoint_device.id,
+            )
+
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
     @callback
