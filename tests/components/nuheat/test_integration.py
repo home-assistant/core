@@ -1300,3 +1300,93 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     ) as unload:
         assert await hass.config_entries.async_unload(entry.entry_id) is True
     unload.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_config_flow_client_uses_access_token_callback(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test the config-flow API client receives its OAuth token callback."""
+
+    class CallbackClient:
+        def __init__(self, _session, callback) -> None:
+            self._callback = callback
+
+        async def get_account(self) -> Account:
+            assert await self._callback(False) == jwt_access_token()
+            return Account("Owner@Example.com")
+
+        async def list_thermostats(self) -> list[Thermostat]:
+            return [thermostat()]
+
+    with (
+        patch("homeassistant.components.nuheat.config_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.nuheat.config_flow.NuHeatClient", CallbackClient
+        ),
+    ):
+        result = await complete_oauth_flow(
+            hass, hass_client_no_auth, oauth_implementation()
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.asyncio
+async def test_reauth_with_malformed_stored_identity(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test malformed old identity data cannot bypass account matching."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_TOKEN: {CONF_ACCESS_TOKEN: "malformed"}},
+        unique_id="provisional",
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    with (
+        patch("homeassistant.components.nuheat.config_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.nuheat.config_flow.NuHeatClient.get_account",
+            AsyncMock(return_value=Account("Owner@Example.com")),
+        ),
+        patch(
+            "homeassistant.components.nuheat.config_flow.NuHeatClient.list_thermostats",
+            AsyncMock(return_value=[thermostat()]),
+        ),
+    ):
+        result = await complete_oauth_flow(
+            hass,
+            hass_client_no_auth,
+            oauth_implementation(),
+            entry=entry,
+            confirmation_step="reauth_confirm",
+        )
+    assert result["reason"] == "reauth_account_mismatch"
+
+
+@pytest.mark.asyncio
+async def test_new_setup_skips_malformed_existing_identity(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test malformed unrelated entry data is ignored during duplicate lookup."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_TOKEN: {CONF_ACCESS_TOKEN: "malformed"}},
+        unique_id="unrelated",
+        version=3,
+    ).add_to_hass(hass)
+    with (
+        patch("homeassistant.components.nuheat.config_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.nuheat.config_flow.NuHeatClient.get_account",
+            AsyncMock(return_value=Account("Owner@Example.com")),
+        ),
+        patch(
+            "homeassistant.components.nuheat.config_flow.NuHeatClient.list_thermostats",
+            AsyncMock(return_value=[thermostat()]),
+        ),
+    ):
+        result = await complete_oauth_flow(
+            hass, hass_client_no_auth, oauth_implementation()
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
