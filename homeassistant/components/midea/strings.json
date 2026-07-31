@@ -146,6 +146,9 @@
       "indoor_temperature": {
         "name": "Indoor Temperature"
       },
+      "instant_power0": {
+        "name": "Current Power"
+      },
       "outdoor_ambient_temperature": {
         "name": "Outdoor Ambient Temperature (T4)"
       },
@@ -158,14 +161,26 @@
       "realtime_power": {
         "name": "Realtime Power"
       },
+      "tank_actual_temperature": {
+        "name": "Tank Actual Temperature"
+      },
       "target_compressor_frequency": {
         "name": "Target Compressor Frequency"
       },
       "target_indoor_fan_speed": {
         "name": "Target Indoor Fan Speed"
       },
+      "temp_tw_in": {
+        "name": "Water Inlet Temperature"
+      },
+      "temp_tw_out": {
+        "name": "Water Outlet Temperature"
+      },
       "total_energy_consumption": {
         "name": "Total Energy Consumption"
+      },
+      "total_produced_energy": {
+        "name": "Total Produced Energy"
       }
     }
   },
