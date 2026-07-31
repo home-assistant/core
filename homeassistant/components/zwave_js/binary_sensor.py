@@ -1665,71 +1665,6 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             },
             type={ValueType.NUMBER},
             any_available_states_keys={
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE_LOCATION_PROVIDED,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL_LOCATION_PROVIDED,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL,
-            },
-            any_available_cc_specific={
-                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HEAT_ALARM)
-            },
-        ),
-        device_class_generic=HEAT_PRIMARY_DEVICE_CLASSES,
-        allow_multi=True,
-        entity_description=NotificationZWaveJSEntityDescription(
-            # NotificationType 4: Heat - rapid temperature rise/fall (primary)
-            key=NOTIFICATION_HEAT,
-            states={
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE_LOCATION_PROVIDED,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL_LOCATION_PROVIDED,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL,
-            },
-            device_class=BinarySensorDeviceClass.PROBLEM,
-        ),
-        entity_class=ZWaveNotificationBinarySensor,
-    ),
-    NewZWaveDiscoverySchema(
-        platform=Platform.BINARY_SENSOR,
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={
-                CommandClass.NOTIFICATION,
-            },
-            type={ValueType.NUMBER},
-            any_available_states_keys={
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE_LOCATION_PROVIDED,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL_LOCATION_PROVIDED,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL,
-            },
-            any_available_cc_specific={
-                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HEAT_ALARM)
-            },
-        ),
-        not_device_class_generic=HEAT_PRIMARY_DEVICE_CLASSES,
-        allow_multi=True,
-        entity_description=NotificationZWaveJSEntityDescription(
-            # NotificationType 4: Heat - rapid temperature rise/fall (diagnostic)
-            key=NOTIFICATION_HEAT,
-            states={
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE_LOCATION_PROVIDED,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL_LOCATION_PROVIDED,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL,
-            },
-            device_class=BinarySensorDeviceClass.PROBLEM,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
-        entity_class=ZWaveNotificationBinarySensor,
-    ),
-    NewZWaveDiscoverySchema(
-        platform=Platform.BINARY_SENSOR,
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={
-                CommandClass.NOTIFICATION,
-            },
-            type={ValueType.NUMBER},
-            any_available_states_keys={
                 HeatAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
                 HeatAlarmNotificationEvent.DUST_IN_DEVICE_STATUS_MAINTENANCE_REQUIRED_DUST_IN_DEVICE,
                 HeatAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
@@ -1774,10 +1709,6 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
                 HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED,
                 HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED_LOCATION_PROVIDED,
                 HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE_LOCATION_PROVIDED,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_RISE,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL_LOCATION_PROVIDED,
-                HeatAlarmNotificationEvent.RAPID_TEMPERATURE_FALL,
                 HeatAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
                 HeatAlarmNotificationEvent.DUST_IN_DEVICE_STATUS_MAINTENANCE_REQUIRED_DUST_IN_DEVICE,
                 HeatAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
