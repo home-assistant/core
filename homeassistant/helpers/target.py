@@ -392,10 +392,6 @@ class TargetFilter:
         self.base_filter = EntityFilter({key: config[key] for key in _BASE_FILTER_KEYS})
         self.include_targets = TargetSelection(config[CONF_INCLUDE_TARGETS])
         self.exclude_targets = TargetSelection(config[CONF_EXCLUDE_TARGETS])
-        self._include_entities = set(config[CONF_INCLUDE_ENTITIES])
-        self._exclude_entities = set(config[CONF_EXCLUDE_ENTITIES])
-        self._include_domains = set(config[CONF_INCLUDE_DOMAINS])
-        self._exclude_domains = set(config[CONF_EXCLUDE_DOMAINS])
 
     @property
     def has_targets(self) -> bool:
@@ -430,10 +426,10 @@ class TargetFilter:
         included, excluded = self.async_expand_targets(hass)
         base = self.base_filter
         has_include_targets = self.include_targets.has_any_target
-        include_entities = self._include_entities
-        exclude_entities = self._exclude_entities
-        include_domains = self._include_domains
-        exclude_domains = self._exclude_domains
+        include_domains = base.include_domains
+        include_entities = base.include_entities
+        exclude_domains = base.exclude_domains
+        exclude_entities = base.exclude_entities
 
         @callback
         def target_filter(entity_id: str) -> bool:

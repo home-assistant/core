@@ -51,6 +51,26 @@ class EntityFilter:
             self._exclude_eg,
         )
 
+    @property
+    def include_domains(self) -> frozenset[str]:
+        """Return the explicitly included domains."""
+        return frozenset(self._include_d)
+
+    @property
+    def include_entities(self) -> frozenset[str]:
+        """Return the explicitly included entity ids."""
+        return frozenset(self._include_e)
+
+    @property
+    def exclude_domains(self) -> frozenset[str]:
+        """Return the explicitly excluded domains."""
+        return frozenset(self._exclude_d)
+
+    @property
+    def exclude_entities(self) -> frozenset[str]:
+        """Return the explicitly excluded entity ids."""
+        return frozenset(self._exclude_e)
+
     def explicitly_included(self, entity_id: str) -> bool:
         """Check if an entity is explicitly included."""
         return entity_id in self._include_e or (
