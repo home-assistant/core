@@ -1701,6 +1701,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         allow_multi=True,
         entity_description=NotificationZWaveJSEntityDescription(
             # NotificationType 4: Heat - All other State Id's
+            # Rapid rise and fall are events, and not states.
             key=NOTIFICATION_HEAT,
             entity_category=EntityCategory.DIAGNOSTIC,
             not_states={
