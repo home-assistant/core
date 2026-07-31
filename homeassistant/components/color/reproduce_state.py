@@ -22,6 +22,8 @@ from .const import (
     FIELD_KELVIN,
     FIELD_XY,
     KIND_WHITE,
+    MAX_KELVIN,
+    MIN_KELVIN,
     SERVICE_CLEAR_BRIGHTNESS,
     SERVICE_SET_BRIGHTNESS,
     SERVICE_SET_COLOR,
@@ -31,11 +33,27 @@ _LOGGER = logging.getLogger(__name__)
 _HEX_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
 
 
+def _valid_kelvin(value: Any) -> bool:
+    """Return True if the snapshot kelvin passes the set_color schema."""
+    try:
+        return MIN_KELVIN <= int(value) <= MAX_KELVIN
+    except TypeError, ValueError, OverflowError:
+        return False
+
+
+def _valid_brightness(value: Any) -> bool:
+    """Return True if the snapshot brightness passes the service schema."""
+    try:
+        return 0 <= int(value) <= 255
+    except TypeError, ValueError, OverflowError:
+        return False
+
+
 def _is_valid_xy_pair(x: Any, y: Any) -> bool:
     """Return True if the snapshot xy pair is a usable chromaticity."""
     try:
         return valid_xy(float(x), float(y))
-    except TypeError, ValueError:
+    except TypeError, ValueError, OverflowError:
         return False
 
 
@@ -57,7 +75,7 @@ def _source_hex_matches(source_hex: Any, xy: Any) -> bool:
         return round(canonical.xy[0], 4) == round(float(xy[0]), 4) and round(
             canonical.xy[1], 4
         ) == round(float(xy[1]), 4)
-    except TypeError, ValueError:
+    except TypeError, ValueError, OverflowError:
         return False
 
 
@@ -89,8 +107,12 @@ async def _async_reproduce_state(
             "Snapshot for %s is kind=white without kelvin; restoring as chromatic",
             state.entity_id,
         )
-    if attrs.get(ATTR_KIND) == KIND_WHITE and attrs.get(ATTR_COLOR_TEMP_KELVIN):
-        color_data = {FIELD_KELVIN: attrs[ATTR_COLOR_TEMP_KELVIN]}
+    if (
+        attrs.get(ATTR_KIND) == KIND_WHITE
+        and attrs.get(ATTR_COLOR_TEMP_KELVIN)
+        and _valid_kelvin(attrs[ATTR_COLOR_TEMP_KELVIN])
+    ):
+        color_data = {FIELD_KELVIN: int(attrs[ATTR_COLOR_TEMP_KELVIN])}
     elif _source_hex_matches(source_hex, xy):
         # The canonical value was derived from this exact hex, so restoring
         # via hex loses nothing and preserves the source_hex attribute.
@@ -122,7 +144,15 @@ async def _async_reproduce_state(
 
     if ATTR_BRIGHTNESS in attrs:
         snapshot_brightness = attrs[ATTR_BRIGHTNESS]
-        if snapshot_brightness is None:
+        if snapshot_brightness is not None and not _valid_brightness(
+            snapshot_brightness
+        ):
+            _LOGGER.debug(
+                "Skipping brightness restore for %s: %r is not a valid brightness",
+                state.entity_id,
+                snapshot_brightness,
+            )
+        elif snapshot_brightness is None:
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_CLEAR_BRIGHTNESS,

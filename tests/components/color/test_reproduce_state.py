@@ -195,3 +195,78 @@ async def test_reproduce_defective_snapshots(
     _r, g, _b = state.attributes[ATTR_RGB_COLOR]
     assert g > 200
     assert state.attributes[ATTR_SOURCE_HEX] == expected_source_hex
+
+
+@pytest.mark.parametrize(
+    "bad_kelvin",
+    [
+        pytest.param("hot", id="non-numeric"),
+        pytest.param(10**6, id="out-of-range"),
+        pytest.param(10**400, id="overflowing"),
+    ],
+)
+async def test_reproduce_corrupt_kelvin_falls_back_to_state(
+    hass: HomeAssistant, bad_kelvin: object
+) -> None:
+    """A white snapshot with an unusable kelvin falls back to the hex state."""
+    await _setup_entity(hass)
+    snapshot = State(
+        ENTITY_ID,
+        "#00FF00",
+        {ATTR_KIND: KIND_WHITE, ATTR_COLOR_TEMP_KELVIN: bad_kelvin},
+    )
+    await async_reproduce_states(hass, [snapshot])
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    _r, g, _b = state.attributes[ATTR_RGB_COLOR]
+    assert g > 200
+    assert state.attributes[ATTR_KIND] == KIND_CHROMATIC
+
+
+@pytest.mark.parametrize(
+    "bad_brightness",
+    [
+        pytest.param(999, id="out-of-range"),
+        pytest.param("dim", id="non-numeric"),
+        pytest.param(10**400, id="overflowing"),
+    ],
+)
+async def test_reproduce_corrupt_brightness_is_skipped(
+    hass: HomeAssistant, bad_brightness: object
+) -> None:
+    """An unusable snapshot brightness is skipped; the color still restores."""
+    await _setup_entity(hass)
+    await hass.services.async_call(
+        DOMAIN,
+        "set_brightness",
+        {"entity_id": ENTITY_ID, "brightness": 100},
+        blocking=True,
+    )
+    snapshot = State(
+        ENTITY_ID,
+        "#00FF00",
+        {ATTR_KIND: KIND_CHROMATIC, ATTR_BRIGHTNESS: bad_brightness},
+    )
+    await async_reproduce_states(hass, [snapshot])
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    _r, g, _b = state.attributes[ATTR_RGB_COLOR]
+    assert g > 200
+    assert state.attributes[ATTR_BRIGHTNESS] == 100
+
+
+async def test_reproduce_overflowing_xy_falls_back_to_state(
+    hass: HomeAssistant,
+) -> None:
+    """A snapshot xy holding an overflowing int falls back to the hex state."""
+    await _setup_entity(hass)
+    snapshot = State(
+        ENTITY_ID,
+        "#00FF00",
+        {ATTR_KIND: KIND_CHROMATIC, ATTR_XY_COLOR: [10**400, 0.4]},
+    )
+    await async_reproduce_states(hass, [snapshot])
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    _r, g, _b = state.attributes[ATTR_RGB_COLOR]
+    assert g > 200

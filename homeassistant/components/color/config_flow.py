@@ -89,7 +89,10 @@ def _coerce_color_input(raw: Any) -> str:
     if isinstance(raw, str):
         return raw
     if isinstance(raw, (list, tuple)) and len(raw) == 3:
-        r, g, b = (int(v) for v in raw)
+        try:
+            r, g, b = (int(v) for v in raw)
+        except TypeError, ValueError, OverflowError:
+            return DEFAULT_HEX
         return f"#{r:02X}{g:02X}{b:02X}"
     return DEFAULT_HEX
 

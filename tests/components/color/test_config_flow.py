@@ -1,5 +1,6 @@
 """Config flow tests for the Color helper."""
 
+import math
 from typing import Any
 
 import pytest
@@ -111,6 +112,8 @@ async def test_options_flow_updates_icon(hass: HomeAssistant) -> None:
         pytest.param({"r": 1, "g": 2, "b": 3}, DEFAULT_HEX, id="dict-falls-back"),
         pytest.param([1, 2, 3, 4], DEFAULT_HEX, id="wrong-length-falls-back"),
         pytest.param(None, DEFAULT_HEX, id="none-falls-back"),
+        pytest.param(["a", "b", "c"], DEFAULT_HEX, id="non-numeric-falls-back"),
+        pytest.param([math.inf, 0, 0], DEFAULT_HEX, id="infinite-falls-back"),
     ],
 )
 def test_coerce_color_input(raw: Any, expected: str) -> None:

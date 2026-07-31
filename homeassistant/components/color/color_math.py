@@ -61,7 +61,7 @@ def _validate_rgb(rgb: Any) -> tuple[int, int, int]:
         raise ColorInputError(f"rgb_color must be a 3-element sequence, got {rgb!r}")
     try:
         r, g, b = (int(v) for v in rgb)
-    except (TypeError, ValueError) as err:
+    except (TypeError, ValueError, OverflowError) as err:
         raise ColorInputError(
             f"rgb_color components must be numbers, got {rgb!r}"
         ) from err
