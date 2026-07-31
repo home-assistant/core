@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 
 
 class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -36,12 +36,12 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if self._api is None:
-            _LOGGER.debug("Initiating device authorization")
+            LOGGER.debug("Initiating device authorization")
             self._api = ActronAirAPI()
             try:
                 device_code_response = await self._api.request_device_code()
             except ActronAirAuthError as err:
-                _LOGGER.error("OAuth2 flow failed: %s", err)
+                LOGGER.error("OAuth2 flow failed: %s", err)
                 return self.async_abort(reason="oauth2_error")
 
             self._device_code = device_code_response.device_code
@@ -53,21 +53,21 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
             """Wait for the user to authorize the device."""
             assert self._api is not None
             assert self._device_code is not None
-            _LOGGER.debug("Waiting for device authorization")
+            LOGGER.debug("Waiting for device authorization")
             try:
                 await self._api.poll_for_token(self._device_code)
-                _LOGGER.debug("Authorization successful")
+                LOGGER.debug("Authorization successful")
             except ActronAirAuthError as ex:
-                _LOGGER.exception("Error while waiting for device authorization")
+                LOGGER.exception("Error while waiting for device authorization")
                 raise CannotConnect from ex
 
-        _LOGGER.debug("Checking login task")
+        LOGGER.debug("Checking login task")
         if self.login_task is None:
-            _LOGGER.debug("Creating task for device authorization")
+            LOGGER.debug("Creating task for device authorization")
             self.login_task = self.hass.async_create_task(_wait_for_authorization())
 
         if self.login_task.done():
-            _LOGGER.debug("Login task is done, checking results")
+            LOGGER.debug("Login task is done, checking results")
             if exception := self.login_task.exception():
                 if isinstance(exception, CannotConnect):
                     return self.async_show_progress_done(
@@ -91,13 +91,13 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the finalization of login."""
-        _LOGGER.debug("Finalizing authorization")
+        LOGGER.debug("Finalizing authorization")
         assert self._api is not None
 
         try:
             user_data = await self._api.get_user_info()
         except ActronAirAuthError as err:
-            _LOGGER.error("Error getting user info: %s", err)
+            LOGGER.error("Error getting user info: %s", err)
             return self.async_abort(reason="oauth2_error")
 
         unique_id = user_data.sub

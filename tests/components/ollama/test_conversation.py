@@ -173,6 +173,7 @@ async def test_thinking_content(
             ollama.CONF_THINK: True,
         },
     )
+    await hass.async_block_till_done()
 
     conversation_id = "conversation_id_1234"
 
@@ -717,6 +718,7 @@ async def test_message_history_unlimited(
             subentry,
             data={**subentry.data, ollama.CONF_MAX_HISTORY: 0},
         )
+        await hass.async_block_till_done()
         for i in range(100):
             result = await conversation.async_converse(
                 hass,
@@ -894,6 +896,7 @@ async def test_reasoning_filter(
             ollama.CONF_THINK: think,
         },
     )
+    await hass.async_block_till_done()
 
     with patch(
         "ollama.AsyncClient.chat",
