@@ -457,6 +457,7 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
         self.site_id = config_entry.data[CONF_SITE_ID]
         self.title = config_entry.title
         self._serial_to_legacy_id: dict[str, str] = {}
+        self._legacy_id_map_initialized = False
 
         @callback
         def _dummy_listener() -> None:
@@ -531,7 +532,7 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
         part after splitting by space, e.g. "1.1.1") to the old statistic ID
         by matching the statistic name. This runs once per coordinator lifecycle.
         """
-        if self._serial_to_legacy_id:
+        if self._legacy_id_map_initialized:
             return
 
         all_stats = await async_list_statistic_ids(self.hass)
@@ -559,6 +560,8 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
                 ambiguous_names.add(short_name)
             elif short_name not in ambiguous_names:
                 name_to_legacy[short_name] = stat_id
+
+        self._legacy_id_map_initialized = True
 
         if not name_to_legacy and not ambiguous_names:
             return
