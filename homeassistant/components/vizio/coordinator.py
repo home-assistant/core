@@ -153,7 +153,11 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             is_on = await self.device.get_power_state()
         except VizioError as err:
             raise UpdateFailed(
-                f"Unable to connect to {self.config_entry.data[CONF_HOST]}"
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={
+                    "host": self.config_entry.data[CONF_HOST],
+                },
             ) from err
 
         if not is_on:

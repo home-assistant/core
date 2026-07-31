@@ -1044,7 +1044,7 @@ async def test_friendly_name_attr(
     hass: HomeAssistant,
     has_entity_name: bool,
     entity_name: str | None,
-    device_name: str | None | UndefinedType,
+    device_name: str | UndefinedType | None,
     expected_friendly_name: str | None,
 ) -> None:
     """Test friendly name when the entity uses _attr_*."""
