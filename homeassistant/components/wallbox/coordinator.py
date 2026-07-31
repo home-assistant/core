@@ -1,9 +1,10 @@
 """DataUpdateCoordinator for the wallbox integration."""
 
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import timedelta
 from http import HTTPStatus
 import logging
+import time
 from typing import Any, Concatenate, override
 
 import requests
@@ -100,9 +101,8 @@ def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
 
 def check_token_validity(jwt_token_ttl: int, jwt_token_drift: int) -> bool:
     """Check if the jwtToken is still valid in order to reuse if possible."""
-    return round((jwt_token_ttl / 1000) - jwt_token_drift, 0) > datetime.timestamp(
-        datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
-    )
+    return round((jwt_token_ttl / 1000) - jwt_token_drift, 0) > time.time()
+    
 
 
 def _validate(wallbox: Wallbox) -> None:
