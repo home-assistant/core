@@ -9,9 +9,11 @@ Two flavours:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import asyncio
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -73,6 +75,30 @@ class AdamAudioGroupEntity(Entity):
     def _coordinators(self) -> list[AdamAudioCoordinator]:
         """Return all currently loaded device coordinators."""
         return get_coordinators(self._hass)
+
+    async def _async_call_all(self, method_name: str, *args: Any) -> None:
+        """Run a client command on every speaker, then refresh all entities.
+
+        All speakers are commanded concurrently.  Entities are refreshed even
+        if some speakers fail, so the UI reflects the speakers that did apply
+        the change; a HomeAssistantError is then raised to surface the
+        failure(s) to the user.
+        """
+        coordinators = self._coordinators()
+        results = await asyncio.gather(
+            *(getattr(c.client, method_name)(*args) for c in coordinators),
+            return_exceptions=True,
+        )
+        for coordinator in coordinators:
+            coordinator.async_notify_state()
+        self.async_write_ha_state()
+
+        failures = [result for result in results if isinstance(result, Exception)]
+        if failures:
+            raise HomeAssistantError(
+                f"Command failed on {len(failures)} of {len(coordinators)} "
+                f"speakers: {failures[0]}"
+            )
 
     # ── HA lifecycle hooks ───────────────────────────────────────────────────
 

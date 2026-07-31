@@ -14,9 +14,12 @@ all child entities as unavailable until the next successful poll.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -25,8 +28,6 @@ from .client import AdamAudioClient, AdamAudioState
 from .const import (
     CONF_DESCRIPTION,
     CONF_DEVICE_NAME,
-    CONF_HOST,
-    CONF_PORT,
     CONF_SERIAL,
     DOMAIN,
     LOGGER,
@@ -110,6 +111,12 @@ class AdamAudioCoordinator(DataUpdateCoordinator[AdamAudioState]):
         Sends keepalive + all GET commands.  On success, client.state holds
         the values the device reported; entities read from there.
         Raises UpdateFailed to mark entities unavailable if unreachable.
+
+        Returns a snapshot copy of the client state: the client mutates its
+        state object in place, so returning it directly would make the
+        coordinator's always_update=False comparison always see "no change"
+        and never notify listeners of polled changes (physical knob or
+        A Control app adjustments).
         """
         success = await self.client.async_fetch_state()
         if not success:
@@ -117,15 +124,41 @@ class AdamAudioCoordinator(DataUpdateCoordinator[AdamAudioState]):
                 f"Device '{self.device_description}' unreachable at "
                 f"{self.client.host}:{self.client.port}"
             )
-        return self.client.state
+        return replace(self.client.state)
+
+    @callback
+    def async_notify_state(self) -> None:
+        """Push the client's current state to all entities immediately.
+
+        Used after SET commands so every sibling entity (e.g. numbers whose
+        availability depends on voicing) refreshes without waiting a poll.
+        """
+        self.async_set_updated_data(replace(self.client.state))
 
     # ── Device info (shared by all child entities) ────────────────────────────
 
     @property
+    def entity_unique_id_base(self) -> str:
+        """Return the value entities should use to build their unique_id.
+
+        Prefers the device serial, which is globally unique, over the
+        hardware name (``device_unique_id``), which is not guaranteed to be
+        unique across speakers and is only kept around to look up
+        registry entries created before the serial was known (see
+        ``_async_migrate_device_identifiers``).
+        """
+        return self.device_serial or self.device_unique_id
+
+    @property
     def device_info(self) -> DeviceInfo:
-        """Return device info for the device registry."""
+        """Return device info for the device registry.
+
+        The serial number is the preferred identifier (stable even if the
+        hardware name changes); existing registry entries created with the
+        name-based identifier are migrated in async_setup_entry.
+        """
         return DeviceInfo(
-            identifiers={(DOMAIN, self.device_unique_id)},
+            identifiers={(DOMAIN, self.entity_unique_id_base)},
             name=self.device_description,
             manufacturer=MANUFACTURER,
             model="A-Series",

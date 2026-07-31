@@ -5,7 +5,6 @@ EQ controls (Bass, Desk, Presence, Treble) use integer dB steps.
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -49,7 +48,6 @@ class _NumberDesc:
     """Descriptor for a number entity."""
 
     translation_key: str
-    icon: str
     native_min: float
     native_max: float
     native_step: float
@@ -64,7 +62,6 @@ class _NumberDesc:
 _NUMBER_DESCRIPTORS: tuple[_NumberDesc, ...] = (
     _NumberDesc(
         translation_key=ENTITY_BASS,
-        icon="mdi:equalizer",
         native_min=BASS_MIN,
         native_max=BASS_MAX,
         native_step=EQ_STEP,
@@ -75,7 +72,6 @@ _NUMBER_DESCRIPTORS: tuple[_NumberDesc, ...] = (
     ),
     _NumberDesc(
         translation_key=ENTITY_DESK,
-        icon="mdi:tune-vertical",
         native_min=DESK_MIN,
         native_max=DESK_MAX,
         native_step=EQ_STEP,
@@ -86,7 +82,6 @@ _NUMBER_DESCRIPTORS: tuple[_NumberDesc, ...] = (
     ),
     _NumberDesc(
         translation_key=ENTITY_PRESENCE,
-        icon="mdi:tune",
         native_min=PRESENCE_MIN,
         native_max=PRESENCE_MAX,
         native_step=EQ_STEP,
@@ -97,7 +92,6 @@ _NUMBER_DESCRIPTORS: tuple[_NumberDesc, ...] = (
     ),
     _NumberDesc(
         translation_key=ENTITY_TREBLE,
-        icon="mdi:tune-vertical-variant",
         native_min=TREBLE_MIN,
         native_max=TREBLE_MAX,
         native_step=EQ_STEP,
@@ -124,6 +118,7 @@ async def async_setup_entry(
 
     if not integration_data.group_numbers_added:
         integration_data.group_numbers_added = True
+        integration_data.group_owner_entry_id = entry.entry_id
         entities += [AdamAudioGroupNumber(hass, desc) for desc in _NUMBER_DESCRIPTORS]
 
     async_add_entities(entities)
@@ -143,9 +138,8 @@ class AdamAudioNumber(AdamAudioEntity, NumberEntity):
         self._desc = desc
         self._attr_translation_key = desc.translation_key
         self._attr_unique_id = (
-            f"{DOMAIN}_{coordinator.device_unique_id}_{desc.translation_key}"
+            f"{DOMAIN}_{coordinator.entity_unique_id_base}_{desc.translation_key}"
         )
-        self._attr_icon = desc.icon
         self._attr_native_min_value = desc.native_min
         self._attr_native_max_value = desc.native_max
         self._attr_native_step = desc.native_step
@@ -172,7 +166,7 @@ class AdamAudioNumber(AdamAudioEntity, NumberEntity):
         if self._desc.native_step == 1.0:
             value = int(value)
         await setter(value)
-        self.async_write_ha_state()
+        self.coordinator.async_notify_state()
 
 
 # ── Group number ──────────────────────────────────────────────────────────────
@@ -189,7 +183,6 @@ class AdamAudioGroupNumber(AdamAudioGroupEntity, NumberEntity):
         self._desc = desc
         self._attr_translation_key = desc.translation_key
         self._attr_unique_id = f"{DOMAIN}_{GROUP_DEVICE_ID}_{desc.translation_key}"
-        self._attr_icon = desc.icon
         self._attr_native_min_value = desc.native_min
         self._attr_native_max_value = desc.native_max
         self._attr_native_step = desc.native_step
@@ -220,11 +213,4 @@ class AdamAudioGroupNumber(AdamAudioGroupEntity, NumberEntity):
         """Set the value on all speakers."""
         if self._desc.native_step == 1.0:
             value = int(value)
-        coordinators = self._coordinators()
-        await asyncio.gather(
-            *(getattr(c.client, self._desc.setter_name)(value) for c in coordinators)
-        )
-        # Push the optimistic state to all per-speaker entities instantly
-        for c in coordinators:
-            c.async_set_updated_data(c.client.state)
-        self.async_write_ha_state()
+        await self._async_call_all(self._desc.setter_name, value)

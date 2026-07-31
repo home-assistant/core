@@ -11,7 +11,7 @@ State management
 • After each SET, a read-back verification confirms the device accepted the
   change.  If verification fails, the command is retried up to MAX_RETRIES
   times with RETRY_DELAY seconds between attempts.
-• ``async_fetch_state()`` polls all 9 GET commands from the device and
+• ``async_fetch_state()`` polls all 8 GET commands from the device and
   overwrites ``self.state`` with the real values.  This is called by the
   coordinator on every update interval.
 """
@@ -207,6 +207,10 @@ class AdamAudioClient:
         Retries up to MAX_RETRIES times with RETRY_DELAY between attempts.
         The lock is acquired for each attempt (send + verify) then released
         between retries so polling isn't starved.
+
+        Raises HomeAssistantError if the send keeps failing or the device
+        never confirms the requested value, so callers must not apply
+        optimistic state on failure.
         """
         for attempt in range(1, self.MAX_RETRIES + 1):
             send_failed = False
@@ -267,6 +271,10 @@ class AdamAudioClient:
             set_fn.__name__,
             self.MAX_RETRIES,
             self.host,
+        )
+        raise HomeAssistantError(
+            f"Device at {self.host} did not confirm {set_fn.__name__} after "
+            f"{self.MAX_RETRIES} attempts"
         )
 
     # ── Legacy send (for commands without GET verification) ────────────────

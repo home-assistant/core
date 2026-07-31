@@ -120,11 +120,15 @@ class AdamAudioConfigFlow(ConfigFlow, domain=DOMAIN):
             device_id = host.replace(".", "_")
 
         # Attempt to connect and retrieve device metadata (including serial).
+        # Abort if the device does not answer: creating an entry we could
+        # never set up (with a hostname-derived unique_id that would clash
+        # with the serial-based one on a later, successful discovery) helps
+        # nobody — zeroconf will re-trigger this flow on the next broadcast.
         result = await self._async_try_connect(host, port)
-        if result is not None:
-            _device_name, description, serial = result
-        else:
-            _device_name, description, serial = device_id, device_id, ""
+        if result is None:
+            return self.async_abort(reason="cannot_connect")
+        _device_name, description, serial = result
+        _device_name = _device_name or device_id
 
         # Prefer serial (stable, device-embedded) as unique_id; fall back to hostname.
         await self.async_set_unique_id(serial or device_id)
@@ -134,7 +138,7 @@ class AdamAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery = {
             CONF_HOST: host,
             CONF_PORT: port,
-            CONF_DEVICE_NAME: _device_name or device_id,
+            CONF_DEVICE_NAME: _device_name,
             CONF_DESCRIPTION: description,
             CONF_SERIAL: serial,
         }

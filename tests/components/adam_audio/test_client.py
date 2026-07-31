@@ -198,14 +198,17 @@ async def test_client_ensure_keepalive_oserror(adam_client: AdamAudioClient) -> 
 
 
 async def test_client_verify_mismatch_retries(adam_client: AdamAudioClient) -> None:
-    """Test retry exhaustion when verification never matches."""
+    """Test retry exhaustion when verification never matches raises."""
     adam_client.RETRY_DELAY = 0
     adam_client._device.set_mute.__name__ = "set_mute"
     adam_client._device.get_mute.return_value = False  # Never matches True
 
-    await adam_client.async_set_mute(True)
+    with pytest.raises(HomeAssistantError, match="did not confirm"):
+        await adam_client.async_set_mute(True)
     assert adam_client._device.set_mute.call_count == 3
     assert adam_client._device.get_mute.call_count == 3
+    # Optimistic state must NOT be applied when the device never confirmed.
+    assert adam_client.state.mute is False
 
 
 async def test_client_verify_read_failure(adam_client: AdamAudioClient) -> None:
@@ -214,8 +217,10 @@ async def test_client_verify_read_failure(adam_client: AdamAudioClient) -> None:
     adam_client._device.set_mute.__name__ = "set_mute"
     adam_client._device.get_mute.side_effect = RuntimeError("read failed")
 
-    await adam_client.async_set_mute(True)
+    with pytest.raises(HomeAssistantError, match="did not confirm"):
+        await adam_client.async_set_mute(True)
     assert adam_client._device.set_mute.call_count == 3
+    assert adam_client.state.mute is False
 
 
 async def test_client_async_send_oserror(adam_client: AdamAudioClient) -> None:

@@ -71,6 +71,69 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_poll_change_notifies_entities(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_client: MagicMock,
+) -> None:
+    """Test that state changes picked up by polling reach entity states.
+
+    Regression test: the client mutates its state object in place, so the
+    coordinator must snapshot it per poll or always_update=False suppresses
+    all listener notifications and knob/app changes never reach HA.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.adam_audio.coordinator.AdamAudioClient",
+        return_value=mock_client,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("switch.left_speaker_mute").state == "off"
+
+    # Simulate a change made on the physical device (mutated in place, as
+    # the real client does), then a poll cycle.
+    mock_client.state.mute = True
+    coordinator = mock_config_entry.runtime_data.coordinator
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.left_speaker_mute").state == "on"
+
+
+async def test_group_entities_survive_reload(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_client: MagicMock,
+) -> None:
+    """Test group entities are recreated when their owning entry reloads.
+
+    Regression test: the group_*_added flags were never reset on unload, so
+    any reload (e.g. after an options update) removed the group entities
+    until Home Assistant was restarted.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.adam_audio.coordinator.AdamAudioClient",
+        return_value=mock_client,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert hass.states.get("switch.all_speakers_mute") is not None
+
+        assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("switch.all_speakers_mute") is not None
+    assert hass.states.get("number.all_speakers_bass") is not None
+    assert hass.states.get("select.all_speakers_voicing") is not None
+
+
 async def test_async_reload_entry(hass: HomeAssistant, mock_config_entry) -> None:
     """Test _async_reload_entry triggers config entry reload."""
     mock_config_entry.add_to_hass(hass)

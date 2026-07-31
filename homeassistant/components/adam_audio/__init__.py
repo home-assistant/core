@@ -14,6 +14,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.const import Platform
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, LOGGER
@@ -60,6 +61,8 @@ async def async_setup_entry(
     coordinator = AdamAudioCoordinator(hass, entry)
     await coordinator.async_setup()  # raises ConfigEntryNotReady if unreachable
 
+    _async_migrate_device_identifiers(hass, coordinator)
+
     entry.runtime_data = AdamAudioData(
         client=coordinator.client,
         coordinator=coordinator,
@@ -93,6 +96,20 @@ async def async_unload_entry(
             if coordinator:
                 await coordinator.async_shutdown()
 
+            # The group entities live under the platforms of the entry that
+            # created them, so they were just removed along with this entry.
+            # Reset the flags so the next entry setup recreates them (this
+            # entry reloading, or a remaining entry we schedule below).
+            if integration_data.group_owner_entry_id == entry.entry_id:
+                integration_data.group_owner_entry_id = None
+                integration_data.group_switches_added = False
+                integration_data.group_numbers_added = False
+                integration_data.group_selects_added = False
+                if integration_data.coordinators and not hass.is_stopping:
+                    hass.config_entries.async_schedule_reload(
+                        next(iter(integration_data.coordinators))
+                    )
+
             LOGGER.debug(
                 "Unloaded entry %s; %d coordinators remaining",
                 entry.entry_id,
@@ -102,6 +119,35 @@ async def async_unload_entry(
             LOGGER.debug("Skipping coordinator cleanup (domain data missing)")
 
     return unload_ok
+
+
+def _async_migrate_device_identifiers(
+    hass: HomeAssistant, coordinator: AdamAudioCoordinator
+) -> None:
+    """Move a device registered under its hardware name to its serial number.
+
+    Versions up to 0.3.x identified devices by hardware name.  Updating the
+    existing registry entry in place preserves the device id, so automations
+    and dashboards referencing the device keep working.
+    """
+    if not coordinator.device_serial:
+        return
+    device_registry = dr.async_get(hass)
+    new_identifier = (DOMAIN, coordinator.device_serial)
+    if device_registry.async_get_device(identifiers={new_identifier}):
+        return  # already migrated (or fresh install)
+    old_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, coordinator.device_unique_id)}
+    )
+    if old_device:
+        device_registry.async_update_device(
+            old_device.id, new_identifiers={new_identifier}
+        )
+        LOGGER.debug(
+            "Migrated device %s identifiers to serial %s",
+            coordinator.device_unique_id,
+            coordinator.device_serial,
+        )
 
 
 async def _async_reload_entry(

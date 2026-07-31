@@ -1940,7 +1940,7 @@ py_ccm15==0.1.2
 py_vapid==1.9.4
 
 # homeassistant.components.adam_audio
-pyadamaudiocontroller==1.0.0
+pyadamaudiocontroller==1.1.0
 
 # homeassistant.components.ads
 pyads==3.4.0

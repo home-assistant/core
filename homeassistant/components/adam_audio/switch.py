@@ -7,7 +7,6 @@ config-entry loads skip it because the unique_id is already registered.
 
 from __future__ import annotations
 
-import asyncio
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity
@@ -37,9 +36,11 @@ async def async_setup_entry(
         AdamAudioMuteSwitch(coordinator),
     ]
 
-    # Create group entities exactly once per HA lifecycle.
+    # Create group entities exactly once; the flags are reset when the owning
+    # entry unloads so a reload recreates them.
     if not integration_data.group_switches_added:
         integration_data.group_switches_added = True
+        integration_data.group_owner_entry_id = entry.entry_id
         entities += [
             AdamAudioGroupSleepSwitch(hass),
             AdamAudioGroupMuteSwitch(hass),
@@ -55,64 +56,56 @@ class AdamAudioMuteSwitch(AdamAudioEntity, SwitchEntity):
     """Mute switch for a single speaker."""
 
     _attr_translation_key = "mute"
-    _attr_icon = "mdi:volume-off"
 
     def __init__(self, coordinator: AdamAudioCoordinator) -> None:
         """Initialize the mute switch."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{DOMAIN}_{coordinator.device_unique_id}_{ENTITY_MUTE}"
+        self._attr_unique_id = (
+            f"{DOMAIN}_{coordinator.entity_unique_id_base}_{ENTITY_MUTE}"
+        )
 
     @property
     def is_on(self) -> bool:
         """Return true if muted."""
         return self.coordinator.client.state.mute
 
-    @property
-    def icon(self) -> str:
-        """Return icon based on mute state."""
-        return "mdi:volume-off" if self.is_on else "mdi:volume-high"
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on mute."""
         await self.coordinator.client.async_set_mute(True)
-        self.async_write_ha_state()
+        self.coordinator.async_notify_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off mute."""
         await self.coordinator.client.async_set_mute(False)
-        self.async_write_ha_state()
+        self.coordinator.async_notify_state()
 
 
 class AdamAudioSleepSwitch(AdamAudioEntity, SwitchEntity):
     """Standby (sleep) switch for a single speaker."""
 
     _attr_translation_key = "sleep"
-    _attr_icon = "mdi:power-sleep"
 
     def __init__(self, coordinator: AdamAudioCoordinator) -> None:
         """Initialize the sleep switch."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{DOMAIN}_{coordinator.device_unique_id}_{ENTITY_SLEEP}"
+        self._attr_unique_id = (
+            f"{DOMAIN}_{coordinator.entity_unique_id_base}_{ENTITY_SLEEP}"
+        )
 
     @property
     def is_on(self) -> bool:
         """Return true if sleeping."""
         return self.coordinator.client.state.sleep
 
-    @property
-    def icon(self) -> str:
-        """Return icon based on sleep state."""
-        return "mdi:power-sleep" if self.is_on else "mdi:power"
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on sleep mode."""
         await self.coordinator.client.async_set_sleep(True)
-        self.async_write_ha_state()
+        self.coordinator.async_notify_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off sleep mode."""
         await self.coordinator.client.async_set_sleep(False)
-        self.async_write_ha_state()
+        self.coordinator.async_notify_state()
 
 
 # ── Group switches ────────────────────────────────────────────────────────────
@@ -125,11 +118,6 @@ class AdamAudioGroupMuteSwitch(AdamAudioGroupEntity, SwitchEntity):
     _attr_unique_id = f"{DOMAIN}_{GROUP_DEVICE_ID}_{ENTITY_MUTE}"
 
     @property
-    def icon(self) -> str:
-        """Return icon based on mute state."""
-        return "mdi:volume-off" if self.is_on else "mdi:volume-high"
-
-    @property
     def is_on(self) -> bool:
         """Return true when ALL speakers are muted."""
         coordinators = self._coordinators()
@@ -139,19 +127,11 @@ class AdamAudioGroupMuteSwitch(AdamAudioGroupEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Mute all speakers."""
-        coordinators = self._coordinators()
-        await asyncio.gather(*(c.client.async_set_mute(True) for c in coordinators))
-        for c in coordinators:
-            c.async_set_updated_data(c.client.state)
-        self.async_write_ha_state()
+        await self._async_call_all("async_set_mute", True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Unmute all speakers."""
-        coordinators = self._coordinators()
-        await asyncio.gather(*(c.client.async_set_mute(False) for c in coordinators))
-        for c in coordinators:
-            c.async_set_updated_data(c.client.state)
-        self.async_write_ha_state()
+        await self._async_call_all("async_set_mute", False)
 
 
 class AdamAudioGroupSleepSwitch(AdamAudioGroupEntity, SwitchEntity):
@@ -159,11 +139,6 @@ class AdamAudioGroupSleepSwitch(AdamAudioGroupEntity, SwitchEntity):
 
     _attr_translation_key = "sleep"
     _attr_unique_id = f"{DOMAIN}_{GROUP_DEVICE_ID}_{ENTITY_SLEEP}"
-
-    @property
-    def icon(self) -> str:
-        """Return icon based on sleep state."""
-        return "mdi:power-sleep" if self.is_on else "mdi:power"
 
     @property
     def is_on(self) -> bool:
@@ -175,16 +150,8 @@ class AdamAudioGroupSleepSwitch(AdamAudioGroupEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Put all speakers to sleep."""
-        coordinators = self._coordinators()
-        await asyncio.gather(*(c.client.async_set_sleep(True) for c in coordinators))
-        for c in coordinators:
-            c.async_set_updated_data(c.client.state)
-        self.async_write_ha_state()
+        await self._async_call_all("async_set_sleep", True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Wake all speakers."""
-        coordinators = self._coordinators()
-        await asyncio.gather(*(c.client.async_set_sleep(False) for c in coordinators))
-        for c in coordinators:
-            c.async_set_updated_data(c.client.state)
-        self.async_write_ha_state()
+        await self._async_call_all("async_set_sleep", False)

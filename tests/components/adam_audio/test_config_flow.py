@@ -7,13 +7,11 @@ from unittest.mock import MagicMock
 
 from homeassistant import config_entries
 from homeassistant.components.adam_audio.const import (
-    CONF_DESCRIPTION,
     CONF_DEVICE_NAME,
-    CONF_HOST,
-    CONF_PORT,
     CONF_SERIAL,
     DOMAIN,
 )
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -124,7 +122,12 @@ async def test_zeroconf_flow_success(
 async def test_zeroconf_flow_connection_failure(
     hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
-    """Test zeroconf discovery when connection fails (uses fallback metadata)."""
+    """Test zeroconf discovery aborts when the device does not answer.
+
+    Creating an entry for an unreachable device would never become ready and
+    its hostname-based unique_id would clash with the serial-based one on a
+    later successful discovery; zeroconf re-triggers the flow automatically.
+    """
     discovery_info = ZeroconfServiceInfo(
         ip_address=IPv4Address(MOCK_HOST),
         ip_addresses=[IPv4Address(MOCK_HOST)],
@@ -142,15 +145,8 @@ async def test_zeroconf_flow_connection_failure(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zeroconf_confirm"
-
-    # Confirm with fallback data
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    # Falls back to device_id derived from hostname
-    assert result["data"][CONF_DEVICE_NAME] == "ASeries-41472b"
-    assert result["data"][CONF_DESCRIPTION] == "ASeries-41472b"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_user_flow_exception(hass: HomeAssistant, mock_client: MagicMock) -> None:

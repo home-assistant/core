@@ -31,3 +31,6 @@ class AdamAudioIntegrationData:
     group_switches_added: bool = False
     group_numbers_added: bool = False
     group_selects_added: bool = False
+    # Entry whose platforms own the group entities; when it unloads, the
+    # flags above are reset so another entry can recreate them.
+    group_owner_entry_id: str | None = None
