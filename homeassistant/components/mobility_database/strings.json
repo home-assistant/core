@@ -76,7 +76,7 @@
       },
       "entry_type": "Transit stop",
       "error": {
-        "choose_one": "Pick either a zone or a map area, not both.",
+        "choose_one": "Pick a zone or a map area.",
         "no_stops_in_zone": "No stops found in this area. Try a larger radius or a different location.",
         "zone_not_found": "That zone no longer exists."
       },
@@ -106,10 +106,10 @@
         },
         "stop": {
           "data": {
-            "stop_id": "Stop"
+            "stop": "Stop"
           },
           "data_description": {
-            "stop_id": "The transit stop to track departures for"
+            "stop": "The stop or station to track departures for"
           },
           "title": "Choose a stop"
         },
@@ -120,7 +120,7 @@
           },
           "data_description": {
             "location": "A circle on the map to search for stops",
-            "zone": "An existing Home Assistant zone to search for stops"
+            "zone": "An existing Home Assistant zone to search for stops. Takes precedence over the map area."
           },
           "description": "Pick an existing zone or draw a circle on the map. Stops inside the area are offered in the next step.",
           "title": "Choose a search area"

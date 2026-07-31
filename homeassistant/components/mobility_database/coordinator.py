@@ -1,6 +1,7 @@
 """Coordinators for the Mobility Database integration."""
 
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 from typing import override
 
@@ -30,7 +31,7 @@ from .const import (
     CONF_FEED_ID,
     CONF_HEADSIGNS,
     CONF_ROUTE_IDS,
-    CONF_STOP_ID,
+    CONF_STOP_IDS,
     CONF_STOP_NAME,
     DOMAIN,
     ISSUE_STOP_MISSING,
@@ -121,7 +122,7 @@ class StaticCoordinator(DataUpdateCoordinator[TransitFeedHandle]):
         """Raise or clear repair issues for stops missing from the dataset."""
         for subentry_id, subentry in stop_subentries(self.config_entry).items():
             issue_id = f"{ISSUE_STOP_MISSING}_{subentry_id}"
-            if subentry.data[CONF_STOP_ID] in self.stop_ids:
+            if self.stop_ids.intersection(subentry.data[CONF_STOP_IDS]):
                 ir.async_delete_issue(self.hass, DOMAIN, issue_id)
             else:
                 ir.async_create_issue(
@@ -183,7 +184,11 @@ class ArrivalsCoordinator(DataUpdateCoordinator[dict[str, list[StopArrival]]]):
         if not subentries:
             return {}
         all_stop_ids = sorted(
-            {subentry.data[CONF_STOP_ID] for subentry in subentries.values()}
+            {
+                stop_id
+                for subentry in subentries.values()
+                for stop_id in subentry.data[CONF_STOP_IDS]
+            }
         )
         try:
             arrivals = await handle.get_arrivals(all_stop_ids)
@@ -205,16 +210,32 @@ class ArrivalsCoordinator(DataUpdateCoordinator[dict[str, list[StopArrival]]]):
         }
 
 
+def _departure_key(arrival: StopArrival) -> datetime:
+    """Sort key: the effective departure time."""
+    departure = arrival.predicted_departure or arrival.scheduled_departure
+    assert departure is not None  # upcoming departures always carry one
+    return departure
+
+
 def _filter_arrivals(
     arrivals: list[StopArrival], subentry: ConfigSubentry
 ) -> list[StopArrival]:
-    """Apply a stop subentry's stop, route, and headsign filters."""
+    """Apply a stop subentry's stop, route, and headsign filters.
+
+    A subentry covers one logical station, which may span several GTFS
+    stops (platforms, direction pairs); their arrivals are merged and
+    sorted by effective departure.
+    """
+    stop_ids: list[str] = subentry.data[CONF_STOP_IDS]
     route_ids: list[str] = subentry.data.get(CONF_ROUTE_IDS) or []
     headsigns: list[str] = subentry.data.get(CONF_HEADSIGNS) or []
-    return [
-        arrival
-        for arrival in arrivals
-        if arrival.stop_id == subentry.data[CONF_STOP_ID]
-        and (not route_ids or arrival.route_id in route_ids)
-        and (not headsigns or arrival.headsign in headsigns)
-    ]
+    return sorted(
+        (
+            arrival
+            for arrival in arrivals
+            if arrival.stop_id in stop_ids
+            and (not route_ids or arrival.route_id in route_ids)
+            and (not headsigns or arrival.headsign in headsigns)
+        ),
+        key=_departure_key,
+    )

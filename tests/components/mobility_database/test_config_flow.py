@@ -27,13 +27,13 @@ from homeassistant.components.mobility_database.const import (
     CONF_REFRESH_TOKEN,
     CONF_ROUTE_IDS,
     CONF_SEARCH_QUERY,
-    CONF_STOP_ID,
+    CONF_STOP_IDS,
     CONF_STOP_NAME,
     DOMAIN,
     SUBENTRY_TYPE_STOP,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_LOCATION, CONF_ZONE
+from homeassistant.const import CONF_API_KEY, CONF_LOCATION, CONF_STOP, CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE,
@@ -42,10 +42,15 @@ from homeassistant.data_entry_flow import (
 
 from .conftest import (
     DATASET,
+    ENTRANCE,
     FEED_ID,
+    PLATFORM_1,
+    PLATFORM_2,
     RT_FEED,
     RT_FEED_ID,
     SEARCH_ITEM,
+    STATION,
+    STOP_2,
     SUBENTRY_ID,
     setup_integration,
 )
@@ -361,7 +366,7 @@ async def test_add_stop_via_zone(
     assert circle.radius_m == 800
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_STOP_ID: "S2"}
+        result["flow_id"], {CONF_STOP: "2nd & spring"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "routes"
@@ -380,10 +385,10 @@ async def test_add_stop_via_zone(
     subentry = next(
         subentry
         for subentry in mock_config_entry.subentries.values()
-        if subentry.unique_id == "S2"
+        if subentry.unique_id == "2nd & spring"
     )
     assert subentry.data == {
-        CONF_STOP_ID: "S2",
+        CONF_STOP_IDS: ["S2"],
         CONF_STOP_NAME: "2nd & Spring",
         CONF_ROUTE_IDS: ["R1"],
         CONF_HEADSIGNS: ["Downtown"],
@@ -415,37 +420,42 @@ async def test_add_stop_via_location(
     assert circle.radius_m == 500
 
 
-@pytest.mark.parametrize(
-    "user_input",
-    [
-        pytest.param({}, id="neither"),
-        pytest.param(
-            {
-                CONF_ZONE: "zone.downtown",
-                CONF_LOCATION: {
-                    "latitude": 34.0,
-                    "longitude": -118.0,
-                    "radius": 100,
-                },
-            },
-            id="both",
-        ),
-    ],
-)
 async def test_add_stop_choose_one_error(
     hass: HomeAssistant,
     mock_feeds_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    user_input: dict,
 ) -> None:
-    """Test exactly one of zone and location must be provided."""
+    """Test submitting neither a zone nor a map area shows an error."""
     await setup_integration(hass, mock_config_entry)
     result = await _start_stop_flow(hass, mock_config_entry)
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], user_input
-    )
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "choose_one"}
+
+
+async def test_add_stop_zone_beats_default_map_area(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_handle: MagicMock,
+) -> None:
+    """Test a picked zone wins over the always-present map suggestion."""
+    await setup_integration(hass, mock_config_entry)
+    hass.states.async_set(
+        "zone.downtown",
+        "0",
+        {"latitude": 34.05, "longitude": -118.25, "radius": 800},
+    )
+    result = await _start_stop_flow(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_ZONE: "zone.downtown",
+            CONF_LOCATION: {"latitude": 34.0, "longitude": -118.0, "radius": 100},
+        },
+    )
+    assert result["step_id"] == "stop"
+    assert mock_handle.stops_in.call_args[0][0].radius_m == 800
 
 
 async def test_add_stop_zone_not_found(
@@ -494,7 +504,7 @@ async def test_add_stop_duplicate_aborts(
         {CONF_LOCATION: {"latitude": 34.05, "longitude": -118.25, "radius": 800}},
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_STOP_ID: "S1"}
+        result["flow_id"], {CONF_STOP: "1st & grand"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -531,14 +541,15 @@ async def test_add_stop_without_routes_or_headsigns(
         {CONF_LOCATION: {"latitude": 34.05, "longitude": -118.25, "radius": 800}},
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_STOP_ID: "S2"}
+        result["flow_id"], {CONF_STOP: "2nd & spring"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentry = next(
         subentry
         for subentry in mock_config_entry.subentries.values()
-        if subentry.unique_id == "S2"
+        if subentry.unique_id == "2nd & spring"
     )
+    assert subentry.data[CONF_STOP_IDS] == ["S2"]
     assert subentry.data[CONF_ROUTE_IDS] == []
     assert subentry.data[CONF_HEADSIGNS] == []
 
@@ -566,7 +577,7 @@ async def test_reconfigure_stop_filters(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     subentry = mock_config_entry.subentries[SUBENTRY_ID]
-    assert subentry.data[CONF_STOP_ID] == "S1"
+    assert subentry.data[CONF_STOP_IDS] == ["S1"]
     assert subentry.data[CONF_ROUTE_IDS] == ["R2"]
     assert subentry.data[CONF_HEADSIGNS] == ["Uptown"]
 
@@ -781,7 +792,7 @@ async def test_add_stop_unloaded_mid_flow(
         {CONF_LOCATION: {"latitude": 34.05, "longitude": -118.25, "radius": 800}},
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_STOP_ID: "S2"}
+        result["flow_id"], {CONF_STOP: "2nd & spring"}
     )
     assert result["step_id"] == "routes"
     if step_input is not None:
@@ -815,3 +826,53 @@ async def test_title_includes_feed_name(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "WMATA Rail"
+
+
+async def test_station_hierarchy_grouped(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_handle: MagicMock,
+) -> None:
+    """Test platforms group under their station and entrances are hidden."""
+    mock_handle.stops_in.return_value = [
+        STATION,
+        PLATFORM_1,
+        PLATFORM_2,
+        ENTRANCE,
+        STOP_2,
+    ]
+    await setup_integration(hass, mock_config_entry)
+    result = await _start_stop_flow(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_LOCATION: {"latitude": 34.05, "longitude": -118.25, "radius": 800}},
+    )
+    assert result["step_id"] == "stop"
+    options = result["data_schema"].schema[CONF_STOP].config["options"]
+    assert options == [
+        {"value": "2nd & spring", "label": "2nd & Spring"},
+        {"value": "ST1", "label": "Metro Center"},
+    ]
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_STOP: "ST1"}
+    )
+    assert result["step_id"] == "routes"
+    mock_handle.routes_serving.assert_any_await("P1")
+    mock_handle.routes_serving.assert_any_await("P2")
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ROUTE_IDS: []}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_HEADSIGNS: []}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.unique_id == "ST1"
+    )
+    assert subentry.data[CONF_STOP_IDS] == ["P1", "P2"]
+    assert subentry.title == "Metro Center"

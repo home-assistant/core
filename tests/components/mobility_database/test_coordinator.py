@@ -11,7 +11,7 @@ import pytest
 from homeassistant.components.mobility_database.const import (
     CONF_HEADSIGNS,
     CONF_ROUTE_IDS,
-    CONF_STOP_ID,
+    CONF_STOP_IDS,
     CONF_STOP_NAME,
     DOMAIN,
     ISSUE_STOP_MISSING,
@@ -38,7 +38,7 @@ NEXT_S2 = "sensor.2nd_spring_next_departure"
 
 SECOND_STOP_SUBENTRY = ConfigSubentryDataWithId(
     data={
-        CONF_STOP_ID: "S2",
+        CONF_STOP_IDS: ["S2"],
         CONF_STOP_NAME: "2nd & Spring",
         CONF_ROUTE_IDS: [],
         CONF_HEADSIGNS: [],
@@ -46,7 +46,7 @@ SECOND_STOP_SUBENTRY = ConfigSubentryDataWithId(
     subentry_id="stop_subentry_2",
     subentry_type=SUBENTRY_TYPE_STOP,
     title="2nd & Spring",
-    unique_id="S2",
+    unique_id="2nd & spring",
 )
 
 
@@ -64,7 +64,7 @@ async def test_arrivals_batched_across_stops(
         subentries_data=[
             ConfigSubentryDataWithId(
                 data={
-                    CONF_STOP_ID: "S1",
+                    CONF_STOP_IDS: ["S1"],
                     CONF_STOP_NAME: "1st & Grand",
                     CONF_ROUTE_IDS: [],
                     CONF_HEADSIGNS: [],
@@ -72,7 +72,7 @@ async def test_arrivals_batched_across_stops(
                 subentry_id=SUBENTRY_ID,
                 subentry_type=SUBENTRY_TYPE_STOP,
                 title="1st & Grand",
-                unique_id="S1",
+                unique_id="1st & grand",
             ),
             SECOND_STOP_SUBENTRY,
         ],
@@ -138,7 +138,7 @@ async def test_route_and_headsign_filters(
         subentries_data=[
             ConfigSubentryDataWithId(
                 data={
-                    CONF_STOP_ID: "S1",
+                    CONF_STOP_IDS: ["S1"],
                     CONF_STOP_NAME: "1st & Grand",
                     CONF_ROUTE_IDS: ["R2"],
                     CONF_HEADSIGNS: ["Uptown"],
@@ -146,7 +146,7 @@ async def test_route_and_headsign_filters(
                 subentry_id=SUBENTRY_ID,
                 subentry_type=SUBENTRY_TYPE_STOP,
                 title="1st & Grand",
-                unique_id="S1",
+                unique_id="1st & grand",
             )
         ],
     )

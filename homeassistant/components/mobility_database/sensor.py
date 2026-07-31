@@ -16,7 +16,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_FEED_ID, CONF_STOP_ID, CONF_STOP_NAME, DOMAIN
+from .const import CONF_FEED_ID, CONF_STOP_IDS, CONF_STOP_NAME, DOMAIN
 from .coordinator import (
     ArrivalsCoordinator,
     MobilityDatabaseConfigEntry,
@@ -67,7 +67,7 @@ class MobilityDatabaseDepartureSensor(
         self._attr_unique_id = f"{subentry.subentry_id}_departure_{index}"
         feed_id: str = coordinator.config_entry.data[CONF_FEED_ID]
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{feed_id}_{subentry.data[CONF_STOP_ID]}")},
+            identifiers={(DOMAIN, f"{feed_id}_{subentry.unique_id}")},
             name=subentry.data[CONF_STOP_NAME],
             manufacturer=coordinator.config_entry.title,
             model="Transit stop",
@@ -83,10 +83,10 @@ class MobilityDatabaseDepartureSensor(
     @override
     def available(self) -> bool:
         """Unavailable when the stop is gone from the current dataset."""
-        return (
-            super().available
-            and self._subentry.data[CONF_STOP_ID]
-            in self.coordinator.static_coordinator.stop_ids
+        return super().available and bool(
+            self.coordinator.static_coordinator.stop_ids.intersection(
+                self._subentry.data[CONF_STOP_IDS]
+            )
         )
 
     @property

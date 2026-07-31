@@ -3,7 +3,8 @@
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any, override
+from statistics import median
+from typing import Any, NamedTuple, override
 
 from aiomobilitydatabase import (
     DataType,
@@ -18,6 +19,7 @@ from aiomobilitydatabase.feeds import (
     MobilityFeedsClient,
     MobilityFeedsError,
     StaticBuildProgress,
+    Stop,
     TransitFeedHandle,
 )
 import voluptuous as vol
@@ -32,7 +34,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LOCATION, CONF_ZONE
+from homeassistant.const import CONF_API_KEY, CONF_LOCATION, CONF_STOP, CONF_ZONE
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -56,7 +58,7 @@ from .const import (
     CONF_REFRESH_TOKEN,
     CONF_ROUTE_IDS,
     CONF_SEARCH_QUERY,
-    CONF_STOP_ID,
+    CONF_STOP_IDS,
     CONF_STOP_NAME,
     DOMAIN,
     SUBENTRY_TYPE_STOP,
@@ -86,18 +88,51 @@ API_KEY_SCHEMA = vol.Schema(
 def _coverage_center(handle: TransitFeedHandle) -> dict[str, float] | None:
     """Return the center of the feed's stops for the map picker.
 
-    Computed from the indexed stops rather than catalog metadata: the
-    catalog's dataset bounding box is unpopulated for many feeds.
+    Computed from the indexed stops rather than catalog metadata (the
+    catalog's dataset bounding box is unpopulated for many feeds), using the
+    median so outlying suburban stops don't drag the center away from the
+    system's core.
     """
     latitudes = [stop.latitude for stop in handle.stops if stop.latitude is not None]
     longitudes = [stop.longitude for stop in handle.stops if stop.longitude is not None]
     if not latitudes or not longitudes:
         return None
     return {
-        "latitude": (min(latitudes) + max(latitudes)) / 2,
-        "longitude": (min(longitudes) + max(longitudes)) / 2,
+        "latitude": median(latitudes),
+        "longitude": median(longitudes),
         "radius": 1000,
     }
+
+
+class _StationGroup(NamedTuple):
+    name: str
+    stop_ids: list[str]
+
+
+def _station_groups(stops: list[Stop]) -> dict[str, _StationGroup]:
+    """Group boarding stops into logical stations for the picker.
+
+    GTFS models stations as hierarchies: platforms (location_type 0) link to
+    a parent station (1), while entrances (2) and pathway nodes are never
+    boarding stops. Stops sharing a parent station — or, without one, an
+    identical name (for example direction pairs at an intersection) — are
+    offered as a single choice covering all their stop ids.
+    """
+    stations = {stop.id: stop for stop in stops if stop.location_type == 1}
+    groups: dict[str, _StationGroup] = {}
+    for stop in stops:
+        if stop.location_type not in (None, 0):
+            continue
+        if stop.parent_station:
+            key = stop.parent_station
+            station = stations.get(stop.parent_station)
+            name = (station.name if station else None) or stop.name or key
+        else:
+            name = stop.name or stop.id
+            key = name.casefold()
+        group = groups.setdefault(key, _StationGroup(name, []))
+        group.stop_ids.append(stop.id)
+    return dict(sorted(groups.items(), key=lambda item: item[1].name))
 
 
 def _auth_info_url(rt_feeds: list[GtfsRtFeed], feed_id: str) -> str | None:
@@ -427,10 +462,11 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
-        self._stop_id: str | None = None
+        self._group_key: str | None = None
+        self._stop_ids: list[str] = []
         self._stop_name: str | None = None
         self._route_ids: list[str] = []
-        self._stop_names: dict[str, str] = {}
+        self._groups: dict[str, _StationGroup] = {}
 
     def _get_handle(self) -> TransitFeedHandle | None:
         """Return the entry's transit feed handle, or None if not ready."""
@@ -447,12 +483,10 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="not_ready")
         errors: dict[str, str] = {}
         if user_input is not None:
-            zone_entity: str | None = user_input.get(CONF_ZONE)
-            location: dict[str, Any] | None = user_input.get(CONF_LOCATION)
             circle: Circle | None = None
-            if (zone_entity is None) == (location is None):
-                errors["base"] = "choose_one"
-            elif zone_entity is not None:
+            # The map area always carries a (suggested) value, so a picked
+            # zone takes precedence over it.
+            if zone_entity := user_input.get(CONF_ZONE):
                 if (state := self.hass.states.get(zone_entity)) is None:
                     errors["base"] = "zone_not_found"
                 else:
@@ -461,19 +495,17 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
                         longitude=state.attributes["longitude"],
                         radius_m=state.attributes["radius"],
                     )
-            else:
-                assert location is not None
+            elif location := user_input.get(CONF_LOCATION):
                 circle = Circle(
                     latitude=location["latitude"],
                     longitude=location["longitude"],
                     radius_m=location.get("radius") or 1000,
                 )
+            else:
+                errors["base"] = "choose_one"
             if circle is not None:
-                if stops := handle.stops_in(circle):
-                    self._stop_names = {
-                        stop.id: stop.name or stop.id
-                        for stop in sorted(stops, key=lambda stop: stop.name or stop.id)
-                    }
+                if groups := _station_groups(handle.stops_in(circle)):
+                    self._groups = groups
                     return await self.async_step_stop()
                 errors["base"] = "no_stops_in_zone"
         schema = vol.Schema(
@@ -497,24 +529,24 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Pick a stop from those inside the search area."""
         if user_input is not None:
-            stop_id: str = user_input[CONF_STOP_ID]
+            group_key: str = user_input[CONF_STOP]
             for subentry in self._get_entry().subentries.values():
-                if subentry.unique_id == stop_id:
+                if subentry.unique_id == group_key:
                     return self.async_abort(reason="already_configured")
-            self._stop_id = stop_id
-            self._stop_name = self._stop_names[stop_id]
+            group = self._groups[group_key]
+            self._group_key = group_key
+            self._stop_name = group.name
+            self._stop_ids = group.stop_ids
             return await self.async_step_routes()
         return self.async_show_form(
             step_id="stop",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_STOP_ID): SelectSelector(
+                    vol.Required(CONF_STOP): SelectSelector(
                         SelectSelectorConfig(
                             options=[
-                                SelectOptionDict(
-                                    value=stop_id, label=f"{name} ({stop_id})"
-                                )
-                                for stop_id, name in self._stop_names.items()
+                                SelectOptionDict(value=group_key, label=group.name)
+                                for group_key, group in self._groups.items()
                             ],
                             mode=SelectSelectorMode.DROPDOWN,
                         )
@@ -529,11 +561,16 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         """Optionally filter to specific routes serving the stop."""
         if (handle := self._get_handle()) is None:
             return self.async_abort(reason="not_ready")
-        assert self._stop_id is not None
+        assert self._stop_ids
         if user_input is not None:
             self._route_ids = user_input.get(CONF_ROUTE_IDS, [])
             return await self.async_step_headsigns()
-        routes = await handle.routes_serving(self._stop_id)
+        routes_by_id = {
+            route.id: route
+            for stop_id in self._stop_ids
+            for route in await handle.routes_serving(stop_id)
+        }
+        routes = sorted(routes_by_id.values(), key=lambda route: route.display_name)
         if not routes:
             return await self.async_step_headsigns()
         return self.async_show_form(
@@ -564,21 +601,18 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         """Optionally filter to specific headsigns, then finish."""
         if (handle := self._get_handle()) is None:
             return self.async_abort(reason="not_ready")
-        assert self._stop_id is not None
+        assert self._stop_ids
         if user_input is not None:
             return self._async_finish(user_input.get(CONF_HEADSIGNS, []))
-        if self._route_ids:
-            headsigns = sorted(
-                {
-                    headsign
-                    for route_id in self._route_ids
-                    for headsign in await handle.headsigns_serving(
-                        self._stop_id, route_id
-                    )
-                }
-            )
-        else:
-            headsigns = await handle.headsigns_serving(self._stop_id)
+        route_ids: list[str | None] = list(self._route_ids) or [None]
+        headsigns = sorted(
+            {
+                headsign
+                for stop_id in self._stop_ids
+                for route_id in route_ids
+                for headsign in await handle.headsigns_serving(stop_id, route_id)
+            }
+        )
         if not headsigns:
             return self._async_finish([])
         return self.async_show_form(
@@ -598,7 +632,6 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
 
     @callback
     def _async_finish(self, headsigns: list[str]) -> SubentryFlowResult:
-        assert self._stop_id is not None
         assert self._stop_name is not None
         if self.source == SOURCE_RECONFIGURE:
             # The entry's update listener reloads; must not reload here too.
@@ -610,15 +643,16 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
                     CONF_HEADSIGNS: headsigns,
                 },
             )
+        assert self._group_key is not None
         return self.async_create_entry(
             title=self._stop_name,
             data={
-                CONF_STOP_ID: self._stop_id,
+                CONF_STOP_IDS: self._stop_ids,
                 CONF_STOP_NAME: self._stop_name,
                 CONF_ROUTE_IDS: self._route_ids,
                 CONF_HEADSIGNS: headsigns,
             },
-            unique_id=self._stop_id,
+            unique_id=self._group_key,
         )
 
     async def async_step_reconfigure(
@@ -626,7 +660,7 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Reconfigure the route and headsign filters for an existing stop."""
         subentry: ConfigSubentry = self._get_reconfigure_subentry()
-        self._stop_id = subentry.data[CONF_STOP_ID]
+        self._stop_ids = list(subentry.data[CONF_STOP_IDS])
         self._stop_name = subentry.data[CONF_STOP_NAME]
         self._route_ids = list(subentry.data.get(CONF_ROUTE_IDS) or [])
         return await self.async_step_routes()

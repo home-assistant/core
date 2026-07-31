@@ -25,7 +25,7 @@ from homeassistant.components.mobility_database.const import (
     CONF_HEADSIGNS,
     CONF_REFRESH_TOKEN,
     CONF_ROUTE_IDS,
-    CONF_STOP_ID,
+    CONF_STOP_IDS,
     CONF_STOP_NAME,
     DOMAIN,
     SUBENTRY_TYPE_STOP,
@@ -54,6 +54,38 @@ STOP_2 = Stop(
     longitude=-118.24,
     parent_station=None,
     location_type=0,
+)
+STATION = Stop(
+    id="ST1",
+    name="Metro Center",
+    latitude=34.052,
+    longitude=-118.251,
+    parent_station=None,
+    location_type=1,
+)
+PLATFORM_1 = Stop(
+    id="P1",
+    name="Metro Center Platform 1",
+    latitude=34.052,
+    longitude=-118.251,
+    parent_station="ST1",
+    location_type=0,
+)
+PLATFORM_2 = Stop(
+    id="P2",
+    name="Metro Center Platform 2",
+    latitude=34.052,
+    longitude=-118.251,
+    parent_station="ST1",
+    location_type=0,
+)
+ENTRANCE = Stop(
+    id="E1",
+    name="Metro Center Entrance",
+    latitude=34.052,
+    longitude=-118.251,
+    parent_station="ST1",
+    location_type=2,
 )
 ROUTE_A = Route(id="R1", short_name="A", long_name="Downtown Loop", type=3)
 ROUTE_B = Route(id="R2", short_name="B", long_name="Crosstown", type=3)
@@ -196,7 +228,7 @@ def mock_config_entry() -> MockConfigEntry:
         subentries_data=[
             ConfigSubentryDataWithId(
                 data={
-                    CONF_STOP_ID: "S1",
+                    CONF_STOP_IDS: ["S1"],
                     CONF_STOP_NAME: "1st & Grand",
                     CONF_ROUTE_IDS: [],
                     CONF_HEADSIGNS: [],
@@ -204,7 +236,7 @@ def mock_config_entry() -> MockConfigEntry:
                 subentry_id=SUBENTRY_ID,
                 subentry_type=SUBENTRY_TYPE_STOP,
                 title="1st & Grand",
-                unique_id="S1",
+                unique_id="1st & grand",
             )
         ],
     )
