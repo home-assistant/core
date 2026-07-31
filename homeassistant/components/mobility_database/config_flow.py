@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Mapping
 import logging
 from statistics import median
-from typing import Any, NamedTuple, override
+from typing import Any, override
 
 from aiomobilitydatabase import (
     DataType,
@@ -19,7 +19,7 @@ from aiomobilitydatabase.feeds import (
     MobilityFeedsClient,
     MobilityFeedsError,
     StaticBuildProgress,
-    Stop,
+    StationGroup,
     TransitFeedHandle,
 )
 import voluptuous as vol
@@ -102,37 +102,6 @@ def _coverage_center(handle: TransitFeedHandle) -> dict[str, float] | None:
         "longitude": median(longitudes),
         "radius": 1000,
     }
-
-
-class _StationGroup(NamedTuple):
-    name: str
-    stop_ids: list[str]
-
-
-def _station_groups(stops: list[Stop]) -> dict[str, _StationGroup]:
-    """Group boarding stops into logical stations for the picker.
-
-    GTFS models stations as hierarchies: platforms (location_type 0) link to
-    a parent station (1), while entrances (2) and pathway nodes are never
-    boarding stops. Stops sharing a parent station — or, without one, an
-    identical name (for example direction pairs at an intersection) — are
-    offered as a single choice covering all their stop ids.
-    """
-    stations = {stop.id: stop for stop in stops if stop.location_type == 1}
-    groups: dict[str, _StationGroup] = {}
-    for stop in stops:
-        if stop.location_type not in (None, 0):
-            continue
-        if stop.parent_station:
-            key = stop.parent_station
-            station = stations.get(stop.parent_station)
-            name = (station.name if station else None) or stop.name or key
-        else:
-            name = stop.name or stop.id
-            key = name.casefold()
-        group = groups.setdefault(key, _StationGroup(name, []))
-        group.stop_ids.append(stop.id)
-    return dict(sorted(groups.items(), key=lambda item: item[1].name))
 
 
 def _auth_info_url(rt_feeds: list[GtfsRtFeed], feed_id: str) -> str | None:
@@ -499,7 +468,7 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         self._stop_ids: list[str] = []
         self._stop_name: str | None = None
         self._route_ids: list[str] = []
-        self._groups: dict[str, _StationGroup] = {}
+        self._groups: dict[str, StationGroup] = {}
 
     def _get_handle(self) -> TransitFeedHandle | None:
         """Return the entry's transit feed handle, or None if not ready."""
@@ -537,8 +506,8 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
             else:
                 errors["base"] = "choose_one"
             if circle is not None:
-                if groups := _station_groups(handle.stops_in(circle)):
-                    self._groups = groups
+                if groups := handle.stations_in(circle):
+                    self._groups = {group.id: group for group in groups}
                     return await self.async_step_stop()
                 errors["base"] = "no_stops_in_zone"
         schema = vol.Schema(
@@ -569,7 +538,7 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
             group = self._groups[group_key]
             self._group_key = group_key
             self._stop_name = group.name
-            self._stop_ids = group.stop_ids
+            self._stop_ids = list(group.stop_ids)
             return await self.async_step_routes()
         return self.async_show_form(
             step_id="stop",

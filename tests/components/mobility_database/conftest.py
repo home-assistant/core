@@ -17,7 +17,7 @@ from aiomobilitydatabase import (
     SearchResults,
     SourceInfo,
 )
-from aiomobilitydatabase.feeds import Route, Stop, StopArrival
+from aiomobilitydatabase.feeds import Route, StationGroup, Stop, StopArrival
 import pytest
 
 from homeassistant.components.mobility_database.const import (
@@ -54,38 +54,6 @@ STOP_2 = Stop(
     longitude=-118.24,
     parent_station=None,
     location_type=0,
-)
-STATION = Stop(
-    id="ST1",
-    name="Metro Center",
-    latitude=34.052,
-    longitude=-118.251,
-    parent_station=None,
-    location_type=1,
-)
-PLATFORM_1 = Stop(
-    id="P1",
-    name="Metro Center Platform 1",
-    latitude=34.052,
-    longitude=-118.251,
-    parent_station="ST1",
-    location_type=0,
-)
-PLATFORM_2 = Stop(
-    id="P2",
-    name="Metro Center Platform 2",
-    latitude=34.052,
-    longitude=-118.251,
-    parent_station="ST1",
-    location_type=0,
-)
-ENTRANCE = Stop(
-    id="E1",
-    name="Metro Center Entrance",
-    latitude=34.052,
-    longitude=-118.251,
-    parent_station="ST1",
-    location_type=2,
 )
 ROUTE_A = Route(id="R1", short_name="A", long_name="Downtown Loop", type=3)
 ROUTE_B = Route(id="R2", short_name="B", long_name="Crosstown", type=3)
@@ -176,6 +144,12 @@ def mock_handle() -> MagicMock:
     handle.routes = [ROUTE_A, ROUTE_B]
     handle.rt_feeds = [RT_FEED]
     handle.stops_in = MagicMock(return_value=[STOP_1, STOP_2])
+    handle.stations_in = MagicMock(
+        return_value=[
+            StationGroup(id="1st & grand", name="1st & Grand", stop_ids=("S1",)),
+            StationGroup(id="2nd & spring", name="2nd & Spring", stop_ids=("S2",)),
+        ]
+    )
     handle.routes_serving = AsyncMock(return_value=[ROUTE_A, ROUTE_B])
     handle.headsigns_serving = AsyncMock(return_value=["Downtown", "Uptown"])
     handle.get_arrivals = AsyncMock(return_value=list(ARRIVALS))

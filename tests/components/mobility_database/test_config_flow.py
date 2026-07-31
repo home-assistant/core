@@ -17,6 +17,7 @@ from aiomobilitydatabase import (
 from aiomobilitydatabase.feeds import (
     StaticBuildProgress,
     StaticDataUnavailableError,
+    StationGroup,
     Stop,
 )
 import pytest
@@ -42,15 +43,10 @@ from homeassistant.data_entry_flow import (
 
 from .conftest import (
     DATASET,
-    ENTRANCE,
     FEED_ID,
-    PLATFORM_1,
-    PLATFORM_2,
     RT_FEED,
     RT_FEED_ID,
     SEARCH_ITEM,
-    STATION,
-    STOP_2,
     SUBENTRY_ID,
     setup_integration,
 )
@@ -390,7 +386,7 @@ async def test_add_stop_via_zone(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "stop"
-    circle = mock_handle.stops_in.call_args[0][0]
+    circle = mock_handle.stations_in.call_args[0][0]
     assert circle.latitude == 34.05
     assert circle.radius_m == 800
 
@@ -445,7 +441,7 @@ async def test_add_stop_via_location(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "stop"
-    circle = mock_handle.stops_in.call_args[0][0]
+    circle = mock_handle.stations_in.call_args[0][0]
     assert circle.radius_m == 500
 
 
@@ -484,7 +480,7 @@ async def test_add_stop_zone_beats_default_map_area(
         },
     )
     assert result["step_id"] == "stop"
-    assert mock_handle.stops_in.call_args[0][0].radius_m == 800
+    assert mock_handle.stations_in.call_args[0][0].radius_m == 800
 
 
 async def test_add_stop_zone_not_found(
@@ -510,7 +506,7 @@ async def test_add_stop_no_stops_in_zone(
 ) -> None:
     """Test an empty search area shows an error."""
     await setup_integration(hass, mock_config_entry)
-    mock_handle.stops_in.return_value = []
+    mock_handle.stations_in.return_value = []
     result = await _start_stop_flow(hass, mock_config_entry)
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -863,13 +859,10 @@ async def test_station_hierarchy_grouped(
     mock_config_entry: MockConfigEntry,
     mock_handle: MagicMock,
 ) -> None:
-    """Test platforms group under their station and entrances are hidden."""
-    mock_handle.stops_in.return_value = [
-        STATION,
-        PLATFORM_1,
-        PLATFORM_2,
-        ENTRANCE,
-        STOP_2,
+    """Test a multi-platform station is offered and stored as one stop."""
+    mock_handle.stations_in.return_value = [
+        StationGroup(id="2nd & spring", name="2nd & Spring", stop_ids=("S2",)),
+        StationGroup(id="ST1", name="Metro Center", stop_ids=("P1", "P2")),
     ]
     await setup_integration(hass, mock_config_entry)
     result = await _start_stop_flow(hass, mock_config_entry)
