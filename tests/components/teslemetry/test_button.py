@@ -70,7 +70,7 @@ async def test_insufficient_credits(
             "tesla_fleet_api.teslemetry.Vehicle.wake_up",
             side_effect=InsufficientCredits,
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as error,
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -78,6 +78,11 @@ async def test_insufficient_credits(
             {ATTR_ENTITY_ID: ["button.test_wake"]},
             blocking=True,
         )
+
+    # Assert the specific insufficient_credits error, not the generic
+    # command_exception fallthrough, so the user-facing message cannot regress.
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "insufficient_credits"
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
 

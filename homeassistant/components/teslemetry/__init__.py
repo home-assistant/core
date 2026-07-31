@@ -552,10 +552,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Unload Teslemetry Config."""
-    # The repair issue is not tied to the config entry, so clear it here (this
-    # also runs on removal) once the credits stream listener is gone.
-    ir.async_delete_issue(hass, DOMAIN, insufficient_credits_issue_id(entry))
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        # The repair issue is not tied to the config entry, so clear it here (this
+        # also runs on removal) once the entry has actually unloaded. Gate on a
+        # successful unload so a FAILED_UNLOAD entry keeps its still-relevant repair.
+        ir.async_delete_issue(hass, DOMAIN, insufficient_credits_issue_id(entry))
+    return unload_ok
 
 
 async def async_migrate_entry(

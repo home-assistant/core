@@ -325,6 +325,37 @@ async def test_insufficient_credits_cleared_on_unload(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
+async def test_insufficient_credits_kept_on_failed_unload(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the insufficient credits issue survives a failed platform unload."""
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    issue_id = f"insufficient_credits_{entry.entry_id}"
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="insufficient_credits",
+        translation_placeholders={"credits_url": CREDITS_URL},
+    )
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=False,
+    ):
+        assert not await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
 async def test_no_live_status(
     hass: HomeAssistant,
     mock_live_status: AsyncMock,
