@@ -186,8 +186,12 @@ class FibaroController:
             identifiers={(DOMAIN, main_device.fibaro_id)},
             manufacturer=manufacturer,
             name=main_device.name,
-            via_device=(DOMAIN, self.hub_serial),
         )
+
+    def link_main_devices_to_hub(self, via_device_id: str) -> None:
+        """Link all main devices to the hub via device."""
+        for device_info in self._device_infos.values():
+            device_info["via_device_id"] = via_device_id
 
     def get_device_info(self, device: DeviceModel) -> DeviceInfo:
         """Get the device info by fibaro device id."""
@@ -331,6 +335,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bo
         sw_version=fibaro_info.current_version,
         configuration_url=controller.get_frontend_url(),
         connections={(dr.CONNECTION_NETWORK_MAC, fibaro_info.mac_address)},
+    )
+    controller.link_main_devices_to_hub(
+        dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, controller.hub_serial), config_entry_id=entry.entry_id
+        )
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
