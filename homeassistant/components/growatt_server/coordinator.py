@@ -593,6 +593,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="mix_settings_read_failed",
+                translation_placeholders={"error": str(err)},
             ) from err
         # obj/mixBean can be absent or null on a failure payload; `or {}` handles both.
         settings = (response.get("obj") or {}).get("mixBean") or {}
@@ -600,6 +601,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="mix_settings_empty",
+                translation_placeholders={"response": str(response)},
             )
         return settings
 
