@@ -38,6 +38,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -140,7 +141,6 @@ async def async_setup_entry(
         max_sub_interval = None
 
     derivative_sensor = DerivativeSensor(
-        hass,
         name=config_entry.title,
         round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
         source_entity=source_entity_id,
@@ -150,6 +150,7 @@ async def async_setup_entry(
         unit_prefix=config_entry.options.get(CONF_UNIT_PREFIX),
         unit_time=config_entry.options[CONF_UNIT_TIME],
         max_sub_interval=max_sub_interval,
+        device=async_entity_id_to_device(hass, source_entity_id),
     )
 
     async_add_entities([derivative_sensor])
@@ -165,7 +166,6 @@ async def async_setup_platform(
     await async_setup_reload_service(hass, DOMAIN, [Platform.SENSOR])
 
     derivative = DerivativeSensor(
-        hass,
         name=config.get(CONF_NAME),
         round_digits=config[CONF_ROUND_DIGITS],
         source_entity=config[CONF_SOURCE],
@@ -189,7 +189,6 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         *,
         name: str | None,
         round_digits: int,
@@ -200,13 +199,11 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         unit_time: UnitOfTime,
         max_sub_interval: timedelta | None,
         unique_id: str | None,
+        device: DeviceEntry | None = None,
     ) -> None:
         """Initialize the derivative sensor."""
         self._attr_unique_id = unique_id
-        self.device_entry = async_entity_id_to_device(
-            hass,
-            source_entity,
-        )
+        self.device_entry = device
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._attr_native_value = round(Decimal(0), round_digits)

@@ -1239,24 +1239,25 @@ class ConfigEntry[_DataT = Any]:
                 if job := self._on_unload.pop()():
                     self.async_create_task(hass, job, eager_start=True)
 
-        if not self._tasks and not self._background_tasks:
-            return
+        if self._tasks or self._background_tasks:
+            cancel_message = f"Config entry {self.title} with {self.domain} unloading"
+            for task in self._background_tasks:
+                task.cancel(cancel_message)
 
-        cancel_message = f"Config entry {self.title} with {self.domain} unloading"
-        for task in self._background_tasks:
-            task.cancel(cancel_message)
-
-        _, pending = await asyncio.wait(
-            [*self._tasks, *self._background_tasks], timeout=10
-        )
-
-        for task in pending:
-            self.logger.warning(
-                "Unloading %s (%s) config entry. Task %s did not complete in time",
-                self.title,
-                self.domain,
-                task,
+            _, pending = await asyncio.wait(
+                [*self._tasks, *self._background_tasks], timeout=10
             )
+
+            for task in pending:
+                self.logger.warning(
+                    "Unloading %s (%s) config entry. Task %s did not complete in time",
+                    self.title,
+                    self.domain,
+                    task,
+                )
+
+        if (dev_reg := hass.data.get(dr.DATA_REGISTRY)) is not None:
+            dev_reg.async_config_entry_unloaded(self.entry_id)
 
     @callback
     def async_on_state_change(self, func: CALLBACK_TYPE) -> CALLBACK_TYPE:
@@ -2540,7 +2541,7 @@ class ConfigEntries:
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         version: int | UndefinedType = UNDEFINED,
     ) -> bool:
         """Update a config entry.
@@ -2579,7 +2580,7 @@ class ConfigEntries:
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
         subentries: dict[str, ConfigSubentry] | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         version: int | UndefinedType = UNDEFINED,
     ) -> bool:
         """Update a config entry.
@@ -2706,7 +2707,7 @@ class ConfigEntries:
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
     ) -> bool:
         """Update a config subentry.
 
@@ -3460,7 +3461,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | None | UndefinedType,
+        unique_id: str | UndefinedType | None,
         title: str | UndefinedType,
         data: Mapping[str, Any] | UndefinedType,
         data_updates: Mapping[str, Any] | UndefinedType,
@@ -3489,7 +3490,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
@@ -3531,7 +3532,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
@@ -3770,7 +3771,7 @@ class ConfigSubentryFlow(
         entry: ConfigEntry,
         subentry: ConfigSubentry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
@@ -3799,7 +3800,7 @@ class ConfigSubentryFlow(
         entry: ConfigEntry,
         subentry: ConfigSubentry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
@@ -3828,7 +3829,7 @@ class ConfigSubentryFlow(
         entry: ConfigEntry,
         subentry: ConfigSubentry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
