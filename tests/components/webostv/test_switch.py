@@ -1,0 +1,153 @@
+"""Tests for LG webOS TV switch platform."""
+
+from unittest.mock import AsyncMock
+
+from aiowebostv import WebOsTvCommandError
+import pytest
+
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.webostv.const import DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
+
+from . import setup_webostv
+from .const import FAKE_UUID
+
+SWITCH_ENTITY_ID = f"{SWITCH_DOMAIN}.lg_webos_tv_model_screen"
+
+
+async def test_screen_switch_setup(
+    hass: HomeAssistant,
+    client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test setup of LG webOS TV screen switch."""
+    await setup_webostv(hass)
+
+    entry = entity_registry.async_get(SWITCH_ENTITY_ID)
+    assert entry is not None
+    assert entry.unique_id == f"{FAKE_UUID}_screen"
+
+    state = hass.states.get(SWITCH_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+async def test_screen_switch_state_updates(
+    hass: HomeAssistant,
+    client: AsyncMock,
+) -> None:
+    """Test screen switch state updates from client."""
+    await setup_webostv(hass)
+
+    state = hass.states.get(SWITCH_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    client.tv_state.is_screen_on = True
+    await client.mock_state_update()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SWITCH_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    client.tv_state.is_on = False
+    client.tv_state.is_screen_on = False
+    await client.mock_state_update()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SWITCH_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+async def test_screen_switch_command_device_off(
+    hass: HomeAssistant,
+    client: AsyncMock,
+    service: str,
+) -> None:
+    """Test commands raise a translated error while the TV is off."""
+    await setup_webostv(hass)
+
+    client.tv_state.is_on = False
+    client.tv_state.is_screen_on = False
+    await client.mock_state_update()
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "device_off"
+    client.request.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("service", "expected_request"),
+    [
+        pytest.param(
+            SERVICE_TURN_ON,
+            "com.webos.service.tvpower/power/turnOnScreen",
+            id="turn_on",
+        ),
+        pytest.param(
+            SERVICE_TURN_OFF,
+            "com.webos.service.tvpower/power/turnOffScreen",
+            id="turn_off",
+        ),
+    ],
+)
+async def test_screen_switch_commands(
+    hass: HomeAssistant,
+    client: AsyncMock,
+    service: str,
+    expected_request: str,
+) -> None:
+    """Test the screen switch sends the matching webOS request."""
+    await setup_webostv(hass)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        blocking=True,
+    )
+
+    client.request.assert_called_once_with(expected_request)
+
+
+@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+async def test_screen_switch_command_error(
+    hass: HomeAssistant,
+    client: AsyncMock,
+    service: str,
+) -> None:
+    """Test a failing screen command raises a translated error."""
+    await setup_webostv(hass)
+    client.request.side_effect = WebOsTvCommandError("Communication error")
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "communication_error"

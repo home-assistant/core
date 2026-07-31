@@ -45,6 +45,13 @@
       "webostv.turn_on": "Device is requested to turn on"
     }
   },
+  "entity": {
+    "switch": {
+      "screen": {
+        "name": "Screen"
+      }
+    }
+  },
   "exceptions": {
     "auth_failed": {
       "message": "Pairing for {device} failed, make sure to accept the pairing request on your TV."
