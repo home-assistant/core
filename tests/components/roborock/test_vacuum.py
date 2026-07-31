@@ -1,12 +1,15 @@
 """Tests for Roborock vacuums."""
 
+import asyncio
 from datetime import timedelta
+from types import SimpleNamespace
 from typing import Any
-from unittest.mock import Mock, call
+from unittest.mock import AsyncMock, Mock, call
 
 import pytest
 from roborock import RoborockException
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXFanLevel
+from roborock.map.b01_q10_map_parser import Q10Point
 from roborock.roborock_typing import RoborockCommand
 from syrupy.assertion import SnapshotAssertion
 from vacuum_map_parser_base.map_data import Point
@@ -22,6 +25,7 @@ from homeassistant.components.roborock.services import (
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
     SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
 )
+from homeassistant.components.roborock.vacuum import RoborockQ10Vacuum
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_CLEAN_AREA,
@@ -298,7 +302,6 @@ async def test_goto(
     "entity_id",
     [
         Q7_ENTITY_ID,
-        Q10_ENTITY_ID,
     ],
 )
 async def test_goto_not_supported(
@@ -348,7 +351,6 @@ async def test_zoned_cleaning(
     "entity_id",
     [
         Q7_ENTITY_ID,
-        Q10_ENTITY_ID,
     ],
 )
 async def test_zoned_cleaning_not_supported(
@@ -446,7 +448,6 @@ async def test_get_current_position_no_robot_position(
     "entity_id",
     [
         Q7_ENTITY_ID,
-        Q10_ENTITY_ID,
     ],
 )
 async def test_get_current_position_not_supported(
@@ -907,6 +908,124 @@ def fake_q10_vacuum_api_fixture(
         api.vacuum.clean_segments.side_effect = send_message_exception
         api.command.send.side_effect = send_message_exception
     return api
+
+
+async def test_q10_get_current_position(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q10_vacuum_api: Mock,
+) -> None:
+    """Test returning the Q10 position in common Roborock coordinates."""
+    q10_vacuum_api.map.roborock_position = Q10Point(x=30020, y=28705)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+        {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {Q10_ENTITY_ID: {"x": 30020, "y": 28705}}
+
+
+async def test_q10_get_current_position_not_available(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q10_vacuum_api: Mock,
+) -> None:
+    """Test the Q10 position service before a trace has been received."""
+    q10_vacuum_api.map.roborock_position = None
+
+    with pytest.raises(HomeAssistantError, match="Robot position not found"):
+        await hass.services.async_call(
+            DOMAIN,
+            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+            {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_q10_zoned_cleaning(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q10_vacuum_api: Mock,
+) -> None:
+    """Test that Q10 zoned cleaning uses the native zone task."""
+    await hass.services.async_call(
+        DOMAIN,
+        SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+        {
+            ATTR_ENTITY_ID: Q10_ENTITY_ID,
+            "x1": 28582,
+            "y1": 21363,
+            "x2": 27425,
+            "y2": 22816,
+            "repeats": 1,
+        },
+        blocking=True,
+    )
+
+    assert q10_vacuum_api.vacuum.clean_zone.call_args == call(
+        28582,
+        21363,
+        27425,
+        22816,
+        clean_count=2,
+    )
+
+
+async def test_q10_goto(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q10_vacuum_api: Mock,
+) -> None:
+    """Test that Q10 goto starts a 40 cm zone centered on the target."""
+    q10_vacuum_api.map.roborock_position = Q10Point(x=25500, y=25500)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+        {ATTR_ENTITY_ID: Q10_ENTITY_ID, "x": 29900, "y": 28650},
+        blocking=True,
+    )
+
+    assert q10_vacuum_api.vacuum.clean_zone.call_args == call(
+        29700,
+        28450,
+        30100,
+        28850,
+    )
+
+    # Cancel the background arrival monitor before the test finishes.
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_STOP,
+        {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+        blocking=True,
+    )
+
+
+async def test_q10_goto_monitor_pauses_at_target() -> None:
+    """Test that the goto monitor pauses inside the target tolerance."""
+    pause_clean = AsyncMock()
+    entity = SimpleNamespace(
+        _goto_monitor_task=asyncio.current_task(),
+        coordinator=SimpleNamespace(
+            api=SimpleNamespace(
+                map=SimpleNamespace(
+                    roborock_position=Q10Point(x=30020, y=28705)
+                ),
+                vacuum=SimpleNamespace(pause_clean=pause_clean),
+            )
+        ),
+    )
+
+    await RoborockQ10Vacuum._async_monitor_goto_target(entity, 29900, 28650)
+
+    pause_clean.assert_awaited_once_with()
+    assert entity._goto_monitor_task is None
 
 
 async def test_q10_registry_entries(
