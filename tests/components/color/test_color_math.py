@@ -165,6 +165,8 @@ def test_derive_hs_in_expected_ranges() -> None:
         pytest.param({FIELD_HS: [180]}, id="hs-wrong-length"),
         pytest.param({FIELD_XY: [0.4]}, id="xy-wrong-length"),
         pytest.param({FIELD_XY: [1.5, 0.4]}, id="xy-out-of-range"),
+        pytest.param({FIELD_XY: [0.0, 0.0]}, id="xy-zero-luminance"),
+        pytest.param({FIELD_XY: [0.7, 0.7]}, id="xy-outside-triangle"),
         pytest.param({FIELD_KELVIN: "warmish"}, id="kelvin-not-an-int"),
         pytest.param({FIELD_KELVIN: None}, id="kelvin-none-explicit"),
     ],

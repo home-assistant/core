@@ -7,6 +7,7 @@ any accepted input shape to that canonical form using
 """
 
 from dataclasses import dataclass
+from math import isfinite
 from typing import Any
 
 from homeassistant.util import color as color_util
@@ -76,15 +77,22 @@ def _validate_hs(hs: Any) -> tuple[float, float]:
     return hue, sat
 
 
+def valid_xy(x: float, y: float) -> bool:
+    """Return True if (x, y) is a usable CIE chromaticity.
+
+    y must be strictly positive: xy-to-RGB divides by y, and (0, 0) in
+    particular would render as saturated blue via an epsilon denominator.
+    """
+    return isfinite(x) and isfinite(y) and 0.0 <= x <= 1.0 and y > 0.0 and x + y <= 1.0
+
+
 def _validate_xy(xy: Any) -> tuple[float, float]:
     """Validate a CIE xy chromaticity pair."""
     if not isinstance(xy, (list, tuple)) or len(xy) != 2:
         raise ColorInputError(f"xy_color must be a 2-element sequence, got {xy!r}")
     x, y = float(xy[0]), float(xy[1])
-    # CIE chromaticities live in [0, 1]; we don't gamut-clamp here, only
-    # sanity-check the storage range.
-    if not (0.0 <= x <= 1.0 and 0.0 <= y <= 1.0):
-        raise ColorInputError("xy_color components must be in [0, 1]")
+    if not valid_xy(x, y):
+        raise ColorInputError("xy_color must be inside the CIE chromaticity triangle")
     return x, y
 
 

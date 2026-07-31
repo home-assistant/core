@@ -124,12 +124,17 @@ class ColorConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="chromatic", data_schema=CHROMATIC_SCHEMA
             )
+        initial_color = _coerce_color_input(user_input.get(CONF_INITIAL_COLOR))
+        if initial_color == "#000000":
+            return self.async_show_form(
+                step_id="chromatic",
+                data_schema=CHROMATIC_SCHEMA,
+                errors={CONF_INITIAL_COLOR: "pure_black"},
+            )
         return self._finalize(
             {
                 **self._stash,
-                CONF_INITIAL_COLOR: _coerce_color_input(
-                    user_input.get(CONF_INITIAL_COLOR)
-                ),
+                CONF_INITIAL_COLOR: initial_color,
                 CONF_INITIAL_BRIGHTNESS: user_input.get(CONF_INITIAL_BRIGHTNESS),
             }
         )

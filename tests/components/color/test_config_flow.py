@@ -192,3 +192,28 @@ async def test_flow_chromatic_defaults(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_INITIAL_COLOR] == DEFAULT_HEX
+
+
+async def test_flow_chromatic_rejects_black(hass: HomeAssistant) -> None:
+    """Selecting pure black shows a form error instead of a silent fallback."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_NAME: "Black Color",
+            CONF_INITIAL_MODE: MODE_CHROMATIC,
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_INITIAL_COLOR: [0, 0, 0]}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_INITIAL_COLOR: "pure_black"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_INITIAL_COLOR: [255, 0, 0]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_INITIAL_COLOR] == "#FF0000"

@@ -1,7 +1,6 @@
 """Entity class for the Color helper."""
 
 import logging
-from math import isfinite
 from typing import Any, Self, override
 
 from homeassistant.components import light
@@ -18,6 +17,7 @@ from .color_math import (
     derive_kelvin,
     derive_rgb,
     normalize,
+    valid_xy,
 )
 from .const import (
     ATTR_BRIGHTNESS,
@@ -39,6 +39,8 @@ from .const import (
     FIELD_KELVIN,
     KIND_CHROMATIC,
     KIND_WHITE,
+    MAX_KELVIN,
+    MIN_KELVIN,
     MODE_WHITE,
     STATE_SCHEMA_VERSION,
 )
@@ -78,13 +80,10 @@ class _StoredColor(ExtraStoredData):
     def from_dict(cls, data: dict[str, Any]) -> Self | None:
         """Create stored color data from a dict."""
         try:
+            version = int(data["version"])
             x, y = (float(value) for value in data["xy"])
             kind = str(data["kind"])
-            canonical = CanonicalColor(
-                xy=(x, y),
-                kind=kind,
-                kelvin=int(data["kelvin"]) if data.get("kelvin") is not None else None,
-            )
+            kelvin = int(data["kelvin"]) if data.get("kelvin") is not None else None
             brightness = data.get("brightness")
             if brightness is not None:
                 brightness = int(brightness)
@@ -93,12 +92,20 @@ class _StoredColor(ExtraStoredData):
                 source_hex = str(source_hex)
         except KeyError, TypeError, ValueError:
             return None
-        if not (isfinite(x) and isfinite(y)) or kind not in (
-            KIND_CHROMATIC,
-            KIND_WHITE,
+        if (
+            version != STATE_SCHEMA_VERSION
+            or not valid_xy(x, y)
+            or kind not in (KIND_CHROMATIC, KIND_WHITE)
+            or (
+                kind == KIND_WHITE
+                and (kelvin is None or not MIN_KELVIN <= kelvin <= MAX_KELVIN)
+            )
+            or (brightness is not None and not 0 <= brightness <= 255)
         ):
             return None
-        return cls(canonical, brightness, source_hex)
+        return cls(
+            CanonicalColor(xy=(x, y), kind=kind, kelvin=kelvin), brightness, source_hex
+        )
 
 
 class ColorEntity(RestoreEntity):
