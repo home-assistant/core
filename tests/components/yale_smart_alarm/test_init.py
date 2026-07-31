@@ -2,11 +2,14 @@
 
 from unittest.mock import Mock, patch
 
+import pytest
+
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.yale_smart_alarm.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import ENTRY_CONFIG, OPTIONS_CONFIG
 
@@ -42,6 +45,28 @@ async def test_setup_entry(
 
     await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize("load_platforms", [[Platform.LOCK]])
+async def test_child_devices_linked_to_panel(
+    hass: HomeAssistant,
+    load_config_entry: tuple[MockConfigEntry, Mock],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test child devices link to the alarm panel through via_device_id.
+
+    Only the lock platform is loaded, whose entities never create the panel
+    device themselves, so the link is established solely by the panel being
+    registered at setup.
+    """
+    panel_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, ENTRY_CONFIG["username"])}
+    )
+    assert panel_device is not None
+
+    lock_device = device_registry.async_get_device(identifiers={(DOMAIN, "1111")})
+    assert lock_device is not None
+    assert lock_device.via_device_id == panel_device.id
 
 
 async def test_migrate_entry(
