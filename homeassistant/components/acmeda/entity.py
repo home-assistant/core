@@ -55,5 +55,4 @@ class AcmedaEntity(entity.Entity):
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Rollease Acmeda",
             name=self.roller.name,
-            via_device=(DOMAIN, self.roller.hub.id),
         )

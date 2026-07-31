@@ -47,7 +47,7 @@
   },
   "exceptions": {
     "auth_failed": {
-      "message": "Pairing failed, make sure to accept the pairing request on your TV."
+      "message": "Pairing for {device} failed, make sure to accept the pairing request on your TV."
     },
     "communication_error": {
       "message": "Communication error while calling {func} for device {name}: {error}"
@@ -60,6 +60,9 @@
     },
     "device_off": {
       "message": "Error calling {func} for device {name}: Device is off and cannot be controlled."
+    },
+    "device_unavailable": {
+      "message": "Device {device} is unavailable"
     },
     "invalid_entity_id": {
       "message": "Entity {entity_id} is not a valid webOS TV entity."
