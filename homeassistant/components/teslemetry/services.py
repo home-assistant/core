@@ -142,7 +142,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 lat=call.data[ATTR_GPS][CONF_LATITUDE],
                 lon=call.data[ATTR_GPS][CONF_LONGITUDE],
                 order=call.data.get(ATTR_ORDER, 0),
-            )
+            ),
         )
 
     hass.services.async_register(
