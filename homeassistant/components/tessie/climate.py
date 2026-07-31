@@ -18,12 +18,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_HALVES,
-    PRECISION_WHOLE,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -37,7 +32,6 @@ PARALLEL_UPDATES = 0
 
 # FanOnly currently not supported by upstream library
 COP_MODES = {"Off": HVACMode.OFF, "On": HVACMode.COOL}
-COP_LEVELS = {"Low": 30, "Medium": 35, "High": 40}
 
 
 async def async_setup_entry(
@@ -179,10 +173,6 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
 class TessieCabinOverheatProtectionClimateEntity(TessieEntity, ClimateEntity):
     """Vehicle Cabin Overheat Protection."""
 
-    _attr_precision = PRECISION_WHOLE
-    _attr_target_temperature_step = 5
-    _attr_min_temp = 30
-    _attr_max_temp = 40
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
     _attr_entity_registry_enabled_default = False
@@ -205,20 +195,6 @@ class TessieCabinOverheatProtectionClimateEntity(TessieEntity, ClimateEntity):
         if (state := self._value) is None:
             return None
         return COP_MODES.get(state)
-
-    @property
-    @override
-    def current_temperature(self) -> float | None:
-        """Return the inside temperature."""
-        return self.get("climate_state_inside_temp")
-
-    @property
-    @override
-    def target_temperature(self) -> float | None:
-        """Return the activation temperature."""
-        if (level := self.get("climate_state_cop_activation_temperature")) is None:
-            return None
-        return COP_LEVELS.get(level)
 
     @override
     async def async_turn_on(self) -> None:
