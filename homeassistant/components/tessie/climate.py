@@ -20,11 +20,10 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TessieConfigEntry
-from .const import DOMAIN, TessieClimateKeeper
+from .const import TessieClimateKeeper
 from .entity import TessieEntity
 from .models import TessieVehicleData
 
@@ -215,8 +214,3 @@ class TessieCabinOverheatProtectionClimateEntity(TessieEntity, ClimateEntity):
         elif hvac_mode == HVACMode.COOL:
             await self.run(start_cabin_overheat_protection)
             self.set((self.key, "On"))
-        else:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_cop_mode",
-            )
