@@ -549,9 +549,11 @@ async def test_reload_migration_with_leading_zero_mac(
     assert reloaded_entity_entry is not None
     assert reloaded_entity_entry.unique_id == f"{mac_address_unique_id}-1-zone1"
 
+    # Two devices: the controller (registered at setup) and the migrated zone
+    # device. Neither was duplicated by the reload.
     assert (
         len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
-        == 1
+        == 2
     )
     assert (
         len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
