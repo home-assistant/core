@@ -5,6 +5,7 @@ from ipaddress import IPv4Network, ip_address
 import logging
 import secrets
 import string
+from typing import override
 
 from aiohttp.web_response import Response
 from telegram import Bot, Update
@@ -93,6 +94,7 @@ class PushBot(BaseTelegramBot):
         )
         self.webhook_url = self.base_url + _get_webhook_url(bot)
 
+    @override
     async def shutdown(self) -> None:
         """Shutdown the app."""
         await self.stop_application()

@@ -21,7 +21,7 @@ from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, CoverEntityFeature, CoverState
+from . import DOMAIN, CoverEntityFeature, CoverEntityStateAttribute, CoverState
 
 # mypy: disallow-any-generics
 
@@ -137,9 +137,9 @@ def async_condition_from_config(
         return test_is_state
 
     if config[CONF_TYPE] == "is_position":
-        position_attr = "current_position"
+        position_attr = CoverEntityStateAttribute.CURRENT_POSITION
     if config[CONF_TYPE] == "is_tilt_position":
-        position_attr = "current_tilt_position"
+        position_attr = CoverEntityStateAttribute.CURRENT_TILT_POSITION
     min_pos = config.get(CONF_ABOVE)
     max_pos = config.get(CONF_BELOW)
 

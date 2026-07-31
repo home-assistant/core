@@ -1,6 +1,7 @@
 """Support for Tuya binary sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from tuya_device_handlers.definition.binary_sensor import (
     BinarySensorDefinition,
@@ -496,10 +497,12 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         self._dpcode_wrapper = definition.binary_sensor_wrapper
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._read_wrapper(self._dpcode_wrapper)
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],

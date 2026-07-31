@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.reeflex import EheimDigitalReeflexUV
@@ -97,5 +97,6 @@ class EheimDigitalBinarySensor[_DeviceT: EheimDigitalDevice](
         self.entity_description = description
         self._attr_unique_id = f"{self._device_address}_{description.key}"
 
+    @override
     def _async_update_attrs(self) -> None:
         self._attr_is_on = self.entity_description.value_fn(self._device)

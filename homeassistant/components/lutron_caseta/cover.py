@@ -1,7 +1,7 @@
 """Support for Lutron Caseta shades."""
 
 from enum import Enum
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -40,15 +40,18 @@ class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
     _movement_direction: ShadeMovementDirection | None = None
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self._device["current_state"] < 1
 
     @property
+    @override
     def current_cover_position(self) -> int:
         """Return the current position of cover."""
         return self._device["current_state"]
 
+    @override
     def _handle_bridge_update(self) -> None:
         """Handle updated data from the bridge and track movement direction."""
         current_position = self.current_cover_position
@@ -68,6 +71,7 @@ class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
         self._previous_position = current_position
         super()._handle_bridge_update()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         # Use set_value to avoid the stuttering issue
@@ -75,6 +79,7 @@ class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
         await self.async_update()
         self.async_write_ha_state()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         # Send appropriate directional command before stop to ensure it works correctly
@@ -89,6 +94,7 @@ class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
 
         await self._smartbridge.stop_cover(self.device_id)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         # Use set_value to avoid the stuttering issue
@@ -96,6 +102,7 @@ class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
         await self.async_update()
         self.async_write_ha_state()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the shade to a specific position."""
         await self._smartbridge.set_value(self.device_id, kwargs[ATTR_POSITION])
@@ -113,27 +120,32 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.BLIND
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the blind is closed, either at position 0 or 100."""
         return self._device["tilt"] == 0 or self._device["tilt"] == 100
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int:
         """Return the current tilt position of blind."""
         return self._device["tilt"]
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the blind."""
         await self._smartbridge.set_tilt(self.device_id, 0)
         await self.async_update()
         self.async_write_ha_state()
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the blind."""
         await self._smartbridge.set_tilt(self.device_id, 50)
         await self.async_update()
         self.async_write_ha_state()
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the blind to a specific tilt."""
         await self._smartbridge.set_tilt(self.device_id, kwargs[ATTR_TILT_POSITION])

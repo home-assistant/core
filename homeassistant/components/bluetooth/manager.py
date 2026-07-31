@@ -1,9 +1,11 @@
 """The bluetooth integration."""
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from functools import partial
 import itertools
 import logging
+from operator import attrgetter
+from typing import override
 
 from bleak_retry_connector import BleakSlotManager
 from bluetooth_adapters import (
@@ -53,7 +55,12 @@ from .match import (
     IntegrationMatcher,
     ble_device_matches,
 )
-from .models import BluetoothCallback, BluetoothChange, BluetoothServiceInfoBleak
+from .models import (
+    BluetoothCallback,
+    BluetoothCallbackReplay,
+    BluetoothChange,
+    BluetoothServiceInfoBleak,
+)
 from .storage import BluetoothStorage
 from .util import async_load_history_from_system
 
@@ -134,6 +141,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         """
         self._integration_matcher.async_clear_address(address)
 
+    @override
     def _discover_service_info(self, service_info: BluetoothServiceInfoBleak) -> None:
         matched_domains = self._integration_matcher.match_domains(service_info)
         if self._debug:
@@ -168,6 +176,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
                 discovery_key=discovery_key,
             )
 
+    @override
     def _address_disappeared(self, address: str) -> None:
         """Dismiss all discoveries for the given address."""
         self._integration_matcher.async_clear_address(address)
@@ -177,6 +186,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         ):
             self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
+    @override
     async def async_setup(self) -> None:
         """Set up the bluetooth manager."""
         await super().async_setup()
@@ -208,6 +218,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         mode: BluetoothScanningMode = BluetoothScanningMode.ACTIVE,
         scan_interval: float | None = None,
         scan_duration: float | None = None,
+        replay: BluetoothCallbackReplay = BluetoothCallbackReplay.OLDEST_FIRST,
     ) -> Callable[[], None]:
         """Register a callback."""
         callback_matcher = BluetoothCallbackMatcherWithCallback(callback=callback)
@@ -241,16 +252,37 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             if cancel_active_scan is not None:
                 cancel_active_scan()
 
+        if replay is not BluetoothCallbackReplay.DISABLED:
+            self._async_replay_history_for_callback(
+                connectable, callback, callback_matcher, replay
+            )
+        return _async_remove_callback
+
+    @hass_callback
+    def _async_replay_history_for_callback(
+        self,
+        connectable: bool,
+        callback: BluetoothCallback,
+        callback_matcher: BluetoothCallbackMatcherWithCallback,
+        replay: BluetoothCallbackReplay,
+    ) -> None:
+        """Replay history for a callback."""
         # If we have history for the subscriber, we can trigger the callback
         # immediately with the last packet so the subscriber can see the
         # device.
         history = self._connectable_history if connectable else self._all_history
-        service_infos: Iterable[BluetoothServiceInfoBleak] = []
+        service_infos: list[BluetoothServiceInfoBleak] = []
         if (address := callback_matcher.get(ADDRESS)) is not None:
             if service_info := history.get(address):
                 service_infos = [service_info]
         else:
-            service_infos = history.values()
+            # Sort by time explicitly; dict insertion order is not guaranteed
+            # to match advertisement time after history is loaded from storage.
+            service_infos = sorted(
+                history.values(),
+                key=attrgetter("time"),
+                reverse=replay is BluetoothCallbackReplay.NEWEST_FIRST,
+            )
 
         for service_info in service_infos:
             if ble_device_matches(callback_matcher, service_info):
@@ -259,9 +291,8 @@ class HomeAssistantBluetoothManager(BluetoothManager):
                 except Exception:
                     _LOGGER.exception("Error in bluetooth callback")
 
-        return _async_remove_callback
-
     @hass_callback
+    @override
     def async_stop(self, event: Event | None = None) -> None:
         """Stop the Bluetooth integration at shutdown."""
         _LOGGER.debug("Stopping bluetooth manager")
@@ -323,6 +354,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             )
         return cancel
 
+    @override
     def async_register_scanner(
         self,
         scanner: BaseHaScanner,
@@ -360,6 +392,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             _LOGGER.debug("Rediscover address %s", address)
             self.async_rediscover_address(address)
 
+    @override
     def on_scanner_start(self, scanner: BaseHaScanner) -> None:
         """Handle when a scanner starts.
 

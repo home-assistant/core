@@ -13,6 +13,46 @@
       "ptz_up": {
         "default": "mdi:arrow-up-bold"
       }
+    },
+    "sensor": {
+      "status": {
+        "default": "mdi:lan-connect",
+        "state": {
+          "offline": "mdi:close-network",
+          "online": "mdi:check-network",
+          "sleep": "mdi:sleep",
+          "upgrading": "mdi:cloud-arrow-up"
+        }
+      },
+      "storage_used": {
+        "default": "mdi:harddisk"
+      },
+      "switch_cnt": {
+        "default": "mdi:counter"
+      }
+    },
+    "switch": {
+      "ab_alarm_sound": {
+        "default": "mdi:home-sound-in"
+      },
+      "audio_encode_control": {
+        "default": "mdi:audio-input-rca"
+      },
+      "close_camera": {
+        "default": "mdi:camera-off"
+      },
+      "header_detect": {
+        "default": "mdi:run"
+      },
+      "light": {
+        "default": "mdi:lightbulb-on"
+      },
+      "motion_detect": {
+        "default": "mdi:motion-sensor"
+      },
+      "white_light": {
+        "default": "mdi:light-flood-down"
+      }
     }
   }
 }

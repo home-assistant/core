@@ -1,5 +1,7 @@
 """DataUpdateCoordinator for the Tailscale integration."""
 
+from typing import override
+
 from tailscale import Device, Tailscale, TailscaleAuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
@@ -38,6 +40,7 @@ class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch devices from Tailscale and remove stale devices from HA."""
         try:
@@ -64,7 +67,9 @@ class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         device_registry = dr.async_get(self.hass)
 
         for device_id in stale_device_ids:
-            device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+            device = device_registry.async_get_device_by_identifier(
+                (DOMAIN, device_id), self.config_entry.entry_id
+            )
             if device:
                 LOGGER.debug("Removing stale device: %s", device_id)
                 device_registry.async_remove_device(device.id)

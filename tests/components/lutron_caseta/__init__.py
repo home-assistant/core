@@ -112,6 +112,7 @@ class MockBridge:
         self.battery_statuses = {"802": "Good"}
         self.buttons = self.load_buttons()
         self._subscribers: dict[str, list] = {}
+        self._button_subscribers: dict[str, list] = {}
         self.smart_away_state = smart_away_state
         self._smart_away_subscribers = []
 
@@ -149,6 +150,12 @@ class MockBridge:
 
     def add_button_subscriber(self, button_id: str, callback_):
         """Mock a listener for button presses."""
+        self._button_subscribers.setdefault(button_id, []).append(callback_)
+
+    def call_button_subscribers(self, button_id: str, event_type: str) -> None:
+        """Simulate a LEAP button event for the given button ID."""
+        for callback in self._button_subscribers.get(button_id, []):
+            callback(event_type)
 
     def call_subscribers(self, device_id: str):
         """Notify subscribers of a device state change."""

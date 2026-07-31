@@ -39,7 +39,7 @@
 # name: test_all_entities[switch.airgradient_post_data_to_airgradient-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient Post data to Airgradient',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Post data to Airgradient',
     }),
     'context': <ANY>,
     'entity_id': 'switch.airgradient_post_data_to_airgradient',

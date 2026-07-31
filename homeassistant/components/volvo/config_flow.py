@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from volvocarsapi.api import VolvoCarsApi
@@ -54,6 +54,7 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self._config_data: dict = {}
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         return super().extra_authorize_data | {
@@ -61,10 +62,12 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         }
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return _LOGGER
 
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for the flow."""
         self._config_data |= (self.init_data or {}) | data
