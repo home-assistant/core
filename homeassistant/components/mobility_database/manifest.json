@@ -1,0 +1,11 @@
+{
+  "domain": "mobility_database",
+  "name": "Mobility Database",
+  "codeowners": ["@raman325"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/mobility_database",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "silver",
+  "requirements": ["aiomobilitydatabase[feeds]==0.2.0"]
+}

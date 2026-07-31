@@ -4451,6 +4451,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "mobility_database": {
+      "name": "Mobility Database",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "mochad": {
       "name": "Mochad",
       "integration_type": "hub",
