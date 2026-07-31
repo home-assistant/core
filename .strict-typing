@@ -354,6 +354,7 @@ homeassistant.components.litejet.*
 homeassistant.components.litellm.*
 homeassistant.components.litterrobot.*
 homeassistant.components.llama_cpp.*
+homeassistant.components.llm.*
 homeassistant.components.local_ip.*
 homeassistant.components.local_todo.*
 homeassistant.components.lock.*
