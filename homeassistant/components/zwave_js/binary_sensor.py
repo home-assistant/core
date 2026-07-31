@@ -200,12 +200,6 @@ LEGACY_DOOR_STATE_REPAIR_ISSUE_KEYS = frozenset(
 # The catch all description should not have a device class and be marked as diagnostic.
 #
 # The following notifications have been moved to diagnostic:
-# Smoke Alarm
-# - Alarm silenced
-# - Replacement required
-# - Replacement required, End-of-life
-# - Maintenance required, planned periodic inspection
-# - Maintenance required, dust in device
 # CO Alarm
 # - Carbon monoxide test
 # - Replacement required
@@ -217,16 +211,6 @@ LEGACY_DOOR_STATE_REPAIR_ISSUE_KEYS = frozenset(
 # - Replacement required
 # - Replacement required, End-of-life
 # - Alarm silenced
-# - Maintenance required, planned periodic inspection
-# Heat Alarm
-# - Rapid temperature rise (location provided)
-# - Rapid temperature rise
-# - Rapid temperature fall (location provided)
-# - Rapid temperature fall
-# - Heat alarm test
-# - Alarm silenced
-# - Replacement required, End-of-life
-# - Maintenance required, dust in device
 # - Maintenance required, planned periodic inspection
 
 # Water Alarm
