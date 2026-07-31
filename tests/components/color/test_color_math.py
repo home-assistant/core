@@ -38,29 +38,27 @@ def test_normalize_requires_exactly_one_shape() -> None:
 
 
 @pytest.mark.parametrize(
-    ("hex_in", "expected_rgb"),
+    ("hex_in", "bounds"),
     [
-        ("#FF0000", (255, 0, 0)),
-        ("ff0000", (255, 0, 0)),
-        ("#00ff00", (0, 255, 0)),
-        ("#0000FF", (0, 0, 255)),
+        pytest.param("#FF0000", [(200, 255), (0, 30), (0, 30)], id="red"),
+        pytest.param("ff0000", [(200, 255), (0, 30), (0, 30)], id="red-no-hash"),
+        pytest.param("#00ff00", [(0, 30), (200, 255), (0, 30)], id="green"),
+        pytest.param("#0000FF", [(0, 30), (0, 30), (200, 255)], id="blue"),
     ],
 )
 def test_normalize_hex_round_trips_via_xy(
-    hex_in: str, expected_rgb: tuple[int, int, int]
+    hex_in: str, bounds: list[tuple[int, int]]
 ) -> None:
-    """Test hex inputs normalize and derive back to a similar RGB."""
+    """Test hex inputs normalize and derive back to a similar RGB.
+
+    xy is chromaticity only; the round-trip introduces a small per-channel
+    drift (more pronounced at the gamut edges), so each channel is checked
+    against a tolerance band rather than exact equality.
+    """
     canonical = normalize({FIELD_HEX: hex_in})
     assert canonical.kind == KIND_CHROMATIC
-    # xy is chromaticity only; the round-trip introduces a small per-channel
-    # drift (more pronounced at the gamut edges). The dominant channel should
-    # clearly win; non-dominant channels should stay near zero.
-    dominant = expected_rgb.index(max(expected_rgb))
-    for i, got in enumerate(derive_rgb(canonical)):
-        if i == dominant:
-            assert got > 200, f"dominant channel too low: {got}"
-        else:
-            assert got < 30, f"off-channel too high: {got}"
+    for got, (low, high) in zip(derive_rgb(canonical), bounds, strict=True):
+        assert low <= got <= high
 
 
 def test_normalize_invalid_hex() -> None:

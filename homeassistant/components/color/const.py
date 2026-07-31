@@ -23,8 +23,9 @@ ATTR_HEX_COLOR: Final = "hex_color"
 ATTR_HS_COLOR: Final = "hs_color"
 ATTR_KIND: Final = "kind"
 ATTR_RGB_COLOR: Final = "rgb_color"
-# Exact-byte echo of the user's input when it had a clear hex equivalent
-# (hex/rgb/hs/color_name). Null for xy/kelvin inputs.
+# Normalized sRGB hex of the user's input when it maps to a single sRGB
+# triple (hex/rgb/hs/color_name), before the lossy xy round-trip. Null for
+# xy/kelvin inputs.
 ATTR_SOURCE_HEX: Final = "source_hex"
 ATTR_XY_COLOR: Final = "xy_color"
 # Dict splattable directly into a light.turn_on call: {"xy_color": [x, y]}

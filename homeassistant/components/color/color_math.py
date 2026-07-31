@@ -222,12 +222,12 @@ def derive_hex(canonical: CanonicalColor) -> str:
 
 
 def compute_source_hex(inputs: dict[str, Any]) -> str | None:
-    """Return the literal hex equivalent of the user's input, if one exists.
+    """Return the normalized sRGB hex of the user's input, if one exists.
 
     For inputs that map cleanly to a single sRGB triple (hex/rgb/hs/
-    color_name) we echo back the exact bytes the user supplied without losing
-    them to the xy gamut round-trip. For xy/kelvin inputs there is no
-    canonical "source hex" so we return None.
+    color_name), this preserves the pre-xy sRGB value, since the xy gamut
+    round-trip is lossy. For xy/kelvin inputs there is no canonical
+    "source hex" so we return None.
     """
     if inputs.get(FIELD_HEX) is not None:
         try:

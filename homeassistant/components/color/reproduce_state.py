@@ -6,8 +6,11 @@ import logging
 import re
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 
 from .color_math import ColorInputError, normalize, valid_xy
 from .const import (
@@ -134,13 +137,20 @@ async def _async_reproduce_state(
         )
 
     if color_data is not None:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_COLOR,
-            {ATTR_ENTITY_ID: state.entity_id, **color_data},
-            context=context,
-            blocking=True,
-        )
+        # Snapshot data is untrusted; a value the guards above let through
+        # (e.g. a #000000 state string) must not abort the whole scene.
+        try:
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_SET_COLOR,
+                {ATTR_ENTITY_ID: state.entity_id, **color_data},
+                context=context,
+                blocking=True,
+            )
+        except vol.Invalid, ServiceValidationError:
+            _LOGGER.warning(
+                "Unable to restore color %s for %s", color_data, state.entity_id
+            )
 
     if ATTR_BRIGHTNESS in attrs:
         snapshot_brightness = attrs[ATTR_BRIGHTNESS]

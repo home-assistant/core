@@ -1,15 +1,4 @@
-"""Tests for non-trivial behaviors: restore, snapshots, options reload.
-
-These tests target paths where regressions would silently corrupt user data
-or break promised semantics:
-- Full restart round-trip via mock_restore_cache_with_extra_data
-- Reproduce-state with malformed snapshot state
-- Options flow + update listener actually applying icon changes
-- brightness=0 distinct from brightness=None
-- Kelvin cleared when a chromatic input replaces a previously-white color
-- Targeting keys stripped before color normalization
-- source_hex semantics per input shape
-"""
+"""Tests for paths where regressions would silently corrupt user data."""
 
 import math
 

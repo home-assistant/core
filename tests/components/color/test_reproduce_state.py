@@ -270,3 +270,22 @@ async def test_reproduce_overflowing_xy_falls_back_to_state(
     state = hass.states.get(ENTITY_ID)
     _r, g, _b = state.attributes[ATTR_RGB_COLOR]
     assert g > 200
+
+
+async def test_reproduce_black_state_does_not_abort_scene(
+    hass: HomeAssistant,
+) -> None:
+    """A #000000 snapshot state is skipped with a warning; the scene continues."""
+    await _setup_entity(hass)
+    black = State(ENTITY_ID, "#000000", {ATTR_KIND: KIND_CHROMATIC})
+    good = State(
+        ENTITY_ID,
+        "#00FF00",
+        {ATTR_KIND: KIND_CHROMATIC, ATTR_BRIGHTNESS: 42},
+    )
+    await async_reproduce_states(hass, [black, good])
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    _r, g, _b = state.attributes[ATTR_RGB_COLOR]
+    assert g > 200
+    assert state.attributes[ATTR_BRIGHTNESS] == 42
