@@ -264,6 +264,7 @@ class DeviceFlowImplementation(config_entry_oauth2_flow.DeviceFlowImplementation
         self._name = credential.name
 
     @property
+    @override
     def name(self) -> str:
         """Name of the implementation."""
         return self._name or self.client_id

@@ -11,7 +11,6 @@ import asyncio
 from asyncio import Lock
 import base64
 from collections.abc import Awaitable, Callable
-from datetime import datetime
 import hashlib
 from http import HTTPStatus
 import json
@@ -435,11 +434,13 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
         self.token_url = token_url
 
     @property
+    @override
     def name(self) -> str:
         """Name of the implementation."""
         return "Local application credentials"
 
     @property
+    @override
     def domain(self) -> str:
         """Domain providing the implementation."""
         return self._domain
@@ -454,6 +455,7 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
         """Extra data for the token resolve request."""
         return {}
 
+    @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
         return str(URL(self.authorize_url))
@@ -532,6 +534,7 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
 
         return cast(dict, await resp.json())
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
         request_data: dict = {
@@ -542,6 +545,7 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
         request_data.update(self.extra_token_resolve_data)
         return await self._token_request(request_data)
 
+    @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh tokens."""
         new_token = await self._token_request(
@@ -555,7 +559,7 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
 
     async def async_check_device_activation(self, device: dict) -> dict[str, str]:
         """Wait for the user to activate the device."""
-        expires_at = datetime.timestamp(datetime.now()) + device["expires_in"]
+        expires_at = time.time() + device["expires_in"]
         jitter = randint(1, 3)  # Jitter to avoid being throttled
         token_request = {
             "client_id": self.client_id,
@@ -565,7 +569,7 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
         session = async_get_clientsession(self.hass)
         interval = device.get("interval", 5)
         while True:
-            if expires_at < datetime.timestamp(datetime.now()):
+            if expires_at < time.time():
                 raise DeviceFlowTimeout
 
             try:
@@ -907,6 +911,7 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
         self.device_flow_error: BaseException | None = None
         self.device_registry: dict[str, Any] = {}
 
+    @override
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
