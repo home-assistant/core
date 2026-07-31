@@ -1,5 +1,4 @@
 {
-  "title": "Color",
   "config": {
     "error": {
       "pure_black": "Pure black has no color value; pick a color and use brightness instead."
@@ -153,5 +152,6 @@
       },
       "name": "Set color"
     }
-  }
+  },
+  "title": "Color"
 }

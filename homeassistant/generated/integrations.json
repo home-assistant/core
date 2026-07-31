@@ -8426,7 +8426,6 @@
   },
   "helper": {
     "color": {
-      "name": "Color",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
@@ -8570,6 +8569,7 @@
     "alert",
     "aurora",
     "cert_expiry",
+    "color",
     "counter",
     "cpuspeed",
     "demo",
