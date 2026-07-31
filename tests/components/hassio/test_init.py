@@ -308,7 +308,11 @@ async def test_setup_api_push_api_data_error(
 async def test_setup_api_push_api_data_server_host(
     hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
-    """Test setup with API push with active server host."""
+    """Test setup with API push with active server host.
+
+    A configured server_host no longer disables the watchdog: Supervisor
+    reaches Core over the Unix socket, independent of the HTTP bind address.
+    """
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
@@ -320,7 +324,7 @@ async def test_setup_api_push_api_data_server_host(
     assert result
     assert len(supervisor_client.mock_calls) == 16
     supervisor_client.homeassistant.set_options.assert_called_once_with(
-        HomeAssistantOptions(ssl=False, port=9999, refresh_token=ANY, watchdog=False)
+        HomeAssistantOptions(ssl=False, port=9999, refresh_token=ANY)
     )
 
 

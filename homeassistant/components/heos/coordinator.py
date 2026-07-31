@@ -9,7 +9,7 @@ entity-specific updates within the entity class itself.
 
 from collections.abc import Callable, Sequence
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyheos import (
     Credentials,
@@ -125,6 +125,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         self.heos.add_on_connected(self._async_on_reconnected)
         self.heos.add_on_controller_event(self._async_on_controller_event)
 
+    @override
     async def async_shutdown(self) -> None:
         """Disconnect all callbacks and disconnect from the device."""
         # Removes all connected through heos.add_on_*
@@ -133,6 +134,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         await self.heos.disconnect()
         await super().async_shutdown()
 
+    @override
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:

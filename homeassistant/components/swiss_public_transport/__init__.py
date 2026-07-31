@@ -86,12 +86,11 @@ async def async_setup_entry(
             },
         ) from e
     except OpendataTransportError as e:
-        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_data",
             translation_placeholders={
-                **PLACEHOLDERS,
+                "stationboard_url": PLACEHOLDERS["stationboard_url"],
                 "config_title": entry.title,
                 "error": str(e),
             },

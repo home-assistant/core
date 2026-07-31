@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -60,7 +60,7 @@ from .alarm_control_panel import (
 )
 from .binary_sensor import async_create_preview_binary_sensor
 from .const import (
-    CONF_ADVANCED_OPTIONS,
+    CONF_ADDITIONAL_OPTIONS,
     CONF_AVAILABILITY,
     CONF_PRESS,
     CONF_TURN_OFF,
@@ -157,7 +157,7 @@ _SCHEMA_STATE: dict[vol.Marker, Any] = {
 def generate_schema(domain: str, flow_type: str) -> vol.Schema:
     """Generate schema."""
     schema: dict[vol.Marker, Any] = {}
-    advanced_options: dict[vol.Marker, Any] = {}
+    additional_options: dict[vol.Marker, Any] = {}
 
     if flow_type == "config":
         schema = {vol.Required(CONF_NAME): selector.TextSelector()}
@@ -240,7 +240,7 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_LATITUDE): selector.TemplateSelector(),
             vol.Optional(CONF_LONGITUDE): selector.TemplateSelector(),
         }
-        advanced_options |= {
+        additional_options |= {
             vol.Optional(CONF_LOCATION_ACCURACY): selector.TemplateSelector(),
         }
 
@@ -445,11 +445,11 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 
     schema |= {
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
-        vol.Optional(CONF_ADVANCED_OPTIONS): section(
+        vol.Optional(CONF_ADDITIONAL_OPTIONS): section(
             vol.Schema(
                 {
                     vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
-                    **advanced_options,
+                    **additional_options,
                 }
             ),
             {"collapsed": True},
@@ -782,15 +782,16 @@ class TemplateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
-    MINOR_VERSION = 2
-    VERSION = 1
+    VERSION = 2
 
     @callback
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options["name"])
 
     @staticmethod
+    @override
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
         websocket_api.async_register_command(hass, ws_start_preview)
@@ -899,9 +900,9 @@ def ws_start_preview(
         return
 
     config: dict = msg["user_input"]
-    advanced_options = config.pop(CONF_ADVANCED_OPTIONS, {})
+    additional_options = config.pop(CONF_ADDITIONAL_OPTIONS, {})
     preview_entity = CREATE_PREVIEW_ENTITY[template_type](
-        hass, name, {**config, **advanced_options}
+        hass, name, {**config, **additional_options}
     )
     preview_entity.hass = hass
     preview_entity.registry_entry = entity_registry_entry

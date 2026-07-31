@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from aioswitcher.device import SwitcherBase
 
@@ -40,6 +41,7 @@ class SwitcherDataUpdateCoordinator(
         self.data = device
         self.token = entry.data.get(CONF_TOKEN)
 
+    @override
     async def _async_update_data(self) -> SwitcherBase:
         """Mark device offline if no data."""
         raise update_coordinator.UpdateFailed(

@@ -1,6 +1,6 @@
 """Config flow to configure SMHI component."""
 
-from typing import Any
+from typing import Any, override
 
 from pysmhi import SmhiForecastException, SMHIPointForecast
 import voluptuous as vol
@@ -38,6 +38,7 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 3
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

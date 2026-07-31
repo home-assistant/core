@@ -1,7 +1,7 @@
 """Select for Shelly."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, override
 
 from aioshelly.const import RPC_GENERATIONS
 
@@ -58,6 +58,7 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
             self._attr_options = list(self.option_map.values())
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         if isinstance(self.attribute_value, str) and self.option_map:
@@ -66,6 +67,7 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
         return None
 
     @rpc_call
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the value."""
         method = getattr(self.coordinator.device, self.entity_description.method)
@@ -83,6 +85,7 @@ class RpcCuryModeSelect(RpcSelect):
     """Represent a RPC select entity for Cury modes."""
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         if self.attribute_value is None:

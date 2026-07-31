@@ -45,7 +45,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'forward',
         'reverse',
         'alternate',
@@ -85,8 +85,8 @@
 # name: test_all_select_entities[select.test_vmc_fan_direction_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test VMC Fan direction mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test VMC Fan direction mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'forward',
         'reverse',
         'alternate',

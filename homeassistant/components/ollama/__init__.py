@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
         # in the UI, instead of ConfigEntryNotReady which would
         # just keep retrying.
         raise ConfigEntryError(err) from err
-    except (TimeoutError, httpx.ConnectError) as err:
+    except (TimeoutError, httpx.ConnectError, ConnectionError) as err:
         raise ConfigEntryNotReady(err) from err
 
     entry.runtime_data = client

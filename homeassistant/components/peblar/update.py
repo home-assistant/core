@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -74,11 +75,13 @@ class PeblarUpdateEntity(
     entity_description: PeblarUpdateEntityDescription
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version currently installed and in use."""
         return self.entity_description.installed_fn(self.coordinator.data)
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self.entity_description.available_fn(self.coordinator.data)

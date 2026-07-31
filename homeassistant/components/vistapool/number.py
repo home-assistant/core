@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aioaquarite import AquariteError
 
@@ -15,12 +16,13 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VistapoolConfigEntry
-from .const import DOMAIN, PATH_HASHIDRO, PATH_HASPH, PATH_HASRX
+from .const import DOMAIN, PATH_HASHIDRO, PATH_HASPH, PATH_HASRX, SIGNAL_NEW_POOL
 from .coordinator import VistapoolDataUpdateCoordinator
 from .entity import VistapoolEntity
 
@@ -137,6 +139,48 @@ NUMBER_DESCRIPTIONS: tuple[VistapoolNumberEntityDescription, ...] = (
 )
 
 
+def _build_number_entities(
+    coordinator: VistapoolDataUpdateCoordinator,
+) -> list[NumberEntity]:
+    """Build the number entities for a single pool."""
+    entities: list[NumberEntity] = []
+    for description in NUMBER_DESCRIPTIONS:
+        if description.exists_path is not None:
+            required = (
+                (description.exists_path,)
+                if isinstance(description.exists_path, str)
+                else description.exists_path
+            )
+            if not all(coordinator.get_value(path) for path in required):
+                continue
+        entities.append(VistapoolNumber(coordinator, description))
+
+    if coordinator.get_value(PATH_HASHIDRO):
+        key = (
+            "hydrolysis_setpoint"
+            if coordinator.get_value("hidro.is_electrolysis") is False
+            else "electrolysis_setpoint"
+        )
+        entities.append(
+            VistapoolNumber(
+                coordinator,
+                VistapoolNumberEntityDescription(
+                    key=key,
+                    translation_key=key,
+                    entity_category=EntityCategory.CONFIG,
+                    native_min_value=0,
+                    native_max_value=50.0,
+                    native_step=0.1,
+                    native_unit_of_measurement="g/h",
+                    value_path="hidro.level",
+                    scale=10,
+                    max_value_fn=_max_electrolysis,
+                ),
+            )
+        )
+    return entities
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: VistapoolConfigEntry,
@@ -144,44 +188,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up Vistapool number entities for every pool on the account."""
     entities: list[NumberEntity] = []
-
     for coordinator in entry.runtime_data.coordinators.values():
-        for description in NUMBER_DESCRIPTIONS:
-            if description.exists_path is not None:
-                required = (
-                    (description.exists_path,)
-                    if isinstance(description.exists_path, str)
-                    else description.exists_path
-                )
-                if not all(coordinator.get_value(path) for path in required):
-                    continue
-            entities.append(VistapoolNumber(coordinator, description))
-
-        if coordinator.get_value(PATH_HASHIDRO):
-            key = (
-                "hydrolysis_setpoint"
-                if coordinator.get_value("hidro.is_electrolysis") is False
-                else "electrolysis_setpoint"
-            )
-            entities.append(
-                VistapoolNumber(
-                    coordinator,
-                    VistapoolNumberEntityDescription(
-                        key=key,
-                        translation_key=key,
-                        entity_category=EntityCategory.CONFIG,
-                        native_min_value=0,
-                        native_max_value=50.0,
-                        native_step=0.1,
-                        native_unit_of_measurement="g/h",
-                        value_path="hidro.level",
-                        scale=10,
-                        max_value_fn=_max_electrolysis,
-                    ),
-                )
-            )
-
+        entities.extend(_build_number_entities(coordinator))
     async_add_entities(entities)
+
+    @callback
+    def _async_add_pool(coordinator: VistapoolDataUpdateCoordinator) -> None:
+        async_add_entities(_build_number_entities(coordinator))
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"{SIGNAL_NEW_POOL}_{entry.entry_id}", _async_add_pool
+        )
+    )
 
 
 class VistapoolNumber(VistapoolEntity, NumberEntity):
@@ -200,6 +219,7 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
         self._attr_unique_id = self.build_unique_id(description.key)
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the max value, recomputed from coordinator data when applicable."""
         if (fn := self.entity_description.max_value_fn) is not None:
@@ -207,6 +227,7 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
         return super().native_max_value
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the scaled current value."""
         raw = self.coordinator.get_value(self.entity_description.value_path)
@@ -218,6 +239,7 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
             return None
         return value / self.entity_description.scale
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Send the de-scaled value to the controller."""
         raw = round(value * self.entity_description.scale)
@@ -233,3 +255,4 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
+        self.coordinator.apply_optimistic(self.entity_description.value_path, raw)

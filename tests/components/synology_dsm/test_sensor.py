@@ -24,6 +24,7 @@ from .common import (
     mock_dsm_external_usb_devices_usb0,
     mock_dsm_external_usb_devices_usb1,
     mock_dsm_external_usb_devices_usb2,
+    mock_dsm_hardware,
     mock_dsm_information,
     mock_dsm_storage_get_disk,
     mock_dsm_storage_get_volume,
@@ -49,6 +50,7 @@ def mock_dsm_with_usb():
         dsm.network = Mock(
             update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
         )
+        dsm.hardware = mock_dsm_hardware()
         dsm.information = mock_dsm_information()
         dsm.storage = Mock(
             get_disk=mock_dsm_storage_get_disk,
@@ -83,6 +85,7 @@ def mock_dsm_without_usb():
         dsm.network = Mock(
             update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
         )
+        dsm.hardware = mock_dsm_hardware()
         dsm.information = mock_dsm_information()
         dsm.file = Mock(get_shared_folders=AsyncMock(return_value=None))
         dsm.logout = AsyncMock(return_value=True)

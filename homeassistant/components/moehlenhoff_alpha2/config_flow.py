@@ -1,7 +1,7 @@
 """Alpha2 config flow."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from moehlenhoff_alpha2 import Alpha2Base
@@ -41,6 +41,7 @@ class Alpha2BaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

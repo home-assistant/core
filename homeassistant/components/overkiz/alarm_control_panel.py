@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from pyoverkiz.enums.ui import UIWidget
@@ -250,10 +250,12 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
         self._attr_supported_features = self.entity_description.supported_features
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the device."""
-        return self.entity_description.fn_state(self.executor.select_state)
+        return self.entity_description.fn_state(self.device.states.get_value)
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         assert self.entity_description.alarm_disarm
@@ -262,6 +264,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
             self.entity_description.alarm_disarm_args,
         )
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         assert self.entity_description.alarm_arm_home
@@ -270,6 +273,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
             self.entity_description.alarm_arm_home_args,
         )
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         assert self.entity_description.alarm_arm_night
@@ -278,6 +282,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
             self.entity_description.alarm_arm_night_args,
         )
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         assert self.entity_description.alarm_arm_away
@@ -286,6 +291,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
             self.entity_description.alarm_arm_away_args,
         )
 
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         assert self.entity_description.alarm_trigger

@@ -1,7 +1,7 @@
 """Vodafone Station image."""
 
 from io import BytesIO
-from typing import Final, cast
+from typing import Final, cast, override
 
 from aiovodafone.const import WIFI_DATA
 
@@ -87,11 +87,13 @@ class VodafoneGuestWifiQRImage(
         )
         return qr_code.getvalue()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set the update time."""
         self._attr_image_last_updated = dt_util.utcnow()
         await super().async_added_to_hass()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator.
 
@@ -104,6 +106,7 @@ class VodafoneGuestWifiQRImage(
 
         super()._handle_coordinator_update()
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return QR code image."""
         return self._qr_code

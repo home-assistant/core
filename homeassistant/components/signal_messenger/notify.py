@@ -1,7 +1,7 @@
 """Signal Messenger for notify component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysignalclirestapi import SignalCliRestApi, SignalCliRestApiError
 import requests
@@ -96,6 +96,7 @@ class SignalNotificationService(BaseNotificationService):
         self._recp_nrs = recp_nrs
         self._signal_cli_rest_api = signal_cli_rest_api
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to one or more recipients."""
 
@@ -119,8 +120,8 @@ class SignalNotificationService(BaseNotificationService):
             self._signal_cli_rest_api.send_message(
                 message,
                 recipients,
-                filenames,
-                attachments_as_bytes,
+                filenames=filenames,
+                attachments_as_bytes=attachments_as_bytes,
                 text_mode="normal" if data is None else data.get(ATTR_TEXTMODE),
             )
         except SignalCliRestApiError as ex:

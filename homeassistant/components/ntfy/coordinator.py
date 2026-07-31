@@ -4,6 +4,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiontfy import Account as NtfyAccount, Ntfy, Version
 from aiontfy.exceptions import (
@@ -59,6 +60,7 @@ class BaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     async def async_update_data(self) -> _DataT:
         """Fetch the latest data from the source."""
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Fetch the latest data from the source."""
         try:
@@ -88,6 +90,7 @@ class NtfyDataUpdateCoordinator(BaseDataUpdateCoordinator[NtfyAccount]):
 
     update_interval = timedelta(minutes=15)
 
+    @override
     async def async_update_data(self) -> NtfyAccount:
         """Fetch account data from ntfy."""
 
@@ -105,6 +108,7 @@ class NtfyVersionDataUpdateCoordinator(BaseDataUpdateCoordinator[Version | None]
 
     update_interval = timedelta(hours=3)
 
+    @override
     async def async_update_data(self) -> Version | None:
         """Fetch version data from ntfy."""
         try:
@@ -130,6 +134,7 @@ class NtfyLatestReleaseUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
         )
         self.update_checker = update_checker
 
+    @override
     async def _async_update_data(self) -> LatestRelease:
         """Fetch latest release data."""
 

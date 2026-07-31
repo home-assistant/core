@@ -39,8 +39,8 @@
 # name: test_notify_platform[notify.hostname-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'hostname',
-      'supported_features': <NotifyEntityFeature: 1>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <NotifyEntityFeature: 1>,
     }),
     'context': <ANY>,
     'entity_id': 'notify.hostname',

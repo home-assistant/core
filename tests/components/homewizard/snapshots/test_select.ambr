@@ -2,8 +2,8 @@
 # name: test_select_entity_snapshots[HWE-P1-select.device_battery_group_charging_strategy]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Battery group charging strategy',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Battery group charging strategy',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'standby',
         'to_full',
         'zero',
@@ -24,7 +24,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'standby',
         'to_full',
         'zero',

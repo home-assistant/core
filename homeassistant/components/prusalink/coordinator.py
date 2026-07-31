@@ -5,7 +5,7 @@ import asyncio
 from datetime import timedelta
 import logging
 from time import monotonic
-from typing import TypeVar
+from typing import TypeVar, override
 
 from httpx import ConnectError
 from pyprusalink import (
@@ -73,6 +73,7 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
             ),
         )
 
+    @override
     async def _async_update_data(self) -> T:
         """Update the data."""
         try:
@@ -116,6 +117,7 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
 class StatusCoordinator(PrusaLinkUpdateCoordinator[PrinterStatus]):
     """Printer update coordinator."""
 
+    @override
     async def _fetch_data(self) -> PrinterStatus:
         """Fetch the printer data."""
         return await self.api.get_status()
@@ -124,6 +126,7 @@ class StatusCoordinator(PrusaLinkUpdateCoordinator[PrinterStatus]):
 class LegacyStatusCoordinator(PrusaLinkUpdateCoordinator[LegacyPrinterStatus]):
     """Printer legacy update coordinator."""
 
+    @override
     async def _fetch_data(self) -> LegacyPrinterStatus:
         """Fetch the printer data."""
         return await self.api.get_legacy_printer()
@@ -137,6 +140,7 @@ class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo | None]):
     coordinator's data must be `None`-aware.
     """
 
+    @override
     async def _fetch_data(self) -> JobInfo | None:
         """Fetch the printer data."""
         return await self.api.get_job()
@@ -145,6 +149,7 @@ class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo | None]):
 class InfoUpdateCoordinator(PrusaLinkUpdateCoordinator[PrinterInfo]):
     """Info update coordinator."""
 
+    @override
     async def _fetch_data(self) -> PrinterInfo:
         """Fetch the printer data."""
         return await self.api.get_info()
@@ -153,6 +158,7 @@ class InfoUpdateCoordinator(PrusaLinkUpdateCoordinator[PrinterInfo]):
 class VersionUpdateCoordinator(PrusaLinkUpdateCoordinator[VersionInfo]):
     """Version update coordinator."""
 
+    @override
     async def _fetch_data(self) -> VersionInfo:
         """Fetch the version data."""
         return await self.api.get_version()

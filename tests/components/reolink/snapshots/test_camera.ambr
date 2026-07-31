@@ -1,0 +1,425 @@
+# serializer version: 1
+# name: test_all_entities[camera.test_reolink_cam_clear-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.test_reolink_cam_clear',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Clear',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clear',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': 'main',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[camera.test_reolink_cam_clear-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.test_reolink_cam_clear?token=1caab5c3b3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Clear',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.test_reolink_cam_clear',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_all_entities[camera.test_reolink_cam_fluent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.test_reolink_cam_fluent',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fluent',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fluent',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': 'sub',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_sub',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[camera.test_reolink_cam_fluent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.test_reolink_cam_fluent?token=1caab5c3b3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Fluent',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.test_reolink_cam_fluent',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_all_entities[camera.test_reolink_cam_snapshots_clear-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.test_reolink_cam_snapshots_clear',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Snapshots clear',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Snapshots clear',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'snapshots_main',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_snapshots',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[camera.test_reolink_cam_snapshots_clear-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.test_reolink_cam_snapshots_clear?token=1caab5c3b3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Snapshots clear',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.test_reolink_cam_snapshots_clear',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_all_entities[camera.test_reolink_cam_snapshots_fluent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.test_reolink_cam_snapshots_fluent',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Snapshots fluent',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Snapshots fluent',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'snapshots_sub',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_snapshots_sub',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[camera.test_reolink_cam_snapshots_fluent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.test_reolink_cam_snapshots_fluent?token=1caab5c3b3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Snapshots fluent',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.test_reolink_cam_snapshots_fluent',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_all_entities[camera.test_reolink_cam_telephoto_clear-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.test_reolink_cam_telephoto_clear',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Telephoto clear',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Telephoto clear',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': 'telephoto_main',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_autotrack_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[camera.test_reolink_cam_telephoto_clear-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.test_reolink_cam_telephoto_clear?token=1caab5c3b3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Telephoto clear',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.test_reolink_cam_telephoto_clear',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_all_entities[camera.test_reolink_cam_telephoto_fluent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.test_reolink_cam_telephoto_fluent',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Telephoto fluent',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Telephoto fluent',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': 'telephoto_sub',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_autotrack_sub',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[camera.test_reolink_cam_telephoto_fluent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.test_reolink_cam_telephoto_fluent?token=1caab5c3b3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Telephoto fluent',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.test_reolink_cam_telephoto_fluent',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_all_entities[camera.test_reolink_cam_telephoto_snapshots_clear-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.test_reolink_cam_telephoto_snapshots_clear',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Telephoto snapshots clear',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Telephoto snapshots clear',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'telephoto_snapshots_main',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_autotrack_snapshots_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[camera.test_reolink_cam_telephoto_snapshots_clear-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.test_reolink_cam_telephoto_snapshots_clear?token=1caab5c3b3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Telephoto snapshots clear',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.test_reolink_cam_telephoto_snapshots_clear',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_all_entities[camera.test_reolink_cam_telephoto_snapshots_fluent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.test_reolink_cam_telephoto_snapshots_fluent',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Telephoto snapshots fluent',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Telephoto snapshots fluent',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'telephoto_snapshots_sub',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_autotrack_snapshots_sub',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[camera.test_reolink_cam_telephoto_snapshots_fluent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.test_reolink_cam_telephoto_snapshots_fluent?token=1caab5c3b3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Telephoto snapshots fluent',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.test_reolink_cam_telephoto_snapshots_fluent',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---

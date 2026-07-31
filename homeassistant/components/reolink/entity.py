@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from reolink_aio.api import DUAL_LENS_DUAL_MOTION_MODELS, DUAL_LENS_MODELS, Chime, Host
 
@@ -94,6 +95,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.entity_description.always_available:
@@ -123,6 +125,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
             callback_id, self._push_callback, cmd_id
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
@@ -139,6 +142,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
         # Privacy mode
         self.register_callback(f"{callback_id}_623", 623)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         cmd_key = self.entity_description.cmd_key
@@ -153,6 +157,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
 
         await super().async_will_remove_from_hass()
 
+    @override
     async def async_update(self) -> None:
         """Force full update from the generic entity update service."""
         for channel in self._host.api.channels:
@@ -238,6 +243,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
             )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.entity_description.always_available:
@@ -249,12 +255,14 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
             and not self._host.api.baichuan.privacy_mode(self._channel)
         )
 
+    @override
     def register_callback(self, callback_id: str, cmd_id: int) -> None:
         """Register callback for TCP push events."""
         self._host.api.baichuan.register_callback(
             callback_id, self._push_callback, cmd_id, self._channel
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
@@ -262,6 +270,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         if cmd_key is not None:
             self._host.async_register_update_cmd(cmd_key, self._channel)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         cmd_key = self.entity_description.cmd_key
@@ -303,6 +312,7 @@ class ReolinkHostChimeCoordinatorEntity(ReolinkHostCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._chime.online
@@ -340,6 +350,7 @@ class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._chime.online and super().available

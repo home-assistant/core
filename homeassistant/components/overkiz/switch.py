@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from pyoverkiz.enums.ui import UIClass, UIWidget
@@ -142,13 +142,15 @@ class OverkizSwitch(OverkizDescriptiveEntity, SwitchEntity):
     entity_description: OverkizSwitchDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         if self.entity_description.is_on:
-            return self.entity_description.is_on(self.executor.select_state)
+            return self.entity_description.is_on(self.device.states.get_value)
 
         return None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.executor.async_execute_command(
@@ -156,6 +158,7 @@ class OverkizSwitch(OverkizDescriptiveEntity, SwitchEntity):
             self.entity_description.turn_on_args,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.executor.async_execute_command(

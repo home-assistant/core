@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast, override
 
 from aioshelly.ble import get_name_from_model_id
 from aioshelly.ble.manufacturer_data import (
@@ -446,6 +446,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         return self.async_abort(reason="firmware_not_fully_provisioned")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -707,6 +708,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             self._abort_if_unique_id_configured({CONF_HOST: host})
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -1112,6 +1114,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return result
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -1281,6 +1284,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         return await get_info(async_get_clientsession(self.hass), host, port=port)
 
     @callback
+    @override
     def async_remove(self) -> None:
         """Handle flow removal - cleanup BLE connection."""
         super().async_remove()
@@ -1293,12 +1297,14 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ShellyConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
     @classmethod
     @callback
+    @override
     def async_supports_options_flow(cls, config_entry: ShellyConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return get_device_entry_gen(

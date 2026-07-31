@@ -754,7 +754,7 @@ async def async_prepare_files_for_prompt(
                 config={"http_options": {"timeout": TIMEOUT_MILLIS}},
             )
 
-        if uploaded_file.state is FileState.FAILED:
+        if uploaded_file.state == FileState.FAILED:
             raise HomeAssistantError(
                 f"File `{uploaded_file.name}` processing"
                 " failed, reason:"
@@ -766,7 +766,7 @@ async def async_prepare_files_for_prompt(
     tasks = [
         asyncio.create_task(wait_for_file_processing(part))
         for part in prompt_parts
-        if part.state is not FileState.ACTIVE
+        if part.state != FileState.ACTIVE
     ]
     async with asyncio.timeout(TIMEOUT_MILLIS / 1000):
         await asyncio.gather(*tasks)

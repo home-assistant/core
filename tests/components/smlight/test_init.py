@@ -72,7 +72,11 @@ async def test_async_setup_missing_credentials(
 
     await setup_integration(hass, mock_config_entry_host)
 
-    progress = hass.config_entries.flow.async_progress()
+    progress = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["handler"] == DOMAIN and flow["context"].get("source") == "reauth"
+    ]
     assert len(progress) == 1
     assert progress[0]["step_id"] == "reauth_confirm"
     assert progress[0]["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"

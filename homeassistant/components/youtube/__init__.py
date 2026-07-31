@@ -1,10 +1,15 @@
 """Support for YouTube."""
 
-from aiohttp.client_exceptions import ClientError, ClientResponseError
+from aiohttp.client_exceptions import ClientError
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -32,13 +37,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> b
     auth = AsyncConfigEntryAuth(hass, session)
     try:
         await auth.check_and_refresh_token()
-    except ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauth required"
-            ) from err
-        raise ConfigEntryNotReady from err
-    except ClientError as err:
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed(
+            "OAuth session is not valid, reauth required"
+        ) from err
+    except (OAuth2TokenRequestError, ClientError) as err:
         raise ConfigEntryNotReady from err
     coordinator = YouTubeDataUpdateCoordinator(hass, entry, auth)
 

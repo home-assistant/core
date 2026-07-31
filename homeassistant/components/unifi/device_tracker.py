@@ -4,7 +4,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
@@ -205,6 +205,7 @@ class UnifiScannerEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     _is_connected: bool
 
     @callback
+    @override
     def async_initiate_state(self) -> None:
         """Initiate entity state.
 
@@ -222,26 +223,31 @@ class UnifiScannerEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             )
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._is_connected
 
     @property
+    @override
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         return self.entity_description.hostname_fn(self.api, self._obj_id)
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self.entity_description.ip_address_fn(self.api, self._obj_id)
 
     @cached_property
+    @override
     def mac_address(self) -> str:
         """Return the mac address of the device."""
         return self._obj_id
 
     @cached_property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self._attr_unique_id
@@ -253,6 +259,7 @@ class UnifiScannerEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         self.async_write_ha_state()
 
     @callback
+    @override
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state.
 
@@ -284,6 +291,7 @@ class UnifiScannerEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             )
 
     @callback
+    @override
     def async_event_callback(self, event: Event) -> None:
         """Event subscription callback."""
         obj_id = self._obj_id
@@ -303,6 +311,7 @@ class UnifiScannerEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             + self.entity_description.heartbeat_timedelta_fn(hub, obj_id),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
@@ -314,12 +323,14 @@ class UnifiScannerEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
         await super().async_will_remove_from_hass()
         self.hub.remove_heartbeat(self.unique_id)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the client state attributes."""
         if self.entity_description.key != "Client device scanner":

@@ -2,12 +2,12 @@
 # name: test_number_entities
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Tailwind iQ3 Status LED brightness',
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tailwind iQ3 Status LED brightness',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.tailwind_iq3_status_led_brightness',
@@ -24,10 +24,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

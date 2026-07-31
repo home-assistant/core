@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from roborock.data import CleanFluidStatus, RoborockStateCode
 from roborock.data.v1.v1_containers import StatusField, StatusV2
@@ -14,12 +15,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import ATTR_BATTERY_CHARGING, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .coordinator import (
     RoborockConfigEntry,
+    RoborockCoordinatorType,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
     RoborockWashingMachineUpdateCoordinator,
@@ -167,26 +170,38 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Roborock vacuum binary sensors."""
-    entities: list[BinarySensorEntity] = [
-        RoborockBinarySensorEntity(
-            coordinator,
-            description,
+    coordinators = config_entry.runtime_data
+
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        entities: list[BinarySensorEntity] = []
+        if isinstance(coordinator, RoborockDataUpdateCoordinator):
+            entities.extend(
+                RoborockBinarySensorEntity(coordinator, description)
+                for description in BINARY_SENSOR_DESCRIPTIONS
+                if description.support_fn(coordinator.properties_api)
+            )
+        elif isinstance(coordinator, RoborockWashingMachineUpdateCoordinator):
+            entities.extend(
+                RoborockBinarySensorEntityA01(coordinator, description)
+                for description in ZEO_BINARY_SENSOR_DESCRIPTIONS
+                if description.data_protocol in coordinator.request_protocols
+            )
+        async_add_entities(entities)
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
         )
-        for coordinator in config_entry.runtime_data.v1
-        for description in BINARY_SENSOR_DESCRIPTIONS
-        if description.support_fn(coordinator.properties_api)
-    ]
-    entities.extend(
-        RoborockBinarySensorEntityA01(
-            coordinator,
-            description,
-        )
-        for coordinator in config_entry.runtime_data.a01
-        if isinstance(coordinator, RoborockWashingMachineUpdateCoordinator)
-        for description in ZEO_BINARY_SENSOR_DESCRIPTIONS
-        if description.data_protocol in coordinator.request_protocols
     )
-    async_add_entities(entities)
 
 
 class RoborockBinarySensorEntity(RoborockCoordinatedEntityV1, BinarySensorEntity):
@@ -208,6 +223,7 @@ class RoborockBinarySensorEntity(RoborockCoordinatedEntityV1, BinarySensorEntity
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the value reported by the sensor."""
         if (data := self.coordinator.data) is not None:
@@ -230,6 +246,7 @@ class RoborockBinarySensorEntityA01(RoborockCoordinatedEntityA01, BinarySensorEn
         super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the value reported by the sensor."""
         value = self.coordinator.data[self.entity_description.data_protocol]

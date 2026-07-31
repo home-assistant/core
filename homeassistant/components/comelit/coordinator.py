@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import TypeVar, cast
+from typing import TypeVar, cast, override
 
 from aiocomelit.api import ComelitCommonApi, ComeliteSerialBridgeApi, ComelitVedoApi
 from aiocomelit.const import (
@@ -100,6 +100,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
             hw_version=self._hw_version,
         )
 
+    @override
     async def _async_update_data(self) -> T:
         """Update device data."""
         _LOGGER.debug("Polling Comelit %s host: %s", self._device, self._host)
@@ -175,6 +176,7 @@ class ComelitSerialBridge(ComelitBaseCoordinator[T]):
         self.vedo_pin = vedo_pin
         super().__init__(hass, entry, BRIDGE, host)
 
+    @override
     async def _async_update_system_data(
         self,
     ) -> T:
@@ -218,6 +220,7 @@ class ComelitVedoSystem(ComelitBaseCoordinator[T]):
         self.vedo_pin = pin
         super().__init__(hass, entry, VEDO, host)
 
+    @override
     async def _async_update_system_data(
         self,
     ) -> T:

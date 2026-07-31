@@ -233,8 +233,9 @@ def _convert_content(  # noqa: C901
     """Transform HA chat_log content into Anthropic API format."""
     messages: list[MessageParam] = []
     container_id: str | None = None
+    contents = list(chat_content)
 
-    for content in chat_content:
+    for index, content in enumerate(contents):
         if isinstance(content, conversation.ToolResultContent):
             external_tool = True
             if content.tool_name == "web_search":
@@ -322,14 +323,26 @@ def _convert_content(  # noqa: C901
             else:
                 messages[-1]["content"].append(tool_result_block)  # type: ignore[attr-defined]
         elif isinstance(content, conversation.UserContent):
+            has_text = bool(content.content.strip())
+            # Attachments are only appended to the last message afterwards, so
+            # an empty message is only useful for attachments if it is last
+            has_attachments = bool(content.attachments) and index == len(contents) - 1
+            if not has_text and not has_attachments:
+                # The API rejects whitespace-only text blocks and empty
+                # messages, so drop content that carries neither text nor
+                # usable attachments
+                continue
             # Combine consequent user messages
             if not messages or messages[-1]["role"] != "user":
                 messages.append(
                     MessageParam(
                         role="user",
-                        content=content.content,
+                        content=content.content if has_text else [],
                     )
                 )
+            elif not has_text:
+                # Attachments are appended to the last user message later
+                continue
             elif isinstance(messages[-1]["content"], str):
                 messages[-1]["content"] = [
                     TextBlockParam(type="text", text=messages[-1]["content"]),
@@ -375,7 +388,7 @@ def _convert_content(  # noqa: C901
                 ):
                     container_id = content.native.container.id
 
-            if content.content:
+            if content.content and content.content.strip():
                 current_index = 0
                 for detail in (
                     content.native.citation_details
@@ -455,7 +468,11 @@ def _convert_content(  # noqa: C901
                     ]
                 )
 
-            if (
+            if not messages[-1]["content"]:
+                # Drop assistant messages that ended up without any content
+                # (e.g. whitespace-only text): the API rejects empty messages
+                messages.pop()
+            elif (
                 isinstance(messages[-1]["content"], list)
                 and len(messages[-1]["content"]) == 1
                 and messages[-1]["content"][0]["type"] == "text"

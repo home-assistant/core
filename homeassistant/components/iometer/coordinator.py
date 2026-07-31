@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from iometer import IOmeterClient, IOmeterConnectionError, Reading, Status
 
@@ -56,6 +57,7 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
         self.client = client
         self.identifier = config_entry.entry_id
 
+    @override
     async def _async_update_data(self) -> IOmeterData:
         """Update data async."""
         try:

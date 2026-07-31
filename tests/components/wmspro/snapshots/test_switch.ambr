@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_device
+# name: test_switch_device[config_prod_load_switch.json-status_prod_load_switch.json]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terasse',
     'config_entries': <ANY>,
@@ -30,11 +30,11 @@
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_switch_update
+# name: test_switch_update[config_prod_load_switch.json-status_prod_load_switch.json]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by WMS WebControl pro API',
-      'friendly_name': 'HEIZUNG LINKS',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by WMS WebControl pro API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HEIZUNG LINKS',
     }),
     'context': <ANY>,
     'entity_id': 'switch.terasse_heizung_links',

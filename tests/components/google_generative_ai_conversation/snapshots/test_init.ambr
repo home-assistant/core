@@ -79,7 +79,7 @@
       'labels': set({
       }),
       'manufacturer': 'Google',
-      'model': 'gemini-2.5-flash-preview-tts',
+      'model': 'gemini-3.1-flash-tts-preview',
       'model_id': None,
       'name': 'Google AI TTS',
       'name_by_user': None,

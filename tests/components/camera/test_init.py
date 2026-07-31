@@ -5,6 +5,7 @@ from http import HTTPStatus
 import io
 from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 
+from aiohttp import hdrs
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from webrtc_models import RTCIceCandidateInit
@@ -692,27 +693,44 @@ async def test_camera_proxy_stream(hass_client: ClientSessionGenerator) -> None:
 
 
 @pytest.mark.usefixtures("mock_camera")
-async def test_camera_proxy_query_token_auth(
+async def test_camera_proxy_unauthenticated(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
-    """Test the camera proxy authenticates via the access token query param."""
+    """Test camera_proxy with an unauthenticated client."""
     client = await hass_client_no_auth()
 
-    state = hass.states.get("camera.demo_camera")
-    assert state is not None
+    # Invalid token and no Authorization header: skip ban by 403
+    resp = await client.get("/api/camera_proxy/camera.demo_camera?token=invalid_token")
+    assert resp.status == HTTPStatus.FORBIDDEN
 
-    # A valid access token in the query param authenticates the request
+    # An invalid Bearer token is a real auth attempt, return 401 so the ban
+    # middleware can handle it.
+    resp = await client.get(
+        "/api/camera_proxy/camera.demo_camera",
+        headers={hdrs.AUTHORIZATION: "blabla"},
+    )
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # A valid access token in the query is accepted.
+    state = hass.states.get("camera.demo_camera")
     resp = await client.get(state.attributes["entity_picture"])
     assert resp.status == HTTPStatus.OK
     assert await resp.read() == b"Test"
 
-    # Without a token the request is unauthorized
-    resp = await client.get("/api/camera_proxy/camera.demo_camera")
+    # Unknown entity while unauthenticated returns 401
+    resp = await client.get("/api/camera_proxy/camera.unknown")
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
-    # An invalid token is also unauthorized
-    resp = await client.get("/api/camera_proxy/camera.demo_camera?token=invalid")
-    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_camera_proxy_authenticated_unknown_entity(
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test camera_proxy for an unknown entity with an authenticated client."""
+    client = await hass_client()
+
+    resp = await client.get("/api/camera_proxy/camera.unknown")
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.usefixtures("mock_camera")

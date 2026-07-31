@@ -2,7 +2,7 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyaehw4a1.aehw4a1 import AehW4a1
 import pyaehw4a1.exceptions
@@ -225,6 +225,7 @@ class ClimateAehW4a1(ClimateEntity):
             self._attr_target_temperature = None
             self._attr_preset_mode = None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if self._on != "1":
@@ -241,6 +242,7 @@ class ClimateAehW4a1(ClimateEntity):
             else:
                 await self._device.command(f"temp_{int(temp)}_F")
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if self._on != "1":
@@ -256,6 +258,7 @@ class ClimateAehW4a1(ClimateEntity):
             )
             await self._device.command(HA_FAN_MODES_TO_AC[fan_mode])
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         if self._on != "1":
@@ -293,6 +296,7 @@ class ClimateAehW4a1(ClimateEntity):
             if swing_act in (SWING_OFF, SWING_VERTICAL):
                 await self._device.command("hor_swing")
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if self._on != "1":
@@ -333,6 +337,7 @@ class ClimateAehW4a1(ClimateEntity):
                 await self._device.command(HA_STATE_TO_AC[self._previous_state])
             self._previous_state = None
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         _LOGGER.debug(
@@ -345,11 +350,13 @@ class ClimateAehW4a1(ClimateEntity):
             if self._on != "1":
                 await self.async_turn_on()
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on."""
         _LOGGER.debug("Turning %s on", self._attr_unique_id)
         await self._device.command("on")
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off."""
         _LOGGER.debug("Turning %s off", self._attr_unique_id)

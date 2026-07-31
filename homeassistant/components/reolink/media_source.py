@@ -2,6 +2,7 @@
 
 import datetime as dt
 import logging
+from typing import override
 
 from reolink_aio.api import DUAL_LENS_MODELS
 from reolink_aio.enums import VodRequestType
@@ -57,6 +58,7 @@ class ReolinkVODMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         identifier = ["UNKNOWN"]
@@ -113,6 +115,7 @@ class ReolinkVODMediaSource(MediaSource):
         stream_url = stream_url.replace("master_", "")
         return PlayMedia(stream_url, mime_type)
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,

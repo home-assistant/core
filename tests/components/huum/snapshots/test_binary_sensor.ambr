@@ -39,8 +39,8 @@
 # name: test_binary_sensor[binary_sensor.huum_sauna_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Huum sauna Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Huum sauna Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.huum_sauna_door',

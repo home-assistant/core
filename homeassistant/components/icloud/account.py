@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 import operator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
@@ -16,7 +16,7 @@ from pyicloud.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_USERNAME, EntityStateAttribute
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -54,6 +54,9 @@ from .const import (
     DEVICE_STATUS_SET,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from .media_source import PhotoCache
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,6 +98,8 @@ class IcloudAccount:
         self._unsub_fetch: CALLBACK_TYPE | None = None
         self.listeners: list[CALLBACK_TYPE] = []
 
+        self.photo_cache: PhotoCache | None = None
+
     def setup(self) -> None:
         """Set up an iCloud account."""
         try:
@@ -105,22 +110,22 @@ class IcloudAccount:
                 with_family=self._with_family,
             )
 
-            if self.api.requires_2fa:
-                # Trigger a new log in to ensure the user enters the 2FA code again.
-                raise PyiCloudFailedLoginException("2FA Required")  # noqa: TRY301
-
         except PyiCloudFailedLoginException:
             self.api = None
-            # Login failed which means credentials need to be updated.
+            # Login failed which means credentials/2fa need to be updated.
             _LOGGER.error(
                 (
-                    "Your password for '%s' is no longer working; Go to the "
+                    "Your iCloud account for '%s' is no longer working; Go to the "
                     "Integrations menu and click on Configure on the discovered Apple "
                     "iCloud card to login again"
                 ),
                 self._config_entry.data[CONF_USERNAME],
             )
 
+            self._require_reauth()
+            return
+
+        if self.api.requires_2fa:
             self._require_reauth()
             return
 
@@ -251,8 +256,8 @@ class IcloudAccount:
             for zone_state in zones:
                 if zone_state is None:
                     continue
-                zone_state_lat = zone_state.attributes[DEVICE_LOCATION_LATITUDE]
-                zone_state_long = zone_state.attributes[DEVICE_LOCATION_LONGITUDE]
+                zone_state_lat = zone_state.attributes[EntityStateAttribute.LATITUDE]
+                zone_state_long = zone_state.attributes[EntityStateAttribute.LONGITUDE]
                 zone_distance = distance(
                     device.location[DEVICE_LOCATION_LATITUDE],
                     device.location[DEVICE_LOCATION_LONGITUDE],

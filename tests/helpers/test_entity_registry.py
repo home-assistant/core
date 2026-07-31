@@ -1064,6 +1064,64 @@ async def test_removing_config_entry_id(
     }
 
 
+async def test_enabled_count_for_config_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test counting enabled entries for a config entry."""
+    mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
+    mock_config.add_to_hass(hass)
+
+    def enabled_count() -> int:
+        return entity_registry.entities.get_enabled_count_for_config_entry_id(
+            "mock-id-1"
+        )
+
+    assert enabled_count() == 0
+
+    # Enabled entry increments the count
+    entry1 = entity_registry.async_get_or_create(
+        "light", "hue", "1", config_entry=mock_config
+    )
+    assert enabled_count() == 1
+
+    # Disabled-by-default entry does not count
+    entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "2",
+        config_entry=mock_config,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+    assert enabled_count() == 1
+
+    # Disabling an enabled entry decrements the count
+    entity_registry.async_update_entity(
+        entry1.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    assert enabled_count() == 0
+
+    # Re-enabling increments it again
+    entity_registry.async_update_entity(entry1.entity_id, disabled_by=None)
+    assert enabled_count() == 1
+
+    # Removing an enabled entry decrements the count
+    entity_registry.async_remove(entry1.entity_id)
+    assert enabled_count() == 0
+
+    # The count matches a filtered scan of the index
+    entity_registry.async_get_or_create("light", "hue", "3", config_entry=mock_config)
+    entity_registry.async_get_or_create("light", "hue", "4", config_entry=mock_config)
+    assert enabled_count() == len(
+        [
+            entry
+            for entry in entity_registry.entities.get_entries_for_config_entry_id(
+                "mock-id-1"
+            )
+            if not entry.disabled
+        ]
+    )
+
+
 async def test_deleted_entity_removing_config_entry_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -2617,6 +2675,71 @@ async def test_restore_states(
     assert hass.states.get("light.simple") is None
     assert hass.states.get("light.disabled") is None
     assert hass.states.get("light.all_info_set") is None
+
+
+@pytest.mark.parametrize(
+    ("original_name", "entity_name", "device_name_by_user", "expected_friendly_name"),
+    [
+        pytest.param(
+            None, None, None, "Pedestal Fan", id="primary_entity_uses_device_name"
+        ),
+        pytest.param(
+            "Temperature",
+            None,
+            None,
+            "Pedestal Fan Temperature",
+            id="entity_name_prefixed_with_device_name",
+        ),
+        pytest.param(
+            "Pedestal Fan", "Angle", None, "Angle", id="user_rename_replaces_full_name"
+        ),
+        pytest.param(
+            None, None, "Living Room Fan", "Living Room Fan", id="device_rename_applied"
+        ),
+    ],
+)
+async def test_restore_state_uses_device_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    original_name: str | None,
+    entity_name: str | None,
+    device_name_by_user: str | None,
+    expected_friendly_name: str,
+) -> None:
+    """Test the restored state friendly name is composed like the live state."""
+    hass.set_state(CoreState.not_running)
+
+    config_entry = MockConfigEntry(domain="fan")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="Pedestal Fan",
+    )
+    device_registry.async_update_device(
+        device_entry.id, name_by_user=device_name_by_user
+    )
+
+    entry = entity_registry.async_get_or_create(
+        "fan",
+        "demo",
+        "1234",
+        suggested_object_id="test",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name=original_name,
+    )
+    entity_registry.async_update_entity(entry.entity_id, name=entity_name)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.test")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes["friendly_name"] == expected_friendly_name
 
 
 async def test_remove_device_removes_entities(

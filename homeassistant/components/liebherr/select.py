@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyliebherrhomeapi import (
     BioFreshPlusControl,
@@ -210,6 +210,7 @@ class LiebherrSelectEntity(LiebherrEntity, SelectEntity):
         return None
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current selected option."""
         control = self._select_control
@@ -224,10 +225,12 @@ class LiebherrSelectEntity(LiebherrEntity, SelectEntity):
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._select_control is not None
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         mode = self.entity_description.mode_enum(option)

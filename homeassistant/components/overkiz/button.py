@@ -1,6 +1,7 @@
 """Support for Overkiz (virtual) buttons."""
 
 from dataclasses import dataclass
+from typing import override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam
 from pyoverkiz.types import StateType as OverkizStateType
@@ -131,6 +132,7 @@ class OverkizButton(OverkizDescriptiveEntity, ButtonEntity):
 
     entity_description: OverkizButtonDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         if self.entity_description.press_args:

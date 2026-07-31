@@ -1,6 +1,6 @@
 """Support for SwitchBee light."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeDimmer
@@ -63,6 +63,7 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
         self._update_attrs_from_coordinator()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attrs_from_coordinator()
@@ -85,6 +86,7 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
         if 0 < brightness < 100:
             self._attr_brightness = _switchbee_brightness_to_hass(brightness)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Async function to set on to light."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -112,6 +114,7 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
         self._get_coordinator_device().brightness = state
         self.coordinator.async_set_updated_data(self.coordinator.data)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off SwitchBee light."""
         try:

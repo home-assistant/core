@@ -1,6 +1,6 @@
 """Config flow for Modem Caller ID integration."""
 
-from typing import Any
+from typing import Any, override
 
 from phone_modem import PhoneModem
 import voluptuous as vol
@@ -29,6 +29,7 @@ class PhoneModemFlowHandler(ConfigFlow, domain=DOMAIN):
         """Set up flow instance."""
         self._device: str | None = None
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         dev_path = discovery_info.device
@@ -58,6 +59,7 @@ class PhoneModemFlowHandler(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="usb_confirm")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

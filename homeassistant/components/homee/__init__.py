@@ -83,9 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={
-            (dr.CONNECTION_NETWORK_MAC, dr.format_mac(homee.settings.mac_address))
-        },
+        connections={(dr.CONNECTION_NETWORK_MAC, homee.settings.mac_address)},
         identifiers={(DOMAIN, homee.settings.uid)},
         manufacturer="homee",
         name=homee.settings.homee_name,

@@ -1,13 +1,13 @@
 """Base class for Netatmo entities."""
 
 from abc import abstractmethod
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyatmo import DeviceType, Home, Module, Room
 from pyatmo.modules.base_class import NetatmoBase, Place
 from pyatmo.modules.device_types import DEVICE_DESCRIPTION_MAP
 
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -16,12 +16,11 @@ from homeassistant.helpers.entity import Entity
 from .const import (
     CONF_URL_ENERGY,
     CONF_URL_WEATHER,
-    DATA_DEVICE_IDS,
     DEFAULT_ATTRIBUTION,
     DOMAIN,
     SIGNAL_NAME,
 )
-from .data_handler import PUBLIC, NetatmoDataHandler, NetatmoDevice, NetatmoRoom
+from .coordinator import PUBLIC, NetatmoDataHandler, NetatmoDevice, NetatmoRoom
 
 
 class NetatmoBaseEntity(Entity):
@@ -36,6 +35,7 @@ class NetatmoBaseEntity(Entity):
         self._publishers: list[dict[str, Any]] = []
         self._attr_extra_state_attributes = {}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         for publisher in self._publishers:
@@ -73,6 +73,7 @@ class NetatmoBaseEntity(Entity):
 
         self.async_update_callback()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -131,6 +132,7 @@ class NetatmoRoomEntity(NetatmoDeviceEntity):
             suggested_area=room.room.name,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
@@ -138,11 +140,10 @@ class NetatmoRoomEntity(NetatmoDeviceEntity):
         if device := registry.async_get_device(
             identifiers={(DOMAIN, self.device.entity_id)}
         ):
-            # Uses legacy hass.data[DOMAIN] pattern
-            # pylint: disable-next=home-assistant-use-runtime-data
-            self.hass.data[DOMAIN][DATA_DEVICE_IDS][self.device.entity_id] = device.id
+            self.data_handler.device_ids[self.device.entity_id] = device.id
 
     @property
+    @override
     def device_type(self) -> DeviceType:
         """Return the device type."""
         assert self.device.climate_type
@@ -167,6 +168,7 @@ class NetatmoModuleEntity(NetatmoDeviceEntity):
         )
 
     @property
+    @override
     def device_type(self) -> DeviceType:
         """Return the device type."""
         return self.device.device_type
@@ -196,12 +198,13 @@ class NetatmoWeatherModuleEntity(NetatmoModuleEntity):
             if hasattr(place, "location") and place.location is not None:
                 self._attr_extra_state_attributes.update(
                     {
-                        ATTR_LATITUDE: place.location.latitude,
-                        ATTR_LONGITUDE: place.location.longitude,
+                        EntityStateAttribute.LATITUDE: place.location.latitude,
+                        EntityStateAttribute.LONGITUDE: place.location.longitude,
                     }
                 )
 
     @property
+    @override
     def device_type(self) -> DeviceType:
         """Return the Netatmo device type."""
         if "." not in self.device.device_type:

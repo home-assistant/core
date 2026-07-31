@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Final, cast
+from typing import Final, cast, override
 
 from systembridgeconnector.models.modules.cpu import PerCPU
 from systembridgeconnector.models.modules.displays import Display
@@ -657,6 +657,7 @@ class SystemBridgeSensor(SystemBridgeEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         try:

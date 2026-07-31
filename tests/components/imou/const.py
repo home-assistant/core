@@ -11,6 +11,10 @@ from homeassistant.components.imou.const import (
     CONF_API_URL,
     CONF_APP_ID,
     CONF_APP_SECRET,
+    PARAM_HEADER_DETECT,
+    PARAM_LIGHT,
+    PARAM_MOTION_DETECT,
+    PARAM_PLUG_SWITCH,
     PARAM_STATE,
     PARAM_STATUS,
 )
@@ -32,6 +36,14 @@ CONFIG_ENTRY_DATA = {
 }
 
 UNKNOWN_BUTTON_KEY = "legacy_unknown_button"
+UNKNOWN_SWITCH_KEY = "legacy_unknown_switch"
+
+DEFAULT_SWITCHES = {
+    PARAM_MOTION_DETECT: {PARAM_STATE: False},
+    PARAM_HEADER_DETECT: {PARAM_STATE: True},
+    PARAM_LIGHT: {PARAM_STATE: False},
+    PARAM_PLUG_SWITCH: {PARAM_STATE: True},
+}
 
 
 def create_online_device(
@@ -40,6 +52,8 @@ def create_online_device(
     *,
     channel_id: str | None = None,
     button_keys: tuple[str, ...] = (),
+    switches: dict[str, dict] | None = None,
+    sensors: dict[str, dict] | None = None,
 ) -> ImouHaDevice:
     """Build an online ImouHaDevice for tests."""
     return create_device(
@@ -48,6 +62,8 @@ def create_online_device(
         channel_id=channel_id,
         button_keys=button_keys,
         status=DeviceStatus.ONLINE,
+        switches=switches,
+        sensors=sensors,
     )
 
 
@@ -75,6 +91,8 @@ def create_device(
     channel_id: str | None = None,
     button_keys: tuple[str, ...] = (),
     status: DeviceStatus = DeviceStatus.ONLINE,
+    switches: dict[str, dict] | None = None,
+    sensors: dict[str, dict] | None = None,
 ) -> ImouHaDevice:
     """Build an ImouHaDevice for tests."""
     device = ImouHaDevice(device_id, name, "Imou", "m1", "1.0")
@@ -83,6 +101,10 @@ def create_device(
     for key in button_keys:
         device._buttons[key] = {}
     device._sensors[PARAM_STATUS] = {PARAM_STATE: status.value}
+    if switches:
+        device._switches.update(switches)
+    if sensors:
+        device._sensors.update(sensors)
     return device
 
 

@@ -1,5 +1,7 @@
 """Base entity for the Hypontech Cloud integration."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -18,7 +20,7 @@ class HypontechEntity(CoordinatorEntity[HypontechDataCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.account_id)},
             name="Overview",
-            manufacturer="Hypontech",
+            manufacturer=coordinator.oem_name,
         )
 
 
@@ -35,7 +37,7 @@ class HypontechPlantEntity(CoordinatorEntity[HypontechDataCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, plant_id)},
             name=plant.info.plant_name,
-            manufacturer="Hypontech",
+            manufacturer=coordinator.oem_name,
             model=plant.info.plant_type,
         )
 
@@ -45,6 +47,7 @@ class HypontechPlantEntity(CoordinatorEntity[HypontechDataCoordinator]):
         return self.coordinator.data.plants[self.plant_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.plant_id in self.coordinator.data.plants

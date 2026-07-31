@@ -1,7 +1,7 @@
 """Media player platform for Alexa Devices."""
 
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from aioamazondevices.structures import (
     AmazonMediaControls,
@@ -22,9 +22,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import _LOGGER
-from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
+from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator, alexa_api_call
 from .entity import AmazonEntity
-from .utils import alexa_api_call
 
 PARALLEL_UPDATES = 1
 
@@ -102,6 +101,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         return self.coordinator.volume_states.get(self._serial_num)
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return dynamically supported features based on current media."""
         features = STANDARD_SUPPORTED_FEATURES
@@ -121,6 +121,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         return features
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the current state of the player."""
         if not self.media_state:
@@ -133,6 +134,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         return MediaPlayerState.IDLE
 
     @property
+    @override
     def volume_level(self) -> float | None:
         """Return the volume level (0.0 to 1.0)."""
         if not self.volume_state or self.volume_state.volume is None:
@@ -140,6 +142,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         return self.volume_state.volume / 100
 
     @property
+    @override
     def is_volume_muted(self) -> bool | None:
         """Return True if the volume is muted."""
         if not self.volume_state or self.volume_state.volume is None:
@@ -149,6 +152,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         return self.volume_state.is_muted or self.volume_state.volume == 0
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Track title."""
         if not self.media_state:
@@ -156,6 +160,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         return self.media_state.now_playing_title
 
     @property
+    @override
     def media_artist(self) -> str | None:
         """Artist name."""
         if not self.media_state:
@@ -163,6 +168,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         return self.media_state.now_playing_line1
 
     @property
+    @override
     def media_album_name(self) -> str | None:
         """Album name."""
         if not self.media_state:
@@ -170,6 +176,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         return self.media_state.now_playing_line2
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Album art URL."""
         if not self.media_state:
@@ -177,6 +184,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         return self.media_state.now_playing_url
 
     @property
+    @override
     def media_duration(self) -> int | None:
         """Duration in seconds."""
         if not self.media_state:
@@ -184,6 +192,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         return self.media_state.media_length
 
     @property
+    @override
     def media_position(self) -> int | None:
         """Current playback position in seconds."""
         if not self.media_state:
@@ -191,6 +200,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         return self.media_state.media_position
 
     @property
+    @override
     def media_position_updated_at(self) -> datetime | None:
         """When media_position was last updated — HA uses this to interpolate the progress bar."""
         if not self.media_state:
@@ -198,12 +208,14 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         return self.media_state.media_position_updated_at
 
     @property
+    @override
     def media_content_type(self) -> MediaType | None:
         """Content type — tells HA what kind of media is playing."""
         if self.state in (MediaPlayerState.PLAYING, MediaPlayerState.PAUSED):
             return MediaType.MUSIC
         return None
 
+    @override
     async def async_play_media(
         self,
         media_type: MediaType | str,
@@ -216,16 +228,15 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         provider = media_type.value if isinstance(media_type, MediaType) else media_type
         await self.async_call_alexa_music(media_id, provider)
 
-    @alexa_api_call
     async def async_call_alexa_music(
         self, search_phrase: str, provider_id: str
     ) -> None:
         """Call alexa music."""
-        await self.coordinator.api.call_alexa_music(
-            self.device, search_phrase, provider_id
-        )
+        async with alexa_api_call(self.coordinator):
+            await self.coordinator.api.call_alexa_music(
+                self.device, search_phrase, provider_id
+            )
 
-    @alexa_api_call
     async def async_set_device_volume(self, volume: int) -> None:
         """Set the device volume."""
         _LOGGER.debug(
@@ -233,13 +244,16 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
             self.device.serial_number,
             volume,
         )
-        await self.coordinator.api.set_device_volume(self.device, volume)
+        async with alexa_api_call(self.coordinator):
+            await self.coordinator.api.set_device_volume(self.device, volume)
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level (0.0 to 1.0)."""
         device_volume = round(volume * 100)
         await self.async_set_device_volume(device_volume)
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or un-mute the volume."""
         # Whilst you can mute a device by asking it there appears to be
@@ -263,29 +277,34 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         await self.async_set_volume_level(target_volume / 100)
         self._prev_volume = None
 
-    @alexa_api_call
     async def _send_media_command(self, command: AmazonMediaControls) -> None:
         _LOGGER.debug(
             "Sending media command '%s' to %s", command, self.device.serial_number
         )
-        await self.coordinator.api.send_media_command(self.device, command)
+        async with alexa_api_call(self.coordinator):
+            await self.coordinator.api.send_media_command(self.device, command)
 
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._send_media_command(AmazonMediaControls.Stop)
 
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._send_media_command(AmazonMediaControls.Pause)
 
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._send_media_command(AmazonMediaControls.Play)
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._send_media_command(AmazonMediaControls.Next)
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._send_media_command(AmazonMediaControls.Previous)

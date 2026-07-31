@@ -1,6 +1,6 @@
 """Switches for Yale Alarm."""
 
-from typing import Any
+from typing import Any, override
 
 from yalesmartalarmclient import YaleLock
 
@@ -40,12 +40,14 @@ class YaleAutolockSwitch(YaleLockEntity, SwitchEntity):
         self._attr_unique_id = f"{lock.sid()}-autolock"
         self._attr_is_on = self.lock_data.autolock()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if await self.hass.async_add_executor_job(self.lock_data.set_autolock, True):
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if await self.hass.async_add_executor_job(self.lock_data.set_autolock, False):
@@ -53,6 +55,7 @@ class YaleAutolockSwitch(YaleLockEntity, SwitchEntity):
             self.async_write_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_on = self.lock_data.autolock()

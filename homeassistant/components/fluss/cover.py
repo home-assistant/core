@@ -1,6 +1,6 @@
 """Cover platform for Fluss+ devices that report an open/closed status."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -15,7 +15,7 @@ from .const import DOMAIN
 from .coordinator import FlussApiClientError, FlussConfigEntry
 from .entity import FlussEntity
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 STATUS_OPEN = "Open"
 STATUS_CLOSED = "Closed"
@@ -54,11 +54,13 @@ class FlussCover(FlussEntity, CoverEntity):
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     @property
+    @override
     def available(self) -> bool:
         """Return True only when the device is online."""
         return super().available and self.device["internetConnected"]
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return whether the cover is closed."""
         status = self.device.get("openCloseStatus")
@@ -68,6 +70,7 @@ class FlussCover(FlussEntity, CoverEntity):
             return False
         return None
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         try:
@@ -78,6 +81,7 @@ class FlussCover(FlussEntity, CoverEntity):
             ) from err
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         try:

@@ -1,7 +1,9 @@
 """Support for airthings ble sensors."""
 
-import dataclasses
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
+from typing import override
 
 from airthings_ble import AirthingsConnectivityMode, AirthingsDevice
 
@@ -12,13 +14,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     EntityCategory,
     Platform,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
+    UnitOfRatio,
     UnitOfSoundPressure,
     UnitOfTemperature,
 )
@@ -32,9 +33,8 @@ from homeassistant.helpers.entity_registry import (
 )
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
+from .const import DOMAIN
 from .coordinator import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,87 +45,108 @@ CONNECTIVITY_MODE_MAP = {
     AirthingsConnectivityMode.NOT_CONFIGURED.value: "not_configured",
 }
 
-SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
-    "radon_1day_avg": SensorEntityDescription(
+
+def get_connectivity_mode(value: str | float | None) -> str | None:
+    """Get connectivity mode."""
+    if not isinstance(value, str):
+        return None
+    return CONNECTIVITY_MODE_MAP.get(value)
+
+
+@dataclass(frozen=True, kw_only=True)
+class AirthingsBLESensorEntityDescription(SensorEntityDescription):
+    """Describes Airthings BLE sensor entity."""
+
+    value_fn: Callable[[str | float | None], str | float | None] = lambda x: x
+
+
+SENSORS_MAPPING_TEMPLATE: dict[str, AirthingsBLESensorEntityDescription] = {
+    "radon_1day_avg": AirthingsBLESensorEntityDescription(
         key="radon_1day_avg",
         translation_key="radon_1day_avg",
-        native_unit_of_measurement=VOLUME_BECQUEREL,
-        suggested_display_precision=0,
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "radon_longterm_avg": SensorEntityDescription(
+    "radon_longterm_avg": AirthingsBLESensorEntityDescription(
         key="radon_longterm_avg",
         translation_key="radon_longterm_avg",
-        native_unit_of_measurement=VOLUME_BECQUEREL,
-        suggested_display_precision=0,
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "radon_1day_level": SensorEntityDescription(
+    "radon_1day_level": AirthingsBLESensorEntityDescription(
         key="radon_1day_level",
         translation_key="radon_1day_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["good", "fair", "poor"],
+        value_fn=lambda value: value if value != "unknown" else None,
     ),
-    "radon_longterm_level": SensorEntityDescription(
+    "radon_longterm_level": AirthingsBLESensorEntityDescription(
         key="radon_longterm_level",
         translation_key="radon_longterm_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["good", "fair", "poor"],
+        value_fn=lambda value: value if value != "unknown" else None,
     ),
-    "temperature": SensorEntityDescription(
+    "temperature": AirthingsBLESensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    "humidity": SensorEntityDescription(
+    "humidity": AirthingsBLESensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    "pressure": SensorEntityDescription(
+    "pressure": AirthingsBLESensorEntityDescription(
         key="pressure",
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    "battery": SensorEntityDescription(
+    "battery": AirthingsBLESensorEntityDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,
     ),
-    "co2": SensorEntityDescription(
+    "co2": AirthingsBLESensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
-    "voc": SensorEntityDescription(
+    "voc": AirthingsBLESensorEntityDescription(
         key="voc",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
-    "illuminance": SensorEntityDescription(
+    "illuminance": AirthingsBLESensorEntityDescription(
         key="illuminance",
         translation_key="illuminance",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
-    "lux": SensorEntityDescription(
+    "lux": AirthingsBLESensorEntityDescription(
         key="lux",
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
-    "noise": SensorEntityDescription(
+    "noise": AirthingsBLESensorEntityDescription(
         key="noise",
         translation_key="ambient_noise",
         device_class=SensorDeviceClass.SOUND_PRESSURE,
@@ -133,13 +154,14 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
-    "connectivity_mode": SensorEntityDescription(
+    "connectivity_mode": AirthingsBLESensorEntityDescription(
         key="connectivity_mode",
         translation_key="connectivity_mode",
         device_class=SensorDeviceClass.ENUM,
         options=list(CONNECTIVITY_MODE_MAP.values()),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        value_fn=get_connectivity_mode,
     ),
 }
 
@@ -187,26 +209,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Airthings BLE sensors."""
-    is_metric = hass.config.units is METRIC_SYSTEM
-
     coordinator = entry.runtime_data
-
-    # we need to change some units
-    sensors_mapping = SENSORS_MAPPING_TEMPLATE.copy()
-    if not is_metric:
-        for key, val in sensors_mapping.items():
-            if val.native_unit_of_measurement is not VOLUME_BECQUEREL:
-                continue
-            sensors_mapping[key] = dataclasses.replace(
-                val,
-                native_unit_of_measurement=VOLUME_PICOCURIE,
-                suggested_display_precision=1,
-            )
 
     entities = []
     _LOGGER.debug("got sensors: %s", coordinator.data.sensors)
     for sensor_type, sensor_value in coordinator.data.sensors.items():
-        if sensor_type not in sensors_mapping:
+        if sensor_type not in SENSORS_MAPPING_TEMPLATE:
             _LOGGER.debug(
                 "Unknown sensor type detected: %s, %s",
                 sensor_type,
@@ -215,7 +223,9 @@ async def async_setup_entry(
             continue
         async_migrate(hass, coordinator.data.address, sensor_type)
         entities.append(
-            AirthingsSensor(coordinator, coordinator.data, sensors_mapping[sensor_type])
+            AirthingsSensor(
+                coordinator, coordinator.data, SENSORS_MAPPING_TEMPLATE[sensor_type]
+            )
         )
 
     async_add_entities(entities)
@@ -227,12 +237,13 @@ class AirthingsSensor(
     """Airthings BLE sensors for the device."""
 
     _attr_has_entity_name = True
+    entity_description: AirthingsBLESensorEntityDescription
 
     def __init__(
         self,
         coordinator: AirthingsBLEDataUpdateCoordinator,
         airthings_device: AirthingsDevice,
-        entity_description: SensorEntityDescription,
+        entity_description: AirthingsBLESensorEntityDescription,
     ) -> None:
         """Populate the airthings entity with relevant data."""
         super().__init__(coordinator)
@@ -258,6 +269,7 @@ class AirthingsSensor(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Check if device and sensor is available in data."""
         return (
@@ -266,14 +278,8 @@ class AirthingsSensor(
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         value = self.coordinator.data.sensors[self.entity_description.key]
-
-        # Map connectivity mode to enum values
-        if self.entity_description.key == "connectivity_mode":
-            if not isinstance(value, str):
-                return None
-            return CONNECTIVITY_MODE_MAP.get(value)
-
-        return value
+        return self.entity_description.value_fn(value)

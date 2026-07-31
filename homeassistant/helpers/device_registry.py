@@ -8,7 +8,7 @@ from enum import StrEnum
 from functools import lru_cache
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, Unpack
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, Unpack, override
 
 import attr
 from yarl import URL
@@ -585,6 +585,7 @@ class DeletedDeviceEntry:
 class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
+    @override
     async def _async_migrate_func(  # noqa: C901
         self,
         old_major_version: int,
@@ -698,6 +699,7 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
         self._connections: dict[tuple[str, str], _EntryTypeT] = {}
         self._identifiers: dict[tuple[str, str], _EntryTypeT] = {}
 
+    @override
     def _index_entry(self, key: str, entry: _EntryTypeT) -> None:
         """Index an entry."""
         for connection in entry.connections:
@@ -705,6 +707,7 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
         for identifier in entry.identifiers:
             self._identifiers[identifier] = entry
 
+    @override
     def _unindex_entry(
         self, key: str, replacement_entry: _EntryTypeT | None = None
     ) -> None:
@@ -767,6 +770,7 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
         self._config_entry_id_index: RegistryIndexType = defaultdict(dict)
         self._labels_index: RegistryIndexType = defaultdict(dict)
 
+    @override
     def _index_entry(self, key: str, entry: DeviceEntry) -> None:
         """Index an entry."""
         super()._index_entry(key, entry)
@@ -777,6 +781,7 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
         for config_entry_id in entry.config_entries:
             self._config_entry_id_index[config_entry_id][key] = True
 
+    @override
     def _unindex_entry(
         self, key: str, replacement_entry: DeviceEntry | None = None
     ) -> None:
@@ -1514,6 +1519,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
         self.async_schedule_save()
 
+    @override
     async def _async_load(self) -> None:
         """Load the device registry."""
         if self._loaded_event.is_set():
@@ -1623,6 +1629,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         await self._loaded_event.wait()
 
     @callback
+    @override
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of device registry to store in a file."""
         # Create intermediate lists to allow this method to be called from a thread

@@ -127,6 +127,26 @@ def now(time_zone: dt.tzinfo | None = None) -> dt.datetime:
     return dt.datetime.now(time_zone or DEFAULT_TIME_ZONE)
 
 
+def naive_now() -> dt.datetime:
+    """Get now as a naive datetime in system local time.
+
+    The returned datetime has no tzinfo.
+    Prefer the time zone aware `now` helper unless
+    a naive datetime is explicitly required.
+
+    A valid use case for a naive datetime is for example when
+    a 3rd party library requires a naive datetime in local time.
+    In that case, this helper can be used to get the current time
+    in the expected format.
+
+    Use time.time() when calculating a relative time.
+    For example, to calculate the time until a future event,
+    do `event_time - time.time()`
+    instead of `event_time - datetime.datetime.now().timestamp()`.
+    """
+    return dt.datetime.now()
+
+
 def as_utc(dattim: dt.datetime) -> dt.datetime:
     """Return a datetime as UTC time.
 

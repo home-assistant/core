@@ -74,7 +74,7 @@
 # name: test_states[switch.my_device-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device',
@@ -124,7 +124,7 @@
 # name: test_states[switch.my_device_auto_off_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Auto-off enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Auto-off enabled',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_auto_off_enabled',
@@ -174,7 +174,7 @@
 # name: test_states[switch.my_device_auto_update_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Auto-update enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Auto-update enabled',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_auto_update_enabled',
@@ -224,7 +224,7 @@
 # name: test_states[switch.my_device_baby_cry_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Baby cry detection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Baby cry detection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_baby_cry_detection',
@@ -274,7 +274,7 @@
 # name: test_states[switch.my_device_carpet_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Carpet boost',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Carpet boost',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_carpet_boost',
@@ -324,7 +324,7 @@
 # name: test_states[switch.my_device_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_child_lock',
@@ -374,7 +374,7 @@
 # name: test_states[switch.my_device_fan_sleep_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Fan sleep mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Fan sleep mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_fan_sleep_mode',
@@ -424,7 +424,7 @@
 # name: test_states[switch.my_device_led-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device LED',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device LED',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_led',
@@ -474,7 +474,7 @@
 # name: test_states[switch.my_device_motion_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Motion detection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Motion detection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_motion_detection',
@@ -524,7 +524,7 @@
 # name: test_states[switch.my_device_motion_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Motion sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Motion sensor',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_motion_sensor',
@@ -574,7 +574,7 @@
 # name: test_states[switch.my_device_person_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Person detection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Person detection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_person_detection',
@@ -624,7 +624,7 @@
 # name: test_states[switch.my_device_smooth_transitions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Smooth transitions',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Smooth transitions',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_smooth_transitions',
@@ -674,7 +674,7 @@
 # name: test_states[switch.my_device_tamper_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Tamper detection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Tamper detection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_tamper_detection',

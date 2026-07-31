@@ -1,5 +1,7 @@
 """Support for Plaato Airlock sensors."""
 
+from typing import override
+
 from pyplaato.models.device import PlaatoDevice
 from pyplaato.plaato import PlaatoKeg
 
@@ -81,11 +83,13 @@ class PlaatoSensor(PlaatoEntity, SensorEntity):
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state of the sensor."""
         return self._sensor_data.sensors.get(self._sensor_type)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return self._sensor_data.get_unit_of_measurement(self._sensor_type)

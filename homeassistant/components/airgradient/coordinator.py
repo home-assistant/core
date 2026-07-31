@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from airgradient import AirGradientClient, AirGradientError, Config, Measures
 
@@ -47,6 +48,7 @@ class AirGradientCoordinator(DataUpdateCoordinator[AirGradientData]):
         assert self.config_entry.unique_id
         self.serial_number = self.config_entry.unique_id
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
@@ -60,6 +62,7 @@ class AirGradientCoordinator(DataUpdateCoordinator[AirGradientData]):
                 translation_placeholders={"error": str(error)},
             ) from error
 
+    @override
     async def _async_update_data(self) -> AirGradientData:
         try:
             measures = await self.client.get_current_measures()

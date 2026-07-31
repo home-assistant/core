@@ -1,7 +1,7 @@
 """Config flow to configure IPMA component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyipma import IPMAException
 from pyipma.api import IPMA_API
@@ -23,6 +23,7 @@ class IpmaFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyportainer import (
     Portainer,
@@ -18,6 +18,12 @@ from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import CONF_DISK_SPACE_SENSORS, DOMAIN
 from .coordinator import PortainerConfigEntry
@@ -32,9 +38,13 @@ OPTIONS_SCHEMA = vol.Schema(
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_URL): str,
-        vol.Required(CONF_API_TOKEN): str,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        vol.Required(CONF_URL): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.URL)
+        ),
+        vol.Required(CONF_API_TOKEN): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+        vol.Optional(CONF_VERIFY_SSL, default=True): BooleanSelector(),
     }
 )
 
@@ -69,12 +79,14 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: PortainerConfigEntry,
     ) -> PortainerOptionsFlow:
         """Create the options flow."""
         return PortainerOptionsFlow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -141,7 +153,13 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_API_TOKEN): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    )
+                }
+            ),
             errors=errors,
         )
 

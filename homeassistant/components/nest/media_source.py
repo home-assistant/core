@@ -23,7 +23,7 @@ import logging
 import os
 import pathlib
 import shutil
-from typing import Any
+from typing import Any, override
 
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait, CameraEventImageTrait
 from google_nest_sdm.device import Device
@@ -156,6 +156,7 @@ class NestEventMediaStore(EventMediaStore):
             datetime.timedelta(days=1),
         )
 
+    @override
     async def async_load(self) -> dict | None:
         """Load data."""
         if self._data is None:
@@ -168,6 +169,7 @@ class NestEventMediaStore(EventMediaStore):
                 self._data = data
         return self._data
 
+    @override
     async def async_save(self, data: dict) -> None:
         """Save data."""
         self._data = data
@@ -177,6 +179,7 @@ class NestEventMediaStore(EventMediaStore):
 
         self._store.async_delay_save(provide_data, STORAGE_SAVE_DELAY_SECONDS)
 
+    @override
     def get_media_key(self, device_id: str, event: ImageEventBase) -> str:
         """Return the filename to use for a new event."""
         if event.event_image_type != EventImageType.IMAGE:
@@ -190,6 +193,7 @@ class NestEventMediaStore(EventMediaStore):
             else "unknown_device"
         )
 
+    @override
     def get_image_media_key(self, device_id: str, event: ImageEventBase) -> str:
         """Return the filename for image media for an event."""
         device_id_str = self._map_device_id(device_id)
@@ -197,6 +201,7 @@ class NestEventMediaStore(EventMediaStore):
         event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
         return f"{device_id_str}/{time_str}-{event_type_str}.jpg"
 
+    @override
     def get_clip_preview_media_key(self, device_id: str, event: ImageEventBase) -> str:
         """Return the filename for clip preview media for an event session."""
         device_id_str = self._map_device_id(device_id)
@@ -204,6 +209,7 @@ class NestEventMediaStore(EventMediaStore):
         event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
         return f"{device_id_str}/{time_str}-{event_type_str}.mp4"
 
+    @override
     def get_clip_preview_thumbnail_media_key(
         self, device_id: str, event: ImageEventBase
     ) -> str:
@@ -217,6 +223,7 @@ class NestEventMediaStore(EventMediaStore):
         """Return the filename in storage for a media key."""
         return f"{self._media_path}/{media_key}"
 
+    @override
     async def async_load_media(self, media_key: str) -> bytes | None:
         """Load media content."""
         filename = self.get_media_filename(media_key)
@@ -234,6 +241,7 @@ class NestEventMediaStore(EventMediaStore):
             _LOGGER.error("Unable to read media file: %s %s", filename, err)
             return None
 
+    @override
     async def async_save_media(self, media_key: str, content: bytes) -> None:
         """Write media content."""
         filename = self.get_media_filename(media_key)
@@ -254,6 +262,7 @@ class NestEventMediaStore(EventMediaStore):
         except OSError as err:
             _LOGGER.error("Unable to write media file: %s %s", filename, err)
 
+    @override
     async def async_remove_media(self, media_key: str) -> None:
         """Remove media content."""
         filename = self.get_media_filename(media_key)
@@ -412,6 +421,7 @@ class NestMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media identifier to a url."""
         media_id: MediaId | None = parse_media_id(item.identifier)
@@ -444,6 +454,7 @@ class NestMediaSource(MediaSource):
             content_type,
         )
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media for the specified level of the directory tree.
 

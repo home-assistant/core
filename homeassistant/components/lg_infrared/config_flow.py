@@ -1,6 +1,6 @@
 """Config flow for LG IR integration."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -35,8 +35,9 @@ DEVICE_TYPE_NAMES: dict[LGDeviceType, str] = {
 class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for LG IR."""
 
-    VERSION = 1
+    VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -49,24 +50,39 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if entity_id := user_input.get(CONF_INFRARED_ENTITY_ID) or user_input.get(
-                CONF_INFRARED_RECEIVER_ENTITY_ID
-            ):
+            emitter_id = user_input.get(CONF_INFRARED_ENTITY_ID)
+            receiver_id = user_input.get(CONF_INFRARED_RECEIVER_ENTITY_ID)
+            if emitter_id or receiver_id:
                 device_type = user_input[CONF_DEVICE_TYPE]
 
-                await self.async_set_unique_id(f"lg_ir_{device_type}_{entity_id}")
-                self._abort_if_unique_id_configured()
+                if emitter_id:
+                    self._async_abort_entries_match(
+                        {
+                            CONF_DEVICE_TYPE: device_type,
+                            CONF_INFRARED_ENTITY_ID: emitter_id,
+                        }
+                    )
+                if receiver_id:
+                    self._async_abort_entries_match(
+                        {
+                            CONF_DEVICE_TYPE: device_type,
+                            CONF_INFRARED_RECEIVER_ENTITY_ID: receiver_id,
+                        }
+                    )
 
                 # Get entity name for the title
+                title_entity_id = emitter_id or receiver_id
+                if TYPE_CHECKING:
+                    assert title_entity_id is not None
                 ent_reg = er.async_get(self.hass)
-                entry = ent_reg.async_get(entity_id)
-                entity_name = (
-                    entry.name or entry.original_name or entity_id
+                entry = ent_reg.async_get(title_entity_id)
+                title_entity_name = (
+                    entry.name or entry.original_name or title_entity_id
                     if entry
-                    else entity_id
+                    else title_entity_id
                 )
                 device_type_name = DEVICE_TYPE_NAMES[LGDeviceType(device_type)]
-                title = f"LG {device_type_name} via {entity_name}"
+                title = f"LG {device_type_name} via {title_entity_name}"
 
                 return self.async_create_entry(title=title, data=user_input)
 

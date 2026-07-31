@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import TypedDict
+from typing import TypedDict, override
 
 import aiohttp
 from aiohttp.web import Request
@@ -89,6 +89,7 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         self.lock = lock
         self.device_name = config_entry.data[CONF_NAME]
 
+    @override
     async def _async_update_data(self) -> StatusMessage:
         """Fetch data from API endpoint."""
         async with asyncio.timeout(10):
