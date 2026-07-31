@@ -94,7 +94,7 @@ class ParticulateMatterSensor(SensorEntity):
     @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return UnitOfDensity
+        return UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
 
     def update(self) -> None:
         """Read from sensor and update the state."""
