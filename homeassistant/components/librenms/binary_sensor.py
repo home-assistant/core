@@ -50,10 +50,10 @@ async def async_setup_entry(
     """Add LibreNMS server state sensors."""
     coordinator = entry.runtime_data
     async_add_entities(
-        LibrenmsDeviceBinarySensorEntity(coordinator, description, dev_info)
+        LibrenmsDeviceBinarySensorEntity(coordinator, description, dev_id)
         for description in DEVICE_SENSOR_TYPES
-        for dev_info in coordinator.data.devices
-        if description.is_suitable(dev_info)
+        for dev_id, dev in coordinator.data.devices.items()
+        if description.is_suitable(dev)
     )
 
 
@@ -66,15 +66,17 @@ class LibrenmsDeviceBinarySensorEntity(LibrenmsDeviceEntity, BinarySensorEntity)
         self,
         coordinator: LibrenmsDataUpdateCoordinator,
         description: LibrenmsDeviceBinarySensorEntityDescription,
-        dev_info: LibrenmsDeviceInfo,
+        device_id: int,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, dev_info)
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{dev_info.device_id}_{description.key}"
+        super().__init__(coordinator, device_id)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{device_id}_{description.key}"
+        )
         self.entity_description = description
 
     @property
     @override
     def is_on(self) -> bool:
         """Return the value reported by the sensor."""
-        return self.entity_description.value(self.dev_info)
+        return self.entity_description.value(self._data)

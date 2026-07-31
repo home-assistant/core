@@ -35,7 +35,7 @@ class LibrenmsData:
     """Data class for storing data from the API."""
 
     system: LibrenmsSystemInfo
-    devices: list[LibrenmsDeviceInfo]
+    devices: dict[int, LibrenmsDeviceInfo]
 
 
 type LibrenmsConfigEntry = ConfigEntry[LibrenmsDataUpdateCoordinator]
@@ -104,4 +104,4 @@ class LibrenmsDataUpdateCoordinator(DataUpdateCoordinator[LibrenmsData]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        return LibrenmsData(system, devices)
+        return LibrenmsData(system, {dev.device_id: dev for dev in devices})

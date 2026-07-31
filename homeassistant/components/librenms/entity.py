@@ -13,33 +13,35 @@ class LibrenmsDeviceEntity(CoordinatorEntity[LibrenmsDataUpdateCoordinator]):
     """Define LibreNMS device base entity."""
 
     _attr_has_entity_name = True
-    dev_info: LibrenmsDeviceInfo
 
     def __init__(
         self,
         coordinator: LibrenmsDataUpdateCoordinator,
-        dev_info: LibrenmsDeviceInfo,
+        device_id: int,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self.dev_info = dev_info
+        self.device_id = device_id
 
-        identifier = f"{coordinator.config_entry.entry_id}_{dev_info.device_id}"
-        sw_version = dev_info.version
+        identifier = f"{coordinator.config_entry.entry_id}_{self.device_id}"
+        sw_version = self._data.version
         model = None
-        configuration_url = (
-            f"{coordinator.configuration_url}/device/{dev_info.device_id}"
-        )
-        if dev_info.os != "ping":
-            if sw_version and (feature := dev_info.features) is not None:
+        configuration_url = f"{coordinator.configuration_url}/device/{self.device_id}"
+        if self._data.os != "ping":
+            if sw_version and (feature := self._data.features) is not None:
                 sw_version += f" ({feature})"
-            model = dev_info.hardware
+            model = self._data.hardware
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identifier)},
             sw_version=sw_version,
             configuration_url=configuration_url,
-            name=dev_info.display,
+            name=self._data.display,
             model=model,
-            serial_number=dev_info.serial,
+            serial_number=self._data.serial,
         )
+
+    @property
+    def _data(self) -> LibrenmsDeviceInfo:
+        """Get DeviceInfo from coordinator."""
+        return self.coordinator.data.devices[self.device_id]
