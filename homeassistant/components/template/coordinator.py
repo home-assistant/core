@@ -126,7 +126,6 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             DOMAIN,
             self.name,
             self.logger.log,
-            start_event is not None,
         )
 
     async def _handle_triggered_with_script(

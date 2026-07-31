@@ -77,6 +77,7 @@ from .const import (  # noqa: F401
     UNIT_CONVERSIONS,
     VALID_UNITS,
     WeatherEntityFeature,
+    WeatherEntityStateAttribute,
 )
 from .websocket_api import async_setup as async_setup_ws_api
 
@@ -577,11 +578,11 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 value_temp = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
                     temperature_f, from_unit, to_unit
                 )
-                data[ATTR_WEATHER_TEMPERATURE] = round_temperature(
+                data[WeatherEntityStateAttribute.TEMPERATURE] = round_temperature(
                     value_temp, precision
                 )
             except TypeError, ValueError:
-                data[ATTR_WEATHER_TEMPERATURE] = temperature
+                data[WeatherEntityStateAttribute.TEMPERATURE] = temperature
 
         if (apparent_temperature := self.native_apparent_temperature) is not None:
             from_unit = self.native_temperature_unit or self._default_temperature_unit
@@ -591,11 +592,13 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 value_apparent_temp = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
                     apparent_temperature_f, from_unit, to_unit
                 )
-                data[ATTR_WEATHER_APPARENT_TEMPERATURE] = round_temperature(
-                    value_apparent_temp, precision
+                data[WeatherEntityStateAttribute.APPARENT_TEMPERATURE] = (
+                    round_temperature(value_apparent_temp, precision)
                 )
             except TypeError, ValueError:
-                data[ATTR_WEATHER_APPARENT_TEMPERATURE] = apparent_temperature
+                data[WeatherEntityStateAttribute.APPARENT_TEMPERATURE] = (
+                    apparent_temperature
+                )
 
         if (dew_point := self.native_dew_point) is not None:
             from_unit = self.native_temperature_unit or self._default_temperature_unit
@@ -605,25 +608,25 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 value_dew_point = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
                     dew_point_f, from_unit, to_unit
                 )
-                data[ATTR_WEATHER_DEW_POINT] = round_temperature(
+                data[WeatherEntityStateAttribute.DEW_POINT] = round_temperature(
                     value_dew_point, precision
                 )
             except TypeError, ValueError:
-                data[ATTR_WEATHER_DEW_POINT] = dew_point
+                data[WeatherEntityStateAttribute.DEW_POINT] = dew_point
 
-        data[ATTR_WEATHER_TEMPERATURE_UNIT] = self._temperature_unit
+        data[WeatherEntityStateAttribute.TEMPERATURE_UNIT] = self._temperature_unit
 
         if (humidity := self.humidity) is not None:
-            data[ATTR_WEATHER_HUMIDITY] = round(humidity)
+            data[WeatherEntityStateAttribute.HUMIDITY] = round(humidity)
 
         if (ozone := self.ozone) is not None:
-            data[ATTR_WEATHER_OZONE] = ozone
+            data[WeatherEntityStateAttribute.OZONE] = ozone
 
         if (cloud_coverage := self.cloud_coverage) is not None:
-            data[ATTR_WEATHER_CLOUD_COVERAGE] = cloud_coverage
+            data[WeatherEntityStateAttribute.CLOUD_COVERAGE] = cloud_coverage
 
         if (uv_index := self.uv_index) is not None:
-            data[ATTR_WEATHER_UV_INDEX] = uv_index
+            data[WeatherEntityStateAttribute.UV_INDEX] = uv_index
 
         if (pressure := self.native_pressure) is not None:
             from_unit = self.native_pressure_unit or self._default_pressure_unit
@@ -633,14 +636,16 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 value_pressure = UNIT_CONVERSIONS[ATTR_WEATHER_PRESSURE_UNIT](
                     pressure_f, from_unit, to_unit
                 )
-                data[ATTR_WEATHER_PRESSURE] = round(value_pressure, ROUNDING_PRECISION)
+                data[WeatherEntityStateAttribute.PRESSURE] = round(
+                    value_pressure, ROUNDING_PRECISION
+                )
             except TypeError, ValueError:
-                data[ATTR_WEATHER_PRESSURE] = pressure
+                data[WeatherEntityStateAttribute.PRESSURE] = pressure
 
-        data[ATTR_WEATHER_PRESSURE_UNIT] = self._pressure_unit
+        data[WeatherEntityStateAttribute.PRESSURE_UNIT] = self._pressure_unit
 
         if (wind_bearing := self.wind_bearing) is not None:
-            data[ATTR_WEATHER_WIND_BEARING] = wind_bearing
+            data[WeatherEntityStateAttribute.WIND_BEARING] = wind_bearing
 
         if (wind_gust_speed := self.native_wind_gust_speed) is not None:
             from_unit = self.native_wind_speed_unit or self._default_wind_speed_unit
@@ -650,11 +655,11 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 value_wind_gust_speed = UNIT_CONVERSIONS[ATTR_WEATHER_WIND_SPEED_UNIT](
                     wind_gust_speed_f, from_unit, to_unit
                 )
-                data[ATTR_WEATHER_WIND_GUST_SPEED] = round(
+                data[WeatherEntityStateAttribute.WIND_GUST_SPEED] = round(
                     value_wind_gust_speed, ROUNDING_PRECISION
                 )
             except TypeError, ValueError:
-                data[ATTR_WEATHER_WIND_GUST_SPEED] = wind_gust_speed
+                data[WeatherEntityStateAttribute.WIND_GUST_SPEED] = wind_gust_speed
 
         if (wind_speed := self.native_wind_speed) is not None:
             from_unit = self.native_wind_speed_unit or self._default_wind_speed_unit
@@ -664,13 +669,13 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 value_wind_speed = UNIT_CONVERSIONS[ATTR_WEATHER_WIND_SPEED_UNIT](
                     wind_speed_f, from_unit, to_unit
                 )
-                data[ATTR_WEATHER_WIND_SPEED] = round(
+                data[WeatherEntityStateAttribute.WIND_SPEED] = round(
                     value_wind_speed, ROUNDING_PRECISION
                 )
             except TypeError, ValueError:
-                data[ATTR_WEATHER_WIND_SPEED] = wind_speed
+                data[WeatherEntityStateAttribute.WIND_SPEED] = wind_speed
 
-        data[ATTR_WEATHER_WIND_SPEED_UNIT] = self._wind_speed_unit
+        data[WeatherEntityStateAttribute.WIND_SPEED_UNIT] = self._wind_speed_unit
 
         if (visibility := self.native_visibility) is not None:
             from_unit = self.native_visibility_unit or self._default_visibility_unit
@@ -680,14 +685,14 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 value_visibility = UNIT_CONVERSIONS[ATTR_WEATHER_VISIBILITY_UNIT](
                     visibility_f, from_unit, to_unit
                 )
-                data[ATTR_WEATHER_VISIBILITY] = round(
+                data[WeatherEntityStateAttribute.VISIBILITY] = round(
                     value_visibility, ROUNDING_PRECISION
                 )
             except TypeError, ValueError:
-                data[ATTR_WEATHER_VISIBILITY] = visibility
+                data[WeatherEntityStateAttribute.VISIBILITY] = visibility
 
-        data[ATTR_WEATHER_VISIBILITY_UNIT] = self._visibility_unit
-        data[ATTR_WEATHER_PRECIPITATION_UNIT] = self._precipitation_unit
+        data[WeatherEntityStateAttribute.VISIBILITY_UNIT] = self._visibility_unit
+        data[WeatherEntityStateAttribute.PRECIPITATION_UNIT] = self._precipitation_unit
 
         return data
 

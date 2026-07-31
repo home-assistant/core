@@ -39,8 +39,8 @@
 # name: test_entities[button.openevse_mock_config_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'openevse_mock_config Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'openevse_mock_config Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.openevse_mock_config_restart',
@@ -90,8 +90,8 @@
 # name: test_entities[button.openevse_mock_config_restart_wi_fi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'openevse_mock_config Restart Wi-Fi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'openevse_mock_config Restart Wi-Fi',
     }),
     'context': <ANY>,
     'entity_id': 'button.openevse_mock_config_restart_wi_fi',

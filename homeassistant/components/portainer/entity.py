@@ -1,6 +1,6 @@
 """Base class for Portainer entities."""
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from yarl import URL
 
@@ -19,6 +19,7 @@ from .coordinator import (
     PortainerStackData,
     PortainerVolumeData,
 )
+from .util import sanitize_container_name
 
 
 class PortainerCoordinatorEntity(CoordinatorEntity[PortainerCoordinator]):
@@ -94,8 +95,9 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
         # The first one, should always be unique, it's fine if users have aliases
         # According to Docker's API docs, the first name is unique
         names = self._device_info.container.names
-        assert names, "Container names list unexpectedly empty"
-        self.device_name = names[0].replace("/", " ").strip()
+        if TYPE_CHECKING:
+            assert names is not None
+        self.device_name = sanitize_container_name(names[0])
 
         self._attr_device_info = DeviceInfo(
             identifiers={

@@ -26,6 +26,12 @@ INPUT_EVENT_VALUES = {
     InputEventValues.LONG_PRESS: "long_press",
 }
 
+DOORBELL_EVENT_VALUES = {
+    InputEventValues.SINGLE_PRESS: "ring",
+    InputEventValues.DOUBLE_PRESS: "double_press",
+    InputEventValues.LONG_PRESS: "long_press",
+}
+
 
 class HomeKitEventEntity(BaseCharacteristicEntity, EventEntity):
     """Representation of a Homekit event entity."""
@@ -50,11 +56,17 @@ class HomeKitEventEntity(BaseCharacteristicEntity, EventEntity):
 
         self.entity_description = entity_description
 
+        self._event_values = (
+            DOORBELL_EVENT_VALUES
+            if entity_description.device_class == EventDeviceClass.DOORBELL
+            else INPUT_EVENT_VALUES
+        )
+
         # An INPUT_EVENT may support single_press, long_press and
         # double_press. All are optional. So we have to clamp
         # InputEventValues for this exact device
         self._attr_event_types = [
-            INPUT_EVENT_VALUES[v]
+            self._event_values[v]
             for v in clamp_enum_to_char(InputEventValues, self._char)
         ]
 
@@ -82,7 +94,7 @@ class HomeKitEventEntity(BaseCharacteristicEntity, EventEntity):
             # pollable, but always returns None when polled
             # Make sure we don't explode if we see that edge case.
             return
-        self._trigger_event(INPUT_EVENT_VALUES[self._char.value])
+        self._trigger_event(self._event_values[self._char.value])
         self.async_write_ha_state()
 
 

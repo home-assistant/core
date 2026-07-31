@@ -329,7 +329,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._state_message_received,
-            {"_attr_battery_level", "_attr_fan_speed", "_attr_activity"},
+            {"_attr_fan_speed", "_attr_activity"},
         )
 
     @override

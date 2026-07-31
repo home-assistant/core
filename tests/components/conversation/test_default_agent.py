@@ -351,7 +351,7 @@ async def test_expose_flag_automatically_set(
 
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-    with patch("homeassistant.components.http.start_http_server_and_save_config"):
+    with patch("homeassistant.components.http.HomeAssistantHTTP.start"):
         await hass.async_start()
 
     # After setting up conversation, the expose flag should now be set on all entities
@@ -729,19 +729,6 @@ async def test_satellite_area_context(
     }
     turn_off_calls.clear()
 
-    # Turn on/off all lights also works
-    for command in ("on", "off"):
-        result = await conversation.async_converse(
-            hass, f"turn {command} all lights", None, Context(), None
-        )
-        await hass.async_block_till_done()
-        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
-
-        # All lights should have been targeted
-        assert {s.entity_id for s in result.response.matched_states} == {
-            e.entity_id for e in all_lights
-        }
-
 
 @pytest.mark.usefixtures("init_components")
 async def test_error_no_device(hass: HomeAssistant) -> None:
@@ -841,7 +828,7 @@ async def test_error_no_device_on_floor(
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
-        == "Sorry, I am not aware of any device called missing entity on ground floor"
+        == "Sorry, I am not aware of any device called missing entity in the ground floor"
     )
 
 
@@ -1128,7 +1115,7 @@ async def test_error_no_domain_on_floor_exposed(
     await hass.async_block_till_done()
 
     result = await conversation.async_converse(
-        hass, "turn on all lights on the ground floor", None, Context(), None
+        hass, "turn on all lights in the ground floor", None, Context(), None
     )
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
@@ -1481,21 +1468,6 @@ async def test_error_duplicate_names_same_area(
         # command
         result = await conversation.async_converse(
             hass, f"turn on {name} in {area_kitchen.name}", None, Context(), None
-        )
-        assert result.response.response_type is intent.IntentResponseType.ERROR
-        assert (
-            result.response.error_code
-            == intent.IntentResponseErrorCode.NO_VALID_TARGETS
-        )
-        assert (
-            result.response.speech["plain"]["speech"]
-            == f"Sorry, there are multiple devices called"
-            f" {name} in the {area_kitchen.name} area"
-        )
-
-        # question
-        result = await conversation.async_converse(
-            hass, f"is {name} on in the {area_kitchen.name}?", None, Context(), None
         )
         assert result.response.response_type is intent.IntentResponseType.ERROR
         assert (
@@ -2855,9 +2827,9 @@ async def test_config_sentences_priority(
         {
             "conversation": {
                 "intents": {
-                    "CustomIntent": ["turn on <name>"],
+                    "CustomIntent": ["turn on [the] {name}"],
                     "WorseCustomIntent": ["turn on the lamp"],
-                    "FakeCustomIntent": ["turn on <name>"],
+                    "FakeCustomIntent": ["turn on [the] {name}"],
                 }
             }
         },

@@ -11,6 +11,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OverkizDataConfigEntry
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -27,6 +29,8 @@ async def async_setup_entry(
 
 class OverkizScene(Scene):
     """Representation of an Overkiz Scene."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, scenario: PersistedActionGroup, client: OverkizClient) -> None:
         """Initialize the scene."""
