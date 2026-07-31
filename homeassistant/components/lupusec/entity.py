@@ -2,6 +2,8 @@
 
 import lupupy
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -26,17 +28,20 @@ class LupusecDevice(Entity):
 class LupusecBaseSensor(LupusecDevice):
     """Lupusec Sensor base entity."""
 
-    def __init__(self, device: lupupy.devices.LupusecDevice, entry_id: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, device: lupupy.devices.LupusecDevice, entry_id: str
+    ) -> None:
         """Initialize the LupusecBaseSensor."""
         super().__init__(device)
-
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},
             name=device.name,
             manufacturer="Lupus Electronics",
             serial_number=device.device_id,
             model=TYPE_TRANSLATION.get(device.type, device.type),
-            via_device=(DOMAIN, entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, entry_id), config_entry_id=entry_id
+            ),
         )
 
     def get_type_name(self) -> str:

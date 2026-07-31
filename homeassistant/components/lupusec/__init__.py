@@ -9,6 +9,9 @@ from lupupy.exceptions import LupusecException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +47,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: LupusecConfigEntry) -> b
         return False
 
     entry.runtime_data = lupusec_system
+
+    alarm = await hass.async_add_executor_job(lupusec_system.get_alarm)
+
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        name=alarm.name,
+        manufacturer="Lupus Electronics",
+        model=f"Lupusec-XT{lupusec_system.model}",
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
