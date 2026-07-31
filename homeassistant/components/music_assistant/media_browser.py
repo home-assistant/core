@@ -76,14 +76,24 @@ LIBRARY_MASS_MEDIA_TYPE_MAP = {
     LIBRARY_AUDIOBOOKS: MASSMediaType.AUDIOBOOK,
 }
 
+MUSIC_MASS_MEDIA_TYPES = [
+    MASSMediaType.ARTIST,
+    MASSMediaType.ALBUM,
+    MASSMediaType.TRACK,
+    MASSMediaType.PLAYLIST,
+]
+
 MEDIA_CLASS_MASS_MEDIA_TYPE_MAP = {
-    MediaClass.ARTIST: MASSMediaType.ARTIST,
-    MediaClass.ALBUM: MASSMediaType.ALBUM,
-    MediaClass.TRACK: MASSMediaType.TRACK,
-    MediaClass.PLAYLIST: MASSMediaType.PLAYLIST,
-    MediaClass.MUSIC: MASSMediaType.RADIO,
-    MediaClass.DIRECTORY: MASSMediaType.AUDIOBOOK,
-    MediaClass.PODCAST: MASSMediaType.PODCAST,
+    MediaClass.ARTIST: [MASSMediaType.ARTIST],
+    MediaClass.ALBUM: [MASSMediaType.ALBUM],
+    MediaClass.TRACK: [MASSMediaType.TRACK],
+    MediaClass.PLAYLIST: [MASSMediaType.PLAYLIST],
+    # music is the class a voice assistant picks for a plain "play something"
+    # request, so it has to mean music rather than the radio stations we
+    # happen to hand back to HA under the same class
+    MediaClass.MUSIC: MUSIC_MASS_MEDIA_TYPES,
+    MediaClass.DIRECTORY: [MASSMediaType.AUDIOBOOK],
+    MediaClass.PODCAST: [MASSMediaType.PODCAST],
 }
 
 SEARCHABLE_MASS_MEDIA_TYPES = [
@@ -548,11 +558,12 @@ def _get_media_types_from_query(query: SearchMediaQuery) -> list[MASSMediaType]:
     # wins from the media type that merely surrounds the search, and asking
     # for something unsearchable leaves nothing rather than everything
     if query.media_filter_classes:
-        return [
-            MEDIA_CLASS_MASS_MEDIA_TYPE_MAP[cls]
+        requested = {
+            media_type
             for cls in query.media_filter_classes
-            if MEDIA_CLASS_MASS_MEDIA_TYPE_MAP.get(cls) in allowed
-        ]
+            for media_type in MEDIA_CLASS_MASS_MEDIA_TYPE_MAP.get(cls, ())
+        }
+        return [media_type for media_type in allowed if media_type in requested]
 
     match query.media_content_type:
         case MediaType.ARTIST:
