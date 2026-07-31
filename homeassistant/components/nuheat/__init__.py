@@ -114,8 +114,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> b
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry[Any]) -> bool:
     """Retain legacy entries until their user-assisted OAuth conversion."""
-    if entry.version > OAUTH_CONFIG_ENTRY_VERSION:
-        return False
     if is_legacy_entry(entry):
         # Legacy entries intentionally remain version 1 so their stored schema
         # is distinguishable and reversible until OAuth validation succeeds.

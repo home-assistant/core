@@ -7,7 +7,6 @@ from chemelex_nuheat import HoldUntilStatus, NuHeatApiError, NuHeatAuthError, Th
 import pytest
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.nuheat import async_migrate_entry, async_setup_entry
 from homeassistant.components.nuheat.account_identity import (
     InvalidAccountSubjectError,
     account_subject_from_entry_data,
@@ -35,10 +34,10 @@ from homeassistant.components.nuheat.registry_migration import (
     validate_registry_snapshots,
     verify_registry_ownership,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
-    ConfigEntryNotReady,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
@@ -83,9 +82,9 @@ async def test_setup_implementation_unavailable(hass: HomeAssistant) -> None:
             "homeassistant.components.nuheat.async_get_config_entry_implementation",
             AsyncMock(side_effect=ImplementationUnavailableError),
         ),
-        pytest.raises(ConfigEntryNotReady),
     ):
-        await async_setup_entry(hass, entry)
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
@@ -152,14 +151,14 @@ async def test_api_access_token_callback_translation(
             AsyncMock(),
         ),
     ):
-        assert await async_setup_entry(hass, entry)
+        assert await hass.config_entries.async_setup(entry.entry_id)
 
 
 async def test_migrate_future_and_pending_entries(hass: HomeAssistant) -> None:
     """Test future entries are rejected and cleanup markers are advanced."""
     future = MockConfigEntry(domain=DOMAIN, data={}, version=99)
     future.add_to_hass(hass)
-    assert not await async_migrate_entry(hass, future)
+    assert not await future.async_migrate(hass)
 
     pending = MockConfigEntry(
         domain=DOMAIN,
@@ -171,7 +170,7 @@ async def test_migrate_future_and_pending_entries(hass: HomeAssistant) -> None:
         version=1,
     )
     pending.add_to_hass(hass)
-    assert await async_migrate_entry(hass, pending)
+    assert await pending.async_migrate(hass)
     assert pending.version == OAUTH_CONFIG_ENTRY_VERSION
 
 
