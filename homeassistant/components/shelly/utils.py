@@ -785,6 +785,8 @@ def get_irrigation_zone_id(device: RpcDevice, key: str) -> int | None:
 
 
 def get_rpc_device_info(
+    hass: HomeAssistant,
+    config_entry_id: str,
     device: RpcDevice,
     mac: str,
     configuration_url: str,
@@ -809,7 +811,9 @@ def get_rpc_device_info(
             model=model_name,
             model_id=model,
             suggested_area=suggested_area,
-            via_device=(DOMAIN, mac),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, mac), config_entry_id=config_entry_id
+            ),
             configuration_url=configuration_url,
         )
 
@@ -830,20 +834,29 @@ def get_rpc_device_info(
         model=model_name,
         model_id=model,
         suggested_area=suggested_area,
-        via_device=(DOMAIN, mac),
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, mac), config_entry_id=config_entry_id
+        ),
         configuration_url=configuration_url,
     )
 
 
 def get_blu_trv_device_info(
-    config: dict[str, Any], ble_addr: str, parent_mac: str, fw_ver: str | None
+    hass: HomeAssistant,
+    config_entry_id: str,
+    config: dict[str, Any],
+    ble_addr: str,
+    parent_mac: str,
+    fw_ver: str | None,
 ) -> DeviceInfo:
     """Return device info for RPC device."""
     model_id = config.get("local_name")
     return DeviceInfo(
         connections={(CONNECTION_BLUETOOTH, ble_addr)},
         identifiers={(DOMAIN, ble_addr)},
-        via_device=(DOMAIN, parent_mac),
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, parent_mac), config_entry_id=config_entry_id
+        ),
         manufacturer="Shelly",
         model=BLU_TRV_MODEL_NAME.get(model_id) if model_id else None,
         model_id=config.get("local_name"),
@@ -862,6 +875,8 @@ def is_block_single_device(device: BlockDevice, block: Block | None = None) -> b
 
 
 def get_block_device_info(
+    hass: HomeAssistant,
+    config_entry_id: str,
     device: BlockDevice,
     mac: str,
     configuration_url: str,
@@ -886,7 +901,9 @@ def get_block_device_info(
         model=model_name,
         model_id=model,
         suggested_area=suggested_area,
-        via_device=(DOMAIN, mac),
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, mac), config_entry_id=config_entry_id
+        ),
         configuration_url=configuration_url,
     )
 
