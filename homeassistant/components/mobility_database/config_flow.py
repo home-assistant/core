@@ -7,6 +7,7 @@ from typing import Any, override
 
 from aiomobilitydatabase import (
     DataType,
+    FeedStatus,
     GtfsRtFeed,
     MobilityDatabaseAuthenticationError,
     MobilityDatabaseConnectionError,
@@ -192,10 +193,14 @@ class MobilityDatabaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 except MobilityDatabaseError:
                     errors["base"] = "unknown"
             elif query := user_input.get(CONF_SEARCH_QUERY):
+                # GTFS only: realtime siblings resolve automatically and would
+                # otherwise clutter the results (often several unnamed entries
+                # per provider). Active only: skip deprecated legacy feeds.
                 try:
                     results = await client.catalog.search_feeds(
                         search_query=query,
-                        data_types=[DataType.GTFS, DataType.GTFS_RT],
+                        data_types=[DataType.GTFS],
+                        statuses=[FeedStatus.ACTIVE],
                         limit=25,
                     )
                 except MobilityDatabaseConnectionError:
@@ -230,25 +235,20 @@ class MobilityDatabaseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_resolve_feed_family(self, feed_id: str) -> ConfigFlowResult:
-        """Resolve the static feed and realtime siblings for a picked feed."""
+        """Look up the picked GTFS feed and its realtime siblings."""
         catalog = self._get_client().catalog
-        feed = await catalog.get_feed(feed_id)
-        if feed.data_type is DataType.GTFS_RT:
-            rt_feed = await catalog.get_gtfs_rt_feed(feed_id)
-            references = rt_feed.feed_references or []
-            if not references:
-                return self.async_abort(reason="no_static_feed")
-            static_feed_id = references[0]
-        else:
-            static_feed_id = feed_id
-        static_feed = await catalog.get_gtfs_feed(static_feed_id)
-        rt_feeds = await catalog.get_gtfs_feed_gtfs_rt_feeds(static_feed_id)
+        static_feed = await catalog.get_gtfs_feed(feed_id)
+        rt_feeds = await catalog.get_gtfs_feed_gtfs_rt_feeds(feed_id)
 
-        await self.async_set_unique_id(static_feed_id)
+        await self.async_set_unique_id(feed_id)
         self._abort_if_unique_id_configured()
 
-        self._static_feed_id = static_feed_id
-        self._title = static_feed.provider or static_feed.feed_name or static_feed_id
+        self._static_feed_id = feed_id
+        # Providers often publish several feeds (for example Rail and Bus);
+        # the feed name keeps their entry titles distinct.
+        self._title = static_feed.provider or feed_id
+        if static_feed.feed_name:
+            self._title = f"{self._title} {static_feed.feed_name}"
         self._needs_api_key = _needs_api_key(rt_feeds)
         if self._needs_api_key:
             return await self.async_step_api_key()

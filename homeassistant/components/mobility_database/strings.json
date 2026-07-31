@@ -4,7 +4,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "build_failed": "Downloading or indexing the transit schedule failed: {error}",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_static_feed": "The selected realtime feed does not reference a static schedule feed, so it cannot be used.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {

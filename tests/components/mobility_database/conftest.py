@@ -8,7 +8,6 @@ from aiomobilitydatabase import (
     BoundingBox,
     DataType,
     EntityType,
-    Feed,
     FeedStatus,
     GtfsFeed,
     GtfsRtFeed,
@@ -108,12 +107,6 @@ SEARCH_ITEM = SearchFeedItemResult(
     status=FeedStatus.ACTIVE,
     provider="LADOT",
 )
-RT_SEARCH_ITEM = SearchFeedItemResult(
-    id=RT_FEED_ID,
-    data_type=DataType.GTFS_RT,
-    status=FeedStatus.ACTIVE,
-    provider="LADOT",
-)
 
 RT_FEED = GtfsRtFeed(
     id=RT_FEED_ID,
@@ -166,9 +159,6 @@ def mock_client(mock_handle: MagicMock) -> MagicMock:
     client.catalog.get_metadata = AsyncMock(return_value=Metadata(version="1.0.0"))
     client.catalog.search_feeds = AsyncMock(
         return_value=SearchResults(total=1, results=[SEARCH_ITEM])
-    )
-    client.catalog.get_feed = AsyncMock(
-        return_value=Feed(id=FEED_ID, data_type=DataType.GTFS)
     )
     client.catalog.get_gtfs_feed = AsyncMock(return_value=STATIC_FEED)
     client.catalog.get_gtfs_rt_feed = AsyncMock(return_value=RT_FEED)

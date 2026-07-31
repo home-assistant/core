@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 from aiomobilitydatabase import (
     DataType,
-    Feed,
+    GtfsFeed,
     Metadata,
     MobilityDatabaseAuthenticationError,
     MobilityDatabaseConnectionError,
@@ -40,10 +40,10 @@ from homeassistant.data_entry_flow import (
 )
 
 from .conftest import (
+    DATASET,
     FEED_ID,
     RT_FEED,
     RT_FEED_ID,
-    RT_SEARCH_ITEM,
     SEARCH_ITEM,
     SUBENTRY_ID,
     setup_integration,
@@ -118,28 +118,6 @@ async def test_full_flow(
     }
     assert result["result"].unique_id == FEED_ID
     mock_handle.close.assert_called_once()
-
-
-async def test_full_flow_realtime_feed_selected(
-    hass: HomeAssistant, mock_feeds_client: MagicMock
-) -> None:
-    """Test picking a realtime feed resolves its static sibling."""
-    mock_feeds_client.catalog.search_feeds.return_value = SearchResults(
-        total=1, results=[RT_SEARCH_ITEM]
-    )
-    mock_feeds_client.catalog.get_feed.return_value = Feed(
-        id=RT_FEED_ID, data_type=DataType.GTFS_RT
-    )
-
-    flow_id = await _advance_to_search(hass)
-    await _search_and_get_options(hass, flow_id)
-    result = await hass.config_entries.flow.async_configure(
-        flow_id, {CONF_FEED_ID: RT_FEED_ID}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_FEED_ID] == FEED_ID
-    assert result["result"].unique_id == FEED_ID
 
 
 @pytest.mark.parametrize(
@@ -252,28 +230,6 @@ async def test_duplicate_feed_aborts(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_realtime_feed_without_static_reference_aborts(
-    hass: HomeAssistant, mock_feeds_client: MagicMock
-) -> None:
-    """Test a realtime feed with no static sibling cannot be used."""
-    mock_feeds_client.catalog.search_feeds.return_value = SearchResults(
-        total=1, results=[RT_SEARCH_ITEM]
-    )
-    mock_feeds_client.catalog.get_feed.return_value = Feed(
-        id=RT_FEED_ID, data_type=DataType.GTFS_RT
-    )
-    mock_feeds_client.catalog.get_gtfs_rt_feed.return_value = RT_FEED.__class__(
-        id=RT_FEED_ID, data_type=DataType.GTFS_RT, feed_references=[]
-    )
-    flow_id = await _advance_to_search(hass)
-    await _search_and_get_options(hass, flow_id)
-    result = await hass.config_entries.flow.async_configure(
-        flow_id, {CONF_FEED_ID: RT_FEED_ID}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_static_feed"
 
 
 async def test_build_failure_aborts(
@@ -586,13 +542,13 @@ async def test_reconfigure_stop_filters(
     ("attribute", "side_effect", "error"),
     [
         pytest.param(
-            "get_feed",
+            "get_gtfs_feed",
             MobilityDatabaseConnectionError("timeout"),
             "cannot_connect",
             id="resolve_cannot_connect",
         ),
         pytest.param(
-            "get_feed",
+            "get_gtfs_feed",
             MobilityDatabaseNotFoundError("gone"),
             "unknown",
             id="resolve_unknown",
@@ -618,7 +574,7 @@ async def test_search_step_errors(
     getattr(mock_feeds_client.catalog, attribute).side_effect = side_effect
     user_input = (
         {CONF_FEED_ID: FEED_ID}
-        if attribute == "get_feed"
+        if attribute == "get_gtfs_feed"
         else {CONF_SEARCH_QUERY: "again"}
     )
     result = await hass.config_entries.flow.async_configure(flow_id, user_input)
@@ -806,3 +762,23 @@ async def test_add_stop_unloaded_mid_flow(
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_ready"
+
+
+async def test_title_includes_feed_name(
+    hass: HomeAssistant, mock_feeds_client: MagicMock
+) -> None:
+    """Test entry titles stay distinct when a provider has multiple feeds."""
+    mock_feeds_client.catalog.get_gtfs_feed.return_value = GtfsFeed(
+        id=FEED_ID,
+        data_type=DataType.GTFS,
+        provider="WMATA",
+        feed_name="Rail",
+        latest_dataset=DATASET,
+    )
+    flow_id = await _advance_to_search(hass)
+    await _search_and_get_options(hass, flow_id)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_FEED_ID: FEED_ID}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "WMATA Rail"
