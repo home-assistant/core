@@ -90,7 +90,7 @@ class _StoredColor(ExtraStoredData):
             source_hex = data.get("source_hex")
             if source_hex is not None:
                 source_hex = str(source_hex)
-        except KeyError, TypeError, ValueError:
+        except KeyError, TypeError, ValueError, OverflowError:
             return None
         if (
             version != STATE_SCHEMA_VERSION
@@ -167,7 +167,7 @@ class ColorEntity(RestoreEntity):
             return None
         try:
             value = int(brightness)
-        except TypeError, ValueError:
+        except TypeError, ValueError, OverflowError:
             return None
         return max(0, min(255, value))
 

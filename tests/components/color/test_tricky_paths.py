@@ -397,6 +397,13 @@ async def test_source_hex_for_color_name(hass: HomeAssistant) -> None:
             "kind": KIND_CHROMATIC,
             "kelvin": 5000,
         },
+        {"version": math.inf, "xy": [0.4, 0.4], "kind": KIND_CHROMATIC},
+        {
+            "version": STATE_SCHEMA_VERSION,
+            "xy": [0.4, 0.4],
+            "kind": KIND_CHROMATIC,
+            "brightness": math.inf,
+        },
     ],
 )
 async def test_restore_rejects_invalid_payload_shapes(

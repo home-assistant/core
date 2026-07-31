@@ -1,11 +1,15 @@
 """Setup/unload tests for the Color helper config entry."""
 
+import math
+
 from homeassistant.components.color.const import (
+    ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_KIND,
     ATTR_RGB_COLOR,
     ATTR_SOURCE_HEX,
     ATTR_XY_COLOR,
+    CONF_INITIAL_BRIGHTNESS,
     CONF_INITIAL_COLOR,
     CONF_INITIAL_KELVIN,
     CONF_INITIAL_MODE,
@@ -120,3 +124,24 @@ async def test_registry_entry_linked_to_config_entry(
 
     assert entity_registry.async_get(ENTITY_ID) is None
     assert hass.states.get(ENTITY_ID) is None
+
+
+async def test_infinite_initial_brightness_is_ignored(hass: HomeAssistant) -> None:
+    """An infinite stored initial brightness is treated as unset."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Couch Color",
+        data={
+            CONF_NAME: "Couch Color",
+            CONF_INITIAL_MODE: MODE_CHROMATIC,
+            CONF_INITIAL_COLOR: "#FF8000",
+            CONF_INITIAL_BRIGHTNESS: math.inf,
+        },
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_BRIGHTNESS] is None
