@@ -67,6 +67,8 @@ def test_normalize_invalid_hex() -> None:
         normalize({FIELD_HEX: "#GGGGGG"})
     with pytest.raises(ColorInputError):
         normalize({FIELD_HEX: "#FFF"})
+    with pytest.raises(ColorInputError):
+        normalize({FIELD_HEX: "##FF0000"})
 
 
 def test_normalize_rgb_validates_range() -> None:

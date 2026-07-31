@@ -41,7 +41,7 @@ class ColorInputError(ValueError):
 
 def _strip_hex(hex_value: str) -> str:
     """Validate and strip a hex color string."""
-    stripped = hex_value.strip().lstrip("#")
+    stripped = hex_value.strip().removeprefix("#")
     if len(stripped) != 6 or any(
         char not in "0123456789abcdefABCDEF" for char in stripped
     ):
