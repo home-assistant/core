@@ -69,6 +69,12 @@ async def async_setup_entry(
     @callback
     def _add_zones(_hub: nobo) -> None:
         """Add climate entities for zones added to the hub."""
+        if hub.connected:
+            # Forget zones no longer on the hub so a removed-then-re-added zone
+            # (the hub reuses zone ids) is detected as new again. Skip while
+            # disconnected: a stale/empty snapshot would drop live zones and
+            # cause duplicate re-adds on reconnect.
+            known_zones.intersection_update(hub.zones)
         new_zones = [zone_id for zone_id in hub.zones if zone_id not in known_zones]
         known_zones.update(new_zones)
         async_add_entities(
@@ -100,7 +106,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
     # Need to poll to get preset change when in HVACMode.AUTO
     _attr_should_poll = True
 
-    def __init__(self, zone_id, hub: nobo, override_type) -> None:
+    def __init__(self, zone_id: str, hub: nobo, override_type: str) -> None:
         """Initialize the climate device."""
         super().__init__(hub)
         self._id = zone_id

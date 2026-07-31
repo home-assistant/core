@@ -171,7 +171,7 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
 
 def get_device_class_or_undefined(
     hass: HomeAssistant, entity_id: str
-) -> str | None | UndefinedType:
+) -> str | UndefinedType | None:
     """Get the device class of an entity or UNDEFINED if not found."""
     try:
         return get_device_class(hass, entity_id)
@@ -1620,6 +1620,8 @@ class Entity(
 
         if device_id := registry_entry.device_id:
             self.device_entry = dr.async_get(self.hass).async_get(device_id)
+        else:
+            self.device_entry = None
 
         if registry_entry.disabled:
             await self.async_remove()

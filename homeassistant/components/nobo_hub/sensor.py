@@ -35,6 +35,12 @@ async def async_setup_entry(
     @callback
     def _add_sensors(_hub: nobo) -> None:
         """Add temperature sensors for components added to the hub."""
+        if hub.connected:
+            # Forget components no longer on the hub so a removed-then-re-added
+            # component is detected as new again. Skip while disconnected: a
+            # stale/empty snapshot would drop live components and cause
+            # duplicate re-adds on reconnect.
+            known_components.intersection_update(hub.components)
         new_components = [
             serial
             for serial, component in hub.components.items()

@@ -3,7 +3,7 @@
 import ipaddress
 from typing import TYPE_CHECKING, Any, override
 
-from pynobo import nobo
+from pynobo import PynoboConnectionError, nobo
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -313,23 +313,25 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             raise NoboHubConnectError("invalid_ip") from err
         hub = nobo(serial=serial, ip=ip_address, discover=False, synchronous=False)
         # pynobo distinguishes the two failure modes: TCP-level errors
-        # (wrong IP, hub offline, port closed) raise OSError, while a
-        # successful TCP connection followed by a handshake REJECT
+        # (wrong IP, hub offline, port closed) raise PynoboConnectionError,
+        # while a successful TCP connection followed by a handshake REJECT
         # (serial mismatch) returns False.
         try:
             if not await hub.async_connect_hub(ip_address, serial):
                 raise NoboHubConnectError("cannot_connect")
             return hub.hub_info["name"]
-        except OSError as err:
+        except PynoboConnectionError as err:
             raise NoboHubConnectError("cannot_connect_ip") from err
         finally:
             await hub.close()
 
     @staticmethod
-    def _format_hub(ip, serial_prefix):
+    def _format_hub(ip: str, serial_prefix: str) -> str:
         return f"{serial_prefix}XXX ({ip})"
 
-    def _hubs(self):
+    def _hubs(self) -> dict[str, str]:
+        if TYPE_CHECKING:
+            assert self._discovered_hubs
         return {
             ip: self._format_hub(ip, serial_prefix)
             for ip, serial_prefix in self._discovered_hubs.items()
@@ -348,7 +350,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
 class NoboHubConnectError(HomeAssistantError):
     """Error with connecting to Nobø Ecohub."""
 
-    def __init__(self, msg) -> None:
+    def __init__(self, msg: str) -> None:
         """Instantiate error."""
         super().__init__()
         self.msg = msg
@@ -357,7 +359,9 @@ class NoboHubConnectError(HomeAssistantError):
 class OptionsFlowHandler(OptionsFlowWithReload):
     """Handles options flow for the component."""
 
-    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options."""
 
         if user_input is not None:
