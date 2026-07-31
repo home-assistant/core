@@ -60,6 +60,12 @@ async def _wait_until(predicate: Callable[[], bool]) -> None:
             await asyncio.sleep(0)
 
 
+async def _settle() -> None:
+    """Give background work a chance to run to completion."""
+    for _ in range(50):
+        await asyncio.sleep(0)
+
+
 async def test_infrared_setup_works(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -284,7 +290,7 @@ async def test_infrared_receiver_discards_own_transmission(
     # and a capture is only readable once.
     captured: list[bytes] = []
     mock_setup.api.enter_learning.side_effect = captured.clear
-    mock_setup.api.send_data.side_effect = lambda packet: captured.append(packet)
+    mock_setup.api.send_data.side_effect = captured.append
     mock_setup.api.check_data.side_effect = lambda: (
         captured.pop() if captured else _raise(ReadError())
     )
@@ -355,9 +361,10 @@ async def test_infrared_receiver_stops_when_unsubscribed(
         await _wait_until(lambda: mock_setup.api.check_data.call_count >= 1)
         unsubscribe()
 
+        # The listener finishes the request it is in before it stops.
+        await _settle()
         polls_when_unsubscribed = mock_setup.api.check_data.call_count
-        for _ in range(20):
-            await asyncio.sleep(0)
+        await _settle()
 
     assert mock_setup.api.check_data.call_count == polls_when_unsubscribed
 
@@ -388,12 +395,35 @@ async def test_infrared_receiver_listens_until_last_subscriber_leaves(
         )
 
         unsubscribe_second()
+        await _settle()
         polls_when_unsubscribed = mock_setup.api.check_data.call_count
-        for _ in range(20):
-            await asyncio.sleep(0)
+        await _settle()
 
     # The second subscriber must not start a second listener.
     assert mock_setup.api.enter_learning.call_count == 1
+    assert mock_setup.api.check_data.call_count == polls_when_unsubscribed
+
+
+async def test_infrared_receiver_ignores_repeated_unsubscribe(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test unsubscribing twice does not leave a listener without subscribers."""
+    mock_setup = await get_device(DEVICE_NAME).setup_entry(hass)
+    entity_id = _infrared_entity_id(entity_registry, "receiver")
+
+    mock_setup.api.check_data.side_effect = ReadError
+
+    with patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0):
+        unsubscribe = async_subscribe_receiver(hass, entity_id, lambda signal: None)
+        await _wait_until(lambda: mock_setup.api.check_data.call_count >= 1)
+
+        unsubscribe()
+        unsubscribe()
+        await _settle()
+        polls_when_unsubscribed = mock_setup.api.check_data.call_count
+        await _settle()
+
     assert mock_setup.api.check_data.call_count == polls_when_unsubscribed
 
 
@@ -415,7 +445,6 @@ async def test_infrared_receiver_stops_on_unload(
         await hass.async_block_till_done()
 
         polls_when_unloaded = mock_setup.api.check_data.call_count
-        for _ in range(20):
-            await asyncio.sleep(0)
+        await _settle()
 
     assert mock_setup.api.check_data.call_count == polls_when_unloaded

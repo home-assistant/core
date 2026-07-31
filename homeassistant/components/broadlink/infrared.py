@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from contextlib import suppress
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, override
@@ -119,12 +120,20 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
         self._config_entry = config_entry
         self._subscribers = 0
         self._listen_task: asyncio.Task[None] | None = None
+        self._stop_listening = asyncio.Event()
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Call when the entity is added to hass."""
-        await super().async_added_to_hass()
-        self.async_on_remove(self._async_stop_listening)
+    async def async_will_remove_from_hass(self) -> None:
+        """Wait for the listener to finish its current device request.
+
+        Cancelling it would release the front end while a request is still
+        running in the executor, leaving another platform free to talk to the
+        device at the same time.
+        """
+        await super().async_will_remove_from_hass()
+        self._stop_listening.set()
+        if self._listen_task is not None:
+            await self._listen_task
 
     @callback
     @override
@@ -142,9 +151,14 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
         remove_subscription = super().async_subscribe_received_signal(signal_callback)
         self._subscribers += 1
         self._async_update_listening()
+        unsubscribed = False
 
         @callback
         def remove_callback() -> None:
+            nonlocal unsubscribed
+            if unsubscribed:
+                return
+            unsubscribed = True
             remove_subscription()
             self._subscribers -= 1
             self._async_update_listening()
@@ -153,22 +167,26 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
 
     @callback
     def _async_update_listening(self) -> None:
-        """Start or stop listening to match the number of subscribers."""
-        if not self._subscribers:
-            self._async_stop_listening()
-        elif self._listen_task is None:
+        """Start listening when subscribed to.
+
+        Stopping is left to the listener itself, which exits once it has no
+        subscribers left and its current device request has finished.
+        """
+        if (
+            self._subscribers
+            and self._listen_task is None
+            and not self._stop_listening.is_set()
+        ):
             self._listen_task = self._config_entry.async_create_background_task(
                 self.hass,
                 self._async_listen(),
                 f"{self.entity_id} infrared receiver",
             )
 
-    @callback
-    def _async_stop_listening(self) -> None:
-        """Stop listening for IR signals."""
-        if self._listen_task is not None:
-            self._listen_task.cancel()
-            self._listen_task = None
+    async def _async_idle(self, delay: float) -> None:
+        """Wait between polls, returning early when removed."""
+        with suppress(TimeoutError):
+            await asyncio.wait_for(self._stop_listening.wait(), delay)
 
     async def _async_listen(self) -> None:
         """Capture IR signals for as long as there are subscribers.
@@ -182,7 +200,7 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
         armed_generation: int | None = None
         armed_until = dt_util.utcnow()
 
-        while True:
+        while self._subscribers and not self._stop_listening.is_set():
             if (
                 armed_generation is not None
                 and armed_generation != front_end.generation
@@ -210,14 +228,18 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
             except (BroadlinkException, OSError) as err:
                 _LOGGER.debug("Failed to listen for IR signals: %s", err)
                 armed_generation = None
-                await asyncio.sleep(ERROR_BACKOFF)
+                await self._async_idle(ERROR_BACKOFF)
                 continue
 
             if packet is not None:
                 armed_generation = None
                 self._async_handle_packet(packet)
 
-            await asyncio.sleep(POLL_INTERVAL)
+            await self._async_idle(POLL_INTERVAL)
+
+        self._listen_task = None
+        # A subscriber that arrived while we were shutting down needs a listener.
+        self._async_update_listening()
 
     @callback
     def _async_handle_packet(self, packet: bytes) -> None:

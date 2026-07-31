@@ -244,26 +244,26 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             raise ValueError(err_msg)
 
         at_least_one_sent = False
-        async with device.front_end.exclusive():
-            for _, codes in product(range(repeat), code_list):
-                if at_least_one_sent:
-                    await asyncio.sleep(delay)
+        for _, codes in product(range(repeat), code_list):
+            if at_least_one_sent:
+                await asyncio.sleep(delay)
 
-                if len(codes) > 1:
-                    code = codes[self._flags[subdevice]]
-                else:
-                    code = codes[0]
+            if len(codes) > 1:
+                code = codes[self._flags[subdevice]]
+            else:
+                code = codes[0]
 
-                try:
+            try:
+                async with device.front_end.exclusive():
                     await device.async_request(device.api.send_data, code)
-                # pylint: disable-next=home-assistant-action-swallowed-exception
-                except (BroadlinkException, OSError) as err:
-                    _LOGGER.error("Error during %s: %s", service, err)
-                    break
+            # pylint: disable-next=home-assistant-action-swallowed-exception
+            except (BroadlinkException, OSError) as err:
+                _LOGGER.error("Error during %s: %s", service, err)
+                break
 
-                if len(codes) > 1:
-                    self._flags[subdevice] ^= 1
-                at_least_one_sent = True
+            if len(codes) > 1:
+                self._flags[subdevice] ^= 1
+            at_least_one_sent = True
 
         if at_least_one_sent:
             self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
@@ -288,7 +288,9 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         if not self._storage_loaded:
             await self._async_load_storage()
 
-        async with self._lock:
+        # The front end is held for the whole session, so nothing else can
+        # consume a code that was pressed for us.
+        async with self._lock, device.front_end.exclusive():
             if command_type == COMMAND_TYPE_IR:
                 learn_command = self._async_learn_ir_command
 
@@ -302,26 +304,23 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
             should_store = False
 
-            # Hold the front end for the whole session, so nothing else can
-            # consume a code that was pressed for us.
-            async with device.front_end.exclusive():
-                for command in commands:
-                    try:
-                        code = await learn_command(command)
-                        if toggle:
-                            code = [code, await learn_command(command)]
+            for command in commands:
+                try:
+                    code = await learn_command(command)
+                    if toggle:
+                        code = [code, await learn_command(command)]
 
-                    # pylint: disable-next=home-assistant-action-swallowed-exception
-                    except (AuthorizationError, NetworkTimeoutError, OSError) as err:
-                        _LOGGER.error("Failed to learn '%s': %s", command, err)
-                        break
+                # pylint: disable-next=home-assistant-action-swallowed-exception
+                except (AuthorizationError, NetworkTimeoutError, OSError) as err:
+                    _LOGGER.error("Failed to learn '%s': %s", command, err)
+                    break
 
-                    except BroadlinkException as err:
-                        _LOGGER.error("Failed to learn '%s': %s", command, err)
-                        continue
+                except BroadlinkException as err:
+                    _LOGGER.error("Failed to learn '%s': %s", command, err)
+                    continue
 
-                    self._codes.setdefault(subdevice, {}).update({command: code})
-                    should_store = True
+                self._codes.setdefault(subdevice, {}).update({command: code})
+                should_store = True
 
             if should_store:
                 await self._code_storage.async_save(self._codes)
