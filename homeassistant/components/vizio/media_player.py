@@ -126,7 +126,9 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
     @property
     def _volume_step(self) -> int:
         """Return the configured volume step."""
-        return cast(int, self._config_entry.options.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP))
+        return cast(
+            int, self._config_entry.options.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
+        )
 
     @property
     def _conf_apps(self) -> dict[str, Any]:
