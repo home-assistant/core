@@ -130,8 +130,8 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             )
             device_registry = dr.async_get(self.hass)
             for device_id in orphaned_devices:
-                if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, f"{self._entry_id}_{device_id}")}
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, f"{self._entry_id}_{device_id}"), self._entry_id
                 ):
                     _LOGGER.debug(
                         "Removing device: %s", self._previous_devices[device_id]

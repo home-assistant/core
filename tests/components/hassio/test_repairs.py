@@ -50,6 +50,7 @@ async def test_supervisor_issue_repair_flow(
                 context=ContextType.SYSTEM,
                 reference="/dev/sda1",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -60,6 +61,7 @@ async def test_supervisor_issue_repair_flow(
                     reference="/dev/sda1",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 )
             ]
         },
@@ -129,6 +131,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
                 context=ContextType.SYSTEM,
                 reference="test",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -139,6 +142,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
                     reference="test",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
                 Suggestion(
                     type="test_type",
@@ -146,6 +150,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
                     reference="test",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -228,6 +233,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -238,6 +244,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
                     reference=None,
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
                 Suggestion(
                     type="test_type",
@@ -245,6 +252,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
                     reference=None,
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -343,6 +351,7 @@ async def test_supervisor_issue_repair_flow_skip_confirmation(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -353,6 +362,7 @@ async def test_supervisor_issue_repair_flow_skip_confirmation(
                     reference=None,
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -422,6 +432,7 @@ async def test_supervisor_issue_ntp_sync_failed_repair_flow(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -432,6 +443,7 @@ async def test_supervisor_issue_ntp_sync_failed_repair_flow(
                     reference=None,
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -501,6 +513,7 @@ async def test_supervisor_issue_ntp_sync_failed_repair_flow_error(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -511,6 +524,7 @@ async def test_supervisor_issue_ntp_sync_failed_repair_flow_error(
                     reference=None,
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -568,6 +582,7 @@ async def test_mount_failed_repair_flow_error(
                 context=ContextType.MOUNT,
                 reference="backup_share",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -578,6 +593,7 @@ async def test_mount_failed_repair_flow_error(
                     reference="backup_share",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
                 Suggestion(
                     type=SuggestionType.EXECUTE_REMOVE,
@@ -585,6 +601,7 @@ async def test_mount_failed_repair_flow_error(
                     reference="backup_share",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -645,6 +662,7 @@ async def test_mount_failed_repair_flow(
                 context=ContextType.MOUNT,
                 reference="backup_share",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -655,6 +673,7 @@ async def test_mount_failed_repair_flow(
                     reference="backup_share",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
                 Suggestion(
                     type=SuggestionType.EXECUTE_REMOVE,
@@ -662,6 +681,7 @@ async def test_mount_failed_repair_flow(
                     reference="backup_share",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -748,18 +768,21 @@ async def test_supervisor_issue_docker_config_repair_flow(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(issue1_uuid := uuid4()),
+                reference_extra=None,
             ),
             Issue(
                 type=IssueType.DOCKER_CONFIG,
                 context=ContextType.CORE,
                 reference=None,
                 uuid=(issue2_uuid := uuid4()),
+                reference_extra=None,
             ),
             Issue(
                 type=IssueType.DOCKER_CONFIG,
                 context=ContextType.ADDON,
                 reference="test",
                 uuid=(issue3_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -770,6 +793,7 @@ async def test_supervisor_issue_docker_config_repair_flow(
                     reference=None,
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ],
             issue2_uuid: [
@@ -779,6 +803,7 @@ async def test_supervisor_issue_docker_config_repair_flow(
                     reference=None,
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
             ],
             issue3_uuid: [
@@ -788,6 +813,7 @@ async def test_supervisor_issue_docker_config_repair_flow(
                     reference="test",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
             ],
         },
@@ -857,6 +883,7 @@ async def test_supervisor_issue_repair_flow_multiple_data_disks(
                 context=ContextType.SYSTEM,
                 reference="/dev/sda1",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -867,6 +894,7 @@ async def test_supervisor_issue_repair_flow_multiple_data_disks(
                     reference="/dev/sda1",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
                 Suggestion(
                     type=SuggestionType.ADOPT_DATA_DISK,
@@ -874,6 +902,7 @@ async def test_supervisor_issue_repair_flow_multiple_data_disks(
                     reference="/dev/sda1",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -960,6 +989,205 @@ async def test_supervisor_issue_repair_flow_multiple_data_disks(
     "all_setup_requests", [{"include_addons": True}], indirect=True
 )
 @pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issue_app_port_conflict_repair_flow_execute_start(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test fix flow for app port conflict with single execute_start suggestion."""
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type="app_port_conflict",
+                context=ContextType.ADDON,
+                reference="test",
+                uuid=(issue_uuid := uuid4()),
+                reference_extra={"port": 11443},
+            ),
+        ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    type="execute_start",
+                    context=ContextType.ADDON,
+                    reference="test",
+                    uuid=(sugg_uuid := uuid4()),
+                    auto=False,
+                    reference_extra={"port": 11443},
+                ),
+            ]
+        },
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    repair_issue = issue_registry.async_get_issue(
+        domain="hassio", issue_id=issue_uuid.hex
+    )
+    assert repair_issue
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": "hassio", "issue_id": repair_issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "type": "form",
+        "flow_id": flow_id,
+        "handler": "hassio",
+        "step_id": "addon_execute_start",
+        "data_schema": [],
+        "errors": None,
+        "description_placeholders": {
+            "reference": "test",
+            "addon": "test",
+            "port": "11443",
+        },
+        "last_step": True,
+        "preview": None,
+    }
+
+    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "type": "create_entry",
+        "flow_id": flow_id,
+        "handler": "hassio",
+        "description": None,
+        "description_placeholders": None,
+    }
+
+    assert not issue_registry.async_get_issue(domain="hassio", issue_id=issue_uuid.hex)
+    supervisor_client.resolution.apply_suggestion.assert_called_once_with(sugg_uuid)
+
+
+@pytest.mark.parametrize(
+    "all_setup_requests", [{"include_addons": True}], indirect=True
+)
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issue_app_port_conflict_repair_flow_menu(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test fix flow for app port conflict with two suggestions showing menu."""
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type="app_port_conflict",
+                context=ContextType.ADDON,
+                reference="test",
+                uuid=(issue_uuid := uuid4()),
+                reference_extra={"port": 11443},
+            ),
+        ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    type="execute_start",
+                    context=ContextType.ADDON,
+                    reference="test",
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra={"port": 11443},
+                ),
+                Suggestion(
+                    type="clear_port_config",
+                    context=ContextType.ADDON,
+                    reference="test",
+                    uuid=(clear_config_uuid := uuid4()),
+                    auto=False,
+                    reference_extra={"port": 11443},
+                ),
+            ]
+        },
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    repair_issue = issue_registry.async_get_issue(
+        domain="hassio", issue_id=issue_uuid.hex
+    )
+    assert repair_issue
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": "hassio", "issue_id": repair_issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "type": "menu",
+        "flow_id": flow_id,
+        "handler": "hassio",
+        "step_id": "fix_menu",
+        "data_schema": [
+            {
+                "type": "select",
+                "options": [
+                    ["addon_execute_start", "addon_execute_start"],
+                    ["addon_clear_port_config", "addon_clear_port_config"],
+                ],
+                "required": False,
+                "name": "next_step_id",
+            }
+        ],
+        "menu_options": ["addon_execute_start", "addon_clear_port_config"],
+        "description_placeholders": {
+            "reference": "test",
+            "addon": "test",
+            "port": "11443",
+        },
+    }
+
+    # Test clear_port_config path - automatically applies without confirmation
+    resp = await client.post(
+        f"/api/repairs/issues/fix/{flow_id}",
+        json={"next_step_id": "addon_clear_port_config"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    # Since addon_clear_port_config does not require confirmation, it applies immediately
+    assert data == {
+        "type": "create_entry",
+        "flow_id": flow_id,
+        "handler": "hassio",
+        "description": None,
+        "description_placeholders": None,
+    }
+
+    assert not issue_registry.async_get_issue(domain="hassio", issue_id=issue_uuid.hex)
+    supervisor_client.resolution.apply_suggestion.assert_called_once_with(
+        clear_config_uuid
+    )
+
+
+@pytest.mark.parametrize(
+    "all_setup_requests", [{"include_addons": True}], indirect=True
+)
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issue_detached_addon_removed(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
@@ -975,6 +1203,7 @@ async def test_supervisor_issue_detached_addon_removed(
                 context=ContextType.ADDON,
                 reference="test",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -985,6 +1214,7 @@ async def test_supervisor_issue_detached_addon_removed(
                     reference="test",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -1062,6 +1292,7 @@ async def test_supervisor_issue_addon_boot_fail(
                 context=ContextType.ADDON,
                 reference="test",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -1072,6 +1303,7 @@ async def test_supervisor_issue_addon_boot_fail(
                     reference="test",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
                 Suggestion(
                     type="disable_boot",
@@ -1079,6 +1311,7 @@ async def test_supervisor_issue_addon_boot_fail(
                     reference="test",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -1169,6 +1402,7 @@ async def test_supervisor_issue_deprecated_addon(
                 context=ContextType.ADDON,
                 reference="test",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -1179,6 +1413,7 @@ async def test_supervisor_issue_deprecated_addon(
                     reference="test",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -1258,6 +1493,7 @@ async def test_supervisor_issue_deprecated_arch_addon(
                 context=ContextType.ADDON,
                 reference="test",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -1268,6 +1504,7 @@ async def test_supervisor_issue_deprecated_arch_addon(
                     reference="test",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },

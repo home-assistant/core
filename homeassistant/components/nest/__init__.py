@@ -145,8 +145,8 @@ class SignalUpdateCallback:
             return
         _LOGGER.debug("Event Update %s", events.keys())
         device_registry = dr.async_get(self._hass)
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), self._config_entry.entry_id
         )
         if not device_entry:
             return
@@ -273,7 +273,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
     subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
     subscriber.cache_policy.fetch = True
     # Use disk backed event media store
-    subscriber.cache_policy.store = await async_get_media_event_store(hass, subscriber)
+    subscriber.cache_policy.store = await async_get_media_event_store(
+        hass, entry, subscriber
+    )
     subscriber.cache_policy.transcoder = await async_get_transcoder(hass)
 
     # The device manager has a single change callback. When the change
