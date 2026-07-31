@@ -4,7 +4,7 @@ import copy
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from aiohttp import ClientResponse
+from aiohttp import ClientError, ClientResponse
 from pyenphase.envoy import Envoy
 from pyenphase.exceptions import EnvoyError
 
@@ -92,7 +92,8 @@ async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
                     "code": response.status,
                 }
             )
-        except EnvoyError as err:
+        except (EnvoyError, ClientError) as err:
+            # except EnvoyError as err:
             fixture_data[f"{end_point}_log"] = {"Error": repr(err)}
     return fixture_data
 

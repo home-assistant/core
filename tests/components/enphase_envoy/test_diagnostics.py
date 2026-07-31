@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from pyenphase.exceptions import EnvoyError
 from pyenphase.models.meters import CtType
@@ -93,6 +94,22 @@ async def test_entry_diagnostics_with_fixtures_with_error(
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry_options
     ) == snapshot(exclude=limit_diagnostic_attrs)
+
+
+async def test_entry_diagnostics_with_fixtures_with_clientresponse_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry_options: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test diagnostics test fixtures with client errors."""
+    await setup_integration(hass, config_entry_options)
+    mock_envoy.request.side_effect = ClientError
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry_options
+    )
+    assert diagnostics["fixtures"]["/info_log"] == {"Error": "ClientError()"}
 
 
 @pytest.mark.parametrize(
