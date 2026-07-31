@@ -307,12 +307,10 @@ async def ws_start_preview(
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, None, name, True)
     await coordinator.async_refresh()
     preview_entity = HistoryStatsSensor(
-        hass,
         coordinator=coordinator,
         sensor_type=sensor_type,
         name=name,
         unique_id=None,
-        source_entity_id=entity_id,
         state_class=state_class,
     )
     preview_entity.hass = hass

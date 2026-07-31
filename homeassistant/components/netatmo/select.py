@@ -132,3 +132,4 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
         self._attr_options = [
             schedule.name for schedule in self.home.schedules.values() if schedule.name
         ]
+        self.async_write_ha_state()

@@ -44,6 +44,7 @@ from .const import (
     CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
+    CONF_IGNORE_LOCAL_MAC,
     CONF_IGNORE_WIRED_BUG,
     CONF_MORE_OPTIONS,
     CONF_SITE_ID,
@@ -359,6 +360,10 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                                 vol.Optional(
                                     CONF_IGNORE_WIRED_BUG,
                                     default=self.hub.config.option_ignore_wired_bug,
+                                ): bool,
+                                vol.Optional(
+                                    CONF_IGNORE_LOCAL_MAC,
+                                    default=self.hub.config.option_ignore_local_mac,
                                 ): bool,
                                 vol.Optional(
                                     CONF_DPI_RESTRICTIONS,

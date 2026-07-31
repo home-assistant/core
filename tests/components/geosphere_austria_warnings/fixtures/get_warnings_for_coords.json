@@ -1,0 +1,67 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "MultiPolygon",
+    "coordinates": []
+  },
+  "properties": {
+    "location": {
+      "type": "Municipal",
+      "properties": {
+        "gemeindenr": 30740,
+        "name": "Schwechat",
+        "urlname": "schwechat"
+      }
+    },
+    "warnings": [
+      {
+        "type": "Warning",
+        "properties": {
+          "warnid": 4149,
+          "chgid": 6,
+          "verlaufid": 2,
+          "warntypid": 1,
+          "begin": "27.03.2023 08:00",
+          "end": "27.03.2023 18:00",
+          "create": "2023-03-27 06:00:00+00",
+          "text": "Orange wind warning from Mon, 27.03.2023 08:00 until Mon, 27.03.2023 18:00",
+          "auswirkungen": "* Branches may fall and objects may be thrown around.",
+          "empfehlungen": "* Be careful in forests, parks and avenues!",
+          "meteotext": "Strong northwest winds with gusts between 60 and 80 km/h.",
+          "updategrund": "",
+          "warnstufeid": 2,
+          "rawinfo": {
+            "wtype": 1,
+            "wlevel": 2,
+            "start": "1679896800",
+            "end": "1679932800"
+          }
+        }
+      },
+      {
+        "type": "Warning",
+        "properties": {
+          "warnid": 4150,
+          "chgid": 2,
+          "verlaufid": 1,
+          "warntypid": 2,
+          "begin": "28.03.2023 08:00",
+          "end": "28.03.2023 18:00",
+          "create": "2023-03-27 08:00:00+00",
+          "text": "Yellow rain warning from Tue, 28.03.2023 08:00 until Tue, 28.03.2023 18:00",
+          "auswirkungen": "* Local flooding is possible.",
+          "empfehlungen": "* Avoid underpasses and flooded roads!",
+          "meteotext": "Persistent rain with amounts between 40 and 60 mm.",
+          "updategrund": "",
+          "warnstufeid": 1,
+          "rawinfo": {
+            "wtype": 2,
+            "wlevel": 1,
+            "start": "1679983200",
+            "end": "1680019200"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -69,8 +69,8 @@ class UptimeRobotDataUpdateCoordinator(
             device_registry = dr.async_get(self.hass)
 
             for monitor_id in stale_ids:
-                if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, str(monitor_id))}
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, str(monitor_id)), self.config_entry.entry_id
                 ):
                     device_registry.async_update_device(
                         device_id=device.id,
