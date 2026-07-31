@@ -105,6 +105,68 @@
       "climate_zone2": {
         "name": "Zone 2 thermostat"
       }
+    },
+    "sensor": {
+      "compressor_current": {
+        "name": "Compressor Current"
+      },
+      "compressor_frequency": {
+        "name": "Compressor Frequency"
+      },
+      "compressor_power": {
+        "name": "Compressor Power"
+      },
+      "compressor_voltage": {
+        "name": "Compressor Voltage"
+      },
+      "condenser_temperature": {
+        "name": "Condenser Temperature (T3)"
+      },
+      "current_energy_consumption": {
+        "name": "Current Energy Consumption"
+      },
+      "discharge_pipe_temperature": {
+        "name": "Discharge Pipe Temperature (TP)"
+      },
+      "error_code": {
+        "name": "Error Code"
+      },
+      "evaporator_temperature": {
+        "name": "Evaporator Temperature (T2)"
+      },
+      "indoor_coil_temperature": {
+        "name": "Indoor Coil Temperature (T1)"
+      },
+      "indoor_fan_speed": {
+        "name": "Indoor Fan Speed"
+      },
+      "indoor_humidity": {
+        "name": "Indoor Humidity"
+      },
+      "indoor_temperature": {
+        "name": "Indoor Temperature"
+      },
+      "outdoor_ambient_temperature": {
+        "name": "Outdoor Ambient Temperature (T4)"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor Temperature"
+      },
+      "pmv": {
+        "name": "PMV"
+      },
+      "realtime_power": {
+        "name": "Realtime Power"
+      },
+      "target_compressor_frequency": {
+        "name": "Target Compressor Frequency"
+      },
+      "target_indoor_fan_speed": {
+        "name": "Target Indoor Fan Speed"
+      },
+      "total_energy_consumption": {
+        "name": "Total Energy Consumption"
+      }
     }
   },
   "exceptions": {
