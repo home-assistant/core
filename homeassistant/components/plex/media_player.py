@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from functools import wraps
 import logging
-from typing import Any, Concatenate, cast, override
+from typing import TYPE_CHECKING, Any, Concatenate, cast, override
 
 from plexapi.client import PlexClient
 import plexapi.exceptions
@@ -557,6 +557,9 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 entry_type=DeviceEntryType.SERVICE,
             )
 
+        config_entry = self.platform.config_entry
+        if TYPE_CHECKING:
+            assert config_entry
         return DeviceInfo(
             identifiers={(DOMAIN, self.machine_identifier)},
             manufacturer=self.device_platform or "Plex",
@@ -569,7 +572,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             via_device_id=dr.async_get_device_id_by_identifier(
                 self.hass,
                 (DOMAIN, self.plex_server.machine_identifier),
-                config_entry_id=self.plex_server.entry_id,
+                config_entry_id=config_entry.entry_id,
             ),
         )
 
