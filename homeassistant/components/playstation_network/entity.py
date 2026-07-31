@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigSubentry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -50,5 +51,11 @@ class PlaystationNetworkServiceEntity(
         )
         if subentry:
             self._attr_device_info.update(
-                DeviceInfo(via_device=(DOMAIN, coordinator.config_entry.unique_id))
+                DeviceInfo(
+                    via_device_id=dr.async_get_device_id_by_identifier(
+                        coordinator.hass,
+                        (DOMAIN, coordinator.config_entry.unique_id),
+                        config_entry_id=coordinator.config_entry.entry_id,
+                    )
+                )
             )
