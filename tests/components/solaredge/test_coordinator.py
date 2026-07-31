@@ -386,8 +386,8 @@ async def test_modules_coordinator_api_failure(
     assert mock_config_entry_web_login.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_legacy_statistic_id_reused(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_solar_edge_web: AsyncMock,
 ) -> None:
@@ -428,8 +428,73 @@ async def test_legacy_statistic_id_reused(
     assert coordinator.get_statistic_id("7A012345-CA") == legacy_statistic_id
 
     # Data should be inserted under the legacy ID.
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
+        None,
+        {legacy_statistic_id},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    assert stats == {
+        legacy_statistic_id: [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 14.0, "sum": 24.0},
+        ]
+    }
+    # No new serial-based ID should have been created.
     all_stats = await async_list_statistic_ids(hass)
     stat_ids = {s["statistic_id"] for s in all_stats}
-    assert legacy_statistic_id in stat_ids
-    # No new serial-based ID should have been created.
     assert f"{DOMAIN}:{SITE_ID}_7a012345_ca" not in stat_ids
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_legacy_statistic_id_ambiguous(
+    hass: HomeAssistant,
+    mock_solar_edge_web: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that ambiguous legacy statistic names are not reused."""
+    # Two legacy numeric statistics with the same name, e.g. after a module
+    # replacement created a new series under a new numeric ID.
+    for legacy_id in (
+        f"{DOMAIN}:{SITE_ID}_231397259",
+        f"{DOMAIN}:{SITE_ID}_231397260",
+    ):
+        legacy_metadata = StatisticMetaData(
+            mean_type=StatisticMeanType.ARITHMETIC,
+            has_sum=True,
+            name="SolarEdge 1.1",
+            source=DOMAIN,
+            statistic_id=legacy_id,
+            unit_class=EnergyConverter.UNIT_CLASS,
+            unit_of_measurement="Wh",
+        )
+        async_add_external_statistics(hass, legacy_metadata, [])
+    await async_wait_recording_done(hass)
+
+    # Equipment with matching name "1.1".
+    mock_solar_edge_web.async_get_equipment.return_value = {
+        "7A012345-CA": {"name": "Optimizer 1.1"},
+    }
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="SolarEdge",
+        data={CONF_SITE_ID: SITE_ID, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    # The match is ambiguous, so a new serial-based ID is used.
+    coordinator: SolarEdgeModulesCoordinator = entry.runtime_data[
+        DATA_MODULES_COORDINATOR
+    ]
+    assert (
+        coordinator.get_statistic_id("7A012345-CA") == f"{DOMAIN}:{SITE_ID}_7a012345_ca"
+    )
+    assert "ambiguous" in caplog.text

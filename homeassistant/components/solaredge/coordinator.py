@@ -537,8 +537,11 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
         all_stats = await async_list_statistic_ids(self.hass)
 
         prefix = f"{DOMAIN}:{self.site_id}_"
-        # Map the short name (e.g. "1.1.1") to old numeric statistic ID.
+        # Map the short name (e.g. "1.1.1") to the old numeric statistic ID.
+        # Multiple numeric IDs may share the same name, e.g. after a module
+        # replacement; those matches are ambiguous and skipped.
         name_to_legacy: dict[str, str] = {}
+        ambiguous_names: set[str] = set()
         for stat in all_stats:
             stat_id = stat["statistic_id"]
             if not stat_id.startswith(prefix):
@@ -549,17 +552,34 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
             name = stat.get("name", "")
             # Use the last part after splitting by space (e.g. "solaredge 1.1.1" -> "1.1.1").
             short_name = name.rsplit(" ", 1)[-1] if name else ""
-            if short_name:
+            if not short_name:
+                continue
+            if short_name in name_to_legacy:
+                del name_to_legacy[short_name]
+                ambiguous_names.add(short_name)
+            elif short_name not in ambiguous_names:
                 name_to_legacy[short_name] = stat_id
 
-        if not name_to_legacy:
+        if not name_to_legacy and not ambiguous_names:
             return
 
         # Map each serial to its old statistic ID via the equipment name.
         for serial, data in equipment.items():
             name = data.get("name", "")
             short_name = name.rsplit(" ", 1)[-1] if name else ""
-            if short_name and short_name in name_to_legacy:
+            if not short_name:
+                continue
+            if short_name in ambiguous_names:
+                LOGGER.warning(
+                    "Skipping legacy statistics migration for %s %s: multiple "
+                    "numeric statistics share the name %s, so the match is "
+                    "ambiguous",
+                    self.site_id,
+                    name,
+                    short_name,
+                )
+                continue
+            if short_name in name_to_legacy:
                 self._serial_to_legacy_id[serial] = name_to_legacy[short_name]
 
         if self._serial_to_legacy_id:
