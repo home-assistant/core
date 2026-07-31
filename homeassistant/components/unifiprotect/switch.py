@@ -622,7 +622,9 @@ class ProtectRelayOutputSwitch(SwitchEntity):
             manufacturer=DEFAULT_BRAND,
             name=relay.name,
             model="Relay",
-            via_device=(DOMAIN, nvr.mac),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                data.hass, (DOMAIN, nvr.mac), config_entry_id=data.entry.entry_id
+            ),
         )
         self._update_from_relay(relay)
 
