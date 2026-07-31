@@ -112,7 +112,7 @@ MEASUREMENT_SENSOR_TYPES: tuple[AirGradientMeasurementSensorEntityDescription, .
     AirGradientMeasurementSensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.rco2,
     ),
@@ -217,7 +217,7 @@ CONFIG_DISPLAY_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...
         translation_key="display_brightness",
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda config: config.led_bar_brightness,
+        value_fn=lambda config: config.display_brightness,
     ),
 )
 

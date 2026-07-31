@@ -1,5 +1,6 @@
 """Config flow for Lyngdorf integration."""
 
+import logging
 from typing import Any, override
 from urllib.parse import urlparse
 
@@ -22,6 +23,8 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 
 from .const import CONF_SERIAL_NUMBER, DEFAULT_DEVICE_NAME, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -158,6 +161,11 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
 
         device_model_name = discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME) or ""
         if not (model := lookup_receiver_model(device_model_name)):
+            _LOGGER.warning(
+                "SSDP discovered device with unrecognized model name %r at %s",
+                device_model_name,
+                self._host,
+            )
             raise AbortFlow("unsupported_model")
         self._device_model = model.model_name
         self._device_serial_number = (
