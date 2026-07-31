@@ -25,10 +25,12 @@ DHCP: Final = "dhcp"
 FIRMWARE_UPDATE: Final = "fw-update"
 HEALTH: Final = "health"
 IDENTITY: Final = "identity"
+INTERFACE: Final = "interface"
 IS_CAPSMAN: Final = "is_capsman"
 IS_WIFI: Final = "is_wifi"
 IS_WIFIWAVE2: Final = "is_wifiwave2"
 IS_WIRELESS: Final = "is_wireless"
+POE: Final = "poe"
 REBOOT: Final = "reboot"
 RESOURCE: Final = "resource"
 ROUTERBOARD_UPDATE: Final = "routerboard-update"
@@ -48,10 +50,12 @@ MIKROTIK_SERVICES: Final = {
     FIRMWARE_UPDATE: "/system/package/update/install",
     HEALTH: "/system/health/print",
     IDENTITY: "/system/identity/getall",
+    INTERFACE: "/interface/print",
     IS_CAPSMAN: "/caps-man/interface/print",
     IS_WIFI: "/interface/wifi/print",
     IS_WIFIWAVE2: "/interface/wifiwave2/print",
     IS_WIRELESS: "/interface/wireless/print",
+    POE: "/interface/ethernet/poe/print",
     REBOOT: "/system/reboot",
     RESOURCE: "/system/resource/print",
     ROUTERBOARD_UPDATE: "/system/routerboard/upgrade",

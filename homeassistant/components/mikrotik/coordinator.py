@@ -32,12 +32,14 @@ from .const import (
     DOMAIN,
     HEALTH,
     IDENTITY,
+    INTERFACE,
     IS_CAPSMAN,
     IS_WIFI,
     IS_WIFIWAVE2,
     IS_WIRELESS,
     MIKROTIK_SERVICES,
     NAME,
+    POE,
     RESOURCE,
     ROUTERBOARD,
     UPDATE,
@@ -77,6 +79,7 @@ class MikrotikData:
         self.serial_number: str = ""
         self.sensors: dict[str, Any] = {}
         self.system: dict[str, Any] = {}
+        self.interfaces: list[dict[str, Any]] = []
 
     def _get_system_details(self, during_setup: bool = False) -> None:
         """Retrieve system and routerboard details from Mikrotik API."""
@@ -91,6 +94,36 @@ class MikrotikData:
             )
             or [{}]
         )[0]
+
+    def _get_interfaces_details(self) -> None:
+        """Get interfaces details."""
+        all_interfs = self.command(MIKROTIK_SERVICES[INTERFACE])
+
+        fields = {
+            ".id",
+            "name",
+            "type",
+            "mac-address",
+            "running",
+            "disabled",
+        }
+
+        self.interfaces = [
+            {key: interf.get(key) for key in fields}
+            for interf in all_interfs
+            if interf.get("type") != "loopback"
+        ]
+
+        poe_interfs = self.command(MIKROTIK_SERVICES[POE], suppress_errors=True) or []
+
+        poe_by_id = {
+            poe_interf[".id"]: poe_interf.get("poe-out", "off")
+            for poe_interf in poe_interfs
+        }
+
+        for interf in self.interfaces:
+            if (poe_out := poe_by_id.get(interf[".id"])) is not None:
+                interf["poe-out"] = poe_out
 
     @staticmethod
     def load_mac(devices: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -197,6 +230,8 @@ class MikrotikData:
             self.sensors[RESOURCE] = (
                 self.command(MIKROTIK_SERVICES[RESOURCE], suppress_errors=True) or []
             )
+
+            self._get_interfaces_details()
 
         if not device_list:
             return
