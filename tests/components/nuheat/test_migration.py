@@ -1381,14 +1381,16 @@ def test_build_plan_detects_initiator_removed_during_iteration() -> None:
     )
 
     class ChangingEntries:
+        def __init__(self) -> None:
+            self.iterated = False
+
         def __contains__(self, item) -> bool:
             return item is initiating
 
         def __iter__(self):
-            if not hasattr(self, "iterated"):
-                self.iterated = True
-                return iter((initiating,))
-            return iter(())
+            entries = () if self.iterated else (initiating,)
+            self.iterated = True
+            return iter(entries)
 
     hass = MagicMock()
     hass.config_entries.async_entries.return_value = ChangingEntries()
