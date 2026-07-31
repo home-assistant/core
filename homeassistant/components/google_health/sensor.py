@@ -27,6 +27,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
 from . import GoogleHealthConfigEntry
 from .const import DOMAIN
@@ -50,6 +51,7 @@ class GoogleHealthSensorEntityDescription[
     """Class describing Google Health sensor entities."""
 
     value_fn: Callable[[Any], _ValueT]
+    suggested_unit_fn: Callable[[UnitSystem], str | None] | None = None
 
 
 ACTIVITY_SENSORS: list[
@@ -68,6 +70,11 @@ ACTIVITY_SENSORS: list[
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: (
             data.distance.millimeters_sum / 1000.0 if data and data.distance else 0.0
+        ),
+        suggested_unit_fn=lambda units: (
+            UnitOfLength.MILES
+            if units is US_CUSTOMARY_SYSTEM
+            else UnitOfLength.KILOMETERS
         ),
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float](
@@ -108,6 +115,9 @@ BODY_SENSORS: list[
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (
             data.weight.weight_grams / 1000.0 if data and data.weight else None
+        ),
+        suggested_unit_fn=lambda units: (
+            UnitOfMass.POUNDS if units is US_CUSTOMARY_SYSTEM else None
         ),
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, int | None](
@@ -211,6 +221,9 @@ NUTRITION_SENSORS: list[
             data.hydration.amount_consumed.milliliters_sum / 1000.0
             if data and data.hydration and data.hydration.amount_consumed
             else 0.0
+        ),
+        suggested_unit_fn=lambda units: (
+            UnitOfVolume.FLUID_OUNCES if units is US_CUSTOMARY_SYSTEM else None
         ),
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
@@ -344,6 +357,15 @@ class GoogleHealthSensor[_CoordinatorT: GoogleHealthDataUpdateCoordinator[Any]](
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return cast(StateType, self.entity_description.value_fn(self.coordinator.data))
+
+    @property
+    @override
+    def suggested_unit_of_measurement(self) -> str | None:
+        """Return the suggested unit of measurement."""
+        if (suggested_unit_fn := self.entity_description.suggested_unit_fn) is not None:
+            return suggested_unit_fn(self.hass.config.units)
+
+        return super().suggested_unit_of_measurement
 
 
 class GoogleHealthDeviceSensor(

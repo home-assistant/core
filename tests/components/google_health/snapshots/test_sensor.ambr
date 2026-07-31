@@ -402,6 +402,9 @@
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
@@ -412,7 +415,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_distance',
-    'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
 # name: test_all_entities[sensor.google_health_distance-state]
@@ -421,14 +424,14 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Distance',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.METERS: 'm'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.google_health_distance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5000.0',
+    'state': '5.0',
   })
 # ---
 # name: test_all_entities[sensor.google_health_floors-entry]
