@@ -1,7 +1,7 @@
 """Tests for the Growatt Server sensor platform."""
 
 from datetime import date, timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import growattServer
@@ -213,7 +213,7 @@ async def test_sensor_coordinator_updates(
 @pytest.mark.freeze_time("2026-07-14 17:00:00+00:00")
 async def test_v1_total_output_power_uses_recent_plant_power(
     hass: HomeAssistant,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     powers: list[dict[str, str | float | None]],
     expected_state: str,
@@ -239,7 +239,7 @@ async def test_v1_total_output_power_uses_recent_plant_power(
 @pytest.mark.freeze_time("2026-07-14 17:00:00+00:00")
 async def test_v1_total_output_power_falls_back_on_power_api_error(
     hass: HomeAssistant,
-    mock_growatt_v1_api,
+    mock_growatt_v1_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test V1 total output power remains available when plant power fails."""

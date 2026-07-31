@@ -229,7 +229,9 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     ) from err
                 total_info["todayEnergy"] = total_info["today_energy"]
                 total_info["totalEnergy"] = total_info["total_energy"]
-                # The plant data endpoint can report zero while production continues.
+                # The plant power overview is authoritative for instantaneous power.
+                # Plant energy overview's current_power is only a fallback on error;
+                # it can report zero while production continues.
                 current_power = total_info["current_power"] * 1000
                 now = dt_util.now()
                 try:
