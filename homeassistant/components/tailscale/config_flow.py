@@ -6,7 +6,7 @@ from typing import Any, override
 from tailscale import Tailscale, TailscaleAuthenticationError, TailscaleError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -19,14 +19,16 @@ from .const import CONF_OAUTH_CLIENT_ID, CONF_OAUTH_CLIENT_SECRET, CONF_TAILNET,
 
 OAUTH_URL = "https://login.tailscale.com/admin/settings/oauth"
 
-STEP_OAUTH_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_OAUTH_CLIENT_ID): str,
-        vol.Required(CONF_OAUTH_CLIENT_SECRET): TextSelector(
-            config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
-        ),
-    }
-)
+OAUTH_SCHEMA = {
+    vol.Required(CONF_OAUTH_CLIENT_ID): str,
+    vol.Required(CONF_OAUTH_CLIENT_SECRET): TextSelector(
+        config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
+    ),
+}
+
+STEP_USER_SCHEMA = vol.Schema({vol.Required(CONF_TAILNET): str, **OAUTH_SCHEMA})
+
+STEP_REAUTH_SCHEMA = vol.Schema(OAUTH_SCHEMA)
 
 
 async def validate_input(
@@ -53,34 +55,21 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    tailnet: str
-
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if user_input is not None:
-            self.tailnet = user_input[CONF_TAILNET]
-            await self.async_set_unique_id(self.tailnet)
-            self._abort_if_unique_id_configured()
-            return await self.async_step_oauth()
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_TAILNET): str}),
-        )
-
-    async def async_step_oauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Configure an OAuth client. OAuth clients do not expire."""
         errors = {}
 
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_TAILNET])
+            self._abort_if_unique_id_configured()
             try:
                 await validate_input(
-                    self.hass, tailnet=self.tailnet, user_input=user_input
+                    self.hass,
+                    tailnet=user_input[CONF_TAILNET],
+                    user_input=user_input,
                 )
             except TailscaleAuthenticationError:
                 errors["base"] = "invalid_auth"
@@ -88,13 +77,13 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
-                    title=self.tailnet,
-                    data={CONF_TAILNET: self.tailnet, **user_input},
+                    title=user_input[CONF_TAILNET],
+                    data=user_input,
                 )
 
         return self.async_show_form(
-            step_id="oauth",
-            data_schema=STEP_OAUTH_SCHEMA,
+            step_id="user",
+            data_schema=STEP_USER_SCHEMA,
             description_placeholders={"oauth_url": OAUTH_URL},
             errors=errors,
         )
@@ -109,31 +98,15 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Re-authenticate with an OAuth client, migrating an API token entry."""
-        return await self._async_update_entry(
-            self._get_reauth_entry(), "reauth_confirm", user_input
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Reconfigure an entry's OAuth client credentials."""
-        return await self._async_update_entry(
-            self._get_reconfigure_entry(), "reconfigure", user_input
-        )
-
-    async def _async_update_entry(
-        self,
-        entry: ConfigEntry,
-        step_id: str,
-        user_input: dict[str, Any] | None,
-    ) -> ConfigFlowResult:
-        """Validate OAuth credentials and replace the entry's data with them."""
         errors = {}
+        reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
             try:
                 await validate_input(
-                    self.hass, tailnet=entry.data[CONF_TAILNET], user_input=user_input
+                    self.hass,
+                    tailnet=reauth_entry.data[CONF_TAILNET],
+                    user_input=user_input,
                 )
             except TailscaleAuthenticationError:
                 errors["base"] = "invalid_auth"
@@ -143,13 +116,13 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
                 # Replace, rather than update, so a migrated entry's API access
                 # token is not left behind in storage.
                 return self.async_update_reload_and_abort(
-                    entry,
-                    data={CONF_TAILNET: entry.data[CONF_TAILNET], **user_input},
+                    reauth_entry,
+                    data={CONF_TAILNET: reauth_entry.data[CONF_TAILNET], **user_input},
                 )
 
         return self.async_show_form(
-            step_id=step_id,
-            data_schema=STEP_OAUTH_SCHEMA,
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_SCHEMA,
             description_placeholders={"oauth_url": OAUTH_URL},
             errors=errors,
         )
