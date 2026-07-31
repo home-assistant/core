@@ -199,6 +199,25 @@ async def test_create_subscription_sink_error(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_create_subscription_connection_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test handling a connection error when creating a subscription."""
+    assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
+
+    devices.create_subscription.side_effect = SmartThingsConnectionError("Boom")
+
+    await setup_integration(hass, mock_config_entry)
+
+    devices.subscribe.assert_not_called()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_update_subscription_identifier(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -241,6 +260,31 @@ async def test_stale_subscription_id(
         == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
     )
     devices.delete_subscription.assert_called_once_with("test")
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_stale_subscription_id_delete_connection_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test retrying when deleting a stale subscription has a connection error."""
+    mock_config_entry.add_to_hass(hass)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_SUBSCRIPTION_ID: "test"},
+    )
+    devices.delete_subscription.side_effect = SmartThingsConnectionError("Boom")
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.data[CONF_SUBSCRIPTION_ID] == "test"
+    devices.delete_subscription.assert_called_once_with("test")
+    devices.create_subscription.assert_not_called()
+    devices.subscribe.assert_not_called()
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
