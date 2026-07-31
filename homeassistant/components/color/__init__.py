@@ -100,6 +100,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the entity component and entity services."""
     component = EntityComponent[ColorEntity](_LOGGER, DOMAIN, hass)
     hass.data[DATA_COMPONENT] = component
+    # Config-entry-only component: EntityComponent.async_setup() never runs,
+    # so the shutdown hook must be registered explicitly.
+    component.register_shutdown()
 
     async def set_color(entity: ColorEntity, call: ServiceCall) -> None:
         """Set a color from a service call."""
