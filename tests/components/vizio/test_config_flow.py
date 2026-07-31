@@ -45,7 +45,9 @@ from .const import (
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup")
+@pytest.mark.usefixtures(
+    "vizio_connect", "vizio_bypass_setup", "vizio_guess_device_type"
+)
 async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
     """Test user config flow with minimum fields."""
     # test form shows
@@ -66,7 +68,7 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
     assert result["data"][CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.SPEAKER
 
 
-@pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup")
+@pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup", "vizio_detect_tv")
 async def test_user_flow_all_fields(hass: HomeAssistant) -> None:
     """Test user config flow with all fields."""
     # test form shows

@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from aiowaqi import WAQIError
+import attr
 import pytest
 
 from homeassistant.components.waqi import DOMAIN
@@ -249,8 +250,12 @@ async def test_migration_from_v1_disabled(
         identifiers={(DOMAIN, mock_config_entry.unique_id)},
         name=mock_config_entry.title,
         entry_type=dr.DeviceEntryType.SERVICE,
-        disabled_by=DeviceEntryDisabler.CONFIG_ENTRY,
     )
+    # A stale disabled_by flag can't be set through the registry API, which
+    # validates it against the config entry's disabled state; write it
+    # directly to simulate existing storage.
+    device_1 = attr.evolve(device_1, disabled_by=DeviceEntryDisabler.CONFIG_ENTRY)
+    device_registry.devices[device_1.id] = device_1
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -267,6 +272,11 @@ async def test_migration_from_v1_disabled(
         name=mock_config_entry_2.title,
         entry_type=dr.DeviceEntryType.SERVICE,
     )
+    # A device created on a disabled config entry is disabled by the registry
+    # API; clear the flag directly to simulate existing storage with a stale
+    # enabled device.
+    device_2 = attr.evolve(device_2, disabled_by=None)
+    device_registry.devices[device_2.id] = device_2
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,

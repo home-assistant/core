@@ -106,7 +106,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
     # Need to poll to get preset change when in HVACMode.AUTO
     _attr_should_poll = True
 
-    def __init__(self, zone_id, hub: nobo, override_type) -> None:
+    def __init__(self, zone_id: str, hub: nobo, override_type: str) -> None:
         """Initialize the climate device."""
         super().__init__(hub)
         self._id = zone_id

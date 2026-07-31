@@ -258,8 +258,8 @@ async def async_setup_entry(
             device_reg = dr.async_get(hass)
             mac = entry.unique_id
             for node_id in stale_node_ids:
-                device = device_reg.async_get_device(
-                    identifiers={(DOMAIN, f"{mac}_{node_id}")}
+                device = device_reg.async_get_device_by_identifier(
+                    (DOMAIN, f"{mac}_{node_id}"), entry.entry_id
                 )
                 if device:
                     device_reg.async_update_device(

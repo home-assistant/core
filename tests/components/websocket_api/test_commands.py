@@ -311,7 +311,7 @@ async def target_entities(
     }
     assert set(label_registry.labels) == {"label_1", "label_2", "label_3"}
     assert set(area_registry.areas) == {"kitchen", "living_room", "bathroom", "garage"}
-    assert set(dr.async_get(hass).devices) == {
+    assert set(dr.async_get(hass).devices) == {  # pylint: disable=home-assistant-tests-registry-fixtures
         "device1",
         "device2",
         "area_device",
@@ -1245,6 +1245,17 @@ async def test_ping(websocket_client: MockHAClientWebSocket) -> None:
 
     msg = await websocket_client.receive_json()
     assert msg["type"] == "pong"
+
+
+async def test_slugify(websocket_client: MockHAClientWebSocket) -> None:
+    """Test slugify command."""
+    await websocket_client.send_json_auto_id(
+        {"type": "slugify", "text": "Living room Thermostat Temperature"}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["success"] is True
+    assert msg["result"] == {"slug": "living_room_thermostat_temperature"}
 
 
 async def test_call_service_context_with_user(
