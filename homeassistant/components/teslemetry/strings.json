@@ -104,6 +104,9 @@
       "climate_state_is_preconditioning": {
         "name": "Preconditioning"
       },
+      "climate_state_is_rear_defroster_on": {
+        "name": "Rear defroster"
+      },
       "components_grid_services_enabled": {
         "name": "Grid services enabled"
       },
