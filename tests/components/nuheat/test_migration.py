@@ -19,6 +19,8 @@ import pytest
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.nuheat.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.components.nuheat.migration import (
+    CONF_MIGRATION_ANCHOR_ENTRY_ID,
+    CONF_MIGRATION_SERIAL_NUMBER,
     CONF_MIGRATION_STATE,
     CONF_MIGRATION_VALIDATED_SERIALS,
     ISSUE_CLEANUP_INCOMPLETE,
@@ -27,13 +29,22 @@ from homeassistant.components.nuheat.migration import (
     OAUTH_CONFIG_ENTRY_VERSION,
     MigrationExecutionError,
     MigrationPreflightError,
+    _cleanup_plan_entries,
+    _legacy_serial,
+    _oauth_entry_subject,
+    _pending_serial,
+    _require_config_entry,
+    _restart_anchor,
+    _verify_validated_serials,
     async_consolidate_legacy_entries,
     async_resume_migration_cleanup,
     build_migration_plan,
     execute_migration_plan,
     is_legacy_entry,
     is_legacy_entry_data,
+    rollback_migration_plan,
     validate_migration_plan,
+    verify_migration_plan_result,
 )
 from homeassistant.components.nuheat.registry_migration import (
     RegistryMigrationError,
@@ -1292,6 +1303,386 @@ async def test_restart_after_registry_transfer_converges_without_duplicates(
     assert len(device_registry.devices) == len(records)
 
 
+def test_migration_private_value_helpers() -> None:
+    """Test malformed stored values are ignored without exposing them."""
+    entry = SimpleNamespace(
+        data={CONF_SERIAL_NUMBER: 1, CONF_MIGRATION_SERIAL_NUMBER: 2}
+    )
+    assert _legacy_serial(entry) is None
+    assert _pending_serial(entry) is None
+    assert _oauth_entry_subject(entry) is None
+
+
+@pytest.mark.asyncio
+async def test_build_plan_defensive_preflight_failures(hass: HomeAssistant) -> None:
+    """Test migration planning rejects every inconsistent entry layout."""
+    missing = add_legacy_entry(hass, "A")
+    await hass.config_entries.async_remove(missing.entry_id)
+    with pytest.raises(MigrationPreflightError, match="no longer present"):
+        build_migration_plan(
+            hass,
+            missing,
+            account_unique_id=ACCOUNT_SUBJECT,
+            account_title="Account",
+            thermostats=[thermostat("A")],
+        )
+
+    initiating = add_legacy_entry(hass, "A")
+    for unique_id in (ACCOUNT_SUBJECT, "provisional"):
+        MockConfigEntry(
+            domain=DOMAIN,
+            data=oauth_data(subject=ACCOUNT_SUBJECT),
+            unique_id=unique_id,
+            version=3,
+        ).add_to_hass(hass)
+    with pytest.raises(MigrationPreflightError, match="Duplicate NuHeat account"):
+        build_migration_plan(
+            hass,
+            initiating,
+            account_unique_id=ACCOUNT_SUBJECT,
+            account_title="Account",
+            thermostats=[thermostat("A")],
+        )
+
+    for entry in list(hass.config_entries.async_entries(DOMAIN))[1:]:
+        await hass.config_entries.async_remove(entry.entry_id)
+    invalid = add_legacy_entry(hass, "B")
+    hass.config_entries.async_update_entry(invalid, data=legacy_data(""))
+    with pytest.raises(MigrationPreflightError, match="no valid serial"):
+        build_migration_plan(
+            hass,
+            initiating,
+            account_unique_id=ACCOUNT_SUBJECT,
+            account_title="Account",
+            thermostats=[thermostat("A")],
+        )
+
+    await hass.config_entries.async_remove(invalid.entry_id)
+    add_legacy_entry(hass, "A")
+    with pytest.raises(MigrationPreflightError, match="Duplicate legacy"):
+        build_migration_plan(
+            hass,
+            initiating,
+            account_unique_id=ACCOUNT_SUBJECT,
+            account_title="Account",
+            thermostats=[thermostat("A")],
+        )
+
+
+def test_build_plan_detects_initiator_removed_during_iteration() -> None:
+    """Test planning fails closed if its entry collection changes mid-plan."""
+    initiating = SimpleNamespace(
+        entry_id="initiating",
+        data=legacy_data("A"),
+        unique_id="A",
+        title="A",
+        version=1,
+        state=ConfigEntryState.NOT_LOADED,
+    )
+
+    class ChangingEntries:
+        def __contains__(self, item) -> bool:
+            return item is initiating
+
+        def __iter__(self):
+            if not hasattr(self, "iterated"):
+                self.iterated = True
+                return iter((initiating,))
+            return iter(())
+
+    hass = MagicMock()
+    hass.config_entries.async_entries.return_value = ChangingEntries()
+    with pytest.raises(MigrationPreflightError):
+        build_migration_plan(
+            hass,
+            initiating,
+            account_unique_id=ACCOUNT_SUBJECT,
+            account_title="Account",
+            thermostats=[thermostat("A")],
+        )
+
+
+@pytest.mark.asyncio
+async def test_plan_revalidation_failures(hass: HomeAssistant) -> None:
+    """Test entries cannot disappear or change after preflight."""
+    entries, _, plan = build_three_entry_plan(hass)
+    hass.config_entries.async_update_entry(entries[0], title="changed")
+    with pytest.raises(MigrationPreflightError, match="anchor changed"):
+        validate_migration_plan(hass, plan)
+    hass.config_entries.async_update_entry(entries[0], title=plan.original_anchor_title)
+
+    redundant = plan.redundant_entry_snapshots[0]
+    redundant_entry = hass.config_entries.async_get_entry(redundant.entry_id)
+    assert redundant_entry is not None
+    hass.config_entries.async_update_entry(redundant_entry, title="changed")
+    with pytest.raises(MigrationPreflightError, match="Redundant NuHeat entry changed"):
+        validate_migration_plan(hass, plan)
+    hass.config_entries.async_update_entry(redundant_entry, title=redundant.title)
+
+    await hass.config_entries.async_remove(redundant.entry_id)
+    with pytest.raises(
+        MigrationPreflightError, match="Redundant NuHeat entry disappeared"
+    ):
+        validate_migration_plan(hass, plan)
+
+    await hass.config_entries.async_remove(plan.anchor_entry_id)
+    with pytest.raises(MigrationPreflightError, match="anchor disappeared"):
+        validate_migration_plan(hass, plan)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("entries", "unload", "setup", "state", "message"),
+    [
+        ([None], True, True, ConfigEntryState.LOADED, "disappeared"),
+        (
+            [SimpleNamespace(state=ConfigEntryState.LOADED)],
+            False,
+            True,
+            ConfigEntryState.LOADED,
+            "unload failed",
+        ),
+        (
+            [SimpleNamespace(state=ConfigEntryState.NOT_LOADED)],
+            True,
+            False,
+            ConfigEntryState.LOADED,
+            "setup failed",
+        ),
+        (
+            [
+                SimpleNamespace(state=ConfigEntryState.NOT_LOADED),
+                SimpleNamespace(state=ConfigEntryState.NOT_LOADED),
+            ],
+            True,
+            True,
+            ConfigEntryState.NOT_LOADED,
+            "did not load",
+        ),
+    ],
+)
+async def test_restart_anchor_failures(entries, unload, setup, state, message) -> None:
+    """Test controlled restart failures are explicit."""
+    hass = MagicMock()
+    hass.config_entries.async_get_entry.side_effect = entries
+    hass.config_entries.async_unload = AsyncMock(return_value=unload)
+    hass.config_entries.async_setup = AsyncMock(return_value=setup)
+    plan = SimpleNamespace(anchor_entry_id="anchor")
+    with pytest.raises(MigrationExecutionError, match=message):
+        await _restart_anchor(hass, plan)
+
+
+def test_result_and_serial_verification_failures() -> None:
+    """Test post-restart validation rejects missing entries and devices."""
+    hass = MagicMock()
+    hass.config_entries.async_get_entry.return_value = None
+    plan = SimpleNamespace(anchor_entry_id="anchor", validated_serials=frozenset({"A"}))
+    with pytest.raises(MigrationExecutionError, match="did not load"):
+        verify_migration_plan_result(hass, plan)
+
+    anchor = SimpleNamespace(
+        state=ConfigEntryState.LOADED,
+        runtime_data=SimpleNamespace(coordinator=SimpleNamespace(data={})),
+    )
+    hass.config_entries.async_get_entry.return_value = anchor
+    with pytest.raises(MigrationExecutionError, match="omitted expected"):
+        verify_migration_plan_result(hass, plan)
+    with pytest.raises(MigrationExecutionError, match="omitted devices"):
+        _verify_validated_serials(frozenset({"A"}), {})
+
+
+def _rollback_plan(*, loaded: bool = False):
+    snapshot = SimpleNamespace(
+        entry_id="redundant",
+        data={"old": True},
+        title="old redundant",
+        unique_id="serial",
+        version=1,
+    )
+    return SimpleNamespace(
+        anchor_entry_id="anchor",
+        original_anchor_data={"old": True},
+        original_anchor_title="old anchor",
+        original_anchor_unique_id="serial",
+        original_anchor_version=1,
+        anchor_was_loaded=loaded,
+        redundant_entry_snapshots=(snapshot,),
+        entity_snapshots=(),
+        device_snapshots=(),
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "case",
+    [
+        "unload_false",
+        "unload_error",
+        "missing_anchor",
+        "missing_redundant",
+        "update_error",
+        "changed_anchor",
+        "changed_redundant",
+        "validation_error",
+        "setup_error",
+    ],
+)
+async def test_rollback_failure_paths(case: str) -> None:
+    """Test rollback reports all local restoration failures."""
+    plan = _rollback_plan(
+        loaded=case in ("unload_false", "unload_error", "setup_error")
+    )
+    anchor = SimpleNamespace(
+        entry_id="anchor",
+        state=ConfigEntryState.LOADED
+        if plan.anchor_was_loaded
+        else ConfigEntryState.NOT_LOADED,
+        data={"old": True},
+        title="old anchor",
+        unique_id="serial",
+        version=1,
+    )
+    redundant = SimpleNamespace(
+        entry_id="redundant",
+        data={"old": True},
+        title="old redundant",
+        unique_id="serial",
+        version=1,
+    )
+    hass = MagicMock()
+    hass.config_entries.async_unload = AsyncMock(return_value=case != "unload_false")
+    if case == "unload_error":
+        hass.config_entries.async_unload.side_effect = RuntimeError
+    hass.config_entries.async_setup = AsyncMock(return_value=True)
+    if case == "setup_error":
+        hass.config_entries.async_setup.side_effect = RuntimeError
+
+    def get_entry(entry_id):
+        if case == "missing_anchor" and entry_id == "anchor":
+            return None
+        if case == "missing_redundant" and entry_id == "redundant":
+            return None
+        if case == "changed_anchor" and entry_id == "anchor":
+            anchor.title = "changed"
+        if case == "changed_redundant" and entry_id == "redundant":
+            redundant.title = "changed"
+        return anchor if entry_id == "anchor" else redundant
+
+    hass.config_entries.async_get_entry.side_effect = get_entry
+    if case == "update_error":
+        hass.config_entries.async_update_entry.side_effect = RuntimeError
+    validation = (
+        MagicMock(side_effect=RuntimeError)
+        if case == "validation_error"
+        else MagicMock()
+    )
+    with (
+        patch("homeassistant.components.nuheat.migration.restore_registry_snapshots"),
+        patch(
+            "homeassistant.components.nuheat.migration.validate_registry_snapshots",
+            validation,
+        ),
+        patch(
+            "homeassistant.components.nuheat.migration._create_repair_issue"
+        ) as issue,
+    ):
+        assert not await rollback_migration_plan(hass, plan)
+    issue.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_cleanup_helpers_handle_disappearing_entries() -> None:
+    """Test vanished cleanup entries and required-entry checks."""
+    hass = MagicMock()
+    hass.config_entries.async_get_entry.return_value = None
+    plan = SimpleNamespace(
+        redundant_entry_ids=("missing",), initiating_entry_id="initiating"
+    )
+    result = await _cleanup_plan_entries(hass, plan)
+    assert result is None
+    with pytest.raises(MigrationExecutionError, match="disappeared"):
+        _require_config_entry(hass, "missing")
+
+
+@pytest.mark.asyncio
+async def test_resume_cleanup_markers_and_retry_paths(hass: HomeAssistant) -> None:
+    """Test pending markers, invalid anchors, transfer, and retry failure."""
+    anchor = MockConfigEntry(domain=DOMAIN, data=oauth_data(), version=3)
+    anchor.add_to_hass(hass)
+    pending = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_MIGRATION_STATE: MIGRATION_STATE_PENDING_CLEANUP,
+            CONF_MIGRATION_ANCHOR_ENTRY_ID: anchor.entry_id,
+            CONF_MIGRATION_SERIAL_NUMBER: "A",
+        },
+        version=3,
+    )
+    pending.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.nuheat.migration._create_repair_issue"
+    ) as issue:
+        await async_resume_migration_cleanup(hass, anchor)
+    issue.assert_called_once()
+
+    hass.config_entries.async_update_entry(
+        anchor,
+        data={
+            **oauth_data(),
+            CONF_MIGRATION_STATE: "in_progress",
+            CONF_MIGRATION_VALIDATED_SERIALS: "bad",
+        },
+    )
+    with patch(
+        "homeassistant.components.nuheat.migration._create_repair_issue"
+    ) as issue:
+        await async_resume_migration_cleanup(hass, anchor)
+    issue.assert_called_once()
+
+    hass.config_entries.async_update_entry(
+        anchor,
+        data={
+            **oauth_data(),
+            CONF_MIGRATION_STATE: "in_progress",
+            CONF_MIGRATION_VALIDATED_SERIALS: ["A"],
+        },
+    )
+    anchor.runtime_data = SimpleNamespace(
+        coordinator=SimpleNamespace(data={"A": thermostat("A")})
+    )
+    legacy = add_legacy_entry(hass, "A")
+    with (
+        patch(
+            "homeassistant.components.nuheat.migration.build_registry_snapshots",
+            return_value=((), ()),
+        ) as build,
+        patch(
+            "homeassistant.components.nuheat.migration.transfer_registry_ownership"
+        ) as transfer,
+        patch("homeassistant.components.nuheat.migration.verify_registry_ownership"),
+        patch.object(hass.config_entries, "async_remove", AsyncMock()),
+    ):
+        await async_resume_migration_cleanup(hass, anchor)
+    build.assert_called_once()
+    transfer.assert_called_once()
+    assert legacy.data[CONF_MIGRATION_STATE] == MIGRATION_STATE_PENDING_CLEANUP
+
+    hass.config_entries.async_update_entry(
+        anchor,
+        data={
+            **oauth_data(),
+            CONF_MIGRATION_STATE: "in_progress",
+            CONF_MIGRATION_VALIDATED_SERIALS: ["A", "B"],
+        },
+    )
+    anchor.runtime_data = SimpleNamespace(coordinator=SimpleNamespace(data={}))
+    with patch(
+        "homeassistant.components.nuheat.migration._create_repair_issue"
+    ) as issue:
+        await async_resume_migration_cleanup(hass, anchor)
+    issue.assert_called_once()
+
+
 @pytest.mark.asyncio
 async def test_restart_after_anchor_conversion_resumes_cleanup(
     hass: HomeAssistant,
@@ -1366,3 +1757,19 @@ async def test_retry_after_successful_rollback_completes(
     assert CONF_PASSWORD not in entries[0].data
     assert len(entity_registry.entities) == len(records)
     assert len(device_registry.devices) == len(records)
+
+
+@pytest.mark.asyncio
+async def test_unexpected_migration_failure_is_translated(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test an unexpected migration failure produces a stable flow error."""
+    entry = add_legacy_entry(hass, "ABC123")
+    with patch(
+        "homeassistant.components.nuheat.config_flow.async_consolidate_legacy_entries",
+        AsyncMock(side_effect=RuntimeError("synthetic migration failure")),
+    ):
+        result = await run_migration_flow(
+            hass, hass_client_no_auth, entry, [thermostat("ABC123")]
+        )
+    assert result["reason"] == "migration_failed"
