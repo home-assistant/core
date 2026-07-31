@@ -7,8 +7,9 @@ from aioairzone_cloud.exceptions import AirzoneTimeout
 from homeassistant.components.airzone_cloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from .util import CONFIG
+from .util import CONFIG, WS_ID, WS_ID_AIDOO, async_init_integration
 
 from tests.common import MockConfigEntry
 
@@ -52,6 +53,39 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_device_via_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that child devices are linked to their via_device parents."""
+    await async_init_integration(hass)
+
+    ws_device = device_registry.async_get_device(identifiers={(DOMAIN, WS_ID)})
+    assert ws_device is not None
+    assert ws_device.via_device_id is None
+
+    ws_aidoo_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, WS_ID_AIDOO)}
+    )
+    assert ws_aidoo_device is not None
+
+    system_device = device_registry.async_get_device(identifiers={(DOMAIN, "system1")})
+    assert system_device is not None
+    assert system_device.via_device_id == ws_device.id
+
+    zone_device = device_registry.async_get_device(identifiers={(DOMAIN, "zone1")})
+    assert zone_device is not None
+    assert zone_device.via_device_id == system_device.id
+
+    dhw_device = device_registry.async_get_device(identifiers={(DOMAIN, "dhw1")})
+    assert dhw_device is not None
+    assert dhw_device.via_device_id == ws_device.id
+
+    aidoo_device = device_registry.async_get_device(identifiers={(DOMAIN, "aidoo1")})
+    assert aidoo_device is not None
+    assert aidoo_device.via_device_id == ws_aidoo_device.id
 
 
 async def test_init_api_timeout(hass: HomeAssistant) -> None:
