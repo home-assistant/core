@@ -1,4 +1,4 @@
-"""Sensor for Midea Lan."""
+"""Midea Sensor entries."""
 
 from dataclasses import dataclass
 from typing import cast, override
