@@ -42,26 +42,26 @@ async def async_setup_entry(
     entities: list[VeluxCover] = []
     for node in pyvlx.nodes:
         if isinstance(node, Blind):
-            entities.append(VeluxBlind(node, config_entry.entry_id))
+            entities.append(VeluxBlind(hass, node, config_entry.entry_id))
         elif isinstance(node, DualRollerShutter):
             # add three entities, one for each part and the "dual" control
             entities.append(
                 VeluxDualRollerShutter(
-                    node, config_entry.entry_id, VeluxDualRollerPart.DUAL
+                    hass, node, config_entry.entry_id, VeluxDualRollerPart.DUAL
                 )
             )
             entities.append(
                 VeluxDualRollerShutter(
-                    node, config_entry.entry_id, VeluxDualRollerPart.UPPER
+                    hass, node, config_entry.entry_id, VeluxDualRollerPart.UPPER
                 )
             )
             entities.append(
                 VeluxDualRollerShutter(
-                    node, config_entry.entry_id, VeluxDualRollerPart.LOWER
+                    hass, node, config_entry.entry_id, VeluxDualRollerPart.LOWER
                 )
             )
         elif isinstance(node, OpeningDevice):
-            entities.append(VeluxCover(node, config_entry.entry_id))
+            entities.append(VeluxCover(hass, node, config_entry.entry_id))
 
     async_add_entities(entities)
 
@@ -79,9 +79,11 @@ class VeluxCover(VeluxEntity, CoverEntity):
         | CoverEntityFeature.STOP
     )
 
-    def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, node: OpeningDevice, config_entry_id: str
+    ) -> None:
         """Initialize VeluxCover."""
-        super().__init__(node, config_entry_id)
+        super().__init__(hass, node, config_entry_id)
         match node:
             case Window():
                 self._attr_device_class = CoverDeviceClass.WINDOW
@@ -166,10 +168,14 @@ class VeluxDualRollerShutter(VeluxCover):
     _attr_device_class = CoverDeviceClass.SHUTTER
 
     def __init__(
-        self, node: DualRollerShutter, config_entry_id: str, part: VeluxDualRollerPart
+        self,
+        hass: HomeAssistant,
+        node: DualRollerShutter,
+        config_entry_id: str,
+        part: VeluxDualRollerPart,
     ) -> None:
         """Initialize VeluxDualRollerShutter."""
-        super().__init__(node, config_entry_id)
+        super().__init__(hass, node, config_entry_id)
         if part == VeluxDualRollerPart.DUAL:
             self._attr_name = None
         else:
@@ -235,9 +241,9 @@ class VeluxBlind(VeluxCover):
     node: Blind
     _attr_device_class = CoverDeviceClass.BLIND
 
-    def __init__(self, node: Blind, config_entry_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, node: Blind, config_entry_id: str) -> None:
         """Initialize VeluxBlind."""
-        super().__init__(node, config_entry_id)
+        super().__init__(hass, node, config_entry_id)
 
         self._attr_supported_features |= (
             CoverEntityFeature.OPEN_TILT
