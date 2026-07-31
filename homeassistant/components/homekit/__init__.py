@@ -67,17 +67,16 @@ from homeassistant.helpers import (
     instance_id,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entityfilter import (
-    BASE_FILTER_SCHEMA,
-    FILTER_SCHEMA,
-    EntityFilter,
-)
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.target import (
+    TARGET_FILTER_CONFIG_SCHEMA,
+    TARGET_FILTER_SCHEMA,
+    TargetFilter,
     TargetSelection,
     async_extract_referenced_entity_ids,
+    async_track_target_filter_changes,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
@@ -164,6 +163,7 @@ STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
 PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
+TARGET_CHANGE_RELOAD_COOLDOWN = 3
 
 _HOMEKIT_CONFIG_UPDATE_TIME = (
     10  # number of seconds to wait for homekit to see the c# change
@@ -210,7 +210,7 @@ BRIDGE_SCHEMA = vol.All(
             vol.Optional(CONF_ADVERTISE_IP): vol.All(
                 cv.ensure_list, [ipaddress.ip_address], [cv.string]
             ),
-            vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
+            vol.Optional(CONF_FILTER, default={}): TARGET_FILTER_CONFIG_SCHEMA,
             vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
             vol.Optional(CONF_DEVICES): cv.ensure_list,
         },
@@ -368,7 +368,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
     )
     homekit_mode: str = options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
     entity_config: dict[str, Any] = options.get(CONF_ENTITY_CONFIG, {}).copy()
-    entity_filter: EntityFilter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
+    target_filter: TargetFilter = TARGET_FILTER_SCHEMA(options.get(CONF_FILTER, {}))
     devices: list[str] = options.get(CONF_DEVICES, [])
 
     homekit = HomeKit(
@@ -376,7 +376,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
         name,
         port,
         ip_address,
-        entity_filter,
+        target_filter,
         exclude_accessory_mode,
         entity_config,
         homekit_mode,
@@ -389,6 +389,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
+    )
+
+    @callback
+    def _async_schedule_reload() -> None:
+        """Schedule a reload when the filter's expanded targets change."""
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    entry.async_on_unload(
+        async_track_target_filter_changes(
+            hass,
+            target_filter,
+            _async_schedule_reload,
+            debounce_cooldown=TARGET_CHANGE_RELOAD_COOLDOWN,
+        )
     )
 
     entry_data = HomeKitEntryData(
@@ -548,7 +562,7 @@ class HomeKit:
         name: str,
         port: int,
         ip_address: list[str] | str | None,
-        entity_filter: EntityFilter,
+        target_filter: TargetFilter,
         exclude_accessory_mode: bool,
         entity_config: dict[str, Any],
         homekit_mode: str,
@@ -562,7 +576,7 @@ class HomeKit:
         self._name = name
         self._port = port
         self._ip_address = ip_address
-        self._filter = entity_filter
+        self._filter = target_filter
         self._config: defaultdict[str, dict[str, Any]] = defaultdict(
             dict, entity_config
         )
@@ -854,7 +868,7 @@ class HomeKit:
         ent_reg = er.async_get(self.hass)
         device_lookup: dict[str, dict[tuple[str, str | None], str]] = {}
         entity_states: list[State] = []
-        entity_filter = self._filter.get_filter()
+        entity_filter = self._filter.async_get_filter(self.hass)
         entries = ent_reg.entities
         for state in self.hass.states.async_all():
             entity_id = state.entity_id

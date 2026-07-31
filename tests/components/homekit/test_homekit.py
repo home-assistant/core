@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from uuid import uuid1
 
+from freezegun.api import FrozenDateTimeFactory
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_CAMERA, CATEGORY_TELEVISION
 import pytest
@@ -19,6 +20,7 @@ from homeassistant.components.homekit import (
     STATUS_RUNNING,
     STATUS_STOPPED,
     STATUS_WAIT,
+    TARGET_CHANGE_RELOAD_COOLDOWN,
     TYPE_AIR_PURIFIER,
     HomeKit,
 )
@@ -46,6 +48,7 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_ZEROCONF
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_DEVICE_CLASS,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
@@ -63,6 +66,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
+    area_registry as ar,
     device_registry as dr,
     entity_registry as er,
     instance_id,
@@ -74,14 +78,18 @@ from homeassistant.helpers.entityfilter import (
     CONF_INCLUDE_DOMAINS,
     CONF_INCLUDE_ENTITIES,
     CONF_INCLUDE_ENTITY_GLOBS,
-    EntityFilter,
-    convert_filter,
+)
+from homeassistant.helpers.target import (
+    CONF_EXCLUDE_TARGETS,
+    CONF_INCLUDE_TARGETS,
+    TargetFilter,
+    convert_target_filter,
 )
 from homeassistant.setup import async_setup_component
 
 from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
 
-from tests.common import MockConfigEntry, get_fixture_path
+from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
 
 IP_ADDRESS = "127.0.0.1"
 
@@ -95,16 +103,20 @@ def generate_filter(
     exclude_entites,
     include_globs=None,
     exclude_globs=None,
+    include_targets=None,
+    exclude_targets=None,
 ):
-    """Generate an entity filter using the standard method."""
-    return convert_filter(
+    """Generate a target filter using the standard method."""
+    return convert_target_filter(
         {
             CONF_INCLUDE_DOMAINS: include_domains,
             CONF_INCLUDE_ENTITIES: include_entities,
+            CONF_INCLUDE_ENTITY_GLOBS: include_globs or [],
+            CONF_INCLUDE_TARGETS: include_targets or {},
             CONF_EXCLUDE_DOMAINS: exclude_domains,
             CONF_EXCLUDE_ENTITIES: exclude_entites,
-            CONF_INCLUDE_ENTITY_GLOBS: include_globs or [],
             CONF_EXCLUDE_ENTITY_GLOBS: exclude_globs or [],
+            CONF_EXCLUDE_TARGETS: exclude_targets or {},
         }
     )
 
@@ -125,7 +137,7 @@ def _mock_homekit(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     homekit_mode: str,
-    entity_filter: EntityFilter | None = None,
+    entity_filter: TargetFilter | None = None,
     devices: list[str] | None = None,
 ) -> HomeKit:
     return HomeKit(
@@ -133,7 +145,7 @@ def _mock_homekit(
         name=BRIDGE_NAME,
         port=DEFAULT_PORT,
         ip_address=None,
-        entity_filter=entity_filter or generate_filter([], [], [], []),
+        target_filter=entity_filter or generate_filter([], [], [], []),
         exclude_accessory_mode=False,
         entity_config={},
         homekit_mode=homekit_mode,
@@ -578,6 +590,174 @@ async def test_homekit_entity_filter(hass: HomeAssistant) -> None:
     assert hass.states.get("cover.test") in filtered_states
     assert hass.states.get("demo.test") in filtered_states
     assert hass.states.get("light.demo") not in filtered_states
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_area_filter(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the area target filter."""
+    entry = await async_init_integration(hass)
+    include_area = area_registry.async_create("Included Area")
+    exclude_area = area_registry.async_create("Private Area")
+
+    included = entity_registry.async_get_or_create(
+        "light", "demo", "included_by_area", suggested_object_id="included_by_area"
+    )
+    entity_registry.async_update_entity(included.entity_id, area_id=include_area.id)
+    hass.states.async_set("light.included_by_area", "on")
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "device")},
+    )
+    device_registry.async_update_device(device.id, area_id=include_area.id)
+    entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "included_by_device_area",
+        suggested_object_id="included_by_device_area",
+        device_id=device.id,
+    )
+    hass.states.async_set("light.included_by_device_area", "on")
+
+    config_entity = entity_registry.async_get_or_create(
+        "switch",
+        "demo",
+        "config_entity",
+        suggested_object_id="config_entity",
+        entity_category=EntityCategory.CONFIG,
+    )
+    entity_registry.async_update_entity(
+        config_entity.entity_id, area_id=include_area.id
+    )
+    hass.states.async_set(config_entity.entity_id, "on")
+
+    excluded_by_domain = entity_registry.async_get_or_create(
+        "cover",
+        "demo",
+        "excluded_by_domain",
+        suggested_object_id="excluded_by_domain",
+    )
+    entity_registry.async_update_entity(
+        excluded_by_domain.entity_id, area_id=include_area.id
+    )
+    hass.states.async_set("cover.excluded_by_domain", "open")
+
+    excluded_by_id = entity_registry.async_get_or_create(
+        "light", "demo", "excluded_by_id", suggested_object_id="excluded_by_id"
+    )
+    entity_registry.async_update_entity(
+        excluded_by_id.entity_id, area_id=include_area.id
+    )
+    hass.states.async_set("light.excluded_by_id", "on")
+
+    excluded_by_glob = entity_registry.async_get_or_create(
+        "light", "demo", "excluded_by_glob", suggested_object_id="excluded_by_glob"
+    )
+    entity_registry.async_update_entity(
+        excluded_by_glob.entity_id, area_id=include_area.id
+    )
+    hass.states.async_set("light.excluded_by_glob", "on")
+
+    switch_in_area = entity_registry.async_get_or_create(
+        "switch", "demo", "in_included_area", suggested_object_id="in_included_area"
+    )
+    entity_registry.async_update_entity(
+        switch_in_area.entity_id, area_id=include_area.id
+    )
+    hass.states.async_set("switch.in_included_area", "on")
+
+    excluded_by_area = entity_registry.async_get_or_create(
+        "switch", "demo", "excluded_by_area", suggested_object_id="excluded_by_area"
+    )
+    entity_registry.async_update_entity(
+        excluded_by_area.entity_id, area_id=exclude_area.id
+    )
+    hass.states.async_set("switch.excluded_by_area", "on")
+
+    included_by_id = entity_registry.async_get_or_create(
+        "light", "demo", "included_by_id", suggested_object_id="included_by_id"
+    )
+    entity_registry.async_update_entity(
+        included_by_id.entity_id, area_id=exclude_area.id
+    )
+    hass.states.async_set("light.included_by_id", "on")
+    hass.states.async_set("light.unrelated", "on")
+
+    entity_filter = generate_filter(
+        ["light"],
+        ["light.included_by_id"],
+        ["cover"],
+        ["light.excluded_by_id"],
+        exclude_globs=["light.excluded_by_glob"],
+        include_targets={ATTR_AREA_ID: [include_area.id]},
+        exclude_targets={ATTR_AREA_ID: [exclude_area.id]},
+    )
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE, entity_filter)
+
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = {}
+
+    filtered_states = await homekit.async_configure_accessories()
+    # Matches an include domain and the include area.
+    assert hass.states.get("light.included_by_area") in filtered_states
+    assert hass.states.get("light.included_by_device_area") in filtered_states
+    # An explicit entity include is absolute, even inside an excluded area.
+    assert hass.states.get("light.included_by_id") in filtered_states
+    # Include targets narrow the include domains: an include-domain entity
+    # outside the include area is not bridged.
+    assert hass.states.get("light.unrelated") not in filtered_states
+    # An entity inside the include area whose domain is not an include domain
+    # is not bridged either.
+    assert hass.states.get("switch.in_included_area") not in filtered_states
+    assert hass.states.get(config_entity.entity_id) not in filtered_states
+    assert hass.states.get("cover.excluded_by_domain") not in filtered_states
+    assert hass.states.get("light.excluded_by_id") not in filtered_states
+    assert hass.states.get("light.excluded_by_glob") not in filtered_states
+    assert hass.states.get("switch.excluded_by_area") not in filtered_states
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_area_filter_areas_only(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test area targets act as the include list without base filter domains."""
+    entry = await async_init_integration(hass)
+    include_area = area_registry.async_create("Included Area")
+
+    in_area = entity_registry.async_get_or_create(
+        "light", "demo", "in_area", suggested_object_id="in_area"
+    )
+    entity_registry.async_update_entity(in_area.entity_id, area_id=include_area.id)
+    hass.states.async_set("light.in_area", "on")
+    hass.states.async_set("light.glob_included", "on")
+    hass.states.async_set("light.unrelated", "on")
+    hass.states.async_set("switch.unrelated", "on")
+
+    entity_filter = generate_filter(
+        [],
+        [],
+        [],
+        [],
+        include_globs=["light.glob_*"],
+        include_targets={ATTR_AREA_ID: [include_area.id]},
+    )
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE, entity_filter)
+
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = {}
+
+    filtered_states = await homekit.async_configure_accessories()
+    assert hass.states.get("light.in_area") in filtered_states
+    assert hass.states.get("light.glob_included") in filtered_states
+    assert hass.states.get("light.unrelated") not in filtered_states
+    assert hass.states.get("switch.unrelated") not in filtered_states
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
@@ -1746,6 +1926,141 @@ async def test_yaml_updates_update_config_entry_for_name(hass: HomeAssistant) ->
     await hass.async_block_till_done()
 
     mock_homekit().async_start.assert_called()
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_yaml_config_with_area_targets(hass: HomeAssistant) -> None:
+    """Test async_setup with area targets in imported config."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_IMPORT,
+        data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit,
+        patch(
+            "homeassistant.components.network.async_get_source_ip",
+            return_value="1.2.3.4",
+        ),
+    ):
+        mock_homekit.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "homekit": {
+                    CONF_NAME: BRIDGE_NAME,
+                    CONF_PORT: 12345,
+                    "filter": {
+                        CONF_INCLUDE_TARGETS: {ATTR_AREA_ID: ["living_room"]},
+                        CONF_EXCLUDE_TARGETS: {ATTR_AREA_ID: ["garage"]},
+                    },
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    target_filter = mock_homekit.call_args[0][4]
+    assert target_filter.include_targets.area_ids == {"living_room"}
+    assert target_filter.exclude_targets.area_ids == {"garage"}
+
+
+async def _async_setup_area_reload_test(
+    hass: HomeAssistant, area_id: str
+) -> MockConfigEntry:
+    """Set up HomeKit with an area target filter and return its config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
+        options={"filter": {CONF_INCLUDE_TARGETS: {ATTR_AREA_ID: [area_id]}}},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit,
+        patch(
+            "homeassistant.components.network.async_get_source_ip",
+            return_value="1.2.3.4",
+        ),
+    ):
+        mock_homekit.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    return entry
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_area_target_changes_reload_homekit(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test configured area target changes schedule one debounced reload."""
+    target_area = area_registry.async_create("Target Area")
+    other_area = area_registry.async_create("Other Area")
+    registry_entry = entity_registry.async_get_or_create(
+        "light", "demo", "area_reload", suggested_object_id="area_reload"
+    )
+    other_entry = entity_registry.async_get_or_create(
+        "light", "demo", "area_reload_2", suggested_object_id="area_reload_2"
+    )
+    entry = await _async_setup_area_reload_test(hass, target_area.id)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        entity_registry.async_update_entity(
+            registry_entry.entity_id, area_id=other_area.id
+        )
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        entity_registry.async_update_entity(
+            registry_entry.entity_id, area_id=target_area.id
+        )
+        entity_registry.async_update_entity(
+            other_entry.entity_id, area_id=target_area.id
+        )
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        freezer.tick(TARGET_CHANGE_RELOAD_COOLDOWN)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        mock_reload.assert_called_once_with(entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+@patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
+async def test_area_target_reload_tracking_stops_on_unload(
+    mock_port_available: MagicMock,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test area target tracking stops when the entry is unloaded."""
+    target_area = area_registry.async_create("Target Area")
+    registry_entry = entity_registry.async_get_or_create(
+        "light", "demo", "area_reload", suggested_object_id="area_reload"
+    )
+    entry = await _async_setup_area_reload_test(hass, target_area.id)
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        entity_registry.async_update_entity(
+            registry_entry.entity_id, area_id=target_area.id
+        )
+        await hass.async_block_till_done()
+        freezer.tick(TARGET_CHANGE_RELOAD_COOLDOWN)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")

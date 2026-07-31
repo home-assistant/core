@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Mapping
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.group import Group
@@ -34,10 +35,13 @@ from homeassistant.setup import async_setup_component
 from tests.common import (
     MockConfigEntry,
     RegistryEntryWithDefaults,
+    async_fire_time_changed,
     mock_area_registry,
     mock_device_registry,
     mock_registry,
 )
+
+TARGET_FILTER_DEBOUNCE_COOLDOWN = 3
 
 
 async def set_states_and_check_target_events(
@@ -1097,3 +1101,382 @@ async def test_target_trickle_down_to_splits(
     assert selected.referenced_devices == splits
     assert COMPOSITE_ID not in selected.referenced_devices
     assert selected.indirectly_referenced == {"sensor.a", "sensor.b"}
+
+
+@pytest.fixture
+async def target_filter_registries(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Create labeled entities, devices, and areas for target filter tests."""
+    include_label = label_registry.async_create("incl")
+    exclude_label = label_registry.async_create("excl")
+
+    labeled: dict[tuple[str, str], set[str]] = {
+        ("light", "labeled_in"): {include_label.label_id},
+        ("cover", "labeled_in"): {include_label.label_id},
+        ("light", "labeled_out"): {exclude_label.label_id},
+        ("light", "explicit_in"): {exclude_label.label_id},
+        ("light", "explicit_out"): {include_label.label_id},
+        ("light", "globx_bad"): {include_label.label_id},
+        ("light", "glob_match"): set(),
+        ("switch", "base"): set(),
+        ("light", "unrelated"): set(),
+    }
+    for (domain, object_id), labels in labeled.items():
+        entry = entity_registry.async_get_or_create(
+            domain, "test", object_id, suggested_object_id=object_id
+        )
+        entity_registry.async_update_entity(entry.entity_id, labels=labels)
+
+    hidden = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "hidden_labeled",
+        suggested_object_id="hidden_labeled",
+        hidden_by=er.RegistryEntryHider.USER,
+    )
+    entity_registry.async_update_entity(
+        hidden.entity_id, labels={include_label.label_id}
+    )
+    config = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "config_labeled",
+        suggested_object_id="config_labeled",
+        entity_category=EntityCategory.CONFIG,
+    )
+    entity_registry.async_update_entity(
+        config.entity_id, labels={include_label.label_id}
+    )
+    disabled = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "disabled_labeled",
+        suggested_object_id="disabled_labeled",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    entity_registry.async_update_entity(
+        disabled.entity_id, labels={include_label.label_id}
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    labeled_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "labeled_device")},
+    )
+    device_registry.async_update_device(
+        labeled_device.id, labels={include_label.label_id}
+    )
+    entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "on_labeled_device",
+        suggested_object_id="on_labeled_device",
+        device_id=labeled_device.id,
+    )
+
+    labeled_area = area_registry.async_create("Labeled area")
+    area_registry.async_update(labeled_area.id, labels={include_label.label_id})
+    in_area = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "in_labeled_area",
+        suggested_object_id="in_labeled_area",
+    )
+    entity_registry.async_update_entity(in_area.entity_id, area_id=labeled_area.id)
+
+
+_TARGET_FILTER_CANDIDATES = [
+    "light.labeled_in",
+    "cover.labeled_in",
+    "light.labeled_out",
+    "light.explicit_in",
+    "light.explicit_out",
+    "light.globx_bad",
+    "light.glob_match",
+    "switch.base",
+    "light.unrelated",
+    "light.hidden_labeled",
+    "sensor.config_labeled",
+    "light.disabled_labeled",
+    "light.on_labeled_device",
+    "light.in_labeled_area",
+]
+
+
+@pytest.mark.parametrize(
+    ("filter_config", "expected_included"),
+    [
+        pytest.param(
+            {
+                "include_domains": ["switch"],
+                "include_entities": ["light.explicit_in"],
+                "include_entity_globs": ["light.glob_*"],
+                "include_targets": {ATTR_LABEL_ID: ["incl"]},
+                "exclude_domains": ["cover"],
+                "exclude_entities": ["light.explicit_out"],
+                "exclude_entity_globs": ["light.globx_*"],
+                "exclude_targets": {ATTR_LABEL_ID: ["excl"]},
+            },
+            # Include domains (switch) intersect the include targets (incl
+            # labels, all on lights), so no target match survives; only the
+            # absolute explicit-entity and glob includes remain.
+            {
+                "light.explicit_in",
+                "light.glob_match",
+            },
+            id="full_precedence",
+        ),
+        pytest.param(
+            {
+                "include_domains": ["light"],
+                "include_targets": {ATTR_LABEL_ID: ["incl"]},
+            },
+            # Include domains narrow the include targets to matching domains:
+            # cover.labeled_in drops out because cover is not an include domain.
+            {
+                "light.labeled_in",
+                "light.explicit_out",
+                "light.globx_bad",
+                "light.on_labeled_device",
+                "light.in_labeled_area",
+            },
+            id="include_domains_intersect_targets",
+        ),
+        pytest.param(
+            {
+                "include_domains": ["light"],
+                "include_targets": {ATTR_AREA_ID: ["labeled_area"]},
+            },
+            # Lights not in the area drop out; the area narrows the domain.
+            {"light.in_labeled_area"},
+            id="include_domain_narrowed_by_area",
+        ),
+        pytest.param(
+            {"include_targets": {ATTR_LABEL_ID: ["incl"]}},
+            {
+                "light.labeled_in",
+                "cover.labeled_in",
+                "light.explicit_out",
+                "light.globx_bad",
+                "light.on_labeled_device",
+                "light.in_labeled_area",
+            },
+            id="targets_only_include",
+        ),
+        pytest.param(
+            {
+                "include_entity_globs": ["light.glob_*"],
+                "include_targets": {ATTR_LABEL_ID: ["incl"]},
+            },
+            {
+                "light.labeled_in",
+                "cover.labeled_in",
+                "light.explicit_out",
+                "light.globx_bad",
+                "light.glob_match",
+                "light.on_labeled_device",
+                "light.in_labeled_area",
+            },
+            id="targets_with_include_globs",
+        ),
+        pytest.param(
+            {"include_targets": {ATTR_AREA_ID: ["labeled_area"]}},
+            {"light.in_labeled_area"},
+            id="area_targets_include",
+        ),
+        pytest.param(
+            {
+                "include_entity_globs": ["light.glob_*"],
+                "include_targets": {ATTR_LABEL_ID: ["incl"]},
+                "exclude_entities": ["light.glob_match"],
+            },
+            {
+                "light.labeled_in",
+                "cover.labeled_in",
+                "light.explicit_out",
+                "light.globx_bad",
+                "light.on_labeled_device",
+                "light.in_labeled_area",
+            },
+            id="excluded_entity_id_beats_include_glob",
+        ),
+        pytest.param(
+            {
+                "include_domains": ["light"],
+                "exclude_targets": {ATTR_LABEL_ID: ["excl"]},
+            },
+            {
+                "light.labeled_in",
+                "light.explicit_out",
+                "light.globx_bad",
+                "light.glob_match",
+                "light.unrelated",
+                "light.hidden_labeled",
+                "light.disabled_labeled",
+                "light.on_labeled_device",
+                "light.in_labeled_area",
+            },
+            id="exclude_targets_with_base_filter",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("target_filter_registries")
+async def test_target_filter(
+    hass: HomeAssistant,
+    filter_config: dict[str, Any],
+    expected_included: set[str],
+) -> None:
+    """Test target filter precedence and expansion policy."""
+    target_filter = target.TARGET_FILTER_SCHEMA(filter_config)
+    entity_filter = target_filter.async_get_filter(hass)
+    assert {
+        entity_id for entity_id in _TARGET_FILTER_CANDIDATES if entity_filter(entity_id)
+    } == expected_included
+
+
+async def _async_debounce_pass(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Let the target filter debounce cooldown elapse."""
+    await hass.async_block_till_done()
+    freezer.tick(TARGET_FILTER_DEBOUNCE_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+async def test_track_target_filter_changes(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test tracking calls the action only when expanded targets change."""
+    label = label_registry.async_create("tracked")
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "a", suggested_object_id="a"
+    )
+    other = entity_registry.async_get_or_create(
+        "light", "test", "b", suggested_object_id="b"
+    )
+    target_filter = target.TARGET_FILTER_SCHEMA(
+        {"include_targets": {ATTR_LABEL_ID: [label.label_id]}}
+    )
+    calls: list[None] = []
+    unsub = target.async_track_target_filter_changes(
+        hass,
+        target_filter,
+        lambda: calls.append(None),
+        debounce_cooldown=TARGET_FILTER_DEBOUNCE_COOLDOWN,
+    )
+
+    entity_registry.async_update_entity(entry.entity_id, name="renamed")
+    await _async_debounce_pass(hass, freezer)
+    assert not calls
+
+    entity_registry.async_update_entity(entry.entity_id, labels={label.label_id})
+    await hass.async_block_till_done()
+    assert not calls
+
+    entity_registry.async_update_entity(other.entity_id, labels={label.label_id})
+    await _async_debounce_pass(hass, freezer)
+    assert len(calls) == 1
+
+    disabled = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "d",
+        suggested_object_id="d",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    entity_registry.async_update_entity(disabled.entity_id, labels={label.label_id})
+    await _async_debounce_pass(hass, freezer)
+    assert len(calls) == 1
+
+    entity_registry.async_update_entity(disabled.entity_id, disabled_by=None)
+    await _async_debounce_pass(hass, freezer)
+    assert len(calls) == 2
+
+    unsub()
+    entity_registry.async_update_entity(entry.entity_id, labels=set())
+    await _async_debounce_pass(hass, freezer)
+    assert len(calls) == 2
+
+
+async def test_track_target_filter_changes_indirect(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test tracking reacts to indirect device and area membership changes."""
+    label = label_registry.async_create("tracked")
+    area = area_registry.async_create("Labeled area")
+    area_registry.async_update(area.id, labels={label.label_id})
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "device")},
+    )
+    entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "on_device",
+        suggested_object_id="on_device",
+        device_id=device.id,
+    )
+    target_filter = target.TARGET_FILTER_SCHEMA(
+        {"include_targets": {ATTR_LABEL_ID: [label.label_id]}}
+    )
+    calls: list[None] = []
+    unsub = target.async_track_target_filter_changes(
+        hass,
+        target_filter,
+        lambda: calls.append(None),
+        debounce_cooldown=TARGET_FILTER_DEBOUNCE_COOLDOWN,
+    )
+
+    device_registry.async_update_device(device.id, area_id=area.id)
+    await _async_debounce_pass(hass, freezer)
+    assert len(calls) == 1
+
+    area_registry.async_update(area.id, name="Renamed area")
+    await _async_debounce_pass(hass, freezer)
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_track_target_filter_changes_without_targets(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test tracking is a no-op for a filter without target selections."""
+    label = label_registry.async_create("tracked")
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "a", suggested_object_id="a"
+    )
+    target_filter = target.TARGET_FILTER_SCHEMA({"include_domains": ["light"]})
+    calls: list[None] = []
+    unsub = target.async_track_target_filter_changes(
+        hass,
+        target_filter,
+        lambda: calls.append(None),
+        debounce_cooldown=TARGET_FILTER_DEBOUNCE_COOLDOWN,
+    )
+
+    entity_registry.async_update_entity(entry.entity_id, labels={label.label_id})
+    await _async_debounce_pass(hass, freezer)
+    assert not calls
+
+    unsub()
