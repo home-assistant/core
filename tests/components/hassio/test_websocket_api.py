@@ -375,14 +375,12 @@ async def test_websocket_non_admin_user(
     assert msg["error"]["message"] == "Unauthorized"
 
 
-async def test_websocket_store_reload_refreshes_update_entities(
+async def test_store_reloaded_event_refreshes_update_entities(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    aioclient_mock: AiohttpClientMocker,
     supervisor_client: AsyncMock,
     addons_list: AsyncMock,
 ) -> None:
-    """Test add-on update entities refresh after a store reload via the API proxy."""
+    """Test add-on update entities refresh on a Supervisor store_reloaded event."""
     addons_list.return_value = [
         replace(
             addons_list.return_value[0],
@@ -406,22 +404,16 @@ async def test_websocket_store_reload_refreshes_update_entities(
             version_latest="2.0.1",
         )
     ]
-    aioclient_mock.post(
-        "http://127.0.0.1/store/reload", json={"result": "ok", "data": {}}
-    )
 
-    websocket_client = await hass_ws_client(hass)
-    await websocket_client.send_json_auto_id(
-        {
-            WS_TYPE: WS_TYPE_API,
-            ATTR_ENDPOINT: "/store/reload",
-            ATTR_METHOD: "post",
-        }
+    async_dispatcher_send(
+        hass,
+        EVENT_SUPERVISOR_EVENT,
+        {"event": "store_reloaded", "data": {"repositories": ["core"]}},
     )
-    msg = await websocket_client.receive_json()
-    assert msg["success"]
+    await hass.async_block_till_done()
 
     assert hass.states.get("update.test_update").state == "on"
+    # Supervisor already reloaded the store, so we must not reload it again.
     supervisor_client.store.reload.assert_not_called()
 
 
