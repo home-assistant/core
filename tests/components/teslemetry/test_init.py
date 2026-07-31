@@ -299,6 +299,32 @@ async def test_insufficient_credits_resolved_by_stream(
     assert (issue is None) is resolved
 
 
+async def test_insufficient_credits_cleared_on_unload(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the insufficient credits issue is cleared when the entry unloads."""
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    issue_id = f"insufficient_credits_{entry.entry_id}"
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="insufficient_credits",
+        translation_placeholders={"credits_url": CREDITS_URL},
+    )
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
 async def test_no_live_status(
     hass: HomeAssistant,
     mock_live_status: AsyncMock,

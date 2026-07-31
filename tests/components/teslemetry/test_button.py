@@ -81,7 +81,8 @@ async def test_insufficient_credits(
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
-    # A subsequent successful command resolves the repair issue
+    # A subsequent successful command does not clear the repair; only a credits
+    # stream event does, since not every command consumes command credits.
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
@@ -89,4 +90,4 @@ async def test_insufficient_credits(
         blocking=True,
     )
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)

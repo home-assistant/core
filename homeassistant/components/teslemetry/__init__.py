@@ -52,7 +52,12 @@ from .coordinator import (
     TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
-from .helpers import async_handle_credits, async_update_device_sw_version, flatten
+from .helpers import (
+    async_handle_credits,
+    async_update_device_sw_version,
+    flatten,
+    insufficient_credits_issue_id,
+)
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 from .services import async_setup_services
 
@@ -547,6 +552,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Unload Teslemetry Config."""
+    # The repair issue is not tied to the config entry, so clear it here (this
+    # also runs on removal) once the credits stream listener is gone.
+    ir.async_delete_issue(hass, DOMAIN, insufficient_credits_issue_id(entry))
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

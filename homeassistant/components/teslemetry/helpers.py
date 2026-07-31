@@ -80,8 +80,9 @@ async def handle_command(
             translation_key="command_exception",
             translation_placeholders={"message": e.message},
         ) from e
-    # A successful command means the account has credits again
-    ir.async_delete_issue(hass, DOMAIN, issue_id)
+    # The repair is cleared by the credits stream (async_handle_credits), not
+    # here: handle_command also wraps energy-site commands, which do not consume
+    # command credits, so a successful command is not proof credits are back.
     LOGGER.debug("Command result: %s", result)
     return result
 
@@ -136,7 +137,13 @@ def async_handle_credits(
         and not isinstance(fraction, bool)
         and fraction < CREDITS_QUOTA_FRACTION_THRESHOLD
     )
-    if quota_available or credits.get("balance", 0) > CREDITS_BALANCE_THRESHOLD:
+    balance = credits.get("balance")
+    balance_available = (
+        isinstance(balance, (int, float))
+        and not isinstance(balance, bool)
+        and balance > CREDITS_BALANCE_THRESHOLD
+    )
+    if quota_available or balance_available:
         ir.async_delete_issue(hass, DOMAIN, insufficient_credits_issue_id(entry))
 
 
