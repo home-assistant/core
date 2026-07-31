@@ -7,7 +7,9 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_EXCLUDE,
+    CONF_EVENT_DATA,
     CONF_INCLUDE,
+    CONF_MATCH,
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,  # noqa: F401
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
     EVENT_STATE_CHANGED,
@@ -67,9 +69,7 @@ CONF_DB_RETRY_WAIT = "db_retry_wait"
 CONF_PURGE_KEEP_DAYS = "purge_keep_days"
 CONF_PURGE_INTERVAL = "purge_interval"
 CONF_EVENT_TYPES = "event_types"
-CONF_EVENT_DATA = "event_data"
 CONF_EVENT_TYPE = "event_type"
-CONF_MATCH = "match"
 CONF_COMMIT_INTERVAL = "commit_interval"
 
 
