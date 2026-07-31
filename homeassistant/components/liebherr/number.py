@@ -185,8 +185,11 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
             assert self.temperature_control is not None
         temp_control = self.temperature_control
 
-        target = int(value)
-        if value != target or not temp_control.validate_temperature(target):
+        target = round(value)
+        if (
+            self.unit_of_measurement == self.native_unit_of_measurement
+            and value != target
+        ) or not temp_control.validate_temperature(target):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_temperature",
