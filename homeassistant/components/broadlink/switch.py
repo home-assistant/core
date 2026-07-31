@@ -194,7 +194,8 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
             return True
 
         try:
-            await device.async_request(device.api.send_data, packet)
+            async with device.front_end.exclusive():
+                await device.async_request(device.api.send_data, packet)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False

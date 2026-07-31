@@ -48,6 +48,11 @@ def _nec_packet(command: NECCommand) -> bytes:
     return pulses_to_data([abs(timing) for timing in command.get_raw_timings()])
 
 
+def _raise(error: Exception) -> None:
+    """Raise the given error from within a lambda."""
+    raise error
+
+
 async def _wait_until(predicate: Callable[[], bool]) -> None:
     """Yield to the event loop until the predicate holds."""
     async with asyncio.timeout(10):
@@ -263,31 +268,52 @@ async def test_infrared_receiver_rearms_before_learning_times_out(
         unsubscribe()
 
 
-async def test_infrared_receiver_rearms_after_transmit(
+async def test_infrared_receiver_discards_own_transmission(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test transmitting invalidates the session so we skip our own output."""
+    """Test the code a device captures from its own transmission is dropped."""
     mock_setup = await get_device(DEVICE_NAME).setup_entry(hass)
     receiver_id = _infrared_entity_id(entity_registry, "receiver")
     emitter_id = _infrared_entity_id(entity_registry, "emitter")
 
-    mock_setup.api.check_data.side_effect = ReadError
+    sent_command = NECCommand(address=0x20, command=0x10)
+    remote_command = NECCommand(address=0x20, command=0x11)
+
+    # Model the device: it captures whatever it sees, arming clears the buffer,
+    # and a capture is only readable once.
+    captured: list[bytes] = []
+    mock_setup.api.enter_learning.side_effect = captured.clear
+    mock_setup.api.send_data.side_effect = lambda packet: captured.append(packet)
+    mock_setup.api.check_data.side_effect = lambda: (
+        captured.pop() if captured else _raise(ReadError())
+    )
+
+    signals: list[InfraredReceivedSignal] = []
 
     with (
         patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0),
         patch(f"{INFRARED_MODULE}.TRANSMIT_COOLDOWN", 0),
     ):
-        unsubscribe = async_subscribe_receiver(hass, receiver_id, lambda signal: None)
+        unsubscribe = async_subscribe_receiver(hass, receiver_id, signals.append)
         await _wait_until(lambda: mock_setup.api.enter_learning.call_count == 1)
 
-        await async_send_command(
-            hass, emitter_id, NECCommand(address=0x20, command=0x10)
-        )
+        await async_send_command(hass, emitter_id, sent_command)
         await _wait_until(lambda: mock_setup.api.enter_learning.call_count == 2)
+        await _wait_until(lambda: mock_setup.api.check_data.call_count >= 3)
+
+        assert signals == []
+
+        # The receiver still reports a code that came from an actual remote.
+        captured.append(_nec_packet(remote_command))
+        await _wait_until(lambda: len(signals) == 1)
         unsubscribe()
 
     assert mock_setup.api.send_data.call_count == 1
+
+    decoded = NECCommand.from_raw_timings(signals[0].timings)
+    assert decoded is not None
+    assert decoded.command == remote_command.command
 
 
 @pytest.mark.parametrize("error", [BroadlinkException("boom"), OSError("boom")])

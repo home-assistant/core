@@ -123,11 +123,12 @@ class BroadlinkRadioFrequency(BroadlinkEntity, RadioFrequencyTransmitterEntity):
         )
 
         device = self._device
-        try:
-            await device.async_request(device.api.send_data, packet)
-        except (BroadlinkException, OSError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="transmit_failed",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        async with device.front_end.exclusive():
+            try:
+                await device.async_request(device.api.send_data, packet)
+            except (BroadlinkException, OSError) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="transmit_failed",
+                    translation_placeholders={"error": str(err)},
+                ) from err

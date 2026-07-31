@@ -1,8 +1,7 @@
 """Infrared platform for Broadlink remotes."""
 
 import asyncio
-from collections.abc import AsyncIterator, Callable
-from contextlib import asynccontextmanager
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, override
@@ -64,28 +63,6 @@ def _broadlink_packet_to_timings(packet: bytes) -> list[int]:
     ]
 
 
-class _InfraredFrontEnd:
-    """Serializes access to the single infrared front end of a remote.
-
-    The device can either transmit or be armed for learning, never both, and an
-    armed session is invalidated by any transmission. Users of the front end
-    take the lock; transmitters additionally bump the generation so an armed
-    receiver knows its capture window is gone.
-    """
-
-    def __init__(self) -> None:
-        """Initialize the front end."""
-        self.lock = asyncio.Lock()
-        self.generation = 0
-
-    @asynccontextmanager
-    async def transmitting(self) -> AsyncIterator[None]:
-        """Hold the front end for a transmission."""
-        async with self.lock:
-            self.generation += 1
-            yield
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -95,11 +72,10 @@ async def async_setup_entry(
     # Uses legacy hass.data[DOMAIN] pattern
     # pylint: disable-next=home-assistant-use-runtime-data
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
-    front_end = _InfraredFrontEnd()
     async_add_entities(
         [
-            BroadlinkInfraredEntity(device, front_end),
-            BroadlinkInfraredReceiverEntity(device, config_entry, front_end),
+            BroadlinkInfraredEntity(device),
+            BroadlinkInfraredReceiverEntity(device, config_entry),
         ]
     )
 
@@ -110,17 +86,16 @@ class BroadlinkInfraredEntity(BroadlinkEntity, InfraredEmitterEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "infrared_emitter"
 
-    def __init__(self, device: BroadlinkDevice, front_end: _InfraredFrontEnd) -> None:
+    def __init__(self, device: BroadlinkDevice) -> None:
         """Initialize the entity."""
         super().__init__(device)
         self._attr_unique_id = f"{device.unique_id}-emitter"
-        self._front_end = front_end
 
     @override
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command via the Broadlink device."""
         packet = _timings_to_broadlink_packet(command.get_raw_timings())
-        async with self._front_end.transmitting():
+        async with self._device.front_end.exclusive():
             try:
                 await self._device.async_request(self._device.api.send_data, packet)
             except (BroadlinkException, OSError) as err:
@@ -137,17 +112,11 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "infrared_receiver"
 
-    def __init__(
-        self,
-        device: BroadlinkDevice,
-        config_entry: ConfigEntry,
-        front_end: _InfraredFrontEnd,
-    ) -> None:
+    def __init__(self, device: BroadlinkDevice, config_entry: ConfigEntry) -> None:
         """Initialize the entity."""
         super().__init__(device)
         self._attr_unique_id = f"{device.unique_id}-receiver"
         self._config_entry = config_entry
-        self._front_end = front_end
         self._subscribers = 0
         self._listen_task: asyncio.Task[None] | None = None
 
@@ -209,7 +178,7 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
         transmission invalidated it, and before the device times it out.
         """
         device = self._device
-        front_end = self._front_end
+        front_end = device.front_end
         armed_generation: int | None = None
         armed_until = dt_util.utcnow()
 

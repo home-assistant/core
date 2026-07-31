@@ -1,6 +1,8 @@
 """Support for Broadlink devices."""
 
-from contextlib import suppress
+import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager, suppress
 from functools import partial
 import logging
 
@@ -37,6 +39,28 @@ def get_domains(device_type: str) -> set[Platform]:
     return {d for d, t in DOMAINS_AND_TYPES.items() if device_type in t}
 
 
+class BroadlinkFrontEnd:
+    """Serializes access to the IR/RF front end of a device.
+
+    The device can either transmit or be armed for learning, never both, and an
+    armed learning session is invalidated by anything else using the front end.
+    Callers that transmit or learn take `exclusive()`; a caller that keeps the
+    device armed watches `generation` to notice that its session is gone.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the front end."""
+        self.lock = asyncio.Lock()
+        self.generation = 0
+
+    @asynccontextmanager
+    async def exclusive(self) -> AsyncIterator[None]:
+        """Hold the front end, invalidating any armed learning session."""
+        async with self.lock:
+            self.generation += 1
+            yield
+
+
 class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
     """Manages a Broadlink device."""
 
@@ -50,6 +74,7 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         self.fw_version: int | None = None
         self.authorized: bool | None = None
         self.reset_jobs: list[CALLBACK_TYPE] = []
+        self.front_end = BroadlinkFrontEnd()
 
     @property
     def name(self) -> str:
