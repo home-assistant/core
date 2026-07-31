@@ -11,7 +11,11 @@ from pyoverkiz.auth.credentials import (
     UsernamePasswordCredentials,
 )
 from pyoverkiz.client import GatewayCandidate, OverkizClient
-from pyoverkiz.const import SERVERS_WITH_LOCAL_API, SUPPORTED_SERVERS
+from pyoverkiz.const import (
+    REXEL_OAUTH_CLIENT_ID,
+    SERVERS_WITH_LOCAL_API,
+    SUPPORTED_SERVERS,
+)
 from pyoverkiz.enums import APIType, Server
 from pyoverkiz.exceptions import (
     ApplicationNotAllowedError,
@@ -28,7 +32,15 @@ from pyoverkiz.obfuscate import obfuscate_id
 from pyoverkiz.utils import create_local_server_config, is_overkiz_gateway
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -118,6 +130,25 @@ class OverkizConfigFlow(
 
         return user_input
 
+    def _async_finish_validated_entry(
+        self, user_input: dict[str, Any], title: str
+    ) -> ConfigFlowResult:
+        """Create or update the entry once credentials have been validated."""
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=user_input
+            )
+
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch(reason="reconfigure_wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data=user_input
+            )
+
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=title, data=user_input)
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -130,10 +161,6 @@ class OverkizConfigFlow(
             # Users can choose between local or cloud API.
             if self._server in SERVERS_WITH_LOCAL_API:
                 return await self.async_step_local_or_cloud()
-
-            # Rexel authenticates via OAuth2 (Azure AD B2C with PKCE).
-            if self._server == Server.REXEL:
-                return await self.async_step_pick_implementation()
 
             return await self.async_step_cloud()
 
@@ -178,6 +205,18 @@ class OverkizConfigFlow(
             ),
             description_placeholders={"local_api_docs": LOCAL_API_DOCS_URL},
         )
+
+    @override
+    async def async_step_pick_implementation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Start the Rexel OAuth2 flow, re-importing the credential if removed."""
+        await async_import_client_credential(
+            self.hass,
+            DOMAIN,
+            ClientCredential(REXEL_OAUTH_CLIENT_ID, "", name="Rexel"),
+        )
+        return await super().async_step_pick_implementation(user_input)
 
     async def async_step_cloud(
         self, user_input: dict[str, Any] | None = None
@@ -242,18 +281,8 @@ class OverkizConfigFlow(
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:
-                if self.source == SOURCE_REAUTH:
-                    self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
-
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
-                    )
-
-                # Create new entry
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=user_input
+                return self._async_finish_validated_entry(
+                    user_input, title=user_input[CONF_USERNAME]
                 )
 
         return self.async_show_form(
@@ -312,18 +341,8 @@ class OverkizConfigFlow(
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:
-                if self.source == SOURCE_REAUTH:
-                    self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
-
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
-                    )
-
-                # Create new entry
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                return self._async_finish_validated_entry(
+                    user_input, title=user_input[CONF_HOST]
                 )
 
         return self.async_show_form(
@@ -413,6 +432,12 @@ class OverkizConfigFlow(
                 self._get_reauth_entry(), data=data
             )
 
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch(reason="reconfigure_wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data=data
+            )
+
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=gateway.label or "Rexel", data=data)
@@ -451,23 +476,27 @@ class OverkizConfigFlow(
         if discovery_info.type == "_kizboxdev._tcp.local.":
             self._host = f"{discovery_info.hostname[:-1]}:{discovery_info.port}"
             self._api_type = APIType.LOCAL
+            return await self._process_discovery(
+                gateway_id, updates={CONF_HOST: self._host}
+            )
 
         return await self._process_discovery(gateway_id)
 
-    async def _process_discovery(self, gateway_id: str) -> ConfigFlowResult:
+    async def _process_discovery(
+        self, gateway_id: str, *, updates: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle discovery of a gateway."""
         await self.async_set_unique_id(gateway_id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates=updates)
         self.context["title_placeholders"] = {"gateway_id": gateway_id}
 
         return await self.async_step_user()
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauth."""
-        # Overkiz entries always have unique IDs
-        self.context["title_placeholders"] = {"gateway_id": cast(str, self.unique_id)}
+    def _init_flow_from_entry(
+        self, entry_data: Mapping[str, Any], gateway_id: str
+    ) -> None:
+        """Initialize the flow's state from an existing entry for reauth/reconfigure."""
+        self.context["title_placeholders"] = {"gateway_id": gateway_id}
         self._api_type = entry_data.get(CONF_API_TYPE, APIType.CLOUD)
         self._server = entry_data[CONF_HUB]
 
@@ -478,4 +507,17 @@ class OverkizConfigFlow(
         elif self._server != Server.REXEL:
             self._user = entry_data[CONF_USERNAME]
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauth."""
+        self._init_flow_from_entry(entry_data, cast(str, self.unique_id))
         return await self.async_step_user(dict(entry_data))
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        entry = self._get_reconfigure_entry()
+        self._init_flow_from_entry(entry.data, cast(str, entry.unique_id))
+        return await self.async_step_user(dict(entry.data))

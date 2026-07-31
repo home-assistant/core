@@ -74,7 +74,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-serial-number_CO2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_sensors[entry_humidity]
@@ -113,7 +113,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-serial-number_Humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[entry_pm10]
@@ -152,7 +152,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-serial-number_PM10',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensors[entry_pm2_5]
@@ -191,7 +191,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-serial-number_PM25',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensors[entry_temperature]
@@ -296,7 +296,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Sensor Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_sensor_carbon_dioxide',
@@ -312,7 +312,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Sensor Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_sensor_humidity',
@@ -328,7 +328,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Sensor PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_sensor_pm10',
@@ -344,7 +344,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Sensor PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_sensor_pm2_5',

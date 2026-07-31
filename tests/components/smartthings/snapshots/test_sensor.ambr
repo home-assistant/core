@@ -533,7 +533,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'e44d4e5c-45ea-498f-a653-f5d0c3d97bb8_main_fineDustSensor_fineDustLevel_fineDustLevel',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_all_entities[aq_sensor_3_ikea][sensor.aq_sensor_3_ikea_pm2_5-state]
@@ -542,7 +542,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aq-sensor-3-ikea PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aq_sensor_3_ikea_pm2_5',
@@ -1550,7 +1550,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'c02e8cfa-94ba-86f3-59a0-04a280950f2b_main_veryFineDustSensor_veryFineDustLevel_veryFineDustLevel',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm1-state]
@@ -1559,7 +1559,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm1',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air purifier PM1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_pm1',
@@ -1605,7 +1605,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'c02e8cfa-94ba-86f3-59a0-04a280950f2b_main_dustSensor_dustLevel_dustLevel',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm10-state]
@@ -1614,7 +1614,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air purifier PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_pm10',
@@ -1796,7 +1796,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'c02e8cfa-94ba-86f3-59a0-04a280950f2b_main_dustSensor_fineDustLevel_fineDustLevel',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_all_entities[da_ac_air_000001][sensor.air_purifier_pm2_5-state]
@@ -1805,7 +1805,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air purifier PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_pm2_5',
@@ -2479,7 +2479,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_veryFineDustSensor_veryFineDustLevel_veryFineDustLevel',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm1-state]
@@ -2488,7 +2488,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm1',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '에어모니터 플러스 PM1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eeomoniteo_peulreoseu_pm1',
@@ -2534,7 +2534,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_dustSensor_dustLevel_dustLevel',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm10-state]
@@ -2543,7 +2543,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '에어모니터 플러스 PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eeomoniteo_peulreoseu_pm10',
@@ -2725,7 +2725,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_dustSensor_fineDustLevel_fineDustLevel',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm2_5-state]
@@ -2734,7 +2734,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '에어모니터 플러스 PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eeomoniteo_peulreoseu_pm2_5',
@@ -5076,7 +5076,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_dustSensor_dustLevel_dustLevel',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_all_entities[da_ac_rac_100001][sensor.theater_corridor_a_c_pm10-state]
@@ -5085,7 +5085,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Corridor A/C PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.theater_corridor_a_c_pm10',
@@ -5131,7 +5131,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_dustSensor_fineDustLevel_fineDustLevel',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_all_entities[da_ac_rac_100001][sensor.theater_corridor_a_c_pm2_5-state]
@@ -5140,7 +5140,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Corridor A/C PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.theater_corridor_a_c_pm2_5',
@@ -6042,7 +6042,7 @@
     'supported_features': 0,
     'translation_key': 'hood_filter_usage',
     'unique_id': 'fa5fca25-fa7a-1807-030a-2f72ee0f7bff_main_samsungce.hoodFilter_hoodFilterUsage_hoodFilterUsage',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_filter_usage-state]
@@ -6050,7 +6050,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Range hood Filter usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.range_hood_filter_usage',
@@ -6096,7 +6096,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'fa5fca25-fa7a-1807-030a-2f72ee0f7bff_main_veryFineDustSensor_veryFineDustLevel_veryFineDustLevel',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm1-state]
@@ -6105,7 +6105,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm1',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Range hood PM1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.range_hood_pm1',
@@ -6151,7 +6151,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'fa5fca25-fa7a-1807-030a-2f72ee0f7bff_main_dustSensor_dustLevel_dustLevel',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm10-state]
@@ -6160,7 +6160,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Range hood PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.range_hood_pm10',
@@ -6342,7 +6342,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'fa5fca25-fa7a-1807-030a-2f72ee0f7bff_main_dustSensor_fineDustLevel_fineDustLevel',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_all_entities[da_ks_hood_01001][sensor.range_hood_pm2_5-state]
@@ -6351,7 +6351,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Range hood PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.range_hood_pm2_5',
@@ -10353,7 +10353,7 @@
     'supported_features': 0,
     'translation_key': 'water_filter_usage',
     'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_custom.waterFilter_waterFilterUsage_waterFilterUsage',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.theater_refrigerator_water_filter_usage-state]
@@ -10361,7 +10361,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Water filter usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.theater_refrigerator_water_filter_usage',
@@ -10815,7 +10815,7 @@
     'supported_features': 0,
     'translation_key': 'water_filter_usage',
     'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_custom.waterFilter_waterFilterUsage_waterFilterUsage',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_water_filter_usage-state]
@@ -10823,7 +10823,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator 1 Water filter usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.refrigerator_1_water_filter_usage',
@@ -11277,7 +11277,7 @@
     'supported_features': 0,
     'translation_key': 'water_filter_usage',
     'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_custom.waterFilter_waterFilterUsage_waterFilterUsage',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_water_filter_usage-state]
@@ -11285,7 +11285,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frigo Water filter usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.frigo_water_filter_usage',
@@ -11732,7 +11732,7 @@
     'supported_features': 0,
     'translation_key': 'water_filter_usage',
     'unique_id': 'C097277F-0DCF-0000-0000-000000000000_main_custom.waterFilter_waterFilterUsage_waterFilterUsage',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_all_entities[da_ref_normal_100001][sensor.kjoleskap_water_filter_usage-state]
@@ -11740,7 +11740,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kjøleskap Water filter usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kjoleskap_water_filter_usage',
@@ -15323,7 +15323,7 @@
     'supported_features': 0,
     'translation_key': 'water_filter_usage',
     'unique_id': '42e80b4d-24c4-a810-11b3-f90375c56a39_main_custom.waterFilter_waterFilterUsage_waterFilterUsage',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_all_entities[da_wm_mf_01001][sensor.filtro_in_microfibra_water_filter_usage-state]
@@ -15331,7 +15331,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Filtro in microfibra Water filter usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.filtro_in_microfibra_water_filter_usage',
@@ -19652,7 +19652,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1888b38f-6246-4f1e-911b-bfcfb66999db_main_relativeHumidityMeasurement_humidity_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_all_entities[ecobee_thermostat_offline][sensor.downstairs_humidity-state]
@@ -19661,7 +19661,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Downstairs Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.downstairs_humidity',

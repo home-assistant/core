@@ -59,9 +59,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UV_INDEX,
     EntityCategory,
@@ -71,6 +69,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -131,11 +130,14 @@ PARALLEL_UPDATES = 0
 
 # These descriptions should have a non None unit of measurement.
 ENTITY_DESCRIPTION_KEY_UNIT_MAP: dict[tuple[str, str], SensorEntityDescription] = {
-    (ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY, PERCENTAGE): SensorEntityDescription(
+    (
+        ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY,
+        UnitOfRatio.PERCENTAGE,
+    ): SensorEntityDescription(
         key=ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_registry_enabled_default=False,
     ),
     (
@@ -185,29 +187,29 @@ ENTITY_DESCRIPTION_KEY_UNIT_MAP: dict[tuple[str, str], SensorEntityDescription] 
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
     ),
-    (ENTITY_DESC_KEY_POWER_FACTOR, PERCENTAGE): SensorEntityDescription(
+    (ENTITY_DESC_KEY_POWER_FACTOR, UnitOfRatio.PERCENTAGE): SensorEntityDescription(
         key=ENTITY_DESC_KEY_POWER_FACTOR,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
-    (ENTITY_DESC_KEY_CO, CONCENTRATION_PARTS_PER_MILLION): SensorEntityDescription(
+    (ENTITY_DESC_KEY_CO, UnitOfRatio.PARTS_PER_MILLION): SensorEntityDescription(
         key=ENTITY_DESC_KEY_CO,
         device_class=SensorDeviceClass.CO,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
-    (ENTITY_DESC_KEY_CO2, CONCENTRATION_PARTS_PER_MILLION): SensorEntityDescription(
+    (ENTITY_DESC_KEY_CO2, UnitOfRatio.PARTS_PER_MILLION): SensorEntityDescription(
         key=ENTITY_DESC_KEY_CO2,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
-    (ENTITY_DESC_KEY_HUMIDITY, PERCENTAGE): SensorEntityDescription(
+    (ENTITY_DESC_KEY_HUMIDITY, UnitOfRatio.PERCENTAGE): SensorEntityDescription(
         key=ENTITY_DESC_KEY_HUMIDITY,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     (ENTITY_DESC_KEY_ILLUMINANCE, LIGHT_LUX): SensorEntityDescription(
         key=ENTITY_DESC_KEY_ILLUMINANCE,
@@ -1180,7 +1182,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             device_class=SensorDeviceClass.BATTERY,
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         ),
     ),
     NewZWaveDiscoverySchema(

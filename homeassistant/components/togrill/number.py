@@ -69,7 +69,7 @@ def _get_temperature_descriptions(
 
     def _get_temperatures(
         coordinator: ToGrillCoordinator, alarm_type: AlarmType
-    ) -> tuple[None | float, None | float]:
+    ) -> tuple[float | None, float | None]:
         if not (packet := coordinator.get_packet(PacketA8Notify, probe_number)):
             return None, None
 

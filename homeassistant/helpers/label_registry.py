@@ -184,9 +184,9 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         self,
         label_id: str,
         *,
-        color: str | None | UndefinedType = UNDEFINED,
-        description: str | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
+        color: str | UndefinedType | None = UNDEFINED,
+        description: str | UndefinedType | None = UNDEFINED,
+        icon: str | UndefinedType | None = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
     ) -> LabelEntry:
         """Update name of label."""

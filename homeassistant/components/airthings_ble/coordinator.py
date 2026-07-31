@@ -14,7 +14,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
@@ -36,9 +35,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
 
     def __init__(self, hass: HomeAssistant, entry: AirthingsBLEConfigEntry) -> None:
         """Initialize the coordinator."""
-        self.airthings = AirthingsBluetoothDeviceData(
-            _LOGGER, hass.config.units is METRIC_SYSTEM
-        )
+        self.airthings = AirthingsBluetoothDeviceData(_LOGGER, is_metric=True)
 
         device_model = entry.data.get(DEVICE_MODEL)
         interval = DEVICE_SPECIFIC_SCAN_INTERVAL.get(

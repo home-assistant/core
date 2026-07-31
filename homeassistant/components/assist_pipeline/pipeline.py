@@ -25,7 +25,7 @@ from homeassistant.components import (
     wake_word,
     websocket_api,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, MATCH_ALL
+from homeassistant.const import MATCH_ALL, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -342,13 +342,13 @@ async def async_update_pipeline(
     conversation_language: str | UndefinedType = UNDEFINED,
     language: str | UndefinedType = UNDEFINED,
     name: str | UndefinedType = UNDEFINED,
-    stt_engine: str | None | UndefinedType = UNDEFINED,
-    stt_language: str | None | UndefinedType = UNDEFINED,
-    tts_engine: str | None | UndefinedType = UNDEFINED,
-    tts_language: str | None | UndefinedType = UNDEFINED,
-    tts_voice: str | None | UndefinedType = UNDEFINED,
-    wake_word_entity: str | None | UndefinedType = UNDEFINED,
-    wake_word_id: str | None | UndefinedType = UNDEFINED,
+    stt_engine: str | UndefinedType | None = UNDEFINED,
+    stt_language: str | UndefinedType | None = UNDEFINED,
+    tts_engine: str | UndefinedType | None = UNDEFINED,
+    tts_language: str | UndefinedType | None = UNDEFINED,
+    tts_voice: str | UndefinedType | None = UNDEFINED,
+    wake_word_entity: str | UndefinedType | None = UNDEFINED,
+    wake_word_id: str | UndefinedType | None = UNDEFINED,
     prefer_local_intents: bool | UndefinedType = UNDEFINED,
 ) -> None:
     """Update a pipeline."""
@@ -1255,7 +1255,7 @@ class PipelineRun:
                     if (
                         intent_agent_state := self.hass.states.get(self.intent_agent.id)
                     ) and intent_agent_state.attributes.get(
-                        ATTR_SUPPORTED_FEATURES, 0
+                        EntityStateAttribute.SUPPORTED_FEATURES, 0
                     ) & conversation.ConversationEntityFeature.CONTROL:
                         intent_filter = _async_local_fallback_intent_filter
 

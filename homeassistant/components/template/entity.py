@@ -6,15 +6,13 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from homeassistant.const import (
-    ATTR_ENTITY_PICTURE,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     CONF_DEVICE_ID,
     CONF_ICON,
     CONF_NAME,
     CONF_OPTIMISTIC,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr
@@ -90,7 +88,11 @@ class AbstractTemplateEntity(Entity):
             )
 
         device_registry = dr.async_get(hass)
-        if (device_id := config.get(CONF_DEVICE_ID)) is not None:
+        if (
+            device_id := config.get(CONF_DEVICE_ID)
+        ) is not None and device_registry.async_is_composite_device_id(
+            device_id
+        ) is False:
             self.device_entry = device_registry.async_get(device_id)
 
     @property
@@ -289,9 +291,9 @@ class AbstractTemplateEntity(Entity):
         """Restore attributes from the last state."""
         # Restore built-in attributes from templates
         for conf_key, attr, _attr in (
-            (CONF_ICON, ATTR_ICON, "_attr_icon"),
-            (CONF_NAME, ATTR_FRIENDLY_NAME, "_attr_name"),
-            (CONF_PICTURE, ATTR_ENTITY_PICTURE, "_attr_entity_picture"),
+            (CONF_ICON, EntityStateAttribute.ICON, "_attr_icon"),
+            (CONF_NAME, EntityStateAttribute.FRIENDLY_NAME, "_attr_name"),
+            (CONF_PICTURE, EntityStateAttribute.ENTITY_PICTURE, "_attr_entity_picture"),
         ):
             if conf_key not in self._config or attr not in last_state.attributes:
                 continue

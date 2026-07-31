@@ -2,7 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_device": "The device does not match the configured device."
     },
     "error": {
       "bad_request": "Invalid request. Check your configuration.",
@@ -13,6 +15,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "The API token for the Kiosker App. This can be generated in the app API settings."
+        },
+        "description": "Re-authenticate {name} with Home Assistant. Generate a new API token in the Kiosker app settings.",
+        "title": "Re-authenticate Kiosker"
+      },
       "user": {
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]",

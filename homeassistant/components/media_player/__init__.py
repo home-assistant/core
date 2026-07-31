@@ -17,7 +17,7 @@ from urllib.parse import quote, urlparse
 
 import aiohttp
 from aiohttp import hdrs, web
-from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
+from aiohttp.hdrs import CACHE_CONTROL, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 from propcache.api import cached_property
 import voluptuous as vol
@@ -49,6 +49,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_OFF,
     STATE_PLAYING,
     STATE_STANDBY,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.helpers import config_validation as cv
@@ -202,31 +203,31 @@ MEDIA_PLAYER_BROWSE_MEDIA_SCHEMA = {
 }
 
 
-ATTR_TO_PROPERTY = [
-    MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
-    MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED,
-    MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID,
-    MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE,
-    MediaPlayerEntityStateAttribute.MEDIA_DURATION,
-    MediaPlayerEntityStateAttribute.MEDIA_POSITION,
-    MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT,
-    MediaPlayerEntityStateAttribute.MEDIA_TITLE,
-    MediaPlayerEntityStateAttribute.MEDIA_ARTIST,
-    MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME,
-    MediaPlayerEntityStateAttribute.MEDIA_ALBUM_ARTIST,
-    MediaPlayerEntityStateAttribute.MEDIA_TRACK,
-    MediaPlayerEntityStateAttribute.MEDIA_SERIES_TITLE,
-    MediaPlayerEntityStateAttribute.MEDIA_SEASON,
-    MediaPlayerEntityStateAttribute.MEDIA_EPISODE,
-    MediaPlayerEntityStateAttribute.MEDIA_CHANNEL,
-    MediaPlayerEntityStateAttribute.MEDIA_PLAYLIST,
-    MediaPlayerEntityStateAttribute.APP_ID,
-    MediaPlayerEntityStateAttribute.APP_NAME,
-    MediaPlayerEntityStateAttribute.INPUT_SOURCE,
-    MediaPlayerEntityStateAttribute.SOUND_MODE,
-    MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE,
-    MediaPlayerEntityStateAttribute.MEDIA_REPEAT,
-]
+PROP_TO_ATTR = {
+    "volume_level": MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
+    "is_volume_muted": MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED,
+    "media_content_id": MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID,
+    "media_content_type": MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE,
+    "media_duration": MediaPlayerEntityStateAttribute.MEDIA_DURATION,
+    "media_position": MediaPlayerEntityStateAttribute.MEDIA_POSITION,
+    "media_position_updated_at": MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT,
+    "media_title": MediaPlayerEntityStateAttribute.MEDIA_TITLE,
+    "media_artist": MediaPlayerEntityStateAttribute.MEDIA_ARTIST,
+    "media_album_name": MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME,
+    "media_album_artist": MediaPlayerEntityStateAttribute.MEDIA_ALBUM_ARTIST,
+    "media_track": MediaPlayerEntityStateAttribute.MEDIA_TRACK,
+    "media_series_title": MediaPlayerEntityStateAttribute.MEDIA_SERIES_TITLE,
+    "media_season": MediaPlayerEntityStateAttribute.MEDIA_SEASON,
+    "media_episode": MediaPlayerEntityStateAttribute.MEDIA_EPISODE,
+    "media_channel": MediaPlayerEntityStateAttribute.MEDIA_CHANNEL,
+    "media_playlist": MediaPlayerEntityStateAttribute.MEDIA_PLAYLIST,
+    "app_id": MediaPlayerEntityStateAttribute.APP_ID,
+    "app_name": MediaPlayerEntityStateAttribute.APP_NAME,
+    "source": MediaPlayerEntityStateAttribute.INPUT_SOURCE,
+    "sound_mode": MediaPlayerEntityStateAttribute.SOUND_MODE,
+    "shuffle": MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE,
+    "repeat": MediaPlayerEntityStateAttribute.MEDIA_REPEAT,
+}
 
 # mypy: disallow-any-generics
 
@@ -543,7 +544,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _entity_component_unrecorded_attributes = frozenset(
         {
             MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL,
-            ATTR_ENTITY_PICTURE,
+            EntityStateAttribute.ENTITY_PICTURE,
             MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST,
             MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT,
             MediaPlayerEntityStateAttribute.MEDIA_POSITION,
@@ -1141,8 +1142,8 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if self.state == MediaPlayerState.OFF:
             return state_attr
 
-        for attr in ATTR_TO_PROPERTY:
-            if (value := getattr(self, attr)) is not None:
+        for prop, attr in PROP_TO_ATTR.items():
+            if (value := getattr(self, prop)) is not None:
                 state_attr[attr] = value
 
         if self.media_image_remotely_accessible:
@@ -1227,7 +1228,8 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         (content, content_type) = await self._async_fetch_image(url)
 
         async with cache_images[url][CACHE_LOCK]:
-            cache_images[url][CACHE_CONTENT] = content, content_type
+            if content is not None:
+                cache_images[url][CACHE_CONTENT] = content, content_type
             while len(cache_images) > cache_maxsize:
                 cache_images.popitem(last=False)
 
@@ -1469,6 +1471,23 @@ async def websocket_search_media(
 _FETCH_TIMEOUT = aiohttp.ClientTimeout(total=10)
 
 
+def _image_response_appears_complete(
+    response: aiohttp.ClientResponse, body: bytes
+) -> bool:
+    """Return False when the body is shorter than the advertised Content-Length."""
+    # Content-Length is the encoded size; aiohttp may have decoded the body.
+    encoding = (response.headers.get(CONTENT_ENCODING) or "identity").strip().lower()
+    if encoding != "identity":
+        return True
+    content_length = response.headers.get(CONTENT_LENGTH)
+    if content_length is None:
+        return True
+    try:
+        return len(body) >= int(content_length)
+    except ValueError:
+        return True
+
+
 async def async_fetch_image(
     logger: logging.Logger, hass: HomeAssistant, url: str
 ) -> tuple[bytes | None, str | None]:
@@ -1478,9 +1497,11 @@ async def async_fetch_image(
     with suppress(TimeoutError):
         response = await websession.get(url, timeout=_FETCH_TIMEOUT)
         if response.status == HTTPStatus.OK:
-            content = await response.read()
-            if content_type := response.headers.get(CONTENT_TYPE):
-                content_type = content_type.split(";")[0]
+            body = await response.read()
+            if _image_response_appears_complete(response, body):
+                content = body
+                if content_type := response.headers.get(CONTENT_TYPE):
+                    content_type = content_type.split(";")[0]
 
     if content is None:
         url_parts = URL(url)

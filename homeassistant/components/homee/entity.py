@@ -1,8 +1,9 @@
 """Base Entities for Homee integration."""
 
+import logging
 from typing import override
 
-from pyHomee.const import AttributeState, AttributeType, NodeProfile, NodeState
+from pyHomee.const import AttributeType, NodeProfile, NodeState
 from pyHomee.model import HomeeAttribute, HomeeNode
 from websockets.exceptions import ConnectionClosed
 
@@ -13,6 +14,10 @@ from homeassistant.helpers.entity import Entity
 from . import HomeeConfigEntry
 from .const import DOMAIN
 from .helpers import get_name_for_enum
+
+_LOGGER = logging.getLogger(__name__)
+
+FIRST_UNAVAILABLE_ATTRIBUTE_STATE = 5
 
 
 class HomeeEntity(Entity):
@@ -65,11 +70,14 @@ class HomeeEntity(Entity):
     @override
     def available(self) -> bool:
         """Return the availability of the underlying node."""
-        return (self._attribute.state == AttributeState.NORMAL) and self._host_connected
+        return (
+            self._attribute.state < FIRST_UNAVAILABLE_ATTRIBUTE_STATE
+        ) and self._host_connected
 
     async def async_set_homee_value(self, value: float) -> None:
         """Set an attribute value on the homee node."""
         homee = self._entry.runtime_data
+        _LOGGER.debug("Setting attribute %s to %s", self._attribute.id, value)
         try:
             await homee.set_value(self._attribute.node_id, self._attribute.id, value)
         except ConnectionClosed as exception:
@@ -84,6 +92,7 @@ class HomeeEntity(Entity):
         await homee.update_attribute(self._attribute.node_id, self._attribute.id)
 
     def _on_node_updated(self, attribute: HomeeAttribute) -> None:
+        _LOGGER.debug("Update for attribute %s received", attribute.id)
         self.schedule_update_ha_state()
 
     async def _on_connection_changed(self, connected: bool) -> None:
@@ -164,6 +173,7 @@ class HomeeNodeEntity(Entity):
     ) -> None:
         """Set an attribute value on the homee node."""
         homee = self._entry.runtime_data
+        _LOGGER.debug("Setting attribute %s to %s", attribute.id, value)
         try:
             await homee.set_value(attribute.node_id, attribute.id, value)
         except ConnectionClosed as exception:
@@ -173,6 +183,7 @@ class HomeeNodeEntity(Entity):
             ) from exception
 
     def _on_node_updated(self, node: HomeeNode) -> None:
+        _LOGGER.debug("Update for node %s with id %s received", node.name, node.id)
         self.schedule_update_ha_state()
 
     async def _on_connection_changed(self, connected: bool) -> None:
