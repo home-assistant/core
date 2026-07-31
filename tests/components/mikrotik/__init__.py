@@ -70,6 +70,7 @@ async def setup_integration(
         cmd: str,
         params: dict[str, Any] | None = None,
         suppress_errors: bool = False,
+        during_setup: bool = False,
     ) -> Any:
         return command_responses.get(cmd, {})
 
