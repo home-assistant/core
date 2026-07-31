@@ -380,24 +380,25 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.RADON: 'radon'>,
     'original_icon': None,
     'original_name': 'Radon',
     'platform': 'airthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'radon',
+    'translation_key': None,
     'unique_id': '2960000001_radonShortTermAvg',
-    'unit_of_measurement': 'Bq/m³',
+    'unit_of_measurement': <UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER: 'Bq/m³'>,
   })
 # ---
 # name: test_all_device_types[view_plus][sensor.living_room_radon-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'radon',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Radon',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Bq/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER: 'Bq/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_radon',
@@ -1255,24 +1256,25 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.RADON: 'radon'>,
     'original_icon': None,
     'original_name': 'Radon',
     'platform': 'airthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'radon',
+    'translation_key': None,
     'unique_id': '2930000002_radonShortTermAvg',
-    'unit_of_measurement': 'Bq/m³',
+    'unit_of_measurement': <UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER: 'Bq/m³'>,
   })
 # ---
 # name: test_all_device_types[wave_plus][sensor.office_radon-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'radon',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Radon',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Bq/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER: 'Bq/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.office_radon',

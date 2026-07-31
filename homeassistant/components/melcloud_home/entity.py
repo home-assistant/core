@@ -4,11 +4,12 @@ from abc import abstractmethod
 from typing import override
 
 from aiomelcloudhome import ATAUnit, ATWUnit
+from yarl import URL
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DEVICE_ATA, DEVICE_ATW, DOMAIN, WEB_BASE_URL
 from .coordinator import MelCloudHomeCoordinator
 
 
@@ -21,6 +22,8 @@ class MelCloudHomeEntity(CoordinatorEntity[MelCloudHomeCoordinator]):
 class MelCloudHomeUnitEntity[_UnitT: (ATAUnit, ATWUnit)](MelCloudHomeEntity):
     """Base entity for a MELCloud Home unit."""
 
+    _unit_type_path: str
+
     def __init__(self, coordinator: MelCloudHomeCoordinator, unit: _UnitT) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -30,6 +33,9 @@ class MelCloudHomeUnitEntity[_UnitT: (ATAUnit, ATWUnit)](MelCloudHomeEntity):
             identifiers={(DOMAIN, unit.id)},
             name=unit.name,
             manufacturer="Mitsubishi Electric",
+            configuration_url=URL(
+                f"{WEB_BASE_URL}/{self._unit_type_path}/{unit.id}/temperature"
+            ),
         )
 
     @abstractmethod
@@ -51,6 +57,8 @@ class MelCloudHomeUnitEntity[_UnitT: (ATAUnit, ATWUnit)](MelCloudHomeEntity):
 class MelCloudHomeATAUnitEntity(MelCloudHomeUnitEntity[ATAUnit]):
     """Base entity for a MELCloud Home Air-to-Air unit."""
 
+    _unit_type_path = DEVICE_ATA
+
     @override
     def _units_dict(self) -> dict[str, ATAUnit]:
         """Return ATA units dict from coordinator."""
@@ -59,6 +67,8 @@ class MelCloudHomeATAUnitEntity(MelCloudHomeUnitEntity[ATAUnit]):
 
 class MelCloudHomeATWUnitEntity(MelCloudHomeUnitEntity[ATWUnit]):
     """Base entity for a MELCloud Home Air-to-Water unit."""
+
+    _unit_type_path = DEVICE_ATW
 
     @override
     def _units_dict(self) -> dict[str, ATWUnit]:
