@@ -1,7 +1,7 @@
 """Sensor platform for the Mobility Database integration.
 
-Two timestamp sensors per configured stop: the next departure and the one
-after it, honoring the stop subentry's route and headsign filters.
+Three timestamp sensors per configured stop — the next three departures —
+honoring the stop subentry's route and headsign filters.
 """
 
 from datetime import datetime
@@ -37,7 +37,7 @@ async def async_setup_entry(
         async_add_entities(
             [
                 MobilityDatabaseDepartureSensor(coordinator, subentry, index)
-                for index in (0, 1)
+                for index in range(3)
             ],
             config_subentry_id=subentry_id,
         )
@@ -62,8 +62,11 @@ class MobilityDatabaseDepartureSensor(
         self._subentry = subentry
         self._index = index
         self._attr_translation_key = (
-            "next_departure" if index == 0 else "following_departure"
-        )
+            "next_departure",
+            "second_departure",
+            "third_departure",
+        )[index]
+        self._attr_entity_registry_enabled_default = index == 0
         self._attr_unique_id = f"{subentry.subentry_id}_departure_{index}"
         feed_id: str = coordinator.config_entry.data[CONF_FEED_ID]
         self._attr_device_info = DeviceInfo(

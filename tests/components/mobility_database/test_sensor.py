@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -12,6 +13,7 @@ from .conftest import make_arrival, setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     mock_feeds_client: MagicMock,
@@ -24,7 +26,8 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_following_departure_unknown_with_single_arrival(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_second_departure_unknown_with_single_arrival(
     hass: HomeAssistant,
     mock_feeds_client: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -37,4 +40,5 @@ async def test_following_departure_unknown_with_single_arrival(
         hass.states.get("sensor.1st_grand_next_departure").state
         == "2026-08-01T08:05:30+00:00"
     )
-    assert hass.states.get("sensor.1st_grand_following_departure").state == "unknown"
+    assert hass.states.get("sensor.1st_grand_second_departure").state == "unknown"
+    assert hass.states.get("sensor.1st_grand_third_departure").state == "unknown"

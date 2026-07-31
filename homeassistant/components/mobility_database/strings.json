@@ -130,11 +130,14 @@
   },
   "entity": {
     "sensor": {
-      "following_departure": {
-        "name": "Following departure"
-      },
       "next_departure": {
         "name": "Next departure"
+      },
+      "second_departure": {
+        "name": "Second departure"
+      },
+      "third_departure": {
+        "name": "Third departure"
       }
     }
   },

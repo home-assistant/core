@@ -423,7 +423,6 @@ async def test_add_stop_via_zone(
     # Creating a subentry reloads the entry so its sensors appear immediately.
     await hass.async_block_till_done()
     assert hass.states.get("sensor.2nd_spring_next_departure") is not None
-    assert hass.states.get("sensor.2nd_spring_following_departure") is not None
 
 
 async def test_add_stop_via_location(

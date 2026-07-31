@@ -124,6 +124,7 @@ async def test_polling_interval_matches_capability(
     assert mock_handle.get_arrivals.await_count == second_tick_calls
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_route_and_headsign_filters(
     hass: HomeAssistant,
     mock_feeds_client: MagicMock,
@@ -155,7 +156,7 @@ async def test_route_and_headsign_filters(
     assert state.state == "2026-08-01T08:12:00+00:00"
     assert state.attributes["route_id"] == "R2"
     assert state.attributes["realtime"] is False
-    assert hass.states.get("sensor.1st_grand_following_departure").state == "unknown"
+    assert hass.states.get("sensor.1st_grand_second_departure").state == "unknown"
 
 
 async def test_arrivals_failure_marks_unavailable(

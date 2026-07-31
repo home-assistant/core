@@ -75,9 +75,7 @@ rules:
     status: exempt
     comment: The departure sensors are primary entities with no category.
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: Each stop has only two primary sensors; none are noisy or niche.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
