@@ -334,9 +334,6 @@ async def async_setup_entry(
 
     # Determine API version and get devices
     # Note: auth_type field is guaranteed to exist after migration
-    # api is an OpenApiV1 (token auth) or its base class GrowattApi (password
-    # auth), selected by auth_type. Typed as the common base; each branch narrows
-    # to the concrete type it uses.
     api: growattServer.GrowattApi
     if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
         # V1 API (token-based, no login needed)
