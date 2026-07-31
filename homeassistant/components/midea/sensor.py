@@ -48,7 +48,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         models=[DeviceType.AC],
     ),
     MideaSensorEntityDescription(
@@ -58,7 +57,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         models=[DeviceType.AC],
     ),
     MideaSensorEntityDescription(
@@ -68,7 +66,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         models=[DeviceType.AC],
     ),
     MideaSensorEntityDescription(
@@ -258,15 +255,12 @@ async def async_setup_entry(
 class MideaSensor(MideaEntity, SensorEntity):
     """Represent a Midea  sensor."""
 
-    _entity_key: str
-
     def __init__(
         self,
         device: MideaDevice,
         description: SensorEntityDescription,
     ) -> None:
         """Midea Sensor entity init."""
-        self._entity_key = description.key
         super().__init__(device, description.key)
         self.entity_description = description
 
@@ -274,5 +268,5 @@ class MideaSensor(MideaEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Native value of the sensor."""
-        value = self._device.get_attribute(self._entity_key)
+        value = self._device.get_attribute(self.entity_description.key)
         return cast("StateType", value)
