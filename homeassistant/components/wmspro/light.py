@@ -32,9 +32,9 @@ async def async_setup_entry(
     entities: list[WebControlProGenericEntity] = []
     for dest in hub.dests.values():
         if dest.hasAction(ACTION_DESC.LightDimming):
-            entities.append(WebControlProDimmer(config_entry.entry_id, dest))
+            entities.append(WebControlProDimmer(hass, config_entry.entry_id, dest))
         elif dest.hasAction(ACTION_DESC.LightSwitch):
-            entities.append(WebControlProLight(config_entry.entry_id, dest))
+            entities.append(WebControlProLight(hass, config_entry.entry_id, dest))
 
     async_add_entities(entities)
 
