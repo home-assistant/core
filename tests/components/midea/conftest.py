@@ -168,3 +168,15 @@ def mock_config_entry() -> Callable[[DummyDevice], MockConfigEntry]:
         )
 
     return _create
+
+
+@pytest.fixture
+def set_device_attribute(hass: HomeAssistant):
+    """Return a function that sets an attribute on a device and notifies the integration."""
+
+    async def _set_device_attribute(device, attribute, value):
+        device.attributes[attribute] = value
+        device.notify_update({attribute: value})
+        await hass.async_block_till_done()
+
+    return _set_device_attribute
