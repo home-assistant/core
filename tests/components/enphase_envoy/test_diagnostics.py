@@ -2,7 +2,8 @@
 
 from unittest.mock import AsyncMock
 
-from aiohttp import ClientError
+from aiohttp import ClientResponseError
+from aiohttp.client import RequestInfo
 from freezegun.api import FrozenDateTimeFactory
 from pyenphase.exceptions import EnvoyError
 from pyenphase.models.meters import CtType
@@ -105,11 +106,30 @@ async def test_entry_diagnostics_with_fixtures_with_clientresponse_error(
 ) -> None:
     """Test diagnostics test fixtures with client errors."""
     await setup_integration(hass, config_entry_options)
-    mock_envoy.request.side_effect = ClientError
+    mock_envoy.request.side_effect = ClientResponseError(
+        RequestInfo(
+            url="http://example.com",
+            method="GET",
+            headers={
+                "Host": "www.example.com",
+                "Connection": "keep-alive",
+                "secret": "very secret secret",
+            },
+            real_url="http://example.com",
+        ),
+        None,
+        status=0,
+    )
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry_options
     )
-    assert diagnostics["fixtures"]["/info_log"] == {"Error": "ClientError()"}
+    assert diagnostics["fixtures"]["/info_log"] == {"Error": "Aiohttp Client error 0"}
+
+    mock_envoy.request.side_effect = EnvoyError("Test")
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry_options
+    )
+    assert diagnostics["fixtures"]["/info_log"] == {"Error": "EnvoyError('Test')"}
 
 
 @pytest.mark.parametrize(

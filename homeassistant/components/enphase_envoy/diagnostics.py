@@ -92,7 +92,11 @@ async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
                     "code": response.status,
                 }
             )
-        except (EnvoyError, ClientError) as err:
+        except ClientError as err:
+            fixture_data[f"{end_point}_log"] = {
+                "Error": f"Aiohttp Client error {'' if not hasattr(err, 'status') else err.status}"
+            }
+        except EnvoyError as err:
             fixture_data[f"{end_point}_log"] = {"Error": repr(err)}
     return fixture_data
 
