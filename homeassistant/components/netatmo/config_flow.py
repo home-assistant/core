@@ -155,16 +155,16 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
                         if home_id not in enabled_homes
                     ]
                 else:
-                    # An empty selection re-enables all homes
-                    user_input[CONF_DISABLED_HOMES] = []
+                    errors[CONF_ENABLED_HOMES] = "empty_home_selection"
 
-            self.options.update(user_input)
-            if new_client:
-                return await self.async_step_public_weather(
-                    user_input={CONF_NEW_AREA: new_client}
-                )
+            if not errors:
+                self.options.update(user_input)
+                if new_client:
+                    return await self.async_step_public_weather(
+                        user_input={CONF_NEW_AREA: new_client}
+                    )
 
-            return self._create_options_entry()
+                return self._create_options_entry()
 
         weather_areas = list(self.options[CONF_WEATHER_AREAS])
 

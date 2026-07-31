@@ -170,6 +170,9 @@
     }
   },
   "options": {
+    "error": {
+      "empty_home_selection": "At least one home must remain enabled"
+    },
     "step": {
       "public_weather": {
         "data": {
@@ -200,11 +203,11 @@
           "weather_areas": "Weather areas"
         },
         "data_description": {
-          "enabled_homes": "Homes to be managed by this integration. Newly added homes are enabled by default. Leave empty to enable all homes.",
+          "enabled_homes": "Homes to be managed by this integration. Newly added homes are enabled by default.",
           "new_area": "Name of a new weather area to add.",
           "weather_areas": "Configured weather areas to edit or remove."
         },
-        "description": "Configure enabled homes and public weather sensors. Newly added homes are enabled by default; leave the homes selection empty to enable all homes.",
+        "description": "Configure enabled homes and public weather sensors. Newly added homes are enabled by default.",
         "title": "Home selection and public weather"
       }
     }

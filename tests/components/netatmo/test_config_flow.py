@@ -246,7 +246,7 @@ async def test_option_flow_wrong_coordinates(hass: HomeAssistant) -> None:
     ("initial_disabled", "selection", "expected_disabled"),
     [
         pytest.param([], [HOME_1_ID], [HOME_2_ID], id="disable_one_home"),
-        pytest.param([HOME_2_ID], [], [], id="empty_selection_enables_all"),
+        pytest.param([HOME_2_ID], [HOME_1_ID, HOME_2_ID], [], id="enable_all_homes"),
     ],
 )
 @pytest.mark.usefixtures("netatmo_auth")
@@ -298,6 +298,41 @@ def _drop_second_home(payload: dict) -> None:
         payload["body"]["homes"] = [
             home for home in payload["body"]["homes"] if home["id"] == HOME_1_ID
         ]
+
+
+@pytest.mark.usefixtures("netatmo_auth")
+async def test_option_flow_empty_home_selection_rejected(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test an empty home selection is rejected and can be corrected."""
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={**config_entry.options, CONF_DISABLED_HOMES: [HOME_2_ID]},
+    )
+
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_ENABLED_HOMES: []}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {CONF_ENABLED_HOMES: "empty_home_selection"}
+        # Nothing is stored on a rejected submit
+        assert config_entry.options[CONF_DISABLED_HOMES] == [HOME_2_ID]
+
+        # The corrected selection goes through
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_ENABLED_HOMES: [HOME_1_ID]}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options[CONF_DISABLED_HOMES] == [HOME_2_ID]
 
 
 async def test_option_flow_single_disabled_home(
