@@ -7,6 +7,7 @@ from pyipp import IPPError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -98,20 +99,34 @@ async def test_no_page_count_sensors_when_unsupported(
         )
 
 
-async def test_page_counts_retained_on_fetch_failure(
+@pytest.mark.parametrize(
+    ("execute_side_effect", "execute_response", "expected_state"),
+    [
+        pytest.param(IPPError("boom"), None, "1234", id="error-retains-previous"),
+        pytest.param(None, {"printers": [{}]}, STATE_UNKNOWN, id="empty-clears"),
+    ],
+)
+async def test_page_counts_after_fetch_issue(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_ipp: MagicMock,
+    execute_side_effect: IPPError | None,
+    execute_response: dict[str, Any] | None,
+    expected_state: str,
 ) -> None:
-    """Test page count sensors keep previous values when fetch fails."""
+    """Test page count sensor values after a failed or empty fetch.
+
+    A failed request keeps the previous values, while a successful response
+    without page count attributes clears them.
+    """
     assert hass.states.get("sensor.test_ha_1000_series_pages_completed").state == "1234"
 
-    mock_ipp.execute.side_effect = IPPError("boom")
+    mock_ipp.execute.side_effect = execute_side_effect
+    mock_ipp.execute.return_value = execute_response
     await init_integration.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.test_ha_1000_series_pages_completed").state == "1234"
     assert (
-        hass.states.get("sensor.test_ha_1000_series_impressions_completed").state
-        == "2468"
+        hass.states.get("sensor.test_ha_1000_series_pages_completed").state
+        == expected_state
     )

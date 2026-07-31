@@ -201,6 +201,7 @@ class IPPPageCountSensor(IPPEntity, SensorEntity):
     entity_description: IPPPageCountSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.coordinator.data.page_counts.get(
