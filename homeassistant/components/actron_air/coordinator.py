@@ -40,6 +40,8 @@ type ActronAirConfigEntry = ConfigEntry[ActronAirRuntimeData]
 class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirStatus]):
     """System coordinator for Actron Air integration."""
 
+    config_entry: ActronAirConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
