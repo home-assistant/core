@@ -15,12 +15,9 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data
-    now = dt_util.now()
-
     payload: dict[str, Any] = {
-        "now": now.isoformat(),
+        "now": dt_util.now().isoformat(),
         "timezone": str(dt_util.get_default_time_zone()),
-        "system_timezone": str(now.tzname()),
     }
     payload["ics"] = "\n".join(redact_ics(coordinator.ics))
     return payload
