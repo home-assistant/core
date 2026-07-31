@@ -6,6 +6,8 @@ from unittest.mock import patch
 
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
+from midealocal.devices.c3 import DeviceAttributes as C3Attributes
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -19,32 +21,56 @@ from .const import TEST_DEVICE_ID
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.parametrize(
+    "device",
+    [
+        pytest.param(
+            DummyDevice(
+                DeviceType.AC,
+                attributes={
+                    ACAttributes.power: True,
+                    ACAttributes.mode: 1,
+                    ACAttributes.target_temperature: 22.0,
+                    ACAttributes.indoor_temperature: 21.0,
+                    ACAttributes.comfort_mode: False,
+                    ACAttributes.eco_mode: False,
+                    ACAttributes.boost_mode: False,
+                    ACAttributes.sleep_mode: False,
+                    ACAttributes.frost_protect: False,
+                    ACAttributes.fan_speed: 103,
+                    ACAttributes.swing_vertical: True,
+                    ACAttributes.swing_horizontal: True,
+                    ACAttributes.indoor_humidity: 50,
+                },
+            ),
+            id="ac",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.C3,
+                attributes={
+                    C3Attributes.zone_temp_type: [True, False],
+                    C3Attributes.temperature_min: [16, 17],
+                    C3Attributes.temperature_max: [30, 29],
+                    C3Attributes.mode: 1,
+                    C3Attributes.zone1_power: True,
+                    C3Attributes.zone2_power: False,
+                    C3Attributes.target_temperature: [22, 23],
+                    C3Attributes.temp_tw_out: 21.5,
+                },
+            ),
+            id="c3",
+        ),
+    ],
+)
 async def test_all_entities(
     hass: HomeAssistant,
+    device: DummyDevice,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor entities are created."""
-    device = DummyDevice(
-        DeviceType.AC,
-        attributes={
-            ACAttributes.power: True,
-            ACAttributes.mode: 1,
-            ACAttributes.target_temperature: 22.0,
-            ACAttributes.indoor_temperature: 21.0,
-            ACAttributes.comfort_mode: False,
-            ACAttributes.eco_mode: False,
-            ACAttributes.boost_mode: False,
-            ACAttributes.sleep_mode: False,
-            ACAttributes.frost_protect: False,
-            ACAttributes.fan_speed: 103,
-            ACAttributes.swing_vertical: True,
-            ACAttributes.swing_horizontal: True,
-            ACAttributes.indoor_humidity: 50,
-            ACAttributes.full_dust: True,
-        },
-    )
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry, device)
