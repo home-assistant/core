@@ -65,7 +65,7 @@
         'rest',
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 40.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 40.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fakespa',
