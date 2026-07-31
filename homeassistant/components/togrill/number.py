@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Generator, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from togrill_bluetooth.packets import (
     AlarmType,
@@ -69,7 +69,7 @@ def _get_temperature_descriptions(
 
     def _get_temperatures(
         coordinator: ToGrillCoordinator, alarm_type: AlarmType
-    ) -> tuple[None | float, None | float]:
+    ) -> tuple[float | None, float | None]:
         if not (packet := coordinator.get_packet(PacketA8Notify, probe_number)):
             return None, None
 
@@ -231,10 +231,12 @@ class ToGrillNumber(ToGrillEntity, NumberEntity):
         self._attr_unique_id = f"{coordinator.address}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the value reported by the number."""
         return self.entity_description.get_value(self.coordinator)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set value on device."""
 

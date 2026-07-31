@@ -10,8 +10,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.knx.const import (
+    CONF_KNX_TELEGRAM_DB_BACKEND,
+    CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     KNX_ADDRESS,
     KNX_MODULE_KEY,
+    KNX_TELEGRAM_BACKEND_POSTGRES,
     SUPPORTED_PLATFORMS_UI,
 )
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
@@ -28,7 +31,7 @@ async def test_knx_get_base_data_command(
     hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test knx/get_base_data command."""
-    await knx.setup_integration()
+    await knx.setup_integration(real_telegram_store=True)
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "knx/get_base_data"})
 
@@ -37,8 +40,44 @@ async def test_knx_get_base_data_command(
     assert res["result"]["connection_info"]["version"] is not None
     assert res["result"]["connection_info"]["connected"]
     assert res["result"]["connection_info"]["current_address"] == "0.0.0"
+    assert res["result"]["connection_info"]["telegram_backend"] == "sqlite"
     assert res["result"]["project_info"] is None
     assert not SUPPORTED_PLATFORMS_UI.difference(res["result"]["supported_platforms"])
+
+
+async def test_knx_get_base_data_command_postgres(
+    hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test knx/get_base_data reports the PostgreSQL telegram backend."""
+    knx.mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        knx.mock_config_entry,
+        options=knx.mock_config_entry.options
+        | {
+            CONF_KNX_TELEGRAM_DB_BACKEND: KNX_TELEGRAM_BACKEND_POSTGRES,
+            CONF_KNX_TELEGRAM_DB_POSTGRES_DSN: "postgresql://user:pw@db.local:5432/knx",
+        },
+    )
+    # Patch methods on the real class so the isinstance check in the
+    # websocket handler still sees a BufferedPostgresStore instance.
+    with (
+        patch(
+            "knx_telegram_store.BufferedPostgresStore.needs_migration",
+            return_value=False,
+        ),
+        patch("knx_telegram_store.BufferedPostgresStore.initialize"),
+        patch(
+            "knx_telegram_store.BufferedPostgresStore.get_last_unique_telegrams",
+            return_value=[],
+        ),
+    ):
+        await knx.setup_integration(add_entry_to_hass=False, real_telegram_store=True)
+        client = await hass_ws_client(hass)
+        await client.send_json_auto_id({"type": "knx/get_base_data"})
+        res = await client.receive_json()
+
+    assert res["success"], res
+    assert res["result"]["connection_info"]["telegram_backend"] == "postgres"
 
 
 @pytest.mark.usefixtures("load_knxproj")
@@ -197,7 +236,7 @@ async def test_knx_group_monitor_info_command(
     hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test knx/group_monitor_info command."""
-    await knx.setup_integration()
+    await knx.setup_integration(real_telegram_store=True)
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id({"type": "knx/group_monitor_info"})
@@ -212,7 +251,7 @@ async def test_knx_query_telegrams_command(
     hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test knx/query_telegrams command."""
-    await knx.setup_integration()
+    await knx.setup_integration(real_telegram_store=True)
     client = await hass_ws_client(hass)
 
     # get some telegrams to populate the store
@@ -273,7 +312,7 @@ async def test_telegram_store_not_initialized(
         "knx_telegram_store.BufferedSqliteStore.initialize",
         side_effect=KnxTelegramStoreException("init failed"),
     ):
-        await knx.setup_integration()
+        await knx.setup_integration(real_telegram_store=True)
     client = await hass_ws_client(hass)
 
     assert hass.data[KNX_MODULE_KEY].telegrams.store is None
@@ -295,7 +334,7 @@ async def test_telegram_store_query_database_error(
     command: str,
 ) -> None:
     """Test telegram commands when the store query raises a database error."""
-    await knx.setup_integration()
+    await knx.setup_integration(real_telegram_store=True)
     client = await hass_ws_client(hass)
 
     store = hass.data[KNX_MODULE_KEY].telegrams.store
@@ -348,7 +387,8 @@ async def test_knx_subscribe_telegrams_command_recent_telegrams(
                 CONF_NAME: "test",
                 KNX_ADDRESS: "1/2/4",
             }
-        }
+        },
+        real_telegram_store=True,
     )
 
     # send incoming telegram

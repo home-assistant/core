@@ -2,7 +2,7 @@
 
 from functools import partial
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 from urllib.parse import urlparse
 
 from aioesphomeapi import (
@@ -92,6 +92,7 @@ class EsphomeMediaPlayer(
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     @callback
+    @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
@@ -108,23 +109,27 @@ class EsphomeMediaPlayer(
 
     @property
     @esphome_state_property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return current state."""
         return _STATES.from_esphome(self._state.state)
 
     @property
     @esphome_state_property
+    @override
     def is_volume_muted(self) -> bool:
         """Return true if volume is muted."""
         return self._state.muted
 
     @property
     @esphome_float_state_property
+    @override
     def volume_level(self) -> float:
         """Volume level of the media player (0..1)."""
         return self._state.volume
 
     @convert_api_error_ha_error
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -162,6 +167,7 @@ class EsphomeMediaPlayer(
             device_id=self._static_info.device_id,
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity being removed."""
         await super().async_will_remove_from_hass()
@@ -226,6 +232,7 @@ class EsphomeMediaPlayer(
         # Resolve URL
         return async_process_play_media_url(self.hass, proxy_url)
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -239,6 +246,7 @@ class EsphomeMediaPlayer(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._client.media_player_command(
@@ -246,6 +254,7 @@ class EsphomeMediaPlayer(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         self._client.media_player_command(
@@ -255,6 +264,7 @@ class EsphomeMediaPlayer(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         self._client.media_player_command(
@@ -264,6 +274,7 @@ class EsphomeMediaPlayer(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         self._client.media_player_command(
@@ -273,6 +284,7 @@ class EsphomeMediaPlayer(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         self._client.media_player_command(
@@ -282,6 +294,7 @@ class EsphomeMediaPlayer(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_turn_on(self) -> None:
         """Send turn on command."""
         self._client.media_player_command(
@@ -291,6 +304,7 @@ class EsphomeMediaPlayer(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_turn_off(self) -> None:
         """Send turn off command."""
         self._client.media_player_command(

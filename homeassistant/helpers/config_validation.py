@@ -857,7 +857,7 @@ def url(
     value: Any,
     _schema_list: frozenset[UrlProtocolSchema] = EXTERNAL_URL_PROTOCOL_SCHEMA_LIST,
 ) -> str:
-    """Validate an URL."""
+    """Validate a URL."""
     url_in = str(value)
     parsed = urlparse(url_in)
 
@@ -872,7 +872,7 @@ def url(
 
 
 def configuration_url(value: Any) -> str:
-    """Validate an URL that allows the homeassistant schema."""
+    """Validate a URL that allows the homeassistant schema."""
     return url(value, CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST)
 
 

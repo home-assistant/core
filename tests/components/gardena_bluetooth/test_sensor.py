@@ -10,11 +10,12 @@ from gardena_bluetooth.const import (
     Battery,
     EventHistory,
     FlowStatistics,
+    Pump,
     Sensor,
     Spray,
     Valve,
 )
-from gardena_bluetooth.parse import ErrorData
+from gardena_bluetooth.parse import ActivationReason, ErrorData
 from habluetooth import BluetoothServiceInfo
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -23,7 +24,12 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import AQUA_CONTOUR_SERVICE_INFO, WATER_TIMER_SERVICE_INFO, setup_entry
+from . import (
+    AQUA_CONTOUR_SERVICE_INFO,
+    PRESSURE_TANK_SERVICE_INFO,
+    WATER_TIMER_SERVICE_INFO,
+    setup_entry,
+)
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -82,6 +88,9 @@ async def test_setup(
             {
                 Battery.battery_level.uuid: Battery.battery_level.encode(100),
                 Valve.remaining_open_time.uuid: Valve.remaining_open_time.encode(10),
+                Valve.activation_reason.uuid: Valve.activation_reason.encode(
+                    ActivationReason.SCHEDULE
+                ),
             },
             id="timer",
         ),
@@ -105,6 +114,14 @@ async def test_setup(
                 ),
             },
             id="aqua_contour",
+        ),
+        pytest.param(
+            PRESSURE_TANK_SERVICE_INFO,
+            {
+                Pump.tank_preassure.uuid: Pump.tank_preassure.encode(3312),
+                Pump.water_temperature.uuid: Pump.water_temperature.encode(21),
+            },
+            id="pressure_tank",
         ),
     ],
 )

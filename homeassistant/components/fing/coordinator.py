@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
+from typing import override
 
 from fing_agent_api import FingAgent
 from fing_agent_api.models import AgentInfoResponse, Device
@@ -51,6 +52,7 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
             config_entry=config_entry,
         )
 
+    @override
     async def _async_update_data(self) -> FingDataObject:
         """Fetch data from Fing Agent."""
         device_response = None

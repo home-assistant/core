@@ -1,6 +1,6 @@
 """Support for Velux lights."""
 
-from typing import Any
+from typing import Any, override
 
 from pyvlx import DimmableDevice, Intensity, Light, OnOffLight
 
@@ -40,16 +40,19 @@ class VeluxOnOffLight(VeluxEntity, LightEntity):
     node: DimmableDevice
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return not self.node.intensity.off and self.node.intensity.known
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         await self.node.turn_on(wait_for_completion=True)
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self.node.turn_off(wait_for_completion=True)
@@ -63,11 +66,13 @@ class VeluxDimmableLight(VeluxOnOffLight):
     _attr_name = None
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the current brightness."""
         return int(self.node.intensity.intensity_percent * 255 / 100)
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if ATTR_BRIGHTNESS in kwargs:

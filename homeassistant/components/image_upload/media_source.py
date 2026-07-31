@@ -1,6 +1,7 @@
 """Expose image_upload as media sources."""
 
 import pathlib
+from typing import override
 
 from propcache.api import cached_property
 
@@ -37,6 +38,7 @@ class ImageUploadMediaSource(MediaSource):
         """Return the image folder path."""
         return pathlib.Path(self.hass.config.path(FOLDER_IMAGE))
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         image = self.hass.data[DOMAIN].data.get(item.identifier)
@@ -50,6 +52,7 @@ class ImageUploadMediaSource(MediaSource):
             path=self.image_folder / item.identifier / "original",
         )
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,

@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import dataclass
 import datetime
 import logging
-from typing import Final
+from typing import Final, override
 
 from fitbit_web_api.models.device import Device
 
@@ -42,6 +42,7 @@ class FitbitDeviceCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         )
         self._api = api
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch data from API endpoint."""
         async with asyncio.timeout(TIMEOUT):

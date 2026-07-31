@@ -39,8 +39,8 @@
 # name: test_binary_sensor[binary_sensor.to_home_arrival_delayed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Arrival delayed',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Arrival delayed',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.to_home_arrival_delayed',
@@ -90,8 +90,8 @@
 # name: test_binary_sensor[binary_sensor.to_home_departure_delayed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Departure delayed',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Departure delayed',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.to_home_departure_delayed',
@@ -141,8 +141,8 @@
 # name: test_binary_sensor[binary_sensor.to_home_going-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Going',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To home Going',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.to_home_going',
@@ -192,8 +192,8 @@
 # name: test_binary_sensor[binary_sensor.to_work_arrival_delayed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Arrival delayed',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Arrival delayed',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.to_work_arrival_delayed',
@@ -243,8 +243,8 @@
 # name: test_binary_sensor[binary_sensor.to_work_departure_delayed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Departure delayed',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Departure delayed',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.to_work_departure_delayed',
@@ -294,8 +294,8 @@
 # name: test_binary_sensor[binary_sensor.to_work_going-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Going',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by NS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'To work Going',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.to_work_going',

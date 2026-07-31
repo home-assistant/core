@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from melnor_bluetooth.device import Valve
 
@@ -80,15 +80,18 @@ class MelnorZoneSwitch(MelnorZoneEntity, SwitchEntity):
         super().__init__(coordinator, entity_description, valve)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.entity_description.state_fn(self._valve)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.entity_description.on_off_fn(self._valve, True)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.entity_description.on_off_fn(self._valve, False)

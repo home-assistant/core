@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
 from pyoctoprintapi import ApiError, OctoprintClient, OctoprintException
@@ -62,6 +62,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a config flow for OctoPrint."""
         self._sessions: list[aiohttp.ClientSession] = []
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -168,6 +169,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle import."""
         return await self.async_step_user(import_data)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -194,6 +196,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

@@ -39,7 +39,7 @@
 # name: test_binary_sensor_off[load_platforms0][binary_sensor.nord_pool_se3_tomorrow_price_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Tomorrow price available',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Tomorrow price available',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nord_pool_se3_tomorrow_price_available',
@@ -89,7 +89,7 @@
 # name: test_binary_sensor_off[load_platforms0][binary_sensor.nord_pool_se4_tomorrow_price_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Tomorrow price available',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Tomorrow price available',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nord_pool_se4_tomorrow_price_available',
@@ -139,7 +139,7 @@
 # name: test_binary_sensor_on[load_platforms0][binary_sensor.nord_pool_se3_tomorrow_price_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Tomorrow price available',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Tomorrow price available',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nord_pool_se3_tomorrow_price_available',
@@ -189,7 +189,7 @@
 # name: test_binary_sensor_on[load_platforms0][binary_sensor.nord_pool_se4_tomorrow_price_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Tomorrow price available',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Tomorrow price available',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nord_pool_se4_tomorrow_price_available',

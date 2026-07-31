@@ -3,8 +3,9 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from itertools import chain
-from typing import Any
+from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
@@ -142,7 +143,7 @@ async def async_setup_entry(
                     description,
                     entry.runtime_data.scopes,
                 )
-                if vehicle.poll or vehicle.firmware < "2024.26"
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
                 else TeslemetryStreamingNumberEntity(
                     vehicle,
                     description,
@@ -172,6 +173,7 @@ class TeslemetryVehicleNumberEntity(TeslemetryRootEntity, NumberEntity):
     api: Vehicle
     entity_description: TeslemetryNumberVehicleEntityDescription
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         value = int(value)
@@ -200,6 +202,7 @@ class TeslemetryVehiclePollingNumberEntity(
             description.key,
         )
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_native_value = self._value
@@ -229,6 +232,7 @@ class TeslemetryStreamingNumberEntity(
         self._attr_native_max_value = self.entity_description.native_max_value
         super().__init__(data, description.key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -290,10 +294,12 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_native_value = self._value
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         value = int(value)

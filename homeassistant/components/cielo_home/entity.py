@@ -1,13 +1,36 @@
 """Base entity for Cielo integration."""
 
+from typing import override
+
 from cieloconnectapi.device import CieloDeviceAPI
 from cieloconnectapi.model import CieloDevice
 
+from homeassistant.const import UnitOfTemperature
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import CieloDataUpdateCoordinator
+
+
+def normalize_temp_unit(client: CieloDeviceAPI) -> str:
+    """Normalize a raw device temperature unit to a UnitOfTemperature value.
+
+    Unrecognized or empty values fall back to Celsius.
+    """
+    unit = client.temperature_unit()
+
+    if not unit:
+        return UnitOfTemperature.CELSIUS
+
+    normalized = unit.strip().lower()
+
+    if normalized in {"c", "°c", "celsius"}:
+        return UnitOfTemperature.CELSIUS
+    if normalized in {"f", "°f", "fahrenheit"}:
+        return UnitOfTemperature.FAHRENHEIT
+
+    return UnitOfTemperature.CELSIUS
 
 
 class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
@@ -27,6 +50,7 @@ class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
             coordinator.client, coordinator.data.parsed[device_id]
         )
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if (dev := self.device_data) is not None:
@@ -39,6 +63,7 @@ class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
         return self.coordinator.data.parsed.get(self._device_id)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available and online."""
         if not (super().available and self._device_id in self.coordinator.data.parsed):
@@ -70,3 +95,14 @@ class CieloDeviceEntity(CieloBaseEntity):
             configuration_url="https://home.cielowigle.com/",
             suggested_area=device.name,
         )
+
+    @property
+    def temperature_unit(self) -> str:
+        """Return the unit of temperature for the device.
+
+        The unit can change over time based on the device settings,
+        so it is fetched dynamically from the client. This dynamic
+        nature means that if a user changes the device's temperature
+        unit, historical statistics may be affected.
+        """
+        return normalize_temp_unit(self.client)

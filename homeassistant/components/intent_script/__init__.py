@@ -1,7 +1,7 @@
 """Handle intents with scripts."""
 
 import logging
-from typing import Any, TypedDict
+from typing import Any, TypedDict, override
 
 import voluptuous as vol
 
@@ -170,6 +170,7 @@ class ScriptIntentHandler(intent.IntentHandler):
         self.description = config.get(CONF_DESCRIPTION)
         self.platforms = config.get(CONF_PLATFORMS)
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         speech: _IntentSpeechRepromptData | None = self.config.get(CONF_SPEECH)

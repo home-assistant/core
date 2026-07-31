@@ -1,5 +1,7 @@
 """Base class for Airtouch5 entities."""
 
+from typing import override
+
 from airtouch5py.airtouch5_client import Airtouch5ConnectionStateChange
 from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient
 
@@ -25,12 +27,14 @@ class Airtouch5Entity(Entity):
         self._attr_available = state is Airtouch5ConnectionStateChange.CONNECTED
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add data updated listener after this object has been initialized."""
         self._client.connection_state_callbacks.append(
             self._receive_connection_callback
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove data updated listener when entity is removed from homeassistant."""
         self._client.connection_state_callbacks.remove(

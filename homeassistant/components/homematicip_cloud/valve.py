@@ -1,5 +1,7 @@
 """Support for HomematicIP Cloud valve devices."""
 
+from typing import override
+
 from homematicip.base.functionalChannels import FunctionalChannelType
 from homematicip.device import Device
 
@@ -50,17 +52,20 @@ class HomematicipWateringValve(HomematicipGenericEntity, ValveEntity):
             feature_id="watering",
         )
 
+    @override
     async def async_open_valve(self) -> None:
         """Open the valve."""
         channel = self.get_channel_or_raise()
         await channel.set_watering_switch_state_async(True)
 
+    @override
     async def async_close_valve(self) -> None:
         """Close valve."""
         channel = self.get_channel_or_raise()
         await channel.set_watering_switch_state_async(False)
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the valve is closed."""
         channel = self.get_channel_or_raise()

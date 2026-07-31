@@ -1,6 +1,7 @@
 """Device tracker for Synology SRM routers."""
 
 import logging
+from typing import override
 
 import synology_srm
 import voluptuous as vol
@@ -98,12 +99,14 @@ class SynologySrmDeviceScanner(DeviceScanner):
         self.devices = []
         self.success_init = self._update_info()
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
         return [device["mac"] for device in self.devices]
 
+    @override
     def get_extra_attributes(self, device) -> dict:
         """Get the extra attributes of a device."""
         device = next(
@@ -119,6 +122,7 @@ class SynologySrmDeviceScanner(DeviceScanner):
             filtered_attributes[attr] = value
         return filtered_attributes
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         filter_named = [

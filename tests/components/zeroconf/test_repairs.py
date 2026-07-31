@@ -18,11 +18,7 @@ from homeassistant.setup import async_setup_component
 
 from .test_init import service_update_mock
 
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
 
@@ -238,7 +234,6 @@ async def test_duplicate_repair_issue_repair_flow(
     """Test desired flow of the fix flow for duplicate instance ID."""
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
-    await async_process_repairs_platforms(hass)
 
     with (
         patch("homeassistant.helpers.instance_id.async_get", return_value="abc123"),

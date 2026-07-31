@@ -2,19 +2,18 @@
 
 from collections.abc import Iterable
 from datetime import timedelta
-import logging
-from typing import Any
+from typing import Any, override
 
 from directv import DIRECTV, DIRECTVError
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DirecTVConfigEntry
+from .const import DOMAIN
 from .entity import DIRECTVEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
@@ -66,14 +65,17 @@ class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
             self._attr_available = False
             self._attr_is_on = False
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.dtv.remote("poweron", self._address)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.dtv.remote("poweroff", self._address)
 
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to a device.
 
@@ -90,10 +92,12 @@ class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
             for single_command in command:
                 try:
                     await self.dtv.remote(single_command, self._address)
-                # pylint: disable-next=home-assistant-action-swallowed-exception
-                except DIRECTVError:
-                    _LOGGER.exception(
-                        "Sending command %s to device %s failed",
-                        single_command,
-                        self._device_id,
-                    )
+                except DIRECTVError as err:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="send_command_failed",
+                        translation_placeholders={
+                            "command": single_command,
+                            "device": self._device_id,
+                        },
+                    ) from err
