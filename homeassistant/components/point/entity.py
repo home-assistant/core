@@ -33,7 +33,11 @@ class MinutPointEntity(CoordinatorEntity[PointDataUpdateCoordinator]):
             name=device["description"],
             hw_version=device["hardware_version"],
             sw_version=device["firmware"]["installed"],
-            via_device=(DOMAIN, device["home"]),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, device["home"]),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
         if self.device_class:
             self._attr_name = f"{self._name} {self.device_class.capitalize()}"
