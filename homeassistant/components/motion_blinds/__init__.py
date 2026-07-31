@@ -4,11 +4,12 @@
 import asyncio
 import logging
 
-from motionblinds import AsyncMotionMulticast
+from motionblinds import DEVICE_TYPES_GATEWAY, AsyncMotionMulticast
 
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     CONF_BLIND_TYPE_LIST,
@@ -21,6 +22,7 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import DataUpdateCoordinatorMotionBlinds, MotionBlindsConfigEntry
+from .entity import gateway_device_info
 from .gateway import ConnectMotionGateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,6 +102,14 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    # Register the gateway device up front so child blinds can resolve it as their
+    # via_device parent regardless of the order platforms are set up in.
+    if motion_gateway.device_type in DEVICE_TYPES_GATEWAY:
+        dr.async_get(hass).async_get_or_create(
+            config_entry_id=entry.entry_id,
+            **gateway_device_info(motion_gateway),
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
