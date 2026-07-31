@@ -51,6 +51,14 @@ def _finite_int(value: Any) -> int:
         raise vol.Invalid(f"expected an integer, got {value!r}") from err
 
 
+def _safe_float(value: Any) -> float:
+    """Coerce to float, mapping overflowing ints to vol.Invalid, not OverflowError."""
+    try:
+        return float(value)
+    except (TypeError, ValueError, OverflowError) as err:
+        raise vol.Invalid(f"expected a number, got {value!r}") from err
+
+
 def _exactly_one_color_shape(data: dict[str, Any]) -> dict[str, Any]:
     """Ensure only one of the mutually exclusive color shapes is present."""
     present = sorted(field for field in COLOR_SHAPE_FIELDS if field in data)
@@ -71,12 +79,12 @@ SET_COLOR_SCHEMA = vol.All(
             vol.Optional(FIELD_HS): vol.All(
                 cv.ensure_list,
                 vol.Length(min=2, max=2),
-                [vol.Coerce(float)],
+                [_safe_float],
             ),
             vol.Optional(FIELD_XY): vol.All(
                 cv.ensure_list,
                 vol.Length(min=2, max=2),
-                [vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0))],
+                [vol.All(_safe_float, vol.Range(min=0.0, max=1.0))],
             ),
             vol.Optional(FIELD_KELVIN): vol.All(
                 _finite_int, vol.Range(min=MIN_KELVIN, max=MAX_KELVIN)

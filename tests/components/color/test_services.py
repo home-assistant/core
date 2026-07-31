@@ -239,6 +239,8 @@ async def test_set_color_rejects_pure_black(hass: HomeAssistant, payload: dict) 
         pytest.param({"color_temp_kelvin": math.inf}, id="kelvin-infinite"),
         pytest.param({"brightness": math.inf}, id="brightness-infinite"),
         pytest.param({"rgb_color": [math.inf, 0, 0]}, id="rgb-infinite"),
+        pytest.param({"hs_color": [10**400, 50]}, id="hs-overflowing"),
+        pytest.param({"xy_color": [10**400, 0.3]}, id="xy-overflowing"),
     ],
 )
 async def test_set_color_rejects_infinite_numbers(

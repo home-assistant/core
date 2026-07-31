@@ -76,7 +76,7 @@ def _validate_hs(hs: Any) -> tuple[float, float]:
         raise ColorInputError(f"hs_color must be a 2-element sequence, got {hs!r}")
     try:
         hue, sat = float(hs[0]), float(hs[1])
-    except (TypeError, ValueError) as err:
+    except (TypeError, ValueError, OverflowError) as err:
         raise ColorInputError(
             f"hs_color components must be numbers, got {hs!r}"
         ) from err
@@ -102,7 +102,7 @@ def _validate_xy(xy: Any) -> tuple[float, float]:
         raise ColorInputError(f"xy_color must be a 2-element sequence, got {xy!r}")
     try:
         x, y = float(xy[0]), float(xy[1])
-    except (TypeError, ValueError) as err:
+    except (TypeError, ValueError, OverflowError) as err:
         raise ColorInputError(
             f"xy_color components must be numbers, got {xy!r}"
         ) from err

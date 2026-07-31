@@ -175,7 +175,9 @@ def test_derive_hs_in_expected_ranges() -> None:
         pytest.param({FIELD_RGB: ["abc", 0, 0]}, id="rgb-non-numeric"),
         pytest.param({FIELD_RGB: [math.inf, 0, 0]}, id="rgb-infinite"),
         pytest.param({FIELD_HS: ["x", 1]}, id="hs-non-numeric"),
+        pytest.param({FIELD_HS: [10**400, 50]}, id="hs-overflowing"),
         pytest.param({FIELD_XY: ["x", 0.3]}, id="xy-non-numeric"),
+        pytest.param({FIELD_XY: [10**400, 0.3]}, id="xy-overflowing"),
     ],
 )
 def test_normalize_rejects_malformed_shapes(inputs: dict) -> None:
