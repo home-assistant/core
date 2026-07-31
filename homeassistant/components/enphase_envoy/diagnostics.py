@@ -93,7 +93,6 @@ async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
                 }
             )
         except (EnvoyError, ClientError) as err:
-            # except EnvoyError as err:
             fixture_data[f"{end_point}_log"] = {"Error": repr(err)}
     return fixture_data
 
