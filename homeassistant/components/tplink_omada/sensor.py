@@ -25,8 +25,16 @@ from homeassistant.helpers.typing import StateType
 
 from . import OmadaConfigEntry
 from .const import OmadaDeviceStatus
-from .coordinator import OmadaDevicesCoordinator, OmadaSwitchPortCoordinator
-from .entity import OmadaDeviceEntity, get_switch_port_base_name
+from .coordinator import (
+    OmadaControllerStatusCoordinator,
+    OmadaDevicesCoordinator,
+    OmadaSwitchPortCoordinator,
+)
+from .entity import (
+    OmadaControllerEntity,
+    OmadaDeviceEntity,
+    get_switch_port_base_name,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -67,6 +75,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors."""
     controller = config_entry.runtime_data
+
+    async_add_entities(
+        [OmadaControllerStatusSensor(controller.controller_status_coordinator)]
+    )
 
     devices_coordinator = controller.devices_coordinator
 
@@ -151,6 +163,21 @@ OMADA_DEVICE_SENSORS: list[OmadaDeviceSensorEntityDescription] = [
         update_func=lambda device: device.mem_usage,
     ),
 ]
+
+
+class OmadaControllerStatusSensor(OmadaControllerEntity, SensorEntity):
+    """Status sensor for the Omada Controller."""
+
+    _attr_translation_key = "device_status"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_options = [v.value for v in OmadaDeviceStatus]
+    _attr_native_value = OmadaDeviceStatus.CONNECTED.value
+
+    def __init__(self, coordinator: OmadaControllerStatusCoordinator) -> None:
+        """Initialize the controller status sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.data.mac}_device_status"
 
 
 class OmadaDeviceSensor(OmadaDeviceEntity[OmadaDevicesCoordinator], SensorEntity):

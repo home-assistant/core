@@ -5,7 +5,13 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, NamedTuple, override
 
-from tplink_omada_client import OmadaSiteClient, OmadaSwitchPortDetails
+from tplink_omada_client import (
+    OmadaClient,
+    OmadaControllerStatus,
+    OmadaControllerUpdateInfo,
+    OmadaSiteClient,
+    OmadaSwitchPortDetails,
+)
 from tplink_omada_client.clients import OmadaWirelessClient
 from tplink_omada_client.devices import (
     OmadaFirmwareUpdate,
@@ -29,6 +35,8 @@ POLL_SWITCH_PORT = 30
 POLL_GATEWAY = 300
 POLL_CLIENTS = 300
 POLL_DEVICES = 300
+POLL_CONTROLLER = 300
+POLL_CONTROLLER_UPDATE = 3600
 POLL_UPGRADE = 60
 
 
@@ -70,6 +78,68 @@ class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
     async def poll_update(self) -> dict[str, _T]:
         """Poll the current data from the controller."""
         raise NotImplementedError("Update method not implemented")
+
+
+class OmadaControllerStatusCoordinator(DataUpdateCoordinator[OmadaControllerStatus]):
+    """Coordinator for getting status information about the Omada Controller."""
+
+    config_entry: OmadaConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaClient,
+    ) -> None:
+        """Initialize the controller status coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="Omada API Data - Controller Status",
+            update_interval=timedelta(seconds=POLL_CONTROLLER),
+        )
+        self.omada_client = omada_client
+
+    async def _async_update_data(self) -> OmadaControllerStatus:
+        """Fetch controller status from the API."""
+        try:
+            async with asyncio.timeout(10):
+                return await self.omada_client.get_controller_status()
+        except OmadaClientException as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+
+class OmadaControllerUpdateCoordinator(
+    DataUpdateCoordinator[OmadaControllerUpdateInfo]
+):
+    """Coordinator for controller firmware update information."""
+
+    config_entry: OmadaConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaClient,
+    ) -> None:
+        """Initialize the controller update coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="Omada API Data - Controller Firmware Update",
+            update_interval=timedelta(seconds=POLL_CONTROLLER_UPDATE),
+        )
+        self.omada_client = omada_client
+
+    async def _async_update_data(self) -> OmadaControllerUpdateInfo:
+        """Fetch controller firmware update information from the API."""
+        try:
+            async with asyncio.timeout(10):
+                return await self.omada_client.check_firmware_updates()
+        except OmadaClientException as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
 
 class OmadaSwitchPortCoordinator(OmadaCoordinator[OmadaSwitchPortDetails]):

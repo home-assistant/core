@@ -13,6 +13,7 @@ from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
+    ATTR_RELEASE_URL,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
@@ -30,6 +31,7 @@ from tests.common import (
 from tests.typing import WebSocketGenerator
 
 POLL_INTERVAL = timedelta(seconds=POLL_DEVICES)
+ATTR_DOWNLOAD_URL = "download_url"
 
 
 async def _rebuild_device_list_with_update(
@@ -101,6 +103,28 @@ async def test_firmware_download_in_progress(
     entity = hass.states.get(entity_id)
     assert entity is not None
     assert entity.attributes.get(ATTR_IN_PROGRESS) is True
+
+
+async def test_controller_update_exposes_release_and_download_urls(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test controller update exposes release URL and download URL separately."""
+    entity_id = entity_registry.async_get_entity_id(
+        UPDATE_DOMAIN, DOMAIN, "00-11-22-33-44-55_firmware"
+    )
+
+    assert entity_id is not None
+
+    entity = hass.states.get(entity_id)
+    assert entity is not None
+    assert entity.attributes[ATTR_DOWNLOAD_URL] == (
+        "https://example.com/controller-update.tar.gz"
+    )
+    assert entity.attributes[ATTR_RELEASE_URL] == (
+        "https://example.com/controller-release-notes"
+    )
 
 
 async def test_install_firmware_success(
