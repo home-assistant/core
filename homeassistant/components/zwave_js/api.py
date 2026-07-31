@@ -1137,6 +1137,14 @@ async def websocket_provision_smart_start_node(
             manufacturer = device_info.manufacturer
             model = device_info.label
 
+        via_device_id: str | None = None
+        if driver.controller.own_node:
+            via_device_id = dr.async_get_device_id_by_identifier(
+                hass,
+                get_device_id(driver, driver.controller.own_node),
+                config_entry_id=entry.entry_id,
+            )
+
         # Create an empty device
         device = dev_reg.async_get_or_create(
             config_entry_id=entry.entry_id,
@@ -1144,9 +1152,7 @@ async def websocket_provision_smart_start_node(
             name=device_name,
             manufacturer=manufacturer,
             model=model,
-            via_device=get_device_id(driver, driver.controller.own_node)
-            if driver.controller.own_node
-            else None,
+            via_device_id=via_device_id,
         )
         dev_reg.async_update_device(
             device.id, area_id=msg.get(AREA_ID), name_by_user=device_name
