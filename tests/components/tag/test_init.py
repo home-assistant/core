@@ -44,7 +44,7 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
             }
         else:
             hass_storage[DOMAIN] = items
-        entity_registry = er.async_get(hass)
+        entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
         _create_entry(entity_registry, TEST_TAG_ID, TEST_TAG_NAME)
         _create_entry(entity_registry, TEST_TAG_ID_2, TEST_TAG_NAME_2)
         config = {DOMAIN: {}}

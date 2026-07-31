@@ -115,7 +115,7 @@ async def test_last_alarm_pic_sensor_not_created(
     assert last_alarm_pic_state is None
 
     # But other sensors should be created
-    registry = er.async_get(hass)
+    registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     battery_entity = registry.async_get("sensor.camera_1_battery")
     assert battery_entity is not None
 

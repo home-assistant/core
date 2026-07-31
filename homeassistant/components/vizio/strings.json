@@ -41,8 +41,14 @@
     }
   },
   "exceptions": {
+    "command_error": {
+      "message": "Failed to send command to the device: {error}"
+    },
     "unknown_command": {
       "message": "Unknown remote command `{command}`. Valid commands for this device are listed in the integration documentation."
+    },
+    "update_failed": {
+      "message": "Unable to connect to {host}"
     }
   },
   "options": {
