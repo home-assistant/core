@@ -4,6 +4,7 @@ from typing import Any, override
 
 from aiowithings import Device
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -50,7 +51,11 @@ class WithingsDeviceEntity(WithingsEntity[WithingsDeviceDataUpdateCoordinator]):
             manufacturer="Withings",
             name=self.device.raw_model,
             model=self.device.raw_model,
-            via_device=(DOMAIN, str(coordinator.config_entry.unique_id)),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, str(coordinator.config_entry.unique_id)),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
 
     @property
