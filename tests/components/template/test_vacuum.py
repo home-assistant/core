@@ -25,12 +25,14 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_action,
@@ -38,9 +40,11 @@ from .conftest import (
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_mock_restore_state_shutdown_restart
 from tests.components.vacuum import common
 from tests.typing import WebSocketGenerator
 
@@ -1283,3 +1287,187 @@ async def test_flow_preview(
     )
 
     assert state["state"] == VacuumActivity.CLEANING
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    (
+        "saved_state",
+        "saved_extra_data",
+        "initial_state",
+        "initial_attributes",
+    ),
+    [
+        (
+            "some_value",
+            {
+                "activity": VacuumActivity.DOCKED,
+                "fan_speed": "high",
+            },
+            VacuumActivity.DOCKED,
+            {
+                "fan_speed": "high",
+            },
+        ),
+        (
+            "some_value",
+            {
+                "activity": "do",
+            },
+            STATE_UNKNOWN,
+            {
+                "fan_speed": None,
+            },
+        ),
+        (
+            "some_value",
+            {
+                "activity": VacuumActivity.DOCKED,
+            },
+            STATE_UNKNOWN,
+            {
+                "fan_speed": None,
+            },
+        ),
+        (
+            "some_value",
+            {
+                "fan_speed": "high",
+            },
+            STATE_UNKNOWN,
+            {
+                "fan_speed": None,
+            },
+        ),
+        (
+            STATE_UNAVAILABLE,
+            {
+                "activity": VacuumActivity.DOCKED,
+                "fan_speed": "high",
+            },
+            STATE_UNKNOWN,
+            {
+                "fan_speed": None,
+            },
+        ),
+        (
+            STATE_UNKNOWN,
+            {
+                "activity": VacuumActivity.DOCKED,
+                "fan_speed": "high",
+            },
+            STATE_UNKNOWN,
+            {
+                "fan_speed": None,
+            },
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    saved_state: str,
+    saved_extra_data: dict | None,
+    initial_state: str,
+    initial_attributes: ConfigType,
+) -> None:
+    """Test restoring trigger template vacuum."""
+
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_VACUUM,
+        saved_state,
+        saved_extra_data=saved_extra_data,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_VACUUM,
+        style,
+        {
+            "state": "{{ state_attr('sensor.test_state', 'activity') }}",
+            "start": [],
+            "fan_speed": "{{ state_attr('sensor.test_state', 'fan_speed') }}",
+            "fan_speeds": ["low", "high"],
+            "set_fan_speed": [],
+        },
+        "state_attr('sensor.test_state', 'activity') == 'cleaning'",
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_VACUUM,
+        initial_state,
+        initial_attributes,
+    )
+
+    await async_trigger(
+        hass,
+        "sensor.test_state",
+        "anything",
+        {"activity": VacuumActivity.CLEANING, "fan_speed": "low"},
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_VACUUM,
+        VacuumActivity.CLEANING,
+        {
+            "fan_speed": "low",
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_saving_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test restore saved state."""
+
+    await setup_entity(
+        hass,
+        TEST_VACUUM,
+        style,
+        1,
+        config={
+            "state": "{{ state_attr('sensor.test_state', 'activity') }}",
+            "start": [],
+            "fan_speed": "{{ state_attr('sensor.test_state', 'fan_speed') }}",
+            "fan_speeds": ["low", "high"],
+            "set_fan_speed": [],
+        },
+    )
+
+    await async_trigger(
+        hass,
+        TEST_STATE_ENTITY_ID,
+        "anything",
+        {"activity": VacuumActivity.DOCKED, "fan_speed": "high"},
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_VACUUM,
+        VacuumActivity.DOCKED,
+        {
+            "fan_speed": "high",
+        },
+    )
+
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
+    state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
+    assert state["entity_id"] == TEST_VACUUM.entity_id
+
+    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
+    assert extra_data == {
+        "activity": "docked",
+        "fan_speed": "high",
+    }
