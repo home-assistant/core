@@ -3,6 +3,7 @@
 import datetime
 import json
 import logging
+import math
 from typing import TYPE_CHECKING, Any, override
 
 import growattServer
@@ -52,8 +53,14 @@ def _latest_power_value(
 
     for reading in power_overview.get("powers", []):
         power = reading.get("power")
-        reading_time = dt_util.parse_datetime(reading.get("time", ""))
-        if power is None or reading_time is None:
+        timestamp = reading.get("time")
+        if power is None or not isinstance(timestamp, str):
+            continue
+        try:
+            reading_time = dt_util.parse_datetime(timestamp)
+        except ValueError:
+            continue
+        if reading_time is None:
             continue
         if reading_time.tzinfo is None:
             reading_time = reading_time.replace(tzinfo=dt_util.get_default_time_zone())
@@ -62,6 +69,8 @@ def _latest_power_value(
         try:
             power_value = float(power)
         except TypeError, ValueError:
+            continue
+        if not math.isfinite(power_value):
             continue
         if latest_time is None or reading_time > latest_time:
             latest_time = reading_time

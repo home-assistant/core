@@ -207,6 +207,22 @@ async def test_sensor_coordinator_updates(
             "2500.0",
             id="stale-reading",
         ),
+        pytest.param(
+            [
+                {"time": None, "power": 900.0},
+                {"time": "2026-02-30 12:00", "power": 900.0},
+            ],
+            "2500.0",
+            id="invalid-timestamps",
+        ),
+        pytest.param(
+            [
+                {"time": "2026-07-14 18:55", "power": "nan"},
+                {"time": "2026-07-14 18:56", "power": "inf"},
+            ],
+            "2500.0",
+            id="non-finite-power",
+        ),
         pytest.param([], "2500.0", id="missing-readings"),
     ],
 )
