@@ -96,7 +96,6 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="pmv",
         translation_key="pmv",
-        icon="mdi:thermometer-lines",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -104,7 +103,6 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="error_code",
         translation_key="error_code",
-        icon="mdi:alert-box",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -192,7 +190,6 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="indoor_fan_speed",
         translation_key="indoor_fan_speed",
-        icon="mdi:fan",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -201,7 +198,6 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="target_indoor_fan_speed",
         translation_key="target_indoor_fan_speed",
-        icon="mdi:fan-clock",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,

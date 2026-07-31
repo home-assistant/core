@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "error_code": {
+        "default": "mdi:alert-box"
+      },
+      "indoor_fan_speed": {
+        "default": "mdi:fan"
+      },
+      "pmv": {
+        "default": "mdi:thermometer-lines"
+      },
+      "target_indoor_fan_speed": {
+        "default": "mdi:fan-clock"
+      }
+    }
+  }
+}
