@@ -9,6 +9,7 @@ from homeassistant.components.event import (
     EventDeviceClass,
     EventEntityStateAttribute,
 )
+from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
@@ -30,6 +31,7 @@ class ButtonPressedTrigger(StatelessEntityTriggerBase):
     _domain_specs = {
         DOMAIN: DomainSpec(),
         EVENT_DOMAIN: DomainSpec(device_class=EventDeviceClass.BUTTON),
+        INPUT_BUTTON_DOMAIN: DomainSpec(),
     }
 
     @override
