@@ -39,7 +39,9 @@ async def async_setup_entry(
     entry_data = config_entry.runtime_data
 
     async_add_entities(
-        LutronEventEntity(area_name, keypad, button, entry_data.client)
+        LutronEventEntity(
+            hass, area_name, keypad, button, entry_data.client, config_entry.entry_id
+        )
         for area_name, keypad, button in entry_data.buttons
     )
 
@@ -51,13 +53,15 @@ class LutronEventEntity(LutronKeypad, EventEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         area_name: str,
         keypad: Keypad,
         button: Button,
         controller: Lutron,
+        config_entry_id: str,
     ) -> None:
         """Initialize the button."""
-        super().__init__(area_name, button, controller, keypad)
+        super().__init__(hass, area_name, button, controller, keypad, config_entry_id)
         if (name := button.name) == "Unknown Button":
             name += f" {button.number}"
         self._attr_name = name

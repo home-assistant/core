@@ -36,7 +36,7 @@ async def async_setup_entry(
 
     async_add_entities(
         (
-            LutronLight(area_name, device, entry_data.client, config_entry)
+            LutronLight(hass, area_name, device, entry_data.client, config_entry)
             for area_name, device in entry_data.lights
         ),
         True,
@@ -65,13 +65,16 @@ class LutronLight(LutronDevice, LightEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         area_name: str,
         lutron_device: LutronEntity,
         controller: Lutron,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the device."""
-        super().__init__(area_name, lutron_device, controller)
+        super().__init__(
+            hass, area_name, lutron_device, controller, config_entry.entry_id
+        )
         self._config_entry = config_entry
 
     @override
