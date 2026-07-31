@@ -6,8 +6,8 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_EXCLUDE,
     CONF_EVENT_DATA,
+    CONF_EXCLUDE,
     CONF_INCLUDE,
     CONF_MATCH,
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,  # noqa: F401
