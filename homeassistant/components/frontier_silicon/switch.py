@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, override
 
 from afsapi import AFSAPI, FSNotImplementedError
 
@@ -81,15 +81,18 @@ class AFSAPISwitch(FrontierSiliconEntity, SwitchEntity):
         self.entity_description = description
 
     @fs_command_exception_wrap
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.entity_description.turn_off_fn(self.fs_device)()
 
     @fs_command_exception_wrap
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.entity_description.turn_on_fn(self.fs_device)()
 
+    @override
     async def _fs_update(self) -> None:
         """Update Frontier Silicon entity."""
         self._attr_is_on = await self.entity_description.is_on_fn(self.fs_device)()
