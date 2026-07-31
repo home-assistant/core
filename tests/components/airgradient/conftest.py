@@ -98,6 +98,16 @@ def mock_v1_airgradient_client(
 
 
 @pytest.fixture
+def mock_config_apply_delay() -> Generator[AsyncMock]:
+    """Prevent waiting for a configuration change in tests."""
+    with patch(
+        "homeassistant.components.airgradient.coordinator.sleep",
+        new_callable=AsyncMock,
+    ) as mock_sleep:
+        yield mock_sleep
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(

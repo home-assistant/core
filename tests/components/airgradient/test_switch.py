@@ -88,6 +88,7 @@ async def test_go_entities(
         ("switch.airgradient_cloud_connection", "set_cloud_connection"),
     ],
 )
+@pytest.mark.usefixtures("mock_config_apply_delay")
 async def test_go_switch_writes(
     hass: HomeAssistant,
     mock_v1_airgradient_client: AsyncMock,

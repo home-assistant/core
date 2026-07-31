@@ -40,6 +40,7 @@ async def test_all_entities(
 async def test_setting_value(
     hass: HomeAssistant,
     mock_airgradient_client: AsyncMock,
+    mock_config_apply_delay: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting value."""
@@ -62,6 +63,7 @@ async def test_setting_value(
         blocking=True,
     )
     mock_airgradient_client.set_led_bar_brightness.assert_called_once()
+    mock_config_apply_delay.assert_not_awaited()
 
 
 async def test_cloud_creates_no_number(

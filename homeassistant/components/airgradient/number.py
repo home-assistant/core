@@ -143,5 +143,6 @@ class AirGradientNumber(AirGradientEntity, NumberEntity):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the selected value."""
-        await self.entity_description.set_value_fn(self.coordinator.client, int(value))
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_execute_config_write(
+            self.entity_description.set_value_fn(self.coordinator.client, int(value))
+        )

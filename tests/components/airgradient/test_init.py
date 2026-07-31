@@ -1,5 +1,7 @@
 """Tests for the AirGradient integration."""
 
+import asyncio
+from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -9,6 +11,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.airgradient.const import DOMAIN
+from homeassistant.components.airgradient.coordinator import V1_CONFIG_APPLY_DELAY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -88,6 +91,85 @@ async def test_diy_legacy_entities(
         "button.airgradient_test_led_bar",
     ):
         assert hass.states.get(entity_id) is None
+
+
+async def test_go_config_refresh_skips_pending_writes(
+    hass: HomeAssistant,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_apply_delay: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test Go config refreshes skip reads during pending writes."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    release_writes = asyncio.Event()
+    first_write_started = asyncio.Event()
+    second_write_started = asyncio.Event()
+
+    async def write_config(started: asyncio.Event) -> None:
+        started.set()
+        await release_writes.wait()
+
+    first_write = hass.async_create_task(
+        coordinator.async_execute_config_write(write_config(first_write_started))
+    )
+    await first_write_started.wait()
+    second_write = hass.async_create_task(
+        coordinator.async_execute_config_write(write_config(second_write_started))
+    )
+    await second_write_started.wait()
+    config_calls = mock_v1_airgradient_client.get_config.call_count
+
+    refresh = hass.async_create_task(coordinator.async_refresh())
+    await asyncio.sleep(0)
+
+    await refresh
+
+    assert mock_v1_airgradient_client.get_config.call_count == config_calls
+
+    release_writes.set()
+    await asyncio.gather(first_write, second_write)
+
+    assert mock_config_apply_delay.await_count == 2
+
+
+async def test_go_config_refresh_discards_in_flight_read(
+    hass: HomeAssistant,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_apply_delay: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a Go config write discards an in-flight config read."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    cached_config = coordinator.data.config
+    config_read_started = asyncio.Event()
+    release_config_read = asyncio.Event()
+    stale_config = replace(cached_config, temperature_unit=None)
+
+    async def get_config() -> object:
+        if config_read_started.is_set():
+            return cached_config
+        config_read_started.set()
+        await release_config_read.wait()
+        return stale_config
+
+    mock_v1_airgradient_client.get_config.side_effect = get_config
+
+    refresh = hass.async_create_task(coordinator.async_refresh())
+    await config_read_started.wait()
+    write = hass.async_create_task(
+        coordinator.async_execute_config_write(asyncio.sleep(0))
+    )
+    await asyncio.sleep(0)
+    release_config_read.set()
+
+    await refresh
+
+    assert coordinator.data.config == cached_config
+
+    await write
+    mock_config_apply_delay.assert_awaited_once_with(V1_CONFIG_APPLY_DELAY)
 
 
 async def test_new_firmware_version(

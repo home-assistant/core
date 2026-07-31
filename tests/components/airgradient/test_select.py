@@ -16,6 +16,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.airgradient.coordinator import V1_CONFIG_APPLY_DELAY
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
@@ -130,6 +131,7 @@ async def test_v1_config_omission_removes_entity(
 async def test_go_measurement_interval_select(
     hass: HomeAssistant,
     mock_v1_airgradient_client: AsyncMock,
+    mock_config_apply_delay: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test Go measurement interval is selected from approved values."""
@@ -150,6 +152,7 @@ async def test_go_measurement_interval_select(
     )
 
     mock_v1_airgradient_client.set_measurement_interval.assert_awaited_once_with(300)
+    mock_config_apply_delay.assert_awaited_once_with(V1_CONFIG_APPLY_DELAY)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -200,6 +203,7 @@ async def test_go_entities(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_config_apply_delay")
 async def test_go_select_writes(
     hass: HomeAssistant,
     mock_v1_airgradient_client: AsyncMock,

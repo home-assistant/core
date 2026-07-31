@@ -138,12 +138,14 @@ class AirGradientSwitch(AirGradientEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.entity_description.set_value_fn(self.coordinator.client, True)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_execute_config_write(
+            self.entity_description.set_value_fn(self.coordinator.client, True)
+        )
 
     @exception_handler
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.entity_description.set_value_fn(self.coordinator.client, False)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_execute_config_write(
+            self.entity_description.set_value_fn(self.coordinator.client, False)
+        )

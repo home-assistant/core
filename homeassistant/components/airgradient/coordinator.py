@@ -1,10 +1,18 @@
 """Define an object to manage fetching AirGradient data."""
 
+from asyncio import sleep
+from collections.abc import Awaitable
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import override
 
-from airgradient import AirGradientClient, AirGradientError, Config, Measures
+from airgradient import (
+    AirGradientClient,
+    AirGradientError,
+    ApiVersion,
+    Config,
+    Measures,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -14,6 +22,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, LOGGER
 
 type AirGradientConfigEntry = ConfigEntry[AirGradientCoordinator]
+
+# V1 needs up to two seconds before GET reflects a successful PUT.
+V1_CONFIG_APPLY_DELAY = 2
 
 
 @dataclass
@@ -47,6 +58,10 @@ class AirGradientCoordinator(DataUpdateCoordinator[AirGradientData]):
         self.client = client
         assert self.config_entry.unique_id
         self.serial_number = self.config_entry.unique_id
+        # A V1 PUT can succeed before GET exposes the persisted config.
+        # Track writes to avoid publishing a pre-write config response.
+        self._config_write_generation = 0
+        self._pending_config_writes = 0
 
     @override
     async def _async_setup(self) -> None:
@@ -74,12 +89,41 @@ class AirGradientCoordinator(DataUpdateCoordinator[AirGradientData]):
                 },
             )
 
+    async def async_execute_config_write(self, write: Awaitable[None]) -> None:
+        """Write config and refresh once V1 writes have settled."""
+        if self.client.api_version is not ApiVersion.V1:
+            await write
+            await self.async_request_refresh()
+            return
+
+        self._config_write_generation += 1
+        self._pending_config_writes += 1
+        try:
+            await write
+            await sleep(V1_CONFIG_APPLY_DELAY)
+        finally:
+            self._pending_config_writes -= 1
+
+        if not self._pending_config_writes:
+            await self.async_refresh()
+
     @override
     async def _async_update_data(self) -> AirGradientData:
         try:
             measures = await self.client.get_current_measures()
             self._validate_measures_identity(measures)
-            config = await self.client.get_config()
+            if self.client.api_version is ApiVersion.V1:
+                # PUT succeeds before GET reflects persisted config; retain the last
+                # confirmed config while writes settle or race this GET.
+                generation = self._config_write_generation
+                if self._pending_config_writes:
+                    config = self.data.config
+                else:
+                    config = await self.client.get_config()
+                    if generation != self._config_write_generation:
+                        config = self.data.config
+            else:
+                config = await self.client.get_config()
         except AirGradientError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
