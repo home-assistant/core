@@ -11,6 +11,7 @@ from midealocal.cloud import (
 )
 from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.device import MideaDevice
+from midealocal.devices import device_selector
 from midealocal.discover import discover
 import voluptuous as vol
 
@@ -368,19 +369,26 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             keys = {**keys, **(await MideaCloud.get_default_keys())}
         # use token/key to connect device and confirm token result
         for k, value in keys.items():
-            dm = MideaDevice(
-                name="",
-                device_id=appliance_id,
-                device_type=device.get(CONF_TYPE),
-                ip_address=device.get(CONF_IP_ADDRESS),
-                port=device.get(CONF_PORT),
-                token=value["token"],
-                key=value["key"],
-                device_protocol=ProtocolVersion.V3,
-                model=device.get(CONF_MODEL),
-                subtype=device.get(CONF_SUBTYPE, 0),
-                attributes={},
+            dm = await self.hass.async_add_executor_job(
+                device_selector,
+                "",
+                appliance_id,
+                device.get(CONF_TYPE),
+                device.get(CONF_IP_ADDRESS),
+                device.get(CONF_PORT),
+                value["token"],
+                value["key"],
+                ProtocolVersion.V3,
+                device.get(CONF_MODEL),
+                device.get(CONF_SUBTYPE, 0),
+                "",
             )
+            if dm is None:
+                LOGGER.debug(
+                    "No device implementation for device_type %s",
+                    device.get(CONF_TYPE),
+                )
+                break
             connected = await self.hass.async_add_executor_job(_connect_and_close, dm)
             if connected:
                 return value
@@ -512,19 +520,22 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(str(device_id))
         self._abort_if_unique_id_configured()
 
-        dm = MideaDevice(
-            name="",
-            device_id=device_id,
-            device_type=user_input[CONF_TYPE],
-            ip_address=user_input[CONF_IP_ADDRESS],
-            port=user_input[CONF_PORT],
-            token=user_input[CONF_TOKEN],
-            key=user_input[CONF_KEY],
-            device_protocol=user_input[CONF_PROTOCOL],
-            model=user_input[CONF_MODEL],
-            subtype=user_input[CONF_SUBTYPE],
-            attributes={},
+        dm = await self.hass.async_add_executor_job(
+            device_selector,
+            "",
+            device_id,
+            user_input[CONF_TYPE],
+            user_input[CONF_IP_ADDRESS],
+            user_input[CONF_PORT],
+            user_input[CONF_TOKEN],
+            user_input[CONF_KEY],
+            user_input[CONF_PROTOCOL],
+            user_input[CONF_MODEL],
+            user_input[CONF_SUBTYPE],
+            "",
         )
+        if dm is None:
+            return self._show_manually_form(user_input, error="device_auth_failed")
         connected = await self.hass.async_add_executor_job(_connect_and_close, dm)
         if connected:
             device_type = user_input[CONF_TYPE]
