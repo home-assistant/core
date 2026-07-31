@@ -1,20 +1,31 @@
 """Support for the Hive devices and services."""
 
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from apyhiveapi import Hive
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
+if TYPE_CHECKING:
+    from . import HiveConfigEntry
+
 
 class HiveEntity(Entity):
     """Initiate Hive Base Class."""
 
-    def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: HiveConfigEntry,
+        hive: Hive,
+        hive_device: dict[str, Any],
+    ) -> None:
         """Initialize the instance."""
         self.hive = hive
         self.device = hive_device
@@ -26,7 +37,11 @@ class HiveEntity(Entity):
             manufacturer=self.device["deviceData"]["manufacturer"],
             name=self.device["device_name"],
             sw_version=self.device["deviceData"]["version"],
-            via_device=(DOMAIN, self.device["parentDevice"]),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, self.device["parentDevice"]),
+                config_entry_id=entry.entry_id,
+            ),
         )
         self.attributes: dict[str, Any] = {}
 
