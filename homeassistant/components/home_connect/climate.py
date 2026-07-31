@@ -154,6 +154,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         )
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if event := self.appliance.events.get(
@@ -163,6 +164,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         if (
@@ -186,6 +188,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         if (
@@ -195,6 +198,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         return super().min_temp
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         if (
@@ -204,6 +208,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         return super().max_temp
 
     @property
+    @override
     def target_temperature_step(self) -> float | None:
         """Return the temperature step."""
         if (
@@ -397,6 +402,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         """Set new preset mode."""
         await self._set_program(PRESET_MODES_PROGRAMS_MAP[preset_mode])
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
