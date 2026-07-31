@@ -98,6 +98,14 @@
       "container_disk_usage_total_size": {
         "name": "Container disk usage total size"
       },
+      "container_health_state": {
+        "name": "Health",
+        "state": {
+          "healthy": "Healthy",
+          "starting": "Starting",
+          "unhealthy": "Unhealthy"
+        }
+      },
       "container_state": {
         "name": "State",
         "state": {
