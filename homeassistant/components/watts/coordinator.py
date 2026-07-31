@@ -244,10 +244,12 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
         _LOGGER.debug("Refreshed device %s", self.device_id)
         return WattsVisionDeviceData(device=device)
 
-    def trigger_fast_polling(self, duration: int = 60) -> None:
+    def trigger_fast_polling(self, duration_seconds: int = 60) -> None:
         """Activate fast polling for a specified duration after a command."""
-        self.fast_polling_until = time.time() + duration
+        self.fast_polling_until = time.time() + duration_seconds
         self.update_interval = timedelta(seconds=FAST_POLLING_INTERVAL_SECONDS)
         _LOGGER.debug(
-            "Device %s: Activated fast polling for %d seconds", self.device_id, duration
+            "Device %s: Activated fast polling for %d seconds",
+            self.device_id,
+            duration_seconds,
         )
