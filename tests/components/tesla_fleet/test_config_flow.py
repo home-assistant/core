@@ -47,7 +47,7 @@ def _mock_api(
     *,
     public_key: str = PUBLIC_KEY,
     server: str | None = None,
-    register_response: dict[str, dict[str, str] | None] | None | object = (
+    register_response: dict[str, dict[str, str] | None] | object | None = (
         DEFAULT_REGISTER_RESPONSE
     ),
     register_side_effect: BaseException | type[BaseException] | None = None,
