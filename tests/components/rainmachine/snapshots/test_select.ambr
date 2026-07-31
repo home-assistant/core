@@ -46,7 +46,7 @@
 # name: test_select_entities[select.12345_freeze_protection_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '12345 Freeze protection temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Freeze protection temperature',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0°C',
         '2°C',

@@ -14,7 +14,7 @@ from yoto_api import (
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import YotoConfigEntry, YotoDataUpdateCoordinator
@@ -66,12 +66,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Yoto select platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        YotoSelect(coordinator, player, description)
-        for player in coordinator.client.players.values()
-        for description in SELECTS
-        if description.supported_fn(caps_for(player.device))
-    )
+    known_players: set[str] = set()
+
+    @callback
+    def _add_players() -> None:
+        current = set(coordinator.data)
+        new_players = current - known_players
+        known_players.clear()
+        known_players.update(current)
+        if new_players:
+            async_add_entities(
+                YotoSelect(coordinator, coordinator.data[player_id], description)
+                for player_id in new_players
+                for description in SELECTS
+                if description.supported_fn(
+                    caps_for(coordinator.data[player_id].device)
+                )
+            )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_players))
+    _add_players()
 
 
 class YotoSelect(YotoConfigEntity, SelectEntity):

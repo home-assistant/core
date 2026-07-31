@@ -4,11 +4,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import Condition, make_entity_state_condition
 
-from . import ATTR_IS_CLOSED
-from .const import DOMAIN
+from .const import DOMAIN, ValveEntityStateAttribute
 
 VALVE_DOMAIN_SPECS: dict[str, DomainSpec] = {
-    DOMAIN: DomainSpec(value_source=ATTR_IS_CLOSED),
+    DOMAIN: DomainSpec(value_source=ValveEntityStateAttribute.IS_CLOSED),
 }
 
 CONDITIONS: dict[str, type[Condition]] = {

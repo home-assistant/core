@@ -3,7 +3,6 @@
 from datetime import datetime, timedelta
 from typing import Any, cast, override
 
-import astral
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -47,7 +46,13 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, STATE_ATTR_ELEVATION
+from .const import (
+    DOMAIN,
+    ELEVATION_ASTRONOMICAL,
+    ELEVATION_CIVIL,
+    ELEVATION_NAUTICAL,
+    STATE_ATTR_ELEVATION,
+)
 
 # Names of solar events supported by the astral.sun module
 _SUN_EVENT_SOLAR_NOON = "noon"
@@ -59,11 +64,24 @@ _TWILIGHT_CIVIL = "civil"
 _TWILIGHT_NAUTICAL = "nautical"
 _TWILIGHT_ASTRONOMICAL = "astronomical"
 
-# Sun depression below the horizon for each twilight phase, as defined by astral.
-_TWILIGHT_DEPRESSIONS = {
-    _TWILIGHT_CIVIL: astral.Depression.CIVIL,
-    _TWILIGHT_NAUTICAL: astral.Depression.NAUTICAL,
-    _TWILIGHT_ASTRONOMICAL: astral.Depression.ASTRONOMICAL,
+CONF_OFFSET_TYPE = "offset_type"
+OFFSET_TYPE_BEFORE = "before"
+OFFSET_TYPE_AFTER = "after"
+
+# Offset options shared by the solar event triggers. A positive offset combined
+# with an offset type of "before" fires earlier than the event; "after" later.
+_OFFSET_OPTIONS: dict[vol.Marker, Any] = {
+    vol.Required(CONF_OFFSET, default=timedelta(0)): cv.time_period,
+    vol.Required(CONF_OFFSET_TYPE, default=OFFSET_TYPE_BEFORE): vol.In(
+        {OFFSET_TYPE_BEFORE, OFFSET_TYPE_AFTER}
+    ),
+}
+
+# Sun elevation at each twilight boundary.
+_TWILIGHT_ELEVATIONS = {
+    _TWILIGHT_CIVIL: ELEVATION_CIVIL,
+    _TWILIGHT_NAUTICAL: ELEVATION_NAUTICAL,
+    _TWILIGHT_ASTRONOMICAL: ELEVATION_ASTRONOMICAL,
 }
 
 # The sun is a singleton, so the elevation triggers always target sun.sun
@@ -129,7 +147,9 @@ class SunElevationCrossedTrigger(
     _schema = _ELEVATION_CROSSED_TRIGGER_SCHEMA
 
 
-_EVENT_TRIGGER_SCHEMA = vol.Schema({vol.Required(CONF_OPTIONS, default=dict): {}})
+_EVENT_TRIGGER_SCHEMA = vol.Schema(
+    {vol.Required(CONF_OPTIONS, default=dict): {**_OFFSET_OPTIONS}}
+)
 
 
 class SunEventTrigger(Trigger):
@@ -150,10 +170,16 @@ class SunEventTrigger(Trigger):
         """Initialize the trigger."""
         super().__init__(hass, config)
         self._options = config.options or {}
+        offset = self._options.get(CONF_OFFSET) or timedelta(0)
+        if self._options.get(CONF_OFFSET_TYPE) == OFFSET_TYPE_BEFORE:
+            offset = -offset
+        self._offset = offset
 
     def _get_next_event(self, utc_point_in_time: datetime) -> datetime:
         """Return the next time this solar event occurs."""
-        return get_astral_event_next(self._hass, self._event, utc_point_in_time)
+        return get_astral_event_next(
+            self._hass, self._event, utc_point_in_time, self._offset
+        )
 
     def _action_payload(self) -> dict[str, Any]:
         """Return extra trigger payload passed to the action."""
@@ -228,8 +254,9 @@ _DAWN_DUSK_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_OPTIONS, default=dict): {
             vol.Optional(CONF_TYPE, default=_TWILIGHT_CIVIL): vol.In(
-                _TWILIGHT_DEPRESSIONS
+                _TWILIGHT_ELEVATIONS
             ),
+            **_OFFSET_OPTIONS,
         }
     }
 )
@@ -244,7 +271,7 @@ class SunDawnDuskTrigger(SunEventTrigger):
         """Initialize the trigger."""
         super().__init__(hass, config)
         self._twilight: str = self._options[CONF_TYPE]
-        self._depression = _TWILIGHT_DEPRESSIONS[self._twilight]
+        self._elevation = _TWILIGHT_ELEVATIONS[self._twilight]
 
     @override
     def _get_next_event(self, utc_point_in_time: datetime) -> datetime:
@@ -252,7 +279,10 @@ class SunDawnDuskTrigger(SunEventTrigger):
             get_astral_observer(self._hass),
             self._event,
             utc_point_in_time,
-            depression=self._depression,
+            self._offset,
+            # astral takes a depression (degrees below the horizon), i.e. the
+            # negated elevation.
+            depression=-self._elevation,
         )
 
     @override
@@ -298,13 +328,6 @@ class LegacySunTrigger(SunEventTrigger):
         """Initialize the trigger."""
         super().__init__(hass, config)
         self._event = self._options[CONF_EVENT]
-        self._offset: timedelta = self._options[CONF_OFFSET]
-
-    @override
-    def _get_next_event(self, utc_point_in_time: datetime) -> datetime:
-        return get_astral_event_next(
-            self._hass, self._event, utc_point_in_time, self._offset
-        )
 
     @override
     def _action_payload(self) -> dict[str, Any]:

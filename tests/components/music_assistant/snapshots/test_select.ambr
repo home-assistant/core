@@ -45,7 +45,7 @@
 # name: test_select_entities[select.test_player_1_link_audio_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Player 1 Link audio delay',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Link audio delay',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'audio_sync_translation',
         'balanced_translation',

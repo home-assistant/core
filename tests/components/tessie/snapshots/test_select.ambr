@@ -45,7 +45,7 @@
 # name: test_select[select.energy_site_allow_export-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Allow export',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Allow export',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <EnergyExportMode.NEVER: 'never'>,
         <EnergyExportMode.BATTERY_OK: 'battery_ok'>,
@@ -106,7 +106,7 @@
 # name: test_select[select.energy_site_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Operation mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Operation mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <EnergyOperationMode.AUTONOMOUS: 'autonomous'>,
         <EnergyOperationMode.BACKUP: 'backup'>,
@@ -168,7 +168,7 @@
 # name: test_select[select.test_seat_cooler_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat cooler left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat cooler left',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatCoolerOptions.OFF: 'off'>,
         <TessieSeatCoolerOptions.LOW: 'low'>,
@@ -231,7 +231,7 @@
 # name: test_select[select.test_seat_cooler_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat cooler right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat cooler right',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatCoolerOptions.OFF: 'off'>,
         <TessieSeatCoolerOptions.LOW: 'low'>,
@@ -294,7 +294,7 @@
 # name: test_select[select.test_seat_heater_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater left',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
@@ -357,7 +357,7 @@
 # name: test_select[select.test_seat_heater_rear_center-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater rear center',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater rear center',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
@@ -420,7 +420,7 @@
 # name: test_select[select.test_seat_heater_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater rear left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater rear left',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
@@ -483,7 +483,7 @@
 # name: test_select[select.test_seat_heater_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater rear right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater rear right',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
@@ -546,7 +546,7 @@
 # name: test_select[select.test_seat_heater_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater right',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
@@ -565,7 +565,7 @@
 # name: test_select[select_option]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater left',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,

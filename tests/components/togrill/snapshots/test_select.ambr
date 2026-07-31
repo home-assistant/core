@@ -58,7 +58,7 @@
 # name: test_setup[no_data][select.probe_1_grill_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Probe 1 Grill type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Probe 1 Grill type',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
@@ -135,7 +135,7 @@
 # name: test_setup[no_data][select.probe_1_taste-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Probe 1 Taste',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Probe 1 Taste',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
@@ -212,7 +212,7 @@
 # name: test_setup[no_data][select.probe_2_grill_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Probe 2 Grill type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Probe 2 Grill type',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
@@ -289,7 +289,7 @@
 # name: test_setup[no_data][select.probe_2_taste-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Probe 2 Taste',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Probe 2 Taste',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
@@ -366,7 +366,7 @@
 # name: test_setup[probes_with_different_data][select.probe_1_grill_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Probe 1 Grill type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Probe 1 Grill type',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
@@ -443,7 +443,7 @@
 # name: test_setup[probes_with_different_data][select.probe_1_taste-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Probe 1 Taste',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Probe 1 Taste',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
@@ -520,7 +520,7 @@
 # name: test_setup[probes_with_different_data][select.probe_2_grill_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Probe 2 Grill type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Probe 2 Grill type',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
@@ -597,7 +597,7 @@
 # name: test_setup[probes_with_different_data][select.probe_2_taste-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Probe 2 Taste',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Probe 2 Taste',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
@@ -674,7 +674,7 @@
 # name: test_setup[probes_with_unknown_data][select.probe_1_grill_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Probe 1 Grill type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Probe 1 Grill type',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
@@ -751,7 +751,7 @@
 # name: test_setup[probes_with_unknown_data][select.probe_1_taste-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Probe 1 Taste',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Probe 1 Taste',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
@@ -828,7 +828,7 @@
 # name: test_setup[probes_with_unknown_data][select.probe_2_grill_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Probe 2 Grill type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Probe 2 Grill type',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
@@ -905,7 +905,7 @@
 # name: test_setup[probes_with_unknown_data][select.probe_2_taste-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Probe 2 Taste',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Probe 2 Taste',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',

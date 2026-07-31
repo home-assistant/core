@@ -10,8 +10,8 @@
       'auto',
       'diffuse',
     ]),
-    'friendly_name': 'device1',
-    <ClimateEntityStateAttribute.HUMIDITY: 'humidity'>: None,
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'device1',
+    <ClimateEntityStateAttribute.TARGET_HUMIDITY: 'humidity'>: None,
     <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
     <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
       <HVACMode.OFF: 'off'>,
@@ -30,9 +30,9 @@
       'away',
       'hold',
     ]),
-    'supported_features': <ClimateEntityFeature: 415>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 415>,
     <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
     <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
-    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+    <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
   })
 # ---

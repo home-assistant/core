@@ -46,7 +46,7 @@
 # name: test_all_entities[select.1p7k_500006_load_balancing_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1p7k_500006 Load balancing mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1p7k_500006 Load balancing mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'power',

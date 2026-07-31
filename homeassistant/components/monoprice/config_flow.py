@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from pymonoprice import get_monoprice
-from serial import SerialException
+from serialx import SerialException
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import SerialPortSelector
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -42,7 +43,9 @@ SOURCES = [
 
 OPTIONS_FOR_DATA: VolDictType = {vol.Optional(source): str for source in SOURCES}
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_PORT): str, **OPTIONS_FOR_DATA})
+DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_PORT): SerialPortSelector(), **OPTIONS_FOR_DATA}
+)
 
 
 @callback

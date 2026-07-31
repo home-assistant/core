@@ -45,7 +45,7 @@
 # name: test_selects[select.test_fridge_bottom_zone_icemaker-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Fridge Bottom zone IceMaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fridge Bottom zone IceMaker',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'on',
@@ -107,7 +107,7 @@
 # name: test_selects[select.test_fridge_top_zone_biofresh_plus-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Fridge Top zone BioFresh-Plus',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fridge Top zone BioFresh-Plus',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'zero_zero',
         'zero_minus_two',
@@ -170,7 +170,7 @@
 # name: test_selects[select.test_fridge_top_zone_hydrobreeze-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Fridge Top zone HydroBreeze',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fridge Top zone HydroBreeze',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
@@ -233,7 +233,7 @@
 # name: test_single_zone_select[select.single_zone_fridge_hydrobreeze-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Single Zone Fridge HydroBreeze',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Single Zone Fridge HydroBreeze',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
@@ -294,7 +294,7 @@
 # name: test_single_zone_select[select.single_zone_fridge_icemaker-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Single Zone Fridge IceMaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Single Zone Fridge IceMaker',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'on',

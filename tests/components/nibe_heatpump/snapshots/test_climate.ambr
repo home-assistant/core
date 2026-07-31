@@ -3,7 +3,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F1155 Climate System S2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Climate System S2',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -12,11 +12,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 30.0,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21.0,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f1155_climate_system_s2',
@@ -29,7 +29,7 @@
 # name: test_active_accessory[Model.F1155-s2-climate.f1155_climate_system_s2][unavailable (not supported)]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F1155 Climate System S2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Climate System S2',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
@@ -37,7 +37,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'context': <ANY>,
@@ -52,7 +52,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F1155 Climate System S3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Climate System S3',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -61,11 +61,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 30.0,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21.0,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f1155_climate_system_s3',
@@ -78,7 +78,7 @@
 # name: test_active_accessory[Model.F1155-s3-climate.f1155_climate_system_s3][unavailable (not supported)]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F1155 Climate System S3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Climate System S3',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
@@ -86,7 +86,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'context': <ANY>,
@@ -101,7 +101,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F1155 Climate System S2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Climate System S2',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.COOLING: 'cooling'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -110,11 +110,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 30.0,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21.0,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f1155_climate_system_s2',
@@ -128,7 +128,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F1155 Climate System S2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Climate System S2',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -137,11 +137,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f1155_climate_system_s2',
@@ -155,7 +155,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F1155 Climate System S2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Climate System S2',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -164,11 +164,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f1155_climate_system_s2',
@@ -182,7 +182,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F1155 Climate System S2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Climate System S2',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -191,11 +191,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 30.0,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21.0,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f1155_climate_system_s2',
@@ -209,7 +209,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F1155 Climate System S2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Climate System S2',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -218,11 +218,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 30.0,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21.0,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f1155_climate_system_s2',
@@ -236,7 +236,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F1155 Climate System S2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Climate System S2',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -245,11 +245,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 30.0,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21.0,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f1155_climate_system_s2',
@@ -263,7 +263,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F1155 Climate System S2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Climate System S2',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -272,11 +272,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f1155_climate_system_s2',
@@ -290,7 +290,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F1155 Climate System S2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Climate System S2',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -299,11 +299,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f1155_climate_system_s2',
@@ -317,7 +317,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F730 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F730 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.COOLING: 'cooling'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -325,11 +325,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21.0,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f730_climate_system_s1',
@@ -343,7 +343,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F730 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F730 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -351,11 +351,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f730_climate_system_s1',
@@ -369,7 +369,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F730 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F730 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -377,11 +377,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f730_climate_system_s1',
@@ -395,7 +395,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F730 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F730 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -403,11 +403,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21.0,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f730_climate_system_s1',
@@ -421,7 +421,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F730 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F730 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -429,11 +429,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21.0,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f730_climate_system_s1',
@@ -447,7 +447,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F730 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F730 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -455,11 +455,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21.0,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f730_climate_system_s1',
@@ -473,7 +473,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F730 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F730 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -481,11 +481,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f730_climate_system_s1',
@@ -499,7 +499,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'F730 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F730 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -507,11 +507,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.f730_climate_system_s1',
@@ -525,7 +525,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'S320 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.COOLING: 'cooling'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -534,11 +534,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 30.0,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21.0,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.s320_climate_system_s1',
@@ -552,7 +552,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'S320 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -561,11 +561,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.s320_climate_system_s1',
@@ -579,7 +579,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'S320 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -588,11 +588,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.s320_climate_system_s1',
@@ -606,7 +606,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'S320 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -615,11 +615,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 30.0,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21.0,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.s320_climate_system_s1',
@@ -633,7 +633,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'S320 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -642,11 +642,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 30.0,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21.0,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.s320_climate_system_s1',
@@ -660,7 +660,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'S320 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -669,11 +669,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 30.0,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21.0,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.s320_climate_system_s1',
@@ -687,7 +687,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'S320 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -696,11 +696,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.s320_climate_system_s1',
@@ -714,7 +714,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'S320 Climate System S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Climate System S1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -723,11 +723,11 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 3>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.s320_climate_system_s1',
