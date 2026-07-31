@@ -67,7 +67,9 @@ class SHCEntity(SHCBaseEntity):
 
     _device: SHCDevice
 
-    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, device: SHCDevice, parent_id: str, entry_id: str
+    ) -> None:
         """Initialize generic SHC device."""
         self._attr_unique_id = device.serial
         self._attr_device_info = DeviceInfo(
@@ -75,7 +77,9 @@ class SHCEntity(SHCBaseEntity):
             manufacturer=device.manufacturer,
             model=device.device_model,
             name=device.name,
-            via_device=(DOMAIN, device.root_device_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, device.root_device_id), config_entry_id=entry_id
+            ),
         )
         super().__init__(device=device, parent_id=parent_id, entry_id=entry_id)
 
@@ -110,7 +114,11 @@ class SHCDomainEntity(SHCBaseEntity):
     _device: SHCIntrusionSystem
 
     def __init__(
-        self, domain: SHCIntrusionSystem, parent_id: str, entry_id: str
+        self,
+        hass: HomeAssistant,
+        domain: SHCIntrusionSystem,
+        parent_id: str,
+        entry_id: str,
     ) -> None:
         """Initialize the generic SHC device."""
         self._attr_unique_id = domain.id
@@ -119,9 +127,8 @@ class SHCDomainEntity(SHCBaseEntity):
             manufacturer=domain.manufacturer,
             model=domain.device_model,
             name=domain.name,
-            via_device=(
-                DOMAIN,
-                parent_id,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, parent_id), config_entry_id=entry_id
             ),
         )
         super().__init__(device=domain, parent_id=parent_id, entry_id=entry_id)
