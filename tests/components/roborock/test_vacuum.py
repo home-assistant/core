@@ -1,10 +1,8 @@
 """Tests for Roborock vacuums."""
 
-import asyncio
 from datetime import timedelta
-from types import SimpleNamespace
 from typing import Any
-from unittest.mock import AsyncMock, Mock, call
+from unittest.mock import Mock, call
 
 import pytest
 from roborock import RoborockException
@@ -25,7 +23,6 @@ from homeassistant.components.roborock.services import (
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
     SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
 )
-from homeassistant.components.roborock.vacuum import RoborockQ10Vacuum
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_CLEAN_AREA,
@@ -981,7 +978,7 @@ async def test_q10_goto(
     setup_entry: MockConfigEntry,
     q10_vacuum_api: Mock,
 ) -> None:
-    """Test that Q10 goto starts a 40 cm zone centered on the target."""
+    """Test that Q10 goto delegates the complete operation to the library."""
     q10_vacuum_api.map.roborock_position = Q10Point(x=25500, y=25500)
 
     await hass.services.async_call(
@@ -991,41 +988,7 @@ async def test_q10_goto(
         blocking=True,
     )
 
-    assert q10_vacuum_api.vacuum.clean_zone.call_args == call(
-        29700,
-        28450,
-        30100,
-        28850,
-    )
-
-    # Cancel the background arrival monitor before the test finishes.
-    await hass.services.async_call(
-        VACUUM_DOMAIN,
-        SERVICE_STOP,
-        {ATTR_ENTITY_ID: Q10_ENTITY_ID},
-        blocking=True,
-    )
-
-
-async def test_q10_goto_monitor_pauses_at_target() -> None:
-    """Test that the goto monitor pauses inside the target tolerance."""
-    pause_clean = AsyncMock()
-    entity = SimpleNamespace(
-        _goto_monitor_task=asyncio.current_task(),
-        coordinator=SimpleNamespace(
-            api=SimpleNamespace(
-                map=SimpleNamespace(
-                    roborock_position=Q10Point(x=30020, y=28705)
-                ),
-                vacuum=SimpleNamespace(pause_clean=pause_clean),
-            )
-        ),
-    )
-
-    await RoborockQ10Vacuum._async_monitor_goto_target(entity, 29900, 28650)
-
-    pause_clean.assert_awaited_once_with()
-    assert entity._goto_monitor_task is None
+    assert q10_vacuum_api.vacuum.goto_position.call_args == call(29900, 28650)
 
 
 async def test_q10_registry_entries(
@@ -1140,6 +1103,7 @@ async def test_q10_send_command(
         blocking=True,
     )
     assert q10_vacuum_api.command.send.call_count == 1
+    q10_vacuum_api.vacuum.cancel_goto.assert_called_once_with()
 
 
 async def test_q10_send_command_invalid(
@@ -1158,6 +1122,7 @@ async def test_q10_send_command_invalid(
             {ATTR_ENTITY_ID: Q10_ENTITY_ID, "command": "INVALID_COMMAND"},
             blocking=True,
         )
+    q10_vacuum_api.vacuum.cancel_goto.assert_not_called()
 
 
 @pytest.mark.parametrize(

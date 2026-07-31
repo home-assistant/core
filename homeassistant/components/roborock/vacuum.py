@@ -1,8 +1,6 @@
 """Support for Roborock vacuum class."""
 
-import asyncio
 import logging
-from math import hypot
 from typing import Any, override
 
 from roborock.data import RoborockStateCode, SCWindMapping, WorkStatusMapping
@@ -108,10 +106,6 @@ Q10_STATE_CODE_TO_STATE = {
 }
 
 PARALLEL_UPDATES = 0
-
-Q10_GOTO_HALF_ZONE_SIZE = 200
-Q10_GOTO_TOLERANCE = 200
-Q10_GOTO_TIMEOUT = 300
 
 
 async def async_setup_entry(
@@ -602,59 +596,14 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
             coordinator.duid_slug,
             coordinator,
         )
-        self._goto_monitor_task: asyncio.Task[None] | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
         """Register trait listener for push-based status updates."""
         await super().async_added_to_hass()
-        self.async_on_remove(self._cancel_goto_monitor)
         self.async_on_remove(
             self.coordinator.api.status.add_update_listener(self.async_write_ha_state)
         )
-
-    def _cancel_goto_monitor(self) -> None:
-        """Cancel a pending emulated goto monitor."""
-        if self._goto_monitor_task is not None:
-            self._goto_monitor_task.cancel()
-            self._goto_monitor_task = None
-
-    async def _async_monitor_goto_target(self, x: int, y: int) -> None:
-        """Pause the Q10 mini-zone task when the robot reaches its target."""
-        current_task = asyncio.current_task()
-        try:
-            async with asyncio.timeout(Q10_GOTO_TIMEOUT):
-                while True:
-                    if (
-                        position := self.coordinator.api.map.roborock_position
-                    ) is not None and hypot(position.x - x, position.y - y) <= (
-                        Q10_GOTO_TOLERANCE
-                    ):
-                        _LOGGER.debug(
-                            "Q10 vacuum reached goto target (%s, %s); pausing zone task",
-                            x,
-                            y,
-                        )
-                        await self.coordinator.api.vacuum.pause_clean()
-                        return
-                    await asyncio.sleep(1)
-        except TimeoutError:
-            _LOGGER.warning(
-                "Q10 vacuum did not report reaching goto target (%s, %s) within "
-                "%s seconds; stopping zone task",
-                x,
-                y,
-                Q10_GOTO_TIMEOUT,
-            )
-            try:
-                await self.coordinator.api.vacuum.stop_clean()
-            except RoborockException as err:
-                _LOGGER.warning("Failed to stop timed-out Q10 goto task: %s", err)
-        except RoborockException as err:
-            _LOGGER.warning("Failed to pause completed Q10 goto task: %s", err)
-        finally:
-            if self._goto_monitor_task is current_task:
-                self._goto_monitor_task = None
 
     @property
     @override
@@ -675,7 +624,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     @override
     async def async_start(self) -> None:
         """Start the vacuum."""
-        self._cancel_goto_monitor()
         try:
             await self.coordinator.api.vacuum.start_clean()
         except RoborockException as err:
@@ -690,7 +638,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     @override
     async def async_pause(self) -> None:
         """Pause the vacuum."""
-        self._cancel_goto_monitor()
         try:
             await self.coordinator.api.vacuum.pause_clean()
         except RoborockException as err:
@@ -705,7 +652,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
-        self._cancel_goto_monitor()
         try:
             await self.coordinator.api.vacuum.stop_clean()
         except RoborockException as err:
@@ -720,7 +666,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Send vacuum back to base."""
-        self._cancel_goto_monitor()
         try:
             await self.coordinator.api.vacuum.return_to_dock()
         except RoborockException as err:
@@ -781,7 +726,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     @override
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Clean the specified segments."""
-        self._cancel_goto_monitor()
         try:
             await self.coordinator.api.vacuum.clean_segments(
                 [int(seg_id) for seg_id in segment_ids]
@@ -807,7 +751,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
         The command string can be an enum name (e.g. "SEEK"), a DP string
         value (e.g. "dpSeek"), or an integer code (e.g. "11").
         """
-        self._cancel_goto_monitor()
         if (dp_command := B01_Q10_DP.from_any_optional(command)) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -826,6 +769,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                     "command": command,
                 },
             ) from err
+        self.coordinator.api.vacuum.cancel_goto()
 
     async def get_maps(self) -> ServiceResponse:
         """Get map information such as map id and room ids."""
@@ -841,19 +785,9 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
         return {"x": position.x, "y": position.y}
 
     async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
-        """Move the Q10 to a position using a small zone-clean task."""
-        self._cancel_goto_monitor()
-        if (position := self.coordinator.api.map.roborock_position) is not None:
-            if hypot(position.x - x, position.y - y) <= Q10_GOTO_TOLERANCE:
-                return
-
+        """Move the Q10 to a position using the library goto operation."""
         try:
-            await self.coordinator.api.vacuum.clean_zone(
-                x - Q10_GOTO_HALF_ZONE_SIZE,
-                y - Q10_GOTO_HALF_ZONE_SIZE,
-                x + Q10_GOTO_HALF_ZONE_SIZE,
-                y + Q10_GOTO_HALF_ZONE_SIZE,
-            )
+            await self.coordinator.api.vacuum.goto_position(x, y)
         except ValueError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -867,16 +801,10 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                 translation_placeholders={"command": "set_vacuum_goto_position"},
             ) from err
 
-        self._goto_monitor_task = self.hass.async_create_task(
-            self._async_monitor_goto_target(x, y),
-            f"roborock_q10_goto_{self.coordinator.duid_slug}",
-        )
-
     async def async_set_vacuum_zoned_cleaning(
         self, x1: int, y1: int, x2: int, y2: int, repeats: int
     ) -> None:
         """Clean the specified zone."""
-        self._cancel_goto_monitor()
         try:
             # Home Assistant defines repeats as additional passes, while Q10
             # carries the total clean count.
