@@ -22,6 +22,14 @@
       "uv": {
         "default": "mdi:weather-sunny-alert"
       }
+    },
+    "time": {
+      "filtration_interval_end": {
+        "default": "mdi:clock-end"
+      },
+      "filtration_interval_start": {
+        "default": "mdi:clock-start"
+      }
     }
   }
 }

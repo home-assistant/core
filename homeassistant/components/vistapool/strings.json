@@ -207,6 +207,14 @@
       "uv": {
         "name": "UV"
       }
+    },
+    "time": {
+      "filtration_interval_end": {
+        "name": "Filtration interval {number} end"
+      },
+      "filtration_interval_start": {
+        "name": "Filtration interval {number} start"
+      }
     }
   },
   "exceptions": {
