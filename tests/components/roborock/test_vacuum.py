@@ -903,6 +903,8 @@ def fake_q10_vacuum_api_fixture(
         api.vacuum.return_to_dock.side_effect = send_message_exception
         api.vacuum.set_fan_level.side_effect = send_message_exception
         api.vacuum.clean_segments.side_effect = send_message_exception
+        api.vacuum.clean_zone.side_effect = send_message_exception
+        api.vacuum.goto_position.side_effect = send_message_exception
         api.command.send.side_effect = send_message_exception
     return api
 
@@ -989,6 +991,65 @@ async def test_q10_goto(
     )
 
     assert q10_vacuum_api.vacuum.goto_position.call_args == call(29900, 28650)
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "api_method", "error", "expected_exception"),
+    [
+        pytest.param(
+            SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+            {"x": 29900, "y": 28650},
+            "goto_position",
+            ValueError("invalid coordinate"),
+            ServiceValidationError,
+            id="goto-validation",
+        ),
+        pytest.param(
+            SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+            {"x": 29900, "y": 28650},
+            "goto_position",
+            RoborockException(),
+            HomeAssistantError,
+            id="goto-command",
+        ),
+        pytest.param(
+            SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+            {"x1": 28582, "y1": 21363, "x2": 27425, "y2": 22816, "repeats": 1},
+            "clean_zone",
+            ValueError("invalid zone"),
+            ServiceValidationError,
+            id="zone-validation",
+        ),
+        pytest.param(
+            SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+            {"x1": 28582, "y1": 21363, "x2": 27425, "y2": 22816, "repeats": 1},
+            "clean_zone",
+            RoborockException(),
+            HomeAssistantError,
+            id="zone-command",
+        ),
+    ],
+)
+async def test_q10_targeted_action_errors(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q10_vacuum_api: Mock,
+    service: str,
+    service_data: dict[str, Any],
+    api_method: str,
+    error: Exception,
+    expected_exception: type[Exception],
+) -> None:
+    """Test validation and command failures for Q10 targeted actions."""
+    getattr(q10_vacuum_api.vacuum, api_method).side_effect = error
+
+    with pytest.raises(expected_exception):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: Q10_ENTITY_ID, **service_data},
+            blocking=True,
+        )
 
 
 async def test_q10_registry_entries(
