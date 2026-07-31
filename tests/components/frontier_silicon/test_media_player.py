@@ -8,6 +8,8 @@ import pytest
 from homeassistant.components.frontier_silicon.media_player import AFSAPIDevice
 from homeassistant.exceptions import HomeAssistantError
 
+from tests.common import MockConfigEntry
+
 
 @pytest.mark.parametrize(
     ("error", "translation_key", "message"),
@@ -26,7 +28,8 @@ async def test_async_media_previous_track_maps_errors(
     """Test previous track maps API failures to Home Assistant errors."""
     fs_device = AsyncMock()
     fs_device.rewind.side_effect = error
-    entity = AFSAPIDevice("unique_id", "name", fs_device)
+    mock_config_entry = MockConfigEntry()
+    entity = AFSAPIDevice(mock_config_entry, fs_device)
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await entity.async_media_previous_track()
