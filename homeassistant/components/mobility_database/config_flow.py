@@ -100,13 +100,26 @@ def _coverage_center(handle: TransitFeedHandle) -> dict[str, float] | None:
     }
 
 
-def _needs_api_key(rt_feeds: list[GtfsRtFeed]) -> bool:
-    """Return whether any realtime sibling requires producer authentication."""
-    return any(
-        rt_feed.source_info is not None
-        and rt_feed.source_info.authentication_type in (1, 2)
-        for rt_feed in rt_feeds
-    )
+def _auth_info_url(rt_feeds: list[GtfsRtFeed], feed_id: str) -> str | None:
+    """Return where to get an API key, or None if no sibling needs one.
+
+    Falls back to the feed's Mobility Database page when the provider does
+    not publish authentication instructions.
+    """
+    for rt_feed in rt_feeds:
+        if (
+            rt_feed.source_info is not None
+            and rt_feed.source_info.authentication_type
+            in (
+                1,
+                2,
+            )
+        ):
+            return (
+                rt_feed.source_info.authentication_info_url
+                or f"{ACCOUNT_URL}/feeds/{feed_id}"
+            )
+    return None
 
 
 class MobilityDatabaseConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -122,7 +135,7 @@ class MobilityDatabaseConfigFlow(ConfigFlow, domain=DOMAIN):
         self._static_feed_id: str | None = None
         self._title: str | None = None
         self._api_key: str | None = None
-        self._needs_api_key = False
+        self._auth_url: str | None = None
         self._build_task: asyncio.Task[None] | None = None
         self._build_error: str | None = None
 
@@ -249,8 +262,8 @@ class MobilityDatabaseConfigFlow(ConfigFlow, domain=DOMAIN):
         self._title = static_feed.provider or feed_id
         if static_feed.feed_name:
             self._title = f"{self._title} {static_feed.feed_name}"
-        self._needs_api_key = _needs_api_key(rt_feeds)
-        if self._needs_api_key:
+        self._auth_url = _auth_info_url(rt_feeds, feed_id)
+        if self._auth_url is not None:
             return await self.async_step_api_key()
         return await self.async_step_build()
 
@@ -261,7 +274,12 @@ class MobilityDatabaseConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._api_key = user_input[CONF_API_KEY]
             return await self.async_step_build()
-        return self.async_show_form(step_id="api_key", data_schema=API_KEY_SCHEMA)
+        assert self._auth_url is not None
+        return self.async_show_form(
+            step_id="api_key",
+            data_schema=API_KEY_SCHEMA,
+            description_placeholders={"authentication_info_url": self._auth_url},
+        )
 
     async def async_step_build(
         self, user_input: dict[str, Any] | None = None
@@ -345,14 +363,19 @@ class MobilityDatabaseConfigFlow(ConfigFlow, domain=DOMAIN):
             entry.data[CONF_REFRESH_TOKEN],
             session=async_get_clientsession(self.hass),
         )
+        feed_id: str = entry.data[CONF_FEED_ID]
         try:
             await client.catalog.get_metadata()
+            rt_feeds = await client.catalog.get_gtfs_feed_gtfs_rt_feeds(feed_id)
         except MobilityDatabaseAuthenticationError:
             return await self.async_step_reauth_token()
         except MobilityDatabaseConnectionError:
             return self.async_abort(reason="cannot_connect")
         finally:
             await client.close()
+        self._auth_url = (
+            _auth_info_url(rt_feeds, feed_id) or f"{ACCOUNT_URL}/feeds/{feed_id}"
+        )
         return await self.async_step_reauth_api_key()
 
     async def async_step_reauth_token(
@@ -391,8 +414,11 @@ class MobilityDatabaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._get_reauth_entry(),
                 data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
             )
+        assert self._auth_url is not None
         return self.async_show_form(
-            step_id="reauth_api_key", data_schema=API_KEY_SCHEMA
+            step_id="reauth_api_key",
+            data_schema=API_KEY_SCHEMA,
+            description_placeholders={"authentication_info_url": self._auth_url},
         )
 
 

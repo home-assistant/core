@@ -24,7 +24,7 @@
         "data_description": {
           "api_key": "API key issued by the transit data producer"
         },
-        "description": "This feed's realtime data requires an API key issued by the transit provider."
+        "description": "This feed's realtime data requires an API key issued by the transit provider. See [the provider's instructions]({authentication_info_url}) for how to get one."
       },
       "reauth_api_key": {
         "data": {
@@ -33,7 +33,7 @@
         "data_description": {
           "api_key": "[%key:component::mobility_database::config::step::api_key::data_description::api_key%]"
         },
-        "description": "The transit provider rejected the configured API key. Enter a new one."
+        "description": "The transit provider rejected the configured API key. Enter a new one. See [the provider's instructions]({authentication_info_url}) for how to get one."
       },
       "reauth_token": {
         "data": {

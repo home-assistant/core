@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 from aiomobilitydatabase import (
     DataType,
     GtfsFeed,
+    GtfsRtFeed,
     Metadata,
     MobilityDatabaseAuthenticationError,
     MobilityDatabaseConnectionError,
@@ -51,14 +52,19 @@ from .conftest import (
 
 from tests.common import MockConfigEntry, async_capture_events
 
-AUTHED_RT_FEED = RT_FEED.__class__(
-    id=RT_FEED_ID,
-    data_type=DataType.GTFS_RT,
-    provider="LADOT",
-    entity_types=RT_FEED.entity_types,
-    feed_references=[FEED_ID],
-    source_info=SourceInfo(authentication_type=2),
-)
+
+def _authed_rt_feed(authentication_info_url: str | None) -> GtfsRtFeed:
+    return GtfsRtFeed(
+        id=RT_FEED_ID,
+        data_type=DataType.GTFS_RT,
+        provider="LADOT",
+        entity_types=RT_FEED.entity_types,
+        feed_references=[FEED_ID],
+        source_info=SourceInfo(
+            authentication_type=2,
+            authentication_info_url=authentication_info_url,
+        ),
+    )
 
 
 async def _advance_to_search(hass: HomeAssistant) -> str:
@@ -195,10 +201,30 @@ async def test_search_nothing_entered(
     assert result["errors"] == {"base": "search_or_select"}
 
 
-async def test_api_key_flow(hass: HomeAssistant, mock_feeds_client: MagicMock) -> None:
+@pytest.mark.parametrize(
+    ("info_url", "expected_url"),
+    [
+        pytest.param(
+            "https://developer.example.com/signup",
+            "https://developer.example.com/signup",
+            id="provider_url",
+        ),
+        pytest.param(
+            None,
+            f"https://mobilitydatabase.org/feeds/{FEED_ID}",
+            id="catalog_fallback",
+        ),
+    ],
+)
+async def test_api_key_flow(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    info_url: str | None,
+    expected_url: str,
+) -> None:
     """Test the conditional API key step for authenticated realtime feeds."""
     mock_feeds_client.catalog.get_gtfs_feed_gtfs_rt_feeds.return_value = [
-        AUTHED_RT_FEED
+        _authed_rt_feed(info_url)
     ]
     flow_id = await _advance_to_search(hass)
     await _search_and_get_options(hass, flow_id)
@@ -207,6 +233,9 @@ async def test_api_key_flow(hass: HomeAssistant, mock_feeds_client: MagicMock) -
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "api_key"
+    assert result["description_placeholders"] == {
+        "authentication_info_url": expected_url
+    }
 
     result = await hass.config_entries.flow.async_configure(
         flow_id, {CONF_API_KEY: "producer-key"}
@@ -285,6 +314,10 @@ async def test_reauth_api_key(
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_api_key"
+    assert (
+        result["description_placeholders"]["authentication_info_url"]
+        == f"https://mobilitydatabase.org/feeds/{FEED_ID}"
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: "new-key"}
