@@ -100,6 +100,7 @@ class _StoredColor(ExtraStoredData):
                 kind == KIND_WHITE
                 and (kelvin is None or not MIN_KELVIN <= kelvin <= MAX_KELVIN)
             )
+            or (kind == KIND_CHROMATIC and kelvin is not None)
             or (brightness is not None and not 0 <= brightness <= 255)
         ):
             return None
@@ -112,7 +113,19 @@ class ColorEntity(RestoreEntity):
     """Represent a stored color value with derived representations."""
 
     _attr_should_poll = False
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
+    # Derived views of the canonical value; recording them just duplicates
+    # the state string in the database.
+    _unrecorded_attributes = frozenset(
+        {
+            ATTR_COLOR_PARAMS,
+            ATTR_HEX_COLOR,
+            ATTR_HS_COLOR,
+            ATTR_RGB_COLOR,
+            ATTR_SOURCE_HEX,
+            ATTR_XY_COLOR,
+        }
+    )
 
     def __init__(self, entry: ColorConfigEntry) -> None:
         """Initialize the color entity from its config entry."""

@@ -4,6 +4,8 @@ These are pure-Python tests (no HA event loop) so they're cheap to run and
 catch the bulk of normalization regressions before any integration tests.
 """
 
+import math
+
 import pytest
 
 from homeassistant.components.color.color_math import (
@@ -171,6 +173,10 @@ def test_derive_hs_in_expected_ranges() -> None:
         pytest.param({FIELD_XY: [0.7, 0.7]}, id="xy-outside-triangle"),
         pytest.param({FIELD_KELVIN: "warmish"}, id="kelvin-not-an-int"),
         pytest.param({FIELD_KELVIN: None}, id="kelvin-none-explicit"),
+        pytest.param({FIELD_KELVIN: math.inf}, id="kelvin-infinite"),
+        pytest.param({FIELD_RGB: ["abc", 0, 0]}, id="rgb-non-numeric"),
+        pytest.param({FIELD_HS: ["x", 1]}, id="hs-non-numeric"),
+        pytest.param({FIELD_XY: ["x", 0.3]}, id="xy-non-numeric"),
     ],
 )
 def test_normalize_rejects_malformed_shapes(inputs: dict) -> None:

@@ -1,5 +1,7 @@
 """Service-call tests for the Color helper."""
 
+import math
+
 import pytest
 import voluptuous as vol
 
@@ -229,3 +231,37 @@ async def test_set_color_rejects_pure_black(hass: HomeAssistant, payload: dict) 
             blocking=True,
         )
     assert hass.states.get(ENTITY_ID).state == before
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param({"color_temp_kelvin": math.inf}, id="kelvin-infinite"),
+        pytest.param({"brightness": math.inf}, id="brightness-infinite"),
+        pytest.param({"rgb_color": [math.inf, 0, 0]}, id="rgb-infinite"),
+    ],
+)
+async def test_set_color_rejects_infinite_numbers(
+    hass: HomeAssistant, payload: dict
+) -> None:
+    """Infinite numbers fail schema validation instead of raising OverflowError."""
+    await _create_entry(hass)
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_COLOR,
+            {ATTR_ENTITY_ID: ENTITY_ID, **payload},
+            blocking=True,
+        )
+
+
+async def test_set_brightness_rejects_infinite(hass: HomeAssistant) -> None:
+    """Infinite brightness fails schema validation for set_brightness."""
+    await _create_entry(hass)
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_BRIGHTNESS,
+            {ATTR_ENTITY_ID: ENTITY_ID, "brightness": math.inf},
+            blocking=True,
+        )

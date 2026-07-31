@@ -43,6 +43,14 @@ DATA_COMPONENT: HassKey[EntityComponent[ColorEntity]] = HassKey(DOMAIN)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
+def _finite_int(value: Any) -> int:
+    """Coerce to int, mapping non-finite floats to vol.Invalid, not OverflowError."""
+    try:
+        return int(value)
+    except (TypeError, ValueError, OverflowError) as err:
+        raise vol.Invalid(f"expected an integer, got {value!r}") from err
+
+
 def _exactly_one_color_shape(data: dict[str, Any]) -> dict[str, Any]:
     """Ensure only one of the mutually exclusive color shapes is present."""
     present = sorted(field for field in COLOR_SHAPE_FIELDS if field in data)
@@ -58,7 +66,7 @@ SET_COLOR_SCHEMA = vol.All(
             vol.Optional(FIELD_RGB): vol.All(
                 cv.ensure_list,
                 vol.Length(min=3, max=3),
-                [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))],
+                [vol.All(_finite_int, vol.Range(min=0, max=255))],
             ),
             vol.Optional(FIELD_HS): vol.All(
                 cv.ensure_list,
@@ -71,11 +79,11 @@ SET_COLOR_SCHEMA = vol.All(
                 [vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0))],
             ),
             vol.Optional(FIELD_KELVIN): vol.All(
-                vol.Coerce(int), vol.Range(min=MIN_KELVIN, max=MAX_KELVIN)
+                _finite_int, vol.Range(min=MIN_KELVIN, max=MAX_KELVIN)
             ),
             vol.Optional(FIELD_COLOR_NAME): cv.string,
             vol.Optional(FIELD_BRIGHTNESS): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=255)
+                _finite_int, vol.Range(min=0, max=255)
             ),
         }
     ),
@@ -84,7 +92,7 @@ SET_COLOR_SCHEMA = vol.All(
 )
 
 SET_BRIGHTNESS_SCHEMA: VolDictType = {
-    vol.Required(FIELD_BRIGHTNESS): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
+    vol.Required(FIELD_BRIGHTNESS): vol.All(_finite_int, vol.Range(min=0, max=255)),
 }
 
 

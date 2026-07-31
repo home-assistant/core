@@ -59,7 +59,12 @@ def _validate_rgb(rgb: Any) -> tuple[int, int, int]:
     """Validate an RGB triplet."""
     if not isinstance(rgb, (list, tuple)) or len(rgb) != 3:
         raise ColorInputError(f"rgb_color must be a 3-element sequence, got {rgb!r}")
-    r, g, b = (int(v) for v in rgb)
+    try:
+        r, g, b = (int(v) for v in rgb)
+    except (TypeError, ValueError) as err:
+        raise ColorInputError(
+            f"rgb_color components must be numbers, got {rgb!r}"
+        ) from err
     if not all(0 <= v <= 255 for v in (r, g, b)):
         raise ColorInputError("rgb_color components must be 0-255")
     return r, g, b
@@ -69,7 +74,12 @@ def _validate_hs(hs: Any) -> tuple[float, float]:
     """Validate a hue/saturation pair."""
     if not isinstance(hs, (list, tuple)) or len(hs) != 2:
         raise ColorInputError(f"hs_color must be a 2-element sequence, got {hs!r}")
-    hue, sat = float(hs[0]), float(hs[1])
+    try:
+        hue, sat = float(hs[0]), float(hs[1])
+    except (TypeError, ValueError) as err:
+        raise ColorInputError(
+            f"hs_color components must be numbers, got {hs!r}"
+        ) from err
     if not 0 <= hue <= 360:
         raise ColorInputError("hs_color hue must be 0-360")
     if not 0 <= sat <= 100:
@@ -90,7 +100,12 @@ def _validate_xy(xy: Any) -> tuple[float, float]:
     """Validate a CIE xy chromaticity pair."""
     if not isinstance(xy, (list, tuple)) or len(xy) != 2:
         raise ColorInputError(f"xy_color must be a 2-element sequence, got {xy!r}")
-    x, y = float(xy[0]), float(xy[1])
+    try:
+        x, y = float(xy[0]), float(xy[1])
+    except (TypeError, ValueError) as err:
+        raise ColorInputError(
+            f"xy_color components must be numbers, got {xy!r}"
+        ) from err
     if not valid_xy(x, y):
         raise ColorInputError("xy_color must be inside the CIE chromaticity triangle")
     return x, y
@@ -100,7 +115,7 @@ def _validate_kelvin(kelvin: Any) -> int:
     """Validate a color temperature in Kelvin."""
     try:
         value = int(kelvin)
-    except (TypeError, ValueError) as err:
+    except (TypeError, ValueError, OverflowError) as err:
         raise ColorInputError(
             f"color_temp_kelvin must be an int, got {kelvin!r}"
         ) from err

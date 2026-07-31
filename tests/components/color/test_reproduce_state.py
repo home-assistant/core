@@ -1,10 +1,13 @@
 """Scene reproduce_state tests for the Color helper."""
 
+import pytest
+
 from homeassistant.components.color.const import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_KIND,
     ATTR_RGB_COLOR,
+    ATTR_SOURCE_HEX,
     ATTR_XY_COLOR,
     CONF_INITIAL_COLOR,
     CONF_INITIAL_MODE,
@@ -99,3 +102,96 @@ async def test_reproduce_chromatic_prefers_xy_attribute(
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_XY_COLOR] == [0.1234, 0.4567]
+
+
+async def test_reproduce_corrupt_xy_falls_back_to_hex(hass: HomeAssistant) -> None:
+    """A snapshot xy outside the CIE triangle falls back to the hex state."""
+    await _setup_entity(hass)
+    snapshot = State(
+        ENTITY_ID,
+        "#00FF00",
+        {ATTR_KIND: KIND_CHROMATIC, ATTR_XY_COLOR: [0.9, 0.9]},
+    )
+    await async_reproduce_states(hass, [snapshot])
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    _r, g, _b = state.attributes[ATTR_RGB_COLOR]
+    assert g > 200
+
+
+async def test_reproduce_preserves_source_hex(hass: HomeAssistant) -> None:
+    """A snapshot whose source hex matches the state restores via hex."""
+    await _setup_entity(hass)
+    await hass.services.async_call(
+        DOMAIN,
+        "set_color",
+        {"entity_id": ENTITY_ID, "hex_value": "#37A1FB"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    snapshot_state = hass.states.get(ENTITY_ID)
+    snapshot = State(ENTITY_ID, snapshot_state.state, dict(snapshot_state.attributes))
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_color",
+        {"entity_id": ENTITY_ID, "hex_value": "#FF0000"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    await async_reproduce_states(hass, [snapshot])
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == snapshot.state
+    assert state.attributes[ATTR_SOURCE_HEX] == snapshot.attributes[ATTR_SOURCE_HEX]
+
+
+@pytest.mark.parametrize(
+    ("snapshot_attrs", "expected_source_hex"),
+    [
+        pytest.param(
+            {ATTR_KIND: KIND_CHROMATIC, ATTR_XY_COLOR: ["x", "y"]},
+            "#00FF00",
+            id="non-numeric-xy-falls-back-to-state",
+        ),
+        pytest.param(
+            {ATTR_KIND: KIND_CHROMATIC, ATTR_SOURCE_HEX: "#000000"},
+            "#00FF00",
+            id="black-source-hex-falls-back-to-state",
+        ),
+        pytest.param(
+            {ATTR_KIND: KIND_CHROMATIC, ATTR_SOURCE_HEX: "#00FF00"},
+            "#00FF00",
+            id="source-hex-without-xy-restores-source",
+        ),
+        pytest.param(
+            {
+                ATTR_KIND: KIND_CHROMATIC,
+                ATTR_SOURCE_HEX: "#00FF00",
+                ATTR_XY_COLOR: ["x", "y"],
+            },
+            "#00FF00",
+            id="source-hex-with-corrupt-xy-falls-back-to-state",
+        ),
+        pytest.param(
+            {ATTR_KIND: KIND_WHITE},
+            "#00FF00",
+            id="white-without-kelvin-restores-as-chromatic",
+        ),
+    ],
+)
+async def test_reproduce_defective_snapshots(
+    hass: HomeAssistant,
+    snapshot_attrs: dict,
+    expected_source_hex: str | None,
+) -> None:
+    """Defective snapshot attributes fall back to the hex state string."""
+    await _setup_entity(hass)
+    snapshot = State(ENTITY_ID, "#00FF00", snapshot_attrs)
+    await async_reproduce_states(hass, [snapshot])
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    _r, g, _b = state.attributes[ATTR_RGB_COLOR]
+    assert g > 200
+    assert state.attributes[ATTR_SOURCE_HEX] == expected_source_hex
