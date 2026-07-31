@@ -15,7 +15,6 @@ class MikrotikBaseEntity(CoordinatorEntity[MikrotikDataUpdateCoordinator]):
     """Base class for all Mikrotik entities."""
 
     _attr_has_entity_name = True
-    entity_description: EntityDescription
 
     def __init__(
         self,

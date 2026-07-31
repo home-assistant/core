@@ -57,8 +57,6 @@ async def async_setup_entry(
 class MikrotikButtonEntity(MikrotikEntity, ButtonEntity):
     """Button entity for Mikrotik."""
 
-    entity_description: ButtonEntityDescription
-
     @override
     async def async_press(self) -> None:
         """Handle button press action."""
