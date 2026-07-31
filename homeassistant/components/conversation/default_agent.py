@@ -805,6 +805,10 @@ class DefaultAgent(ConversationEntity):
                 else:
                     num_unmatched_entities += 1
 
+            # Literal text matched is the dominant signal
+            same_text_matched = (maybe_result is not None) and (
+                result.text_chunks_matched == maybe_result.text_chunks_matched
+            )
             if (
                 (maybe_result is None)  # first result
                 or (
@@ -813,22 +817,25 @@ class DefaultAgent(ConversationEntity):
                 )
                 or (
                     # More entities matched
-                    num_matched_entities > best_num_matched_entities
+                    same_text_matched
+                    and (num_matched_entities > best_num_matched_entities)
                 )
                 or (
                     # Fewer unmatched entities
-                    (num_matched_entities == best_num_matched_entities)
+                    same_text_matched
+                    and (num_matched_entities == best_num_matched_entities)
                     and (num_unmatched_entities < best_num_unmatched_entities)
                 )
                 or (
                     # Prefer unmatched ranges
-                    (num_matched_entities == best_num_matched_entities)
+                    same_text_matched
+                    and (num_matched_entities == best_num_matched_entities)
                     and (num_unmatched_entities == best_num_unmatched_entities)
                     and (num_unmatched_ranges > best_num_unmatched_ranges)
                 )
                 or (
                     # Prefer match failures with entities
-                    (result.text_chunks_matched == maybe_result.text_chunks_matched)
+                    same_text_matched
                     and (num_unmatched_entities == best_num_unmatched_entities)
                     and (num_unmatched_ranges == best_num_unmatched_ranges)
                     and (

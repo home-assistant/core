@@ -286,7 +286,10 @@ async def register_callbacks(
         return async_camera_wake
 
     host.api.baichuan.register_callback(
-        "privacy_mode_change", async_privacy_mode_change, 623
+        "privacy_mode_change_623", async_privacy_mode_change, 623
+    )
+    host.api.baichuan.register_callback(
+        "privacy_mode_change_574", async_privacy_mode_change, 574
     )
     for channel in host.api.channels:
         if host.api.supported(channel, "battery"):
@@ -306,7 +309,8 @@ async def async_unload_entry(
 
     await host.stop()
 
-    host.api.baichuan.unregister_callback("privacy_mode_change")
+    host.api.baichuan.unregister_callback("privacy_mode_change_623")
+    host.api.baichuan.unregister_callback("privacy_mode_change_574")
     for channel in host.api.channels:
         if host.api.supported(channel, "battery"):
             host.api.baichuan.unregister_callback(f"camera_{channel}_wake")
@@ -489,7 +493,9 @@ def migrate_entity_ids(
                 new_device_id,
             )
             new_identifiers = {(DOMAIN, new_device_id)}
-            existing_device = device_reg.async_get_device(identifiers=new_identifiers)
+            existing_device = device_reg.async_get_device_by_identifier(
+                (DOMAIN, new_device_id), config_entry_id
+            )
             if existing_device is None:
                 device_reg.async_update_device(
                     device.id, new_identifiers=new_identifiers
@@ -529,6 +535,33 @@ def migrate_entity_ids(
                 )
                 entity_reg.async_remove(entity.entity_id)
                 continue
+
+        # Can be removed in HA 2027.2
+        if (
+            host.api.is_dual_lens
+            and host.api.supported(1, "zoom_basic")
+            and not host.api.supported(0, "zoom_basic")
+        ):
+            id_parts = entity.unique_id.split("_", 2)
+            if len(id_parts) < 3:
+                continue
+            if id_parts[1] == "0" and id_parts[2] in {
+                "zoom",
+                "ptz_zoom_in",
+                "ptz_zoom_out",
+            }:
+                new_id = f"{host.unique_id}_1_{id_parts[2]}"
+                _LOGGER.debug(
+                    "Updating Reolink entity unique_id from %s to %s",
+                    entity.unique_id,
+                    new_id,
+                )
+                existing_entity = entity_reg.async_get_entity_id(
+                    entity.domain, entity.platform, new_id
+                )
+                if existing_entity is not None:
+                    entity_reg.async_remove(existing_entity)
+                entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
 
         if entity.device_id in ch_device_ids:
             ch = ch_device_ids[entity.device_id]

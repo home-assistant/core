@@ -23,7 +23,6 @@ from homematicip.device import (
     LightSensor,
     MotionDetectorIndoor,
     MotionDetectorOutdoor,
-    MotionDetectorPushButton,
     PassageDetector,
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
@@ -50,14 +49,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_GRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     DEGREE,
     LIGHT_LUX,
-    PERCENTAGE,
+    UnitOfDensity,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfPrecipitationDepth,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
@@ -84,7 +82,7 @@ SMOKE_DETECTOR_SENSORS: tuple[HmipSmokeDetectorSensorDescription, ...] = (
     HmipSmokeDetectorSensorDescription(
         key="dirt_level",
         translation_key="smoke_detector_dirt_level",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         channel_field="dirtLevel",
@@ -216,9 +214,6 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
             HomematicipIlluminanceSensor(hap, device),
         ],
         MotionDetectorOutdoor: lambda device: [
-            HomematicipIlluminanceSensor(hap, device),
-        ],
-        MotionDetectorPushButton: lambda device: [
             HomematicipIlluminanceSensor(hap, device),
         ],
         PresenceDetectorIndoor: lambda device: [
@@ -532,7 +527,7 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
 ):
     """Representation of the HomematicIP floor terminal block."""
 
-    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
@@ -581,7 +576,7 @@ class HomematicipAccesspointDutyCycle(HomematicipGenericEntity, SensorEntity):
     """Representation of then HomeMaticIP access point."""
 
     _attr_icon = "mdi:access-point-network"
-    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
@@ -600,7 +595,7 @@ class HomematicipAccesspointDutyCycle(HomematicipGenericEntity, SensorEntity):
 class HomematicipHeatingThermostat(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP heating thermostat."""
 
-    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize heating thermostat device."""
@@ -629,7 +624,7 @@ class HomematicipHumiditySensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP humidity sensor."""
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
-    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
@@ -680,9 +675,9 @@ class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP absolute humidity sensor."""
 
     _attr_device_class = SensorDeviceClass.ABSOLUTE_HUMIDITY
-    _attr_native_unit_of_measurement = CONCENTRATION_GRAMS_PER_CUBIC_METER
+    _attr_native_unit_of_measurement = UnitOfDensity.GRAMS_PER_CUBIC_METER
     _attr_suggested_display_precision = 1
-    _attr_suggested_unit_of_measurement = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
+    _attr_suggested_unit_of_measurement = UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
@@ -1143,7 +1138,7 @@ class HomematicipSoilMoistureSensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP soil moisture sensor."""
 
     _attr_device_class = SensorDeviceClass.MOISTURE
-    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:

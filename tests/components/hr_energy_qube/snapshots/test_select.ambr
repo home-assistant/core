@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'block',
         'plus',
@@ -46,8 +46,8 @@
 # name: test_entities[select.qube_heat_pump_smart_grid_ready_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump Smart grid ready mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Smart grid ready mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'block',
         'plus',

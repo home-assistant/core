@@ -49,6 +49,55 @@
       "camera_sd": {
         "name": "Live view SD"
       }
+    },
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "offline": "[%key:common::state::disconnected%]",
+          "online": "[%key:common::state::connected%]",
+          "sleep": "[%key:common::state::standby%]",
+          "upgrading": "Upgrading"
+        }
+      },
+      "storage_used": {
+        "name": "Storage used"
+      },
+      "switch_cnt": {
+        "name": "Cycles today"
+      },
+      "use_electricity": {
+        "name": "Energy consumption"
+      },
+      "use_time": {
+        "name": "Usage duration"
+      }
+    },
+    "switch": {
+      "ab_alarm_sound": {
+        "name": "Abnormal sound alarm"
+      },
+      "audio_encode_control": {
+        "name": "Audio recording"
+      },
+      "close_camera": {
+        "name": "Privacy mode"
+      },
+      "header_detect": {
+        "name": "Human detection"
+      },
+      "light": {
+        "name": "Indicator light"
+      },
+      "motion_detect": {
+        "name": "Motion detection"
+      },
+      "switch": {
+        "name": "Plug switch"
+      },
+      "white_light": {
+        "name": "White light"
+      }
     }
   },
   "selector": {

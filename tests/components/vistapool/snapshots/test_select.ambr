@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',
@@ -45,8 +45,8 @@
 # name: test_all_entities[select.my_pool_filtration_timer_speed_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Filtration timer speed 1',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration timer speed 1',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',
@@ -67,7 +67,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',
@@ -106,8 +106,8 @@
 # name: test_all_entities[select.my_pool_filtration_timer_speed_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Filtration timer speed 2',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration timer speed 2',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',
@@ -128,7 +128,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',
@@ -167,8 +167,8 @@
 # name: test_all_entities[select.my_pool_filtration_timer_speed_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Filtration timer speed 3',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration timer speed 3',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',
@@ -189,7 +189,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'manual',
         'auto',
         'heat',
@@ -230,8 +230,8 @@
 # name: test_all_entities[select.my_pool_pump_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Pump mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Pump mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'manual',
         'auto',
         'heat',
@@ -254,7 +254,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',
@@ -293,8 +293,8 @@
 # name: test_all_entities[select.my_pool_pump_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Pump speed',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Pump speed',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',

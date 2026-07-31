@@ -2,13 +2,12 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.unnecessary_format_mac import (
     UnnecessaryFormatMacChecker,
 )
 import pytest
 
-from . import assert_no_messages
+from . import assert_no_messages, walk_checker
 
 _IMPORTS = """\
 from homeassistant.helpers.device_registry import (
@@ -95,11 +94,8 @@ def test_no_warning(
     """Test cases that should not trigger a warning."""
     root_node = astroid.parse(code, "homeassistant.components.test_integration.sensor")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(format_mac_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, format_mac_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -152,9 +148,7 @@ def test_format_mac_flagged(
     """Warning when format_mac is used in connections= keyword argument."""
     root_node = astroid.parse(code, "homeassistant.components.test_integration.sensor")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(format_mac_checker)
-    walker.walk(root_node)
+    walk_checker(linter, format_mac_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -174,8 +168,5 @@ device = DeviceInfo(
 """
     root_node = astroid.parse(code, "some_other.module")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(format_mac_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, format_mac_checker, root_node)
