@@ -83,22 +83,18 @@ API_KEY_SCHEMA = vol.Schema(
 
 
 def _coverage_center(handle: TransitFeedHandle) -> dict[str, float] | None:
-    """Return the center of the feed's coverage area for the map picker."""
-    if (dataset := handle.static_dataset) is None or (
-        bounding_box := dataset.bounding_box
-    ) is None:
-        return None
-    if (
-        bounding_box.minimum_latitude is None
-        or bounding_box.maximum_latitude is None
-        or bounding_box.minimum_longitude is None
-        or bounding_box.maximum_longitude is None
-    ):
+    """Return the center of the feed's stops for the map picker.
+
+    Computed from the indexed stops rather than catalog metadata: the
+    catalog's dataset bounding box is unpopulated for many feeds.
+    """
+    latitudes = [stop.latitude for stop in handle.stops if stop.latitude is not None]
+    longitudes = [stop.longitude for stop in handle.stops if stop.longitude is not None]
+    if not latitudes or not longitudes:
         return None
     return {
-        "latitude": (bounding_box.minimum_latitude + bounding_box.maximum_latitude) / 2,
-        "longitude": (bounding_box.minimum_longitude + bounding_box.maximum_longitude)
-        / 2,
+        "latitude": (min(latitudes) + max(latitudes)) / 2,
+        "longitude": (min(longitudes) + max(longitudes)) / 2,
         "radius": 1000,
     }
 
@@ -579,7 +575,8 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         assert self._stop_id is not None
         assert self._stop_name is not None
         if self.source == SOURCE_RECONFIGURE:
-            return self.async_update_reload_and_abort(
+            # The entry's update listener reloads; must not reload here too.
+            return self.async_update_and_abort(
                 self._get_entry(),
                 self._get_reconfigure_subentry(),
                 data_updates={

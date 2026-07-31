@@ -4,10 +4,8 @@ import asyncio
 from unittest.mock import MagicMock
 
 from aiomobilitydatabase import (
-    BoundingBox,
     DataType,
     Feed,
-    LatestDataset,
     Metadata,
     MobilityDatabaseAuthenticationError,
     MobilityDatabaseConnectionError,
@@ -15,7 +13,11 @@ from aiomobilitydatabase import (
     SearchResults,
     SourceInfo,
 )
-from aiomobilitydatabase.feeds import StaticBuildProgress, StaticDataUnavailableError
+from aiomobilitydatabase.feeds import (
+    StaticBuildProgress,
+    StaticDataUnavailableError,
+    Stop,
+)
 import pytest
 
 from homeassistant.components.mobility_database.const import (
@@ -399,6 +401,11 @@ async def test_add_stop_via_zone(
     }
     assert subentry.title == "2nd & Spring"
 
+    # Creating a subentry reloads the entry so its sensors appear immediately.
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.2nd_spring_next_departure") is not None
+    assert hass.states.get("sensor.2nd_spring_following_departure") is not None
+
 
 async def test_add_stop_via_location(
     hass: HomeAssistant,
@@ -716,31 +723,51 @@ async def test_add_stop_entry_not_loaded(
     assert result["reason"] == "not_ready"
 
 
-@pytest.mark.parametrize(
-    "dataset",
-    [
-        pytest.param(LatestDataset(id="d", hosted_url="https://e.com/z"), id="no_bbox"),
-        pytest.param(
-            LatestDataset(
-                id="d", hosted_url="https://e.com/z", bounding_box=BoundingBox()
-            ),
-            id="empty_bbox",
-        ),
-    ],
-)
+def _suggested_location(result: dict) -> dict | None:
+    """Extract the map picker's suggested value from the form schema."""
+    for key in result["data_schema"].schema:
+        if str(key) == "location":
+            return (key.description or {}).get("suggested_value")
+    return None
+
+
+async def test_add_stop_map_centered_on_coverage(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the map picker is pre-centered on the feed's stops."""
+    await setup_integration(hass, mock_config_entry)
+    result = await _start_stop_flow(hass, mock_config_entry)
+    assert _suggested_location(result) == {
+        "latitude": pytest.approx(34.055),
+        "longitude": pytest.approx(-118.245),
+        "radius": 1000,
+    }
+
+
 async def test_add_stop_without_coverage_center(
     hass: HomeAssistant,
     mock_feeds_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     mock_handle: MagicMock,
-    dataset: LatestDataset,
 ) -> None:
-    """Test the area picker still works without dataset bounding box data."""
-    mock_handle.static_dataset = dataset
+    """Test the area picker still works when stops lack coordinates."""
+    mock_handle.stops = [
+        Stop(
+            id="S9",
+            name="No coords",
+            latitude=None,
+            longitude=None,
+            parent_station=None,
+            location_type=0,
+        )
+    ]
     await setup_integration(hass, mock_config_entry)
     result = await _start_stop_flow(hass, mock_config_entry)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert _suggested_location(result) is None
 
 
 @pytest.mark.parametrize(

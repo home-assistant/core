@@ -43,6 +43,8 @@ async def async_setup_entry(
     # No entity listens to the static coordinator, and an unlistened
     # coordinator never schedules its periodic refresh.
     entry.async_on_unload(static_coordinator.async_add_listener(lambda: None))
+    # Subentry changes only fire update listeners; reload to (un)load sensors.
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     # The first static refresh may be a full download + index build on a cold
     # cache; entities stay unavailable until it lands rather than blocking
     # setup or raising ConfigEntryNotReady.
@@ -53,6 +55,13 @@ async def async_setup_entry(
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def _async_update_listener(
+    hass: HomeAssistant, entry: MobilityDatabaseConfigEntry
+) -> None:
+    """Reload the entry when its data or subentries change."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def _async_initial_refresh(
