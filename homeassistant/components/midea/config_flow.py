@@ -367,6 +367,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         keys = await self.cloud.get_cloud_keys(appliance_id)
         if default_key:
             keys = {**keys, **(await MideaCloud.get_default_keys())}
+        error = "connect_error"
         # use token/key to connect device and confirm token result
         for k, value in keys.items():
             dm = await self.hass.async_add_executor_job(
@@ -388,6 +389,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     "No device implementation for device_type %s",
                     device.get(CONF_TYPE),
                 )
+                error = "no_device_implementation"
                 break
             connected = await self.hass.async_add_executor_job(_connect_and_close, dm)
             if connected:
@@ -400,7 +402,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         LOGGER.debug(
             "Unable to connect device with all the token/key",
         )
-        return {"error": "connect_error"}
+        return {"error": error}
 
     async def async_step_auto(
         self,
