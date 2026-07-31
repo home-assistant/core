@@ -40,6 +40,9 @@ async def async_setup_entry(
         static_coordinator=static_coordinator,
         arrivals_coordinator=arrivals_coordinator,
     )
+    # No entity listens to the static coordinator, and an unlistened
+    # coordinator never schedules its periodic refresh.
+    entry.async_on_unload(static_coordinator.async_add_listener(lambda: None))
     # The first static refresh may be a full download + index build on a cold
     # cache; entities stay unavailable until it lands rather than blocking
     # setup or raising ConfigEntryNotReady.

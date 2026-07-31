@@ -82,6 +82,27 @@ API_KEY_SCHEMA = vol.Schema(
 )
 
 
+def _coverage_center(handle: TransitFeedHandle) -> dict[str, float] | None:
+    """Return the center of the feed's coverage area for the map picker."""
+    if (dataset := handle.static_dataset) is None or (
+        bounding_box := dataset.bounding_box
+    ) is None:
+        return None
+    if (
+        bounding_box.minimum_latitude is None
+        or bounding_box.maximum_latitude is None
+        or bounding_box.minimum_longitude is None
+        or bounding_box.maximum_longitude is None
+    ):
+        return None
+    return {
+        "latitude": (bounding_box.minimum_latitude + bounding_box.maximum_latitude) / 2,
+        "longitude": (bounding_box.minimum_longitude + bounding_box.maximum_longitude)
+        / 2,
+        "radius": 1000,
+    }
+
+
 def _needs_api_key(rt_feeds: list[GtfsRtFeed]) -> bool:
     """Return whether any realtime sibling requires producer authentication."""
     return any(
@@ -433,20 +454,21 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
                     }
                     return await self.async_step_stop()
                 errors["base"] = "no_stops_in_zone"
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_ZONE): EntitySelector(
-                        EntitySelectorConfig(domain="zone")
-                    ),
-                    vol.Optional(CONF_LOCATION): LocationSelector(
-                        LocationSelectorConfig(radius=True)
-                    ),
-                }
-            ),
-            errors=errors,
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_ZONE): EntitySelector(
+                    EntitySelectorConfig(domain="zone")
+                ),
+                vol.Optional(CONF_LOCATION): LocationSelector(
+                    LocationSelectorConfig(radius=True)
+                ),
+            }
         )
+        if (center := _coverage_center(handle)) is not None:
+            schema = self.add_suggested_values_to_schema(
+                schema, {CONF_LOCATION: center}
+            )
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_stop(
         self, user_input: dict[str, Any] | None = None

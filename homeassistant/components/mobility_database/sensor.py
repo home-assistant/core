@@ -16,14 +16,12 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_FEED_ID,
-    CONF_STOP_ID,
-    CONF_STOP_NAME,
-    DOMAIN,
-    SUBENTRY_TYPE_STOP,
+from .const import CONF_FEED_ID, CONF_STOP_ID, CONF_STOP_NAME, DOMAIN
+from .coordinator import (
+    ArrivalsCoordinator,
+    MobilityDatabaseConfigEntry,
+    stop_subentries,
 )
-from .coordinator import ArrivalsCoordinator, MobilityDatabaseConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -35,9 +33,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up departure sensors for each stop subentry."""
     coordinator = entry.runtime_data.arrivals_coordinator
-    for subentry_id, subentry in entry.subentries.items():
-        if subentry.subentry_type != SUBENTRY_TYPE_STOP:
-            continue
+    for subentry_id, subentry in stop_subentries(entry).items():
         async_add_entities(
             [
                 MobilityDatabaseDepartureSensor(coordinator, subentry, index)
