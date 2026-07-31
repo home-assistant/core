@@ -40,17 +40,20 @@ async def test_rain_delay_number(
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_status",
             return_value=status_data,
-            new_callable=AsyncMock, create=True,
+            new_callable=AsyncMock,
+            create=True,
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_rain_delay",
             return_value={"days_remaining": 3},
-            new_callable=AsyncMock, create=True,
+            new_callable=AsyncMock,
+            create=True,
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_schedules",
             return_value=[],
-            new_callable=AsyncMock, create=True,
+            new_callable=AsyncMock,
+            create=True,
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -64,7 +67,8 @@ async def test_rain_delay_number(
 
         with patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.set_rain_delay",
-            new_callable=AsyncMock, create=True,
+            new_callable=AsyncMock,
+            create=True,
         ) as mock_set_rain_delay:
             await hass.services.async_call(
                 NUMBER_DOMAIN,
@@ -94,17 +98,20 @@ async def test_rain_delay_number_connection_error(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_status",
             return_value=status_data,
-            new_callable=AsyncMock, create=True,
+            new_callable=AsyncMock,
+            create=True,
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_rain_delay",
             return_value={"days_remaining": 0},
-            new_callable=AsyncMock, create=True,
+            new_callable=AsyncMock,
+            create=True,
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_schedules",
             return_value=[],
-            new_callable=AsyncMock, create=True,
+            new_callable=AsyncMock,
+            create=True,
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -116,7 +123,8 @@ async def test_rain_delay_number_connection_error(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.set_rain_delay",
             side_effect=IntelliDwellConnectionError("timeout"),
-            new_callable=AsyncMock, create=True,
+            new_callable=AsyncMock,
+            create=True,
         ),
         pytest.raises(HomeAssistantError, match="Error setting rain delay to 4 days"),
     ):
@@ -147,17 +155,20 @@ async def test_rain_delay_number_invalid_value(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_status",
             return_value=status_data,
-            new_callable=AsyncMock, create=True,
+            new_callable=AsyncMock,
+            create=True,
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_rain_delay",
             return_value={"days_remaining": 0},
-            new_callable=AsyncMock, create=True,
+            new_callable=AsyncMock,
+            create=True,
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_schedules",
             return_value=[],
-            new_callable=AsyncMock, create=True,
+            new_callable=AsyncMock,
+            create=True,
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
