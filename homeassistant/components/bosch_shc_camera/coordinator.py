@@ -1114,7 +1114,7 @@ class BoschCameraCoordinator(
             # _person bus events never fire, with no error shown otherwise.
             try:
                 self._refresh_notifications_disabled_issues()
-            except Exception:  # noqa: BLE001 — explicitly non-fatal per log message; must not abort the coordinator tick
+            except Exception:
                 _LOGGER.debug(
                     "Notifications-disabled Repairs check failed (non-fatal)",
                     exc_info=True,
@@ -1124,7 +1124,7 @@ class BoschCameraCoordinator(
             # camera — see _refresh_firmware_update_issues docstring.
             try:
                 self._refresh_firmware_update_issues()
-            except Exception:  # noqa: BLE001 — explicitly non-fatal per log message; must not abort the coordinator tick
+            except Exception:
                 _LOGGER.debug(
                     "Firmware-update Repairs check failed (non-fatal)",
                     exc_info=True,
