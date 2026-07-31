@@ -35,7 +35,6 @@ class WiLightDevice(Entity):
             model=api_device.model,
             manufacturer="WiLight",
             sw_version=api_device.swversion,
-            via_device=(DOMAIN, self._device_id),
         )
 
     @property
