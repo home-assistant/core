@@ -7,6 +7,7 @@ from typing import Any, override
 from pyinsteon import devices
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -88,6 +89,8 @@ class InsteonEntity(Entity):
     @override
     def device_info(self) -> DeviceInfo:
         """Return device information."""
+        config_entry = self.platform.config_entry
+        assert config_entry
         return DeviceInfo(
             identifiers={(DOMAIN, str(self._insteon_device.address))},
             manufacturer="SmartLabs, Inc",
@@ -100,7 +103,11 @@ class InsteonEntity(Entity):
                 f"{self._insteon_device.firmware:02x} Engine Version:"
                 f" {self._insteon_device.engine_version}"
             ),
-            via_device=(DOMAIN, str(devices.modem.address)),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, str(devices.modem.address)),
+                config_entry_id=config_entry.entry_id,
+            ),
             configuration_url=f"homeassistant://insteon/device/config/{self._insteon_device.id}",
         )
 

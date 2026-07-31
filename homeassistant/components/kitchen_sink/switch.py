@@ -5,6 +5,7 @@ from typing import Any, override
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -27,6 +28,10 @@ async def async_setup_entry(
         "2_ch_power_strip",
     )
 
+    via_device_id = dr.async_get_device_id_by_identifier(
+        hass, (DOMAIN, "2_ch_power_strip"), config_entry_id=config_entry.entry_id
+    )
+
     async_add_entities(
         [
             DemoSwitch(
@@ -35,7 +40,7 @@ async def async_setup_entry(
                 entity_name=None,
                 state=False,
                 assumed=False,
-                via_device="2_ch_power_strip",
+                via_device_id=via_device_id,
             ),
             DemoSwitch(
                 unique_id="outlet_2",
@@ -43,7 +48,7 @@ async def async_setup_entry(
                 entity_name=None,
                 state=True,
                 assumed=False,
-                via_device="2_ch_power_strip",
+                via_device_id=via_device_id,
             ),
         ]
     )
@@ -65,7 +70,7 @@ class DemoSwitch(SwitchEntity):
         assumed: bool,
         translation_key: str | None = None,
         device_class: SwitchDeviceClass | None = None,
-        via_device: str | None = None,
+        via_device_id: str | None = None,
     ) -> None:
         """Initialize the Demo switch."""
         self._attr_assumed_state = assumed
@@ -77,8 +82,8 @@ class DemoSwitch(SwitchEntity):
             identifiers={(DOMAIN, unique_id)},
             name=device_name,
         )
-        if via_device:
-            self._attr_device_info["via_device"] = (DOMAIN, via_device)
+        if via_device_id:
+            self._attr_device_info["via_device_id"] = via_device_id
         self._attr_name = entity_name
 
     @override

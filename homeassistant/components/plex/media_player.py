@@ -20,7 +20,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -566,7 +566,11 @@ class PlexMediaPlayer(MediaPlayerEntity):
             # name to None
             name=cast(str | None, self.name),
             sw_version=self.device_version,
-            via_device=(DOMAIN, self.plex_server.machine_identifier),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self.plex_server.machine_identifier),
+                config_entry_id=self.plex_server.entry_id,
+            ),
         )
 
     @override

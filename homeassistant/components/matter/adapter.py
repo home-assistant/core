@@ -172,14 +172,20 @@ class MatterAdapter:
             or (device_type.__name__ if device_type else None)
         )
 
+        device_registry = dr.async_get(self.hass)
+
         # handle bridged devices
-        bridge_device_id = None
+        via_device_id: str | None = None
         if endpoint.is_bridged_device and endpoint.node.endpoints[0] != endpoint:
             bridge_device_id = get_device_id(
                 server_info,
                 endpoint.node.endpoints[0],
             )
-            bridge_device_id = f"{ID_TYPE_DEVICE_ID}_{bridge_device_id}"
+            via_device_id = dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{bridge_device_id}"),
+                config_entry_id=self.config_entry.entry_id,
+            )
 
         node_device_id = get_device_id(
             server_info,
@@ -214,7 +220,7 @@ class MatterAdapter:
         else:
             model_id = str(product_id) if (product_id := basic_info.productID) else None
 
-        dr.async_get(self.hass).async_get_or_create(
+        device_registry.async_get_or_create(
             name=name,
             config_entry_id=self.config_entry.entry_id,
             identifiers=identifiers,
@@ -224,7 +230,7 @@ class MatterAdapter:
             model=model_name,
             model_id=model_id,
             serial_number=serial_number,
-            via_device=(DOMAIN, bridge_device_id) if bridge_device_id else None,
+            via_device_id=via_device_id,
         )
 
     def _setup_endpoint(self, endpoint: MatterEndpoint) -> None:

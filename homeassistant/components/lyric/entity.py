@@ -97,7 +97,11 @@ class LyricAccessoryEntity(LyricDeviceEntity):
             manufacturer="Honeywell",
             model="RCHTSENSOR",
             name=f"{self.room.room_name} Sensor",
-            via_device=(dr.CONNECTION_NETWORK_MAC, self._mac_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (dr.CONNECTION_NETWORK_MAC, self._mac_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
         )
 
     @property
