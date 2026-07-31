@@ -6,8 +6,10 @@ from typing import Any
 from aioairzone.const import (
     AZD_FIRMWARE,
     AZD_FULL_NAME,
+    AZD_ID,
     AZD_MAC,
     AZD_MODEL,
+    AZD_SYSTEMS,
     AZD_WEBSERVER,
     DEFAULT_SYSTEM_ID,
 )
@@ -93,19 +95,46 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
 
     device_registry = dr.async_get(hass)
 
-    ws_data: dict[str, Any] | None = coordinator.data.get(AZD_WEBSERVER)
-    if ws_data is not None:
-        mac = ws_data.get(AZD_MAC, "")
+    @callback
+    def _async_register_devices() -> None:
+        """Register the WebServer and System via_device parents.
 
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-            identifiers={(DOMAIN, f"{entry.entry_id}_ws")},
-            manufacturer=MANUFACTURER,
-            model=ws_data.get(AZD_MODEL),
-            name=ws_data.get(AZD_FULL_NAME),
-            sw_version=ws_data.get(AZD_FIRMWARE),
-        )
+        The WebServer and Systems can appear on later coordinator updates, so
+        this runs on every update (before the platform listeners) to keep the
+        via_device parents registered before their child entities are added.
+        """
+        ws_device_id: str | None = None
+        ws_data: dict[str, Any] | None = coordinator.data.get(AZD_WEBSERVER)
+        if ws_data is not None:
+            mac = ws_data.get(AZD_MAC, "")
+
+            ws_device = device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+                identifiers={(DOMAIN, f"{entry.entry_id}_ws")},
+                manufacturer=MANUFACTURER,
+                model=ws_data.get(AZD_MODEL),
+                name=ws_data.get(AZD_FULL_NAME),
+                sw_version=ws_data.get(AZD_FIRMWARE),
+            )
+            ws_device_id = ws_device.id
+
+        for system_data in coordinator.data.get(AZD_SYSTEMS, {}).values():
+            system_id = system_data[AZD_ID]
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(DOMAIN, f"{entry.entry_id}_{system_id}")},
+                manufacturer=MANUFACTURER,
+                model=system_data.get(AZD_MODEL),
+                name=f"System {system_id}",
+                sw_version=system_data.get(AZD_FIRMWARE),
+                via_device_id=ws_device_id,
+            )
+
+    # Register the parents before forwarding platforms, and keep them registered
+    # as new devices appear so child entities can resolve their via_device_id.
+    _async_register_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_async_register_devices))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
