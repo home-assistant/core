@@ -24,6 +24,8 @@ from .const import (
     CONF_CLIENT_PRIVATE_KEY,
     CONF_CONTROLLER_PUBLIC_KEY,
     CONF_CONTROLLER_UUID,
+    CONF_EXPOSE_POOL_DEVICES,
+    DEFAULT_EXPOSE_POOL_DEVICES,
     DOMAIN,
     LAST_TIME_SITE_WAS_LOADED_FIELD,
     LOGGER,
@@ -81,25 +83,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: PoolsideConfigEntry) -> 
         await client.async_disconnect()
         raise ConfigEntryNotReady from err
 
-    try:
-        pool_devices = await client.async_get_pool_devices()
-    except PoolsideCommandError as err:
-        # Expected on older controller firmware without Site.getPoolDevices,
-        # but loud enough to catch a renamed/misrouted method during testing.
-        LOGGER.warning(
-            "Controller rejected Site.getPoolDevices; no pool devices will be"
-            " created: %s",
-            err,
+    pool_devices: list[PoolsideDevice] = []
+    if entry.options.get(CONF_EXPOSE_POOL_DEVICES, DEFAULT_EXPOSE_POOL_DEVICES):
+        try:
+            pool_devices = await client.async_get_pool_devices()
+        except PoolsideCommandError as err:
+            # Expected on older controller firmware without Site.getPoolDevices,
+            # but loud enough to catch a renamed/misrouted method during testing.
+            LOGGER.warning(
+                "Controller rejected Site.getPoolDevices; no pool devices will be"
+                " created: %s",
+                err,
+            )
+        except PoolsideConnectionError as err:
+            await client.async_disconnect()
+            raise ConfigEntryNotReady from err
+        LOGGER.debug(
+            "Loaded %d pool device(s): %s",
+            len(pool_devices),
+            [(device.uuid, device.name, device.device_type) for device in pool_devices],
         )
-        pool_devices = []
-    except PoolsideConnectionError as err:
-        await client.async_disconnect()
-        raise ConfigEntryNotReady from err
-    LOGGER.debug(
-        "Loaded %d pool device(s): %s",
-        len(pool_devices),
-        [(device.uuid, device.name, device.device_type) for device in pool_devices],
-    )
 
     entry.runtime_data = PoolsideData(
         client=client, site=site, controls=controls, pool_devices=pool_devices

@@ -22,6 +22,10 @@ CONF_CONTROLLER_PUBLIC_KEY = "controller_public_key"
 CONF_CONTROLLER_UUID = "controller_uuid"
 CONF_CLIENT_NAME = "client_name"
 
+# Options
+CONF_EXPOSE_POOL_DEVICES = "expose_pool_devices"
+DEFAULT_EXPOSE_POOL_DEVICES = True
+
 PING_INTERVAL = 30
 PING_TIMEOUT = 10
 PAIRING_TIMEOUT = 300
@@ -239,6 +243,40 @@ FIELD_TYPES_KEY = "FieldTypes"
 
 # The FieldTypes entry marking a field as read-only telemetry.
 INFORMATION_FIELD_TYPE = "INFORMATION"
+
+# Light pool devices push their Twinkle vocabulary here: a JSON array of
+# {value, description} used to translate the raw Twinkle value. A supporting
+# state only - never shown as a sensor of its own.
+TWINKLE_INCREMENTS_FIELD = "TwinkleIncrements"
+
+# DeviceType (casing varies by firmware) of light pool devices, which never
+# publish an InformationFields document.
+LIGHT_DEVICE_TYPE = "light"
+
+# DeviceType prefix shared by two- and three-way actuators, which render
+# identically: not on/off-able (no power state), a FriendlyState headline,
+# and a position percentage.
+ACTUATOR_DEVICE_TYPE_PREFIX = "actuator"
+
+# Actuator status fields, pushed keyed by the device's UUID.
+ACTUATOR_FRIENDLY_STATE_FIELD = "FriendlyState"
+ACTUATOR_POSITION_FIELD = "ActualPositionPercentLeft"
+CALIBRATED_LEFT_TO_RIGHT_FIELD = "CalibratedMovingLeftToRightTime"
+CALIBRATED_RIGHT_TO_LEFT_FIELD = "CalibratedMovingRightToLeftTime"
+
+
+class ActuatorFriendlyState(StrEnum):
+    """An actuator pool device's FriendlyState values."""
+
+    IDLE = "IDLE"
+    WAITING_TO_MOVE = "WAITING_TO_MOVE"
+    ATTEMPTING_TO_MOVE = "ATTEMPTING_TO_MOVE"
+    CALIBRATING = "CALIBRATING"
+    OVERLOAD = "OVERLOAD"
+    ERROR = "ERROR"
+    FAILED = "FAILED"
+    OFFLINE = "OFFLINE"
+
 
 # LIGHT control capabilities pushed by Device.setStatus keyed by the
 # control's own UUID, each as a JSON document encoded inside the string

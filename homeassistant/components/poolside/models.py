@@ -6,8 +6,10 @@ from typing import Any
 from homeassistant.const import Platform
 
 from .const import (
+    ACTUATOR_DEVICE_TYPE_PREFIX,
     COMBINED_CONTROL_UUID_FIELD,
     CONTROL_TYPE_MAP,
+    LIGHT_DEVICE_TYPE,
     LOGGER,
     MAX_SET_POINT_FIELD,
     MEMBER_CONTROL_UUIDS_FIELD,
@@ -59,6 +61,16 @@ class PoolsideDevice:
     uuid: str
     name: str
     device_type: str
+
+    @property
+    def is_light(self) -> bool:
+        """Return True if this is a light device, whose telemetry has a fixed layout."""
+        return self.device_type.lower() == LIGHT_DEVICE_TYPE
+
+    @property
+    def is_actuator(self) -> bool:
+        """Return True for actuators (two- or three-way), which render alike."""
+        return self.device_type.lower().startswith(ACTUATOR_DEVICE_TYPE_PREFIX)
 
 
 def parse_pool_devices(data: dict[str, Any] | None) -> list[PoolsideDevice]:

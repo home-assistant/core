@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 
 from homeassistant.components.poolside.client import PoolsideCommandError
-from homeassistant.components.poolside.const import DOMAIN
+from homeassistant.components.poolside.const import CONF_EXPOSE_POOL_DEVICES, DOMAIN
 from homeassistant.components.poolside.models import PoolsideDevice
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -16,6 +16,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -24,6 +25,10 @@ from .conftest import TEST_CONTROLLER_UUID, FakePoolsideClient
 from tests.common import MockConfigEntry
 
 PUMP_UUID = "device-pump-1"
+LIGHT_UUID = "device-light-1"
+ACTUATOR_UUID = "device-actuator-1"
+ACTUATOR_STATE_ENTITY_ID = "sensor.intake_valve_state"
+ACTUATOR_POSITION_ENTITY_ID = "sensor.intake_valve_position"
 
 MODE_ENTITY_ID = "sensor.test_residence_controller_mode"
 POWER_ENTITY_ID = "sensor.pump_power"
@@ -189,6 +194,36 @@ INFORMATION_FIELDS = json.dumps(
             "DisplayProcessingLogic": "VOLT",
             "FieldTypes": ["INFORMATION"],
         },
+        {
+            "Name": "LightName",
+            "DisplayName": "Show",
+            "DisplayOrder": 24,
+            "DisplayProcessingLogic": "LIGHT_NAME",
+            "FieldTypes": ["INFORMATION"],
+        },
+        {
+            "Name": "Twinkle",
+            "DisplayName": "Twinkle",
+            "DisplayOrder": 25,
+            "DisplayProcessingLogic": "TWINKLE",
+            "FieldTypes": ["INFORMATION"],
+        },
+        {
+            "Name": "TwinkleIncrements",
+            "DisplayName": "Twinkle Increments",
+            "DisplayOrder": 26,
+            "FieldTypes": ["INFORMATION"],
+        },
+    ]
+)
+
+TWINKLE_ENTITY_ID = "sensor.pump_twinkle"
+
+TWINKLE_INCREMENTS = json.dumps(
+    [
+        {"value": 0, "description": "Off"},
+        {"value": 50, "description": "Half"},
+        {"value": 100, "description": "Full"},
     ]
 )
 
@@ -211,7 +246,7 @@ async def test_sensors_created_from_initial_snapshot(
     mock_config_entry: MockConfigEntry,
     mock_poolside_client: FakePoolsideClient,
 ) -> None:
-    """Each INFORMATION field becomes a sensor; control-typed fields do not."""
+    """Each INFORMATION field becomes a sensor; control-typed fields and supporting states do not."""
     mock_poolside_client.set_status(PUMP_UUID, "InformationFields", INFORMATION_FIELDS)
     await setup_entry(hass, mock_config_entry)
 
@@ -240,6 +275,8 @@ async def test_sensors_created_from_initial_snapshot(
         "sensor.pump_sensor_current",
         "sensor.pump_cell_voltage",
         "sensor.pump_supply_voltage",
+        "sensor.pump_show",
+        TWINKLE_ENTITY_ID,
     }
 
 
@@ -402,6 +439,14 @@ async def test_sensors_created_from_initial_snapshot(
             "V",
             id="volt",
         ),
+        pytest.param(
+            "LightName",
+            "sensor.pump_show",
+            "Party Mode",
+            "Party Mode",
+            None,
+            id="light-name-plain-string",
+        ),
     ],
 )
 async def test_field_value_rendering(
@@ -428,6 +473,36 @@ async def test_field_value_rendering(
     assert state is not None
     assert state.state == expected_state
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
+
+
+@pytest.mark.parametrize(
+    ("increments", "raw_value", "expected_state"),
+    [
+        pytest.param(TWINKLE_INCREMENTS, "50", "Half", id="matched"),
+        pytest.param(TWINKLE_INCREMENTS, 100, "Full", id="matched-numeric"),
+        pytest.param(TWINKLE_INCREMENTS, "50.0", "Half", id="matched-float-notation"),
+        pytest.param(TWINKLE_INCREMENTS, "75", "75", id="unlisted-value-stays-raw"),
+        pytest.param(None, "50", "50", id="missing-document-stays-raw"),
+        pytest.param("not json", "50", "50", id="unparsable-document-stays-raw"),
+    ],
+)
+async def test_twinkle_sensor_translates_increments(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_poolside_client: FakePoolsideClient,
+    increments: str | None,
+    raw_value: Any,
+    expected_state: str,
+) -> None:
+    """Twinkle renders as its TwinkleIncrements description, raw when unresolvable."""
+    mock_poolside_client.set_status(PUMP_UUID, "InformationFields", INFORMATION_FIELDS)
+    mock_poolside_client.set_status(PUMP_UUID, "TwinkleIncrements", increments)
+    mock_poolside_client.set_status(PUMP_UUID, "Twinkle", raw_value)
+    await setup_entry(hass, mock_config_entry)
+
+    state = hass.states.get(TWINKLE_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -560,6 +635,233 @@ async def test_winterized_sensor(
     assert state.state == expected_state
 
 
+@pytest.mark.parametrize(
+    "device_type",
+    [
+        pytest.param("Light", id="mixed-case"),
+        pytest.param("LIGHT", id="upper-case"),
+    ],
+)
+async def test_light_device_sensors_synthesized_without_descriptor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_poolside_client: FakePoolsideClient,
+    device_type: str,
+) -> None:
+    """Light devices get their fixed field set from setup; no InformationFields needed."""
+    mock_poolside_client.async_get_pool_devices.return_value = [
+        PoolsideDevice(uuid=LIGHT_UUID, name="Spa Light", device_type=device_type)
+    ]
+    await setup_entry(hass, mock_config_entry)
+
+    assert set(hass.states.async_entity_ids("sensor")) == {
+        MODE_ENTITY_ID,
+        "sensor.spa_light_power_state",
+        "sensor.spa_light_winterized",
+        "sensor.spa_light_power",
+        "sensor.spa_light_show",
+        "sensor.spa_light_brightness",
+        "sensor.spa_light_speed",
+        "sensor.spa_light_twinkle",
+    }
+
+
+@pytest.mark.parametrize(
+    ("field", "entity_id", "raw_value", "expected_state", "expected_unit"),
+    [
+        pytest.param(
+            "PowerState", "sensor.spa_light_power", "ON", "on", None, id="power-onoff"
+        ),
+        pytest.param(
+            "LightName",
+            "sensor.spa_light_show",
+            "Caribbean Blue",
+            "Caribbean Blue",
+            None,
+            id="light-name-plain-string",
+        ),
+        pytest.param(
+            "Brightness",
+            "sensor.spa_light_brightness",
+            "80",
+            "80.0",
+            "%",
+            id="brightness-percent",
+        ),
+        pytest.param(
+            "Speed", "sensor.spa_light_speed", "2", "2.0", "x", id="speed-multiplier"
+        ),
+    ],
+)
+async def test_light_device_field_rendering(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_poolside_client: FakePoolsideClient,
+    field: str,
+    entity_id: str,
+    raw_value: str,
+    expected_state: str,
+    expected_unit: str | None,
+) -> None:
+    """Each fixed light field renders per its assigned processing logic."""
+    mock_poolside_client.async_get_pool_devices.return_value = [
+        PoolsideDevice(uuid=LIGHT_UUID, name="Spa Light", device_type="Light")
+    ]
+    mock_poolside_client.set_status(LIGHT_UUID, field, raw_value)
+    await setup_entry(hass, mock_config_entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
+
+
+async def test_light_device_twinkle_translates_increments(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_poolside_client: FakePoolsideClient,
+) -> None:
+    """A light's Twinkle resolves through TwinkleIncrements like any TWINKLE field."""
+    mock_poolside_client.async_get_pool_devices.return_value = [
+        PoolsideDevice(uuid=LIGHT_UUID, name="Spa Light", device_type="Light")
+    ]
+    mock_poolside_client.set_status(LIGHT_UUID, "TwinkleIncrements", TWINKLE_INCREMENTS)
+    mock_poolside_client.set_status(LIGHT_UUID, "Twinkle", "100")
+    await setup_entry(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.spa_light_twinkle")
+    assert state is not None
+    assert state.state == "Full"
+
+
+def _actuator_device(device_type: str = "ActuatorTwoWay") -> PoolsideDevice:
+    return PoolsideDevice(
+        uuid=ACTUATOR_UUID, name="Intake Valve", device_type=device_type
+    )
+
+
+@pytest.mark.parametrize(
+    "device_type",
+    [
+        pytest.param("ActuatorTwoWay", id="two-way"),
+        pytest.param("ActuatorThreeWay", id="three-way"),
+        pytest.param("ACTUATOR_TWO_WAY", id="upper-case"),
+    ],
+)
+async def test_actuator_sensors_synthesized_without_descriptor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_poolside_client: FakePoolsideClient,
+    device_type: str,
+) -> None:
+    """Actuators get state, position, and fallback calibration sensors - and no power state."""
+    mock_poolside_client.async_get_pool_devices.return_value = [
+        _actuator_device(device_type)
+    ]
+    await setup_entry(hass, mock_config_entry)
+
+    assert set(hass.states.async_entity_ids("sensor")) == {
+        MODE_ENTITY_ID,
+        "sensor.intake_valve_winterized",
+        ACTUATOR_STATE_ENTITY_ID,
+        ACTUATOR_POSITION_ENTITY_ID,
+        "sensor.intake_valve_calibration_left_to_right",
+        "sensor.intake_valve_calibration_right_to_left",
+    }
+
+
+async def test_actuator_published_descriptor_replaces_fallback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_poolside_client: FakePoolsideClient,
+) -> None:
+    """A published InformationFields document takes the fallback list's place."""
+    fields = json.dumps(
+        [
+            {
+                "Name": "MotorCurrent",
+                "DisplayName": "Motor Current",
+                "DisplayOrder": 1,
+                "DisplayProcessingLogic": "AMP",
+                "FieldTypes": ["INFORMATION"],
+            }
+        ]
+    )
+    mock_poolside_client.async_get_pool_devices.return_value = [_actuator_device()]
+    mock_poolside_client.set_status(ACTUATOR_UUID, "InformationFields", fields)
+    await setup_entry(hass, mock_config_entry)
+
+    assert set(hass.states.async_entity_ids("sensor")) == {
+        MODE_ENTITY_ID,
+        "sensor.intake_valve_winterized",
+        ACTUATOR_STATE_ENTITY_ID,
+        ACTUATOR_POSITION_ENTITY_ID,
+        "sensor.intake_valve_motor_current",
+    }
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "expected_state"),
+    [
+        pytest.param("IDLE", "idle", id="idle"),
+        pytest.param("WAITING_TO_MOVE", "waiting_to_move", id="waiting"),
+        pytest.param("ATTEMPTING_TO_MOVE", "attempting_to_move", id="moving"),
+        pytest.param("CALIBRATING", "calibrating", id="calibrating"),
+        pytest.param("OVERLOAD", "overload", id="overload"),
+        pytest.param("ERROR", "error", id="error"),
+        pytest.param("FAILED", "failed", id="failed"),
+        pytest.param("OFFLINE", "offline", id="offline"),
+        pytest.param("MAGMA", STATE_UNKNOWN, id="unrecognized"),
+    ],
+)
+async def test_actuator_state_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_poolside_client: FakePoolsideClient,
+    raw_value: str,
+    expected_state: str,
+) -> None:
+    """FriendlyState renders as its enum option; unrecognized values as unknown."""
+    mock_poolside_client.async_get_pool_devices.return_value = [_actuator_device()]
+    mock_poolside_client.set_status(ACTUATOR_UUID, "FriendlyState", raw_value)
+    await setup_entry(hass, mock_config_entry)
+
+    state = hass.states.get(ACTUATOR_STATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "expected_state"),
+    [
+        pytest.param("40", "40.0", id="in-range"),
+        pytest.param(0, "0.0", id="lower-bound"),
+        pytest.param("100", "100.0", id="upper-bound"),
+        pytest.param("255", STATE_UNKNOWN, id="out-of-range-sentinel"),
+        pytest.param("-5", STATE_UNKNOWN, id="negative"),
+        pytest.param("banana", STATE_UNKNOWN, id="garbage"),
+    ],
+)
+async def test_actuator_position_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_poolside_client: FakePoolsideClient,
+    raw_value: Any,
+    expected_state: str,
+) -> None:
+    """ActualPositionPercentLeft renders as a percentage; out-of-range means no data."""
+    mock_poolside_client.async_get_pool_devices.return_value = [_actuator_device()]
+    mock_poolside_client.set_status(
+        ACTUATOR_UUID, "ActualPositionPercentLeft", raw_value
+    )
+    await setup_entry(hass, mock_config_entry)
+
+    state = hass.states.get(ACTUATOR_POSITION_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
+
+
 async def test_pool_device_registered_under_controller(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -595,6 +897,32 @@ async def test_pool_device_named_from_the_device_list(
     assert device is not None
     assert device.name == "Main Pump"
     assert device.model == "Pump"
+
+
+async def test_disabling_pool_devices_option_removes_them(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_poolside_client: FakePoolsideClient,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Turning the option off skips the fetch and prunes existing pool devices."""
+    await setup_entry(hass, mock_config_entry)
+    assert device_registry.async_get_device({(DOMAIN, PUMP_UUID)}) is not None
+    assert hass.states.get(POWER_STATE_ENTITY_ID) is not None
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_EXPOSE_POOL_DEVICES: False}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.options == {CONF_EXPOSE_POOL_DEVICES: False}
+    assert device_registry.async_get_device({(DOMAIN, PUMP_UUID)}) is None
+    assert hass.states.get(POWER_STATE_ENTITY_ID) is None
+    mock_poolside_client.async_get_pool_devices.assert_awaited_once()
 
 
 async def test_setup_succeeds_without_pool_device_support(

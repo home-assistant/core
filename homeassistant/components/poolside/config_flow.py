@@ -9,8 +9,15 @@ from typing import Any, override
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -25,6 +32,8 @@ from .const import (
     CONF_CLIENT_PRIVATE_KEY,
     CONF_CONTROLLER_PUBLIC_KEY,
     CONF_CONTROLLER_UUID,
+    CONF_EXPOSE_POOL_DEVICES,
+    DEFAULT_EXPOSE_POOL_DEVICES,
     DEFAULT_PORT,
     DOMAIN,
     ZEROCONF_PROP_NAME,
@@ -59,10 +68,42 @@ _ABORT_REASONS: dict[type[Exception], str] = {
 }
 
 
+class PoolsideOptionsFlow(OptionsFlowWithReload):
+    """Handle the Poolside options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_EXPOSE_POOL_DEVICES,
+                        default=self.config_entry.options.get(
+                            CONF_EXPOSE_POOL_DEVICES, DEFAULT_EXPOSE_POOL_DEVICES
+                        ),
+                    ): bool,
+                }
+            ),
+        )
+
+
 class PoolsideConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Poolside."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: ConfigEntry) -> PoolsideOptionsFlow:
+        """Create the options flow."""
+        return PoolsideOptionsFlow()
 
     def __init__(self) -> None:
         """Initialize the flow."""

@@ -66,6 +66,19 @@
           "on": "[%key:common::state::on%]"
         }
       },
+      "actuator_state": {
+        "name": "State",
+        "state": {
+          "attempting_to_move": "Moving",
+          "calibrating": "Calibrating",
+          "error": "Error",
+          "failed": "Failed",
+          "idle": "Idle",
+          "offline": "Offline",
+          "overload": "Overload",
+          "waiting_to_move": "Waiting"
+        }
+      },
       "current_state": {
         "name": "Water state",
         "state": {
@@ -120,6 +133,18 @@
         "state": {
           "false": "False",
           "true": "True"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "expose_pool_devices": "Expose pool devices"
+        },
+        "data_description": {
+          "expose_pool_devices": "Create read-only telemetry devices for the physical pool equipment (pumps, heaters, lights, actuators) the controller operates."
         }
       }
     }

@@ -20,6 +20,17 @@
       "actual_power_state": {
         "default": "mdi:power"
       },
+      "actuator_state": {
+        "default": "mdi:valve",
+        "state": {
+          "attempting_to_move": "mdi:valve-open",
+          "calibrating": "mdi:progress-wrench",
+          "error": "mdi:alert-circle",
+          "failed": "mdi:alert-circle",
+          "offline": "mdi:lan-disconnect",
+          "overload": "mdi:alert-circle"
+        }
+      },
       "current_state": {
         "default": "mdi:state-machine"
       },

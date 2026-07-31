@@ -35,6 +35,11 @@ from . import PoolsideConfigEntry
 from .client import PoolsideClient
 from .const import (
     ACTUAL_POWER_STATE_FIELD,
+    ACTUATOR_FRIENDLY_STATE_FIELD,
+    ACTUATOR_POSITION_FIELD,
+    BRIGHTNESS_FIELD,
+    CALIBRATED_LEFT_TO_RIGHT_FIELD,
+    CALIBRATED_RIGHT_TO_LEFT_FIELD,
     CURRENT_STATE_FIELD,
     CURRENT_TEMPERATURE_FIELD,
     DOMAIN,
@@ -46,10 +51,16 @@ from .const import (
     FREEZE_PROTECT_REASON,
     INFORMATION_FIELD_TYPE,
     INFORMATION_FIELDS_FIELD,
+    LIGHT_NAME_FIELD,
     LOGGER,
+    POWER_STATE_FIELD,
     SITE_MODE_KEY,
+    SPEED_FIELD,
+    TWINKLE_FIELD,
+    TWINKLE_INCREMENTS_FIELD,
     WINTERIZED_FIELD,
     WINTERIZED_REASON,
+    ActuatorFriendlyState,
     BodyOfWaterState,
     SiteMode,
 )
@@ -180,6 +191,22 @@ def _yes_no_value(value: Any) -> str | None:
     if (result := _bool_value(value)) is None:
         return None
     return "yes" if result else "no"
+
+
+def _actuator_state_value(value: Any) -> str | None:
+    """Map a FriendlyState value to its option, or None if unrecognized."""
+    try:
+        return ActuatorFriendlyState(str(value).strip().upper()).value.lower()
+    except ValueError:
+        return None
+
+
+def _position_percent_value(value: Any) -> float | None:
+    """Coerce a position percentage, treating out-of-range values as no data."""
+    number = _float_value(value)
+    if number is None or not 0 <= number <= 100:
+        return None
+    return number
 
 
 def _datetime_value(value: Any) -> datetime | None:
@@ -338,9 +365,90 @@ PROCESSING_LOGIC_DESCRIPTIONS: dict[str, PoolsideFieldSensorDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_float_value,
     ),
+    "ACTUATOR_FRIENDLY_STATE": PoolsideFieldSensorDescription(
+        key="ACTUATOR_FRIENDLY_STATE",
+        translation_key="actuator_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=[state.value.lower() for state in ActuatorFriendlyState],
+        value_fn=_actuator_state_value,
+    ),
+    "ACTUATOR_POSITION": PoolsideFieldSensorDescription(
+        key="ACTUATOR_POSITION",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=_position_percent_value,
+    ),
 }
 
 DEFAULT_FIELD_DESCRIPTION = PoolsideFieldSensorDescription(key="STRING")
+
+TWINKLE_PROCESSING_LOGIC = "TWINKLE"
+
+# Supporting states referenced by other fields' rendering, never shown as
+# sensors of their own even when a descriptor marks them INFORMATION.
+HIDDEN_INFORMATION_FIELDS = {TWINKLE_INCREMENTS_FIELD}
+
+# Light pool devices never publish an InformationFields document - the
+# vendor app hardcodes their screen - so an equivalent fixed field set is
+# synthesized for them instead.
+LIGHT_DEVICE_FIELDS: list[dict[str, Any]] = [
+    {
+        FIELD_NAME_KEY: POWER_STATE_FIELD,
+        FIELD_DISPLAY_NAME_KEY: "Power",
+        FIELD_PROCESSING_LOGIC_KEY: "ONOFF",
+    },
+    {
+        FIELD_NAME_KEY: LIGHT_NAME_FIELD,
+        FIELD_DISPLAY_NAME_KEY: "Show",
+        FIELD_PROCESSING_LOGIC_KEY: "LIGHT_NAME",
+    },
+    {
+        FIELD_NAME_KEY: BRIGHTNESS_FIELD,
+        FIELD_DISPLAY_NAME_KEY: "Brightness",
+        FIELD_PROCESSING_LOGIC_KEY: "PERCENT",
+    },
+    {
+        FIELD_NAME_KEY: SPEED_FIELD,
+        FIELD_DISPLAY_NAME_KEY: "Speed",
+        FIELD_PROCESSING_LOGIC_KEY: "X",
+    },
+    {
+        FIELD_NAME_KEY: TWINKLE_FIELD,
+        FIELD_DISPLAY_NAME_KEY: "Twinkle",
+        FIELD_PROCESSING_LOGIC_KEY: TWINKLE_PROCESSING_LOGIC,
+    },
+]
+
+# Actuator pool devices always carry their headline state and position,
+# whether or not they publish an InformationFields document.
+ACTUATOR_DEVICE_FIELDS: list[dict[str, Any]] = [
+    {
+        FIELD_NAME_KEY: ACTUATOR_FRIENDLY_STATE_FIELD,
+        FIELD_DISPLAY_NAME_KEY: "State",
+        FIELD_PROCESSING_LOGIC_KEY: "ACTUATOR_FRIENDLY_STATE",
+    },
+    {
+        FIELD_NAME_KEY: ACTUATOR_POSITION_FIELD,
+        FIELD_DISPLAY_NAME_KEY: "Position",
+        FIELD_PROCESSING_LOGIC_KEY: "ACTUATOR_POSITION",
+    },
+]
+
+# Shown for an actuator that publishes no InformationFields document; a
+# published document takes its place, like the vendor screen's fallback list.
+ACTUATOR_FALLBACK_FIELDS: list[dict[str, Any]] = [
+    {
+        FIELD_NAME_KEY: CALIBRATED_LEFT_TO_RIGHT_FIELD,
+        FIELD_DISPLAY_NAME_KEY: "Calibration left to right",
+        FIELD_PROCESSING_LOGIC_KEY: "MS_TO_S",
+    },
+    {
+        FIELD_NAME_KEY: CALIBRATED_RIGHT_TO_LEFT_FIELD,
+        FIELD_DISPLAY_NAME_KEY: "Calibration right to left",
+        FIELD_PROCESSING_LOGIC_KEY: "MS_TO_S",
+    },
+]
 
 
 def _device_field_description(field: dict[str, Any]) -> PoolsideFieldSensorDescription:
@@ -376,10 +484,31 @@ def _information_fields(
         for field in value
         if isinstance(field, dict)
         and field.get(FIELD_NAME_KEY)
+        and field.get(FIELD_NAME_KEY) not in HIDDEN_INFORMATION_FIELDS
         and INFORMATION_FIELD_TYPE in (field.get(FIELD_TYPES_KEY) or [])
     ]
     fields.sort(key=lambda field: field.get(FIELD_DISPLAY_ORDER_KEY) or 0)
     return fields
+
+
+def _device_fields(
+    client: PoolsideClient, device: PoolsideDevice
+) -> list[dict[str, Any]]:
+    """Return a pool device's telemetry field descriptors.
+
+    Light devices never publish InformationFields, so their fixed vendor
+    screen layout is used instead. Actuators always carry their state and
+    position fields, plus their published InformationFields document or the
+    fixed fallback list when there is none. Every other device type is
+    described by its InformationFields document alone.
+    """
+    if device.is_light:
+        return LIGHT_DEVICE_FIELDS
+    if device.is_actuator:
+        return ACTUATOR_DEVICE_FIELDS + (
+            _information_fields(client, device) or ACTUATOR_FALLBACK_FIELDS
+        )
+    return _information_fields(client, device)
 
 
 async def async_setup_entry(
@@ -393,7 +522,8 @@ async def async_setup_entry(
     first time their field is reported - usually straight from the initial
     status snapshot, otherwise on a later push - since probes are optional
     equipment a body may simply not have. Pool device sensors follow the
-    same pattern, keyed on the device's InformationFields document.
+    same pattern, keyed on the device's InformationFields document - except
+    for light devices, whose fixed field set never waits on a descriptor.
     """
     data = entry.runtime_data
     client = data.client
@@ -416,9 +546,12 @@ async def async_setup_entry(
     )
     # ActualPowerState and Winterized are pushed for every pool device
     # regardless of what its InformationFields document lists, so their
-    # sensors are created eagerly.
+    # sensors are created eagerly. Actuators are the exception: they are not
+    # on/off-able and report no power state at all.
     entities.extend(
-        PoolsideDevicePowerSensor(client, device) for device in data.pool_devices
+        PoolsideDevicePowerSensor(client, device)
+        for device in data.pool_devices
+        if not device.is_actuator
     )
     entities.extend(
         PoolsideDeviceWinterizedSensor(client, device) for device in data.pool_devices
@@ -465,12 +598,17 @@ async def async_setup_entry(
     def _async_add_described_device_sensors() -> None:
         new_entities: list[PoolsideDeviceSensor] = []
         for device in data.pool_devices:
-            for field in _information_fields(client, device):
+            for field in _device_fields(client, device):
                 added_key = f"{device.uuid}_{field[FIELD_NAME_KEY]}"
                 if added_key in added_device_fields:
                     continue
                 added_device_fields.add(added_key)
-                new_entities.append(PoolsideDeviceSensor(client, device, field))
+                sensor_cls = (
+                    PoolsideDeviceTwinkleSensor
+                    if field.get(FIELD_PROCESSING_LOGIC_KEY) == TWINKLE_PROCESSING_LOGIC
+                    else PoolsideDeviceSensor
+                )
+                new_entities.append(sensor_cls(client, device, field))
         if new_entities:
             async_add_entities(new_entities)
 
@@ -583,6 +721,54 @@ class PoolsideDeviceSensor(PoolsideDeviceEntity, SensorEntity):
         if value is None:
             return None
         return self.entity_description.value_fn(value)
+
+
+class PoolsideDeviceTwinkleSensor(PoolsideDeviceSensor):
+    """A TWINKLE field, translated through the device's TwinkleIncrements state.
+
+    The raw Twinkle value is an increment the device's TwinkleIncrements
+    document (a JSON array of {value, description} entries) gives a display
+    name; a value the document doesn't list - or a missing/unparsable
+    document - degrades to the raw value as text.
+    """
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the increment's description, or the raw value as text."""
+        value = self._client.get_status(self._device.uuid, self.entity_description.key)
+        if value is None:
+            return None
+        return self._increment_description(value) or str(value)
+
+    def _increment_description(self, value: Any) -> str | None:
+        """Look the raw value up in the device's TwinkleIncrements document."""
+        increments = self._client.get_status(
+            self._device.uuid, TWINKLE_INCREMENTS_FIELD
+        )
+        if isinstance(increments, str):
+            try:
+                increments = json.loads(increments)
+            except ValueError:
+                LOGGER.warning(
+                    "%s: unparsable %s: %r",
+                    self._device.uuid,
+                    TWINKLE_INCREMENTS_FIELD,
+                    increments,
+                )
+                return None
+        if not isinstance(increments, list):
+            return None
+        number = _float_value(value)
+        for item in increments:
+            if not isinstance(item, dict) or "description" not in item:
+                continue
+            candidate = item.get("value")
+            if str(candidate) == str(value) or (
+                number is not None and _float_value(candidate) == number
+            ):
+                return str(item["description"])
+        return None
 
 
 class PoolsideDevicePowerSensor(PoolsideDeviceEntity, SensorEntity):
