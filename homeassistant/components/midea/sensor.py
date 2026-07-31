@@ -1,6 +1,5 @@
 """Midea Sensor entries."""
 
-from dataclasses import dataclass
 from typing import cast, override
 
 from midealocal.device import MideaDevice
@@ -27,48 +26,36 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .device_catalog import DeviceType
 from .entity import MideaEntity
 
 PARALLEL_UPDATES = 0
 
-
-@dataclass(kw_only=True, frozen=True)
-class MideaSensorEntityDescription(SensorEntityDescription):
-    """Description for a Midea sensor entity."""
-
-    models: list[DeviceType]
-
-
-SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
-    MideaSensorEntityDescription(
+SENSOR_ENTITIES: list[SensorEntityDescription] = [
+    SensorEntityDescription(
         key="indoor_humidity",
         translation_key="indoor_humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="indoor_temperature",
         translation_key="indoor_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="outdoor_temperature",
         translation_key="outdoor_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        models=[DeviceType.AC, DeviceType.C3],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="total_energy_consumption",
         translation_key="total_energy_consumption",
         device_class=SensorDeviceClass.ENERGY,
@@ -76,9 +63,8 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC, DeviceType.C3],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="current_energy_consumption",
         translation_key="current_energy_consumption",
         device_class=SensorDeviceClass.ENERGY,
@@ -86,9 +72,8 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="realtime_power",
         translation_key="realtime_power",
         device_class=SensorDeviceClass.POWER,
@@ -96,24 +81,21 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="pmv",
         translation_key="pmv",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="error_code",
         translation_key="error_code",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC, DeviceType.C3],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="compressor_frequency",
         translation_key="compressor_frequency",
         device_class=SensorDeviceClass.FREQUENCY,
@@ -121,9 +103,8 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="target_compressor_frequency",
         translation_key="target_compressor_frequency",
         device_class=SensorDeviceClass.FREQUENCY,
@@ -131,9 +112,8 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="compressor_current",
         translation_key="compressor_current",
         device_class=SensorDeviceClass.CURRENT,
@@ -141,9 +121,8 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="compressor_voltage",
         translation_key="compressor_voltage",
         device_class=SensorDeviceClass.VOLTAGE,
@@ -151,9 +130,8 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="indoor_coil_temperature",
         translation_key="indoor_coil_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -161,9 +139,8 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="evaporator_temperature",
         translation_key="evaporator_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -171,9 +148,8 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="condenser_temperature",
         translation_key="condenser_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -181,9 +157,8 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="outdoor_ambient_temperature",
         translation_key="outdoor_ambient_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -191,9 +166,8 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="discharge_pipe_temperature",
         translation_key="discharge_pipe_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -201,27 +175,24 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="indoor_fan_speed",
         translation_key="indoor_fan_speed",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="target_indoor_fan_speed",
         translation_key="target_indoor_fan_speed",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="compressor_power",
         translation_key="compressor_power",
         device_class=SensorDeviceClass.POWER,
@@ -229,18 +200,16 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.AC],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="tank_actual_temperature",
         translation_key="tank_actual_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        models=[DeviceType.C3],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="total_produced_energy",
         translation_key="total_produced_energy",
         device_class=SensorDeviceClass.ENERGY,
@@ -248,27 +217,24 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.C3],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="temp_tw_in",
         translation_key="temp_tw_in",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        models=[DeviceType.C3],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="temp_tw_out",
         translation_key="temp_tw_out",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        models=[DeviceType.C3],
     ),
-    MideaSensorEntityDescription(
+    SensorEntityDescription(
         key="instant_power0",
         translation_key="instant_power0",
         device_class=SensorDeviceClass.POWER,
@@ -276,7 +242,15 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        models=[DeviceType.C3],
+    ),
+    SensorEntityDescription(
+        key="compressor_temperature",
+        translation_key="compressor_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 ]
 
@@ -292,8 +266,7 @@ async def async_setup_entry(
     sensors: list[MideaSensor] = [
         MideaSensor(device, description)
         for description in SENSOR_ENTITIES
-        if device.device_type in description.models
-        and description.key in device.attributes
+        if description.key in device.attributes
     ]
 
     async_add_entities(sensors)
