@@ -26,7 +26,6 @@ async def test_sub_devices_link_to_main_device(
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     entry_id = mock_config_entry.entry_id
     main_device = device_registry.async_get_device(identifiers={(DOMAIN, entry_id)})
