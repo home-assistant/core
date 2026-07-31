@@ -35,13 +35,14 @@ def _determine_lock_state_open(attribute: HomeeAttribute) -> float | None:
 
 
 async def add_lock_entities(
+    hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
     """Add homee lock entities."""
     async_add_entities(
-        HomeeLock(attribute, config_entry)
+        HomeeLock(hass, attribute, config_entry)
         for node in nodes
         for attribute in node.attributes
         if (attribute.type == AttributeType.LOCK_STATE and attribute.editable)
@@ -55,7 +56,9 @@ async def async_setup_entry(
 ) -> None:
     """Add the homee platform for the lock component."""
 
-    await setup_homee_platform(add_lock_entities, async_add_entities, config_entry)
+    await setup_homee_platform(
+        hass, add_lock_entities, async_add_entities, config_entry
+    )
 
 
 class HomeeLock(HomeeEntity, LockEntity):
@@ -63,9 +66,11 @@ class HomeeLock(HomeeEntity, LockEntity):
 
     _attr_name = None
 
-    def __init__(self, attribute: HomeeAttribute, entry: HomeeConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, attribute: HomeeAttribute, entry: HomeeConfigEntry
+    ) -> None:
         """Initialize the homee lock."""
-        super().__init__(attribute, entry)
+        super().__init__(hass, attribute, entry)
         self._lock_state_open = _determine_lock_state_open(attribute)
         if self._lock_state_open is not None:
             self._attr_supported_features = LockEntityFeature.OPEN
