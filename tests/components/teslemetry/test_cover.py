@@ -1,9 +1,11 @@
 """Test the Teslemetry cover platform."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.const import ClosureState
 from tesla_fleet_api.exceptions import InvalidCommand
 from teslemetry_stream import Signal
 
@@ -24,12 +26,15 @@ from . import assert_entities, setup_platform
 from .const import (
     COMMAND_ERRORS,
     COMMAND_OK,
+    METADATA,
     METADATA_NOSCOPE,
     PRODUCTS,
     PRODUCTS_CYBERTRUCK,
     VEHICLE_DATA_ALT,
     VEHICLE_DATA_NONE,
 )
+
+VIN = PRODUCTS_CYBERTRUCK["response"][0]["vin"]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -109,6 +114,31 @@ async def test_cover_tonneau_model_gate(
     assert (hass.states.get("cover.test_tonneau") is not None) == expected
 
 
+@pytest.mark.parametrize(
+    ("firmware", "expected"),
+    [
+        pytest.param("2024.44.24", False, id="below_threshold"),
+        pytest.param("2024.44.25", True, id="at_threshold"),
+    ],
+)
+async def test_cover_tonneau_firmware_gate(
+    hass: HomeAssistant,
+    mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
+    firmware: str,
+    expected: bool,
+) -> None:
+    """Tests that the tonneau cover is only created on firmware >= 2024.44.25."""
+
+    mock_products.return_value = PRODUCTS_CYBERTRUCK
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VIN]["firmware"] = firmware
+    mock_metadata.return_value = metadata
+
+    await setup_platform(hass, [Platform.COVER])
+    assert (hass.states.get("cover.test_tonneau") is not None) == expected
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_cover_cybertruck(
     hass: HomeAssistant,
@@ -144,7 +174,7 @@ async def test_cover_tonneau_services(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        call.assert_called_once()
+        call.assert_called_once_with(tonneau=ClosureState.OPEN)
         state = hass.states.get(entity_id)
         assert state
         assert state.state == CoverState.OPEN
@@ -156,7 +186,7 @@ async def test_cover_tonneau_services(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        call.assert_called_once()
+        call.assert_called_once_with(tonneau=ClosureState.STOP)
         state = hass.states.get(entity_id)
         assert state
         assert state.state == CoverState.OPEN
@@ -168,7 +198,7 @@ async def test_cover_tonneau_services(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        call.assert_called_once()
+        call.assert_called_once_with(tonneau=ClosureState.CLOSE)
         state = hass.states.get(entity_id)
         assert state
         assert state.state == CoverState.CLOSED

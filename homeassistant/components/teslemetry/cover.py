@@ -35,6 +35,7 @@ from .models import TeslemetryVehicleData
 
 OPEN = 1
 CLOSED = 0
+TONNEAU_CLOSED = "Closed"
 
 PARALLEL_UPDATES = 0
 
@@ -576,6 +577,8 @@ class TeslemetryStreamingTonneauEntity(
     def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
         """Initialize the cover."""
         super().__init__(vehicle, "tonneau")
+        # Kept as an attribute rather than checked upfront, matching how scoping
+        # is handled for the other entities in this integration.
         self.scoped = Scope.VEHICLE_CMDS in scopes
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
@@ -598,10 +601,13 @@ class TeslemetryStreamingTonneauEntity(
 
     def _async_position_from_stream(self, value: str | None) -> None:
         """Update the entity attributes."""
+        # None and "Invalid" are treated the same as "Unknown" here as
+        # defensive handling: a past bug interpreted None as false and
+        # "Invalid" as true for a similar streaming field.
         if value in (None, "Unknown", "Invalid"):
             self._attr_is_closed = None
         else:
-            self._attr_is_closed = value == "Closed"
+            self._attr_is_closed = value == TONNEAU_CLOSED
         self.async_write_ha_state()
 
     def _async_percent_from_stream(self, value: float | None) -> None:
