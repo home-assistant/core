@@ -169,6 +169,23 @@ async def test_unique_id_migration(
     )
 
 
+async def test_home_device_via_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    router: Mock,
+) -> None:
+    """Test home devices are linked to the router device via via_device_id."""
+    await setup_platform(hass, BINARY_SENSOR_DOMAIN)
+
+    router_device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_MAC)})
+    assert router_device is not None
+
+    pir_node_id = 26  # Détecteur from fixture
+    pir_device = device_registry.async_get_device(identifiers={(DOMAIN, pir_node_id)})
+    assert pir_device is not None
+    assert pir_device.via_device_id == router_device.id
+
+
 async def test_home_device_label_sync(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
