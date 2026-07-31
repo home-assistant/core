@@ -195,7 +195,7 @@ async def _async_domain_names(hass: HomeAssistant, domains: list[str]) -> str:
 
 
 @callback
-def _async_build_entities_filter(
+def _async_build_include_filter(
     domains: list[str],
     entities: list[str],
     areas: list[str] | None = None,
@@ -649,7 +649,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
-            entity_filter = _async_build_entities_filter(domains, entities)
+            entity_filter = _async_build_include_filter(domains, entities)
             self.included_cameras = _async_entities_in_domain(entities, CAMERA_DOMAIN)
             self.included_climates = _async_entities_in_domain(entities, CLIMATE_DOMAIN)
             hk_options[CONF_FILTER] = entity_filter
@@ -694,7 +694,7 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
             include_areas = cv.ensure_list(user_input.get(CONF_INCLUDE_AREAS, []))
-            entity_filter = _async_build_entities_filter(
+            entity_filter = _async_build_include_filter(
                 domains, entities, include_areas
             )
             filtered = _async_domain_filtered_entities(
