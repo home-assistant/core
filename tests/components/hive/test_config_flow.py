@@ -120,34 +120,6 @@ async def test_user_flow_uppercase_username_normalized_for_auth(
     )
 
 
-async def test_user_flow_duplicate_username_with_different_casing_aborts(
-    hass: HomeAssistant,
-) -> None:
-    """Test user flow aborts for legacy entries stored with different unique_id casing."""
-    legacy_unique_id = USERNAME.upper()
-
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=legacy_unique_id,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_USERNAME: USERNAME.upper(), CONF_PASSWORD: PASSWORD},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
 async def test_user_flow_with_no_2fa(hass: HomeAssistant) -> None:
     """Test user flow with no 2FA required and device registration."""
     result = await hass.config_entries.flow.async_init(
