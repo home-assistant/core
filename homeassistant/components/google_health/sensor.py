@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfMass,
@@ -81,6 +82,7 @@ ACTIVITY_SENSORS: list[
         key="active_calories",
         translation_key="active_calories",
         native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: (
             data.active_energy_burned.kcal_sum
@@ -92,6 +94,7 @@ ACTIVITY_SENSORS: list[
         key="total_calories",
         translation_key="total_calories",
         native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: (
             data.total_calories.kcal_sum if data and data.total_calories else 0.0
@@ -230,6 +233,7 @@ NUTRITION_SENSORS: list[
         key="calories_consumed",
         translation_key="calories_consumed",
         native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: (
             data.nutrition.energy.kcal_sum
@@ -374,6 +378,7 @@ class GoogleHealthDeviceSensor(
     """Device-specific Google Health sensor entity."""
 
     _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     entity_description: GoogleHealthDeviceSensorEntityDescription
 
     def __init__(
