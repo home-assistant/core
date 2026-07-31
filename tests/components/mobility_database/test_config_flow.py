@@ -250,20 +250,49 @@ async def test_api_key_flow(
     assert result["data"][CONF_API_KEY] == "producer-key"
 
 
-async def test_duplicate_feed_aborts(
+async def test_duplicate_feed_aborts_and_token_reused(
     hass: HomeAssistant,
     mock_feeds_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that a feed can only be configured once."""
+    """Test the account token is reused and duplicate feeds abort."""
     mock_config_entry.add_to_hass(hass)
-    flow_id = await _advance_to_search(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    # The existing entry's token still works, so the token step is skipped.
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "search"
+    flow_id = result["flow_id"]
     await _search_and_get_options(hass, flow_id)
     result = await hass.config_entries.flow.async_configure(
         flow_id, {CONF_FEED_ID: FEED_ID}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_stale_existing_token_prompts_again(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the token step is shown when the existing entry's token is dead."""
+    mock_config_entry.add_to_hass(hass)
+    mock_feeds_client.catalog.get_metadata.side_effect = [
+        MobilityDatabaseAuthenticationError("expired"),
+        Metadata(version="1.0.0"),
+    ]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_REFRESH_TOKEN: "fresh-token"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "search"
 
 
 async def test_build_failure_aborts(
@@ -876,3 +905,39 @@ async def test_station_hierarchy_grouped(
     )
     assert subentry.data[CONF_STOP_IDS] == ["P1", "P2"]
     assert subentry.title == "Metro Center"
+
+
+async def test_reauth_token_updates_sibling_entries(
+    hass: HomeAssistant,
+    mock_feeds_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a rotated token propagates to entries sharing the old one."""
+    mock_config_entry.add_to_hass(hass)
+    sibling = MockConfigEntry(
+        domain=DOMAIN,
+        title="WMATA Rail",
+        unique_id="mdb-1847",
+        data={CONF_REFRESH_TOKEN: "refresh-token", CONF_FEED_ID: "mdb-1847"},
+    )
+    sibling.add_to_hass(hass)
+    other_account = MockConfigEntry(
+        domain=DOMAIN,
+        title="Other",
+        unique_id="mdb-99",
+        data={CONF_REFRESH_TOKEN: "different-token", CONF_FEED_ID: "mdb-99"},
+    )
+    other_account.add_to_hass(hass)
+    mock_feeds_client.catalog.get_metadata.side_effect = [
+        MobilityDatabaseAuthenticationError("expired"),
+        Metadata(version="1.0.0"),
+    ]
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_token"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_REFRESH_TOKEN: "new-token"}
+    )
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_REFRESH_TOKEN] == "new-token"
+    assert sibling.data[CONF_REFRESH_TOKEN] == "new-token"
+    assert other_account.data[CONF_REFRESH_TOKEN] == "different-token"

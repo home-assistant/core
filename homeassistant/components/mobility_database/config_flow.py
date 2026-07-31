@@ -204,9 +204,29 @@ class MobilityDatabaseConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Prompt for and validate the Mobility Database refresh token."""
+        """Prompt for and validate the Mobility Database refresh token.
+
+        The token is account-wide, so when another feed entry already holds a
+        working one, reuse it and skip straight to the feed search.
+        """
         errors: dict[str, str] = {}
-        if user_input is not None:
+        if user_input is None:
+            known_tokens = {
+                entry.data[CONF_REFRESH_TOKEN]
+                for entry in self._async_current_entries(include_ignore=False)
+            }
+            for token in known_tokens:
+                self._refresh_token = token
+                client = self._get_client()
+                try:
+                    await client.catalog.get_metadata()
+                except MobilityDatabaseError:
+                    self._refresh_token = None
+                    self._client = None
+                    await client.close()
+                else:
+                    return await self.async_step_search()
+        else:
             self._refresh_token = user_input[CONF_REFRESH_TOKEN]
             client = self._get_client()
             try:
@@ -432,9 +452,22 @@ class MobilityDatabaseConfigFlow(ConfigFlow, domain=DOMAIN):
             finally:
                 await client.close()
             if not errors:
+                entry = self._get_reauth_entry()
+                new_token: str = user_input[CONF_REFRESH_TOKEN]
+                # The token is account-wide: fix every other feed entry that
+                # held the same expired token instead of prompting per entry.
+                old_token: str = entry.data[CONF_REFRESH_TOKEN]
+                for other in self.hass.config_entries.async_entries(DOMAIN):
+                    if (
+                        other.entry_id != entry.entry_id
+                        and other.data[CONF_REFRESH_TOKEN] == old_token
+                    ):
+                        self.hass.config_entries.async_update_entry(
+                            other,
+                            data={**other.data, CONF_REFRESH_TOKEN: new_token},
+                        )
                 return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={CONF_REFRESH_TOKEN: user_input[CONF_REFRESH_TOKEN]},
+                    entry, data_updates={CONF_REFRESH_TOKEN: new_token}
                 )
         return self.async_show_form(
             step_id="reauth_token", data_schema=TOKEN_SCHEMA, errors=errors
