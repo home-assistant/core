@@ -1593,7 +1593,7 @@
     'state': '12',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_battery_percentage-entry]
+# name: test_v1_entities[sensor.airgradient_battery_percentage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1632,7 +1632,7 @@
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_battery_percentage-state]
+# name: test_v1_entities[sensor.airgradient_battery_percentage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
@@ -1648,7 +1648,7 @@
     'state': '87',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_battery_voltage-entry]
+# name: test_v1_entities[sensor.airgradient_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1690,7 +1690,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_battery_voltage-state]
+# name: test_v1_entities[sensor.airgradient_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
@@ -1706,7 +1706,7 @@
     'state': '3.91',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_carbon_dioxide-entry]
+# name: test_v1_entities[sensor.airgradient_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1745,7 +1745,7 @@
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_carbon_dioxide-state]
+# name: test_v1_entities[sensor.airgradient_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
@@ -1761,7 +1761,7 @@
     'state': '612',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_carbon_dioxide_automatic_baseline_calibration-entry]
+# name: test_v1_entities[sensor.airgradient_carbon_dioxide_automatic_baseline_calibration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1801,7 +1801,7 @@
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_carbon_dioxide_automatic_baseline_calibration-state]
+# name: test_v1_entities[sensor.airgradient_carbon_dioxide_automatic_baseline_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -1816,7 +1816,7 @@
     'state': '7',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_display_pm_standard-entry]
+# name: test_v1_entities[sensor.airgradient_display_pm_standard-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1858,7 +1858,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_display_pm_standard-state]
+# name: test_v1_entities[sensor.airgradient_display_pm_standard-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -1876,7 +1876,7 @@
     'state': 'ugm3',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_display_temperature_unit-entry]
+# name: test_v1_entities[sensor.airgradient_display_temperature_unit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1918,7 +1918,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_display_temperature_unit-state]
+# name: test_v1_entities[sensor.airgradient_display_temperature_unit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -1936,7 +1936,7 @@
     'state': 'c',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_humidity-entry]
+# name: test_v1_entities[sensor.airgradient_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1975,7 +1975,7 @@
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_humidity-state]
+# name: test_v1_entities[sensor.airgradient_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
@@ -1991,7 +1991,7 @@
     'state': '48.25',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_input_voltage-entry]
+# name: test_v1_entities[sensor.airgradient_input_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2033,7 +2033,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_input_voltage-state]
+# name: test_v1_entities[sensor.airgradient_input_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
@@ -2049,7 +2049,7 @@
     'state': '5.02',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_nox_index-entry]
+# name: test_v1_entities[sensor.airgradient_nox_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2088,7 +2088,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_nox_index-state]
+# name: test_v1_entities[sensor.airgradient_nox_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient NOx index',
@@ -2102,7 +2102,7 @@
     'state': '2',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_nox_index_learning_offset-entry]
+# name: test_v1_entities[sensor.airgradient_nox_index_learning_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2142,7 +2142,7 @@
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_nox_index_learning_offset-state]
+# name: test_v1_entities[sensor.airgradient_nox_index_learning_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -2157,7 +2157,7 @@
     'state': '12',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm0_3-entry]
+# name: test_v1_entities[sensor.airgradient_pm0_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2196,7 +2196,7 @@
     'unit_of_measurement': 'particles/dL',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm0_3-state]
+# name: test_v1_entities[sensor.airgradient_pm0_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient PM0.3',
@@ -2211,7 +2211,7 @@
     'state': '100',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm0_5_particle_count-entry]
+# name: test_v1_entities[sensor.airgradient_pm0_5_particle_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2250,7 +2250,7 @@
     'unit_of_measurement': 'particles/dL',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm0_5_particle_count-state]
+# name: test_v1_entities[sensor.airgradient_pm0_5_particle_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient PM0.5 particle count',
@@ -2265,7 +2265,7 @@
     'state': '90',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm1-entry]
+# name: test_v1_entities[sensor.airgradient_pm1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2304,7 +2304,7 @@
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm1-state]
+# name: test_v1_entities[sensor.airgradient_pm1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm1',
@@ -2320,7 +2320,7 @@
     'state': '1.25',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm10-entry]
+# name: test_v1_entities[sensor.airgradient_pm10-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2359,7 +2359,7 @@
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm10-state]
+# name: test_v1_entities[sensor.airgradient_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
@@ -2375,7 +2375,7 @@
     'state': '3.75',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm10_particle_count-entry]
+# name: test_v1_entities[sensor.airgradient_pm10_particle_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2414,7 +2414,7 @@
     'unit_of_measurement': 'particles/dL',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm10_particle_count-state]
+# name: test_v1_entities[sensor.airgradient_pm10_particle_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient PM10 particle count',
@@ -2429,7 +2429,7 @@
     'state': '50',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm1_particle_count-entry]
+# name: test_v1_entities[sensor.airgradient_pm1_particle_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2468,7 +2468,7 @@
     'unit_of_measurement': 'particles/dL',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm1_particle_count-state]
+# name: test_v1_entities[sensor.airgradient_pm1_particle_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient PM1 particle count',
@@ -2483,7 +2483,7 @@
     'state': '80',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm2_5-entry]
+# name: test_v1_entities[sensor.airgradient_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2522,7 +2522,7 @@
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm2_5-state]
+# name: test_v1_entities[sensor.airgradient_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
@@ -2538,7 +2538,7 @@
     'state': '2.5',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm2_5_particle_count-entry]
+# name: test_v1_entities[sensor.airgradient_pm2_5_particle_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2577,7 +2577,7 @@
     'unit_of_measurement': 'particles/dL',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm2_5_particle_count-state]
+# name: test_v1_entities[sensor.airgradient_pm2_5_particle_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient PM2.5 particle count',
@@ -2592,7 +2592,7 @@
     'state': '70',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm5_particle_count-entry]
+# name: test_v1_entities[sensor.airgradient_pm5_particle_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2631,7 +2631,7 @@
     'unit_of_measurement': 'particles/dL',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_pm5_particle_count-state]
+# name: test_v1_entities[sensor.airgradient_pm5_particle_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient PM5 particle count',
@@ -2646,7 +2646,7 @@
     'state': '60',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_raw_nox-entry]
+# name: test_v1_entities[sensor.airgradient_raw_nox-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2685,7 +2685,7 @@
     'unit_of_measurement': 'ticks',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_raw_nox-state]
+# name: test_v1_entities[sensor.airgradient_raw_nox-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Raw NOx',
@@ -2700,7 +2700,7 @@
     'state': '16000',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_raw_voc-entry]
+# name: test_v1_entities[sensor.airgradient_raw_voc-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2739,7 +2739,7 @@
     'unit_of_measurement': 'ticks',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_raw_voc-state]
+# name: test_v1_entities[sensor.airgradient_raw_voc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Raw VOC',
@@ -2754,7 +2754,7 @@
     'state': '32100',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_signal_strength-entry]
+# name: test_v1_entities[sensor.airgradient_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2793,7 +2793,7 @@
     'unit_of_measurement': 'dBm',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_signal_strength-state]
+# name: test_v1_entities[sensor.airgradient_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
@@ -2809,7 +2809,7 @@
     'state': '-57',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_temperature-entry]
+# name: test_v1_entities[sensor.airgradient_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2851,7 +2851,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_temperature-state]
+# name: test_v1_entities[sensor.airgradient_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2867,7 +2867,7 @@
     'state': '21.5',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_voc_index-entry]
+# name: test_v1_entities[sensor.airgradient_voc_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2906,7 +2906,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_voc_index-state]
+# name: test_v1_entities[sensor.airgradient_voc_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient VOC index',
@@ -2920,7 +2920,7 @@
     'state': '101',
   })
 # ---
-# name: test_go_entities[sensor.airgradient_voc_index_learning_offset-entry]
+# name: test_v1_entities[sensor.airgradient_voc_index_learning_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2960,7 +2960,7 @@
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
-# name: test_go_entities[sensor.airgradient_voc_index_learning_offset-state]
+# name: test_v1_entities[sensor.airgradient_voc_index_learning_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',

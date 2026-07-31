@@ -86,13 +86,13 @@ def mock_cloud_airgradient_client(
 def mock_v1_airgradient_client(
     mock_airgradient_client: AsyncMock,
 ) -> AsyncMock:
-    """Mock a V1 AirGradient client with a complete Go payload."""
+    """Mock an AirGradient client with a complete API V1 payload."""
     mock_airgradient_client.api_version = ApiVersion.V1
     mock_airgradient_client.get_current_measures.return_value = load_measures_fixture(
         "measures_v1_full.json", ApiVersion.V1
     )
     mock_airgradient_client.get_config.return_value = load_config_fixture(
-        "config_v1_go.json", ApiVersion.V1
+        "config_v1_full.json", ApiVersion.V1
     )
     return mock_airgradient_client
 

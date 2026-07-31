@@ -30,14 +30,14 @@ async def test_diagnostics_polling_instance(
     )
 
 
-async def test_go_diagnostics(
+async def test_v1_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_v1_airgradient_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test Go diagnostics."""
+    """Test V1 diagnostics."""
     mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
         "config_v1_local.json", ApiVersion.V1
     )

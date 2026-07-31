@@ -128,13 +128,13 @@ async def test_v1_config_omission_removes_entity(
     assert hass.states.get("select.airgradient_co2_automatic_baseline_duration") is None
 
 
-async def test_go_measurement_interval_select(
+async def test_v1_measurement_interval_select(
     hass: HomeAssistant,
     mock_v1_airgradient_client: AsyncMock,
     mock_config_apply_delay: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test Go measurement interval is selected from approved values."""
+    """Test V1 measurement interval is selected from approved values."""
     mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
         "config_v1_local.json", ApiVersion.V1
     )
@@ -156,14 +156,14 @@ async def test_go_measurement_interval_select(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_go_entities(
+async def test_v1_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_v1_airgradient_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test Go select entities."""
+    """Test V1 select entities."""
     mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
         "config_v1_local.json", ApiVersion.V1
     )
@@ -204,7 +204,7 @@ async def test_go_entities(
     ],
 )
 @pytest.mark.usefixtures("mock_config_apply_delay")
-async def test_go_select_writes(
+async def test_v1_select_writes(
     hass: HomeAssistant,
     mock_v1_airgradient_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -213,7 +213,7 @@ async def test_go_select_writes(
     method: str,
     expected: int | str,
 ) -> None:
-    """Test Go select values use the documented wire values."""
+    """Test V1 select values use the documented wire values."""
     mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
         "config_v1_local.json", ApiVersion.V1
     )

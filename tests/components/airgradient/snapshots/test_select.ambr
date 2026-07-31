@@ -690,7 +690,7 @@
     'state': '12',
   })
 # ---
-# name: test_go_entities[select.airgradient_back_led_brightness-entry]
+# name: test_v1_entities[select.airgradient_back_led_brightness-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -734,7 +734,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[select.airgradient_back_led_brightness-state]
+# name: test_v1_entities[select.airgradient_back_led_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Back LED brightness',
@@ -753,7 +753,7 @@
     'state': 'mid',
   })
 # ---
-# name: test_go_entities[select.airgradient_co2_automatic_baseline_duration-entry]
+# name: test_v1_entities[select.airgradient_co2_automatic_baseline_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -799,7 +799,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[select.airgradient_co2_automatic_baseline_duration-state]
+# name: test_v1_entities[select.airgradient_co2_automatic_baseline_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient CO2 automatic baseline duration',
@@ -820,7 +820,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_go_entities[select.airgradient_configuration_source-entry]
+# name: test_v1_entities[select.airgradient_configuration_source-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -862,7 +862,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[select.airgradient_configuration_source-state]
+# name: test_v1_entities[select.airgradient_configuration_source-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Configuration source',
@@ -879,7 +879,7 @@
     'state': 'local',
   })
 # ---
-# name: test_go_entities[select.airgradient_display_pm_standard-entry]
+# name: test_v1_entities[select.airgradient_display_pm_standard-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -921,7 +921,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[select.airgradient_display_pm_standard-state]
+# name: test_v1_entities[select.airgradient_display_pm_standard-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Display PM standard',
@@ -938,7 +938,7 @@
     'state': 'ugm3',
   })
 # ---
-# name: test_go_entities[select.airgradient_display_temperature_unit-entry]
+# name: test_v1_entities[select.airgradient_display_temperature_unit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -980,7 +980,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[select.airgradient_display_temperature_unit-state]
+# name: test_v1_entities[select.airgradient_display_temperature_unit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Display temperature unit',
@@ -997,7 +997,7 @@
     'state': 'c',
   })
 # ---
-# name: test_go_entities[select.airgradient_front_led_brightness-entry]
+# name: test_v1_entities[select.airgradient_front_led_brightness-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1041,7 +1041,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[select.airgradient_front_led_brightness-state]
+# name: test_v1_entities[select.airgradient_front_led_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Front LED brightness',
@@ -1060,7 +1060,7 @@
     'state': 'dim',
   })
 # ---
-# name: test_go_entities[select.airgradient_gps_mode-entry]
+# name: test_v1_entities[select.airgradient_gps_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1103,7 +1103,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[select.airgradient_gps_mode-state]
+# name: test_v1_entities[select.airgradient_gps_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient GPS mode',
@@ -1121,7 +1121,7 @@
     'state': 'tracking',
   })
 # ---
-# name: test_go_entities[select.airgradient_measurement_interval-entry]
+# name: test_v1_entities[select.airgradient_measurement_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1168,7 +1168,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[select.airgradient_measurement_interval-state]
+# name: test_v1_entities[select.airgradient_measurement_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Measurement interval',
@@ -1190,7 +1190,7 @@
     'state': '10',
   })
 # ---
-# name: test_go_entities[select.airgradient_nox_index_learning_offset-entry]
+# name: test_v1_entities[select.airgradient_nox_index_learning_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1235,7 +1235,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[select.airgradient_nox_index_learning_offset-state]
+# name: test_v1_entities[select.airgradient_nox_index_learning_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient NOx index learning offset',
@@ -1255,7 +1255,7 @@
     'state': '12',
   })
 # ---
-# name: test_go_entities[select.airgradient_touch_led_intensity-entry]
+# name: test_v1_entities[select.airgradient_touch_led_intensity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1298,7 +1298,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[select.airgradient_touch_led_intensity-state]
+# name: test_v1_entities[select.airgradient_touch_led_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Touch LED intensity',
@@ -1316,7 +1316,7 @@
     'state': 'bright',
   })
 # ---
-# name: test_go_entities[select.airgradient_voc_index_learning_offset-entry]
+# name: test_v1_entities[select.airgradient_voc_index_learning_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1361,7 +1361,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[select.airgradient_voc_index_learning_offset-state]
+# name: test_v1_entities[select.airgradient_voc_index_learning_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient VOC index learning offset',

@@ -58,27 +58,27 @@ async def test_create_entities(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_go_entities(
+async def test_v1_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_v1_airgradient_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test Go sensor entities."""
+    """Test V1 sensor entities."""
     with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_go_sensor_defaults(
+async def test_v1_sensor_defaults(
     hass: HomeAssistant,
     mock_v1_airgradient_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test Go sensor default enablement."""
+    """Test V1 sensor default enablement."""
     with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
@@ -100,13 +100,13 @@ async def test_go_sensor_defaults(
     assert hass.states.get("sensor.airgradient_raw_pm2_5") is None
 
 
-async def test_go_measurements_can_appear_later(
+async def test_v1_measurements_can_appear_later(
     hass: HomeAssistant,
     mock_v1_airgradient_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test omitted Go measurements are added when they become available."""
+    """Test omitted V1 measurements are added when they become available."""
     mock_v1_airgradient_client.get_current_measures.return_value = (
         load_measures_fixture("measures_v1_minimal.json", ApiVersion.V1)
     )
@@ -126,12 +126,12 @@ async def test_go_measurements_can_appear_later(
     assert battery_state.state == "87"
 
 
-async def test_go_zero_measurements(
+async def test_v1_zero_measurements(
     hass: HomeAssistant,
     mock_v1_airgradient_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test zero-valued Go measurements are not treated as missing."""
+    """Test zero-valued V1 measurements are not treated as missing."""
     mock_v1_airgradient_client.get_current_measures.return_value = (
         load_measures_fixture("measures_v1_zero.json", ApiVersion.V1)
     )

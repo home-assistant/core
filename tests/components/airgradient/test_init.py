@@ -93,13 +93,13 @@ async def test_diy_legacy_entities(
         assert hass.states.get(entity_id) is None
 
 
-async def test_go_config_refresh_skips_pending_writes(
+async def test_v1_config_refresh_skips_pending_writes(
     hass: HomeAssistant,
     mock_v1_airgradient_client: AsyncMock,
     mock_config_apply_delay: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test Go config refreshes skip reads during pending writes."""
+    """Test V1 config refreshes skip reads during pending writes."""
     await setup_integration(hass, mock_config_entry)
     coordinator = mock_config_entry.runtime_data
     release_writes = asyncio.Event()
@@ -133,13 +133,13 @@ async def test_go_config_refresh_skips_pending_writes(
     assert mock_config_apply_delay.await_count == 2
 
 
-async def test_go_config_refresh_discards_in_flight_read(
+async def test_v1_config_refresh_discards_in_flight_read(
     hass: HomeAssistant,
     mock_v1_airgradient_client: AsyncMock,
     mock_config_apply_delay: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a Go config write discards an in-flight config read."""
+    """Test a V1 config write discards an in-flight config read."""
     await setup_integration(hass, mock_config_entry)
     coordinator = mock_config_entry.runtime_data
     cached_config = coordinator.data.config

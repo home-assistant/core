@@ -384,7 +384,7 @@ async def test_zeroconf_flow_aborts_on_serial_mismatch(
 async def test_user_flow_v1_skips_legacy_firmware_gate(
     hass: HomeAssistant, mock_v1_airgradient_client: AsyncMock
 ) -> None:
-    """Test manual V1 setup accepts a Go firmware version below 3.1.1."""
+    """Test manual setup skips the legacy firmware minimum for an API V1 capable model."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},

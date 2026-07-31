@@ -56,7 +56,7 @@
     }),
   })
 # ---
-# name: test_go_diagnostics
+# name: test_v1_diagnostics
   dict({
     'config': dict({
       'back_led_brightness': 2,

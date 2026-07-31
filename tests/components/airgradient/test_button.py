@@ -35,14 +35,14 @@ async def test_all_entities(
     )
 
 
-async def test_go_entities(
+async def test_v1_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_v1_airgradient_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test Go button entities."""
+    """Test V1 button entities."""
     mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
         "config_v1_local.json", ApiVersion.V1
     )

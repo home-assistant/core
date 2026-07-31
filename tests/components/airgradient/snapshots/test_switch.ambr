@@ -49,7 +49,7 @@
     'state': 'on',
   })
 # ---
-# name: test_go_entities[switch.airgradient_buzzer-entry]
+# name: test_v1_entities[switch.airgradient_buzzer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -86,7 +86,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[switch.airgradient_buzzer-state]
+# name: test_v1_entities[switch.airgradient_buzzer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Buzzer',
@@ -99,7 +99,7 @@
     'state': 'on',
   })
 # ---
-# name: test_go_entities[switch.airgradient_cloud_connection-entry]
+# name: test_v1_entities[switch.airgradient_cloud_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -136,7 +136,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_go_entities[switch.airgradient_cloud_connection-state]
+# name: test_v1_entities[switch.airgradient_cloud_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Cloud connection',

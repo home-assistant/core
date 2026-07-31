@@ -64,14 +64,14 @@ async def test_setting_value(
     mock_airgradient_client.enable_sharing_data.assert_called_once()
 
 
-async def test_go_entities(
+async def test_v1_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_v1_airgradient_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test Go switch entities."""
+    """Test V1 switch entities."""
     mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
         "config_v1_local.json", ApiVersion.V1
     )
@@ -89,14 +89,14 @@ async def test_go_entities(
     ],
 )
 @pytest.mark.usefixtures("mock_config_apply_delay")
-async def test_go_switch_writes(
+async def test_v1_switch_writes(
     hass: HomeAssistant,
     mock_v1_airgradient_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_id: str,
     method: str,
 ) -> None:
-    """Test Go switch writes."""
+    """Test V1 switch writes."""
     mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
         "config_v1_local.json", ApiVersion.V1
     )
