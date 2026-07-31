@@ -71,6 +71,8 @@ async def test_time_decodes_seconds_since_midnight(
     [
         pytest.param("garbage", id="non_numeric"),
         pytest.param(None, id="missing"),
+        pytest.param(86400, id="out_of_range_high"),
+        pytest.param(-60, id="negative"),
     ],
 )
 async def test_time_native_value_unknown_when_unparsable(
@@ -79,7 +81,7 @@ async def test_time_native_value_unknown_when_unparsable(
     mock_vistapool_client: AsyncMock,
     raw_value: Any,
 ) -> None:
-    """Test a non-numeric or missing raw value yields an unknown state."""
+    """Test an unparsable or out-of-range raw value yields an unknown state."""
     mock_vistapool_client.fetch_pool_data.return_value = {
         "main": {"version": 1},
         "filtration": {"interval1": {"from": raw_value}},
@@ -95,17 +97,28 @@ async def test_time_native_value_unknown_when_unparsable(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "expected_path"),
+    ("entity_id", "time_value", "expected_path", "expected_seconds"),
     [
         pytest.param(
             "time.my_pool_filtration_interval_1_start",
+            "12:30:00",
             "filtration.interval1.from",
+            45000,
             id="interval_1_start",
         ),
         pytest.param(
             "time.my_pool_filtration_interval_2_end",
+            "12:30:00",
             "filtration.interval2.to",
+            45000,
             id="interval_2_end",
+        ),
+        pytest.param(
+            "time.my_pool_filtration_interval_3_start",
+            "07:05:09",
+            "filtration.interval3.from",
+            25509,
+            id="interval_3_start_with_seconds",
         ),
     ],
 )
@@ -115,7 +128,9 @@ async def test_time_set_value(
     mock_vistapool_client: AsyncMock,
     mock_pool_data: dict[str, Any],
     entity_id: str,
+    time_value: str,
     expected_path: str,
+    expected_seconds: int,
 ) -> None:
     """Test set_value encodes the time as seconds since midnight at the right path."""
     mock_vistapool_client.fetch_pool_data.return_value = mock_pool_data
@@ -127,15 +142,14 @@ async def test_time_set_value(
     await hass.services.async_call(
         TIME_DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TIME: "12:30:00"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_TIME: time_value},
         blocking=True,
     )
 
-    # 12:30 -> 12 * 3600 + 30 * 60 = 45000 seconds.
     mock_vistapool_client.set_value.assert_awaited_once_with(
-        "ABCDEF1234567890", expected_path, 45000
+        "ABCDEF1234567890", expected_path, expected_seconds
     )
-    assert hass.states.get(entity_id).state == "12:30:00"
+    assert hass.states.get(entity_id).state == time_value
 
 
 async def test_time_set_value_raises_on_api_error(

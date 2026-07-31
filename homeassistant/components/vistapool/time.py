@@ -101,16 +101,24 @@ class VistapoolTime(VistapoolEntity, TimeEntity):
             return None
         try:
             seconds = int(raw)
+            return time(
+                seconds // _SECONDS_PER_HOUR,
+                (seconds % _SECONDS_PER_HOUR) // _SECONDS_PER_MINUTE,
+                seconds % _SECONDS_PER_MINUTE,
+            )
         except TypeError, ValueError:
+            # Also covers out-of-range values (negative or >= 24h), which make
+            # the time() constructor raise instead of silently wrapping.
             return None
-        hours = (seconds // _SECONDS_PER_HOUR) % 24
-        minutes = (seconds % _SECONDS_PER_HOUR) // _SECONDS_PER_MINUTE
-        return time(hours, minutes)
 
     @override
     async def async_set_value(self, value: time) -> None:
         """Send the interval bound to the controller as seconds since midnight."""
-        seconds = value.hour * _SECONDS_PER_HOUR + value.minute * _SECONDS_PER_MINUTE
+        seconds = (
+            value.hour * _SECONDS_PER_HOUR
+            + value.minute * _SECONDS_PER_MINUTE
+            + value.second
+        )
         try:
             await self.coordinator.api.set_value(
                 self.coordinator.pool_id,
