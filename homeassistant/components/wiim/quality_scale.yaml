@@ -52,7 +52,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: done
   discovery: done
   docs-data-update: todo
@@ -72,7 +72,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No known use cases for repair issues or flows, yet

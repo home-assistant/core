@@ -51,6 +51,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity import CONTEXT_RECENT_TIME_SECONDS
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -143,6 +144,7 @@ async def async_setup_entry(
         PLATFORM_SCHEMA_COMMON(dict(config_entry.options)),
         config_entry.entry_id,
         async_add_entities,
+        device=async_entity_id_to_device(hass, config_entry.options[CONF_HEATER]),
     )
 
 
@@ -165,6 +167,7 @@ async def _async_setup_config(
     config: Mapping[str, Any],
     unique_id: str | None,
     async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
+    device: DeviceEntry | None = None,
 ) -> None:
     """Set up the generic thermostat platform."""
 
@@ -192,7 +195,6 @@ async def _async_setup_config(
     async_add_entities(
         [
             GenericThermostat(
-                hass,
                 name=name,
                 heater_entity_id=heater_entity_id,
                 sensor_entity_id=sensor_entity_id,
@@ -212,6 +214,7 @@ async def _async_setup_config(
                 target_temperature_step=target_temperature_step,
                 unit=unit,
                 unique_id=unique_id,
+                device=device,
             )
         ]
     )
@@ -224,7 +227,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         *,
         name: str,
         heater_entity_id: str,
@@ -245,15 +247,13 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         target_temperature_step: float | None,
         unit: UnitOfTemperature,
         unique_id: str | None,
+        device: DeviceEntry | None = None,
     ) -> None:
         """Initialize the thermostat."""
         self._attr_name = name
         self.heater_entity_id = heater_entity_id
         self.sensor_entity_id = sensor_entity_id
-        self.device_entry = async_entity_id_to_device(
-            hass,
-            heater_entity_id,
-        )
+        self.device_entry = device
         self.ac_mode = ac_mode
         self.min_cycle_duration = min_cycle_duration or timedelta()
         self.max_cycle_duration = max_cycle_duration
