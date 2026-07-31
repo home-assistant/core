@@ -526,7 +526,7 @@ async def test_migrate_entity_id_zoom(
         config_entry=config_entry,
         suggested_object_id=original_id,
         disabled_by=None,
-        original_name="NEEDS_MIGRATION",
+        original_name="Zoom",
     )
 
     entity_registry.async_get_or_create(
@@ -549,7 +549,7 @@ async def test_migrate_entity_id_zoom(
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
     entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, new_id)
-    assert entity_registry.async_get(entity_id).original_name == "NEEDS_MIGRATION"
+    assert entity_registry.async_get(entity_id).original_name == "Zoom"
 
 
 async def test_migrate_with_already_existing_device(
