@@ -169,13 +169,13 @@ async def test_switch_setup_failure(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_rain_delay",
-            side_effect=IntelliDwellConnectionError,
+            return_value={"days_remaining": 0},
             new_callable=AsyncMock,
             create=True,
         ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.get_schedules",
-            side_effect=IntelliDwellConnectionError,
+            return_value=[],
             new_callable=AsyncMock,
             create=True,
         ),
