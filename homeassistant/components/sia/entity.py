@@ -67,7 +67,6 @@ class SIABaseEntity(RestoreEntity):
         self.account = account
         self.zone = zone
         self.entity_description = entity_description
-        self._entry_id = entry.entry_id
 
         self.ping_interval: int = next(
             acc[CONF_PING_INTERVAL]
