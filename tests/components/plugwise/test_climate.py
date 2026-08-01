@@ -190,12 +190,14 @@ async def test_adam_restore_state_climate(
     assert (state := hass.states.get("climate.living_room"))
     assert state.state == "heat"
 
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.AUTO},
-        blocking=True,
-    )
+    # Verify a HomeAssistantError is raised setting a schedule with last_active_schedule == "off"
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.AUTO},
+            blocking=True,
+        )
 
     data = mock_smile_adam_heat_cool.async_update.return_value
     data["f2bf9048bef64cc5b6d5110154e33c81"]["climate_mode"] = "off"
@@ -243,7 +245,7 @@ async def test_adam_restore_state_climate(
             "Badkamer",
             STATE_ON,
         )
-        assert mock_smile_adam_heat_cool.set_schedule_state.call_count == 2
+        assert mock_smile_adam_heat_cool.set_schedule_state.call_count == 1
 
     data = mock_smile_adam_heat_cool.async_update.return_value
     data["f871b8c4d63549319221e294e4f88074"]["climate_mode"] = "heat"
@@ -263,7 +265,7 @@ async def test_adam_restore_state_climate(
             {ATTR_ENTITY_ID: "climate.bathroom", ATTR_HVAC_MODE: HVACMode.AUTO},
             blocking=True,
         )
-        assert mock_smile_adam_heat_cool.set_schedule_state.call_count == 3
+        assert mock_smile_adam_heat_cool.set_schedule_state.call_count == 2
 
 
 @pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
