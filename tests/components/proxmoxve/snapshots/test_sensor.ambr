@@ -2547,6 +2547,57 @@
     'state': '1.1497809458524',
   })
 # ---
+# name: test_all_entities[sensor.vm_db_guest_agent_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.vm_db_guest_agent_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Guest agent status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Guest agent status',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'guest_agent_status',
+    'unique_id': '1234_101_guest_agent_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.vm_db_guest_agent_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-db Guest agent status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vm_db_guest_agent_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.vm_db_max_cpu-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3201,6 +3252,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.1497809458524',
+  })
+# ---
+# name: test_all_entities[sensor.vm_web_guest_agent_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.vm_web_guest_agent_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Guest agent status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Guest agent status',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'guest_agent_status',
+    'unique_id': '1234_100_guest_agent_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.vm_web_guest_agent_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-web Guest agent status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vm_web_guest_agent_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'active',
   })
 # ---
 # name: test_all_entities[sensor.vm_web_max_cpu-entry]

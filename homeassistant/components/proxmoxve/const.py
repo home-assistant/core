@@ -44,3 +44,11 @@ class ProxmoxPermission(StrEnum):
     SYSAUDIT = "Sys.Audit"
     SYSPOWER = "Sys.PowerMgmt"
     VMAUDIT = "VM.Audit"
+
+
+class ProxmoxAgentState(StrEnum):
+    """Proxmox agent states."""
+
+    UNKNOWN = "unknown"
+    ACTIVE = "active"
+    INACTIVE = "inactive"

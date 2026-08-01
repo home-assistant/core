@@ -298,6 +298,13 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
+    ProxmoxVMSensorEntityDescription(
+        key="guest_agent_status",
+        translation_key="guest_agent_status",
+        value_fn=lambda data: data["guest_agent"],
+        device_class=SensorDeviceClass.ENUM,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
