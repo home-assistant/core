@@ -73,6 +73,12 @@ async def test_get_triggers(
     hue_wall_switch_device = device_registry.async_get_device(
         identifiers={(hue.DOMAIN, "3ff06175-29e8-44a8-8fe7-af591b0025da")}
     )
+    # The device is linked to the bridge device as its via_device.
+    bridge_device = device_registry.async_get_device_by_identifier(
+        (hue.DOMAIN, mock_bridge_v2.api.config.bridge_id),
+        mock_bridge_v2.config_entry.entry_id,
+    )
+    assert hue_wall_switch_device.via_device_id == bridge_device.id
     hue_bat_sensor = entity_registry.async_get(
         "sensor.wall_switch_with_2_controls_battery"
     )
