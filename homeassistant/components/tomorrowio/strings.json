@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -12,11 +12,39 @@
     "step": {
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "location": "[%key:common::config_flow::data::location%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "The API key for your Tomorrow.io account"
         },
         "description": "To get an API key, sign up at {signup_link}."
+      }
+    }
+  },
+  "config_subentries": {
+    "location": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Location",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure location",
+        "user": "Add location"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "location": "[%key:common::config_flow::data::location%]",
+            "name": "[%key:common::config_flow::data::name%]",
+            "timestep": "Minutes between NowCast forecasts"
+          },
+          "data_description": {
+            "location": "The location to get weather data for",
+            "name": "The name of the location",
+            "timestep": "If you choose to enable the `nowcast` forecast entity, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts."
+          }
+        }
       }
     }
   },
@@ -148,17 +176,6 @@
       },
       "wind_gust": {
         "name": "Wind gust"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "timestep": "Minutes between NowCast forecasts"
-        },
-        "description": "If you choose to enable the `nowcast` forecast entity, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
-        "title": "Update Tomorrow.io options"
       }
     }
   }

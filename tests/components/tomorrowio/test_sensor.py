@@ -7,28 +7,19 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, async_rounded_state
-from homeassistant.components.tomorrowio.config_flow import (
-    _get_config_schema,
-    _get_unique_id,
-)
-from homeassistant.components.tomorrowio.const import (
-    ATTRIBUTION,
-    CONF_TIMESTEP,
-    DEFAULT_NAME,
-    DEFAULT_TIMESTEP,
-    DOMAIN,
-)
+from homeassistant.components.tomorrowio.const import ATTRIBUTION
 from homeassistant.components.tomorrowio.sensor import TomorrowioSensorEntityDescription
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, SOURCE_USER
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
+from . import make_v2_config_entry
 from .const import API_V4_ENTRY_DATA
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 CC_SENSOR_ENTITY_ID = "sensor.tomorrow_io_{}"
 
@@ -115,16 +106,7 @@ async def _setup(
     with freeze_time(
         datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC)
     ) as frozen_time:
-        data = _get_config_schema(hass, SOURCE_USER)(config)
-        data[CONF_NAME] = DEFAULT_NAME
-        config_entry = MockConfigEntry(
-            title=DEFAULT_NAME,
-            domain=DOMAIN,
-            data=data,
-            options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
-            unique_id=_get_unique_id(hass, data),
-            version=1,
-        )
+        config_entry = make_v2_config_entry(data=config)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
