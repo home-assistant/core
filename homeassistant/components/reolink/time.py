@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import time
-from typing import Any
+from typing import Any, override
 
 from reolink_aio.api import Host
 from reolink_aio.enums import SpotlightModeEnum
@@ -125,11 +125,13 @@ class ReolinkTimeEntity(ReolinkChannelCoordinatorEntity, TimeEntity):
         super().__init__(reolink_data, channel)
 
     @property
+    @override
     def native_value(self) -> time | None:
         """Return the current value."""
         return self.entity_description.value(self._host.api, self._channel)
 
     @raise_translated_error
+    @override
     async def async_set_value(self, value: time) -> None:
         """Update the current value."""
         await self.entity_description.method(self._host.api, self._channel, value)
