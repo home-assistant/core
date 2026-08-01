@@ -67,12 +67,7 @@ class ClickyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._data.update(user_input)
 
-            self._async_abort_entries_match(
-                {
-                    CONF_SITE_ID: self._data[CONF_SITE_ID],
-                    CONF_SITEKEY: self._data[CONF_SITEKEY],
-                }
-            )
+            self._async_abort_entries_match({CONF_SITE_ID: self._data[CONF_SITE_ID]})
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
