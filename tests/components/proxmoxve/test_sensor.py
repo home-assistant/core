@@ -96,20 +96,24 @@ async def test_sensors_according_to_permissions(
 
 
 @pytest.mark.parametrize(
-    ("vmid", "expected_state", "agent_side_effect"),
+    ("entity_id", "expected_state", "agent_side_effect"),
     [
-        (100, ProxmoxAgentState.ACTIVE, None),
-        (100, ProxmoxAgentState.INACTIVE, ResourceException("500", "error", "content")),
-        (101, ProxmoxAgentState.UNKNOWN, None),
+        ("sensor.vm_web_guest_agent_status", ProxmoxAgentState.ACTIVE, None),
+        (
+            "sensor.vm_web_guest_agent_status",
+            ProxmoxAgentState.INACTIVE,
+            ResourceException("500", "error", "content"),
+        ),
+        ("sensor.vm_db_guest_agent_status", ProxmoxAgentState.UNKNOWN, None),
     ],
 )
 async def test_agent_state(
     hass: HomeAssistant,
-    mock_proxmox_client,
-    mock_config_entry,
-    vmid,
-    expected_state,
-    agent_side_effect,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    expected_state: str,
+    agent_side_effect: Exception | None,
 ) -> None:
     """Normal conditions for guest agent state."""
     vm_data = await async_load_json_array_fixture(hass, "nodes/qemu.json", DOMAIN)
@@ -124,6 +128,7 @@ async def test_agent_state(
     node_mock.qemu.side_effect = lambda *args: vm_mock if args else node_mock.qemu
 
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
 
-    assert coordinator.data["pve1"].vms[vmid]["guest_agent"] == expected_state
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state

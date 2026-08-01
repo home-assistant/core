@@ -2553,7 +2553,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown',
+        'active',
+        'inactive',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2589,6 +2595,11 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-db Guest agent status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown',
+        'active',
+        'inactive',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vm_db_guest_agent_status',
@@ -3260,7 +3271,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown',
+        'active',
+        'inactive',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3296,6 +3313,11 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'vm-web Guest agent status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown',
+        'active',
+        'inactive',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vm_web_guest_agent_status',

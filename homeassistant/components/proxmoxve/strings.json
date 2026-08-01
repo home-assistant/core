@@ -210,8 +210,8 @@
         "name": "Guest agent status",
         "state": {
           "active": "Active",
-          "inactive": "inactive",
-          "unknown": "unknown"
+          "inactive": "Inactive",
+          "unknown": "Unknown"
         }
       },
       "node_backup_duration": {
