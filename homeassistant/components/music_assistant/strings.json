@@ -262,9 +262,6 @@
   "exceptions": {
     "invalid_username": {
       "message": "The username {username} does not exist. Available usernames are {available_usernames}."
-    },
-    "unsupported_parameter": {
-      "message": "Your current Music Assistant version does not support parameter {parameter}. Support is available from {version} (stable) and later."
     }
   },
   "issues": {
