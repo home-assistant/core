@@ -141,7 +141,7 @@ async def test_wallbox_refresh_failed_connection_error(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_wallbox_refresh_failed_too_many_requests_no_eco_mode(
+async def test_wallbox_setup_load_entry_no_eco_mode(
     hass: HomeAssistant, entry: MockConfigEntry, mock_wallbox
 ) -> None:
     """Test Wallbox Unload."""
