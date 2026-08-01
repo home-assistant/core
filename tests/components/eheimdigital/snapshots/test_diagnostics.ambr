@@ -341,8 +341,8 @@
           'version': 8,
         }),
         'usrdta': dict({
-          'api_password': 'admin',
-          'api_usrName': 'api',
+          'api_password': '**REDACTED**',
+          'api_usrName': '**REDACTED**',
           'aqName': 'Mock Aquarium',
           'build': list([
             '1765358332000',
@@ -350,7 +350,7 @@
           ]),
           'demoUse': 0,
           'dst': 1,
-          'emailAddr': 'xxx',
+          'emailAddr': '**REDACTED**',
           'firmwareAvailable': 0,
           'firstStart': 0,
           'from': '00:00:00:00:00:05',
@@ -384,7 +384,7 @@
           'title': 'USRDTA',
           'to': 'USER',
           'unit': 0,
-          'usrName': 'xxx',
+          'usrName': '**REDACTED**',
           'version': 11,
         }),
       }),
