@@ -166,15 +166,6 @@ class MideaClimate(MideaEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _zone: int | None = None
 
-    def __init__(
-        self,
-        device: MideaClimateDevice,
-        description: MideaClimateEntityDescription,
-    ) -> None:
-        """Midea Climate entity init."""
-        super().__init__(device, description.key)
-        self.entity_description = description
-
     def _float_attribute(self, attr: str) -> float | None:
         """Return a device attribute as float, if convertible."""
         value = self._device.get_attribute(attr)
