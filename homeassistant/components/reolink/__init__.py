@@ -236,17 +236,18 @@ async def async_setup_entry(
     )
 
     if host.api.is_nvr and host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
-        # ensure the camera device is setup before
+        # ensure the camera devices are setup before
         # the lens sub-devices that use via_device
-        if host.api.supported(0, "UID"):
-            camera_dev_id = f"{host.unique_id}_{host.api.camera_uid(0)}"
-        else:
-            camera_dev_id = f"{host.unique_id}_ch0"
-        device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
-            identifiers={(DOMAIN, camera_dev_id)},
-            via_device_id=host_device.id,
-        )
+        for channel in host.api.stream_channels:
+            if host.api.supported(channel, "UID"):
+                camera_dev_id = f"{host.unique_id}_{host.api.camera_uid(channel)}"
+            else:
+                camera_dev_id = f"{host.unique_id}_ch{channel}"
+            device_registry.async_get_or_create(
+                config_entry_id=config_entry.entry_id,
+                identifiers={(DOMAIN, camera_dev_id)},
+                via_device_id=host_device.id,
+            )
 
     # ensure the camera devices that chimes connect through are setup
     # before the chime sub-devices that use via_device
