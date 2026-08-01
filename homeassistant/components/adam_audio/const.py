@@ -13,9 +13,8 @@ DEFAULT_PORT = 49494
 # A Control changes in HA).  Lower = more responsive, higher = less chatter.
 POLL_INTERVAL = 15  # seconds
 
-# ── Config entry keys (host/port use homeassistant.const CONF_HOST/CONF_PORT) ─
+# ── Config entry keys (host/port/description use homeassistant.const) ───────
 CONF_DEVICE_NAME = "device_name"  # hardware name, e.g. "ASeries-41472b"
-CONF_DESCRIPTION = "description"  # user-facing name, e.g. "Left"
 CONF_SERIAL = "serial"
 
 # ── Entity keys ──────────────────────────────────────────────────────────────

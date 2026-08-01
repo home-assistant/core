@@ -19,7 +19,7 @@ from dataclasses import replace
 from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DESCRIPTION, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,7 +27,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .client import AdamAudioClient, AdamAudioState
 from .const import (
-    CONF_DESCRIPTION,
     CONF_DEVICE_NAME,
     CONF_SERIAL,
     DOMAIN,

@@ -6,13 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.adam_audio import _async_reload_entry
 from homeassistant.components.adam_audio.const import (
-    CONF_DESCRIPTION,
     CONF_DEVICE_NAME,
     CONF_SERIAL,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DESCRIPTION, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -188,6 +187,34 @@ async def test_coordinator_update_failure(
     await hass.async_block_till_done()
 
     assert coordinator.last_update_success is False
+
+
+async def test_coordinator_survives_single_failed_poll(
+    hass: HomeAssistant, mock_config_entry, mock_client: MagicMock
+) -> None:
+    """Test a single failed poll does not mark the coordinator's data stale.
+
+    Within the client's debounce window, entities must stay available.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.adam_audio.coordinator.AdamAudioClient",
+        return_value=mock_client,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # This poll failed, but the client hasn't hit its failure threshold yet
+    # so it still reports itself as available.
+    mock_client.async_fetch_state = AsyncMock(return_value=False)
+    mock_client.available = True
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is True
 
 
 async def test_migrates_stale_hardware_name_unique_id(

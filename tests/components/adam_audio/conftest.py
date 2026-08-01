@@ -9,12 +9,11 @@ import pytest
 
 from homeassistant.components.adam_audio.client import AdamAudioState
 from homeassistant.components.adam_audio.const import (
-    CONF_DESCRIPTION,
     CONF_DEVICE_NAME,
     CONF_SERIAL,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DESCRIPTION, CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
 

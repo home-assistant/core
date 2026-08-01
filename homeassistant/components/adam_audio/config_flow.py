@@ -11,14 +11,12 @@ reachability and fetch the human-readable description ("Left", "Right", …)
 before creating the config entry.
 """
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DESCRIPTION, CONF_HOST, CONF_PORT
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -28,14 +26,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .client import AdamAudioClient
-from .const import (
-    CONF_DESCRIPTION,
-    CONF_DEVICE_NAME,
-    CONF_SERIAL,
-    DEFAULT_PORT,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_DEVICE_NAME, CONF_SERIAL, DEFAULT_PORT, DOMAIN, LOGGER
 
 _MANUAL_SCHEMA = vol.Schema(
     {
@@ -63,6 +54,7 @@ class AdamAudioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     # ── Manual entry ──────────────────────────────────────────────────────────
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -102,6 +94,7 @@ class AdamAudioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     # ── Zeroconf discovery ────────────────────────────────────────────────────
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
