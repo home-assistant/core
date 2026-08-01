@@ -172,13 +172,14 @@ class FeedReaderCoordinator(
         # Check if the entry has a updated or published date.
         # Start from a updated date because generally `updated` > `published`.
         time_stamp = entry.get("updated_parsed") or entry.get("published_parsed")
-        if time_stamp is not None and time_stamp > self._last_entry_timestamp:
-            self._last_entry_timestamp = time_stamp
-        else:
+        if time_stamp is None:
             _LOGGER.debug(
                 "No updated_parsed or published_parsed info available for entry %s",
                 entry,
             )
+        elif time_stamp and time_stamp > self._last_entry_timestamp:
+            self._last_entry_timestamp = time_stamp
+
         entry["feed_url"] = self.url
         self.hass.bus.async_fire(self._event_type, entry)
         _LOGGER.debug("New event fired for entry %s", entry.get("link"))
