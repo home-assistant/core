@@ -826,7 +826,7 @@
       "title": "No stream is available for camera {camera}"
     },
     "sense_setting_mirror_removed": {
-      "description": "The read-only entity `{entity_id}` has been removed. The matching control is no longer restricted to users with write access, so it is available to you instead and shows the same setting.\n\nUpdate the following automations and scripts:\n{items}",
+      "description": "The read-only entity `{entity_id}` has been removed. Where the sensor supports the setting, its switch or number holds the same state and is no longer restricted to users with write access. Where it does not, the setting is gone with the entity.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Read-only sensor setting entity removed"
     }
   },
