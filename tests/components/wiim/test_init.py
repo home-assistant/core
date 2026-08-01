@@ -101,6 +101,24 @@ async def test_setup_prefers_configured_internal_url(
     assert mock_create_wiim_device.await_args.kwargs["local_host"] == "192.168.1.50"
 
 
+@pytest.mark.usefixtures("mock_wiim_device", "mock_wiim_controller")
+async def test_setup_ignores_hostname_internal_url(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_wiim_device: AsyncMock,
+    mock_local_ip: AsyncMock,
+) -> None:
+    """Test a hostname internal URL falls through to the route to the device."""
+    await setup_integration(
+        hass, mock_config_entry, internal_url="http://homeassistant.local:8123"
+    )
+
+    mock_local_ip.assert_awaited_once_with(
+        "http://192.168.1.100:49152/description.xml", hass.loop
+    )
+    assert mock_create_wiim_device.await_args.kwargs["local_host"] == "192.168.1.10"
+
+
 @pytest.mark.parametrize("local_ip", ["192.168.1.10", "2001:db8::5"])
 async def test_event_callback_host_preserves_address_family(
     hass: HomeAssistant,
