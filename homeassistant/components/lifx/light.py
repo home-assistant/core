@@ -61,7 +61,13 @@ from .manager import (
     SERVICE_EFFECT_STOP,
     LIFXManager,
 )
-from .util import device_error, find_hsbk, parse_hsbk_changes, replace_hsbk
+from .util import (
+    device_error,
+    find_hsbk,
+    overwrites_existing_color,
+    parse_hsbk_changes,
+    replace_hsbk,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -444,15 +450,8 @@ class LIFXMultiZone(LIFXColor):
         changes = parse_hsbk_changes(**kwargs)
         requested_zones = kwargs.get(ATTR_ZONES)
 
-        # A change that leaves nothing of a zone showing does not depend on what
-        # that zone was, so the strip does not have to be read first. Hue only
-        # has to be given when the zones end up saturated enough to show it.
-        overwrites_every_zone = (
-            requested_zones is None
-            and changes["brightness"] is not None
-            and changes["saturation"] is not None
-            and changes["kelvin"] is not None
-            and (changes["hue"] is not None or changes["saturation"] == 0)
+        overwrites_every_zone = requested_zones is None and overwrites_existing_color(
+            changes
         )
         if not overwrites_every_zone:
             # Every zone is written back, so a zone changed outside Home
@@ -507,12 +506,16 @@ class LIFXMatrix(LIFXColor):
         duration: float = 0.0,
     ) -> None:
         """Set the tile colors, leaving each tile at its own brightness."""
-        state = cast(MatrixLightState, self.coordinator.data)
         device = self.device
-        if not state.tile_colors:
+        if not cast(MatrixLightState, self.coordinator.data).tile_colors:
             await super().set_color(hsbk, kwargs, duration)
             return
         changes = parse_hsbk_changes(**kwargs)
+        if not overwrites_existing_color(changes):
+            # Every tile is written back, so a tile changed outside Home
+            # Assistant has to be read before it is merged over
+            await self.coordinator.async_refresh()
+        state = cast(MatrixLightState, self.coordinator.data)
         colors = [replace_hsbk(color, changes) for color in state.tile_colors]
         # tile_colors spans the whole chain, but each tile is written on its own
         offset = 0

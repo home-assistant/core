@@ -633,6 +633,32 @@ async def test_manual_host_creates_version_2_entry(
     assert result["result"].version == 2
 
 
+async def test_manual_hostname_is_stored_as_an_address(
+    hass: HomeAssistant, mock_light: Light
+) -> None:
+    """Test a hostname is resolved before the entry records where to reach it."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with (
+        patch(
+            "homeassistant.components.lifx.config_flow.find_by_ip",
+            return_value=mock_light,
+        ) as find_by_ip,
+        patch(
+            "homeassistant.components.lifx.util.gethostbyname",
+            return_value=IP_ADDRESS,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "lifx.example.com"}
+        )
+
+    find_by_ip.assert_awaited_once_with(IP_ADDRESS)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL}
+
+
 @pytest.mark.parametrize(
     "entered_serial",
     [

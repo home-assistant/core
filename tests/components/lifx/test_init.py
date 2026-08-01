@@ -82,6 +82,33 @@ async def test_setup_connects_once_using_stored_host_and_serial(
     connect.assert_awaited_once_with(ip=IP_ADDRESS, serial=SERIAL)
 
 
+async def test_setup_resolves_a_stored_hostname(hass: HomeAssistant) -> None:
+    """Test an entry holding a hostname is connected to by literal address."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        data={CONF_HOST: "lifx.example.com", CONF_SERIAL: SERIAL},
+        unique_id=SERIAL,
+    )
+    entry.add_to_hass(hass)
+    device = create_mock_light()
+    with (
+        patch(
+            "homeassistant.components.lifx.Device.connect", return_value=device
+        ) as connect,
+        patch(
+            "homeassistant.components.lifx.util.gethostbyname",
+            return_value=IP_ADDRESS,
+        ) as resolve,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    resolve.assert_called_once_with("lifx.example.com")
+    connect.assert_awaited_once_with(ip=IP_ADDRESS, serial=SERIAL)
+
+
 async def test_setup_connection_error_schedules_retry_without_discovery(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -183,6 +210,37 @@ async def test_platform_setup_failure_closes_device(hass: HomeAssistant) -> None
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    device.close.assert_awaited_once_with()
+
+
+async def test_later_platform_failure_unloads_the_number_platform(
+    hass: HomeAssistant,
+) -> None:
+    """Test the separately forwarded number platform is taken back down."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
+    )
+    entry.add_to_hass(hass)
+    device = create_mock_light()
+
+    with (
+        patch("homeassistant.components.lifx.Device.connect", return_value=device),
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            AsyncMock(side_effect=[None, RuntimeError("platform failed")]),
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_unload_platforms",
+            AsyncMock(return_value=True),
+        ) as unload_platforms,
+    ):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    unload_platforms.assert_awaited_once_with(entry, lifx.NUMBER_PLATFORM)
     device.close.assert_awaited_once_with()
 
 

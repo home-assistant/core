@@ -27,7 +27,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 from .const import CONF_SERIAL, DOMAIN, LOGGER
 from .coordinator import LIFXConfigEntry
 from .discovery import async_discover_devices
-from .util import async_entry_serial, normalize_serial
+from .util import async_entry_serial, async_resolve_host, normalize_serial
 
 
 @dataclass(slots=True)
@@ -283,10 +283,16 @@ class LIFXConfigFlow(ConfigFlow, domain=DOMAIN):
             if host is None:
                 assert serial is not None
                 device = await find_by_serial(serial)
-            elif serial is None:
-                device = await find_by_ip(host)
             else:
-                device = await Device.connect(ip=host, serial=normalize_serial(serial))
+                # The library only accepts a literal address, but a hostname is
+                # offered to the user as a way to reach the device
+                ip = await async_resolve_host(self.hass, host)
+                if serial is None:
+                    device = await find_by_ip(ip)
+                else:
+                    device = await Device.connect(
+                        ip=ip, serial=normalize_serial(serial)
+                    )
             if device is None:
                 return None
         except LifxError, OSError, ValueError:

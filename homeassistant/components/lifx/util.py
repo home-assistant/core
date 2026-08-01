@@ -1,6 +1,8 @@
 """Support for LIFX."""
 
+from ipaddress import ip_address
 import re
+from socket import gethostbyname
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from lifx import HSBK, Colors, LifxError
@@ -14,7 +16,7 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_XY_COLOR,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import color as color_util
 
@@ -33,6 +35,15 @@ def normalize_serial(value: str) -> str:
     if not isinstance(value, str) or _SERIAL_PATTERN.fullmatch(value) is None:
         raise ValueError(f"Invalid LIFX serial: {value}")
     return value.replace(":", "").lower()
+
+
+async def async_resolve_host(hass: HomeAssistant, host: str) -> str:
+    """Return the literal address of a host, which the library requires."""
+    try:
+        ip_address(host)
+    except ValueError:
+        return await hass.async_add_executor_job(gethostbyname, host)
+    return host
 
 
 @callback
@@ -117,6 +128,21 @@ def replace_hsbk(base: HSBK, changes: HSBKChanges) -> HSBK:
             translation_key="invalid_color",
             translation_placeholders={"error": str(err)},
         ) from err
+
+
+def overwrites_existing_color(changes: HSBKChanges) -> bool:
+    """Return whether a change leaves nothing of the color it is applied to.
+
+    Such a change does not depend on what was there before, so the device does
+    not have to be read first. Hue only has to be given when the result ends up
+    saturated enough to show it.
+    """
+    return (
+        changes["brightness"] is not None
+        and changes["saturation"] is not None
+        and changes["kelvin"] is not None
+        and (changes["hue"] is not None or changes["saturation"] == 0)
+    )
 
 
 def find_hsbk(base: HSBK, **kwargs: Any) -> HSBK | None:

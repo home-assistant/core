@@ -149,6 +149,7 @@ async def test_fixing_an_already_removed_select_is_aborted(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a select removed while the issue was open aborts the fix."""
     await _async_setup_deprecated_select(hass, entity_registry)
@@ -159,3 +160,4 @@ async def test_fixing_an_already_removed_select_is_aborted(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_removed"
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_ID) is None
