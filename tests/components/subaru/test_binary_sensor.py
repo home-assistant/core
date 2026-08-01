@@ -10,6 +10,7 @@ from homeassistant.components.subaru.binary_sensor import (
     BINARY_SENSORS,
     EV_CHARGING_BINARY_SENSOR,
     EV_PLUG_BINARY_SENSOR,
+    LOCK_STATUS_KEYS,
     MIL_TRANSLATION_KEYS,
     OVERALL_HEALTH_BINARY_SENSOR,
     _is_charging,
@@ -121,6 +122,34 @@ async def test_no_ev_plug_binary_sensor_for_g3(
             BINARY_SENSOR_DOMAIN,
             DOMAIN,
             _unique_id(TEST_VIN_3_G3, EV_PLUG_BINARY_SENSOR.key),
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize("key", list(LOCK_STATUS_KEYS))
+async def test_no_lock_sensors_when_unsupported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    subaru_config_entry: MockConfigEntry,
+    key: str,
+) -> None:
+    """Lock sensors aren't created for a vehicle whose status omits them.
+
+    VEHICLE_STATUS_G3 has no LOCK_* keys, matching a real vehicle without
+    lock-status support -- subarulink omits these fields entirely rather
+    than reporting them as unknown.
+    """
+    await setup_subaru_config_entry(
+        hass,
+        subaru_config_entry,
+        vehicle_list=[TEST_VIN_3_G3],
+        vehicle_data=VEHICLE_DATA[TEST_VIN_3_G3],
+        vehicle_status=VEHICLE_STATUS_G3,
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_3_G3, key)
         )
         is None
     )

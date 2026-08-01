@@ -25,7 +25,7 @@
               'ONDATE': None,
             }),
           }),
-          'ISTROUBLE': False,
+          'ISTROUBLE': True,
           'RECOMMENDED_TIRE_PRESSURE': dict({
             'FRONT_TIRES': 35,
             'REAR_TIRES': 33,
@@ -102,7 +102,7 @@
             'ONDATE': None,
           }),
         }),
-        'ISTROUBLE': False,
+        'ISTROUBLE': True,
         'RECOMMENDED_TIRE_PRESSURE': dict({
           'FRONT_TIRES': 35,
           'REAR_TIRES': 33,

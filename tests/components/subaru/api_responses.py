@@ -117,7 +117,9 @@ VEHICLE_STATUS_EV = {
     },
     VEHICLE_HEALTH: {
         "RECOMMENDED_TIRE_PRESSURE": {"FRONT_TIRES": 35, "REAR_TIRES": 33},
-        "ISTROUBLE": False,
+        # subarulink ORs MIL ISTROUBLE into the top-level one, so it can't
+        # be False here while a feature below is True.
+        "ISTROUBLE": True,
         "FEATURES": {
             "TPMS_MIL": {"ISTROUBLE": False, "ONDATE": None},
             "CEL_MIL": {"ISTROUBLE": True, "ONDATE": None},

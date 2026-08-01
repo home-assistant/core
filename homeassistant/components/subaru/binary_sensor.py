@@ -49,8 +49,8 @@ LOCK_STATUS_KEYS: dict[str, str] = {
     "LOCK_BOOT_STATUS": "lock_status_boot",
 }
 
-# EV_IS_PLUGGED_IN values that indicate the plug is connected. Any other
-# value (including UNPLUGGED / UNKNOWN / None) counts as not plugged in.
+# EV_IS_PLUGGED_IN values meaning connected. Other known values (e.g.
+# UNPLUGGED) mean not connected; UNKNOWN/missing short-circuits earlier.
 EV_PLUGGED_IN_STATES = frozenset({"CHARGING", "LOCKED_CONNECTED", "UNLOCKED_CONNECTED"})
 API_KEY_EV_IS_PLUGGED_IN = "EV_IS_PLUGGED_IN"
 API_KEY_EV_CHARGER_STATE_TYPE = "EV_CHARGER_STATE_TYPE"
@@ -262,13 +262,21 @@ async def async_setup_entry(
         # Doors/windows/locks/health are only reported on Gen2+ vehicles.
         if info[VEHICLE_API_GEN] not in GEN_2_AND_NEWER:
             continue
-        descriptions: list[SubaruBinarySensorEntityDescription] = list(BINARY_SENSORS)
+        vehicle_data = (coordinator.data or {}).get(info[VEHICLE_VIN]) or {}
+        vehicle_status = vehicle_data.get(VEHICLE_STATUS) or {}
+
+        # Windows/locks are omitted from vehicle_status when unsupported
+        # (doors always report); only add descriptions with real data.
+        descriptions: list[SubaruBinarySensorEntityDescription] = [
+            description
+            for description in BINARY_SENSORS
+            if description.key in vehicle_status
+        ]
         descriptions.append(OVERALL_HEALTH_BINARY_SENSOR)
         if info[VEHICLE_HAS_EV]:
             descriptions.append(EV_PLUG_BINARY_SENSOR)
             descriptions.append(EV_CHARGING_BINARY_SENSOR)
 
-        vehicle_data = (coordinator.data or {}).get(info[VEHICLE_VIN]) or {}
         features = vehicle_data.get(VEHICLE_FEATURES) or []
         descriptions.extend(_build_mil_descriptions(features))
 
