@@ -187,7 +187,7 @@ async def test_internal_behavior_instance_entity_removed(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a previously created entity for an internal instance is removed."""
-    # simulate the entity a previous version of the integration created
+    # Simulate an entity created with a previous version of the integration
     stale_entity = entity_registry.async_get_or_create(
         Platform.SWITCH, DOMAIN, FAKE_BEHAVIOR_INSTANCE["id"]
     )
