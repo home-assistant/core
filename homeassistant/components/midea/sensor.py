@@ -791,6 +791,24 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
+        key="life1",
+        translation_key="filter1_life_level",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="life2",
+        translation_key="filter2_life_level",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="life3",
+        translation_key="filter3_life_level",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
         key="filter1_life",
         translation_key="filter1_life_level",
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
@@ -803,22 +821,14 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
-        key="filter3_life",
-        translation_key="filter3_life_level",
-        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    MideaSensorEntityDescription(
         key="in_tds",
         translation_key="in_tds",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
         key="out_tds",
         translation_key="out_tds",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -887,6 +897,10 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         translation_key="error_ed",
         entity_category=EntityCategory.DIAGNOSTIC,
         models=[DeviceType.ED],
+    ),
+    MideaSensorEntityDescription(
+        key="water_box",
+        translation_key="water_box",
     ),
 ]
 

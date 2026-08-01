@@ -140,6 +140,9 @@
       "compressor_power": {
         "name": "Compressor Power"
       },
+      "compressor_temperature": {
+        "name": "Compressor Temperature"
+      },
       "compressor_voltage": {
         "name": "Compressor Voltage"
       },
@@ -505,6 +508,9 @@
       "salt_available": {
         "name": "Salt Available"
       },
+      "salt_setting": {
+        "name": "Salt Setting"
+      },
       "screen_extinction_timeout": {
         "name": "Screen Extinction Timeout"
       },
@@ -584,7 +590,7 @@
         "name": "Total Produced Energy"
       },
       "tvoc": {
-        "name": "Tvoc"
+        "name": "TVOC"
       },
       "use_days": {
         "name": "Days of Use"
@@ -603,6 +609,9 @@
       },
       "wash_time_value": {
         "name": "Wash Time Value"
+      },
+      "water_box": {
+        "name": "Water Box"
       },
       "water_consumption": {
         "name": "Water Consumption"

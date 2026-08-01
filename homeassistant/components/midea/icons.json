@@ -7,7 +7,7 @@
       "bottom_compartment_status": {
         "default": "mdi:information"
       },
-      "bright": {
+      "bright_level": {
         "default": "mdi:star-four-points"
       },
       "dehydration_speed": {
@@ -37,6 +37,9 @@
       "hcho": {
         "default": "mdi:molecule"
       },
+      "in_tds": {
+        "default": "mdi:water"
+      },
       "indoor_fan_speed": {
         "default": "mdi:fan"
       },
@@ -52,11 +55,20 @@
       "mode": {
         "default": "mdi:auto-mode"
       },
+      "out_tds": {
+        "default": "mdi:water-plus"
+      },
       "pmv": {
         "default": "mdi:thermometer-lines"
       },
-      "program": {
+      "program_da": {
         "default": "mdi:progress-wrench"
+      },
+      "program_db": {
+        "default": "mdi:washing-machine"
+      },
+      "program_dc": {
+        "default": "mdi:washing-machine"
       },
       "progress": {
         "default": "mdi:rotate-360"
@@ -73,7 +85,7 @@
       "softener": {
         "default": "mdi:tshirt-crew"
       },
-      "softwater": {
+      "softwater_level": {
         "default": "mdi:shaker-outline"
       },
       "stains": {
@@ -85,7 +97,7 @@
       "storage_remaining": {
         "default": "mdi:progress-clock"
       },
-      "tank": {
+      "tank_level": {
         "default": "mdi:cup-water"
       },
       "target_indoor_fan_speed": {
@@ -105,6 +117,9 @@
       },
       "water_box": {
         "default": "mdi:cup-water"
+      },
+      "working_mode": {
+        "default": "mdi:dishwasher"
       }
     }
   }
