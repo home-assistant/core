@@ -1,12 +1,13 @@
 """Config flow for Verizon FiOS Quantum Gateway integration."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 from quantum_gateway import QuantumGatewayScanner
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL
 from homeassistant.helpers import config_validation as cv
 
@@ -57,6 +58,11 @@ class QuantumGatewayConfigFlow(ConfigFlow, domain=DOMAIN):
             except CannotAuthenticate:
                 errors["base"] = "invalid_auth"
             else:
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_and_abort(
+                        self._get_reauth_entry(), data_updates=user_input
+                    )
+
                 return self.async_create_entry(
                     title=f"{user_input[CONF_HOST]}", data=user_input
                 )
@@ -66,6 +72,21 @@ class QuantumGatewayConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication request."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+
+        return await self.async_step_user(self._get_reauth_entry().data.copy())
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle existing config import step."""

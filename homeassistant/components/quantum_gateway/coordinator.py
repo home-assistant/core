@@ -9,6 +9,7 @@ from quantum_gateway import QuantumGatewayScanner
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -39,20 +40,31 @@ class QuantumGatewayDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]])
             update_interval=UPDATE_INTERVAL,
         )
 
+    async def _get_scanner(self) -> QuantumGatewayScanner:
+        scanner = await self.hass.async_add_executor_job(
+            QuantumGatewayScanner,
+            self.config_entry.data[CONF_HOST],
+            self.config_entry.data[CONF_PASSWORD],
+            self.config_entry.data[CONF_SSL],
+        )
+
+        if not scanner.success_init:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            )
+
+        return scanner
+
     @override
     async def _async_update_data(self) -> dict[str, str]:
         """Fetch data from the Quantum Gateway."""
         try:
             if self.scanner is None:
-                self.scanner = await self.hass.async_add_executor_job(
-                    QuantumGatewayScanner,
-                    self.config_entry.data[CONF_HOST],
-                    self.config_entry.data[CONF_PASSWORD],
-                    self.config_entry.data[CONF_SSL],
-                )
-            assert self.scanner is not None
+                self.scanner = await self._get_scanner()
+
             macs = await self.hass.async_add_executor_job(self.scanner.scan_devices)
             return {mac: self.scanner.get_device_name(mac) for mac in macs}
+
         except Exception as err:
             raise UpdateFailed(
                 f"Failed to fetch data from Quantum Gateway {self.config_entry.data[CONF_HOST]}"
