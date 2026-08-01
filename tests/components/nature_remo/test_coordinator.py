@@ -1,5 +1,6 @@
 """Tests for the Nature Remo coordinator."""
 
+from datetime import datetime
 from unittest.mock import AsyncMock
 
 from aionatureremo import (
@@ -13,6 +14,7 @@ from homeassistant.components.nature_remo.coordinator import NatureRemoCoordinat
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -59,7 +61,7 @@ async def test_auth_error_raises_config_entry_auth_failed(
 async def test_rate_limit_raises_update_failed_with_reset(
     coordinator: NatureRemoCoordinator, mock_client: AsyncMock
 ) -> None:
-    """A 429 becomes UpdateFailed mentioning the reset epoch."""
+    """A 429 reports when requests are accepted again, not a raw epoch."""
     mock_client.get_appliances.side_effect = NatureRemoRateLimitError(
         429, "limited", reset=1752825600
     )
@@ -67,7 +69,9 @@ async def test_rate_limit_raises_update_failed_with_reset(
     with pytest.raises(UpdateFailed) as exc_info:
         await coordinator._async_update_data()
     assert exc_info.value.translation_key == "update_rate_limited"
-    assert exc_info.value.translation_placeholders == {"reset": "1752825600"}
+    assert exc_info.value.translation_placeholders is not None
+    reset = exc_info.value.translation_placeholders["reset"]
+    assert datetime.fromisoformat(reset) == dt_util.utc_from_timestamp(1752825600)
 
 
 async def test_rate_limit_without_reset_raises_update_failed(

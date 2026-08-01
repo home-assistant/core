@@ -1,6 +1,6 @@
 """The Nature Remo integration."""
 
-from aionatureremo import NatureRemoClient
+from aionatureremo import APPLIANCE_TYPE_SMART_METER, NatureRemoClient
 
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -15,14 +15,15 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 @callback
 def _async_register_devices(hass: HomeAssistant, entry: NatureRemoConfigEntry) -> None:
-    """Register every Remo hub and every appliance up front.
+    """Register the Remo hubs and the appliances this platform exposes.
 
-    Appliance entities link to their hub via ``via_device``, but an
-    energy-only hub (Remo E / E lite) reports no sensor events, so its
-    device would never be registered by an entity and its appliances would
-    dangle. Appliances are re-registered from the same builder on every
-    poll so a nickname edited in the Nature app reaches the device
-    registry. Hubs come first so no ``via_device`` target is missing.
+    Hubs are registered up front because an energy-only hub (Remo E /
+    E lite) reports no sensor events, so no entity would ever create its
+    device and the ``via_device`` of the appliances behind it would
+    dangle. Appliances are limited to the ones that get entities here, so
+    that no empty devices appear; later platforms register the appliances
+    they expose. Re-registering on every poll is what lets a nickname
+    edited in the Nature app reach the device registry.
     """
     coordinator = entry.runtime_data
     device_registry = dr.async_get(hass)
@@ -32,6 +33,11 @@ def _async_register_devices(hass: HomeAssistant, entry: NatureRemoConfigEntry) -
             **build_remo_device_info(device),
         )
     for appliance in coordinator.data.appliances.values():
+        if (
+            appliance.type != APPLIANCE_TYPE_SMART_METER
+            or appliance.smart_meter is None
+        ):
+            continue
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             **build_appliance_device_info(appliance),

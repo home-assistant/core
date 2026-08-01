@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, UPDATE_INTERVAL
 
@@ -72,7 +73,11 @@ class NatureRemoCoordinator(DataUpdateCoordinator[NatureRemoData]):
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="update_rate_limited",
-                    translation_placeholders={"reset": str(err.reset)},
+                    translation_placeholders={
+                        "reset": dt_util.as_local(
+                            dt_util.utc_from_timestamp(err.reset)
+                        ).isoformat(timespec="seconds")
+                    },
                 ) from err
             raise UpdateFailed(
                 translation_domain=DOMAIN,

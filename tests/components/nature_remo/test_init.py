@@ -56,10 +56,12 @@ async def test_appliance_links_to_its_hub(
     init_integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Every appliance points at its parent hub via via_device.
+    """The smart meter points at its parent hub via via_device.
 
-    The smart meter under the Remo E lite must be linked to the hub rather than
-    orphaned at the top level, regardless of platform setup ordering.
+    It must be linked to the Remo E lite rather than orphaned at the top
+    level, regardless of platform setup ordering. Appliances this platform
+    exposes no entities for are not registered at all, so a fresh install
+    shows no empty devices.
     """
     hub = device_registry.async_get_device(identifiers={(DOMAIN, "device-remoe-1")})
     meter = device_registry.async_get_device(
@@ -69,11 +71,10 @@ async def test_appliance_links_to_its_hub(
     assert meter is not None
     assert meter.via_device_id == hub.id
 
-    remo3 = device_registry.async_get_device(identifiers={(DOMAIN, "device-remo3-1")})
-    ac = device_registry.async_get_device(identifiers={(DOMAIN, "appliance-ac-1")})
-    assert remo3 is not None
-    assert ac is not None
-    assert ac.via_device_id == remo3.id
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "appliance-ac-1")})
+        is None
+    )
 
 
 async def test_setup_retries_on_connection_error(
@@ -118,18 +119,22 @@ async def test_appliance_rename_reaches_the_device_registry(
     The device would otherwise keep the nickname it happened to have when
     its first entity was created.
     """
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "appliance-ir-1")})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "appliance-meter-1")}
+    )
     assert device is not None
-    assert device.name == "Fan"
+    assert device.name == "Smart meter"
 
     mock_client.get_appliances.return_value = [
-        replace(appliance, nickname="Ceiling fan")
-        if appliance.id == "appliance-ir-1"
+        replace(appliance, nickname="Grid meter")
+        if appliance.id == "appliance-meter-1"
         else appliance
         for appliance in appliances
     ]
     await async_poll(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "appliance-ir-1")})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "appliance-meter-1")}
+    )
     assert device is not None
-    assert device.name == "Ceiling fan"
+    assert device.name == "Grid meter"

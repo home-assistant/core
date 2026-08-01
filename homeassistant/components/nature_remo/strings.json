@@ -44,7 +44,7 @@
       "message": "Error communicating with the Nature API: {error}"
     },
     "update_rate_limited": {
-      "message": "Nature API rate limit exceeded (resets at epoch {reset})"
+      "message": "Nature API rate limit exceeded; requests are accepted again at {reset}"
     }
   }
 }
