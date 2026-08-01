@@ -171,7 +171,7 @@ class FeedReaderCoordinator(
         """Update last_entry_timestamp and fire entry."""
         # Check if the entry has a updated or published date.
         # Start from a updated date because generally `updated` > `published`.
-        time_stamp = entry.get("updated_parsed", entry.get("published_parsed"))
+        time_stamp = entry.get("updated_parsed") or entry.get("published_parsed")
         if time_stamp is not None and time_stamp > self._last_entry_timestamp:
             self._last_entry_timestamp = time_stamp
         else:
