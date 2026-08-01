@@ -169,7 +169,7 @@ async def test_adam_restore_state_climate(
             (
                 State("climate.living_room", "heat"),
                 PlugwiseClimateExtraStoredData(
-                    last_active_schedule=None,
+                    last_active_schedule="off",
                     previous_action_mode="heating",
                 ).as_dict(),
             ),
@@ -191,7 +191,7 @@ async def test_adam_restore_state_climate(
     assert state.state == "heat"
 
     # Verify a HomeAssistantError is raised setting a schedule
-    # with last_active_schedule = None
+    # with last_active_schedule = "off" and not schedules defined
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -300,7 +300,7 @@ async def test_adam_off_regulation_mode_change(
             (
                 State("climate.living_room", "heat"),
                 PlugwiseClimateExtraStoredData(
-                    last_active_schedule=None,
+                    last_active_schedule="off",
                     previous_action_mode="heating",
                 ).as_dict(),
             ),
@@ -321,7 +321,8 @@ async def test_adam_off_regulation_mode_change(
     assert (state := hass.states.get("climate.living_room"))
     assert state.state == "off"
 
-    # Verify a HomeAssistantError is raised setting a schedule from regulation-off-mode with last_active_schedule = None
+    # Verify a HomeAssistantError is raised setting a schedule from regulation-off-mode
+    # with last_active_schedule = "off" and no schedule defined
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
