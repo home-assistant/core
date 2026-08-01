@@ -489,8 +489,9 @@ async def test_hue_events(
         identifiers={(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
     )
     # The sensor device is linked to the bridge device as its via_device.
-    bridge_device = device_registry.async_get_device(
-        identifiers={(hue.DOMAIN, mock_bridge_v1.api.config.bridgeid)}
+    bridge_device = device_registry.async_get_device_by_identifier(
+        (hue.DOMAIN, mock_bridge_v1.api.config.bridgeid),
+        mock_bridge_v1.config_entry.entry_id,
     )
     assert hue_tap_device.via_device_id == bridge_device.id
 

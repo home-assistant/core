@@ -17,21 +17,37 @@ from homeassistant.components.hue.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
 
-async def test_bridge_setup_v1(hass: HomeAssistant, mock_api_v1: Mock) -> None:
+async def test_bridge_setup_v1(
+    hass: HomeAssistant, mock_api_v1: Mock, device_registry: dr.DeviceRegistry
+) -> None:
     """Test a successful setup for V1 bridge."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1},
         options={CONF_ALLOW_HUE_GROUPS: False, CONF_ALLOW_UNREACHABLE: False},
     )
+    config_entry.add_to_hass(hass)
+
+    def assert_bridge_device_registered(*args: object, **kwargs: object) -> None:
+        # The bridge device must already be registered by the time platforms
+        # are forwarded, so light/sensor entities can resolve it as their
+        # via_device parent while they are being added.
+        assert device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_api_v1.config.bridge_id), config_entry.entry_id
+        )
 
     with (
         patch.object(bridge, "HueBridgeV1", return_value=mock_api_v1),
-        patch.object(hass.config_entries, "async_forward_entry_setups") as mock_forward,
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            side_effect=assert_bridge_device_registered,
+        ) as mock_forward,
     ):
         hue_bridge = bridge.HueBridge(hass, config_entry)
         async with config_entry.setup_lock:

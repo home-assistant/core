@@ -4,7 +4,7 @@ from aiohue.util import normalize_bridge_id
 
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .bridge import HueBridge, HueConfigEntry, _async_register_bridge_device
@@ -69,8 +69,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
             hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
             return False
 
-    # add bridge device to device registry
-    _async_register_bridge_device(hass, entry, api, bridge.api_version)
+    # v1 bridges already register their device before platform forwarding, so
+    # light/sensor entities can resolve it as their via_device parent; only
+    # register it here if that has not already happened.
+    if (
+        dr.async_get(hass).async_get_device_by_identifier(
+            (DOMAIN, api.config.bridge_id), entry.entry_id
+        )
+        is None
+    ):
+        _async_register_bridge_device(hass, entry, api, bridge.api_version)
 
     return True
 
