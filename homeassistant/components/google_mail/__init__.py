@@ -1,5 +1,4 @@
 """Support for Google Mail."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, Platform
@@ -26,7 +25,9 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Google Mail integration."""
-    hass.data.setdefault(DOMAIN, {})[DATA_HASS_CONFIG] = config
+    # Root HA config for legacy notify discovery (domain-level, not per-entry).
+    # Per-entry auth lives on entry.runtime_data.
+    hass.data[DATA_HASS_CONFIG] = config
 
     async_setup_services(hass)
 
@@ -53,9 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleMailConfigEntry) -
             Platform.NOTIFY,
             DOMAIN,
             {DATA_AUTH: auth, CONF_NAME: entry.title},
-            # Uses legacy hass.data[DOMAIN] pattern
-            # pylint: disable-next=home-assistant-use-runtime-data
-            hass.data[DOMAIN][DATA_HASS_CONFIG],
+            hass.data[DATA_HASS_CONFIG],
         )
     )
 
