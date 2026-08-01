@@ -1,7 +1,5 @@
 """Tests for the lookin integration."""
 
-from __future__ import annotations
-
 from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 

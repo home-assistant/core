@@ -8,15 +8,16 @@ parameter.  The GET responses populate client.state with the real device
 values, so changes made via the physical knob or ADAM Audio's A
 Control app are reflected in Home Assistant within one poll cycle.
 
-If the fetch fails (device unreachable), UpdateFailed is raised so HA marks
-all child entities as unavailable until the next successful poll.
+If the fetch fails and the client's consecutive-failure streak reaches
+AdamAudioClient.UNAVAILABLE_AFTER_FAILURES (client.available flips to
+False), UpdateFailed is raised so HA marks all child entities as
+unavailable until the next successful poll. A single dropped poll on its
+own is tolerated and does not affect entity availability.
 """
-
-from __future__ import annotations
 
 from dataclasses import replace
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
@@ -110,12 +111,21 @@ class AdamAudioCoordinator(DataUpdateCoordinator[AdamAudioState]):
         # values from the moment they appear in HA.
         await self.async_config_entry_first_refresh()
 
+    @override
     async def async_shutdown(self) -> None:
-        """Release resources when the config entry is unloaded."""
+        """Release resources when the config entry is unloaded.
+
+        Must cancel the base class's scheduled refresh timer first —
+        otherwise a poll already queued via loop.call_at() can still fire
+        after the socket below is closed, sending on a dead file
+        descriptor (OSError: Bad file descriptor).
+        """
+        await super().async_shutdown()
         await self.client.async_shutdown()
 
     # ── Coordinator update callback ───────────────────────────────────────────
 
+    @override
     async def _async_update_data(self) -> AdamAudioState:
         """Fetch current device state.
 
@@ -123,14 +133,19 @@ class AdamAudioCoordinator(DataUpdateCoordinator[AdamAudioState]):
         the values the device reported; entities read from there.
         Raises UpdateFailed to mark entities unavailable if unreachable.
 
+        Availability is read from client.available rather than this poll's
+        own result: the client debounces failures over several consecutive
+        polls, so a single dropped poll (e.g. a device rebooting after being
+        power-cycled) doesn't flip entities unavailable and back.
+
         Returns a snapshot copy of the client state: the client mutates its
         state object in place, so returning it directly would make the
         coordinator's always_update=False comparison always see "no change"
         and never notify listeners of polled changes (physical knob or
         A Control app adjustments).
         """
-        success = await self.client.async_fetch_state()
-        if not success:
+        await self.client.async_fetch_state()
+        if not self.client.available:
             raise UpdateFailed(
                 f"Device '{self.device_description}' unreachable at "
                 f"{self.client.host}:{self.client.port}"

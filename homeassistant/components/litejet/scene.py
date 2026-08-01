@@ -1,17 +1,17 @@
 """Support for LiteJet scenes."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pylitejet import LiteJet, LiteJetError
 
 from homeassistant.components.scene import Scene
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import LiteJetConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,12 +21,12 @@ ATTR_NUMBER = "number"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LiteJetConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
 
-    system: LiteJet = hass.data[DOMAIN]
+    system = config_entry.runtime_data
 
     entities = []
     for i in system.scenes():
@@ -55,10 +55,12 @@ class LiteJetScene(Scene):
             model=system.model_name,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         self._lj.on_connected_changed(self._on_connected_changed)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         self._lj.unsubscribe(self._on_connected_changed)
@@ -68,10 +70,12 @@ class LiteJetScene(Scene):
         self.async_write_ha_state()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device-specific state attributes."""
         return {ATTR_NUMBER: self._index}
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         try:

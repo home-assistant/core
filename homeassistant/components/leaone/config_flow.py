@@ -1,8 +1,6 @@
 """Config flow for Leaone integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from leaone_ble import LeaoneBluetoothDeviceData as DeviceData
 import voluptuous as vol
@@ -23,6 +21,7 @@ class LeaoneConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, str] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

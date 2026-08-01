@@ -1,26 +1,27 @@
 """Utility meter from sensors providing raw data."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
-from typing import Any, Self
+import math
+from typing import Any, Self, override
 
 from cronsim import CronSim
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
+    DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
+    DOMAIN as SENSOR_DOMAIN,
     RestoreSensor,
     SensorDeviceClass,
     SensorExtraStoredData,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.sensor.recorder import (  # pylint: disable=home-assistant-component-root-import
     _suggest_report_issue,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -46,13 +47,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
 )
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.template import is_number
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.enum import try_parse_enum
@@ -76,6 +77,7 @@ from .const import (
     DAILY,
     DATA_TARIFF_SENSORS,
     DATA_UTILITY,
+    DOMAIN,
     HOURLY,
     MONTHLY,
     QUARTER_HOURLY,
@@ -113,8 +115,11 @@ COLLECTING = "collecting"
 
 def validate_is_number(value):
     """Validate value is a number."""
-    if is_number(value):
-        return value
+    try:
+        if math.isfinite(float(value)):
+            return value
+    except ValueError, TypeError:
+        pass
     raise vol.Invalid("Value is not a number")
 
 
@@ -152,7 +157,6 @@ async def async_setup_entry(
     if not tariffs:
         # Add single sensor, not gated by a tariff selector
         meter_sensor = UtilityMeterSensor(
-            hass,
             cron_pattern=cron_pattern,
             delta_values=delta_values,
             meter_offset=meter_offset,
@@ -166,6 +170,7 @@ async def async_setup_entry(
             tariff=None,
             unique_id=entry_id,
             sensor_always_available=sensor_always_available,
+            device=async_entity_id_to_device(hass, source_entity_id),
         )
         meters.append(meter_sensor)
         entry_meter_info[DATA_TARIFF_SENSORS].append(meter_sensor)
@@ -173,7 +178,6 @@ async def async_setup_entry(
         # Add sensors for each tariff
         for tariff in tariffs:
             meter_sensor = UtilityMeterSensor(
-                hass,
                 cron_pattern=cron_pattern,
                 delta_values=delta_values,
                 meter_offset=meter_offset,
@@ -187,6 +191,7 @@ async def async_setup_entry(
                 tariff=tariff,
                 unique_id=f"{entry_id}_{tariff}",
                 sensor_always_available=sensor_always_available,
+                device=async_entity_id_to_device(hass, source_entity_id),
             )
             meters.append(meter_sensor)
             entry_meter_info[DATA_TARIFF_SENSORS].append(meter_sensor)
@@ -210,9 +215,13 @@ async def async_setup_platform(
 ) -> None:
     """Set up the utility meter sensor."""
     if discovery_info is None:
-        _LOGGER.error(
-            "This platform is not available to configure "
-            "from 'sensor:' in configuration.yaml"
+        async_create_platform_config_not_supported_issue(
+            hass,
+            DOMAIN,
+            SENSOR_DOMAIN,
+            yaml_config_under_integration_supported=True,
+            learn_more_url="https://www.home-assistant.io/integrations/utility_meter/",
+            logger=_LOGGER,
         )
         return
 
@@ -250,7 +259,6 @@ async def async_setup_platform(
         conf_cron_pattern = meter_info.get(CONF_CRON_PATTERN)
         conf_sensor_always_available = meter_info[CONF_SENSOR_ALWAYS_AVAILABLE]
         meter_sensor = UtilityMeterSensor(
-            hass,
             cron_pattern=conf_cron_pattern,
             delta_values=conf_meter_delta_values,
             meter_offset=conf_meter_offset,
@@ -291,6 +299,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
     status: str
     input_device_class: SensorDeviceClass | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the utility sensor data."""
         data = super().as_dict()
@@ -306,6 +315,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         return data
 
     @classmethod
+    @override
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored sensor state from a dict."""
         extra = SensorExtraStoredData.from_dict(restored)
@@ -351,7 +361,6 @@ class UtilityMeterSensor(RestoreSensor):
 
     def __init__(
         self,
-        hass,
         *,
         cron_pattern,
         delta_values,
@@ -367,13 +376,11 @@ class UtilityMeterSensor(RestoreSensor):
         unique_id,
         sensor_always_available,
         suggested_entity_id=None,
+        device=None,
     ):
         """Initialize the Utility Meter sensor."""
         self._attr_unique_id = unique_id
-        self.device_entry = async_entity_id_to_device(
-            hass,
-            source_entity,
-        )
+        self.device_entry = device
         self.entity_id = suggested_entity_id
         self._parent_meter = parent_meter
         self._sensor_source_id = source_entity
@@ -386,7 +393,8 @@ class UtilityMeterSensor(RestoreSensor):
         self._attr_native_unit_of_measurement = None
         self._period = meter_type
         if meter_type is not None:
-            # For backwards compatibility reasons we convert the period and offset into a cron pattern
+            # For backwards compatibility reasons we convert
+            # the period and offset into a cron pattern
             self._cron_pattern = PERIOD2CRON[meter_type].format(
                 minute=meter_offset.seconds % 3600 // 60,
                 hour=meter_offset.seconds // 3600,
@@ -405,11 +413,12 @@ class UtilityMeterSensor(RestoreSensor):
         self._current_tz = None
         self._config_scheduler()
 
-    def _config_scheduler(self):
+    def _config_scheduler(self, start_time: datetime | None = None) -> None:
         self.scheduler = (
             CronSim(
                 self._cron_pattern,
-                dt_util.now(
+                start_time
+                or dt_util.now(
                     dt_util.get_default_time_zone()
                 ),  # we need timezone for DST purposes (see issue #102984)
             )
@@ -426,7 +435,7 @@ class UtilityMeterSensor(RestoreSensor):
 
     @staticmethod
     def _validate_state(state: State | None) -> Decimal | None:
-        """Parse the state as a Decimal if available. Throws DecimalException if the state is not a number."""
+        """Parse the state as a Decimal if available."""
         try:
             return (
                 None
@@ -452,7 +461,7 @@ class UtilityMeterSensor(RestoreSensor):
         if (
             not self._sensor_periodically_resetting
             and self._last_valid_state is not None
-        ):  # Fallback to old_state if sensor is periodically resetting but last_valid_state is None
+        ):
             return new_state_val - self._last_valid_state
 
         if (old_state_val := self._validate_state(old_state)) is not None:
@@ -539,9 +548,13 @@ class UtilityMeterSensor(RestoreSensor):
                 self._collecting()
             self._collecting = None
 
-        # Reset the last_valid_state during state change because if the last state before the tariff change was invalid,
-        # there is no way to know how much "adjustment" counts for which tariff. Therefore, we set the last_valid_state
-        # to None and let the fallback mechanism handle the case that the old state was valid
+        # Reset the last_valid_state during state change
+        # because if the last state before the tariff
+        # change was invalid, there is no way to know how
+        # much "adjustment" counts for which tariff.
+        # Therefore, we set the last_valid_state to None
+        # and let the fallback mechanism handle the case
+        # that the old state was valid
         self._last_valid_state = None
 
         _LOGGER.debug(
@@ -599,6 +612,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._attr_native_value = Decimal(str(value))
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -606,8 +620,6 @@ class UtilityMeterSensor(RestoreSensor):
         # track current timezone in case it changes
         # and we need to reconfigure the scheduler
         self._current_tz = self.hass.config.time_zone
-
-        await self._program_reset()
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -627,6 +639,13 @@ class UtilityMeterSensor(RestoreSensor):
             if last_sensor_data.status == COLLECTING:
                 # Null lambda to allow cancelling the collection on tariff change
                 self._collecting = lambda: None
+            # Reconfigure the scheduler from the restored last_reset so that
+            # next_reset is not shifted forward on entity restore/rename.
+            self._config_scheduler(
+                dt_util.as_local(self._last_reset) if self._last_reset else None
+            )
+
+        await self._program_reset()
 
         @callback
         def async_source_tracking(event):
@@ -674,6 +693,7 @@ class UtilityMeterSensor(RestoreSensor):
             self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, async_track_time_zone)
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._collecting:
@@ -681,6 +701,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._collecting = None
 
     @property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         if self._input_device_class is not None:
@@ -693,15 +714,23 @@ class UtilityMeterSensor(RestoreSensor):
         return None
 
     @property
+    @override
     def state_class(self) -> SensorStateClass:
-        """Return the device class of the sensor."""
-        return (
-            SensorStateClass.TOTAL
-            if self._sensor_net_consumption
-            else SensorStateClass.TOTAL_INCREASING
-        )
+        """Return the state class of the sensor."""
+        if self._sensor_net_consumption:
+            return SensorStateClass.TOTAL
+        if (
+            self._input_device_class is not None
+            and SensorStateClass.TOTAL_INCREASING
+            not in DEVICE_CLASS_STATE_CLASSES.get(
+                self._input_device_class, {SensorStateClass.TOTAL_INCREASING}
+            )
+        ):
+            return SensorStateClass.TOTAL
+        return SensorStateClass.TOTAL_INCREASING
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         state_attr = {
@@ -724,6 +753,7 @@ class UtilityMeterSensor(RestoreSensor):
         return state_attr
 
     @property
+    @override
     def extra_restore_state_data(self) -> UtilitySensorExtraStoredData:
         """Return sensor specific state data to be restored."""
         return UtilitySensorExtraStoredData(
@@ -736,6 +766,7 @@ class UtilityMeterSensor(RestoreSensor):
             self._input_device_class,
         )
 
+    @override
     async def async_get_last_sensor_data(self) -> UtilitySensorExtraStoredData | None:
         """Restore Utility Meter Sensor Extra Stored Data."""
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:

@@ -27,28 +27,28 @@ CONF_URL_WEATHER = "https://my.netatmo.com/app/weather"
 CONF_URL_CONTROL = "https://home.netatmo.com/control"
 CONF_URL_PUBLIC_WEATHER = "https://weathermap.netatmo.com/"
 
-AUTH = "netatmo_auth"
 CONF_PUBLIC = "public_sensor_config"
 CAMERA_DATA = "netatmo_camera"
 HOME_DATA = "netatmo_home_data"
-DATA_HANDLER = "netatmo_data_handler"
 SIGNAL_NAME = "signal_name"
 
 API_SCOPES_EXCLUDED_FROM_CLOUD = [
+    "access_camerapro",
     "access_doorbell",
     "read_doorbell",
     "read_mhs1",
     "write_mhs1",
 ]
 
-NETATMO_CREATE_BATTERY = "netatmo_create_battery"
 NETATMO_CREATE_CAMERA = "netatmo_create_camera"
 NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"
 NETATMO_CREATE_CLIMATE = "netatmo_create_climate"
+NETATMO_CREATE_CLIMATE_BATTERY_SENSOR = "netatmo_create_climate_battery_sensor"
 NETATMO_CREATE_COVER = "netatmo_create_cover"
 NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR = "netatmo_create_connectivity_binary_sensor"
 NETATMO_CREATE_BUTTON = "netatmo_create_button"
 NETATMO_CREATE_FAN = "netatmo_create_fan"
+NETATMO_CREATE_LEGACY_SENSOR = "netatmo_create_legacy_sensor"
 NETATMO_CREATE_LIGHT = "netatmo_create_light"
 NETATMO_CREATE_OPENING_BINARY_SENSOR = "netatmo_create_opening_binary_sensor"
 NETATMO_CREATE_ROOM_SENSOR = "netatmo_create_room_sensor"
@@ -71,13 +71,6 @@ CONF_WEATHER_AREAS = "weather_areas"
 OAUTH2_AUTHORIZE = "https://api.netatmo.com/oauth2/authorize"
 OAUTH2_TOKEN = "https://api.netatmo.com/oauth2/token"
 
-DATA_CAMERAS = "cameras"
-DATA_DEVICE_IDS = "netatmo_device_ids"
-DATA_EVENTS = "netatmo_events"
-DATA_HOMES = "netatmo_homes"
-DATA_PERSONS = "netatmo_persons"
-DATA_SCHEDULES = "netatmo_schedules"
-
 NETATMO_EVENT = "netatmo_event"
 
 DEFAULT_DISCOVERY = True
@@ -93,7 +86,6 @@ ATTR_HOME_ID = "home_id"
 ATTR_HOME_NAME = "home_name"
 ATTR_IS_KNOWN = "is_known"
 ATTR_PERSON = "person"
-ATTR_PERSONS = "persons"
 ATTR_PSEUDO = "pseudo"
 ATTR_SCHEDULE_ID = "schedule_id"
 ATTR_SCHEDULE_NAME = "schedule_name"
@@ -217,5 +209,15 @@ WEBHOOK_ACTIVATION = "webhook_activation"
 WEBHOOK_DEACTIVATION = "webhook_deactivation"
 WEBHOOK_NACAMERA_CONNECTION = "NACamera-connection"
 WEBHOOK_NOCAMERA_CONNECTION = "NOC-connection"
+WEBHOOK_NDB_CONNECTION = "NDB-connection"
 WEBHOOK_PUSH_TYPE = "push_type"
-CAMERA_CONNECTION_WEBHOOKS = [WEBHOOK_NACAMERA_CONNECTION, WEBHOOK_NOCAMERA_CONNECTION]
+CAMERA_CONNECTION_WEBHOOKS = [
+    WEBHOOK_NACAMERA_CONNECTION,
+    WEBHOOK_NOCAMERA_CONNECTION,
+    WEBHOOK_NDB_CONNECTION,
+]
+
+# Alimentation status (alim_status) for cameras and door bells (NDB).
+# For NDB there is no monitoring attribute in status but only alim_status.
+# 2 = Full power/online for NDB (and also Correct power adapter for NACamera).
+NETATMO_ALIM_STATUS_ONLINE = 2

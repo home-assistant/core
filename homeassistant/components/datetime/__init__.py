@@ -1,10 +1,8 @@
 """Component to allow setting date/time as platforms."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 import logging
-from typing import final
+from typing import final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -87,18 +85,21 @@ class DateTimeEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @cached_property
     @final
+    @override
     def device_class(self) -> None:
         """Return entity device class."""
         return None
 
     @cached_property
     @final
+    @override
     def state_attributes(self) -> None:
         """Return the state attributes."""
         return None
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         if (value := self.native_value) is None:

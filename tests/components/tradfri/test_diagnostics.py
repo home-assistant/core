@@ -1,7 +1,5 @@
 """Tests for Tradfri diagnostics."""
 
-from __future__ import annotations
-
 import pytest
 from pytradfri.device import Device
 

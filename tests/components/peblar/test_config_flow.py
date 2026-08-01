@@ -291,7 +291,7 @@ async def test_zeroconf_flow_abort_no_serial(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (PeblarConnectionError, {"base": "unknown"}),
+        (PeblarConnectionError, {"base": "cannot_connect"}),
         (PeblarAuthenticationError, {CONF_PASSWORD: "invalid_auth"}),
         (Exception, {"base": "unknown"}),
     ],

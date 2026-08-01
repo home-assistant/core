@@ -1,17 +1,22 @@
 """Support for Tibber."""
 
-from __future__ import annotations
-
+import asyncio
 from dataclasses import dataclass, field
 import logging
+from typing import Final
 
 import aiohttp
-from aiohttp.client_exceptions import ClientError, ClientResponseError
+from aiohttp.client_exceptions import ClientError
 import tibber
 
 from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -23,10 +28,17 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 
 from .const import AUTH_IMPLEMENTATION, DATA_HASS_CONFIG, DOMAIN, TibberConfigEntry
-from .coordinator import TibberDataAPICoordinator
+from .coordinator import (
+    TibberDataAPICoordinator,
+    TibberDataCoordinator,
+    TibberFetchPriceCoordinator,
+    TibberPriceCoordinator,
+)
 from .services import async_setup_services
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.NOTIFY, Platform.SENSOR]
+
+DISCONNECT_TIMEOUT: Final = 10
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -39,24 +51,46 @@ class TibberRuntimeData:
 
     session: OAuth2Session
     data_api_coordinator: TibberDataAPICoordinator | None = field(default=None)
+    data_coordinator: TibberDataCoordinator | None = field(default=None)
+    fetch_price_coordinator: TibberFetchPriceCoordinator | None = field(default=None)
+    price_coordinator: TibberPriceCoordinator | None = field(default=None)
     _client: tibber.Tibber | None = None
+
+    async def _async_get_access_token(self) -> str:
+        """Return a valid Tibber access token."""
+        await self.session.async_ensure_token_valid()
+        token = self.session.token
+        access_token: str | None = token.get(CONF_ACCESS_TOKEN)
+        if not access_token:
+            raise ConfigEntryAuthFailed("Access token missing from OAuth session")
+        return access_token
 
     async def async_get_client(self, hass: HomeAssistant) -> tibber.Tibber:
         """Return an authenticated Tibber client."""
-        await self.session.async_ensure_token_valid()
-        token = self.session.token
-        access_token = token.get(CONF_ACCESS_TOKEN)
-        if not access_token:
-            raise ConfigEntryAuthFailed("Access token missing from OAuth session")
+        access_token = await self._async_get_access_token()
         if self._client is None:
             self._client = tibber.Tibber(
                 access_token=access_token,
                 websession=async_get_clientsession(hass),
                 time_zone=dt_util.get_default_time_zone(),
                 ssl=ssl_util.get_default_context(),
+                refresh_access_token=self._async_get_access_token,
             )
-        self._client.set_access_token(access_token)
+        else:
+            await self._client.set_access_token(access_token)
         return self._client
+
+    async def async_disconnect(self) -> None:
+        """Disconnect the cached realtime connection without raising."""
+        if self._client is None:
+            return
+        try:
+            async with asyncio.timeout(DISCONNECT_TIMEOUT):
+                await self._client.rt_disconnect()
+        except Exception:
+            _LOGGER.warning(
+                "Error disconnecting the Tibber realtime connection", exc_info=True
+            )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -91,13 +125,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     session = OAuth2Session(hass, entry, implementation)
     try:
         await session.async_ensure_token_valid()
-    except ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauthentication required"
-            ) from err
-        raise ConfigEntryNotReady from err
-    except ClientError as err:
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed(
+            "OAuth session is not valid, reauthentication required"
+        ) from err
+    except (OAuth2TokenRequestError, ClientError) as err:
         raise ConfigEntryNotReady from err
 
     entry.runtime_data = TibberRuntimeData(
@@ -107,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     tibber_connection = await entry.runtime_data.async_get_client(hass)
 
     async def _close(event: Event) -> None:
-        await tibber_connection.rt_disconnect()
+        await entry.runtime_data.async_disconnect()
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
@@ -124,6 +156,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     except tibber.FatalHttpExceptionError as err:
         raise ConfigEntryNotReady("Fatal HTTP error from Tibber API") from err
 
+    if tibber_connection.get_homes(only_active=True):
+        fetch_price_coordinator = TibberFetchPriceCoordinator(hass, entry)
+        await fetch_price_coordinator.async_config_entry_first_refresh()
+        entry.runtime_data.fetch_price_coordinator = fetch_price_coordinator
+
+        price_coordinator = TibberPriceCoordinator(hass, entry, fetch_price_coordinator)
+        await price_coordinator.async_config_entry_first_refresh()
+        entry.runtime_data.price_coordinator = price_coordinator
+
+        data_coordinator = TibberDataCoordinator(hass, entry, tibber_connection)
+        await data_coordinator.async_config_entry_first_refresh()
+        entry.runtime_data.data_coordinator = data_coordinator
+
     coordinator = TibberDataAPICoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data.data_api_coordinator = coordinator
@@ -139,6 +184,5 @@ async def async_unload_entry(
     if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     ):
-        tibber_connection = await config_entry.runtime_data.async_get_client(hass)
-        await tibber_connection.rt_disconnect()
+        await config_entry.runtime_data.async_disconnect()
     return unload_ok

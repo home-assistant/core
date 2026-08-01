@@ -1,7 +1,5 @@
 """Diagnostics support for Saunum Leil Sauna Control Unit integration."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import Any
 

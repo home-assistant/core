@@ -1,8 +1,7 @@
 """Support for Homevolt sensors."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -326,11 +325,13 @@ class HomevoltSensor(HomevoltEntity, SensorEntity):
         self._sensor_key = sensor_key
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._sensor_key in self.coordinator.data.sensors
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
         return self.coordinator.data.sensors[self._sensor_key].value

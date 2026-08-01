@@ -16,9 +16,15 @@ rules:
     status: exempt
     comment: |
       Integration does not provide custom services.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -39,10 +45,7 @@ rules:
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: done
-  reauthentication-flow:
-    status: todo
-    comment: |
-      Reauthentication flow removed for initial PR, will be added in follow-up.
+  reauthentication-flow: done
   test-coverage: done
   # Gold
   devices: done
@@ -70,7 +73,7 @@ rules:
     comment: |
       Only one entity type (device_tracker) is created, making this not applicable.
   entity-translations: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow:
     status: todo

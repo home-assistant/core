@@ -1,7 +1,5 @@
 """Provide the device conditions for Z-Wave JS."""
 
-from __future__ import annotations
-
 from typing import cast
 
 import voluptuous as vol
@@ -15,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from .config_validation import VALUE_SCHEMA
+from .config_validation import COMMAND_CLASS_SCHEMA, VALUE_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_ENDPOINT,
@@ -65,7 +63,7 @@ CONFIG_PARAMETER_CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
 VALUE_CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): VALUE_TYPE,
-        vol.Required(ATTR_COMMAND_CLASS): vol.In([cc.value for cc in CommandClass]),
+        vol.Required(ATTR_COMMAND_CLASS): COMMAND_CLASS_SCHEMA,
         vol.Required(ATTR_PROPERTY): vol.Any(vol.Coerce(int), cv.string),
         vol.Optional(ATTR_PROPERTY_KEY): vol.Any(vol.Coerce(int), cv.string),
         vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
@@ -221,7 +219,7 @@ async def async_get_condition_capabilities(
                 {
                     vol.Required(ATTR_COMMAND_CLASS): vol.In(
                         {
-                            CommandClass(cc.id).value: cc.name
+                            str(CommandClass(cc.id).value): cc.name
                             for cc in sorted(
                                 node.command_classes, key=lambda cc: cc.name
                             )

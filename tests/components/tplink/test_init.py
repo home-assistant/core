@@ -1,7 +1,5 @@
 """Tests for the TP-Link component."""
 
-from __future__ import annotations
-
 import copy
 from datetime import timedelta
 from typing import Any
@@ -138,7 +136,9 @@ async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test no migration happens if the original entity id still exists."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
     config_entry.add_to_hass(hass)
     dimmer = _mocked_device(alias="My dimmer", modules=[Module.Light])
     rollout_unique_id = MAC_ADDRESS.replace(":", "").upper()
@@ -192,8 +192,8 @@ async def test_config_entry_wrong_mac_Address(
         assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     assert (
-        "Unexpected device found at 127.0.0.1; expected aa:bb:cc:dd:ee:f0, found aa:bb:cc:dd:ee:ff"
-        in caplog.text
+        "Unexpected device found at 127.0.0.1; expected"
+        " aa:bb:cc:dd:ee:f0, found aa:bb:cc:dd:ee:ff" in caplog.text
     )
 
 
@@ -273,8 +273,8 @@ async def test_config_entry_conn_params_invalid(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     assert (
-        f"Invalid connection parameters dict for {IP_ADDRESS}: {entry_data.get(CONF_CONNECTION_PARAMETERS)}"
-        in caplog.text
+        f"Invalid connection parameters dict for {IP_ADDRESS}:"
+        f" {entry_data.get(CONF_CONNECTION_PARAMETERS)}" in caplog.text
     )
 
 
@@ -519,8 +519,8 @@ async def test_unlink_devices(
     update_msg_fragment = "identifiers for device dummy (hs300):"
     update_msg = f"{expected_message} {update_msg_fragment}" if expected_message else ""
 
-    # Expected identifiers should include all other domains or all the newer non-mac device ids
-    # or just the parent mac device id
+    # Expected identifiers should include all other domains or all
+    # the newer non-mac device ids or just the parent mac device id
     expected_identifiers = [
         (domain, device_id)
         for domain, device_id in test_identifiers

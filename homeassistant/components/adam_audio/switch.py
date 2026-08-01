@@ -5,21 +5,18 @@ switch is also created the first time the platform is loaded; subsequent
 config-entry loads skip it because the unique_id is already registered.
 """
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, ENTITY_MUTE, ENTITY_SLEEP, GROUP_DEVICE_ID
 from .coordinator import AdamAudioCoordinator
+from .data import AdamAudioConfigEntry, AdamAudioIntegrationData
 from .entity import AdamAudioEntity, AdamAudioGroupEntity
 
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-    from .data import AdamAudioConfigEntry, AdamAudioIntegrationData
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -29,6 +26,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the switch platform."""
     coordinator = entry.runtime_data.coordinator
+    # Tracks group entities across ALL config entries (one per speaker), so it
+    # can't live on a single entry's runtime_data.
+    # pylint: disable-next=home-assistant-use-runtime-data
     integration_data: AdamAudioIntegrationData = hass.data[DOMAIN]
 
     entities: list[SwitchEntity] = [
@@ -61,19 +61,23 @@ class AdamAudioMuteSwitch(AdamAudioEntity, SwitchEntity):
         """Initialize the mute switch."""
         super().__init__(coordinator)
         self._attr_unique_id = (
+            # pylint: disable-next=home-assistant-entity-unique-id-redundant-domain
             f"{DOMAIN}_{coordinator.entity_unique_id_base}_{ENTITY_MUTE}"
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if muted."""
         return self.coordinator.client.state.mute
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on mute."""
         await self.coordinator.client.async_set_mute(True)
         self.coordinator.async_notify_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off mute."""
         await self.coordinator.client.async_set_mute(False)
@@ -89,19 +93,23 @@ class AdamAudioSleepSwitch(AdamAudioEntity, SwitchEntity):
         """Initialize the sleep switch."""
         super().__init__(coordinator)
         self._attr_unique_id = (
+            # pylint: disable-next=home-assistant-entity-unique-id-redundant-domain
             f"{DOMAIN}_{coordinator.entity_unique_id_base}_{ENTITY_SLEEP}"
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if sleeping."""
         return self.coordinator.client.state.sleep
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on sleep mode."""
         await self.coordinator.client.async_set_sleep(True)
         self.coordinator.async_notify_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off sleep mode."""
         await self.coordinator.client.async_set_sleep(False)
@@ -115,9 +123,11 @@ class AdamAudioGroupMuteSwitch(AdamAudioGroupEntity, SwitchEntity):
     """Mute switch that controls ALL speakers simultaneously."""
 
     _attr_translation_key = "mute"
+    # pylint: disable-next=home-assistant-entity-unique-id-redundant-domain
     _attr_unique_id = f"{DOMAIN}_{GROUP_DEVICE_ID}_{ENTITY_MUTE}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true when ALL speakers are muted."""
         coordinators = self._coordinators()
@@ -125,10 +135,12 @@ class AdamAudioGroupMuteSwitch(AdamAudioGroupEntity, SwitchEntity):
             return False
         return all(c.client.state.mute for c in coordinators)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Mute all speakers."""
         await self._async_call_all("async_set_mute", True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Unmute all speakers."""
         await self._async_call_all("async_set_mute", False)
@@ -138,9 +150,11 @@ class AdamAudioGroupSleepSwitch(AdamAudioGroupEntity, SwitchEntity):
     """Sleep switch that controls ALL speakers simultaneously."""
 
     _attr_translation_key = "sleep"
+    # pylint: disable-next=home-assistant-entity-unique-id-redundant-domain
     _attr_unique_id = f"{DOMAIN}_{GROUP_DEVICE_ID}_{ENTITY_SLEEP}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true when ALL speakers are sleeping."""
         coordinators = self._coordinators()
@@ -148,10 +162,12 @@ class AdamAudioGroupSleepSwitch(AdamAudioGroupEntity, SwitchEntity):
             return False
         return all(c.client.state.sleep for c in coordinators)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Put all speakers to sleep."""
         await self._async_call_all("async_set_sleep", True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Wake all speakers."""
         await self._async_call_all("async_set_sleep", False)

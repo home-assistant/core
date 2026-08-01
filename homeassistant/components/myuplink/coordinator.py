@@ -2,8 +2,9 @@
 
 import asyncio.timeouts
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
+from typing import override
 
 from myuplink import Device, DevicePoint, MyUplinkAPI, System
 
@@ -21,7 +22,6 @@ class CoordinatorData:
     systems: list[System]
     devices: dict[str, Device]
     points: dict[str, dict[str, DevicePoint]]
-    time: datetime
 
 
 type MyUplinkConfigEntry = ConfigEntry[MyUplinkDataCoordinator]
@@ -45,6 +45,7 @@ class MyUplinkDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> CoordinatorData:
         """Fetch data from the myUplink API."""
         async with asyncio.timeout(10):
@@ -70,5 +71,7 @@ class MyUplinkDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 points[device_id] = point_info
 
             return CoordinatorData(
-                systems=systems, devices=devices, points=points, time=datetime.now()
+                systems=systems,
+                devices=devices,
+                points=points,
             )

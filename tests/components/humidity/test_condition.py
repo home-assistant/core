@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.humidifier import (
     ATTR_CURRENT_HUMIDITY as HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
 )
+from homeassistant.components.weather import ATTR_WEATHER_HUMIDITY
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_ON
 from homeassistant.core import HomeAssistant
 
@@ -18,7 +19,7 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
+    assert_condition_options_supported,
     parametrize_numerical_attribute_condition_above_below_all,
     parametrize_numerical_attribute_condition_above_below_any,
     parametrize_numerical_condition_above_below_all,
@@ -37,12 +38,6 @@ async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 @pytest.fixture
-async def target_numbers(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple number entities associated with different targets."""
-    return await target_entities(hass, "number")
-
-
-@pytest.fixture
 async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple climate entities associated with different targets."""
     return await target_entities(hass, "climate")
@@ -54,20 +49,38 @@ async def target_humidifiers(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "humidifier")
 
 
+@pytest.fixture
+async def target_weathers(hass: HomeAssistant) -> dict[str, list[str]]:
+    """Create multiple weather entities associated with different targets."""
+    return await target_entities(hass, "weather")
+
+
+_PLAIN_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+
+
 @pytest.mark.parametrize(
-    "condition",
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        "humidity.is_value",
+        ("humidity.is_value", _PLAIN_THRESHOLD, True, True),
     ],
 )
-async def test_humidity_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
+async def test_humidity_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the humidity conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+    """Test that humidity conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -103,7 +116,6 @@ async def test_humidity_sensor_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -139,79 +151,6 @@ async def test_humidity_sensor_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("condition_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("condition", "condition_options", "states"),
-    parametrize_numerical_condition_above_below_any(
-        "humidity.is_value",
-        device_class="humidity",
-        unit_attributes=_HUMIDITY_UNIT_ATTRS,
-    ),
-)
-async def test_humidity_number_condition_behavior_any(
-    hass: HomeAssistant,
-    target_numbers: dict[str, list[str]],
-    condition_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    condition: str,
-    condition_options: dict[str, Any],
-    states: list[ConditionStateDescription],
-) -> None:
-    """Test the humidity number condition with 'any' behavior."""
-    await assert_condition_behavior_any(
-        hass,
-        target_entities=target_numbers,
-        condition_target_config=condition_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        condition=condition,
-        condition_options=condition_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("condition_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("condition", "condition_options", "states"),
-    parametrize_numerical_condition_above_below_all(
-        "humidity.is_value",
-        device_class="humidity",
-        unit_attributes=_HUMIDITY_UNIT_ATTRS,
-    ),
-)
-async def test_humidity_number_condition_behavior_all(
-    hass: HomeAssistant,
-    target_numbers: dict[str, list[str]],
-    condition_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    condition: str,
-    condition_options: dict[str, Any],
-    states: list[ConditionStateDescription],
-) -> None:
-    """Test the humidity number condition with 'all' behavior."""
-    await assert_condition_behavior_all(
-        hass,
-        target_entities=target_numbers,
-        condition_target_config=condition_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        condition=condition,
-        condition_options=condition_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -222,6 +161,7 @@ async def test_humidity_number_condition_behavior_all(
         "humidity.is_value",
         HVACMode.AUTO,
         CLIMATE_ATTR_CURRENT_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_climate_condition_behavior_any(
@@ -247,7 +187,6 @@ async def test_humidity_climate_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -258,6 +197,7 @@ async def test_humidity_climate_condition_behavior_any(
         "humidity.is_value",
         HVACMode.AUTO,
         CLIMATE_ATTR_CURRENT_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_climate_condition_behavior_all(
@@ -283,7 +223,6 @@ async def test_humidity_climate_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -294,6 +233,7 @@ async def test_humidity_climate_condition_behavior_all(
         "humidity.is_value",
         STATE_ON,
         HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_humidifier_condition_behavior_any(
@@ -319,7 +259,6 @@ async def test_humidity_humidifier_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -330,6 +269,7 @@ async def test_humidity_humidifier_condition_behavior_any(
         "humidity.is_value",
         STATE_ON,
         HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_humidifier_condition_behavior_all(
@@ -346,6 +286,78 @@ async def test_humidity_humidifier_condition_behavior_all(
     await assert_condition_behavior_all(
         hass,
         target_entities=target_humidifiers,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        condition=condition,
+        condition_options=condition_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("condition_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("weather"),
+)
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "states"),
+    parametrize_numerical_attribute_condition_above_below_any(
+        "humidity.is_value",
+        "sunny",
+        ATTR_WEATHER_HUMIDITY,
+        attribute_required=True,
+    ),
+)
+async def test_humidity_weather_condition_behavior_any(
+    hass: HomeAssistant,
+    target_weathers: dict[str, list[str]],
+    condition_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    condition: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
+) -> None:
+    """Test the humidity weather condition with 'any' behavior."""
+    await assert_condition_behavior_any(
+        hass,
+        target_entities=target_weathers,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        condition=condition,
+        condition_options=condition_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("condition_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("weather"),
+)
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "states"),
+    parametrize_numerical_attribute_condition_above_below_all(
+        "humidity.is_value",
+        "sunny",
+        ATTR_WEATHER_HUMIDITY,
+        attribute_required=True,
+    ),
+)
+async def test_humidity_weather_condition_behavior_all(
+    hass: HomeAssistant,
+    target_weathers: dict[str, list[str]],
+    condition_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    condition: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
+) -> None:
+    """Test the humidity weather condition with 'all' behavior."""
+    await assert_condition_behavior_all(
+        hass,
+        target_entities=target_weathers,
         condition_target_config=condition_target_config,
         entity_id=entity_id,
         entities_in_target=entities_in_target,

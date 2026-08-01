@@ -1,12 +1,13 @@
 """Test schlage lock."""
 
-from datetime import timedelta
-from unittest.mock import Mock
+from collections.abc import Awaitable, Callable
+from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyschlage.code import AccessCode
 from pyschlage.exceptions import Error as SchlageError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
@@ -15,38 +16,68 @@ from homeassistant.components.schlage.const import (
     SERVICE_ADD_CODE,
     SERVICE_DELETE_CODE,
     SERVICE_GET_CODES,
+    UPDATE_INTERVAL,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 from . import MockSchlageConfigEntry
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 
 
 async def test_lock_attributes(
     hass: HomeAssistant,
-    mock_added_config_entry: MockSchlageConfigEntry,
-    mock_schlage: Mock,
-    mock_lock: Mock,
-    freezer: FrozenDateTimeFactory,
+    mock_add_config_entry: Callable[[], Awaitable[MockSchlageConfigEntry]],
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test lock attributes."""
-    lock = hass.states.get("lock.vault_door")
-    assert lock is not None
-    assert lock.state == LockState.UNLOCKED
-    assert lock.attributes["changed_by"] == "thumbturn"
+    with patch("homeassistant.components.schlage.PLATFORMS", [Platform.LOCK]):
+        config_entry = await mock_add_config_entry()
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
+
+async def test_lock_jammed(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test lock jammed state."""
     mock_lock.is_locked = False
     mock_lock.is_jammed = True
-    # Make the coordinator refresh data.
-    freezer.tick(timedelta(seconds=30))
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    lock = hass.states.get("lock.vault_door")
+    assert lock is not None
+    assert lock.state == LockState.JAMMED
+
+
+async def test_lock_disconnected(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test lock unavailable when disconnected."""
+    mock_lock.connected = False
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     lock = hass.states.get("lock.vault_door")
     assert lock is not None
-    assert lock.state == LockState.JAMMED
+    assert lock.state == STATE_UNAVAILABLE
 
 
 async def test_lock_services(
@@ -85,19 +116,87 @@ async def test_changed_by(
     """Test population of the changed_by attribute."""
     mock_lock.last_changed_by.reset_mock()
     mock_lock.last_changed_by.return_value = "access code - foo"
-
-    # Make the coordinator refresh data.
-    freezer.tick(timedelta(seconds=30))
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    mock_lock.last_changed_by.assert_called_with()
 
-    lock_device = hass.states.get("lock.vault_door")
-    assert lock_device is not None
-    assert lock_device.attributes.get("changed_by") == "access code - foo"
+    lock = hass.states.get("lock.vault_door")
+    assert lock is not None
+    assert lock.attributes["changed_by"] == "access code - foo"
 
 
+@pytest.mark.parametrize(
+    "notify_on_use",
+    [
+        True,
+        False,
+    ],
+    ids=["notify-true", "notify-false"],
+)
 async def test_add_code_service(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+    notify_on_use: bool,
+) -> None:
+    """Test add_code service."""
+    # Mock access_codes as empty initially
+    mock_lock.access_codes = {}
+    mock_lock.add_access_code = Mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD_CODE,
+        service_data={
+            "entity_id": "lock.vault_door",
+            "name": "test_user",
+            "code": "1234",
+            "notify_on_use": notify_on_use,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Verify add_access_code was called with correct AccessCode
+    mock_lock.refresh_access_codes.assert_called_once()
+    mock_lock.add_access_code.assert_called_once()
+    call_args = mock_lock.add_access_code.call_args[0][0]
+    assert isinstance(call_args, AccessCode)
+    assert call_args.name == "test_user"
+    assert call_args.code == "1234"
+    assert call_args.notify_on_use == notify_on_use
+
+
+async def test_add_code_service_integer_code(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test add_code service with an integer code."""
+    mock_lock.access_codes = {}
+    mock_lock.add_access_code = Mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD_CODE,
+        service_data={
+            "entity_id": "lock.vault_door",
+            "name": "test_user",
+            "code": 1234,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_lock.refresh_access_codes.assert_called_once()
+    mock_lock.add_access_code.assert_called_once()
+    call_args = mock_lock.add_access_code.call_args[0][0]
+    assert isinstance(call_args, AccessCode)
+    assert call_args.name == "test_user"
+    assert call_args.code == "1234"
+
+
+async def test_add_code_service_default_notify_on_use_value(
     hass: HomeAssistant,
     mock_lock: Mock,
     mock_added_config_entry: MockSchlageConfigEntry,
@@ -126,6 +225,7 @@ async def test_add_code_service(
     assert isinstance(call_args, AccessCode)
     assert call_args.name == "test_user"
     assert call_args.code == "1234"
+    assert call_args.notify_on_use
 
 
 @pytest.mark.parametrize(
@@ -155,6 +255,7 @@ async def test_add_code_service_invalid_code(
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
                 "code": code,
+                "notify_on_use": False,
             },
             blocking=True,
         )
@@ -184,6 +285,7 @@ async def test_add_code_service_duplicate_name(
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
                 "code": "1234",
+                "notify_on_use": False,
             },
             blocking=True,
         )
@@ -215,6 +317,7 @@ async def test_add_code_service_duplicate_code(
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
                 "code": "1234",
+                "notify_on_use": False,
             },
             blocking=True,
         )
@@ -438,6 +541,7 @@ async def test_add_code_service_refresh_error(
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
                 "code": "1234",
+                "notify_on_use": False,
             },
             blocking=True,
         )
@@ -461,6 +565,7 @@ async def test_add_code_service_api_error(
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
                 "code": "1234",
+                "notify_on_use": False,
             },
             blocking=True,
         )

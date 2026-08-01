@@ -491,8 +491,8 @@ async def test_non_unique_triggers(
     # and therefore it was not set up.
     assert device_entry.name == "beer"
     assert (
-        "Config for device trigger bla2 conflicts with existing device trigger, cannot set up trigger"
-        in caplog.text
+        "Config for device trigger bla2 conflicts with existing"
+        " device trigger, cannot set up trigger" in caplog.text
     )
 
     assert await async_setup_component(
@@ -1364,7 +1364,11 @@ async def test_cleanup_trigger(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/device_automation/bla/config", None, 0, True
+        "homeassistant/device_automation/bla/config",
+        None,
+        0,
+        True,
+        message_expiry_interval=None,
     )
 
 

@@ -6,7 +6,6 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from requests_mock.mocker import Mocker
 
 from homeassistant import config_entries
 from homeassistant.components.fitbit.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
@@ -159,7 +158,6 @@ async def test_api_failure(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    requests_mock: Mocker,
     setup_credentials: None,
     http_status: HTTPStatus,
     json: Any,
@@ -189,15 +187,15 @@ async def test_api_failure(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
+    aioclient_mock.clear_requests()
     aioclient_mock.post(
         OAUTH2_TOKEN,
         json=SERVER_ACCESS_TOKEN,
     )
 
-    requests_mock.register_uri(
-        "GET",
+    aioclient_mock.get(
         PROFILE_API_URL,
-        status_code=http_status,
+        status=http_status,
         json=json,
     )
 

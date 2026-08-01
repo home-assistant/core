@@ -32,7 +32,6 @@ def mock_setup_entry() -> Generator[Mock]:
         yield mock_setup_entry
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
@@ -98,7 +97,6 @@ async def test_full_flow(
     }
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow_already_exists(
@@ -152,7 +150,6 @@ async def test_full_flow_already_exists(
     assert result2["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth(
@@ -212,7 +209,6 @@ async def test_reauth(
     assert mock_config_entry.data["token"]["access_token"] == reauth_jwt
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_wrong_account(
@@ -223,7 +219,7 @@ async def test_reauth_wrong_account(
     reauth_jwt_wrong_account: str,
     jwt: str,
 ) -> None:
-    """Test the reauthentication aborts, if user tries to reauthenticate with another account."""
+    """Test reauthentication aborts if user uses another account."""
     assert mock_config_entry.data["token"]["access_token"] == jwt
 
     mock_config_entry.add_to_hass(hass)
@@ -273,7 +269,6 @@ async def test_reauth_wrong_account(
     assert mock_config_entry.data["token"]["access_token"] == jwt
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_legacy_migration_with_email_match(
@@ -283,7 +278,7 @@ async def test_legacy_migration_with_email_match(
     mock_legacy_config_entry: MockConfigEntry,
     migration_jwt: str,
 ) -> None:
-    """Test migration from legacy username/password config to OAuth with email validation."""
+    """Test migration from legacy config to OAuth with email validation."""
 
     mock_legacy_config_entry.add_to_hass(hass)
 
@@ -335,7 +330,6 @@ async def test_legacy_migration_with_email_match(
     assert mock_legacy_config_entry.data["token"]["access_token"] == migration_jwt
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_legacy_migration_wrong_email(
@@ -373,7 +367,8 @@ async def test_legacy_migration_wrong_email(
     aioclient_mock.post(
         OAUTH2_TOKEN,
         json={
-            "access_token": reauth_jwt_wrong_account,  # JWT with email: ["different@email.tld"]
+            # JWT with email: ["different@email.tld"]
+            "access_token": reauth_jwt_wrong_account,
             "expires_in": 86399,
             "refresh_token": "mock-refresh-token",
             "token_type": "Bearer",
@@ -394,7 +389,6 @@ async def test_legacy_migration_wrong_email(
     assert "token" not in mock_legacy_config_entry.data  # Still legacy data
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_legacy_migration_no_email_in_jwt(
@@ -404,7 +398,7 @@ async def test_legacy_migration_no_email_in_jwt(
     mock_legacy_config_entry: MockConfigEntry,
     jwt: str,  # JWT with empty email array
 ) -> None:
-    """Test migration from legacy config succeeds when JWT has no email (can't validate)."""
+    """Test legacy migration succeeds when JWT has no email."""
 
     mock_legacy_config_entry.add_to_hass(hass)
 

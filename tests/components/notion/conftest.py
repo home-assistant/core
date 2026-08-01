@@ -10,7 +10,11 @@ from aionotion.sensor.models import Sensor
 from aionotion.user.models import UserPreferences
 import pytest
 
-from homeassistant.components.notion import CONF_REFRESH_TOKEN, CONF_USER_UUID, DOMAIN
+from homeassistant.components.notion.const import (
+    CONF_REFRESH_TOKEN,
+    CONF_USER_UUID,
+    DOMAIN,
+)
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 

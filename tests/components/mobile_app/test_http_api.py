@@ -167,7 +167,7 @@ async def test_registration_with_cloud_local_only_user(
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
 ) -> None:
-    """Test that cloudhook_url and remote_ui_url are not returned for local_only users."""
+    """Test cloudhook_url and remote_ui_url not returned for local users."""
     hass_admin_user.local_only = True
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 

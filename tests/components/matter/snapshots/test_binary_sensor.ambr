@@ -39,8 +39,8 @@
 # name: test_binary_sensors[aqara_door_window_p2][binary_sensor.aqara_door_and_window_sensor_p2_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Aqara Door and Window Sensor P2 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Door and Window Sensor P2 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.aqara_door_and_window_sensor_p2_door',
@@ -90,8 +90,8 @@
 # name: test_binary_sensors[aqara_motion_p2][binary_sensor.aqara_motion_and_light_sensor_p2_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Aqara Motion and Light Sensor P2 Occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Motion and Light Sensor P2 Occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.aqara_motion_and_light_sensor_p2_occupancy',
@@ -99,6 +99,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[aqara_multi_state_p100][binary_sensor.multi_state_sensor_p100_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.multi_state_sensor_p100_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000016C-MatterNodeDevice-1-ContactSensor-69-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[aqara_multi_state_p100][binary_sensor.multi_state_sensor_p100_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-State Sensor P100 Door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_state_sensor_p100_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensors[aqara_presence_fp300][binary_sensor.presence_multi_sensor_fp300_1_occupancy-entry]
@@ -141,8 +192,8 @@
 # name: test_binary_sensors[aqara_presence_fp300][binary_sensor.presence_multi_sensor_fp300_1_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Presence Multi-Sensor FP300 1 Occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Presence Multi-Sensor FP300 1 Occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.presence_multi_sensor_fp300_1_occupancy',
@@ -192,7 +243,7 @@
 # name: test_binary_sensors[aqara_u200][binary_sensor.aqara_smart_lock_u200_actuator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aqara Smart Lock U200 Actuator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Lock U200 Actuator',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.aqara_smart_lock_u200_actuator',
@@ -242,8 +293,8 @@
 # name: test_binary_sensors[eve_contact_sensor][binary_sensor.eve_door_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Eve Door Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Door Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.eve_door_door',
@@ -293,8 +344,8 @@
 # name: test_binary_sensors[eve_shutter][binary_sensor.eve_shutter_switch_20eci1701_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Eve Shutter Switch 20ECI1701 Configuration status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Shutter Switch 20ECI1701 Configuration status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.eve_shutter_switch_20eci1701_configuration_status',
@@ -344,7 +395,7 @@
 # name: test_binary_sensors[eve_thermo_v4][binary_sensor.eve_thermo_20ebp1701_local_temperature_remote_sensing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo 20EBP1701 Local temperature remote sensing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20EBP1701 Local temperature remote sensing',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.eve_thermo_20ebp1701_local_temperature_remote_sensing',
@@ -394,7 +445,7 @@
 # name: test_binary_sensors[eve_thermo_v5][binary_sensor.eve_thermo_20ecd1701_local_temperature_remote_sensing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo 20ECD1701 Local temperature remote sensing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20ECD1701 Local temperature remote sensing',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.eve_thermo_20ecd1701_local_temperature_remote_sensing',
@@ -444,8 +495,8 @@
 # name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_battery_alert-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Smart CO sensor Battery alert',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart CO sensor Battery alert',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smart_co_sensor_battery_alert',
@@ -495,8 +546,8 @@
 # name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'carbon_monoxide',
-      'friendly_name': 'Smart CO sensor Carbon monoxide',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_monoxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart CO sensor Carbon monoxide',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smart_co_sensor_carbon_monoxide',
@@ -546,8 +597,8 @@
 # name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_end_of_service-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Smart CO sensor End of service',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart CO sensor End of service',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smart_co_sensor_end_of_service',
@@ -597,8 +648,8 @@
 # name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_hardware_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Smart CO sensor Hardware fault',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart CO sensor Hardware fault',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smart_co_sensor_hardware_fault',
@@ -648,7 +699,7 @@
 # name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_muted-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smart CO sensor Muted',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart CO sensor Muted',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smart_co_sensor_muted',
@@ -698,8 +749,8 @@
 # name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_test_in_progress-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Smart CO sensor Test in progress',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart CO sensor Test in progress',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smart_co_sensor_test_in_progress',
@@ -749,8 +800,8 @@
 # name: test_binary_sensors[heiman_motion_sensor_m1][binary_sensor.smart_motion_sensor_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Smart motion sensor Occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart motion sensor Occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smart_motion_sensor_occupancy',
@@ -800,8 +851,8 @@
 # name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_battery_alert-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Smoke sensor Battery alert',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke sensor Battery alert',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smoke_sensor_battery_alert',
@@ -851,8 +902,8 @@
 # name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_end_of_service-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Smoke sensor End of service',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke sensor End of service',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smoke_sensor_end_of_service',
@@ -902,8 +953,8 @@
 # name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_hardware_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Smoke sensor Hardware fault',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke sensor Hardware fault',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smoke_sensor_hardware_fault',
@@ -953,7 +1004,7 @@
 # name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_muted-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smoke sensor Muted',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke sensor Muted',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smoke_sensor_muted',
@@ -1003,8 +1054,8 @@
 # name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'smoke',
-      'friendly_name': 'Smoke sensor Smoke',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke sensor Smoke',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smoke_sensor_smoke',
@@ -1054,8 +1105,8 @@
 # name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_test_in_progress-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Smoke sensor Test in progress',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke sensor Test in progress',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smoke_sensor_test_in_progress',
@@ -1105,8 +1156,8 @@
 # name: test_binary_sensors[longan_link_thermostat][binary_sensor.longan_link_hvac_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Longan link HVAC Occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Longan link HVAC Occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.longan_link_hvac_occupancy',
@@ -1156,7 +1207,7 @@
 # name: test_binary_sensors[mock_door_lock][binary_sensor.mock_door_lock_actuator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Actuator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock Actuator',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_door_lock_actuator',
@@ -1206,8 +1257,8 @@
 # name: test_binary_sensors[mock_door_lock][binary_sensor.mock_door_lock_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Mock Door Lock Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_door_lock_battery',
@@ -1257,7 +1308,7 @@
 # name: test_binary_sensors[mock_door_lock_with_unbolt][binary_sensor.mock_door_lock_with_unbolt_actuator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Actuator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt Actuator',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_door_lock_with_unbolt_actuator',
@@ -1307,8 +1358,8 @@
 # name: test_binary_sensors[mock_door_lock_with_unbolt][binary_sensor.mock_door_lock_with_unbolt_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Mock Door Lock with unbolt Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_door_lock_with_unbolt_battery',
@@ -1358,8 +1409,8 @@
 # name: test_binary_sensors[mock_door_lock_with_unbolt][binary_sensor.mock_door_lock_with_unbolt_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Mock Door Lock with unbolt Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_door_lock_with_unbolt_door',
@@ -1409,8 +1460,8 @@
 # name: test_binary_sensors[mock_leak_sensor][binary_sensor.water_leak_detector_water_leak-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Water Leak Detector Water leak',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Leak Detector Water leak',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.water_leak_detector_water_leak',
@@ -1460,7 +1511,7 @@
 # name: test_binary_sensors[mock_lock][binary_sensor.mock_lock_actuator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Lock Actuator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lock Actuator',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_lock_actuator',
@@ -1510,8 +1561,8 @@
 # name: test_binary_sensors[mock_lock][binary_sensor.mock_lock_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Mock Lock Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lock Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_lock_battery',
@@ -1561,8 +1612,8 @@
 # name: test_binary_sensors[mock_lock][binary_sensor.mock_lock_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Mock Lock Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lock Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_lock_door',
@@ -1612,11 +1663,62 @@
 # name: test_binary_sensors[mock_occupancy_sensor][binary_sensor.mock_occupancy_sensor_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Mock Occupancy Sensor Occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Occupancy Sensor Occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_occupancy_sensor_occupancy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[mock_occupancy_sensor_pir][binary_sensor.mock_pir_occupancy_sensor_occupancy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.mock_pir_occupancy_sensor_occupancy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Occupancy',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+    'original_icon': None,
+    'original_name': 'Occupancy',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000062-MatterNodeDevice-1-OccupancySensor-1030-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[mock_occupancy_sensor_pir][binary_sensor.mock_pir_occupancy_sensor_occupancy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock PIR Occupancy Sensor Occupancy',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_pir_occupancy_sensor_occupancy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1663,8 +1765,8 @@
 # name: test_binary_sensors[mock_onoff_light_alt_name][binary_sensor.mock_onoff_light_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Mock OnOff Light Occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock OnOff Light Occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_onoff_light_occupancy',
@@ -1714,8 +1816,8 @@
 # name: test_binary_sensors[mock_onoff_light_no_name][binary_sensor.mock_light_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Mock Light Occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Light Occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_light_occupancy',
@@ -1765,8 +1867,8 @@
 # name: test_binary_sensors[mock_pump][binary_sensor.mock_pump_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Pump Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Pump Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_pump_problem',
@@ -1816,8 +1918,8 @@
 # name: test_binary_sensors[mock_pump][binary_sensor.mock_pump_running-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Mock Pump Running',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Pump Running',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_pump_running',
@@ -1867,7 +1969,7 @@
 # name: test_binary_sensors[mock_thermostat][binary_sensor.mock_thermostat_local_temperature_remote_sensing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Thermostat Local temperature remote sensing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat Local temperature remote sensing',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_thermostat_local_temperature_remote_sensing',
@@ -1917,7 +2019,7 @@
 # name: test_binary_sensors[mock_thermostat][binary_sensor.mock_thermostat_occupancy_remote_sensing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Thermostat Occupancy remote sensing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat Occupancy remote sensing',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_thermostat_occupancy_remote_sensing',
@@ -1967,7 +2069,7 @@
 # name: test_binary_sensors[mock_thermostat][binary_sensor.mock_thermostat_outdoor_temperature_remote_sensing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Thermostat Outdoor temperature remote sensing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat Outdoor temperature remote sensing',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_thermostat_outdoor_temperature_remote_sensing',
@@ -2017,8 +2119,8 @@
 # name: test_binary_sensors[mock_valve][binary_sensor.mock_valve_general_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Valve General fault',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Valve General fault',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_valve_general_fault',
@@ -2068,8 +2170,8 @@
 # name: test_binary_sensors[mock_valve][binary_sensor.mock_valve_valve_blocked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Valve Valve blocked',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Valve Valve blocked',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_valve_valve_blocked',
@@ -2119,8 +2221,8 @@
 # name: test_binary_sensors[mock_valve][binary_sensor.mock_valve_valve_leaking-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Valve Valve leaking',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Valve Valve leaking',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_valve_valve_leaking',
@@ -2170,8 +2272,8 @@
 # name: test_binary_sensors[mock_window_covering_full][binary_sensor.mock_full_window_covering_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Full Window Covering Configuration status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Full Window Covering Configuration status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_full_window_covering_configuration_status',
@@ -2221,8 +2323,8 @@
 # name: test_binary_sensors[mock_window_covering_lift][binary_sensor.mock_lift_window_covering_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Lift Window Covering Configuration status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lift Window Covering Configuration status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_lift_window_covering_configuration_status',
@@ -2272,8 +2374,8 @@
 # name: test_binary_sensors[mock_window_covering_pa_lift][binary_sensor.longan_link_wncv_da01_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Longan link WNCV DA01 Configuration status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Longan link WNCV DA01 Configuration status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.longan_link_wncv_da01_configuration_status',
@@ -2323,8 +2425,8 @@
 # name: test_binary_sensors[mock_window_covering_pa_tilt][binary_sensor.mock_pa_tilt_window_covering_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock PA Tilt Window Covering Configuration status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock PA Tilt Window Covering Configuration status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_pa_tilt_window_covering_configuration_status',
@@ -2374,8 +2476,8 @@
 # name: test_binary_sensors[mock_window_covering_tilt][binary_sensor.mock_tilt_window_covering_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Tilt Window Covering Configuration status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Tilt Window Covering Configuration status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_tilt_window_covering_configuration_status',
@@ -2425,7 +2527,7 @@
 # name: test_binary_sensors[secuyou_smart_lock][binary_sensor.secuyou_smart_lock_actuator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Secuyou Smart Lock Actuator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Secuyou Smart Lock Actuator',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.secuyou_smart_lock_actuator',
@@ -2475,8 +2577,8 @@
 # name: test_binary_sensors[silabs_dishwasher][binary_sensor.dishwasher_door_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dishwasher Door alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Door alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dishwasher_door_alarm',
@@ -2526,8 +2628,8 @@
 # name: test_binary_sensors[silabs_dishwasher][binary_sensor.dishwasher_inflow_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dishwasher Inflow alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Inflow alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dishwasher_inflow_alarm',
@@ -2577,8 +2679,8 @@
 # name: test_binary_sensors[silabs_evse_charging][binary_sensor.evse_charger_supply_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'evse Charger supply state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'evse Charger supply state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.evse_charger_supply_state',
@@ -2628,8 +2730,8 @@
 # name: test_binary_sensors[silabs_evse_charging][binary_sensor.evse_charging_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'evse Charging status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'evse Charging status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.evse_charging_status',
@@ -2679,8 +2781,8 @@
 # name: test_binary_sensors[silabs_evse_charging][binary_sensor.evse_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'evse Plug',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'evse Plug',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.evse_plug',
@@ -2730,8 +2832,8 @@
 # name: test_binary_sensors[silabs_refrigerator][binary_sensor.refrigerator_door_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Refrigerator Door alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Door alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_door_alarm',
@@ -2781,7 +2883,7 @@
 # name: test_binary_sensors[silabs_water_heater][binary_sensor.water_heater_boost_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Water Heater Boost state',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Heater Boost state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.water_heater_boost_state',
@@ -2831,8 +2933,8 @@
 # name: test_binary_sensors[zemismart_mt25b][binary_sensor.zemismart_mt25b_roller_motor_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Zemismart MT25B Roller Motor Configuration status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zemismart MT25B Roller Motor Configuration status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zemismart_mt25b_roller_motor_configuration_status',

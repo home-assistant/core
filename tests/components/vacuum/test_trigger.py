@@ -5,14 +5,14 @@ from typing import Any
 import pytest
 
 from homeassistant.components.vacuum import VacuumActivity
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
-    assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -27,23 +27,32 @@ async def target_vacuums(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 @pytest.mark.parametrize(
-    "trigger_key",
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        "vacuum.docked",
-        "vacuum.errored",
-        "vacuum.paused_cleaning",
-        "vacuum.started_cleaning",
-        "vacuum.started_returning",
+        ("vacuum.returned_to_dock", {}, True, True),
+        ("vacuum.errored", {}, True, True),
+        ("vacuum.paused_cleaning", {}, True, True),
+        ("vacuum.started_cleaning", {}, True, True),
+        ("vacuum.started_returning", {}, True, True),
     ],
 )
-async def test_vacuum_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+async def test_vacuum_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the vacuum triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+    """Test that vacuum triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("vacuum"),
@@ -52,7 +61,7 @@ async def test_vacuum_triggers_gated_by_labs_flag(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="vacuum.docked",
+            trigger="vacuum.returned_to_dock",
             target_states=[VacuumActivity.DOCKED],
             other_states=other_states(VacuumActivity.DOCKED),
         ),
@@ -78,9 +87,8 @@ async def test_vacuum_triggers_gated_by_labs_flag(
         ),
     ],
 )
-async def test_vacuum_state_trigger_behavior_any(
+async def test_vacuum_state_trigger_behavior_each(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_vacuums: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -89,10 +97,9 @@ async def test_vacuum_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the vacuum state trigger fires when any vacuum state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test vacuum state trigger fires when any vacuum changes to a specific state."""
+    await assert_trigger_behavior_each(
         hass,
-        service_calls=service_calls,
         target_entities=target_vacuums,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -103,7 +110,6 @@ async def test_vacuum_state_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("vacuum"),
@@ -112,7 +118,7 @@ async def test_vacuum_state_trigger_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="vacuum.docked",
+            trigger="vacuum.returned_to_dock",
             target_states=[VacuumActivity.DOCKED],
             other_states=other_states(VacuumActivity.DOCKED),
         ),
@@ -140,7 +146,6 @@ async def test_vacuum_state_trigger_behavior_any(
 )
 async def test_vacuum_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_vacuums: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -149,10 +154,9 @@ async def test_vacuum_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the vacuum state trigger fires when the first vacuum changes to a specific state."""
+    """Test vacuum state trigger fires when first vacuum changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_vacuums,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -163,7 +167,6 @@ async def test_vacuum_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("vacuum"),
@@ -172,7 +175,7 @@ async def test_vacuum_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="vacuum.docked",
+            trigger="vacuum.returned_to_dock",
             target_states=[VacuumActivity.DOCKED],
             other_states=other_states(VacuumActivity.DOCKED),
         ),
@@ -198,9 +201,8 @@ async def test_vacuum_state_trigger_behavior_first(
         ),
     ],
 )
-async def test_vacuum_state_trigger_behavior_last(
+async def test_vacuum_state_trigger_behavior_all(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_vacuums: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -209,10 +211,9 @@ async def test_vacuum_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the vacuum state trigger fires when the last vacuum changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test vacuum state trigger fires when last vacuum changes to a specific state."""
+    await assert_trigger_behavior_all(
         hass,
-        service_calls=service_calls,
         target_entities=target_vacuums,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,

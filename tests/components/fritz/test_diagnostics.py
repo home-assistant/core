@@ -1,7 +1,5 @@
 """Tests for Fritz!Tools diagnostics platform."""
 
-from __future__ import annotations
-
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 

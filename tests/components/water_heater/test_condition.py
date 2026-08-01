@@ -15,8 +15,6 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ABOVE,
-    CONF_BELOW,
     STATE_OFF,
     STATE_ON,
     UnitOfTemperature,
@@ -27,7 +25,7 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
+    assert_condition_options_supported,
     assert_numerical_condition_unit_conversion,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
@@ -36,8 +34,6 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
-
-_TEMPERATURE_CONDITION_OPTIONS = {"unit": UnitOfTemperature.CELSIUS}
 
 _ALL_STATES = [
     STATE_ECO,
@@ -59,23 +55,45 @@ async def target_water_heaters(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "water_heater")
 
 
+_TEMPERATURE_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {"number": 20, "unit_of_measurement": UnitOfTemperature.CELSIUS},
+    }
+}
+
+
 @pytest.mark.parametrize(
-    "condition",
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        "water_heater.is_off",
-        "water_heater.is_on",
-        "water_heater.is_operation_mode",
-        "water_heater.is_target_temperature",
+        ("water_heater.is_off", {}, True, True),
+        ("water_heater.is_on", {}, True, True),
+        (
+            "water_heater.is_operation_mode",
+            {"operation_mode": [STATE_ECO]},
+            True,
+            True,
+        ),
+        ("water_heater.is_target_temperature", _TEMPERATURE_THRESHOLD, True, True),
     ],
 )
-async def test_water_heater_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
+async def test_water_heater_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the water heater conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+    """Test that water_heater conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -134,7 +152,6 @@ async def test_water_heater_state_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -193,7 +210,6 @@ async def test_water_heater_state_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -205,7 +221,8 @@ async def test_water_heater_state_condition_behavior_all(
             "water_heater.is_target_temperature",
             "eco",
             ATTR_TEMPERATURE,
-            condition_options=_TEMPERATURE_CONDITION_OPTIONS,
+            threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -232,7 +249,6 @@ async def test_water_heater_numerical_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -244,7 +260,8 @@ async def test_water_heater_numerical_condition_behavior_any(
             "water_heater.is_target_temperature",
             "eco",
             ATTR_TEMPERATURE,
-            condition_options=_TEMPERATURE_CONDITION_OPTIONS,
+            threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -271,7 +288,6 @@ async def test_water_heater_numerical_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_water_heater_numerical_condition_unit_conversion(
     hass: HomeAssistant,
 ) -> None:
@@ -292,12 +308,39 @@ async def test_water_heater_numerical_condition_unit_conversion(
             }
         ],
         numerical_condition_options=[
-            {CONF_ABOVE: 120, CONF_BELOW: 140, "unit": UnitOfTemperature.FAHRENHEIT},
-            {CONF_ABOVE: 49, CONF_BELOW: 60, "unit": UnitOfTemperature.CELSIUS},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 120,
+                        "unit_of_measurement": UnitOfTemperature.FAHRENHEIT,
+                    },
+                    "value_max": {
+                        "number": 140,
+                        "unit_of_measurement": UnitOfTemperature.FAHRENHEIT,
+                    },
+                }
+            },
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 49,
+                        "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                    },
+                    "value_max": {
+                        "number": 60,
+                        "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                    },
+                }
+            },
         ],
         limit_entity_condition_options={
-            CONF_ABOVE: "sensor.above",
-            CONF_BELOW: "sensor.below",
+            "threshold": {
+                "type": "between",
+                "value_min": {"entity": "sensor.above"},
+                "value_max": {"entity": "sensor.below"},
+            }
         },
         limit_entities=("sensor.above", "sensor.below"),
         limit_entity_states=[

@@ -1,10 +1,8 @@
 """Config flow for Fully Kiosk Browser integration."""
 
-from __future__ import annotations
-
 import asyncio
 import json
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 from fullykiosk import FullyKiosk
@@ -102,6 +100,7 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -125,6 +124,7 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -172,6 +172,7 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:

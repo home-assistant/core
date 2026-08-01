@@ -1,9 +1,7 @@
 """Pushover platform for notify component."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from pushover_complete import BadAPIRequestError, PushoverAPI
 
@@ -31,7 +29,6 @@ from .const import (
     ATTR_URL,
     ATTR_URL_TITLE,
     CONF_USER_KEY,
-    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,11 +40,13 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> PushoverNotificationService | None:
     """Get the Pushover notification service."""
-    if discovery_info is None:
-        return None
-    pushover_api: PushoverAPI = hass.data[DOMAIN][discovery_info["entry_id"]]
+    if TYPE_CHECKING:
+        assert discovery_info is not None
+    entry = hass.config_entries.async_get_entry(discovery_info["entry_id"])
+    if TYPE_CHECKING:
+        assert entry is not None
     return PushoverNotificationService(
-        hass, pushover_api, discovery_info[CONF_USER_KEY]
+        hass, entry.runtime_data, discovery_info[CONF_USER_KEY]
     )
 
 
@@ -62,6 +61,7 @@ class PushoverNotificationService(BaseNotificationService):
         self._user_key = user_key
         self.pushover = pushover
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 
@@ -89,6 +89,7 @@ class PushoverNotificationService(BaseNotificationService):
                     file_handle = open(data[ATTR_ATTACHMENT], "rb")
                     # Replace the attachment identifier with file object.
                     image = file_handle
+                # pylint: disable-next=home-assistant-action-swallowed-exception
                 except OSError as ex_val:
                     _LOGGER.error(ex_val)
                     # Remove attachment key to send without attachment.

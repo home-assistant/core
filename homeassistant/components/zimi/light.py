@@ -1,9 +1,7 @@
 """Light platform for zcc integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from zcc import ControlPoint
 from zcc.device import ControlPointDevice
@@ -50,10 +48,12 @@ class ZimiLight(ZimiEntity, LightEntity):
         self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self._device.is_on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on (with optional brightness)."""
 
@@ -63,6 +63,7 @@ class ZimiLight(ZimiEntity, LightEntity):
 
         await self._device.turn_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
 
@@ -82,6 +83,7 @@ class ZimiDimmer(ZimiLight):
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on (with optional brightness)."""
 
@@ -96,6 +98,7 @@ class ZimiDimmer(ZimiLight):
         await self._device.set_brightness(brightness)
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
         return round(self._device.brightness * 255 / 100)

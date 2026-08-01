@@ -1,11 +1,10 @@
 """Anglian Water sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from typing import override
 
 from pyanglianwater.meter import SmartMeter
 
@@ -121,6 +120,7 @@ class AnglianWaterSensorEntity(AnglianWaterEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> float | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.smart_meter)

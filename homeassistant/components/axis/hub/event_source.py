@@ -1,11 +1,8 @@
 """Axis network device abstraction."""
 
-from __future__ import annotations
-
 import axis
 from axis.errors import Unauthorized
-from axis.interfaces.mqtt import mqtt_json_to_event
-from axis.models.mqtt import ClientState
+from axis.models.mqtt import ClientState, mqtt_json_to_event
 from axis.stream_manager import Signal, State
 
 from homeassistant.components import mqtt

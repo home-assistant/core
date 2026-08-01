@@ -1,10 +1,8 @@
 """Config flow for the sma integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import attrs
 from pysma import (
@@ -29,11 +27,49 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_GROUP, DOMAIN, GROUPS
 
 _LOGGER = logging.getLogger(__name__)
+
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.URL)
+        ),
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
+    }
+)
+
+
+STEP_DISCOVERY_CONFIRM_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
+    }
+)
 
 
 async def validate_input(
@@ -42,14 +78,17 @@ async def validate_input(
     data: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-    session = async_get_clientsession(hass, verify_ssl=user_input[CONF_VERIFY_SSL])
-
     protocol = "https" if user_input[CONF_SSL] else "http"
     host = data[CONF_HOST] if data is not None else user_input[CONF_HOST]
-    url = URL.build(scheme=protocol, host=host)
+    url = str(URL.build(scheme=protocol, host=host))
 
     sma = SMAWebConnect(
-        session, str(url), user_input[CONF_PASSWORD], group=user_input[CONF_GROUP]
+        session=async_get_clientsession(hass, verify_ssl=user_input[CONF_VERIFY_SSL]),
+        url=url,
+        **{
+            CONF_PASSWORD: user_input[CONF_PASSWORD],
+            CONF_GROUP: user_input[CONF_GROUP],
+        },
     )
 
     # new_session raises SmaAuthenticationException on failure
@@ -108,6 +147,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors, device_info
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -128,18 +168,9 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=self._data[CONF_HOST]): cv.string,
-                    vol.Optional(CONF_SSL, default=self._data[CONF_SSL]): cv.boolean,
-                    vol.Optional(
-                        CONF_VERIFY_SSL, default=self._data[CONF_VERIFY_SSL]
-                    ): cv.boolean,
-                    vol.Optional(CONF_GROUP, default=self._data[CONF_GROUP]): vol.In(
-                        GROUPS
-                    ),
-                    vol.Required(CONF_PASSWORD): cv.string,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_DATA_SCHEMA,
+                suggested_values=user_input,
             ),
             errors=errors,
         )
@@ -170,20 +201,14 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_SSL: user_input[CONF_SSL],
                         CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
                         CONF_GROUP: user_input[CONF_GROUP],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
 
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Optional(CONF_SSL): cv.boolean,
-                        vol.Optional(CONF_VERIFY_SSL): cv.boolean,
-                        vol.Optional(CONF_GROUP): vol.In(GROUPS),
-                    }
-                ),
+                data_schema=STEP_USER_DATA_SCHEMA,
                 suggested_values=user_input or dict(reconf_entry.data),
             ),
             errors=errors,
@@ -219,12 +244,18 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Required(CONF_PASSWORD): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
                 }
             ),
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -257,7 +288,8 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                 entry, data_updates={CONF_MAC: self._data[CONF_MAC]}
             )
 
-        # Finally, check if the hostname (which represents the SMA serial number) is unique
+        # Finally, check if the hostname
+        # (which represents the SMA serial number) is unique
         serial_number = discovery_info.hostname.lower()
         # Example hostname: sma12345678-01
         # Remove 'sma' prefix and strip everything after the dash (including the dash)
@@ -286,17 +318,9 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="discovery_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_SSL, default=self._data[CONF_SSL]): cv.boolean,
-                    vol.Optional(
-                        CONF_VERIFY_SSL, default=self._data[CONF_VERIFY_SSL]
-                    ): cv.boolean,
-                    vol.Optional(CONF_GROUP, default=self._data[CONF_GROUP]): vol.In(
-                        GROUPS
-                    ),
-                    vol.Required(CONF_PASSWORD): cv.string,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_DISCOVERY_CONFIRM_DATA_SCHEMA,
+                suggested_values=user_input,
             ),
             description_placeholders={CONF_HOST: self._data[CONF_HOST]},
             errors=errors,

@@ -8,7 +8,7 @@ from collections import deque
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -286,6 +286,7 @@ class Plant(Entity):
                 return f"{sensor_name} high"
         return None
 
+    @override
     async def async_added_to_hass(self):
         """After being added to hass, load from history."""
         if "recorder" in self.hass.config.components:
@@ -336,16 +337,19 @@ class Plant(Entity):
         _LOGGER.debug("Initializing from database completed")
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def state(self):
         """Return the state of the entity."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes of the entity.
 
@@ -385,7 +389,7 @@ class DailyHistory:
 
     def add_measurement(self, value, timestamp=None):
         """Add a new measurement for a certain day."""
-        day = (timestamp or datetime.now()).date()
+        day = (timestamp or datetime.now()).date()  # pylint: disable=home-assistant-enforce-naive-now
         if not isinstance(value, (int, float)):
             return
         if self._days is None:

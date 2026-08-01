@@ -1,4 +1,4 @@
-"""Tests for glances sensors."""
+"""Tests for Glances sensors."""
 
 from datetime import timedelta
 from unittest.mock import AsyncMock

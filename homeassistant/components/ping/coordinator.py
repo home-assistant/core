@@ -1,11 +1,9 @@
 """DataUpdateCoordinator for the ping integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -50,6 +48,7 @@ class PingUpdateCoordinator(DataUpdateCoordinator[PingResult]):
             update_interval=timedelta(seconds=30),
         )
 
+    @override
     async def _async_update_data(self) -> PingResult:
         """Trigger ping check."""
         await self.ping.async_update()

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
@@ -31,6 +32,8 @@ from homeassistant.components.select import ATTR_OPTION, SERVICE_SELECT_OPTION
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import DATA_ENTITY_PLATFORM
 
 from tests.common import MockConfigEntry
 
@@ -398,3 +401,154 @@ async def test_group_resubscribes_new_coordinator(
     mock_coord2.client.async_set_mute.assert_called_with(True)
 
     del integration_data.coordinators["fake_entry_2"]
+
+
+# ── Regression tests: KeyError on double-unsub after entity removal ──────────
+#
+# Bug: async_will_remove_from_hass() used to unsub() every coordinator
+# listener without clearing _unsub_listeners/_subscribed_count. If an
+# in-flight _async_call_all() (e.g. a group switch command still awaiting
+# asyncio.gather()) resumed afterwards and called async_write_ha_state(), the
+# stale coordinator-count mismatch made it call _subscribe_coordinators()
+# again, which tried to unsub() the very same listeners a second time.
+# DataUpdateCoordinator.__async_remove_listener_internal() raises KeyError on
+# a listener id that's already been popped, crashing the service call.
+
+
+async def test_group_entity_removal_clears_subscription_state(
+    hass: HomeAssistant,
+) -> None:
+    """async_will_remove_from_hass must unsub and reset all tracking state."""
+    entity = AdamAudioGroupEntity(hass)
+    unsub1 = MagicMock()
+    unsub2 = MagicMock()
+    entity._unsub_listeners = [unsub1, unsub2]
+    entity._subscribed_count = 2
+
+    await entity.async_will_remove_from_hass()
+
+    unsub1.assert_called_once()
+    unsub2.assert_called_once()
+    assert entity._unsub_listeners == []
+    assert entity._subscribed_count == 0
+    assert entity._removed is True
+
+
+async def test_group_entity_no_resubscribe_after_removal(hass: HomeAssistant) -> None:
+    """_subscribe_coordinators() must be a no-op once the entity is removed."""
+    entity = AdamAudioGroupEntity(hass)
+    await entity.async_will_remove_from_hass()
+
+    mock_coord = MagicMock()
+    mock_coord.async_add_listener = MagicMock(return_value=lambda: None)
+    with patch.object(entity, "_coordinators", return_value=[mock_coord]):
+        entity._subscribe_coordinators()
+
+    assert entity._unsub_listeners == []
+    mock_coord.async_add_listener.assert_not_called()
+
+
+async def test_group_entity_write_ha_state_noop_after_removal(
+    hass: HomeAssistant,
+) -> None:
+    """_async_write_ha_state() must skip re-subscription once removed.
+
+    Uses a coordinator count that deliberately mismatches _subscribed_count
+    (0, after removal) to prove the resubscribe path is never entered. Calls
+    _async_write_ha_state() directly (the actual override point) rather than
+    the public async_write_ha_state(), which requires the entity to be fully
+    attached to a platform before it can be called.
+    """
+    entity = AdamAudioGroupEntity(hass)
+    await entity.async_will_remove_from_hass()
+
+    with (
+        patch.object(entity, "_coordinators", return_value=[MagicMock(), MagicMock()]),
+        patch.object(Entity, "_async_write_ha_state") as mock_super_write,
+    ):
+        entity._async_write_ha_state()
+
+    mock_super_write.assert_not_called()
+
+
+async def test_group_entity_survives_double_unsub_after_removal(
+    hass: HomeAssistant,
+) -> None:
+    """Directly reproduces the KeyError.
+
+    An unsub() that raises if invoked a second time (mirroring
+    DataUpdateCoordinator's real behavior) must only ever be called once,
+    even when async_write_ha_state() is invoked again for a
+    coordinator-count that mismatches the (now-zeroed) subscribed count.
+    """
+    entity = AdamAudioGroupEntity(hass)
+
+    calls = 0
+
+    def unsub_like_coordinator() -> None:
+        nonlocal calls
+        calls += 1
+        if calls > 1:
+            raise KeyError(23)
+
+    entity._unsub_listeners = [unsub_like_coordinator]
+    entity._subscribed_count = 1
+
+    # Entity torn down mid-command, e.g. by a config entry reload.
+    await entity.async_will_remove_from_hass()
+    assert calls == 1
+
+    # A suspended _async_call_all resumes and calls async_write_ha_state()
+    # after removal; this must not attempt to unsub again.
+    with patch.object(entity, "_coordinators", return_value=[MagicMock(), MagicMock()]):
+        entity._async_write_ha_state()
+
+    assert calls == 1
+
+
+@pytest.mark.usefixtures("mock_config_entry", "mock_client")
+async def test_group_switch_removed_mid_command_no_keyerror(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_client: MagicMock
+) -> None:
+    """End-to-end repro.
+
+    Removing the group switch while a command is still in flight (simulating
+    a config entry reload racing a service call) must not raise, and the
+    service call must complete cleanly.
+    """
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.adam_audio.coordinator.AdamAudioClient",
+        return_value=mock_client,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    release = asyncio.Event()
+
+    async def slow_set_sleep(_value: bool) -> None:
+        await release.wait()
+
+    mock_client.async_set_sleep = AsyncMock(side_effect=slow_set_sleep)
+
+    platforms = hass.data[DATA_ENTITY_PLATFORM][DOMAIN]
+    switch_platform = next(p for p in platforms if p.domain == SWITCH_DOMAIN)
+    entity = switch_platform.entities["switch.all_speakers_sleep"]
+
+    task = hass.async_create_task(
+        hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.all_speakers_sleep"},
+            blocking=True,
+        )
+    )
+    await asyncio.sleep(0)  # let _async_call_all start and suspend on gather()
+
+    # Simulate the entity being torn down mid-command (e.g. a reload of the
+    # config entry that owns the group platform removes its entities).
+    await entity.async_will_remove_from_hass()
+
+    release.set()
+    await task  # must not raise KeyError
+    await hass.async_block_till_done()

@@ -1,7 +1,5 @@
 """Mock of a devolo Home Network device."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from devolo_plc_api.device import Device
@@ -85,7 +83,7 @@ class MockDevice(Device):
 
 
 class MockDeviceWrongPassword(MockDevice):
-    """Mock of a devolo Home Network device, that always complains about a wrong password."""
+    """Mock of a devolo Home Network device that complains about a wrong password."""
 
     def __init__(
         self,

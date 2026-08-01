@@ -1,8 +1,7 @@
 """Support for Panasonic Blu-ray players."""
 
-from __future__ import annotations
-
 from datetime import timedelta
+from typing import override
 
 from panacotta import PanasonicBD
 import voluptuous as vol
@@ -39,7 +38,7 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Panasonic Blu-ray platform."""
+    """Set up the Panasonic Blu-ray media player platform."""
     conf = discovery_info or config
 
     # Register configured device with Home Assistant.
@@ -59,7 +58,7 @@ class PanasonicBluRay(MediaPlayerEntity):
     )
 
     def __init__(self, ip, name):
-        """Initialize the Panasonic Blue-ray device."""
+        """Initialize the Panasonic Blu-ray device."""
         self._device = PanasonicBD(ip)
         self._attr_name = name
         self._attr_state = MediaPlayerState.OFF
@@ -91,6 +90,7 @@ class PanasonicBluRay(MediaPlayerEntity):
         self._attr_media_position_updated_at = utcnow()
         self._attr_media_duration = state[2]
 
+    @override
     def turn_off(self) -> None:
         """Instruct the device to turn standby.
 
@@ -104,6 +104,7 @@ class PanasonicBluRay(MediaPlayerEntity):
 
         self._attr_state = MediaPlayerState.OFF
 
+    @override
     def turn_on(self) -> None:
         """Wake the device back up from standby."""
         if self.state == MediaPlayerState.OFF:
@@ -111,14 +112,17 @@ class PanasonicBluRay(MediaPlayerEntity):
 
         self._attr_state = MediaPlayerState.IDLE
 
+    @override
     def media_play(self) -> None:
         """Send play command."""
         self._device.send_key("PLAYBACK")
 
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         self._device.send_key("PAUSE")
 
+    @override
     def media_stop(self) -> None:
         """Send stop command."""
         self._device.send_key("STOP")

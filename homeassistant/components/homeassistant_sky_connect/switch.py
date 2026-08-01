@@ -1,7 +1,5 @@
 """Home Assistant SkyConnect switch entities."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.components.homeassistant_hardware.coordinator import (

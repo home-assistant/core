@@ -1,8 +1,7 @@
 """Base class for a device entity integrated in devolo Home Control."""
 
-from __future__ import annotations
-
 import logging
+from typing import TYPE_CHECKING, override
 from urllib.parse import urlparse
 
 from devolo_home_control_api.devices.zwave import Zwave
@@ -51,6 +50,7 @@ class DevoloDeviceEntity(Entity):
 
         self._value: float
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         assert self.device_info
@@ -62,6 +62,7 @@ class DevoloDeviceEntity(Entity):
             self._device_instance.uid, self.subscriber, self.sync_callback
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity is removed or disabled."""
         self._homecontrol.publisher.unregister(
@@ -102,22 +103,29 @@ class DevoloDeviceEntity(Entity):
                     ].name,
                 )
             self._attr_available = state
-        elif message[1] == "del" and self.platform.config_entry:
+        elif message[1] == "del":
+            # A "del" is dispatched to every entity of the device. Look the device
+            # up freshly instead of using the cached (possibly stale) device_entry:
+            # the first entity to run removes it and the rest find it already gone.
             device_registry = dr.async_get(self.hass)
-            device = device_registry.async_get_device(
-                identifiers={(DOMAIN, self._device_instance.uid)}
-            )
-            if device:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=self.platform.config_entry.entry_id,
-                )
+            platform = self.platform
+            if TYPE_CHECKING:
+                # Devolo entities always belong to a config entry
+                assert platform.config_entry is not None
+            if device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, self._device_instance.uid),
+                platform.config_entry.entry_id,
+            ):
+                device_registry.async_remove_device(device.id)
         else:
             _LOGGER.debug("No valid message received: %s", message)
 
 
 class DevoloMultiLevelSwitchDeviceEntity(DevoloDeviceEntity):
-    """Representation of a multi level switch device within devolo Home Control. Something like a dimmer or a thermostat."""
+    """Representation of a multi level switch device within devolo Home Control.
+
+    Something like a dimmer or a thermostat.
+    """
 
     _attr_name = None
 

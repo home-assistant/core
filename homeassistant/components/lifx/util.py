@@ -1,7 +1,5 @@
 """Support for LIFX."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from functools import partial
@@ -26,10 +24,10 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.util import color as color_util
 
 from .const import (
-    _LOGGER,
     DEFAULT_ATTEMPTS,
     DOMAIN,
     INFRARED_BRIGHTNESS_VALUES_MAP,
+    LOGGER,
     OVERALL_TIMEOUT,
 )
 
@@ -96,7 +94,7 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
                 *color_util.color_name_to_rgb(color_name)
             )
         except ValueError:
-            _LOGGER.warning(
+            LOGGER.warning(
                 "Got unknown color %s, falling back to neutral white", color_name
             )
             hue, saturation = (0, 0)

@@ -9,17 +9,19 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import Scope, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
+    InternalServerError,
     InvalidRegion,
     InvalidToken,
     LibraryError,
     LoginRequired,
+    NotFound,
     OAuthExpired,
     RateLimited,
     TeslaFleetError,
     VehicleOffline,
 )
 
-from homeassistant.components.tesla_fleet.const import DOMAIN
+from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
 from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     ENERGY_INTERVAL,
@@ -45,7 +47,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import setup_platform
 from .conftest import create_config_entry
-from .const import LIVE_STATUS, VEHICLE_ASLEEP, VEHICLE_DATA_ALT
+from .const import LIVE_STATUS, SITE_INFO, VEHICLE_ASLEEP, VEHICLE_DATA_ALT
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -69,6 +71,10 @@ async def test_load_unload(
 
     assert normal_config_entry.state is ConfigEntryState.LOADED
     assert isinstance(normal_config_entry.runtime_data, TeslaFleetData)
+    assert (
+        normal_config_entry.runtime_data.energysites[0].info_coordinator.update_interval
+        == ENERGY_INTERVAL
+    )
     assert await hass.config_entries.async_unload(normal_config_entry.entry_id)
     await hass.async_block_till_done()
     assert normal_config_entry.state is ConfigEntryState.NOT_LOADED
@@ -134,6 +140,30 @@ async def test_oauth_refresh_error(
 
         mock_async_ensure_token_valid.assert_called_once()
     assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_uses_scopes_from_refreshed_token(
+    hass: HomeAssistant,
+    noscope_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup uses scopes from the refreshed OAuth token."""
+    refreshed_token = create_config_entry(
+        expires_at=3600,
+        scopes=SCOPES,
+    ).data[CONF_TOKEN]
+
+    noscope_config_entry.data[CONF_TOKEN]["expires_at"] = 0
+
+    with patch(
+        "homeassistant.components.tesla_fleet.oauth.TeslaUserImplementation.async_refresh_token",
+        return_value=refreshed_token,
+    ) as mock_async_refresh_token:
+        await setup_platform(hass, noscope_config_entry)
+
+    mock_async_refresh_token.assert_awaited_once()
+    assert noscope_config_entry.state is ConfigEntryState.LOADED
+    assert noscope_config_entry.runtime_data.scopes == SCOPES
+    assert noscope_config_entry.runtime_data.vehicles
 
 
 async def test_invalidate_access_token_updates_when_not_expired(
@@ -452,6 +482,77 @@ async def test_energy_live_refresh_error(
     assert state.state == "unavailable"
 
 
+async def test_setup_retries_on_initial_energy_live_refresh_error(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_live_status: AsyncMock,
+) -> None:
+    """Test setup retries when initial energy live status refresh fails."""
+    mock_live_status.side_effect = TeslaFleetError()
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "state"),
+    [
+        (InvalidToken(), ConfigEntryState.SETUP_RETRY),
+        (OAuthExpired(), ConfigEntryState.SETUP_RETRY),
+        (LoginRequired(), ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_setup_does_not_skip_initial_energy_site_auth_error(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_site_info: AsyncMock,
+    side_effect: BaseException,
+    state: ConfigEntryState,
+) -> None:
+    """Test site info auth failures still fail setup."""
+    mock_site_info.side_effect = side_effect
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is state
+
+
+async def test_setup_retries_on_initial_energy_site_bad_response(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_site_info: AsyncMock,
+) -> None:
+    """Test setup retries when initial site info returns a malformed response."""
+    mock_site_info.side_effect = None
+    mock_site_info.return_value = {}
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        InternalServerError({"response": None, "error": "temporary internal error"}),
+        TeslaFleetError(),
+    ],
+)
+async def test_setup_retries_on_initial_energy_site_retryable_error(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_site_info: AsyncMock,
+    side_effect: BaseException,
+) -> None:
+    """Test setup retries when initial site info returns a retryable error."""
+    mock_site_info.side_effect = side_effect
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_energy_live_refresh_bad_response(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
@@ -508,6 +609,56 @@ async def test_energy_site_refresh_error(
 
     assert (state := hass.states.get("number.energy_site_backup_reserve"))
     assert state.state == "unavailable"
+
+
+@pytest.mark.parametrize(
+    "site_info_error",
+    [
+        NotFound(),
+        InternalServerError(
+            {
+                "response": None,
+                "error": "upstream internal error",
+                "error_description": "",
+                "txid": "ea5ffd8832ec468efd54cd6cbd81a449",
+            }
+        ),
+    ],
+)
+async def test_setup_skips_stale_energy_site(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_products: AsyncMock,
+    mock_live_status: AsyncMock,
+    mock_site_info: AsyncMock,
+    site_info_error: TeslaFleetError,
+) -> None:
+    """Test setup skips one stale energy site and keeps the entry loaded."""
+    products = deepcopy(mock_products.return_value)
+    active_site = products["response"][1]
+    stale_site = deepcopy(active_site)
+    stale_site["energy_site_id"] = 654321
+    stale_site["resource_type"] = "solar"
+    stale_site["site_name"] = None
+    stale_site["gateway_id"] = None
+    products["response"].insert(1, stale_site)
+    mock_products.return_value = products
+
+    # Some Tesla accounts keep an old/deactivated solar system in /products after
+    # a replacement system is installed. The stale site can return live_status
+    # successfully but fail site_info with a site-specific error, so it
+    # should not block setup of the vehicle and the healthy energy site.
+    mock_site_info.side_effect = [site_info_error, deepcopy(SITE_INFO)]
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+    assert normal_config_entry.runtime_data.vehicles
+    assert [site.id for site in normal_config_entry.runtime_data.energysites] == [
+        123456
+    ]
+    assert mock_live_status.call_count == 1
+    assert mock_site_info.call_count == 2
 
 
 async def test_energy_refresh_token_expired_recovery(
@@ -599,35 +750,46 @@ async def test_energy_live_refresh_ratelimited(
     assert mock_live_status.call_count == 3
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "second_refresh_call_count", "third_refresh_call_count"),
+    [
+        (RateLimited({"after": ENERGY_INTERVAL_SECONDS + 10}), 2, 3),
+        (RateLimited({}), 3, 4),
+    ],
+)
 async def test_energy_info_refresh_ratelimited(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_site_info: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    side_effect: RateLimited,
+    second_refresh_call_count: int,
+    third_refresh_call_count: int,
 ) -> None:
     """Test coordinator refresh handles 429."""
 
     await setup_platform(hass, normal_config_entry)
 
-    mock_site_info.side_effect = RateLimited({"after": ENERGY_INTERVAL_SECONDS + 10})
+    mock_site_info.side_effect = side_effect
     freezer.tick(ENERGY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert mock_site_info.call_count == 2
+    assert (state := hass.states.get("number.energy_site_backup_reserve"))
+    assert state.state != "unavailable"
 
     freezer.tick(ENERGY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Should not call for another 10 seconds
-    assert mock_site_info.call_count == 2
+    assert mock_site_info.call_count == second_refresh_call_count
 
     freezer.tick(ENERGY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_site_info.call_count == 3
+    assert mock_site_info.call_count == third_refresh_call_count
 
 
 async def test_energy_history_refresh_ratelimited(

@@ -16,8 +16,6 @@ State management
   coordinator on every update interval.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -56,6 +54,11 @@ class AdamAudioClient:
     MAX_RETRIES: int = 3
     RETRY_DELAY: float = 0.5  # seconds between retries
 
+    # Consecutive failed polls required before a poll failure marks the
+    # device unavailable.  Devices commonly miss a single poll cycle while
+    # powering back on, which would otherwise flap available/unavailable.
+    UNAVAILABLE_AFTER_FAILURES: int = 2
+
     def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
         """Initialize the client."""
         self._hass = hass
@@ -64,6 +67,8 @@ class AdamAudioClient:
         self._device: Device | None = None
         self._lock = asyncio.Lock()
         self._last_keepalive: float = 0.0
+        self._consecutive_poll_failures: int = 0
+        self._had_successful_poll: bool = False
         self.available: bool = False
         self.device_name: str = ""
         self.description: str = ""
@@ -101,13 +106,18 @@ class AdamAudioClient:
             await self._hass.async_add_executor_job(self._device.close)
 
     async def async_fetch_state(self) -> bool:
-        """Authoritative full state poll via sequential UDP requests."""
+        """Authoritative full state poll via sequential UDP requests.
+
+        Returns whether this specific poll succeeded. `available` is
+        debounced separately (see _update_availability): a single failed
+        poll does not immediately flip it, since devices commonly miss one
+        poll cycle while powering back on.
+        """
         async with self._lock:
             try:
                 success = await self._hass.async_add_executor_job(
                     self._fetch_state_blocking
                 )
-                self.available = success
             except (OSError, TimeoutError, ValueError, RuntimeError) as err:
                 LOGGER.debug(
                     "State fetch critical failure for %s: %s",
@@ -115,10 +125,44 @@ class AdamAudioClient:
                     err,
                     exc_info=True,
                 )
-                self.available = False
-                return False
-            else:
-                return success
+                success = False
+
+            self._update_availability(success)
+            return success
+
+    def _note_reachable(self) -> None:
+        """Record successful contact with the device (poll or accepted SET).
+
+        Clears the poll-failure streak: the device demonstrably answered, so
+        earlier dropped polls must not count towards the debounce threshold.
+        """
+        self._consecutive_poll_failures = 0
+        self.available = True
+
+    def _update_availability(self, poll_succeeded: bool) -> None:
+        """Debounce poll-driven availability.
+
+        Any successful poll immediately clears the failure streak and marks
+        the device available. A failed poll only flips `available` to False
+        once UNAVAILABLE_AFTER_FAILURES consecutive polls have failed,
+        avoiding available/unavailable flapping around a single dropped
+        request (e.g. a device rebooting after being power-cycled).
+
+        The debounce only applies once a poll has actually succeeded: before
+        that there is no known-good state to hold on to, so tolerating the
+        failure would publish entities with fabricated default values.
+        """
+        if poll_succeeded:
+            self._had_successful_poll = True
+            self._note_reachable()
+            return
+
+        self._consecutive_poll_failures += 1
+        if (
+            not self._had_successful_poll
+            or self._consecutive_poll_failures >= self.UNAVAILABLE_AFTER_FAILURES
+        ):
+            self.available = False
 
     def _fetch_state_blocking(self) -> bool:
         """Executor target for batched state polling."""
@@ -163,7 +207,7 @@ class AdamAudioClient:
             AttributeError,
             TypeError,
         ):
-            LOGGER.warning("Batched poll failed for %s", self.host, exc_info=True)
+            LOGGER.debug("Batched poll failed for %s", self.host, exc_info=True)
             return False
         else:
             return True
@@ -220,7 +264,7 @@ class AdamAudioClient:
                     await self._hass.async_add_executor_job(
                         self._run_set, set_fn, *set_args
                     )
-                    self.available = True
+                    self._note_reachable()
                 except OSError as err:
                     self.available = False
                     if attempt == self.MAX_RETRIES:
@@ -284,7 +328,7 @@ class AdamAudioClient:
         async with self._lock:
             try:
                 await self._hass.async_add_executor_job(self._run_set, fn, *args)
-                self.available = True
+                self._note_reachable()
             except OSError as err:
                 self.available = False
                 LOGGER.error("Command to %s failed: %s", self.host, err)

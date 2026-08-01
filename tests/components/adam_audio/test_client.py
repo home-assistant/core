@@ -18,6 +18,18 @@ def adam_client(hass: HomeAssistant) -> AdamAudioClient:
     return client
 
 
+def _state_pdus(values: tuple[int, ...]) -> list[MagicMock]:
+    """Build 8 fake response PDUs for the batched state poll."""
+    pdus = []
+    for val in values:
+        param = MagicMock()
+        param.value = val
+        pdu = MagicMock()
+        pdu.params = [param]
+        pdus.append(pdu)
+    return pdus
+
+
 async def test_client_fetch_state(adam_client: AdamAudioClient) -> None:
     """Test fetching all states from device."""
     # Mock the batched fetch call
@@ -52,6 +64,88 @@ async def test_client_fetch_state_failure(adam_client: AdamAudioClient) -> None:
     success = await adam_client.async_fetch_state()
     assert success is False
     assert adam_client.available is False
+
+
+async def test_client_fetch_state_tolerates_single_failure(
+    adam_client: AdamAudioClient,
+) -> None:
+    """A single failed poll must not immediately flip `available` to False.
+
+    Devices commonly miss one poll cycle while powering back on; debouncing
+    over UNAVAILABLE_AFTER_FAILURES consecutive failures avoids marking the
+    device unavailable/available/unavailable in quick succession.
+    """
+    adam_client._device.get_full_state_pdus.return_value = _state_pdus(
+        (1, 0, 1, 0, 0, 0, 0, 0)
+    )
+    assert await adam_client.async_fetch_state() is True
+    assert adam_client.available is True
+
+    adam_client._device.get_full_state_pdus.side_effect = TimeoutError("timeout")
+    success = await adam_client.async_fetch_state()
+
+    assert success is False  # the poll itself did fail...
+    assert adam_client.available is True  # ...but it's still within the grace window
+
+
+async def test_client_fetch_state_marks_unavailable_after_threshold(
+    adam_client: AdamAudioClient,
+) -> None:
+    """After UNAVAILABLE_AFTER_FAILURES consecutive failures, mark unavailable."""
+    adam_client._device.get_full_state_pdus.return_value = _state_pdus(
+        (1, 0, 1, 0, 0, 0, 0, 0)
+    )
+    assert await adam_client.async_fetch_state() is True
+
+    adam_client._device.get_full_state_pdus.side_effect = TimeoutError("timeout")
+    for _ in range(AdamAudioClient.UNAVAILABLE_AFTER_FAILURES - 1):
+        await adam_client.async_fetch_state()
+        assert adam_client.available is True
+
+    await adam_client.async_fetch_state()
+    assert adam_client.available is False
+
+
+async def test_client_fetch_state_no_grace_before_first_success(
+    adam_client: AdamAudioClient,
+) -> None:
+    """The debounce must not apply before any poll has ever succeeded.
+
+    Regression test: a device that answers the metadata GETs during setup but
+    drops the very first state poll would otherwise stay `available`, so the
+    coordinator's first refresh succeeds and entities are published with
+    fabricated default values instead of raising ConfigEntryNotReady.
+    """
+    adam_client.available = True  # as set by a successful _setup()
+    adam_client._device.get_full_state_pdus.side_effect = TimeoutError("timeout")
+
+    assert await adam_client.async_fetch_state() is False
+    assert adam_client.available is False
+
+
+async def test_client_fetch_state_success_resets_failure_streak(
+    adam_client: AdamAudioClient,
+) -> None:
+    """A successful poll immediately clears the consecutive-failure streak."""
+    good_pdus = _state_pdus((1, 0, 1, 0, 0, 0, 0, 0))
+    adam_client._device.get_full_state_pdus.return_value = good_pdus
+    assert await adam_client.async_fetch_state() is True
+
+    # One failure — tolerated, not yet at the threshold.
+    adam_client._device.get_full_state_pdus.side_effect = TimeoutError("timeout")
+    await adam_client.async_fetch_state()
+    assert adam_client.available is True
+
+    # A success in between clears the streak...
+    adam_client._device.get_full_state_pdus.side_effect = None
+    adam_client._device.get_full_state_pdus.return_value = good_pdus
+    assert await adam_client.async_fetch_state() is True
+
+    # ...so it takes a fresh full streak of failures to go unavailable again,
+    # not just one more on top of the earlier (already-forgiven) failure.
+    adam_client._device.get_full_state_pdus.side_effect = TimeoutError("timeout")
+    await adam_client.async_fetch_state()
+    assert adam_client.available is True
 
 
 async def test_client_setters(adam_client: AdamAudioClient) -> None:

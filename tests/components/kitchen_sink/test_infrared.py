@@ -1,19 +1,23 @@
 """The tests for the kitchen_sink infrared platform."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-import infrared_protocols
+from infrared_protocols.commands.nec import NECCommand
 import pytest
 
-from homeassistant.components.infrared import async_send_command
+from homeassistant.components.infrared import (
+    async_send_command,
+    async_subscribe_receiver,
+)
 from homeassistant.components.kitchen_sink import DOMAIN
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-ENTITY_IR_TRANSMITTER = "infrared.ir_blaster_infrared_transmitter"
+ENTITY_IR_EMITTER = "infrared.ir_blaster_infrared_emitter"
+ENTITY_IR_RECEIVER = "infrared.ir_blaster_infrared_receiver"
 
 
 @pytest.fixture
@@ -33,23 +37,25 @@ async def setup_comp(hass: HomeAssistant, infrared_only: None) -> None:
     await hass.async_block_till_done()
 
 
-async def test_send_command(
+async def test_send_receive(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test sending an infrared command."""
-    state = hass.states.get(ENTITY_IR_TRANSMITTER)
-    assert state
-    assert state.state == STATE_UNKNOWN
+    """Test the receiver picks up commands sent by the emitter via dispatcher."""
+    signal_callback = Mock()
+    async_subscribe_receiver(hass, ENTITY_IR_RECEIVER, signal_callback)
 
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
     assert now is not None
     freezer.move_to(now)
 
-    command = infrared_protocols.NECCommand(
-        address=0x04, command=0x08, modulation=38000
-    )
-    await async_send_command(hass, ENTITY_IR_TRANSMITTER, command)
+    command = NECCommand(address=0x04, command=0x08, modulation=38000)
+    await async_send_command(hass, ENTITY_IR_EMITTER, command)
+    await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY_IR_TRANSMITTER)
+    state = hass.states.get(ENTITY_IR_RECEIVER)
     assert state
     assert state.state == now.isoformat(timespec="milliseconds")
+
+    assert signal_callback.call_count == 1
+    received_signal = signal_callback.call_args[0][0]
+    assert received_signal.timings == command.get_raw_timings()

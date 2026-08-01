@@ -1,11 +1,9 @@
 """Vodafone Station buttons."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from json.decoder import JSONDecodeError
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiovodafone.exceptions import (
     AlreadyLogged,
@@ -25,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
 
 # Coordinator is used to centralize the data updates
@@ -83,7 +81,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    _LOGGER.debug("Setting up Vodafone Station buttons")
+    LOGGER.debug("Setting up Vodafone Station buttons")
 
     coordinator = entry.runtime_data
 
@@ -115,6 +113,7 @@ class VodafoneStationSensorEntity(
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
 

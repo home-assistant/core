@@ -81,6 +81,6 @@ async def test_unsendable_message(
     await hass.services.async_call(DOMAIN, SERVICE_SEND_MESSAGE, data, blocking=True)
 
     assert (
-        f"Unable to deliver message to room '{TEST_BAD_ROOM}': ErrorResponse: Cannot send a message in this room."
-        in caplog.messages
+        f"Unable to deliver message to room '{TEST_BAD_ROOM}':"
+        " ErrorResponse: Cannot send a message in this room." in caplog.messages
     )

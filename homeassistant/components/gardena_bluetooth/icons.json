@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "text": {
+      "contour_name": {
+        "default": "mdi:vector-polygon"
+      },
+      "position_name": {
+        "default": "mdi:map-marker-radius"
+      }
+    }
+  }
+}

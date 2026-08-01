@@ -1,8 +1,6 @@
 """Config flow for Aranet integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aranet4.client import Aranet4Advertisement, Version as AranetVersion
 from bluetooth_data_tools import human_readable_name
@@ -48,6 +46,7 @@ class AranetConfigFlow(ConfigFlow, domain=DOMAIN):
         if not adv.manufacturer_data.integrations:
             raise AbortFlow("integrations_disabled")
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -77,6 +76,7 @@ class AranetConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

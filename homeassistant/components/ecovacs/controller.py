@@ -1,7 +1,5 @@
 """Controller module."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from functools import partial
@@ -13,15 +11,24 @@ from deebot_client.api_client import ApiClient
 from deebot_client.authentication import Authenticator, create_rest_config
 from deebot_client.const import UNDEFINED, UndefinedType
 from deebot_client.device import Device
-from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
+from deebot_client.exceptions import (
+    DeebotError,
+    DeviceVerificationRequiredError,
+    InvalidAuthenticationError,
+)
 from deebot_client.mqtt_client import MqttClient, create_mqtt_config
 from deebot_client.util import md5
 from deebot_client.util.continents import get_continent
 from sucks import EcoVacsAPI, VacBot
 
-from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_DEVICE_ID,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util.ssl import get_default_no_verify_context
 
@@ -30,7 +37,6 @@ from .const import (
     CONF_OVERRIDE_REST_URL,
     CONF_VERIFY_MQTT_CERTIFICATE,
 )
-from .util import get_client_device_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +50,7 @@ class EcovacsController:
         self._devices: list[Device] = []
         self._legacy_devices: list[VacBot] = []
         rest_url = config.get(CONF_OVERRIDE_REST_URL)
-        self._device_id = get_client_device_id(hass, rest_url is not None)
+        self._device_id = config[CONF_DEVICE_ID]
         country = config[CONF_COUNTRY]
         self._continent = get_continent(country)
 
@@ -118,8 +124,10 @@ class EcovacsController:
                     device_config,
                 )
 
+        except DeviceVerificationRequiredError as ex:
+            raise ConfigEntryAuthFailed("Device verification required") from ex
         except InvalidAuthenticationError as ex:
-            raise ConfigEntryError("Invalid credentials") from ex
+            raise ConfigEntryAuthFailed("Invalid credentials") from ex
         except DeebotError as ex:
             raise ConfigEntryNotReady("Error during setup") from ex
 

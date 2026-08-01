@@ -1,7 +1,5 @@
 """Support for Pilight binary sensors."""
 
-from __future__ import annotations
-
 import datetime
 from typing import Any
 

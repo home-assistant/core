@@ -9,7 +9,7 @@ from tests.common import load_json_object_fixture
 
 @pytest.fixture
 def mock_epion():
-    """Build a fixture for the Epion API that connects successfully and returns one device."""
+    """Build a fixture for the Epion API that connects successfully."""
     current_one_device_data = load_json_object_fixture(
         "epion/get_current_one_device.json"
     )

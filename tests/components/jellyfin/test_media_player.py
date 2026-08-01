@@ -126,10 +126,12 @@ async def test_media_player_music(
     assert state.attributes.get(ATTR_MEDIA_SERIES_TITLE) is None
     assert state.attributes.get(ATTR_MEDIA_SEASON) is None
     assert state.attributes.get(ATTR_MEDIA_EPISODE) is None
-    assert (
-        state.attributes.get(ATTR_ENTITY_PICTURE)
-        == "http://localhost/Items/ALBUM-UUID/Images/Primary.jpg"
+    entity_picture = state.attributes.get(ATTR_ENTITY_PICTURE)
+    assert entity_picture is not None
+    assert entity_picture.startswith(
+        "/api/media_player_proxy/media_player.jellyfin_device_four?token="
     )
+    assert "cache=7f15194cd71877c7" in entity_picture
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry
@@ -348,6 +350,7 @@ async def test_browse_media(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
         "children_media_class": None,
     }
@@ -377,6 +380,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": "http://localhost/Items/21af9851-8e39-43a9-9c47-513d3b9e99fc/Images/Primary.jpg",
         "children_media_class": None,
     }
@@ -406,6 +410,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
         "children_media_class": None,
     }
@@ -435,6 +440,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": "http://localhost/Items/21af9851-8e39-43a9-9c47-513d3b9e99fc/Images/Primary.jpg",
         "children_media_class": None,
     }
@@ -517,6 +523,7 @@ async def test_search_media(
             "can_play": False,
             "can_expand": True,
             "can_search": False,
+            "search_media_classes": None,
             "not_shown": 0,
             "thumbnail": "http://localhost/Items/21af9851-8e39-43a9-9c47-513d3b9e99fc/Images/Primary.jpg",
             "children": [],

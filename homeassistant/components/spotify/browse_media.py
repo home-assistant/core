@@ -1,7 +1,5 @@
 """Support for Spotify media browsing."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict

@@ -2,13 +2,13 @@
 
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, override
 
 from skyboxremote import VALID_KEYS, RemoteControl
 
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -47,14 +47,17 @@ class SkyRemote(RemoteEntity):
             name=remote.host,
         )
 
+    @override
     def turn_on(self, activity: str | None = None, **kwargs: Any) -> None:
         """Send the power on command."""
         self.send_command(["sky"])
 
+    @override
     def turn_off(self, activity: str | None = None, **kwargs: Any) -> None:
         """Send the power command."""
         self.send_command(["power"])
 
+    @override
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a list of commands to the device."""
         for cmd in command:
@@ -65,6 +68,9 @@ class SkyRemote(RemoteEntity):
         try:
             self._remote.send_keys(command)
         except ValueError as err:
-            _LOGGER.error("Invalid command: %s. Error: %s", command, err)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_command",
+                translation_placeholders={"command": ", ".join(command)},
+            ) from err
         _LOGGER.debug("Successfully sent command %s", command)

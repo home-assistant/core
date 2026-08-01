@@ -1,7 +1,5 @@
 """The Litter-Robot integration."""
 
-from __future__ import annotations
-
 import itertools
 import logging
 
@@ -49,9 +47,6 @@ async def async_migrate_entry(
         entry.version,
         entry.minor_version,
     )
-
-    if entry.version > 1:
-        return False
 
     if entry.minor_version < 2:
         account = Account(websession=async_get_clientsession(hass))

@@ -4,11 +4,11 @@ Each physical speaker exposes two selects; one 'All Speakers' group select
 for each is created once.
 """
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import override
 
 from homeassistant.components.select import SelectEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     DOMAIN,
@@ -23,13 +23,10 @@ from .const import (
     VOICING_TO_INT,
 )
 from .coordinator import AdamAudioCoordinator
+from .data import AdamAudioConfigEntry, AdamAudioIntegrationData
 from .entity import AdamAudioEntity, AdamAudioGroupEntity
 
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-    from .data import AdamAudioConfigEntry, AdamAudioIntegrationData
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -39,6 +36,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the select platform."""
     coordinator = entry.runtime_data.coordinator
+    # Tracks group entities across ALL config entries (one per speaker), so it
+    # can't live on a single entry's runtime_data.
+    # pylint: disable-next=home-assistant-use-runtime-data
     integration_data: AdamAudioIntegrationData = hass.data[DOMAIN]
 
     entities: list[SelectEntity] = [
@@ -70,14 +70,17 @@ class AdamAudioInputSelect(AdamAudioEntity, SelectEntity):
         """Initialize the input select."""
         super().__init__(coordinator)
         self._attr_unique_id = (
+            # pylint: disable-next=home-assistant-entity-unique-id-redundant-domain
             f"{DOMAIN}_{coordinator.entity_unique_id_base}_{ENTITY_INPUT}"
         )
 
     @property
+    @override
     def current_option(self) -> str:
         """Return the current input source."""
         return INPUT_FROM_INT.get(self.coordinator.client.state.input_source, "XLR")
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the input source."""
         await self.coordinator.client.async_set_input(INPUT_TO_INT[option])
@@ -94,14 +97,17 @@ class AdamAudioVoicingSelect(AdamAudioEntity, SelectEntity):
         """Initialize the voicing select."""
         super().__init__(coordinator)
         self._attr_unique_id = (
+            # pylint: disable-next=home-assistant-entity-unique-id-redundant-domain
             f"{DOMAIN}_{coordinator.entity_unique_id_base}_{ENTITY_VOICING}"
         )
 
     @property
+    @override
     def current_option(self) -> str:
         """Return the current voicing mode."""
         return VOICING_FROM_INT.get(self.coordinator.client.state.voicing, "Pure")
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the voicing mode."""
         await self.coordinator.client.async_set_voicing(VOICING_TO_INT[option])
@@ -116,9 +122,11 @@ class AdamAudioGroupInputSelect(AdamAudioGroupEntity, SelectEntity):
 
     _attr_translation_key = "input_source"
     _attr_options = INPUT_OPTIONS
+    # pylint: disable-next=home-assistant-entity-unique-id-redundant-domain
     _attr_unique_id = f"{DOMAIN}_{GROUP_DEVICE_ID}_{ENTITY_INPUT}"
 
     @property
+    @override
     def current_option(self) -> str:
         """Return the first speaker's input source (they usually match)."""
         coordinators = self._coordinators()
@@ -126,6 +134,7 @@ class AdamAudioGroupInputSelect(AdamAudioGroupEntity, SelectEntity):
             return INPUT_OPTIONS[0]
         return INPUT_FROM_INT.get(coordinators[0].client.state.input_source, "XLR")
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the input source on all speakers."""
         await self._async_call_all("async_set_input", INPUT_TO_INT[option])
@@ -136,9 +145,11 @@ class AdamAudioGroupVoicingSelect(AdamAudioGroupEntity, SelectEntity):
 
     _attr_translation_key = "voicing"
     _attr_options = VOICING_OPTIONS
+    # pylint: disable-next=home-assistant-entity-unique-id-redundant-domain
     _attr_unique_id = f"{DOMAIN}_{GROUP_DEVICE_ID}_{ENTITY_VOICING}"
 
     @property
+    @override
     def current_option(self) -> str:
         """Return the first speaker's voicing mode (they usually match)."""
         coordinators = self._coordinators()
@@ -146,6 +157,7 @@ class AdamAudioGroupVoicingSelect(AdamAudioGroupEntity, SelectEntity):
             return VOICING_OPTIONS[0]
         return VOICING_FROM_INT.get(coordinators[0].client.state.voicing, "Pure")
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the voicing mode on all speakers."""
         await self._async_call_all("async_set_voicing", VOICING_TO_INT[option])

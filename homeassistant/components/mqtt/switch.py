@@ -1,9 +1,7 @@
 """Support for MQTT switches."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -96,10 +94,12 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
+    @override
     def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
@@ -128,6 +128,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             self._attr_is_on = self._is_on_map[payload]
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         if not self.add_subscription(
@@ -137,6 +138,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             self._optimistic = True
             return
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -144,6 +146,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         if self._optimistic and (last_state := await self.async_get_last_state()):
             self._attr_is_on = last_state.state == STATE_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on.
 
@@ -156,6 +159,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off.
 

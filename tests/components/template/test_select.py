@@ -26,27 +26,32 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_action,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
+    make_test_action,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
 from tests.common import MockConfigEntry, assert_setup_component
 from tests.conftest import WebSocketGenerator
 
-TEST_STATE_ENTITY_ID = "select.test_state"
+TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_AVAILABILITY_ENTITY_ID = "binary_sensor.test_availability"
 
 TEST_SELECT = TemplatePlatformSetup(
     select.DOMAIN,
-    None,
     "template_select",
     make_test_trigger(TEST_STATE_ENTITY_ID, TEST_AVAILABILITY_ENTITY_ID),
 )
@@ -56,14 +61,7 @@ TEST_OPTIONS_WITHOUT_STATE = {
     "select_option": [],
 }
 TEST_OPTIONS = {"state": "test", **TEST_OPTIONS_WITHOUT_STATE}
-TEST_OPTION_ACTION = {
-    "action": "test.automation",
-    "data": {
-        "action": "select_option",
-        "caller": "{{ this.entity_id }}",
-        "option": "{{ option }}",
-    },
-}
+TEST_OPTION_ACTION = make_test_action("select_option", {"option": "{{ option }}"})
 
 
 @pytest.fixture
@@ -129,7 +127,7 @@ async def test_multiple_configs(hass: HomeAssistant) -> None:
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": {
                     "select": [
@@ -181,9 +179,9 @@ async def test_missing_required_keys(hass: HomeAssistant) -> None:
         (
             1,
             {
-                "options": "{{ state_attr('select.test_state', 'options') or [] }}",
-                "select_option": [TEST_OPTION_ACTION],
-                "state": "{{ states('select.test_state') }}",
+                "options": "{{ state_attr('sensor.test_state', 'options') or [] }}",
+                **TEST_OPTION_ACTION,
+                "state": "{{ states('sensor.test_state') }}",
             },
         )
     ],
@@ -214,13 +212,13 @@ async def test_template_select(hass: HomeAssistant, calls: list[ServiceCall]) ->
     )
 
     # Check this variable can be used in set_value script
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "select_option"
-    assert calls[-1].data["caller"] == TEST_SELECT.entity_id
-    assert calls[-1].data["option"] == "c"
+    assert_action(TEST_SELECT, calls, 1, "select_option", option="c")
 
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "c", attributes)
     _verify(hass, "c", ["a", "b", "c"])
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "None", attributes)
+    _verify(hass, STATE_UNKNOWN, ["a", "b", "c"])
 
 
 def _verify(
@@ -247,7 +245,10 @@ def _verify(
         (
             {
                 **TEST_OPTIONS,
-                CONF_ICON: "{% if states.select.test_state.state == 'yes' %}mdi:check{% endif %}",
+                CONF_ICON: (
+                    "{% if states.sensor.test_state.state == 'yes' %}"
+                    "mdi:check{% endif %}"
+                ),
             },
             ATTR_ICON,
             "mdi:check",
@@ -255,7 +256,10 @@ def _verify(
         (
             {
                 **TEST_OPTIONS,
-                CONF_PICTURE: "{% if states.select.test_state.state == 'yes' %}check.jpg{% endif %}",
+                CONF_PICTURE: (
+                    "{% if states.sensor.test_state.state == 'yes' %}"
+                    "check.jpg{% endif %}"
+                ),
             },
             ATTR_ENTITY_PICTURE,
             "check.jpg",
@@ -410,7 +414,7 @@ async def test_optimistic(hass: HomeAssistant) -> None:
         (
             1,
             {
-                "state": "{{ states('select.test_state') }}",
+                "state": "{{ states('sensor.test_state') }}",
                 "optimistic": False,
                 "options": "{{ ['test', 'yes', 'no'] }}",
                 "select_option": [],
@@ -448,8 +452,10 @@ async def test_not_optimistic(hass: HomeAssistant) -> None:
             {
                 "options": "{{ ['test', 'yes', 'no'] }}",
                 "select_option": [],
-                "state": "{{ states('select.test_state') }}",
-                "availability": "{{ is_state('binary_sensor.test_availability', 'on') }}",
+                "state": "{{ states('sensor.test_state') }}",
+                "availability": (
+                    "{{ is_state('binary_sensor.test_availability', 'on') }}"
+                ),
             },
         )
     ],
@@ -485,6 +491,29 @@ async def test_availability(hass: HomeAssistant) -> None:
 
     state = hass.states.get(TEST_SELECT.entity_id)
     assert state.state == "yes"
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
+            {"availability": "{{ x - 12 }}", **TEST_OPTIONS},
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_select")
+async def test_invalid_availability_template_keeps_component_available(
+    hass: HomeAssistant, caplog_setup_text: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that an invalid availability keeps the device available."""
+    await async_trigger(hass, TEST_AVAILABILITY_ENTITY_ID, "anything")
+    assert hass.states.get(TEST_SELECT.entity_id).state != STATE_UNAVAILABLE
+    error = "UndefinedError: 'x' is undefined"
+    assert error in caplog_setup_text or error in caplog.text
 
 
 async def test_flow_preview(
@@ -533,4 +562,126 @@ async def test_nested_unique_id(
         entity_registry,
         TEST_OPTIONS_WITHOUT_STATE,
         "{{ 'test' }}",
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    (
+        "saved_state",
+        "saved_extra_data",
+        "initial_state",
+        "initial_attributes",
+    ),
+    [
+        (
+            "something",
+            {
+                "current_option": "something",
+                "options": ["something", "anything"],
+            },
+            "something",
+            {
+                "options": ["something", "anything"],
+            },
+        ),
+        (
+            "something",
+            {
+                "current_option": "something",
+            },
+            STATE_UNKNOWN,
+            {
+                "options": [],
+            },
+        ),
+        (
+            "something",
+            {
+                "options": ["something", "anything"],
+            },
+            STATE_UNKNOWN,
+            {
+                "options": [],
+            },
+        ),
+        (
+            STATE_UNAVAILABLE,
+            {
+                "current_option": "something",
+                "options": ["something", "anything"],
+            },
+            STATE_UNKNOWN,
+            {
+                "options": [],
+            },
+        ),
+        (
+            STATE_UNKNOWN,
+            {
+                "current_option": "something",
+                "options": ["something", "anything"],
+            },
+            STATE_UNKNOWN,
+            {
+                "options": [],
+            },
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    saved_state: str,
+    saved_extra_data: dict | None,
+    initial_state: str,
+    initial_attributes: ConfigType,
+) -> None:
+    """Test restoring state."""
+
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_SELECT,
+        saved_state,
+        saved_extra_data=saved_extra_data,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_SELECT,
+        style,
+        {
+            "state": "{{ state_attr('sensor.test_state', 'option') }}",
+            "options": "{{ state_attr('sensor.test_state', 'options') or [] }}",
+            "select_option": [],
+        },
+        "is_state('sensor.test_state', 'something_new')",
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_SELECT,
+        initial_state,
+        initial_attributes,
+    )
+
+    await async_trigger(
+        hass,
+        "sensor.test_state",
+        "anything",
+        {
+            "options": ["something", "anything", "something_new"],
+            "option": "something_new",
+        },
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_SELECT,
+        "something_new",
+        {
+            "options": ["something", "anything", "something_new"],
+        },
     )

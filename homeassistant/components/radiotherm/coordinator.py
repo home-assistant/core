@@ -1,9 +1,8 @@
 """Coordinator for radiotherm."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 from urllib.error import URLError
 
 from radiotherm.validate import RadiothermTstatError
@@ -14,6 +13,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .data import RadioThermInitData, RadioThermUpdate, async_get_data
 
+type RadioThermConfigEntry = ConfigEntry[RadioThermUpdateCoordinator]
+
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=15)
@@ -22,12 +23,12 @@ UPDATE_INTERVAL = timedelta(seconds=15)
 class RadioThermUpdateCoordinator(DataUpdateCoordinator[RadioThermUpdate]):
     """DataUpdateCoordinator to gather data for radio thermostats."""
 
-    config_entry: ConfigEntry
+    config_entry: RadioThermConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: RadioThermConfigEntry,
         init_data: RadioThermInitData,
     ) -> None:
         """Initialize DataUpdateCoordinator."""
@@ -41,6 +42,7 @@ class RadioThermUpdateCoordinator(DataUpdateCoordinator[RadioThermUpdate]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> RadioThermUpdate:
         """Update data from the thermostat."""
         try:

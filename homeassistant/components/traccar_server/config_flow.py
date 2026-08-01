@@ -1,9 +1,7 @@
 """Config flow for Traccar Server integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pytraccar import (
     ApiClient,
@@ -130,6 +128,7 @@ class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await client.get_server()
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -216,6 +215,7 @@ class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> SchemaOptionsFlowHandler:

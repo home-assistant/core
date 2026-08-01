@@ -9,9 +9,9 @@ from aiocomelit.api import (
 )
 from aiocomelit.const import BRIDGE, VEDO
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
-ObjectClassType = (
+type ObjectClassType = (
     ComelitSerialBridgeObject | ComelitVedoAreaObject | ComelitVedoZoneObject
 )
 

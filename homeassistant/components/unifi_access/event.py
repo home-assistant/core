@@ -1,12 +1,12 @@
 """Event platform for the UniFi Access integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from unifi_access_api import Door
 
 from homeassistant.components.event import (
+    DoorbellEventType,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -31,7 +31,7 @@ DOORBELL_EVENT_DESCRIPTION = UnifiAccessEventEntityDescription(
     key="doorbell",
     translation_key="doorbell",
     device_class=EventDeviceClass.DOORBELL,
-    event_types=["ring"],
+    event_types=[DoorbellEventType.RING],
     category="doorbell",
 )
 
@@ -55,11 +55,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up UniFi Access event entities."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        UnifiAccessEventEntity(coordinator, door, description)
-        for door in coordinator.data.doors.values()
-        for description in EVENT_DESCRIPTIONS
-    )
+    added_doors: set[str] = set()
+
+    @callback
+    def _async_add_new_doors() -> None:
+        new_door_ids = sorted(set(coordinator.data.doors) - added_doors)
+        if not new_door_ids:
+            return
+        async_add_entities(
+            UnifiAccessEventEntity(
+                coordinator, coordinator.data.doors[door_id], description
+            )
+            for door_id in new_door_ids
+            for description in EVENT_DESCRIPTIONS
+        )
+        added_doors.update(new_door_ids)
+
+    _async_add_new_doors()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_doors))
 
 
 class UnifiAccessEventEntity(UnifiAccessEntity, EventEntity):
@@ -77,6 +90,7 @@ class UnifiAccessEventEntity(UnifiAccessEntity, EventEntity):
         super().__init__(coordinator, door, description.key)
         self.entity_description = description
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to door events when added to hass."""
         await super().async_added_to_hass()

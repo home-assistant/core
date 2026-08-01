@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -9,8 +10,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -21,9 +22,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, WALLCONNECTOR_DATA_LIFETIME, WALLCONNECTOR_DATA_VITALS
-from .coordinator import WallConnectorData
+from .const import (
+    WALLCONNECTOR_DATA_LIFETIME,
+    WALLCONNECTOR_DATA_VITALS,
+    WALLCONNECTOR_DATA_WIFI_STATUS,
+)
+from .coordinator import WallConnectorConfigEntry, WallConnectorData
 from .entity import WallConnectorEntity, WallConnectorLambdaValueGetterMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,6 +53,8 @@ class WallConnectorSensorDescription(
     SensorEntityDescription, WallConnectorLambdaValueGetterMixin
 ):
     """Sensor entity description with a function pointer for getting sensor value."""
+
+    suggested_object_id: str | None = None
 
 
 WALL_CONNECTOR_SENSORS = [
@@ -108,6 +116,15 @@ WALL_CONNECTOR_SENSORS = [
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         value_fn=lambda data: round(data[WALLCONNECTOR_DATA_VITALS].grid_hz, 3),
         device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    WallConnectorSensorDescription(
+        key="vehicle_current_a",
+        translation_key="vehicle_current_a",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].vehicle_current_a,
+        device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -185,22 +202,34 @@ WALL_CONNECTOR_SENSORS = [
     ),
     WallConnectorSensorDescription(
         key="energy_kWh",
+        translation_key="energy_kwh",
+        suggested_object_id="energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_LIFETIME].energy_wh,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    WallConnectorSensorDescription(
+        key="wifi_rssi",
+        translation_key="wifi_rssi",
+        suggested_object_id="wifi_rssi",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_WIFI_STATUS].wifi_rssi,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 ]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WallConnectorConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the Wall Connector sensor devices."""
-    wall_connector_data = hass.data[DOMAIN][config_entry.entry_id]
+    wall_connector_data = config_entry.runtime_data
 
     all_entities = [
         WallConnectorSensorEntity(wall_connector_data, description)
@@ -225,7 +254,17 @@ class WallConnectorSensorEntity(WallConnectorEntity, SensorEntity):
         super().__init__(wall_connector_data)
 
     @property
-    def native_value(self):
+    @override
+    def suggested_object_id(self) -> str | None:
+        """Return suggested object id."""
+        if self.entity_description.suggested_object_id is not None:
+            return self.entity_description.suggested_object_id
+
+        return super().suggested_object_id
+
+    @property
+    @override
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
 
         return self.entity_description.value_fn(self.coordinator.data)

@@ -1,7 +1,5 @@
 """Various utilities for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from mozart_api.models import PairedRemote
@@ -23,10 +21,12 @@ from .const import (
 )
 
 
-def get_device(hass: HomeAssistant, unique_id: str) -> DeviceEntry:
+def get_device(hass: HomeAssistant, unique_id: str, entry_id: str) -> DeviceEntry:
     """Get the device."""
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, unique_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, unique_id), entry_id
+    )
     assert device
 
     return device
@@ -34,7 +34,7 @@ def get_device(hass: HomeAssistant, unique_id: str) -> DeviceEntry:
 
 def get_serial_number_from_jid(jid: str) -> str:
     """Get serial number from Beolink JID."""
-    return jid.split(".")[2].split("@")[0]
+    return jid.split(".")[2].split("@", maxsplit=1)[0]
 
 
 async def get_remotes(client: MozartClient) -> list[PairedRemote]:

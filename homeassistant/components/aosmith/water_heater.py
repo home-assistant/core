@@ -1,6 +1,6 @@
 """The water heater platform for the A. O. Smith integration."""
 
-from typing import Any
+from typing import Any, override
 
 from py_aosmith.models import OperationMode as AOSmithOperationMode
 
@@ -73,6 +73,7 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
         self._attr_unique_id = junction_id
 
     @property
+    @override
     def operation_list(self) -> list[str]:
         """Return the list of supported operation modes."""
         ha_modes = []
@@ -86,10 +87,11 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
         return ha_modes
 
     @property
+    @override
     def supported_features(self) -> WaterHeaterEntityFeature:
         """Return the list of supported features."""
         supports_vacation_mode = any(
-            supported_mode.mode == AOSmithOperationMode.VACATION
+            supported_mode.mode is AOSmithOperationMode.VACATION
             for supported_mode in self.device.supported_modes
         )
 
@@ -105,25 +107,30 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
         return support_flags
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.device.status.temperature_setpoint
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self.device.status.temperature_setpoint_maximum
 
     @property
+    @override
     def current_operation(self) -> str:
         """Return the current operation mode."""
         return MODE_AOSMITH_TO_HA.get(self.device.status.current_mode, STATE_OFF)
 
     @property
+    @override
     def is_away_mode_on(self) -> bool:
         """Return True if away mode is on."""
-        return self.device.status.current_mode == AOSmithOperationMode.VACATION
+        return self.device.status.current_mode is AOSmithOperationMode.VACATION
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         if operation_mode not in self.operation_list:
@@ -135,6 +142,7 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
 
             await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get("temperature")
@@ -143,12 +151,14 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
 
             await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         await self.client.update_mode(self.junction_id, AOSmithOperationMode.VACATION)
 
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         supported_aosmith_modes = [x.mode for x in self.device.supported_modes]

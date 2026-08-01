@@ -1,6 +1,6 @@
 """Support for Solax inverter via local API."""
 
-from __future__ import annotations
+from typing import override
 
 from solax.units import Units
 
@@ -145,6 +145,7 @@ class InverterSensorEntity(CoordinatorEntity, SensorEntity):
         self.key = key
 
     @property
+    @override
     def native_value(self):
         """State of this inverter attribute."""
         return self.coordinator.data.data[self.key]

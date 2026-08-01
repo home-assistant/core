@@ -1,9 +1,7 @@
 """Config flow for QNAP QSW."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioqsw.exceptions import LoginError, QswError
 from aioqsw.localapi import ConnectionOptions, QnapQswApi
@@ -27,6 +25,7 @@ class QNapQSWConfigFlow(ConfigFlow, domain=DOMAIN):
     _discovered_mac: str | None = None
     _discovered_url: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -72,6 +71,7 @@ class QNapQSWConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

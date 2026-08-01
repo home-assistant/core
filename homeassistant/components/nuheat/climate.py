@@ -1,7 +1,7 @@
 """Support for NuHeat thermostats."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from nuheat.config import SCHEDULE_HOLD, SCHEDULE_RUN, SCHEDULE_TEMPORARY_HOLD
 from nuheat.util import (
@@ -18,7 +18,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event as event_helper
@@ -27,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, NUHEAT_API_STATE_SHIFT_DELAY
-from .coordinator import NuHeatCoordinator
+from .coordinator import NuHeatConfigEntry, NuHeatCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,14 +54,15 @@ SCHEDULE_MODE_TO_PRESET_MODE_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NuHeatConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NuHeat thermostat(s)."""
-    thermostat, coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     temperature_unit = hass.config.units.temperature_unit
-    entity = NuHeatThermostat(coordinator, thermostat, temperature_unit)
+
+    entity = NuHeatThermostat(coordinator, coordinator.thermostat, temperature_unit)
 
     # No longer need a service as set_hvac_mode to auto does this
     # since climate 1.0 has been implemented
@@ -91,6 +91,7 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         self._attr_unique_id = thermostat.serial_number
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         if self._temperature_unit == "C":
@@ -99,6 +100,7 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         return UnitOfTemperature.FAHRENHEIT
 
     @property
+    @override
     def current_temperature(self) -> int | None:
         """Return the current temperature."""
         if self._temperature_unit == "C":
@@ -107,10 +109,12 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         return self._thermostat.fahrenheit
 
     @property
+    @override
     def available(self) -> bool:
         """Return the unique id."""
         return self.coordinator.last_update_success and self._thermostat.online
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the system mode."""
         if hvac_mode == HVACMode.AUTO:
@@ -119,6 +123,7 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
             self._set_schedule_mode(SCHEDULE_HOLD)
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current setting heat or auto."""
         if self._schedule_mode in (SCHEDULE_TEMPORARY_HOLD, SCHEDULE_HOLD):
@@ -126,11 +131,13 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         return HVACMode.AUTO
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return current operation heat or idle."""
         return HVACAction.HEATING if self._thermostat.heating else HVACAction.IDLE
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum supported temperature for the thermostat."""
         if self._temperature_unit == "C":
@@ -139,6 +146,7 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         return self._thermostat.min_fahrenheit
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum supported temperature for the thermostat."""
         if self._temperature_unit == "C":
@@ -147,6 +155,7 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         return self._thermostat.max_fahrenheit
 
     @property
+    @override
     def target_temperature(self) -> int:
         """Return the currently programmed temperature."""
         if self._temperature_unit == "C":
@@ -155,10 +164,12 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         return nuheat_to_fahrenheit(self._target_temperature)
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Return current preset mode."""
         return SCHEDULE_MODE_TO_PRESET_MODE_MAP.get(self._schedule_mode, PRESET_RUN)
 
+    @override
     def set_preset_mode(self, preset_mode: str) -> None:
         """Update the hold mode of the thermostat."""
         self._set_schedule_mode(
@@ -172,6 +183,7 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         self._thermostat.schedule_mode = schedule_mode
         self._schedule_update()
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
         self._set_temperature_and_mode(
@@ -231,6 +243,7 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         """Force a refresh."""
         await self.coordinator.async_refresh()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -243,12 +256,14 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         self._target_temperature = self._thermostat.target_temperature
 
     @callback
+    @override
     def _handle_coordinator_update(self):
         """Get the latest state from the thermostat."""
         self._update_internal_state()
         self.async_write_ha_state()
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return DeviceInfo(

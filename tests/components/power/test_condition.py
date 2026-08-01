@@ -4,27 +4,20 @@ from typing import Any
 
 import pytest
 
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ABOVE,
-    CONF_BELOW,
-    UnitOfPower,
-)
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfPower
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
+    assert_condition_options_supported,
     assert_numerical_condition_unit_conversion,
     parametrize_numerical_condition_above_below_all,
     parametrize_numerical_condition_above_below_any,
     parametrize_target_entities,
     target_entities,
 )
-
-_POWER_CONDITION_OPTIONS = {"unit": UnitOfPower.WATT}
 
 
 @pytest.fixture
@@ -33,24 +26,37 @@ async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "sensor")
 
 
-@pytest.fixture
-async def target_numbers(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple number entities associated with different targets."""
-    return await target_entities(hass, "number")
+_WATT_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {"number": 50, "unit_of_measurement": "W"},
+    }
+}
 
 
 @pytest.mark.parametrize(
-    "condition",
-    ["power.is_value"],
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("power.is_value", _WATT_THRESHOLD, True, True),
+    ],
 )
-async def test_power_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
+async def test_power_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the power conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+    """Test that power conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -60,7 +66,7 @@ async def test_power_conditions_gated_by_labs_flag(
     parametrize_numerical_condition_above_below_any(
         "power.is_value",
         device_class="power",
-        condition_options=_POWER_CONDITION_OPTIONS,
+        threshold_unit=UnitOfPower.WATT,
         unit_attributes={ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
     ),
 )
@@ -87,7 +93,6 @@ async def test_power_sensor_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -97,7 +102,7 @@ async def test_power_sensor_condition_behavior_any(
     parametrize_numerical_condition_above_below_all(
         "power.is_value",
         device_class="power",
-        condition_options=_POWER_CONDITION_OPTIONS,
+        threshold_unit=UnitOfPower.WATT,
         unit_attributes={ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
     ),
 )
@@ -124,81 +129,6 @@ async def test_power_sensor_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("condition_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("condition", "condition_options", "states"),
-    parametrize_numerical_condition_above_below_any(
-        "power.is_value",
-        device_class="power",
-        condition_options=_POWER_CONDITION_OPTIONS,
-        unit_attributes={ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
-    ),
-)
-async def test_power_number_condition_behavior_any(
-    hass: HomeAssistant,
-    target_numbers: dict[str, list[str]],
-    condition_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    condition: str,
-    condition_options: dict[str, Any],
-    states: list[ConditionStateDescription],
-) -> None:
-    """Test the power number condition with 'any' behavior."""
-    await assert_condition_behavior_any(
-        hass,
-        target_entities=target_numbers,
-        condition_target_config=condition_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        condition=condition,
-        condition_options=condition_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("condition_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("condition", "condition_options", "states"),
-    parametrize_numerical_condition_above_below_all(
-        "power.is_value",
-        device_class="power",
-        condition_options=_POWER_CONDITION_OPTIONS,
-        unit_attributes={ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
-    ),
-)
-async def test_power_number_condition_behavior_all(
-    hass: HomeAssistant,
-    target_numbers: dict[str, list[str]],
-    condition_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    condition: str,
-    condition_options: dict[str, Any],
-    states: list[ConditionStateDescription],
-) -> None:
-    """Test the power number condition with 'all' behavior."""
-    await assert_condition_behavior_all(
-        hass,
-        target_entities=target_numbers,
-        condition_target_config=condition_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        condition=condition,
-        condition_options=condition_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_power_condition_unit_conversion_sensor(
     hass: HomeAssistant,
 ) -> None:
@@ -230,12 +160,39 @@ async def test_power_condition_unit_conversion_sensor(
             }
         ],
         numerical_condition_options=[
-            {CONF_ABOVE: 0.2, CONF_BELOW: 0.8, "unit": UnitOfPower.KILO_WATT},
-            {CONF_ABOVE: 200, CONF_BELOW: 800, "unit": UnitOfPower.WATT},
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 0.2,
+                        "unit_of_measurement": UnitOfPower.KILO_WATT,
+                    },
+                    "value_max": {
+                        "number": 0.8,
+                        "unit_of_measurement": UnitOfPower.KILO_WATT,
+                    },
+                }
+            },
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 200,
+                        "unit_of_measurement": UnitOfPower.WATT,
+                    },
+                    "value_max": {
+                        "number": 800,
+                        "unit_of_measurement": UnitOfPower.WATT,
+                    },
+                }
+            },
         ],
         limit_entity_condition_options={
-            CONF_ABOVE: "sensor.above",
-            CONF_BELOW: "sensor.below",
+            "threshold": {
+                "type": "between",
+                "value_min": {"entity": "sensor.above"},
+                "value_max": {"entity": "sensor.below"},
+            }
         },
         limit_entities=("sensor.above", "sensor.below"),
         limit_entity_states=[

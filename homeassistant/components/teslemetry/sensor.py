@@ -1,11 +1,11 @@
 """Sensor platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 
 from homeassistant.components.sensor import (
@@ -510,6 +510,14 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="drive_state_active_route_destination",
+        polling=True,
+        streaming_listener=lambda vehicle, callback: vehicle.listen_DestinationName(
+            callback
+        ),
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
@@ -1598,16 +1606,15 @@ async def async_setup_entry(
             if (
                 not vehicle.poll
                 and description.streaming_listener
-                and vehicle.firmware >= description.streaming_firmware
+                and firmware_at_least(vehicle.firmware, description.streaming_firmware)
             ):
                 entities.append(TeslemetryStreamSensorEntity(vehicle, description))
             elif description.polling:
                 entities.append(TeslemetryVehicleSensorEntity(vehicle, description))
 
         for time_description in VEHICLE_TIME_DESCRIPTIONS:
-            if (
-                not vehicle.poll
-                and vehicle.firmware >= time_description.streaming_firmware
+            if not vehicle.poll and firmware_at_least(
+                vehicle.firmware, time_description.streaming_firmware
             ):
                 entities.append(
                     TeslemetryStreamTimeSensorEntity(vehicle, time_description)
@@ -1649,9 +1656,14 @@ async def async_setup_entry(
     )
 
     if entry.runtime_data.stream is not None:
-        entities.append(
-            TeslemetryCreditBalanceSensor(
-                entry.unique_id or entry.entry_id, entry.runtime_data.stream
+        entities.extend(
+            (
+                TeslemetryCreditBalanceSensor(
+                    entry.unique_id or entry.entry_id, entry.runtime_data.stream
+                ),
+                TeslemetryCreditQuotaSensor(
+                    entry.unique_id or entry.entry_id, entry.runtime_data.stream
+                ),
             )
         )
 
@@ -1672,6 +1684,7 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -1706,6 +1719,7 @@ class TeslemetryVehicleSensorEntity(TeslemetryVehiclePollingEntity, SensorEntity
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         if self.entity_description.nullable or self._value is not None:
@@ -1739,6 +1753,7 @@ class TeslemetryStreamTimeSensorEntity(TeslemetryVehicleStreamEntity, SensorEnti
         )
         super().__init__(data, description.key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -1776,6 +1791,7 @@ class TeslemetryVehicleTimeSensorEntity(TeslemetryVehiclePollingEntity, SensorEn
 
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = isinstance(self._value, int | float) and self._value > 0
@@ -1797,6 +1813,7 @@ class TeslemetryEnergyLiveSensorEntity(TeslemetryEnergyLiveEntity, SensorEntity)
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = not self.is_none
@@ -1822,6 +1839,7 @@ class TeslemetryWallConnectorSensorEntity(TeslemetryWallConnectorEntity, SensorE
             description.key,
         )
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_native_value = self.entity_description.value_fn(self._value)
@@ -1841,6 +1859,7 @@ class TeslemetryEnergyInfoSensorEntity(TeslemetryEnergyInfoEntity, SensorEntity)
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = not self.is_none
@@ -1861,6 +1880,7 @@ class TeslemetryEnergyHistorySensorEntity(TeslemetryEnergyHistoryEntity, SensorE
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_native_value = self._value
@@ -1881,6 +1901,7 @@ class TeslemetryCreditBalanceSensor(RestoreSensor):
         self._attr_unique_id = f"{uid}_credit_balance"
         self.stream = stream
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -1893,4 +1914,44 @@ class TeslemetryCreditBalanceSensor(RestoreSensor):
     def _async_update(self, value: int) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = value
+        self.async_write_ha_state()
+
+
+class TeslemetryCreditQuotaSensor(RestoreSensor):
+    """Entity for Teslemetry credit quota usage."""
+
+    _attr_has_entity_name = True
+    stream: TeslemetryStream
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 1
+
+    def __init__(self, uid: str, stream: TeslemetryStream) -> None:
+        """Initialize common aspects of a Teslemetry entity."""
+
+        self._attr_translation_key = "credit_quota"
+        self._attr_unique_id = f"{uid}_credit_quota"
+        self.stream = stream
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        if (sensor_data := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = sensor_data.native_value
+
+        self.async_on_remove(self.stream.listen_Credits(self._async_update))
+
+    def _async_update(self, credits: dict[str, Any]) -> None:
+        """Handle updated data from the stream."""
+        quota = credits.get("quota")
+        if not isinstance(quota, dict):
+            return
+
+        fraction = quota.get("fraction")
+        if not isinstance(fraction, (float, int)) or isinstance(fraction, bool):
+            return
+
+        self._attr_native_value = fraction * 100
         self.async_write_ha_state()

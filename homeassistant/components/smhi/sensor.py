@@ -1,10 +1,9 @@
 """Sensor platform for SMHI integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -56,6 +55,21 @@ FORESTDRY_MAP = {
     "5": "very_dry",
     "6": "extremely_dry",
 }
+PRECIPITATION_CATEGORY_MAP = {
+    0: "no_precipitation",
+    1: "rain",
+    2: "thunderstorm",
+    3: "freezing_rain",
+    4: "mixed_ice",
+    5: "snow",
+    6: "wet_snow",
+    7: "rain_snow_mixed",
+    8: "ice_pellets",
+    9: "graupel",
+    10: "hail",
+    11: "drizzle",
+    12: "freezing_drizzle",
+}
 
 
 def get_percentage_values(entity: SMHIWeatherSensor, key: str) -> int | None:
@@ -65,6 +79,14 @@ def get_percentage_values(entity: SMHIWeatherSensor, key: str) -> int | None:
         return value
     if value is not None:
         return 0
+    return None
+
+
+def get_precipitation_category(entity: SMHIWeatherSensor) -> str | None:
+    """Return the precipitation category."""
+    value: int | None = entity.coordinator.current.get("precipitation_category")
+    if value in PRECIPITATION_CATEGORY_MAP:
+        return PRECIPITATION_CATEGORY_MAP[value]
     return None
 
 
@@ -128,11 +150,9 @@ WEATHER_SENSOR_DESCRIPTIONS: tuple[SMHIWeatherEntityDescription, ...] = (
     SMHIWeatherEntityDescription(
         key="precipitation_category",
         translation_key="precipitation_category",
-        value_fn=lambda entity: str(
-            get_percentage_values(entity, "precipitation_category")
-        ),
+        value_fn=get_precipitation_category,
         device_class=SensorDeviceClass.ENUM,
-        options=["0", "1", "2", "3", "4", "5", "6"],
+        options=[*PRECIPITATION_CATEGORY_MAP.values()],
     ),
     SMHIWeatherEntityDescription(
         key="frozen_precipitation",
@@ -284,6 +304,7 @@ class SMHIWeatherSensor(SmhiWeatherEntity, SensorEntity):
         )
         self._attr_unique_id = f"{latitude}, {longitude}-{entity_description.key}"
 
+    @override
     def update_entity_data(self) -> None:
         """Refresh the entity data."""
         if self.coordinator.data.daily:
@@ -311,6 +332,7 @@ class SMHIFireSensor(SmhiFireEntity, SensorEntity):
         )
         self._attr_unique_id = f"{latitude}, {longitude}-{entity_description.key}"
 
+    @override
     def update_entity_data(self) -> None:
         """Refresh the entity data."""
         if self.coordinator.data.fire_daily:

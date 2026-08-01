@@ -23,6 +23,11 @@ add_code:
         text:
           multiline: false
           type: password
+    notify_on_use:
+      required: false
+      default: true
+      selector:
+        boolean:
 
 delete_code:
   target:

@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 import pytest
 import pywilight
-from pywilight.const import DOMAIN
 import requests
 
 from homeassistant.config_entries import ConfigEntryState
@@ -56,12 +55,9 @@ async def test_unload_config_entry(hass: HomeAssistant, dummy_device_from_host) 
     """Test the WiLight configuration entry unloading."""
     entry = await setup_integration(hass)
 
-    assert entry.entry_id in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    if DOMAIN in hass.data:
-        assert entry.entry_id not in hass.data[DOMAIN]
-        assert entry.state is ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED

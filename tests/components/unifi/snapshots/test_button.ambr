@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Regenerate Password',
+    'object_id_base': 'Regenerate password',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.UPDATE: 'update'>,
     'original_icon': None,
-    'original_name': 'Regenerate Password',
+    'original_name': 'Regenerate password',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -39,8 +39,8 @@
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-device_payload0][button.ssid_1_regenerate_password-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'update',
-      'friendly_name': 'SSID 1 Regenerate Password',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'update',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SSID 1 Regenerate password',
     }),
     'context': <ANY>,
     'entity_id': 'button.ssid_1_regenerate_password',
@@ -72,17 +72,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port 1 Power Cycle',
+    'object_id_base': 'Port 1 power cycle',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
-    'original_name': 'Port 1 Power Cycle',
+    'original_name': 'Port 1 power cycle',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'port_power_cycle',
     'unique_id': 'power_cycle-00:00:00:00:01:01_1',
     'unit_of_measurement': None,
   })
@@ -90,8 +90,8 @@
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-device_payload0][button.switch_port_1_power_cycle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'switch Port 1 Power Cycle',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'switch Port 1 power cycle',
     }),
     'context': <ANY>,
     'entity_id': 'button.switch_port_1_power_cycle',
@@ -141,8 +141,8 @@
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-device_payload0][button.switch_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'switch Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'switch Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.switch_restart',

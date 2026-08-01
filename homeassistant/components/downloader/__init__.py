@@ -1,13 +1,11 @@
 """Support for functionality to download files."""
 
-from __future__ import annotations
-
 import os
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import _LOGGER, CONF_DOWNLOAD_DIR
+from .const import CONF_DOWNLOAD_DIR, LOGGER
 from .services import async_setup_services
 
 
@@ -23,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     if not await hass.async_add_executor_job(os.path.isdir, download_path):
-        _LOGGER.error(
+        LOGGER.error(
             "Download path %s does not exist. File Downloader not active", download_path
         )
         return False

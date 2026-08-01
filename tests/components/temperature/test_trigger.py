@@ -22,15 +22,15 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
-    assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_numerical_state_value_changed_trigger_states,
@@ -71,24 +71,43 @@ async def target_weathers(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "weather")
 
 
+_CELSIUS_CROSSED_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {"number": 20, "unit_of_measurement": "\u00b0C"},
+    }
+}
+
+_CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
+
+
 @pytest.mark.parametrize(
-    "trigger_key",
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        "temperature.changed",
-        "temperature.crossed_threshold",
+        ("temperature.changed", _CHANGED_THRESHOLD, False, False),
+        ("temperature.crossed_threshold", _CELSIUS_CROSSED_THRESHOLD, True, True),
     ],
 )
-async def test_temperature_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+async def test_temperature_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the temperature triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+    """Test that temperature triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 # --- Sensor domain tests (value in state.state) ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -110,9 +129,8 @@ async def test_temperature_triggers_gated_by_labs_flag(
         ),
     ],
 )
-async def test_temperature_trigger_sensor_behavior_any(
+async def test_temperature_trigger_sensor_behavior_each(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -121,10 +139,9 @@ async def test_temperature_trigger_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature trigger fires for sensor entities with device_class temperature."""
-    await assert_trigger_behavior_any(
+    """Test trigger fires for sensor entities with device_class temperature."""
+    await assert_trigger_behavior_each(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -135,7 +152,6 @@ async def test_temperature_trigger_sensor_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -153,7 +169,6 @@ async def test_temperature_trigger_sensor_behavior_any(
 )
 async def test_temperature_trigger_sensor_crossed_threshold_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -162,10 +177,9 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires on the first sensor state change."""
+    """Test crossed_threshold trigger fires on first sensor state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -176,7 +190,6 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -192,9 +205,8 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_first(
         ),
     ],
 )
-async def test_temperature_trigger_sensor_crossed_threshold_behavior_last(
+async def test_temperature_trigger_sensor_crossed_threshold_behavior_all(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -203,10 +215,9 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires when the last sensor changes state."""
-    await assert_trigger_behavior_last(
+    """Test crossed_threshold trigger fires when all sensors have changed state."""
+    await assert_trigger_behavior_all(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -220,7 +231,6 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_last(
 # --- Climate domain tests (value in current_temperature attribute) ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -233,18 +243,19 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_last(
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "temperature.crossed_threshold",
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
-async def test_temperature_trigger_climate_behavior_any(
+async def test_temperature_trigger_climate_behavior_each(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -254,9 +265,8 @@ async def test_temperature_trigger_climate_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test temperature trigger fires for climate entities."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
-        service_calls=service_calls,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -267,7 +277,6 @@ async def test_temperature_trigger_climate_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -280,12 +289,12 @@ async def test_temperature_trigger_climate_behavior_any(
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
 async def test_temperature_trigger_climate_crossed_threshold_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -294,10 +303,9 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires on the first climate state change."""
+    """Test crossed_threshold trigger fires on first climate state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -308,7 +316,6 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -321,12 +328,12 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_first(
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
-async def test_temperature_trigger_climate_crossed_threshold_behavior_last(
+async def test_temperature_trigger_climate_crossed_threshold_behavior_all(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -335,10 +342,9 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires when the last climate changes state."""
-    await assert_trigger_behavior_last(
+    """Test crossed_threshold trigger fires when all climate entities have changed state."""
+    await assert_trigger_behavior_all(
         hass,
-        service_calls=service_calls,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -352,7 +358,6 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_last(
 # --- Water heater domain tests (value in current_temperature attribute) ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -365,18 +370,19 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_last(
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "temperature.crossed_threshold",
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
-async def test_temperature_trigger_water_heater_behavior_any(
+async def test_temperature_trigger_water_heater_behavior_each(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_water_heaters: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -386,9 +392,8 @@ async def test_temperature_trigger_water_heater_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test temperature trigger fires for water_heater entities."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
-        service_calls=service_calls,
         target_entities=target_water_heaters,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -399,7 +404,6 @@ async def test_temperature_trigger_water_heater_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -412,12 +416,12 @@ async def test_temperature_trigger_water_heater_behavior_any(
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
 async def test_temperature_trigger_water_heater_crossed_threshold_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_water_heaters: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -426,10 +430,9 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_first
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires on the first water_heater state change."""
+    """Test crossed_threshold fires on first water_heater state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_water_heaters,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -440,7 +443,6 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_first
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -453,12 +455,12 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_first
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
-async def test_temperature_trigger_water_heater_crossed_threshold_behavior_last(
+async def test_temperature_trigger_water_heater_crossed_threshold_behavior_all(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_water_heaters: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -467,10 +469,9 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires when the last water_heater changes state."""
-    await assert_trigger_behavior_last(
+    """Test crossed_threshold fires when all water_heater entities have changed state."""
+    await assert_trigger_behavior_all(
         hass,
-        service_calls=service_calls,
         target_entities=target_water_heaters,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -484,7 +485,6 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_last(
 # --- Weather domain tests (value in temperature attribute) ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("weather"),
@@ -498,6 +498,7 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_last(
             ATTR_WEATHER_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "temperature.crossed_threshold",
@@ -505,12 +506,12 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_last(
             ATTR_WEATHER_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
+            attribute_required=True,
         ),
     ],
 )
-async def test_temperature_trigger_weather_behavior_any(
+async def test_temperature_trigger_weather_behavior_each(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_weathers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -520,9 +521,8 @@ async def test_temperature_trigger_weather_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test temperature trigger fires for weather entities."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
-        service_calls=service_calls,
         target_entities=target_weathers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -533,7 +533,6 @@ async def test_temperature_trigger_weather_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("weather"),
@@ -547,12 +546,12 @@ async def test_temperature_trigger_weather_behavior_any(
             ATTR_WEATHER_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
+            attribute_required=True,
         ),
     ],
 )
 async def test_temperature_trigger_weather_crossed_threshold_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_weathers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -561,10 +560,9 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires on the first weather state change."""
+    """Test crossed_threshold trigger fires on first weather state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_weathers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -575,7 +573,6 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("weather"),
@@ -589,12 +586,12 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_first(
             ATTR_WEATHER_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
+            attribute_required=True,
         ),
     ],
 )
-async def test_temperature_trigger_weather_crossed_threshold_behavior_last(
+async def test_temperature_trigger_weather_crossed_threshold_behavior_all(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_weathers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -603,10 +600,9 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires when the last weather changes state."""
-    await assert_trigger_behavior_last(
+    """Test crossed_threshold fires when all weather entities have changed state."""
+    await assert_trigger_behavior_all(
         hass,
-        service_calls=service_calls,
         target_entities=target_weathers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -620,12 +616,11 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_last(
 # --- Unit conversion tests ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_temperature_trigger_unit_conversion_sensor_celsius_to_fahrenheit(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
 ) -> None:
-    """Test temperature trigger converts sensor value from °C to °F for threshold comparison."""
+    """Test trigger converts sensor value from C to F for comparison."""
+    calls: list[str] = []
     entity_id = "sensor.test_temp"
 
     # Sensor reports in °C, trigger configured in °F with threshold above 70°F
@@ -649,6 +644,7 @@ async def test_temperature_trigger_unit_conversion_sensor_celsius_to_fahrenheit(
             }
         },
         {CONF_ENTITY_ID: [entity_id]},
+        calls,
     )
 
     # 20°C = 68°F, which is below 70°F - should NOT trigger
@@ -661,7 +657,7 @@ async def test_temperature_trigger_unit_conversion_sensor_celsius_to_fahrenheit(
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert len(calls) == 0
 
     # 22°C = 71.6°F, which is above 70°F - should trigger
     hass.states.async_set(
@@ -673,16 +669,15 @@ async def test_temperature_trigger_unit_conversion_sensor_celsius_to_fahrenheit(
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    service_calls.clear()
+    assert len(calls) == 1
+    calls.clear()
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_temperature_trigger_unit_conversion_sensor_fahrenheit_to_celsius(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
 ) -> None:
-    """Test temperature trigger converts sensor value from °F to °C for threshold comparison."""
+    """Test trigger converts sensor value from F to C for comparison."""
+    calls: list[str] = []
     entity_id = "sensor.test_temp"
 
     # Sensor reports in °F, trigger configured in °C with threshold above 25°C
@@ -706,6 +701,7 @@ async def test_temperature_trigger_unit_conversion_sensor_fahrenheit_to_celsius(
             }
         },
         {CONF_ENTITY_ID: [entity_id]},
+        calls,
     )
 
     # 70°F = 21.1°C, which is below 25°C - should NOT trigger
@@ -718,7 +714,7 @@ async def test_temperature_trigger_unit_conversion_sensor_fahrenheit_to_celsius(
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert len(calls) == 0
 
     # 80°F = 26.7°C, which is above 25°C - should trigger
     hass.states.async_set(
@@ -730,19 +726,19 @@ async def test_temperature_trigger_unit_conversion_sensor_fahrenheit_to_celsius(
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    service_calls.clear()
+    assert len(calls) == 1
+    calls.clear()
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_temperature_trigger_unit_conversion_changed(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
 ) -> None:
     """Test temperature changed trigger with unit conversion and above/below limits."""
+    calls: list[str] = []
     entity_id = "sensor.test_temp"
 
-    # Sensor reports in °C, trigger configured in °F: above 68°F (20°C), below 77°F (25°C)
+    # Sensor reports in C, trigger configured in F:
+    # above 68F (20C), below 77F (25C)
     hass.states.async_set(
         entity_id,
         "18",
@@ -764,6 +760,7 @@ async def test_temperature_trigger_unit_conversion_changed(
             }
         },
         {CONF_ENTITY_ID: [entity_id]},
+        calls,
     )
 
     # 18°C = 64.4°F, below 68°F - should NOT trigger
@@ -776,7 +773,7 @@ async def test_temperature_trigger_unit_conversion_changed(
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert len(calls) == 0
 
     # 22°C = 71.6°F, between 68°F and 77°F - should trigger
     hass.states.async_set(
@@ -788,8 +785,8 @@ async def test_temperature_trigger_unit_conversion_changed(
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    service_calls.clear()
+    assert len(calls) == 1
+    calls.clear()
 
     # 26°C = 78.8°F, above 77°F - should NOT trigger
     hass.states.async_set(
@@ -801,18 +798,18 @@ async def test_temperature_trigger_unit_conversion_changed(
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert len(calls) == 0
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_temperature_trigger_unit_conversion_weather(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
 ) -> None:
     """Test temperature trigger with unit conversion for weather entities."""
+    calls: list[str] = []
     entity_id = "weather.test"
 
-    # Weather reports temperature in °F, trigger configured in °C with threshold above 25°C
+    # Weather reports in F, trigger configured in C with threshold
+    # above 25C
     hass.states.async_set(
         entity_id,
         "sunny",
@@ -833,6 +830,7 @@ async def test_temperature_trigger_unit_conversion_weather(
             }
         },
         {CONF_ENTITY_ID: [entity_id]},
+        calls,
     )
 
     # 70°F = 21.1°C, below 25°C - should NOT trigger
@@ -845,7 +843,7 @@ async def test_temperature_trigger_unit_conversion_weather(
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert len(calls) == 0
 
     # 80°F = 26.7°C, above 25°C - should trigger
     hass.states.async_set(
@@ -857,5 +855,5 @@ async def test_temperature_trigger_unit_conversion_weather(
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    service_calls.clear()
+    assert len(calls) == 1
+    calls.clear()

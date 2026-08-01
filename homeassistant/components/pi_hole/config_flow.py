@@ -1,10 +1,8 @@
 """Config flow to configure the Pi-hole integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from hole.exceptions import HoleError
 import voluptuous as vol
@@ -14,7 +12,6 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
     CONF_LOCATION,
-    CONF_NAME,
     CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
@@ -41,6 +38,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._config: dict = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -50,7 +48,6 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._config = {
                 CONF_HOST: f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
-                CONF_NAME: user_input[CONF_NAME],
                 CONF_LOCATION: user_input[CONF_LOCATION],
                 CONF_SSL: user_input[CONF_SSL],
                 CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
@@ -65,9 +62,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
             if not (errors := await self._async_try_connect()):
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=self._config
-                )
+                return self.async_create_entry(title=DEFAULT_NAME, data=self._config)
 
         user_input = user_input or {}
         return self.async_show_form(
@@ -78,9 +73,6 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_PORT, default=user_input.get(CONF_PORT, 80)
                     ): vol.Coerce(int),
-                    vol.Required(
-                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
-                    ): str,
                     vol.Required(
                         CONF_LOCATION,
                         default=user_input.get(CONF_LOCATION, DEFAULT_LOCATION),
@@ -166,13 +158,16 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 return {"base": "cannot_connect"}
             else:
                 _LOGGER.debug(
-                    "Success connecting to, but necessarily authenticating with, pihole, API version is: %s",
+                    "Success connecting to, but necessarily"
+                    " authenticating with, pihole,"
+                    " API version is: %s",
                     5,
                 )
             # the v5 API returns an empty list to unauthenticated requests.
             if not isinstance(pi_hole.data, dict):
                 _LOGGER.debug(
-                    "API version %s returned %s, '[]' is expected for unauthenticated requests",
+                    "API version %s returned %s, '[]' is expected"
+                    " for unauthenticated requests",
                     5,
                     pi_hole.data,
                 )

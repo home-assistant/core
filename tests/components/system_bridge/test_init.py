@@ -2,15 +2,35 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import FIXTURE_USER_INPUT, FIXTURE_UUID
 
 from tests.common import MockConfigEntry
+
+
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
+async def test_entry_setup_unload(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test integration setup and unload."""
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
@@ -46,6 +66,59 @@ async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
         CONF_PORT: FIXTURE_USER_INPUT[CONF_PORT],
         CONF_TOKEN: FIXTURE_USER_INPUT[CONF_TOKEN],
     }
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
+async def test_migration_minor_2_to_3(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration of entity unique ids."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_UUID,
+        data={
+            CONF_TOKEN: FIXTURE_USER_INPUT[CONF_TOKEN],
+            CONF_HOST: "hostname",
+            CONF_PORT: FIXTURE_USER_INPUT[CONF_PORT],
+        },
+        version=1,
+        minor_version=2,
+    )
+
+    config_entry.add_to_hass(hass)
+    assert config_entry.minor_version == 2
+
+    sensor = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id="hostname_cpu_speed",
+        config_entry=config_entry,
+        original_name="hostname CPU speed",
+    )
+
+    notifier = entity_registry.async_get_or_create(
+        domain="notify",
+        platform=DOMAIN,
+        unique_id="hostname",
+        config_entry=config_entry,
+        original_name="hostname",
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 3
+
+    assert (
+        entity_registry.async_get(sensor.entity_id).unique_id
+        == f"{FIXTURE_UUID}_cpu_speed"
+    )
+
+    assert entity_registry.async_get(notifier.entity_id).unique_id == FIXTURE_UUID
+
     assert config_entry.state is ConfigEntryState.LOADED
 
 

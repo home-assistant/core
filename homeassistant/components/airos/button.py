@@ -1,6 +1,6 @@
 """AirOS button component for Home Assistant."""
 
-from __future__ import annotations
+from typing import override
 
 from airos.exceptions import AirOSException
 
@@ -31,7 +31,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the AirOS button from a config entry."""
-    async_add_entities([AirOSRebootButton(config_entry.runtime_data, REBOOT_BUTTON)])
+    async_add_entities(
+        [AirOSRebootButton(config_entry.runtime_data.status, REBOOT_BUTTON)]
+    )
 
 
 class AirOSRebootButton(AirOSEntity, ButtonEntity):
@@ -50,6 +52,7 @@ class AirOSRebootButton(AirOSEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data.derived.mac}_{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press to reboot the device."""
         try:

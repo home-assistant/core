@@ -9,24 +9,15 @@ child entities.  A virtual 'All Speakers' group device is automatically
 created to control all speakers simultaneously.
 """
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
 from .coordinator import AdamAudioCoordinator
-from .data import AdamAudioData, AdamAudioIntegrationData
-
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.typing import ConfigType
-
-    from .data import AdamAudioConfigEntry
-
+from .data import AdamAudioConfigEntry, AdamAudioData, AdamAudioIntegrationData
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -39,13 +30,17 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
     """Set up the ADAM Audio integration."""
+    # Tracks group entities across ALL config entries (one per speaker), so it
+    # can't live on a single entry's runtime_data.
     if DOMAIN not in hass.data:
+        # pylint: disable-next=home-assistant-use-runtime-data
         hass.data[DOMAIN] = AdamAudioIntegrationData(coordinators={})
     return True
 
 
 def get_coordinators(hass: HomeAssistant) -> list[AdamAudioCoordinator]:
     """Return all currently loaded ADAM Audio coordinators."""
+    # pylint: disable-next=home-assistant-use-runtime-data
     data: AdamAudioIntegrationData | None = hass.data.get(DOMAIN)
     if not data:
         return []
@@ -62,13 +57,16 @@ async def async_setup_entry(
     await coordinator.async_setup()  # raises ConfigEntryNotReady if unreachable
 
     _async_migrate_device_identifiers(hass, coordinator)
+    _async_migrate_entry_unique_id(hass, entry, coordinator)
 
     entry.runtime_data = AdamAudioData(
         client=coordinator.client,
         coordinator=coordinator,
     )
 
-    # Ensure integration-wide state exists (especially for tests)
+    # Ensure integration-wide state exists (especially for tests). Tracks group
+    # entities across ALL config entries, so it can't live on runtime_data.
+    # pylint: disable-next=home-assistant-use-runtime-data
     integration_data = hass.data.setdefault(
         DOMAIN, AdamAudioIntegrationData(coordinators={})
     )
@@ -148,6 +146,47 @@ def _async_migrate_device_identifiers(
             coordinator.device_unique_id,
             coordinator.device_serial,
         )
+
+
+def _async_migrate_entry_unique_id(
+    hass: HomeAssistant, entry: AdamAudioConfigEntry, coordinator: AdamAudioCoordinator
+) -> None:
+    """Point this entry's own unique_id at the device serial number.
+
+    Versions up to 0.3.x set the config entry's unique_id to the hardware
+    name (e.g. "ASeries-414725") because the serial wasn't fetched yet at
+    flow time.  A later zeroconf rediscovery of that same physical speaker
+    now computes a serial-based unique_id, so
+    _abort_if_unique_id_configured no longer recognizes the device as
+    already configured and a duplicate entry gets created — its entities
+    then collide with the original entry's (same device_name, same
+    unique_id suffix). Migrating the entry's unique_id to the serial closes
+    that gap for future rediscoveries.
+    """
+    if not coordinator.device_serial or entry.unique_id == coordinator.device_serial:
+        return
+    existing = hass.config_entries.async_entry_for_domain_unique_id(
+        DOMAIN, coordinator.device_serial
+    )
+    if existing and existing.entry_id != entry.entry_id:
+        LOGGER.warning(
+            "Entry %s (%s) was not migrated to unique_id %s: entry %s already "
+            "uses it. This usually means a duplicate entry exists for the same "
+            "speaker — remove one of them in Settings > Devices & Services",
+            entry.entry_id,
+            coordinator.device_description,
+            coordinator.device_serial,
+            existing.entry_id,
+        )
+        return
+    old_unique_id = entry.unique_id
+    hass.config_entries.async_update_entry(entry, unique_id=coordinator.device_serial)
+    LOGGER.debug(
+        "Migrated entry %s unique_id from %s to serial %s",
+        entry.entry_id,
+        old_unique_id,
+        coordinator.device_serial,
+    )
 
 
 async def _async_reload_entry(

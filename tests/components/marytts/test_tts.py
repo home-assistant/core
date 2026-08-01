@@ -79,6 +79,7 @@ async def test_service_say(
             )
             == HTTPStatus.OK
         )
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_speak.assert_called_once()
     mock_speak.assert_called_with("HomeAssistant", {})
@@ -118,6 +119,7 @@ async def test_service_say_with_effect(
             )
             == HTTPStatus.OK
         )
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_speak.assert_called_once()
     mock_speak.assert_called_with("HomeAssistant", {"Volume": "amount:2.0;"})

@@ -1,9 +1,8 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from technove import Station as TechnoVEStation, Status
 
@@ -144,6 +143,7 @@ class TechnoVESensorEntity(TechnoVEEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

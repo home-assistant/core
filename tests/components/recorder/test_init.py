@@ -1,7 +1,5 @@
 """The tests for the Recorder component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Generator
 from datetime import datetime, timedelta
@@ -190,7 +188,7 @@ async def test_canceled_before_startup_finishes(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test recorder shuts down when its startup future is canceled out from under it."""
+    """Test recorder shuts down when startup future is canceled."""
     hass.set_state(CoreState.not_running)
     recorder_helper.async_initialize_recorder(hass)
     hass.async_create_task(async_setup_recorder_instance(hass))
@@ -1144,7 +1142,7 @@ async def test_auto_purge_auto_repack_disabled_on_second_sunday(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
 ) -> None:
-    """Test periodic purge scheduling does not auto repack on the 2nd sunday if disabled."""
+    """Test periodic purge scheduling skips repack when disabled."""
     timezone = "Europe/Copenhagen"
     await hass.config.async_set_time_zone(timezone)
     await async_setup_recorder_instance(hass, {CONF_AUTO_REPACK: False})
@@ -1600,7 +1598,7 @@ async def test_service_disable_states_not_recording(
     hass: HomeAssistant,
     setup_recorder: None,
 ) -> None:
-    """Test that state changes are not recorded when recorder is disabled using service."""
+    """Test state changes are not recorded when recorder is disabled."""
     await hass.services.async_call(
         DOMAIN,
         SERVICE_DISABLE,
@@ -1874,7 +1872,7 @@ async def test_database_lock_and_overflow(
     caplog: pytest.LogCaptureFixture,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test writing events during lock leading to overflow the queue causes the database to unlock.
+    """Test queue overflow during lock causes database to unlock.
 
     This test is specific for SQLite: Locking is not implemented for other engines.
 
@@ -1939,7 +1937,7 @@ async def test_database_lock_and_overflow_checks_available_memory(
     caplog: pytest.LogCaptureFixture,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test writing events during lock leading to overflow the queue causes the database to unlock.
+    """Test queue overflow with memory check causes database to unlock.
 
     This test is specific for SQLite: Locking is not implemented for other engines.
 
@@ -1994,7 +1992,8 @@ async def test_database_lock_and_overflow_checks_available_memory(
 
         db_events = await instance.async_add_executor_job(_get_db_events)
         assert len(db_events) == 0
-        # Record up to the extended limit (which takes into account the available memory)
+        # Record up to the extended limit (which takes into account
+        # the available memory)
         for _ in range(2):
             event_data = {"test_attr": 5, "test_attr_10": "nice"}
             hass.bus.async_fire(event_type, event_data)
@@ -2011,7 +2010,8 @@ async def test_database_lock_and_overflow_checks_available_memory(
         assert "Database queue backlog reached more than" not in caplog.text
 
         out_of_ram = True
-        # Record beyond the extended limit (which takes into account the available memory)
+        # Record beyond the extended limit (which takes into account
+        # the available memory)
         for _ in range(20):
             event_data = {"test_attr": 5, "test_attr_10": "nice"}
             hass.bus.async_fire(event_type, event_data)
@@ -2446,7 +2446,7 @@ async def test_excluding_all_attributes_by_integration(
     entity_registry: er.EntityRegistry,
     setup_recorder: None,
 ) -> None:
-    """Test that an entity can exclude all attributes from being recorded using MATCH_ALL."""
+    """Test an entity can exclude all attributes using MATCH_ALL."""
     state = "restoring_from_db"
     attributes = {
         "test_attr": 5,
@@ -2525,7 +2525,7 @@ async def test_lru_increases_with_many_entities(
 async def test_clean_shutdown_when_recorder_thread_raises_during_initialize_database(
     hass: HomeAssistant,
 ) -> None:
-    """Test we still shutdown cleanly when the recorder thread raises during initialize_database."""
+    """Test clean shutdown when recorder raises during initialize_database."""
     with (
         patch.object(migration, "initialize_database", side_effect=Exception),
         patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
@@ -2553,7 +2553,7 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_initialize_data
 async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_schema(
     hass: HomeAssistant,
 ) -> None:
-    """Test we still shutdown cleanly when the recorder thread raises during validate_db_schema."""
+    """Test clean shutdown when recorder raises during validate_db_schema."""
     with (
         patch.object(migration, "validate_db_schema", side_effect=Exception),
         patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),

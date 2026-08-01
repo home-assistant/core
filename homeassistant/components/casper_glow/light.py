@@ -1,8 +1,6 @@
 """Casper Glow integration light platform."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pycasperglow import GlowState
 
@@ -56,6 +54,7 @@ class CasperGlowLight(CasperGlowEntity, LightEntity):
         self._attr_unique_id = format_mac(coordinator.device.address)
         self._update_from_state(coordinator.device.state)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback when entity is added."""
         await super().async_added_to_hass()
@@ -71,6 +70,7 @@ class CasperGlowLight(CasperGlowEntity, LightEntity):
             self._attr_color_mode = ColorMode.BRIGHTNESS
         if state.brightness_level is not None:
             self._attr_brightness = _device_pct_to_ha_brightness(state.brightness_level)
+            self.coordinator.last_brightness_pct = state.brightness_level
 
     @callback
     def _async_handle_state_update(self, state: GlowState) -> None:
@@ -78,6 +78,7 @@ class CasperGlowLight(CasperGlowEntity, LightEntity):
         self._update_from_state(state)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness_pct: int | None = None
@@ -97,7 +98,9 @@ class CasperGlowLight(CasperGlowEntity, LightEntity):
                 )
             )
             self._attr_brightness = _device_pct_to_ha_brightness(brightness_pct)
+            self.coordinator.last_brightness_pct = brightness_pct
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._async_command(self._device.turn_off())

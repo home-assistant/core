@@ -1,7 +1,5 @@
 """The A. O. Smith integration."""
 
-from __future__ import annotations
-
 from py_aosmith import AOSmithAPIClient
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform

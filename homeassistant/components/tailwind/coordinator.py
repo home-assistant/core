@@ -1,10 +1,12 @@
 """Data update coordinator for Tailwind."""
 
 from datetime import timedelta
+from typing import override
 
 from gotailwind import (
     Tailwind,
     TailwindAuthenticationError,
+    TailwindConnectionError,
     TailwindDeviceStatus,
     TailwindError,
 )
@@ -39,11 +41,20 @@ class TailwindDataUpdateCoordinator(DataUpdateCoordinator[TailwindDeviceStatus])
             update_interval=timedelta(seconds=5),
         )
 
+    @override
     async def _async_update_data(self) -> TailwindDeviceStatus:
         """Fetch data from the Tailwind device."""
         try:
             return await self.tailwind.status()
         except TailwindAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
+        except TailwindConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
         except TailwindError as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+            ) from err

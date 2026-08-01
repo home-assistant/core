@@ -1,16 +1,14 @@
 """SFR Box coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxError
-from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, WanInfo
+from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, VoipInfo, WanInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -29,9 +27,11 @@ class SFRRuntimeData:
     """Runtime data for SFR Box."""
 
     box: SFRBox
+    has_authentication: bool
     dsl: SFRDataUpdateCoordinator[DslInfo]
     ftth: SFRDataUpdateCoordinator[FtthInfo]
     system: SFRDataUpdateCoordinator[SystemInfo]
+    voip: SFRDataUpdateCoordinator[VoipInfo] | None
     wan: SFRDataUpdateCoordinator[WanInfo]
 
 
@@ -59,6 +59,7 @@ class SFRDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             update_interval=_SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Update data."""
         try:

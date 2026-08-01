@@ -1,7 +1,7 @@
 """Representation of Plex updates."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from plexapi.exceptions import PlexApiException
 import requests.exceptions
@@ -64,10 +64,12 @@ class PlexUpdate(UpdateEntity):
         else:
             self._release_notes = None
 
+    @override
     def release_notes(self) -> str | None:
         """Return release notes for the available upgrade."""
         return self._release_notes
 
+    @override
     def install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
         """Install an update."""
         try:
@@ -76,6 +78,7 @@ class PlexUpdate(UpdateEntity):
             raise HomeAssistantError(str(exc)) from exc
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return DeviceInfo(

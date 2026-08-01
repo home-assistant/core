@@ -1,5 +1,6 @@
 """Test the iRobot Roomba config flow."""
 
+from functools import partial
 from ipaddress import ip_address
 from unittest.mock import MagicMock, PropertyMock, patch
 
@@ -106,11 +107,11 @@ def _create_mocked_roomba(
     return mocked_roomba
 
 
-def _mocked_discovery(*_):
+def _mocked_discovery(*_, blid="BLID"):
     roomba_discovery = MagicMock()
 
     roomba = RoombaInfo(
-        hostname="irobot-BLID",
+        hostname=f"irobot-{blid}",
         robot_name="robot_name",
         ip=MOCK_IP,
         mac="mac",
@@ -347,7 +348,7 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(
 async def test_form_user_discover_fails_aborts_already_configured(
     hass: HomeAssistant,
 ) -> None:
-    """Test if we manually configure an existing host we abort after failed discovery."""
+    """Test abort on failed discovery for already-configured host."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, unique_id="BLID")
     entry.add_to_hass(hass)
@@ -377,7 +378,7 @@ async def test_form_user_discover_fails_aborts_already_configured(
 async def test_form_user_discovery_manual_and_auto_password_fetch_but_cannot_connect(
     hass: HomeAssistant,
 ) -> None:
-    """Test discovery skipped and we can auto fetch the password then we fail to connect."""
+    """Test auto password fetch then connect failure."""
 
     with patch(
         "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
@@ -554,10 +555,10 @@ async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_discovery_not_devices_found_and_password_fetch_fails_and_cannot_connect(
+async def test_form_user_no_devices_password_fetch_fails_cannot_connect(
     hass: HomeAssistant,
 ) -> None:
-    """Test discovery finds no devices and password fetch fails then we cannot connect."""
+    """Test no devices found with password fetch failure."""
 
     mocked_roomba = _create_mocked_roomba(
         connect=RoombaConnectionError,
@@ -695,7 +696,7 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(
     hass: HomeAssistant,
     discovery_data: tuple[str, DhcpServiceInfo | ZeroconfServiceInfo],
 ) -> None:
-    """Test we can process the discovery from dhcp and roomba discovery matches the device."""
+    """Test dhcp discovery when roomba discovery matches device."""
 
     mocked_roomba = _create_mocked_roomba(
         roomba_connected=True,
@@ -755,7 +756,7 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(
 async def test_dhcp_discovery_falls_back_to_manual(
     hass: HomeAssistant, discovery_data
 ) -> None:
-    """Test we can process the discovery from dhcp but roomba discovery cannot find the specific device."""
+    """Test dhcp discovery falls back to manual setup."""
 
     mocked_roomba = _create_mocked_roomba(
         roomba_connected=True,
@@ -833,7 +834,7 @@ async def test_dhcp_discovery_falls_back_to_manual(
 async def test_dhcp_discovery_no_devices_falls_back_to_manual(
     hass: HomeAssistant, discovery_data
 ) -> None:
-    """Test we can process the discovery from dhcp but roomba discovery cannot find any devices."""
+    """Test dhcp discovery with no devices falls back to manual."""
 
     mocked_roomba = _create_mocked_roomba(
         roomba_connected=True,
@@ -981,7 +982,8 @@ async def test_dhcp_discovery_not_irobot(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery",
+        _mocked_no_devices_found_discovery,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -1001,8 +1003,10 @@ async def test_dhcp_discovery_not_irobot(hass: HomeAssistant) -> None:
 async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
     """Test we abort flows when we have a partial hostname."""
 
+    blid = "blid"
     with patch(
-        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery",
+        partial(_mocked_discovery, blid=blid),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -1010,7 +1014,7 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
             data=DhcpServiceInfo(
                 ip=MOCK_IP,
                 macaddress="aabbccddeeff",
-                hostname="irobot-blid",
+                hostname=f"irobot-{blid}",
             ),
         )
         await hass.async_block_till_done()
@@ -1018,8 +1022,10 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 
+    blid = "blidthatislonger"
     with patch(
-        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery",
+        partial(_mocked_discovery, blid=blid),
     ):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -1027,7 +1033,7 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
             data=DhcpServiceInfo(
                 ip=MOCK_IP,
                 macaddress="aabbccddeeff",
-                hostname="irobot-blidthatislonger",
+                hostname=f"irobot-{blid}",
             ),
         )
         await hass.async_block_till_done()
@@ -1039,8 +1045,10 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
     assert len(current_flows) == 1
     assert current_flows[0]["flow_id"] == result2["flow_id"]
 
+    blid = "bl"
     with patch(
-        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery",
+        partial(_mocked_discovery, blid=blid),
     ):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -1048,7 +1056,7 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
             data=DhcpServiceInfo(
                 ip=MOCK_IP,
                 macaddress="aabbccddeeff",
-                hostname="irobot-bl",
+                hostname=f"irobot-{blid}",
             ),
         )
         await hass.async_block_till_done()

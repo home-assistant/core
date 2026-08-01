@@ -18,7 +18,7 @@
       "invalid_access_token": "Invalid encryption key for instant readout",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
-    "flow_title": "{title}",
+    "flow_title": "{name}",
     "step": {
       "access_token": {
         "data": {
@@ -50,6 +50,9 @@
   },
   "entity": {
     "sensor": {
+      "ac_apparent_power": {
+        "name": "AC apparent power"
+      },
       "ac_current": {
         "name": "AC current"
       },
@@ -66,6 +69,9 @@
       },
       "ac_out_power": {
         "name": "AC-out power"
+      },
+      "ac_voltage": {
+        "name": "AC voltage"
       },
       "alarm": {
         "name": "Alarm",
@@ -145,7 +151,7 @@
           "input_current": "Input overcurrent",
           "input_power": "Input overpower",
           "input_shutdown_current": "Input shutdown (current flow during off mode)",
-          "input_shutdown_failure": "PV input failed to shutdown",
+          "input_shutdown_failure": "PV input shutdown failed",
           "input_shutdown_voltage": "Input shutdown (battery overvoltage)",
           "input_voltage": "Input overvoltage",
           "internal_dc_voltage": "Internal DC voltage error",
@@ -210,6 +216,9 @@
       "external_device_load": {
         "name": "External device load"
       },
+      "input_current": {
+        "name": "Input current"
+      },
       "input_voltage": {
         "name": "Input voltage"
       },
@@ -253,6 +262,9 @@
           "switched_off_register": "Switched off by register",
           "switched_off_switch": "Switched off by switch"
         }
+      },
+      "output_current": {
+        "name": "Output current"
       },
       "output_phase_current": {
         "name": "Output phase {phase} current"

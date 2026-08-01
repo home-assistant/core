@@ -1,7 +1,5 @@
 """The tests for RFXCOM RFXtrx device actions."""
 
-from __future__ import annotations
-
 from typing import Any, NamedTuple
 
 import pytest
@@ -50,7 +48,7 @@ async def test_device_test_data(rfxtrx, device: DeviceTestData) -> None:
 async def setup_entry(hass: HomeAssistant, devices: dict[str, Any]) -> None:
     """Construct a config setup."""
     entry_data = create_rfx_test_cfg(devices=devices)
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 

@@ -1,8 +1,7 @@
 """Platform to control a Renson ventilation unit."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from renson_endura_delta.field_enum import FILTER_PRESET_FIELD, DataType
 from renson_endura_delta.renson import RensonVentilation
@@ -12,13 +11,11 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import RensonCoordinator
+from .coordinator import RensonConfigEntry, RensonCoordinator
 from .entity import RensonEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,15 +36,13 @@ RENSON_NUMBER_DESCRIPTION = NumberEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RensonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renson number platform."""
 
-    api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id].api
-    coordinator: RensonCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ].coordinator
+    api = config_entry.runtime_data.api
+    coordinator = config_entry.runtime_data.coordinator
 
     async_add_entities([RensonNumber(RENSON_NUMBER_DESCRIPTION, api, coordinator)])
 
@@ -67,6 +62,7 @@ class RensonNumber(RensonEntity, NumberEntity):
         self.entity_description = description
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = self.api.parse_value(
@@ -76,6 +72,7 @@ class RensonNumber(RensonEntity, NumberEntity):
 
         super()._handle_coordinator_update()
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
 

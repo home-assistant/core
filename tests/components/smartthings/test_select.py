@@ -53,7 +53,7 @@ async def test_state_update(
     """Test state update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("select.dryer").state == "stop"
+    assert hass.states.get("select.theater_dryer").state == "stop"
 
     await trigger_update(
         hass,
@@ -64,7 +64,7 @@ async def test_state_update(
         "run",
     )
 
-    assert hass.states.get("select.dryer").state == "run"
+    assert hass.states.get("select.theater_dryer").state == "run"
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_wd_000001"])
@@ -85,7 +85,7 @@ async def test_select_option(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.dryer", ATTR_OPTION: "run"},
+        {ATTR_ENTITY_ID: "select.theater_dryer", ATTR_OPTION: "run"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -151,7 +151,7 @@ async def test_select_option_without_remote_control(
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: "select.dryer", ATTR_OPTION: "run"},
+            {ATTR_ENTITY_ID: "select.theater_dryer", ATTR_OPTION: "run"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -166,19 +166,19 @@ async def test_availability(
     """Test availability."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("select.dryer").state == "stop"
+    assert hass.states.get("select.theater_dryer").state == "stop"
 
     await trigger_health_update(
         hass, devices, "02f7256e-8353-5bdd-547f-bd5b1647e01b", HealthStatus.OFFLINE
     )
 
-    assert hass.states.get("select.dryer").state == STATE_UNAVAILABLE
+    assert hass.states.get("select.theater_dryer").state == STATE_UNAVAILABLE
 
     await trigger_health_update(
         hass, devices, "02f7256e-8353-5bdd-547f-bd5b1647e01b", HealthStatus.ONLINE
     )
 
-    assert hass.states.get("select.dryer").state == "stop"
+    assert hass.states.get("select.theater_dryer").state == "stop"
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_wd_000001"])
@@ -189,7 +189,7 @@ async def test_availability_at_start(
 ) -> None:
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get("select.dryer").state == STATE_UNAVAILABLE
+    assert hass.states.get("select.theater_dryer").state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000003"])

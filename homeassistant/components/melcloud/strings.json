@@ -42,9 +42,65 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "boiler_status": {
+        "name": "Boiler"
+      },
+      "booster_heater_status": {
+        "name": "Booster heater {number}"
+      },
+      "immersion_heater_status": {
+        "name": "Immersion heater"
+      },
+      "valve_2way_status": {
+        "name": "2-way valve"
+      },
+      "valve_3way_status": {
+        "name": "3-way valve"
+      },
+      "water_pump_status": {
+        "name": "Water pump {number}"
+      }
+    },
+    "number": {
+      "flow_temperature": {
+        "name": "Flow temperature"
+      }
+    },
+    "select": {
+      "operation_mode": {
+        "name": "Operation mode",
+        "state": {
+          "curve": "Curve",
+          "flow": "Flow",
+          "room": "Room"
+        }
+      }
+    },
     "sensor": {
       "condensing_temperature": {
         "name": "Condensing temperature"
+      },
+      "daily_cooling_energy_consumed": {
+        "name": "Daily cooling energy consumed"
+      },
+      "daily_cooling_energy_produced": {
+        "name": "Daily cooling energy produced"
+      },
+      "daily_heating_energy_consumed": {
+        "name": "Daily heating energy consumed"
+      },
+      "daily_heating_energy_produced": {
+        "name": "Daily heating energy produced"
+      },
+      "daily_hot_water_energy_consumed": {
+        "name": "Daily hot water energy consumed"
+      },
+      "daily_hot_water_energy_produced": {
+        "name": "Daily hot water energy produced"
+      },
+      "demand_percentage": {
+        "name": "Demand percentage"
       },
       "energy_consumed": {
         "name": "Energy consumed"
@@ -53,16 +109,25 @@
         "name": "Energy produced"
       },
       "fan_frequency": {
-        "name": "Fan frequency"
+        "name": "Heat pump frequency"
       },
       "flow_temperature": {
         "name": "Flow temperature"
+      },
+      "flow_temperature_boiler": {
+        "name": "Boiler flow temperature"
+      },
+      "mixing_tank_temperature": {
+        "name": "Mixing tank temperature"
       },
       "outside_temperature": {
         "name": "Outside temperature"
       },
       "return_temperature": {
-        "name": "Flow return temperature"
+        "name": "Return temperature"
+      },
+      "return_temperature_boiler": {
+        "name": "Boiler return temperature"
       },
       "room_temperature": {
         "name": "Room temperature"
@@ -70,6 +135,11 @@
       "tank_temperature": {
         "name": "Tank temperature"
       }
+    }
+  },
+  "exceptions": {
+    "set_number_failed": {
+      "message": "Failed to send the value to the device."
     }
   },
   "services": {

@@ -1,7 +1,5 @@
 """Support for IPMA sensors."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import asdict, dataclass
@@ -114,7 +112,11 @@ class IPMASensor(SensorEntity, IPMADevice):
         """Initialize the IPMA Sensor."""
         IPMADevice.__init__(self, api, location)
         self.entity_description = description
-        self._attr_unique_id = f"{self._location.station_latitude}, {self._location.station_longitude}, {self.entity_description.key}"
+        self._attr_unique_id = (
+            f"{self._location.station_latitude},"
+            f" {self._location.station_longitude},"
+            f" {self.entity_description.key}"
+        )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:

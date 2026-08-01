@@ -2,11 +2,6 @@
 
 DOMAIN = "wolflink"
 
-COORDINATOR = "coordinator"
-PARAMETERS = "parameters"
-DEVICE_ID = "device_id"
-DEVICE_GATEWAY = "device_gateway"
-DEVICE_NAME = "device_name"
 MANUFACTURER = "WOLF GmbH"
 
 STATES = {
