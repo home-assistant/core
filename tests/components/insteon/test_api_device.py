@@ -123,14 +123,15 @@ async def test_get_ha_device_name(
     """Test getting the HA device name from an Insteon address."""
 
     _, devices, _, device_reg = await async_mock_setup(hass, hass_ws_client)
+    config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
 
     with patch.object(insteon.api.device, "devices", devices):
         # Test a real HA and Insteon device
-        name = await async_device_name(device_reg, "11.11.11")
+        name = await async_device_name(device_reg, "11.11.11", config_entry_id)
         assert name == "Device 11.11.11"
 
         # Test no HA or Insteon device
-        name = await async_device_name(device_reg, "BB.BB.BB")
+        name = await async_device_name(device_reg, "BB.BB.BB", config_entry_id)
         assert name == ""
 
 
