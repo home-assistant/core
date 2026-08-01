@@ -69,10 +69,11 @@ async def test_setup_raises_config_entry_not_ready(
     }
 
 
-@pytest.mark.usefixtures("mock_wiim_device", "mock_wiim_controller")
+@pytest.mark.usefixtures("mock_wiim_controller")
 async def test_setup_uses_route_to_device_for_event_callback(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_wiim_device: AsyncMock,
     mock_local_ip: AsyncMock,
 ) -> None:
     """Test the callback address is resolved from the route to the device."""
@@ -81,16 +82,26 @@ async def test_setup_uses_route_to_device_for_event_callback(
     mock_local_ip.assert_awaited_once_with(
         "http://192.168.1.100:49152/description.xml", hass.loop
     )
+    assert (
+        mock_wiim_device.create_mock.await_args.kwargs["local_host"] == "192.168.1.10"
+    )
 
 
-@pytest.mark.parametrize("local_ip", ["192.168.1.10", "2001:db8::5"])
+@pytest.mark.parametrize(
+    ("family", "local_ip"),
+    [
+        (AddressFamily.AF_INET, "192.168.1.10"),
+        (AddressFamily.AF_INET6, "2001:db8::5"),
+    ],
+)
 async def test_event_callback_host_preserves_address_family(
     hass: HomeAssistant,
     mock_local_ip: AsyncMock,
+    family: AddressFamily,
     local_ip: str,
 ) -> None:
     """Test the resolved address is used as-is for both IPv4 and IPv6."""
-    mock_local_ip.return_value = (AddressFamily.AF_INET, local_ip)
+    mock_local_ip.return_value = (family, local_ip)
 
     assert (
         await async_get_event_callback_host(
@@ -140,3 +151,4 @@ async def test_setup_retries_when_no_local_address(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert mock_config_entry.error_reason_translation_key == "callback_host_unavailable"
+    assert mock_config_entry.error_reason_translation_placeholders is None

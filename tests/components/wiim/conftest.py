@@ -61,6 +61,8 @@ def mock_wiim_device() -> Generator[AsyncMock]:
         autospec=True,
     ) as mock_create:
         mock = mock_create.return_value
+        # Expose the factory so tests can assert its call kwargs.
+        mock.create_mock = mock_create
         mock.udn = "uuid:test-udn-1234"
         mock.name = "Test WiiM Device"
         mock.model_name = "WiiM Pro"
