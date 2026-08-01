@@ -7,9 +7,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.google_health.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -140,3 +141,26 @@ async def test_sensor_unit_conversions(
         assert state is not None
         assert float(state.state) == expected_state
         assert state.attributes.get("unit_of_measurement") == expected_unit
+
+
+@pytest.mark.usefixtures("mock_google_health_client")
+async def test_device_sensor_via_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test a paired device is linked to the account device via via_device_id."""
+    with patch("homeassistant.components.google_health._PLATFORMS", [Platform.SENSOR]):
+        assert await integration_setup()
+
+    account_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, config_entry.entry_id), config_entry.entry_id
+    )
+    assert account_device is not None
+
+    paired_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "watch_123"), config_entry.entry_id
+    )
+    assert paired_device is not None
+    assert paired_device.via_device_id == account_device.id
