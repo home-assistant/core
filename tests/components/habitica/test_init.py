@@ -198,17 +198,22 @@ async def test_device_via_device_links(
     assert config_entry_with_subentry.state is ConfigEntryState.LOADED
 
     unique_id = config_entry_with_subentry.unique_id
+    entry_id = config_entry_with_subentry.entry_id
 
-    user_device = device_registry.async_get_device({(DOMAIN, unique_id)})
+    user_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, unique_id), entry_id
+    )
     assert user_device is not None
     assert user_device.via_device_id is None
 
-    party_device = device_registry.async_get_device(
-        {(DOMAIN, f"{unique_id}_{group_id}")}
+    party_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{unique_id}_{group_id}"), entry_id
     )
     assert party_device is not None
     assert party_device.via_device_id == user_device.id
 
-    member_device = device_registry.async_get_device({(DOMAIN, member_id)})
+    member_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, member_id), entry_id
+    )
     assert member_device is not None
     assert member_device.via_device_id == party_device.id
