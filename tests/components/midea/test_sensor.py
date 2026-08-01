@@ -7,6 +7,7 @@ from unittest.mock import patch
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.devices.c3 import DeviceAttributes as C3Attributes
+from midealocal.devices.e8 import DeviceAttributes as E8Attributes
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -60,6 +61,22 @@ from tests.common import MockConfigEntry, snapshot_platform
                 },
             ),
             id="c3",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.E8,
+                attributes={
+                    E8Attributes.status: 1,
+                    E8Attributes.time_remaining: 3600,
+                    E8Attributes.keep_warm_remaining: 1800,
+                    E8Attributes.working_time: 7200,
+                    E8Attributes.target_temperature: 22.0,
+                    E8Attributes.current_temperature: 21.0,
+                    E8Attributes.finished: False,
+                    E8Attributes.water_shortage: False,
+                },
+            ),
+            id="e8",
         ),
     ],
 )

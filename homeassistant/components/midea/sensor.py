@@ -746,6 +746,7 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        models=[DeviceType.E8],
     ),
     MideaSensorEntityDescription(
         key="bottom_temperature",
