@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-
+from homeassistant.util import dt as dt_util
 
 from .conftest import http_403_error, http_429_error, setup_integration
 from .const import (
@@ -60,9 +60,8 @@ async def test_wallbox_refresh_failed_error_auth(
     assert entry.state is ConfigEntryState.LOADED
 
     data = dict(entry.data)
-    data[CHARGER_JWT_TTL] = (
-        datetime.timestamp(datetime.now() - timedelta(hours=1)) * 1000  # pylint: disable=home-assistant-enforce-naive-now
-    )
+    # Reemplazamos datetime.now() por dt_util.utcnow() y quitamos el comentario de pylint
+    data[CHARGER_JWT_TTL] = (dt_util.utcnow() - timedelta(hours=1)).timestamp() * 1000
     hass.config_entries.async_update_entry(entry, data=data)
 
     with (
