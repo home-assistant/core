@@ -40,12 +40,16 @@ async def test_child_devices_via_device(
 ) -> None:
     """Test child devices link to the system device via via_device_id."""
 
-    await add_mock_config(hass)
+    entry = await add_mock_config(hass)
 
-    parent = device_registry.async_get_device(identifiers={(DOMAIN, "uniqueid")})
+    parent = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "uniqueid"), entry.entry_id
+    )
     assert parent is not None
 
-    child = device_registry.async_get_device(identifiers={(DOMAIN, child_identifier)})
+    child = device_registry.async_get_device_by_identifier(
+        (DOMAIN, child_identifier), entry.entry_id
+    )
     assert child is not None
     assert child.via_device_id == parent.id
 
