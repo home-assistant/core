@@ -93,6 +93,17 @@ class AdamAudioCoordinator(DataUpdateCoordinator[AdamAudioState]):
         if self.client.description:
             self.device_description = self.client.description
         if self.client.serial:
+            # If a serial was already stored for this entry, the live one
+            # must match it: a stale/reassigned IP can otherwise point at a
+            # different A-Series device, silently swapping the coordinator's
+            # identity (and exposed controls) for the wrong speaker.
+            if self.device_serial and self.client.serial != self.device_serial:
+                raise ConfigEntryNotReady(
+                    f"Device at {self.client.host}:{self.client.port} reports "
+                    f"serial '{self.client.serial}', but this entry is "
+                    f"configured for serial '{self.device_serial}'. The IP "
+                    "address may now belong to a different ADAM Audio speaker."
+                )
             self.device_serial = self.client.serial
 
         # First refresh also does a full state poll so entities have real
