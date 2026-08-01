@@ -247,7 +247,7 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
     offset = call.data.get(ATTR_OFFSET, DEFAULT_OFFSET)
     order_by = call.data.get(ATTR_ORDER_BY, DEFAULT_SORT_ORDER)
     username = call.data.get(ATTR_USERNAME)
-    if username:
+    if username is not None:
         await async_verify_mass_username_availability(mass=mass, username=username)
     base_params = {
         "favorite": call.data.get(ATTR_FAVORITE),
