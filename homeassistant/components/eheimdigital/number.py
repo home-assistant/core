@@ -215,6 +215,8 @@ async def async_setup_entry(
                     device_coordinator, description
                 )
                 for description in CLASSICVARIO_DESCRIPTIONS
+                if description.key
+                in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
             )
         if isinstance(device_coordinator.data, EheimDigitalFilter):
             entities.extend(

@@ -8,6 +8,7 @@ from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.filter import EheimDigitalFilter
 from eheimdigital.reeflex import EheimDigitalReeflexUV
+from eheimdigital.types import MsgTitle
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -78,8 +79,12 @@ async def async_setup_entry(
     ) -> None:
         """Set up the switch entities for one or multiple devices."""
         entities: list[SwitchEntity] = []
-        if isinstance(
-            device_coordinator.data, (EheimDigitalClassicVario, EheimDigitalFilter)
+        if (
+            isinstance(device_coordinator.data, EheimDigitalFilter)
+            and device_coordinator.msg_title == MsgTitle.FILTER_DATA
+        ) or (
+            isinstance(device_coordinator.data, EheimDigitalClassicVario)
+            and device_coordinator.msg_title == MsgTitle.CLASSIC_VARIO_DATA
         ):
             entities.append(EheimDigitalFilterSwitch(device_coordinator))
         if isinstance(device_coordinator.data, EheimDigitalReeflexUV):
