@@ -97,7 +97,23 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
 
         parent_entry, all_disabled = api_keys_entries[api_key]
 
-        hass.config_entries.async_add_subentry(parent_entry, subentry)
+        if (
+            existing_subentry := next(
+                (
+                    existing
+                    for existing in parent_entry.get_subentries_of_type(
+                        SUBENTRY_TYPE_LOCATION
+                    )
+                    if existing.unique_id == subentry.unique_id
+                ),
+                None,
+            )
+        ) is not None:
+            # An interrupted earlier run already persisted this subentry but
+            # not yet the removal of its source entry; finish that work.
+            subentry = existing_subentry
+        else:
+            hass.config_entries.async_add_subentry(parent_entry, subentry)
 
         devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
         device = devices[0] if devices else None

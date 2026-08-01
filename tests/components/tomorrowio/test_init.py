@@ -427,3 +427,44 @@ async def test_reconfigure_location_move_keeps_entity_ids(
     assert subentry.unique_id == (
         f"{WORK_LOCATION[CONF_LATITUDE]}_{WORK_LOCATION[CONF_LONGITUDE]}"
     )
+
+
+async def test_migration_resumes_after_subentry_persisted(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test resuming when a subentry persisted but its v1 entry remains.
+
+    Interruption between async_add_subentry and the removal of the source
+    entry must not abort with already_configured on the next start; the
+    persisted subentry is reused and the leftover entry's entities move
+    onto it.
+    """
+    work_subentry_id = "workworkworkworkworkworkwo"
+    migrated = make_v2_config_entry(
+        subentries_data=[
+            make_location_subentry_data(),
+            make_location_subentry_data(
+                location=WORK_LOCATION, name="Work", subentry_id=work_subentry_id
+            ),
+        ]
+    )
+    migrated.add_to_hass(hass)
+    leftover = make_v1_config_entry(API_KEY, WORK_LOCATION, "Work", 5)
+    leftover.add_to_hass(hass)
+    orphan = entity_registry.async_get_or_create(
+        WEATHER_DOMAIN,
+        DOMAIN,
+        f"{API_KEY}_{WORK_LOCATION[CONF_LATITUDE]}_{WORK_LOCATION[CONF_LONGITUDE]}_daily",
+        config_entry=leftover,
+    )
+
+    await hass.config_entries.async_setup(migrated.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_get_entry(leftover.entry_id) is None
+    assert migrated.state is ConfigEntryState.LOADED
+    assert len(migrated.get_subentries_of_type(SUBENTRY_TYPE_LOCATION)) == 2
+    moved = entity_registry.async_get(orphan.entity_id)
+    assert moved is not None
+    assert moved.config_entry_id == migrated.entry_id
+    assert moved.config_subentry_id == work_subentry_id
