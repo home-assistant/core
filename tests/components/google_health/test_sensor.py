@@ -4,12 +4,14 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from google_health_api.const import HealthApiScope
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.google_health.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -140,3 +142,36 @@ async def test_sensor_unit_conversions(
         assert state is not None
         assert float(state.state) == expected_state
         assert state.attributes.get("unit_of_measurement") == expected_unit
+
+
+@pytest.mark.parametrize(
+    "scopes",
+    [[HealthApiScope.PROFILE_READ, HealthApiScope.SETTINGS_READ]],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_google_health_client")
+async def test_device_sensor_via_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test a paired device is linked to the account device via via_device_id.
+
+    Only the profile and settings scopes are granted so the account device
+    can only come from the up-front registration, not from account-level
+    sensors that scopes outside of this test would also create.
+    """
+    with patch("homeassistant.components.google_health._PLATFORMS", [Platform.SENSOR]):
+        assert await integration_setup()
+
+    account_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, config_entry.entry_id), config_entry.entry_id
+    )
+    assert account_device is not None
+
+    paired_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "watch_123"), config_entry.entry_id
+    )
+    assert paired_device is not None
+    assert paired_device.via_device_id == account_device.id
