@@ -1,5 +1,7 @@
 """Tests for the Quantum Gateway device tracker."""
 
+from unittest.mock import MagicMock
+
 import pytest
 from requests import RequestException
 
@@ -16,11 +18,13 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_CONFIG, MOCK_DEVICE_DATA
 
+from tests.common import MockConfigEntry
+
 
 async def test_device_tracker_entities_created(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_scanner,
+    mock_config_entry: MockConfigEntry,
+    mock_scanner: MagicMock,
     entity_registry: EntityRegistry,
 ) -> None:
     """Test that device tracker entities are created from coordinator data."""
@@ -48,7 +52,7 @@ async def test_device_tracker_entities_created(
 
 async def test_setup_scanner_legacy_platform_imports_config_entry(
     hass: HomeAssistant,
-    mock_scanner,
+    mock_scanner: MagicMock,
 ) -> None:
     """Test legacy device tracker setup triggers config flow import."""
     assert await async_setup_component(
@@ -82,7 +86,7 @@ async def test_setup_scanner_legacy_platform_imports_config_entry(
 async def test_setup_scanner_legacy_platform_creates_issue(
     hass: HomeAssistant,
     issue_registry: IssueRegistry,
-    mock_scanner,
+    mock_scanner: MagicMock,
     side_effect: RequestException | None,
     success_init: bool,
     issue_id: str,
