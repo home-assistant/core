@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from datetime import timedelta
 import logging
+import time
 from typing import override
 
 from fyta_cli.fyta_connector import FytaConnector
@@ -20,7 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
 from .const import CONF_EXPIRATION, DOMAIN
 
@@ -57,7 +57,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
 
         if (
             self.fyta.expiration is None
-            or self.fyta.expiration.timestamp() < dt_util.now().timestamp()
+            or self.fyta.expiration.timestamp() < time.time()
         ):
             await self.renew_authentication()
 
