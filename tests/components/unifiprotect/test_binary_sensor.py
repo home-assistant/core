@@ -13,6 +13,7 @@ from uiprotect.data import (
     Light,
     ModelType,
     MountType,
+    Permission,
     Sensor,
     SmartDetectAudioType,
 )
@@ -616,6 +617,35 @@ async def test_binary_sensor_sense_no_capability_map_creates_all(
             hass, Platform.BINARY_SENSOR, sensor_all, description
         )
         assert entity_registry.async_get(entity_id) is not None
+
+
+async def test_binary_sensor_sense_setting_mirrors_gone(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """The read-only setting mirrors are gone, including for a read-only user.
+
+    Their switches write through the public API, which the local write permission
+    does not gate, so the switch serves this user now.
+    """
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "sensor:read:*"})
+    ]
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    assert {d.key for d in SENSE_SENSORS}.isdisjoint(
+        {"motion_enabled", "temperature", "humidity", "light", "alarm"}
+    )
+    for key in ("motion_enabled", "temperature", "humidity", "light", "alarm"):
+        assert (
+            entity_registry.async_get_entity_id(
+                Platform.BINARY_SENSOR, DOMAIN, f"{sensor_all.mac}_{key}"
+            )
+            is None
+        ), key
 
 
 async def test_binary_sensor_sense_tampering_public_value(

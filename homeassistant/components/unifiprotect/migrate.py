@@ -125,6 +125,10 @@ async def async_migrate_data(
     async_remove_package_binary_sensor(hass, entry)
     _LOGGER.debug("Completed Migrate: async_remove_package_binary_sensor")
 
+    _LOGGER.debug("Start Migrate: async_remove_sense_setting_mirrors")
+    async_remove_sense_setting_mirrors(hass, entry, bootstrap)
+    _LOGGER.debug("Completed Migrate: async_remove_sense_setting_mirrors")
+
 
 # Device type (``ProtectAdoptableDeviceModel.type``) reported by AI Ports. Matched
 # in the registry so cleanup does not depend on the bundled library still exposing
@@ -252,6 +256,48 @@ def async_remove_package_binary_sensor(
             entity,
             f"package_binary_sensor_removed_{entity.unique_id}",
             "package_binary_sensor_removed",
+        )
+        registry.async_remove(entity.entity_id)
+
+
+# Sense settings whose read-only mirror was dropped, by the platform the mirror
+# lived on. Camera and light entities reuse these keys, so the match is scoped to
+# the sensor MACs.
+_REMOVED_SENSE_SETTING_KEYS: dict[str, frozenset[str]] = {
+    Platform.BINARY_SENSOR: frozenset(
+        {"motion_enabled", "temperature", "humidity", "light", "alarm"}
+    ),
+    Platform.SENSOR: frozenset({"sensitivity"}),
+}
+
+
+@callback
+def async_remove_sense_setting_mirrors(
+    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+) -> None:
+    """Remove the read-only mirrors of the sense setting controls.
+
+    Those controls write through the public API, which the local user's write
+    permission does not gate, so the switch or number is now available to every
+    user and the ``PermRequired.NO_WRITE`` mirror has no audience left.
+
+    Added in 2026.8.0
+    """
+    if not (macs := {sensor.mac for sensor in bootstrap.sensors.values()}):
+        return
+    registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        keys = _REMOVED_SENSE_SETTING_KEYS.get(entity.domain)
+        if keys is None:
+            continue
+        mac, _, key = entity.unique_id.partition("_")
+        if mac not in macs or key not in keys:
+            continue
+        _async_repair_if_used(
+            hass,
+            entity,
+            f"sense_setting_mirror_removed_{entity.unique_id}",
+            "sense_setting_mirror_removed",
         )
         registry.async_remove(entity.entity_id)
 

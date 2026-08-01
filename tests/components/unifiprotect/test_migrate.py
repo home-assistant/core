@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from uiprotect.data import Camera
+from uiprotect.data import Camera, Sensor
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
@@ -403,6 +403,108 @@ async def test_migrate_package_binary_sensor_removed(
         )
         is None
     )
+
+
+async def test_migrate_sense_setting_mirrors_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """The unused setting mirrors are removed silently."""
+    stale = {
+        (platform, key): entity_registry.async_get_or_create(
+            platform,
+            DOMAIN,
+            f"{sensor_all.mac}_{key}",
+            config_entry=ufp.entry,
+        )
+        for platform, key in (
+            (Platform.BINARY_SENSOR, "motion_enabled"),
+            (Platform.BINARY_SENSOR, "temperature"),
+            (Platform.BINARY_SENSOR, "humidity"),
+            (Platform.BINARY_SENSOR, "light"),
+            (Platform.BINARY_SENSOR, "alarm"),
+            (Platform.SENSOR, "sensitivity"),
+        )
+    }
+
+    await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
+
+    for (platform, key), entity in stale.items():
+        assert entity_registry.async_get(entity.entity_id) is None, f"{platform}.{key}"
+        assert (
+            issue_registry.async_get_issue(
+                DOMAIN, f"sense_setting_mirror_removed_{sensor_all.mac}_{key}"
+            )
+            is None
+        )
+
+
+async def test_migrate_sense_setting_mirror_in_use(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """Removing a used setting mirror raises an actionable repair."""
+    mirror = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{sensor_all.mac}_alarm",
+        config_entry=ufp.entry,
+    )
+    await _load_automation(hass, mirror.entity_id)
+
+    await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
+
+    assert entity_registry.async_get(mirror.entity_id) is None
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"sense_setting_mirror_removed_{sensor_all.mac}_alarm"
+    )
+    assert issue is not None
+    assert issue.translation_placeholders["entity_id"] == mirror.entity_id
+
+
+async def test_migrate_sense_setting_keys_scoped_to_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    sensor_all: Sensor,
+) -> None:
+    """The removed keys are shared with camera and light, so other devices survive.
+
+    ``motion_enabled`` and ``sensitivity`` also exist on cameras and lights, so a
+    sensor has to be present for the migration to run at all and the other
+    devices' entities still have to survive it.
+    """
+    camera_entities = [
+        entity_registry.async_get_or_create(
+            platform,
+            DOMAIN,
+            f"{doorbell.mac}_{key}",
+            config_entry=ufp.entry,
+        )
+        for platform, key in (
+            (Platform.BINARY_SENSOR, "motion_enabled"),
+            (Platform.SENSOR, "sensitivity"),
+        )
+    ]
+    sensor_entity = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{sensor_all.mac}_motion_enabled",
+        config_entry=ufp.entry,
+    )
+
+    await init_entry(hass, ufp, [doorbell, sensor_all], regenerate_ids=False)
+
+    assert entity_registry.async_get(sensor_entity.entity_id) is None
+    for entity in camera_entities:
+        assert entity_registry.async_get(entity.entity_id) is not None
 
 
 async def test_migrate_package_binary_sensor_removed_in_use(

@@ -499,42 +499,6 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         ufp_value="led_settings.is_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
-    ProtectBinaryEntityDescription(
-        key="motion_enabled",
-        translation_key="motion_detection_enabled",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="motion_settings.is_enabled",
-        ufp_capability=SensorFeatureCapability.MOTION,
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectBinaryEntityDescription(
-        key="temperature",
-        translation_key="temperature_sensor_enabled",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="temperature_settings.is_enabled",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectBinaryEntityDescription(
-        key="humidity",
-        translation_key="humidity_sensor_enabled",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="humidity_settings.is_enabled",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectBinaryEntityDescription(
-        key="light",
-        translation_key="light_sensor_enabled",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="light_settings.is_enabled",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectBinaryEntityDescription(
-        key="alarm",
-        translation_key="alarm_sound_detection",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="alarm_settings.is_enabled",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
 )
 
 # Doorbell ring is momentary (no sustained public state), so it stays on the

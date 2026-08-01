@@ -203,7 +203,6 @@ SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_public_value="motion_settings.sensitivity",
         ufp_set_method="set_motion_sensitivity_public",
         ufp_capability=SensorFeatureCapability.MOTION,
-        ufp_perm=PermRequired.WRITE,
     ),
 )
 
