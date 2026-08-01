@@ -491,11 +491,17 @@ async def test_dry_contact_relay_via_device(
     """Test the via_device chain relay -> Enpower -> Envoy is set up correctly."""
     await setup_integration(hass, config_entry)
 
-    envoy_device = device_registry.async_get_device(identifiers={(DOMAIN, "1234")})
+    envoy_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234"), config_entry.entry_id
+    )
     assert envoy_device is not None
-    enpower_device = device_registry.async_get_device(identifiers={(DOMAIN, "654321")})
+    enpower_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "654321"), config_entry.entry_id
+    )
     assert enpower_device is not None
-    relay_device = device_registry.async_get_device(identifiers={(DOMAIN, "NC1")})
+    relay_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "NC1"), config_entry.entry_id
+    )
     assert relay_device is not None
 
     assert enpower_device.via_device_id == envoy_device.id
