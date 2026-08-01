@@ -257,7 +257,7 @@ async def test_unsorted_feed_updates(
 
         assert len(events) == 3
 
-        # Change time and fetch one more onordered entry
+        # Change time and fetch one more unordered entry
         future = dt_util.utcnow() + timedelta(hours=1, seconds=1)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done(wait_background_tasks=True)
