@@ -1,6 +1,7 @@
 """Config flow for LastFm."""
 
 import asyncio
+from collections.abc import Mapping
 from functools import partial
 import logging
 from typing import Any, override
@@ -9,6 +10,7 @@ from pylast import LastFMNetwork, PyLastError, SessionKeyGenerator, User, WSErro
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -189,6 +191,24 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             self._session_key_error = True
         return None
 
+    async def _async_start_web_auth(self) -> str | None:
+        """Start Last.fm web authentication and return an error key on failure."""
+        try:
+            (
+                self._session_key_generator,
+                self._auth_url,
+            ) = await self.hass.async_add_executor_job(
+                get_web_auth_url,
+                self.data[CONF_API_KEY],
+                self.data[CONF_API_SECRET],
+            )
+        except WSError:
+            return "invalid_auth"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return "unknown"
+        return None
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -209,22 +229,9 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             if not errors:
                 if CONF_API_SECRET in self.data:
-                    try:
-                        (
-                            self._session_key_generator,
-                            self._auth_url,
-                        ) = await self.hass.async_add_executor_job(
-                            get_web_auth_url,
-                            self.data[CONF_API_KEY],
-                            self.data[CONF_API_SECRET],
-                        )
-                    except WSError:
-                        errors["base"] = "invalid_auth"
-                    except Exception:
-                        _LOGGER.exception("Unexpected exception")
-                        errors["base"] = "unknown"
-                    else:
+                    if (error := await self._async_start_web_auth()) is None:
                         return await self.async_step_auth_url()
+                    errors["base"] = error
                 else:
                     return await self.async_step_friends()
         return self.async_show_form(
@@ -233,6 +240,20 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=PLACEHOLDERS,
             data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Start reauthentication for an invalid Last.fm session."""
+        options = self._get_reauth_entry().options
+        self.data = {
+            CONF_API_KEY: options[CONF_API_KEY],
+            CONF_API_SECRET: options[CONF_API_SECRET],
+            CONF_MAIN_USER: options[CONF_MAIN_USER],
+        }
+        if await self._async_start_web_auth() is not None:
+            return self.async_abort(reason="auth_failed")
+        return await self.async_step_auth_url()
 
     async def async_step_auth_url(
         self, user_input: dict[str, Any] | None = None
@@ -262,8 +283,25 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             if self._polling_task:
                 self._polling_task.cancel()
                 self._polling_task = None
-            return self.async_external_step_done(next_step_id="friends")
+            return self.async_external_step_done(
+                next_step_id=(
+                    "finish_reauth" if self.source == SOURCE_REAUTH else "friends"
+                )
+            )
         return self.async_external_step(step_id="auth_url", url=self._auth_url)
+
+    async def async_step_finish_reauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Save the replacement Last.fm session key."""
+        reauth_entry = self._get_reauth_entry()
+        return self.async_update_reload_and_abort(
+            reauth_entry,
+            options={
+                **reauth_entry.options,
+                CONF_SESSION_KEY: self.data[CONF_SESSION_KEY],
+            },
+        )
 
     async def async_step_auth_failed(
         self, user_input: dict[str, Any] | None = None

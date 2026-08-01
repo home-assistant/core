@@ -20,6 +20,7 @@ MAX_POLLING_ATTEMPTS = 60
 
 # Last.fm API error returned when a user hides their recent listening information
 ERROR_CODE_LOGIN_REQUIRED = "17"
+ERROR_CODE_INVALID_SESSION_KEY = "9"
 ERROR_CODE_TOKEN_UNAUTHORIZED = "14"
 
 ATTR_LAST_PLAYED = "last_played"

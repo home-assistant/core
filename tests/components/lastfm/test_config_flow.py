@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components.lastfm.const import (
     CONF_API_SECRET,
     CONF_MAIN_USER,
+    CONF_SESSION_KEY,
     CONF_USERS,
     DEFAULT_NAME,
     DOMAIN,
@@ -28,6 +29,7 @@ from . import (
     CONF_FRIENDS_DATA,
     CONF_USER_DATA,
     CONF_USER_DATA_WITH_SECRET,
+    NEW_SESSION_KEY,
     SESSION_KEY,
     USERNAME_1,
     USERNAME_2,
@@ -206,6 +208,107 @@ async def test_flow_session_key_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "auth_failed"
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    authenticated_config_entry: MockConfigEntry,
+) -> None:
+    """Test replacing an invalid Last.fm session key."""
+    authenticated_config_entry.add_to_hass(hass)
+    with (
+        patch(
+            SESSION_KEY_GENERATOR_PATH,
+            return_value=MockSessionKeyGenerator(session_key=NEW_SESSION_KEY),
+        ),
+        patch(POLLING_INTERVAL_PATH, 60),
+        patch_setup_entry(),
+    ):
+        result = await authenticated_config_entry.start_reauth_flow(hass)
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+        assert result["step_id"] == "auth_url"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert authenticated_config_entry.options == {
+        **CONF_DATA_WITH_SESSION_KEY,
+        CONF_SESSION_KEY: NEW_SESSION_KEY,
+    }
+
+
+async def test_reauth_flow_wrong_account(
+    hass: HomeAssistant,
+    authenticated_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication rejects a different Last.fm account."""
+    authenticated_config_entry.add_to_hass(hass)
+    with (
+        patch(
+            SESSION_KEY_GENERATOR_PATH,
+            return_value=MockSessionKeyGenerator(session_username=USERNAME_2),
+        ),
+        patch(POLLING_INTERVAL_PATH, 60),
+    ):
+        result = await authenticated_config_entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+    assert authenticated_config_entry.options == CONF_DATA_WITH_SESSION_KEY
+
+
+async def test_reauth_flow_session_key_error(
+    hass: HomeAssistant,
+    authenticated_config_entry: MockConfigEntry,
+) -> None:
+    """Test a terminal session exchange error aborts reauthentication."""
+    authenticated_config_entry.add_to_hass(hass)
+    with (
+        patch(
+            SESSION_KEY_GENERATOR_PATH,
+            return_value=MockSessionKeyGenerator(
+                session_key_error=WSError("network", "15", "Token expired")
+            ),
+        ),
+        patch(POLLING_INTERVAL_PATH, 60),
+    ):
+        result = await authenticated_config_entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "auth_failed"
+    assert authenticated_config_entry.options == CONF_DATA_WITH_SESSION_KEY
+
+
+async def test_reauth_flow_start_error(
+    hass: HomeAssistant,
+    authenticated_config_entry: MockConfigEntry,
+) -> None:
+    """Test failing to start web authentication aborts reauthentication."""
+    authenticated_config_entry.add_to_hass(hass)
+    with patch(
+        SESSION_KEY_GENERATOR_PATH,
+        return_value=MockSessionKeyGenerator(
+            web_auth_url_error=WSError("network", "10", "Invalid API key")
+        ),
+    ):
+        result = await authenticated_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "auth_failed"
+    assert authenticated_config_entry.options == CONF_DATA_WITH_SESSION_KEY
 
 
 async def test_flow_abort_cancels_session_key_polling(

@@ -17,6 +17,7 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 API_KEY = "asdasdasdasdasd"
 API_SECRET = "testapisecret"
 SESSION_KEY = "testsessionkey"
+NEW_SESSION_KEY = "newtestsessionkey"
 AUTH_TOKEN = "testauthtoken"
 AUTH_URL = f"https://www.last.fm/api/auth/?api_key={API_KEY}&token={AUTH_TOKEN}"
 USERNAME_1 = "testaccount1"
@@ -133,11 +134,13 @@ class MockSessionKeyGenerator:
         self,
         web_auth_url_error: Exception | None = None,
         session_key_error: Exception | None = None,
+        session_key: str = SESSION_KEY,
         session_username: str = USERNAME_1,
     ) -> None:
         """Initialize the mock."""
         self.web_auth_url_error = web_auth_url_error
         self.session_key_error = session_key_error
+        self.session_key = session_key
         self.session_username = session_username
 
     def get_web_auth_url(self) -> str:
@@ -152,7 +155,7 @@ class MockSessionKeyGenerator:
         """Get mock session key and username."""
         if self.session_key_error:
             raise self.session_key_error
-        return SESSION_KEY, self.session_username
+        return self.session_key, self.session_username
 
     def get_web_auth_session_key(self, url: str, token: str = "") -> str:
         """Get mock session key."""

@@ -9,6 +9,7 @@ from pylast import LastFMNetwork, PyLastError, Track, WSError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -16,6 +17,7 @@ from .const import (
     CONF_SESSION_KEY,
     CONF_USERS,
     DOMAIN,
+    ERROR_CODE_INVALID_SESSION_KEY,
     ERROR_CODE_LOGIN_REQUIRED,
     LOGGER,
 )
@@ -80,6 +82,16 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
         )
         self._warned_hidden_users: set[str] = set()
 
+    def _raise_if_auth_failed(self, error: PyLastError) -> None:
+        """Raise when Last.fm rejects the stored session key."""
+        ws_error = get_lastfm_error(error)
+        if (
+            self.config_entry.options.get(CONF_SESSION_KEY)
+            and ws_error is not None
+            and ws_error.status == ERROR_CODE_INVALID_SESSION_KEY
+        ):
+            raise ConfigEntryAuthFailed from error
+
     @override
     async def _async_update_data(self) -> dict[str, LastFMUserData]:
         res = {}
@@ -98,6 +110,7 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             image = user.get_image()
             top_tracks = user.get_top_tracks(limit=1)
         except PyLastError as exc:
+            self._raise_if_auth_failed(exc)
             if self.last_update_success:
                 LOGGER.error(
                     "LastFM update for %s failed: %s",
@@ -111,6 +124,7 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             now_playing = format_track(user.get_now_playing())
             last_tracks = user.get_recent_tracks(limit=1)
         except PyLastError as exc:
+            self._raise_if_auth_failed(exc)
             error = get_lastfm_error(exc)
             if error is None or error.status != ERROR_CODE_LOGIN_REQUIRED:
                 if self.last_update_success:
