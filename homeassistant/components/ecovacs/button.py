@@ -115,7 +115,7 @@ class EcovacsButtonEntity(
 ):
     """Ecovacs button entity."""
 
-    entity_description: EcovacsLifespanButtonEntityDescription
+    entity_description: EcovacsButtonEntityDescription
 
     @override
     async def async_press(self) -> None:
