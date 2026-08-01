@@ -10,7 +10,6 @@ from homeassistant.components.wiim.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -27,15 +26,6 @@ DISCOVERY_INFO = ZeroconfServiceInfo(
     properties={"uuid": "uuid:test-udn-1234"},
     type="_linkplay._tcp.local.",
 )
-
-
-@pytest.fixture(autouse=True)
-async def setup_internal_url(hass: HomeAssistant) -> None:
-    """Make sure internal url configured."""
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://192.168.1.10:8123"},
-    )
 
 
 @pytest.mark.usefixtures("mock_probe_player")
