@@ -214,10 +214,12 @@ async def test_ev_charging_disabled_by_default(
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
+@pytest.mark.parametrize("key", ["health_istrouble", "DOOR_FRONT_LEFT_POSITION"])
 async def test_entities_unavailable_when_vehicle_data_fetch_fails(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     subaru_config_entry: MockConfigEntry,
+    key: str,
 ) -> None:
     """Setup survives a vehicle whose data fetch fails; its entities go unavailable.
 
@@ -229,7 +231,7 @@ async def test_entities_unavailable_when_vehicle_data_fetch_fails(
     assert subaru_config_entry.state is ConfigEntryState.LOADED
 
     entity_id = entity_registry.async_get_entity_id(
-        BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_2_EV, "health_istrouble")
+        BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_2_EV, key)
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)

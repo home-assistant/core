@@ -265,12 +265,13 @@ async def async_setup_entry(
         vehicle_data = (coordinator.data or {}).get(info[VEHICLE_VIN]) or {}
         vehicle_status = vehicle_data.get(VEHICLE_STATUS) or {}
 
-        # Windows/locks are omitted from vehicle_status when unsupported
-        # (doors always report); only add descriptions with real data.
+        # Doors always report, even on a failed/empty fetch; windows/locks
+        # are omitted from vehicle_status when unsupported, so gate those.
         descriptions: list[SubaruBinarySensorEntityDescription] = [
             description
             for description in BINARY_SENSORS
-            if description.key in vehicle_status
+            if description.key in DOOR_POSITION_KEYS
+            or description.key in vehicle_status
         ]
         descriptions.append(OVERALL_HEALTH_BINARY_SENSOR)
         if info[VEHICLE_HAS_EV]:
