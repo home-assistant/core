@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, override
 
 from eheimdigital.classic_vario import EheimDigitalClassicVario
@@ -18,7 +19,7 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfFrequency, Uni
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
+from .coordinator import EheimDigitalConfigEntry, EheimDigitalDeviceUpdateCoordinator
 from .entity import EheimDigitalEntity
 
 # Coordinator is used to centralize the data updates
@@ -31,7 +32,7 @@ class EheimDigitalSensorDescription[_DeviceT: EheimDigitalDevice](
 ):
     """Class describing EHEIM Digital sensor entities."""
 
-    value_fn: Callable[[_DeviceT], float | str | None]
+    value_fn: Callable[[_DeviceT], float | str | datetime | None]
 
 
 FILTER_DESCRIPTIONS: tuple[EheimDigitalSensorDescription[EheimDigitalFilter], ...] = (
@@ -93,30 +94,30 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
-        device_address: dict[str, EheimDigitalDevice],
+        device_coordinator: EheimDigitalDeviceUpdateCoordinator[Any],
     ) -> None:
         """Set up the light entities for one or multiple devices."""
         entities: list[EheimDigitalSensor[Any]] = []
-        for device in device_address.values():
-            if isinstance(device, EheimDigitalFilter):
-                entities += [
-                    EheimDigitalSensor[EheimDigitalFilter](
-                        coordinator, device, description
-                    )
-                    for description in FILTER_DESCRIPTIONS
-                ]
-            if isinstance(device, EheimDigitalClassicVario):
-                entities += [
-                    EheimDigitalSensor[EheimDigitalClassicVario](
-                        coordinator, device, description
-                    )
-                    for description in CLASSICVARIO_DESCRIPTIONS
-                ]
+        if isinstance(device_coordinator.data, EheimDigitalFilter):
+            entities += [
+                EheimDigitalSensor[EheimDigitalFilter](device_coordinator, description)
+                for description in FILTER_DESCRIPTIONS
+                if description.key
+                in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
+            ]
+        if isinstance(device_coordinator.data, EheimDigitalClassicVario):
+            entities += [
+                EheimDigitalSensor[EheimDigitalClassicVario](
+                    device_coordinator, description
+                )
+                for description in CLASSICVARIO_DESCRIPTIONS
+                if description.key
+                in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
+            ]
 
         async_add_entities(entities)
 
     coordinator.add_platform_callback(async_setup_device_entities)
-    async_setup_device_entities(coordinator.hub.devices)
 
 
 class EheimDigitalSensor[_DeviceT: EheimDigitalDevice](
@@ -128,12 +129,11 @@ class EheimDigitalSensor[_DeviceT: EheimDigitalDevice](
 
     def __init__(
         self,
-        coordinator: EheimDigitalUpdateCoordinator,
-        device: _DeviceT,
+        coordinator: EheimDigitalDeviceUpdateCoordinator[_DeviceT],
         description: EheimDigitalSensorDescription[_DeviceT],
     ) -> None:
         """Initialize an EHEIM Digital number entity."""
-        super().__init__(coordinator, device)
+        super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{self._device_address}_{description.key}"
 

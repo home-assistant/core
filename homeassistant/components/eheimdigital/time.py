@@ -16,7 +16,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
+from .coordinator import EheimDigitalConfigEntry, EheimDigitalDeviceUpdateCoordinator
 from .entity import EheimDigitalEntity, exception_handler
 
 PARALLEL_UPDATES = 0
@@ -103,44 +103,44 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
-        device_address: dict[str, EheimDigitalDevice],
+        device_coordinator: EheimDigitalDeviceUpdateCoordinator[Any],
     ) -> None:
         """Set up the time entities for one or multiple devices."""
         entities: list[EheimDigitalTime[Any]] = []
-        for device in device_address.values():
-            if isinstance(device, EheimDigitalFilter):
-                entities.extend(
-                    EheimDigitalTime[EheimDigitalFilter](
-                        coordinator, device, description
-                    )
-                    for description in FILTER_DESCRIPTIONS
+        if isinstance(device_coordinator.data, EheimDigitalFilter):
+            entities.extend(
+                EheimDigitalTime[EheimDigitalFilter](device_coordinator, description)
+                for description in FILTER_DESCRIPTIONS
+                if description.key
+                in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
+            )
+        if isinstance(device_coordinator.data, EheimDigitalClassicVario):
+            entities.extend(
+                EheimDigitalTime[EheimDigitalClassicVario](
+                    device_coordinator, description
                 )
-            if isinstance(device, EheimDigitalClassicVario):
-                entities.extend(
-                    EheimDigitalTime[EheimDigitalClassicVario](
-                        coordinator, device, description
-                    )
-                    for description in CLASSICVARIO_DESCRIPTIONS
-                )
-            if isinstance(device, EheimDigitalHeater):
-                entities.extend(
-                    EheimDigitalTime[EheimDigitalHeater](
-                        coordinator, device, description
-                    )
-                    for description in HEATER_DESCRIPTIONS
-                )
-            if isinstance(device, EheimDigitalReeflexUV):
-                entities.extend(
-                    EheimDigitalTime[EheimDigitalReeflexUV](
-                        coordinator, device, description
-                    )
-                    for description in REEFLEX_DESCRIPTIONS
-                )
+                for description in CLASSICVARIO_DESCRIPTIONS
+                if description.key
+                in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
+            )
+        if isinstance(device_coordinator.data, EheimDigitalHeater):
+            entities.extend(
+                EheimDigitalTime[EheimDigitalHeater](device_coordinator, description)
+                for description in HEATER_DESCRIPTIONS
+                if description.key
+                in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
+            )
+        if isinstance(device_coordinator.data, EheimDigitalReeflexUV):
+            entities.extend(
+                EheimDigitalTime[EheimDigitalReeflexUV](device_coordinator, description)
+                for description in REEFLEX_DESCRIPTIONS
+                if description.key
+                in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
+            )
 
         async_add_entities(entities)
 
     coordinator.add_platform_callback(async_setup_device_entities)
-    async_setup_device_entities(coordinator.hub.devices)
 
 
 @final
@@ -153,14 +153,13 @@ class EheimDigitalTime[_DeviceT: EheimDigitalDevice](
 
     def __init__(
         self,
-        coordinator: EheimDigitalUpdateCoordinator,
-        device: _DeviceT,
+        coordinator: EheimDigitalDeviceUpdateCoordinator[_DeviceT],
         description: EheimDigitalTimeDescription[_DeviceT],
     ) -> None:
         """Initialize an EHEIM Digital time entity."""
-        super().__init__(coordinator, device)
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{device.mac_address}_{description.key}"
+        self._attr_unique_id = f"{self._device_address}_{description.key}"
 
     @override
     @exception_handler

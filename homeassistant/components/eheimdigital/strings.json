@@ -94,7 +94,7 @@
         "name": "Night temperature offset"
       },
       "pause_time": { "name": "Pause duration" },
-      "system_led": {
+      "sys_led": {
         "name": "System LED brightness"
       },
       "temperature_offset": {
@@ -102,7 +102,7 @@
       }
     },
     "select": {
-      "const_flow_speed": {
+      "const_flow": {
         "name": "Constant flow speed"
       },
       "day_speed": {

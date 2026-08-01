@@ -27,7 +27,7 @@
       "night_temperature_offset": {
         "default": "mdi:thermometer"
       },
-      "system_led": {
+      "sys_led": {
         "default": "mdi:led-on",
         "state": {
           "0": "mdi:led-off"

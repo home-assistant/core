@@ -46,7 +46,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '08:00:00+01:00',
   })
 # ---
 # name: test_setup[time.mock_aquarium_mock_classicvario_night_start_time-entry]
@@ -96,7 +96,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '20:00:00+01:00',
   })
 # ---
 # name: test_setup[time.mock_aquarium_mock_filter_day_start_time-entry]
@@ -146,7 +146,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '07:00:00+01:00',
   })
 # ---
 # name: test_setup[time.mock_aquarium_mock_filter_night_start_time-entry]
@@ -196,7 +196,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '19:00:00+01:00',
   })
 # ---
 # name: test_setup[time.mock_aquarium_mock_heater_day_start_time-entry]
@@ -246,7 +246,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '08:00:00+01:00',
   })
 # ---
 # name: test_setup[time.mock_aquarium_mock_heater_night_start_time-entry]
@@ -296,7 +296,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '20:00:00+01:00',
   })
 # ---
 # name: test_setup[time.mock_aquarium_mock_reeflex_start_time-entry]
@@ -346,6 +346,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '06:30:00+01:00',
   })
 # ---

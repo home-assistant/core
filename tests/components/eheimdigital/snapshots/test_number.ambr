@@ -36,8 +36,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'system_led',
-    'unique_id': '00:00:00:00:00:01_system_led',
+    'translation_key': 'sys_led',
+    'unique_id': '00:00:00:00:00:01_sys_led',
     'unit_of_measurement': '%',
   })
 # ---
@@ -56,7 +56,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '20',
   })
 # ---
 # name: test_setup[number.mock_aquarium_mock_classicvario_day_speed-entry]
@@ -116,7 +116,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '80',
   })
 # ---
 # name: test_setup[number.mock_aquarium_mock_classicvario_manual_speed-entry]
@@ -176,7 +176,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '75',
   })
 # ---
 # name: test_setup[number.mock_aquarium_mock_classicvario_night_speed-entry]
@@ -236,7 +236,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '20',
   })
 # ---
 # name: test_setup[number.mock_aquarium_mock_classicvario_system_led_brightness-entry]
@@ -276,8 +276,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'system_led',
-    'unique_id': '00:00:00:00:00:03_system_led',
+    'translation_key': 'sys_led',
+    'unique_id': '00:00:00:00:00:03_sys_led',
     'unit_of_measurement': '%',
   })
 # ---
@@ -296,7 +296,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '100',
   })
 # ---
 # name: test_setup[number.mock_aquarium_mock_filter_high_pulse_duration-entry]
@@ -357,7 +357,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '10',
   })
 # ---
 # name: test_setup[number.mock_aquarium_mock_filter_low_pulse_duration-entry]
@@ -418,7 +418,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '10',
   })
 # ---
 # name: test_setup[number.mock_aquarium_mock_filter_system_led_brightness-entry]
@@ -458,8 +458,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'system_led',
-    'unique_id': '00:00:00:00:00:04_system_led',
+    'translation_key': 'sys_led',
+    'unique_id': '00:00:00:00:00:04_sys_led',
     'unit_of_measurement': '%',
   })
 # ---
@@ -478,7 +478,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '45',
   })
 # ---
 # name: test_setup[number.mock_aquarium_mock_heater_night_temperature_offset-entry]
@@ -532,13 +532,14 @@
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -5,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.mock_aquarium_mock_heater_night_temperature_offset',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '-0.2',
   })
 # ---
 # name: test_setup[number.mock_aquarium_mock_heater_system_led_brightness-entry]
@@ -578,8 +579,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'system_led',
-    'unique_id': '00:00:00:00:00:02_system_led',
+    'translation_key': 'sys_led',
+    'unique_id': '00:00:00:00:00:02_sys_led',
     'unit_of_measurement': '%',
   })
 # ---
@@ -598,7 +599,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '20',
   })
 # ---
 # name: test_setup[number.mock_aquarium_mock_heater_temperature_offset-entry]
@@ -652,13 +653,14 @@
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -3,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.mock_aquarium_mock_heater_temperature_offset',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.1',
   })
 # ---
 # name: test_setup[number.mock_aquarium_mock_reeflex_booster_duration-entry]
@@ -719,7 +721,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_setup[number.mock_aquarium_mock_reeflex_daily_burn_duration-entry]
@@ -780,7 +782,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '720',
   })
 # ---
 # name: test_setup[number.mock_aquarium_mock_reeflex_pause_duration-entry]
@@ -841,7 +843,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_setup[number.mock_aquarium_mock_reeflex_system_led_brightness-entry]
@@ -881,8 +883,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'system_led',
-    'unique_id': '00:00:00:00:00:05_system_led',
+    'translation_key': 'sys_led',
+    'unique_id': '00:00:00:00:00:05_sys_led',
     'unit_of_measurement': '%',
   })
 # ---
@@ -901,6 +903,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '100',
   })
 # ---

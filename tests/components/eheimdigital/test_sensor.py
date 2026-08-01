@@ -22,7 +22,7 @@ async def test_setup(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test sensor platform setup for the filter."""
+    """Test sensor platform setup."""
     mock_config_entry.add_to_hass(hass)
 
     with (
@@ -35,9 +35,14 @@ async def test_setup(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     for device in eheimdigital_hub_mock.return_value.devices:
+        device_obj = eheimdigital_hub_mock.return_value.devices[device]
         await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
-            device, eheimdigital_hub_mock.return_value.devices[device].device_type
+            device, device_obj.device_type
         )
+        for packet in device_obj.packet_mapping:
+            await eheimdigital_hub_mock.call_args.kwargs["receive_callback"](
+                device_obj.mac_address, packet
+            )
         await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -109,10 +114,15 @@ async def test_state_update(
     await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
         device.mac_address, device.device_type
     )
-
+    for packet in device.packet_mapping:
+        await eheimdigital_hub_mock.call_args.kwargs["receive_callback"](
+            device.mac_address, packet
+        )
     await hass.async_block_till_done()
 
     for item in entity_list:
         getattr(device, item[1])[item[2]] = item[3]
-        await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
+        await eheimdigital_hub_mock.call_args.kwargs["receive_callback"](
+            device.mac_address, item[1].upper()
+        )
         assert get_sensor_display_state(hass, entity_registry, item[0]) == str(item[4])

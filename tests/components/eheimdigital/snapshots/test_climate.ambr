@@ -79,7 +79,7 @@
     'state': 'auto',
   })
 # ---
-# name: test_setup_heater[climate.mock_aquarium_mock_heater-entry]
+# name: test_setup[climate.mock_aquarium_mock_heater-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -129,7 +129,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_heater[climate.mock_aquarium_mock_heater-state]
+# name: test_setup[climate.mock_aquarium_mock_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 24.2,

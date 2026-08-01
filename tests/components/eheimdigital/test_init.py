@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from eheimdigital.types import EheimDeviceType, EheimDigitalClientError
+from eheimdigital.types import EheimDeviceType, EheimDigitalClientError, MsgTitle
 
 from homeassistant.components.eheimdigital.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -54,7 +54,9 @@ async def test_dynamic_entities(
         "00:00:00:00:00:02"
     ].heater_data = heater_data
 
-    await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
+    await eheimdigital_hub_mock.call_args.kwargs["receive_callback"](
+        "00:00:00:00:00:02", MsgTitle.HEATER_DATA
+    )
 
     assert hass.states.get(
         "number.mock_aquarium_mock_heater_night_temperature_offset"
