@@ -27,9 +27,10 @@ ERROR_NO_SCHEDULE = "set_schedule_first"
 PARALLEL_UPDATES = 0
 
 
-def _check_for_schedule(active: bool, last_active: str) -> None:
+def _check_for_schedule(active: bool, last_active: str | None) -> None:
     """Raise a HAError when no thermostat schedule has been set."""
-    if not active and last_active == STATE_OFF:
+    # last_active can be stored as None from before the plugwise v1.14.3 bump
+    if not active and last_active in (None, STATE_OFF):
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key=ERROR_NO_SCHEDULE,
@@ -107,7 +108,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         self._api = coordinator.api
         gateway_id: str = self._api.gateway_id
         self._gateway_data = coordinator.data[gateway_id]
-        self._last_active_schedule = STATE_OFF
+        self._last_active_schedule: str | None = None
         self._location = device_id
         if (location := self.device.get("location")) is not None:
             self._location = location
