@@ -4,7 +4,10 @@ from homeassistant.const import Platform
 
 DOMAIN = "broadlink"
 
+SIGNAL_CAPTURE_IR = f"{DOMAIN}_capture_ir_{{}}"
+
 DOMAINS_AND_TYPES = {
+    Platform.BUTTON: {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"},
     Platform.CLIMATE: {"HYS"},
     Platform.INFRARED: {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"},
     Platform.LIGHT: {"LB1", "LB2"},

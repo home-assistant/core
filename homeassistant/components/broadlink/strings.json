@@ -49,6 +49,11 @@
     }
   },
   "entity": {
+    "button": {
+      "capture_ir_code": {
+        "name": "Capture IR code"
+      }
+    },
     "infrared": {
       "infrared_emitter": {
         "name": "IR emitter"

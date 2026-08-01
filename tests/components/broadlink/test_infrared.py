@@ -13,13 +13,14 @@ from infrared_protocols.commands.nec import NECCommand
 import pytest
 
 from homeassistant.components.broadlink.const import DOMAIN
-from homeassistant.components.broadlink.infrared import REARM_INTERVAL
+from homeassistant.components.broadlink.infrared import CAPTURE_WINDOW, REARM_INTERVAL
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.infrared import (
     InfraredReceivedSignal,
     async_send_command,
     async_subscribe_receiver,
 )
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -64,6 +65,28 @@ async def _settle() -> None:
     """Give background work a chance to run to completion."""
     for _ in range(50):
         await asyncio.sleep(0)
+
+
+async def _request_capture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Press the button that opens a capture window."""
+    button_entity_id = entity_registry.async_get_entity_id(
+        Platform.BUTTON, DOMAIN, f"{get_device(DEVICE_NAME).mac}-capture-ir-code"
+    )
+    assert button_entity_id
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: button_entity_id},
+        blocking=True,
+    )
+
+
+def _is_capturing(hass: HomeAssistant, entity_id: str) -> bool:
+    """Return True while the receiver reports itself available."""
+    state = hass.states.get(entity_id)
+    return state is not None and state.state != STATE_UNAVAILABLE
 
 
 async def test_infrared_setup_works(
@@ -156,11 +179,11 @@ async def test_infrared_send_command_error_translates(
     assert exc_info.value.translation_domain == DOMAIN
 
 
-async def test_infrared_receiver_idle_without_subscribers(
+async def test_infrared_receiver_idle_until_capture_requested(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the device is not armed while nothing is listening."""
+    """Test the device is left alone until a capture is asked for."""
     mock_setup = await get_device(DEVICE_NAME).setup_entry(hass)
     entity_id = _infrared_entity_id(entity_registry, "receiver")
 
@@ -168,10 +191,15 @@ async def test_infrared_receiver_idle_without_subscribers(
 
     assert mock_setup.api.enter_learning.call_count == 0
     assert mock_setup.api.check_data.call_count == 0
+    assert not _is_capturing(hass, entity_id)
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_UNKNOWN
+    # Subscribing on its own must not arm the device.
+    unsubscribe = async_subscribe_receiver(hass, entity_id, lambda signal: None)
+    await _settle()
+
+    assert mock_setup.api.enter_learning.call_count == 0
+    assert not _is_capturing(hass, entity_id)
+    unsubscribe()
 
 
 @pytest.mark.parametrize(
@@ -207,6 +235,7 @@ async def test_infrared_receiver_reports_captured_signal(
 
     with patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0):
         unsubscribe = async_subscribe_receiver(hass, entity_id, handle_signal)
+        await _request_capture(hass, entity_registry)
         async with asyncio.timeout(10):
             await received.wait()
         unsubscribe()
@@ -237,7 +266,6 @@ async def test_infrared_receiver_rearms_after_capture(
 ) -> None:
     """Test a new learning session is started once a capture consumed one."""
     mock_setup = await get_device(DEVICE_NAME).setup_entry(hass)
-    entity_id = _infrared_entity_id(entity_registry, "receiver")
 
     command = NECCommand(address=0x20, command=0x10)
     mock_setup.api.check_data.side_effect = chain(
@@ -245,9 +273,8 @@ async def test_infrared_receiver_rearms_after_capture(
     )
 
     with patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0):
-        unsubscribe = async_subscribe_receiver(hass, entity_id, lambda signal: None)
+        await _request_capture(hass, entity_registry)
         await _wait_until(lambda: mock_setup.api.enter_learning.call_count >= 2)
-        unsubscribe()
 
 
 async def test_infrared_receiver_rearms_before_learning_times_out(
@@ -262,15 +289,107 @@ async def test_infrared_receiver_rearms_before_learning_times_out(
     mock_setup.api.check_data.side_effect = ReadError
 
     with patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0):
-        unsubscribe = async_subscribe_receiver(hass, entity_id, lambda signal: None)
+        await _request_capture(hass, entity_registry)
         await _wait_until(lambda: mock_setup.api.enter_learning.call_count == 1)
 
         # The session stays valid, so polling alone must not re-arm the device.
         await _wait_until(lambda: mock_setup.api.check_data.call_count >= 5)
         assert mock_setup.api.enter_learning.call_count == 1
 
+        # Still inside the capture window, so the receiver stays available.
         freezer.tick(REARM_INTERVAL + timedelta(seconds=1))
         await _wait_until(lambda: mock_setup.api.enter_learning.call_count == 2)
+        assert _is_capturing(hass, entity_id)
+
+
+async def test_infrared_receiver_closes_window_when_quiet(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the window closes when no codes arrive, releasing the device."""
+    mock_setup = await get_device(DEVICE_NAME).setup_entry(hass)
+    entity_id = _infrared_entity_id(entity_registry, "receiver")
+
+    mock_setup.api.check_data.side_effect = ReadError
+
+    with patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0):
+        await _request_capture(hass, entity_registry)
+        await _wait_until(lambda: mock_setup.api.check_data.call_count >= 1)
+        assert _is_capturing(hass, entity_id)
+
+        freezer.tick(CAPTURE_WINDOW + timedelta(seconds=1))
+        await _wait_until(lambda: not _is_capturing(hass, entity_id))
+
+        polls_when_closed = mock_setup.api.check_data.call_count
+        await _settle()
+
+    assert mock_setup.api.check_data.call_count == polls_when_closed
+
+
+async def test_infrared_receiver_window_extends_while_codes_arrive(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a code arriving keeps the window open past its original end."""
+    mock_setup = await get_device(DEVICE_NAME).setup_entry(hass)
+    entity_id = _infrared_entity_id(entity_registry, "receiver")
+
+    pending: list[bytes] = []
+    mock_setup.api.check_data.side_effect = lambda: (
+        pending.pop() if pending else _raise(ReadError())
+    )
+    signals: list[InfraredReceivedSignal] = []
+
+    with patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0):
+        unsubscribe = async_subscribe_receiver(hass, entity_id, signals.append)
+        await _request_capture(hass, entity_registry)
+        await _wait_until(lambda: mock_setup.api.check_data.call_count >= 1)
+
+        freezer.tick(CAPTURE_WINDOW - timedelta(seconds=5))
+        pending.append(_nec_packet(NECCommand(address=0x20, command=0x10)))
+        await _wait_until(lambda: len(signals) == 1)
+
+        # Past the original end of the window, but the code pushed it out.
+        freezer.tick(timedelta(seconds=10))
+        await _settle()
+        assert _is_capturing(hass, entity_id)
+        unsubscribe()
+
+
+async def test_infrared_receiver_window_has_a_hard_limit(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a steady stream of codes cannot hold the window open forever."""
+    mock_setup = await get_device(DEVICE_NAME).setup_entry(hass)
+    entity_id = _infrared_entity_id(entity_registry, "receiver")
+
+    pending: list[bytes] = []
+    mock_setup.api.check_data.side_effect = lambda: (
+        pending.pop() if pending else _raise(ReadError())
+    )
+    signals: list[InfraredReceivedSignal] = []
+    limit = CAPTURE_WINDOW + timedelta(seconds=15)
+
+    with (
+        patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0),
+        patch(f"{INFRARED_MODULE}.CAPTURE_LIMIT", limit),
+    ):
+        unsubscribe = async_subscribe_receiver(hass, entity_id, signals.append)
+        await _request_capture(hass, entity_registry)
+        await _wait_until(lambda: mock_setup.api.check_data.call_count >= 1)
+
+        freezer.tick(CAPTURE_WINDOW - timedelta(seconds=5))
+        pending.append(_nec_packet(NECCommand(address=0x20, command=0x10)))
+        await _wait_until(lambda: len(signals) == 1)
+
+        # Without the limit this code would have held the window open for
+        # another full CAPTURE_WINDOW, so it would still be capturing here.
+        freezer.tick(timedelta(seconds=21))
+        await _wait_until(lambda: not _is_capturing(hass, entity_id))
         unsubscribe()
 
 
@@ -302,6 +421,7 @@ async def test_infrared_receiver_discards_own_transmission(
         patch(f"{INFRARED_MODULE}.TRANSMIT_COOLDOWN", 0),
     ):
         unsubscribe = async_subscribe_receiver(hass, receiver_id, signals.append)
+        await _request_capture(hass, entity_registry)
         await _wait_until(lambda: mock_setup.api.enter_learning.call_count == 1)
 
         await async_send_command(hass, emitter_id, sent_command)
@@ -330,7 +450,6 @@ async def test_infrared_receiver_recovers_from_errors(
 ) -> None:
     """Test the receiver keeps listening after a device error."""
     mock_setup = await get_device(DEVICE_NAME).setup_entry(hass)
-    entity_id = _infrared_entity_id(entity_registry, "receiver")
 
     mock_setup.api.enter_learning.side_effect = chain([error], repeat(None))
     mock_setup.api.check_data.side_effect = ReadError
@@ -339,92 +458,36 @@ async def test_infrared_receiver_recovers_from_errors(
         patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0),
         patch(f"{INFRARED_MODULE}.ERROR_BACKOFF", 0),
     ):
-        unsubscribe = async_subscribe_receiver(hass, entity_id, lambda signal: None)
+        await _request_capture(hass, entity_registry)
         await _wait_until(lambda: mock_setup.api.check_data.call_count >= 1)
-        unsubscribe()
 
     assert mock_setup.api.enter_learning.call_count >= 2
 
 
-async def test_infrared_receiver_stops_when_unsubscribed(
+async def test_infrared_receiver_reopens_window_on_request(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the device is left alone once nothing is listening anymore."""
+    """Test a closed window can be opened again."""
     mock_setup = await get_device(DEVICE_NAME).setup_entry(hass)
     entity_id = _infrared_entity_id(entity_registry, "receiver")
 
     mock_setup.api.check_data.side_effect = ReadError
 
     with patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0):
-        unsubscribe = async_subscribe_receiver(hass, entity_id, lambda signal: None)
-        await _wait_until(lambda: mock_setup.api.check_data.call_count >= 1)
-        unsubscribe()
-
-        # The listener finishes the request it is in before it stops.
-        await _settle()
-        polls_when_unsubscribed = mock_setup.api.check_data.call_count
-        await _settle()
-
-    assert mock_setup.api.check_data.call_count == polls_when_unsubscribed
-
-
-async def test_infrared_receiver_listens_until_last_subscriber_leaves(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the device stays armed once, until the last subscriber is gone."""
-    mock_setup = await get_device(DEVICE_NAME).setup_entry(hass)
-    entity_id = _infrared_entity_id(entity_registry, "receiver")
-
-    mock_setup.api.check_data.side_effect = ReadError
-
-    with patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0):
-        unsubscribe_first = async_subscribe_receiver(
-            hass, entity_id, lambda signal: None
-        )
-        unsubscribe_second = async_subscribe_receiver(
-            hass, entity_id, lambda signal: None
-        )
+        await _request_capture(hass, entity_registry)
         await _wait_until(lambda: mock_setup.api.check_data.call_count >= 1)
 
-        unsubscribe_first()
-        polls_with_one_left = mock_setup.api.check_data.call_count
+        freezer.tick(CAPTURE_WINDOW + timedelta(seconds=1))
+        await _wait_until(lambda: not _is_capturing(hass, entity_id))
+        sessions_when_closed = mock_setup.api.enter_learning.call_count
+
+        await _request_capture(hass, entity_registry)
         await _wait_until(
-            lambda: mock_setup.api.check_data.call_count > polls_with_one_left
+            lambda: mock_setup.api.enter_learning.call_count > sessions_when_closed
         )
-
-        unsubscribe_second()
-        await _settle()
-        polls_when_unsubscribed = mock_setup.api.check_data.call_count
-        await _settle()
-
-    # The second subscriber must not start a second listener.
-    assert mock_setup.api.enter_learning.call_count == 1
-    assert mock_setup.api.check_data.call_count == polls_when_unsubscribed
-
-
-async def test_infrared_receiver_ignores_repeated_unsubscribe(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test unsubscribing twice does not leave a listener without subscribers."""
-    mock_setup = await get_device(DEVICE_NAME).setup_entry(hass)
-    entity_id = _infrared_entity_id(entity_registry, "receiver")
-
-    mock_setup.api.check_data.side_effect = ReadError
-
-    with patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0):
-        unsubscribe = async_subscribe_receiver(hass, entity_id, lambda signal: None)
-        await _wait_until(lambda: mock_setup.api.check_data.call_count >= 1)
-
-        unsubscribe()
-        unsubscribe()
-        await _settle()
-        polls_when_unsubscribed = mock_setup.api.check_data.call_count
-        await _settle()
-
-    assert mock_setup.api.check_data.call_count == polls_when_unsubscribed
+        assert _is_capturing(hass, entity_id)
 
 
 async def test_infrared_receiver_stops_on_unload(
@@ -433,12 +496,11 @@ async def test_infrared_receiver_stops_on_unload(
 ) -> None:
     """Test unloading the config entry stops the listener."""
     mock_setup: MockSetup = await get_device(DEVICE_NAME).setup_entry(hass)
-    entity_id = _infrared_entity_id(entity_registry, "receiver")
 
     mock_setup.api.check_data.side_effect = ReadError
 
     with patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0):
-        async_subscribe_receiver(hass, entity_id, lambda signal: None)
+        await _request_capture(hass, entity_registry)
         await _wait_until(lambda: mock_setup.api.check_data.call_count >= 1)
 
         assert await hass.config_entries.async_unload(mock_setup.entry.entry_id)
