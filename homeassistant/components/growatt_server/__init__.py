@@ -23,7 +23,6 @@ Error handling pattern for reauth:
   → raise ConfigEntryAuthFailed
 - All other errors → ConfigEntryError (setup) or UpdateFailed (coordinator)
 """
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from collections.abc import Mapping
 import datetime
@@ -49,7 +48,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     AUTH_API_TOKEN,
     AUTH_PASSWORD,
-    CACHED_API_KEY,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
     DEFAULT_PLANT_ID,
@@ -69,6 +67,11 @@ from .services import async_setup_services
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+# Temporary handoff of authenticated Classic API sessions from async_migrate_entry
+# to async_setup_entry. Avoids a second login() during the same startup, which
+# would hit Growatt's 5-minute per-endpoint rate limit. Popped after first use.
+_CACHED_APIS: dict[str, growattServer.GrowattApi] = {}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -196,8 +199,7 @@ async def async_migrate_entry(
                 )
 
                 # Cache the logged-in API instance for reuse in async_setup_entry()
-                hass.data.setdefault(DOMAIN, {})
-                hass.data[DOMAIN][f"{CACHED_API_KEY}{config_entry.entry_id}"] = api
+                _CACHED_APIS[config_entry.entry_id] = api
 
                 _LOGGER.info(
                     "Migrated config entry to use specific plant_id '%s'",
@@ -347,9 +349,7 @@ async def async_setup_entry(
         # Check if migration cached an authenticated API instance for us to reuse.
         # This avoids calling login() twice (once in migration, once here) which
         # would trigger rate limiting.
-        cached_api = hass.data.get(DOMAIN, {}).pop(
-            f"{CACHED_API_KEY}{config_entry.entry_id}", None
-        )
+        cached_api = _CACHED_APIS.pop(config_entry.entry_id, None)
 
         if cached_api:
             # Reuse the logged-in API instance from migration (rate limit optimization)
