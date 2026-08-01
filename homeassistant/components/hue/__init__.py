@@ -71,8 +71,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
 
     # v1 bridges already register their device before platform forwarding, so
     # light/sensor entities can resolve it as their via_device parent; only
-    # register it here if that has not already happened.
-    if (
+    # register it here if that has not already happened. v2 bridges are always
+    # (re)registered here to merge the network MAC connection into the bridge
+    # device created by async_setup_devices with only its Zigbee MAC.
+    if bridge.api_version != 1 or (
         dr.async_get(hass).async_get_device_by_identifier(
             (DOMAIN, api.config.bridge_id), entry.entry_id
         )
