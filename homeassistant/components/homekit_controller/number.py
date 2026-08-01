@@ -12,11 +12,12 @@ from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import EntityCategory, Platform, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -63,6 +64,14 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
         name="Sensitivity",
         translation_key="sensitivity",
         entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.SET_DURATION: NumberEntityDescription(
+        key=CharacteristicsTypes.SET_DURATION,
+        name="Duration",
+        device_class=NumberDeviceClass.DURATION,
+        translation_key="duration",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
 }
 

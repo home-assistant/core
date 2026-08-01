@@ -29,7 +29,6 @@
       "user": {
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]",
-          "device_class": "Device type",
           "host": "[%key:common::config_flow::data::host%]",
           "name": "[%key:common::config_flow::data::name%]"
         },
@@ -46,6 +45,9 @@
     },
     "unknown_command": {
       "message": "Unknown remote command `{command}`. Valid commands for this device are listed in the integration documentation."
+    },
+    "update_failed": {
+      "message": "Unable to connect to {host}"
     }
   },
   "options": {
