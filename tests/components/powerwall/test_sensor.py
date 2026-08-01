@@ -59,6 +59,12 @@ async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry) 
     assert reg_device.manufacturer == "Tesla"
     assert reg_device.name == "MySite"
 
+    battery_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_GATEWAY_DIN}_TG0123456789AB"), config_entry.entry_id
+    )
+    assert battery_device is not None
+    assert battery_device.via_device_id == reg_device.id
+
     state = hass.states.get("sensor.mysite_load_power")
     assert state.state == "1.971"
     attributes = state.attributes
