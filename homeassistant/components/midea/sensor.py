@@ -1,6 +1,9 @@
 """Midea Sensor entries."""
 
+from dataclasses import dataclass
 from typing import cast, override
+
+from midealocal.const import DeviceType
 
 from homeassistant.components.sensor import (
     EntityCategory,
@@ -12,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     REVOLUTIONS_PER_MINUTE,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -19,6 +23,9 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfRatio,
     UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -28,8 +35,16 @@ from .entity import MideaEntity
 
 PARALLEL_UPDATES = 0
 
-SENSOR_ENTITIES: list[SensorEntityDescription] = [
-    SensorEntityDescription(
+
+@dataclass(kw_only=True, frozen=True)
+class MideaSensorEntityDescription(SensorEntityDescription):
+    """Describes Midea sensor entity."""
+
+    models: list[DeviceType] | None = None
+
+
+SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
+    MideaSensorEntityDescription(
         key="indoor_humidity",
         translation_key="indoor_humidity",
         device_class=SensorDeviceClass.HUMIDITY,
@@ -37,7 +52,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="indoor_temperature",
         translation_key="indoor_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -45,7 +60,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="outdoor_temperature",
         translation_key="outdoor_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -53,7 +68,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="total_energy_consumption",
         translation_key="total_energy_consumption",
         device_class=SensorDeviceClass.ENERGY,
@@ -62,7 +77,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="current_energy_consumption",
         translation_key="current_energy_consumption",
         device_class=SensorDeviceClass.ENERGY,
@@ -71,7 +86,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="realtime_power",
         translation_key="realtime_power",
         device_class=SensorDeviceClass.POWER,
@@ -80,20 +95,20 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="pmv",
         translation_key="pmv",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="error_code",
         translation_key="error_code",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="compressor_frequency",
         translation_key="compressor_frequency",
         device_class=SensorDeviceClass.FREQUENCY,
@@ -102,7 +117,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="target_compressor_frequency",
         translation_key="target_compressor_frequency",
         device_class=SensorDeviceClass.FREQUENCY,
@@ -111,7 +126,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="compressor_current",
         translation_key="compressor_current",
         device_class=SensorDeviceClass.CURRENT,
@@ -120,7 +135,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="compressor_voltage",
         translation_key="compressor_voltage",
         device_class=SensorDeviceClass.VOLTAGE,
@@ -129,7 +144,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="indoor_coil_temperature",
         translation_key="indoor_coil_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -138,7 +153,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="evaporator_temperature",
         translation_key="evaporator_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -147,7 +162,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="condenser_temperature",
         translation_key="condenser_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -156,7 +171,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="outdoor_ambient_temperature",
         translation_key="outdoor_ambient_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -165,7 +180,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="discharge_pipe_temperature",
         translation_key="discharge_pipe_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -174,7 +189,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="indoor_fan_speed",
         translation_key="indoor_fan_speed",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
@@ -182,7 +197,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="target_indoor_fan_speed",
         translation_key="target_indoor_fan_speed",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
@@ -190,7 +205,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="compressor_power",
         translation_key="compressor_power",
         device_class=SensorDeviceClass.POWER,
@@ -199,7 +214,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="tank_actual_temperature",
         translation_key="tank_actual_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -207,7 +222,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="total_produced_energy",
         translation_key="total_produced_energy",
         device_class=SensorDeviceClass.ENERGY,
@@ -216,7 +231,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="temp_tw_in",
         translation_key="temp_tw_in",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -224,7 +239,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="temp_tw_out",
         translation_key="temp_tw_out",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -232,7 +247,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="instant_power0",
         translation_key="instant_power0",
         device_class=SensorDeviceClass.POWER,
@@ -241,7 +256,7 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    MideaSensorEntityDescription(
         key="compressor_temperature",
         translation_key="compressor_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -249,6 +264,628 @@ SENSOR_ENTITIES: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+    ),
+    MideaSensorEntityDescription(
+        key="current_temperature",
+        translation_key="current_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="current_humidity",
+        translation_key="current_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="humidity",
+        translation_key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="progress",
+        translation_key="progress",
+    ),
+    MideaSensorEntityDescription(
+        key="status",
+        translation_key="status",
+    ),
+    MideaSensorEntityDescription(
+        key="storage_remaining",
+        translation_key="storage_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="temperature",
+        translation_key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="time_remaining",
+        translation_key="time_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        models=[
+            DeviceType.X34,
+            DeviceType.DA,
+            DeviceType.DB,
+            DeviceType.DC,
+            DeviceType.E1,
+            DeviceType.EA,
+            DeviceType.EC,
+        ],
+    ),
+    MideaSensorEntityDescription(
+        key="time_remaining",
+        translation_key="time_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        models=[
+            DeviceType.B0,
+            DeviceType.B1,
+            DeviceType.B4,
+            DeviceType.BF,
+            DeviceType.E8,
+        ],
+    ),
+    MideaSensorEntityDescription(
+        key="mode",
+        translation_key="working_mode",
+        models=[DeviceType.E1, DeviceType.X34],
+    ),
+    MideaSensorEntityDescription(
+        key="mode",
+        translation_key="mode",
+        models=[DeviceType.DB, DeviceType.EA, DeviceType.EC],
+    ),
+    MideaSensorEntityDescription(
+        key="softwater",
+        translation_key="softwater_level",
+    ),
+    MideaSensorEntityDescription(
+        key="bright",
+        translation_key="bright_level",
+    ),
+    MideaSensorEntityDescription(
+        key="tank",
+        translation_key="tank_level",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="temperature_raw",
+        translation_key="temperature_raw",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="humidity_raw",
+        translation_key="humidity_raw",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="temperature_compensate",
+        translation_key="temperature_compensate",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="humidity_compensate",
+        translation_key="humidity_compensate",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="tvoc",
+        translation_key="tvoc",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="co2",
+        translation_key="co2",
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="pm25",
+        translation_key="pm25",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="hcho",
+        translation_key="hcho",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="screen_extinction_timeout",
+        translation_key="screen_extinction_timeout",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MideaSensorEntityDescription(
+        key="top_compartment_status",
+        translation_key="top_compartment_status",
+    ),
+    MideaSensorEntityDescription(
+        key="top_compartment_temperature",
+        translation_key="top_compartment_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="top_compartment_remaining",
+        translation_key="top_compartment_remaining_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="middle_compartment_status",
+        translation_key="middle_compartment_status",
+    ),
+    MideaSensorEntityDescription(
+        key="middle_compartment_temperature",
+        translation_key="middle_compartment_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="middle_compartment_remaining",
+        translation_key="middle_compartment_remaining_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="bottom_compartment_status",
+        translation_key="bottom_compartment_status",
+    ),
+    MideaSensorEntityDescription(
+        key="bottom_compartment_temperature",
+        translation_key="bottom_compartment_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="bottom_compartment_remaining",
+        translation_key="bottom_compartment_remaining_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="fan_level",
+        translation_key="fan_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MideaSensorEntityDescription(
+        key="water_temperature",
+        translation_key="water_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MideaSensorEntityDescription(
+        key="seat_temperature",
+        translation_key="seat_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MideaSensorEntityDescription(
+        key="filter_life",
+        translation_key="filter_life",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    MideaSensorEntityDescription(
+        key="flex_zone_actual_temp",
+        translation_key="flex_zone_actual_temp",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="flex_zone_setting_temp",
+        translation_key="flex_zone_setting_temp",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="freezer_actual_temp",
+        translation_key="freezer_actual_temp",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="freezer_setting_temp",
+        translation_key="freezer_setting_temp",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="energy_consumption",
+        translation_key="energy_consumption",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    MideaSensorEntityDescription(
+        key="refrigerator_actual_temp",
+        translation_key="refrigerator_actual_temp",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="refrigerator_setting_temp",
+        translation_key="refrigerator_setting_temp",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="right_flex_zone_actual_temp",
+        translation_key="right_flex_zone_actual_temp",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="right_flex_zone_setting_temp",
+        translation_key="right_flex_zone_setting_temp",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="variable_mode",
+        translation_key="variable_mode",
+    ),
+    MideaSensorEntityDescription(
+        key="wash_time",
+        translation_key="wash_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="soak_time",
+        translation_key="soak_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="dehydration_time",
+        translation_key="dehydration_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="dehydration_speed",
+        translation_key="dehydration_speed",
+    ),
+    MideaSensorEntityDescription(
+        key="rinse_count",
+        translation_key="rinse_count",
+    ),
+    MideaSensorEntityDescription(
+        key="rinse_level",
+        translation_key="rinse_level",
+    ),
+    MideaSensorEntityDescription(
+        key="wash_level",
+        translation_key="wash_level",
+    ),
+    MideaSensorEntityDescription(
+        key="wash_strength",
+        translation_key="wash_strength",
+    ),
+    MideaSensorEntityDescription(
+        key="softener",
+        translation_key="softener",
+    ),
+    MideaSensorEntityDescription(
+        key="detergent",
+        translation_key="detergent",
+    ),
+    MideaSensorEntityDescription(
+        key="wash_time_value",
+        translation_key="wash_time_value",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="dehydration_time_value",
+        translation_key="dehydration_time_value",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="stains",
+        translation_key="stains",
+    ),
+    MideaSensorEntityDescription(
+        key="dirty_degree",
+        translation_key="dirty_degree",
+    ),
+    MideaSensorEntityDescription(
+        key="program",
+        translation_key="program_da",
+        models=[DeviceType.DA],
+    ),
+    MideaSensorEntityDescription(
+        key="program",
+        translation_key="program_db",
+        models=[DeviceType.DB],
+    ),
+    MideaSensorEntityDescription(
+        key="program",
+        translation_key="program_dc",
+        models=[DeviceType.DC],
+    ),
+    MideaSensorEntityDescription(
+        key="dry_temperature",
+        translation_key="dry_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="intensity",
+        translation_key="intensity",
+    ),
+    MideaSensorEntityDescription(
+        key="dryness_level",
+        translation_key="dryness_level",
+    ),
+    MideaSensorEntityDescription(
+        key="door_warn",
+        translation_key="door_warn",
+    ),
+    MideaSensorEntityDescription(
+        key="ai_switch",
+        translation_key="ai_switch",
+    ),
+    MideaSensorEntityDescription(
+        key="material",
+        translation_key="material",
+    ),
+    MideaSensorEntityDescription(
+        key="heating_time_remaining",
+        translation_key="heating_time_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="heating_power",
+        translation_key="heating_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="water_consumption",
+        translation_key="water_consumption",
+        device_class=SensorDeviceClass.VOLUME,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    MideaSensorEntityDescription(
+        key="heating_leaving_temperature",
+        translation_key="heating_leaving_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="bathing_leaving_temperature",
+        translation_key="bathing_leaving_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="keep_warm_remaining",
+        translation_key="keep_warm_remaining_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="working_time",
+        translation_key="working_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="target_temperature",
+        translation_key="target_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="bottom_temperature",
+        translation_key="bottom_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="keep_warm_time",
+        translation_key="keep_warm_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="top_temperature",
+        translation_key="top_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="filter1",
+        translation_key="filter1_available_days",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="filter2",
+        translation_key="filter2_available_days",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="filter3",
+        translation_key="filter3_available_days",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="filter1_life",
+        translation_key="filter1_life_level",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="filter2_life",
+        translation_key="filter2_life_level",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="filter3_life",
+        translation_key="filter3_life_level",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="in_tds",
+        translation_key="in_tds",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="out_tds",
+        translation_key="out_tds",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="velocity",
+        translation_key="flow_rate",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="soft_available",
+        translation_key="softwater_available",
+        device_class=SensorDeviceClass.VOLUME,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="left_salt",
+        translation_key="salt_available",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="remaining_days",
+        translation_key="remaining_days",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="regeneration_left_seconds",
+        translation_key="regeneration_left_seconds",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="use_days",
+        translation_key="use_days",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="salt_setting",
+        translation_key="salt_setting",
+    ),
+    MideaSensorEntityDescription(
+        key="water_consumption_big",
+        translation_key="water_consumption",
+        device_class=SensorDeviceClass.VOLUME,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    MideaSensorEntityDescription(
+        key="water_consumption_average",
+        translation_key="water_consumption_average",
+        device_class=SensorDeviceClass.VOLUME,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="error",
+        translation_key="error_ed",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        models=[DeviceType.ED],
     ),
 ]
 
@@ -265,6 +902,7 @@ async def async_setup_entry(
         MideaSensor(device, description)
         for description in SENSOR_ENTITIES
         if description.key in device.attributes
+        and (not description.models or device.device_type in description.models)
     ]
 
     async_add_entities(sensors)
