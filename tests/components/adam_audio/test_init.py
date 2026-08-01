@@ -52,7 +52,12 @@ async def test_setup_entry_connection_failure(
     mock_config_entry,
     mock_client: MagicMock,
 ) -> None:
-    """Test setup failure when device is unreachable."""
+    """Test setup failure when device is unreachable.
+
+    Regression test: runtime_data is never installed when setup fails, so
+    unload never runs. The coordinator must close the client itself or its
+    UDP socket leaks on every retry.
+    """
     mock_client.async_setup = AsyncMock(return_value=False)
     mock_config_entry.add_to_hass(hass)
 
@@ -64,6 +69,57 @@ async def test_setup_entry_connection_failure(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_client.async_shutdown.assert_awaited_once()
+
+
+async def test_setup_entry_serial_mismatch_closes_client(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_client: MagicMock,
+) -> None:
+    """Test setup failure when the live serial doesn't match the entry.
+
+    Regression test: this ConfigEntryNotReady path also leaked the client's
+    UDP socket, since it bypassed shutdown just like the connection-failure
+    path.
+    """
+    mock_client.serial = "SN-DIFFERENT"
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.adam_audio.coordinator.AdamAudioClient",
+        return_value=mock_client,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_client.async_shutdown.assert_awaited_once()
+
+
+async def test_setup_entry_first_refresh_failure_closes_client(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_client: MagicMock,
+) -> None:
+    """Test setup failure when the first state poll fails.
+
+    Regression test: async_config_entry_first_refresh() raising
+    ConfigEntryNotReady also left the client's UDP socket open.
+    """
+    mock_client.async_fetch_state = AsyncMock(return_value=False)
+    mock_client.available = False
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.adam_audio.coordinator.AdamAudioClient",
+        return_value=mock_client,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_client.async_shutdown.assert_awaited_once()
 
 
 async def test_unload_entry(
