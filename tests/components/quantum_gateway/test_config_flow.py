@@ -1,5 +1,7 @@
 """Tests for Quantum Gateway config flow."""
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 from requests import RequestException
 
@@ -11,9 +13,11 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_CONFIG
 
+from tests.common import MockConfigEntry
+
 
 async def test_user_flow_success(
-    hass: HomeAssistant, mock_setup_entry, mock_scanner
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_scanner: MagicMock
 ) -> None:
     """Test a successful config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -48,11 +52,11 @@ async def test_user_flow_success(
 )
 async def test_user_flow_failure(
     hass: HomeAssistant,
-    mock_setup_entry,
-    mock_scanner,
-    side_effect,
-    success_init,
-    failure_type,
+    mock_setup_entry: AsyncMock,
+    mock_scanner: MagicMock,
+    side_effect: RequestException | None,
+    success_init: bool,
+    failure_type: str,
 ) -> None:
     """Test a config flow failure."""
     mock_scanner.side_effect = side_effect
@@ -84,7 +88,10 @@ async def test_user_flow_failure(
 
 
 async def test_user_flow_entry_exists(
-    hass: HomeAssistant, mock_setup_entry, mock_scanner, mock_config_entry
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_scanner: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test user flow aborts when entry already exists."""
     mock_config_entry.add_to_hass(hass)
@@ -104,7 +111,7 @@ async def test_user_flow_entry_exists(
 
 
 async def test_import_flow_success(
-    hass: HomeAssistant, mock_setup_entry, mock_scanner
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_scanner: MagicMock
 ) -> None:
     """Test a successful import."""
     result = await hass.config_entries.flow.async_init(
@@ -135,11 +142,11 @@ async def test_import_flow_success(
 )
 async def test_import_flow_failure(
     hass: HomeAssistant,
-    mock_setup_entry,
-    mock_scanner,
-    side_effect,
-    success_init,
-    failure_type,
+    mock_setup_entry: AsyncMock,
+    mock_scanner: MagicMock,
+    side_effect: RequestException | None,
+    success_init: bool,
+    failure_type: str,
 ) -> None:
     """Test a failed import."""
     mock_scanner.side_effect = side_effect
@@ -156,7 +163,10 @@ async def test_import_flow_failure(
 
 
 async def test_import_flow_entry_exists(
-    hass: HomeAssistant, mock_setup_entry, mock_scanner, mock_config_entry
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_scanner: MagicMock,
+    mock_config_entry,
 ) -> None:
     """Test import flow aborts when entry already exists."""
     mock_config_entry.add_to_hass(hass)
