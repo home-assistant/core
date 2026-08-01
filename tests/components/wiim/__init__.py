@@ -10,14 +10,12 @@ from homeassistant.core_config import async_process_ha_core_config
 from tests.common import MockConfigEntry
 
 
-async def setup_integration(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    internal_url: str | None = "http://192.168.1.10:8123",
-) -> None:
-    """Set up the component, optionally without a configured internal URL."""
-    if internal_url is not None:
-        await async_process_ha_core_config(hass, {"internal_url": internal_url})
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Set up the component."""
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://192.168.1.10:8123"},
+    )
 
     config_entry.add_to_hass(hass)
 

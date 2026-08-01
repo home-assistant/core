@@ -76,25 +76,11 @@ async def test_setup_uses_route_to_device_for_event_callback(
     mock_local_ip: AsyncMock,
 ) -> None:
     """Test the callback address is resolved from the route to the device."""
-    await setup_integration(hass, mock_config_entry, internal_url=None)
+    await setup_integration(hass, mock_config_entry)
 
     mock_local_ip.assert_awaited_once_with(
         "http://192.168.1.100:49152/description.xml", hass.loop
     )
-
-
-@pytest.mark.usefixtures("mock_wiim_device", "mock_wiim_controller")
-async def test_setup_prefers_configured_internal_url(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_local_ip: AsyncMock,
-) -> None:
-    """Test a configured internal URL is used instead of the route to the device."""
-    await setup_integration(
-        hass, mock_config_entry, internal_url="http://192.168.1.50:8123"
-    )
-
-    mock_local_ip.assert_not_awaited()
 
 
 @pytest.mark.parametrize("local_ip", ["192.168.1.10", "2001:db8::5"])
@@ -114,21 +100,25 @@ async def test_event_callback_host_preserves_address_family(
     )
 
 
-async def test_setup_raises_config_entry_not_ready_when_no_url(
+async def test_event_callback_host_falls_back_to_source_ip(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_wiim_controller: AsyncMock,
     mock_local_ip: AsyncMock,
 ) -> None:
-    """Test a missing internal URL raises a translated ConfigEntryNotReady."""
+    """Test an unroutable device falls back to the announced source address."""
     mock_local_ip.side_effect = OSError("network is unreachable")
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.error_reason_translation_key == "missing_homeassistant_url"
-    assert mock_config_entry.error_reason_translation_placeholders is None
+    with patch(
+        "homeassistant.components.wiim.util.async_get_source_ip",
+        return_value="192.168.1.10",
+    ) as mock_source_ip:
+        assert (
+            await async_get_event_callback_host(
+                hass, "http://192.168.1.100:49152/description.xml"
+            )
+            == "192.168.1.10"
+        )
+
+    mock_source_ip.assert_awaited_once_with(hass, target_ip="192.168.1.100")
 
 
 async def test_setup_no_url_after_core_config(
