@@ -168,19 +168,23 @@ async def test_child_devices_link_to_their_gateway(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        main_gateway = device_registry.async_get_device({(DOMAIN, MAIN_GATEWAY_ID)})
-        secondary_gateway = device_registry.async_get_device(
-            {(DOMAIN, SECONDARY_GATEWAY_ID)}
+        main_gateway = device_registry.async_get_device_by_identifier(
+            (DOMAIN, MAIN_GATEWAY_ID), mock_config_entry.entry_id
+        )
+        secondary_gateway = device_registry.async_get_device_by_identifier(
+            (DOMAIN, SECONDARY_GATEWAY_ID), mock_config_entry.entry_id
         )
         assert main_gateway is not None
         assert secondary_gateway is not None
 
-        main_child = device_registry.async_get_device(
-            {(DOMAIN, MAIN_GATEWAY_CHILD_URL)}
+        main_child = device_registry.async_get_device_by_identifier(
+            (DOMAIN, MAIN_GATEWAY_CHILD_URL), mock_config_entry.entry_id
         )
-        secondary_child = device_registry.async_get_device(
-            {(DOMAIN, SECONDARY_GATEWAY_CHILD_URL)}
+        secondary_child = device_registry.async_get_device_by_identifier(
+            (DOMAIN, SECONDARY_GATEWAY_CHILD_URL), mock_config_entry.entry_id
         )
+        assert main_child is not None
+        assert secondary_child is not None
         assert main_child.via_device_id == main_gateway.id
         assert secondary_child.via_device_id == secondary_gateway.id
 
@@ -194,10 +198,12 @@ async def test_child_devices_link_to_their_gateway(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    secondary_gateway = device_registry.async_get_device(
-        {(DOMAIN, SECONDARY_GATEWAY_ID)}
+    secondary_gateway = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SECONDARY_GATEWAY_ID), mock_config_entry.entry_id
     )
-    secondary_child = device_registry.async_get_device(
-        {(DOMAIN, SECONDARY_GATEWAY_CHILD_URL)}
+    secondary_child = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SECONDARY_GATEWAY_CHILD_URL), mock_config_entry.entry_id
     )
+    assert secondary_gateway is not None
+    assert secondary_child is not None
     assert secondary_child.via_device_id == secondary_gateway.id
