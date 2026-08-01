@@ -58,11 +58,11 @@ async def test_topic_device_via_device(
     assert config_entry.state is ConfigEntryState.LOADED
 
     subentry_id = next(iter(config_entry.subentries))
-    account_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry.entry_id)}
+    account_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, config_entry.entry_id), config_entry.entry_id
     )
-    topic_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{config_entry.entry_id}_{subentry_id}")}
+    topic_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{config_entry.entry_id}_{subentry_id}"), config_entry.entry_id
     )
 
     assert account_device is not None
