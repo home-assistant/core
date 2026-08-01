@@ -37,10 +37,7 @@ def get_homeassistant_local_host(hass: HomeAssistant) -> str:
 
 async def async_get_event_callback_host(hass: HomeAssistant, upnp_location: str) -> str:
     """Return the address a WiiM device should send UPnP events to."""
-    # A configured internal URL wins over route selection, which can pick a
-    # container-local address — but only when it pins an IP. The device must
-    # deliver NOTIFYs to this host directly, and a hostname may not resolve
-    # for it (or bind on this side) at all.
+    # Only an IP-literal internal URL wins: the device can't be assumed to resolve hostnames.
     internal_host = (
         urlparse(hass.config.internal_url).hostname
         if hass.config.internal_url
