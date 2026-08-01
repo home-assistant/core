@@ -114,19 +114,20 @@ async def test_zones(
     assert entity_entry.unique_id == "4c:a1:61:00:11:22-3"
 
 
+@pytest.mark.usefixtures("hass")
 async def test_zone_device_linked_to_controller(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test the zone switch device is linked to the controller device."""
 
-    controller_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MAC_ADDRESS_UNIQUE_ID)}
+    controller_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MAC_ADDRESS_UNIQUE_ID), config_entry.entry_id
     )
     assert controller_device is not None
 
-    zone_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MAC_ADDRESS_UNIQUE_ID}-1")}
+    zone_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MAC_ADDRESS_UNIQUE_ID}-1"), config_entry.entry_id
     )
     assert zone_device is not None
     assert zone_device.via_device_id == controller_device.id
