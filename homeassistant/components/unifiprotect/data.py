@@ -296,15 +296,6 @@ class ProtectData:
         )
 
     @callback
-    def async_forget_public_device(self, mac: str) -> None:
-        """Allow a new add offer for a mac whose entity left the registry.
-
-        The next re-delivered ADD frame or reconnect resync then re-creates
-        the deleted entity.
-        """
-        self._known_public_macs.discard(mac)
-
-    @callback
     def _async_dispatch_new_public_device(self, device: PublicDeviceModel) -> None:
         """Offer a public device to the platforms, once per mac.
 

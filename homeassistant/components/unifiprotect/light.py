@@ -127,11 +127,6 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
             connections={(dr.CONNECTION_NETWORK_MAC, public.mac)},
         )
 
-    @override
-    async def async_removed_from_registry(self) -> None:
-        """Release the device for a future public add offer."""
-        self.data.async_forget_public_device(self.device.mac)
-
     @callback
     @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:

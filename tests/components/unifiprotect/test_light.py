@@ -276,37 +276,6 @@ async def test_light_added_after_setup_public_only(
     assert "already exists" not in caplog.text
 
 
-async def test_light_recreated_after_entity_removal_public_only(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    ufp: MockUFPFixture,
-    light: Light,
-) -> None:
-    """A deleted entity is recreated when its device is offered again.
-
-    Removing the entity from the registry releases the device's dedup slot, so
-    a re-delivered ADD frame recreates the entity instead of being dropped.
-    """
-
-    public = make_public_light(light)
-    _use_public_only_bootstrap(ufp, public)
-
-    await init_entry(hass, ufp, [])
-    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
-
-    entity_registry.async_remove("light.test_light")
-    await hass.async_block_till_done()
-    assert hass.states.get("light.test_light") is None
-
-    msg = public_device_ws_message(public)
-    msg.action = WSAction.ADD
-    ufp.devices_ws_subscription(msg)
-    await hass.async_block_till_done()
-
-    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
-    assert hass.states.get("light.test_light") is not None
-
-
 async def test_light_added_during_gap_public_only(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
