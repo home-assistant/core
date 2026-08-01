@@ -229,6 +229,24 @@ async def test_turn_on_connection_error(hass: HomeAssistant) -> None:
 
     with (
         patch(
+            "homeassistant.components.intellidwell.IntelliDwellClient.get_status",
+            return_value={"relay_states": [0] * 10},
+            new_callable=AsyncMock,
+            create=True,
+        ),
+        patch(
+            "homeassistant.components.intellidwell.IntelliDwellClient.get_rain_delay",
+            return_value={"days_remaining": 0},
+            new_callable=AsyncMock,
+            create=True,
+        ),
+        patch(
+            "homeassistant.components.intellidwell.IntelliDwellClient.get_schedules",
+            return_value=[],
+            new_callable=AsyncMock,
+            create=True,
+        ),
+        patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.set_relay",
             side_effect=IntelliDwellConnectionError("timeout"),
             new_callable=AsyncMock,
@@ -249,6 +267,24 @@ async def test_turn_off_connection_error(hass: HomeAssistant) -> None:
     await _setup_entry(hass)
 
     with (
+        patch(
+            "homeassistant.components.intellidwell.IntelliDwellClient.get_status",
+            return_value={"relay_states": [0] * 10},
+            new_callable=AsyncMock,
+            create=True,
+        ),
+        patch(
+            "homeassistant.components.intellidwell.IntelliDwellClient.get_rain_delay",
+            return_value={"days_remaining": 0},
+            new_callable=AsyncMock,
+            create=True,
+        ),
+        patch(
+            "homeassistant.components.intellidwell.IntelliDwellClient.get_schedules",
+            return_value=[],
+            new_callable=AsyncMock,
+            create=True,
+        ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.set_relay",
             side_effect=IntelliDwellConnectionError("timeout"),
@@ -271,6 +307,24 @@ async def test_schedule_switch_connection_errors(hass: HomeAssistant) -> None:
 
     with (
         patch(
+            "homeassistant.components.intellidwell.IntelliDwellClient.get_status",
+            return_value={"relay_states": [0] * 10},
+            new_callable=AsyncMock,
+            create=True,
+        ),
+        patch(
+            "homeassistant.components.intellidwell.IntelliDwellClient.get_rain_delay",
+            return_value={"days_remaining": 0},
+            new_callable=AsyncMock,
+            create=True,
+        ),
+        patch(
+            "homeassistant.components.intellidwell.IntelliDwellClient.get_schedules",
+            return_value=[],
+            new_callable=AsyncMock,
+            create=True,
+        ),
+        patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.set_schedule_enabled",
             side_effect=IntelliDwellConnectionError("timeout"),
             new_callable=AsyncMock,
@@ -290,6 +344,24 @@ async def test_schedule_switch_connection_errors(hass: HomeAssistant) -> None:
         )
 
     with (
+        patch(
+            "homeassistant.components.intellidwell.IntelliDwellClient.get_status",
+            return_value={"relay_states": [0] * 10},
+            new_callable=AsyncMock,
+            create=True,
+        ),
+        patch(
+            "homeassistant.components.intellidwell.IntelliDwellClient.get_rain_delay",
+            return_value={"days_remaining": 0},
+            new_callable=AsyncMock,
+            create=True,
+        ),
+        patch(
+            "homeassistant.components.intellidwell.IntelliDwellClient.get_schedules",
+            return_value=[],
+            new_callable=AsyncMock,
+            create=True,
+        ),
         patch(
             "homeassistant.components.intellidwell.IntelliDwellClient.set_schedule_enabled",
             side_effect=IntelliDwellConnectionError("timeout"),
