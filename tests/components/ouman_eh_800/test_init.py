@@ -28,12 +28,14 @@ async def test_sub_devices_link_to_main_device(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     entry_id = mock_config_entry.entry_id
-    main_device = device_registry.async_get_device(identifiers={(DOMAIN, entry_id)})
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry_id), config_entry_id=entry_id
+    )
     assert main_device is not None
 
     for sub_device in (OumanDevice.L1, OumanDevice.L2):
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{entry_id}_{sub_device}")}
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{entry_id}_{sub_device}"), config_entry_id=entry_id
         )
         assert device is not None
         assert device.via_device_id == main_device.id
