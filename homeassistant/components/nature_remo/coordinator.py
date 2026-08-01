@@ -70,14 +70,18 @@ class NatureRemoCoordinator(DataUpdateCoordinator[NatureRemoData]):
             ) from err
         except NatureRemoRateLimitError as err:
             if err.reset is not None:
+                reset = dt_util.utc_from_timestamp(err.reset)
+                delay = (reset - dt_util.utcnow()).total_seconds()
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="update_rate_limited",
                     translation_placeholders={
-                        "reset": dt_util.as_local(
-                            dt_util.utc_from_timestamp(err.reset)
-                        ).isoformat(timespec="seconds")
+                        "reset": dt_util.as_local(reset).isoformat(timespec="seconds")
                     },
+                    # Polling before the window resets only burns requests
+                    # the API rejects. A reset already in the past carries
+                    # no delay, so fall back to the normal interval.
+                    retry_after=delay if delay > 0 else None,
                 ) from err
             raise UpdateFailed(
                 translation_domain=DOMAIN,

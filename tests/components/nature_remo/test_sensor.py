@@ -111,6 +111,25 @@ async def test_smart_meter_follows_the_hub_reading_it(
     assert hass.states.get("sensor.smart_meter_power").state == STATE_UNAVAILABLE
 
 
+async def test_smart_meter_unavailable_when_its_hub_disappears(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: AsyncMock,
+    devices: list[Device],
+) -> None:
+    """A meter whose hub drops out of the account stops reporting.
+
+    The appliance keeps its cached readings in the API response, so
+    without following the hub the meter would look live.
+    """
+    mock_client.get_devices.return_value = [
+        device for device in devices if device.id != "device-remoe-1"
+    ]
+    await async_poll(hass)
+
+    assert hass.states.get("sensor.smart_meter_power").state == STATE_UNAVAILABLE
+
+
 async def test_smart_meter_reading_dropout_is_unknown(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,

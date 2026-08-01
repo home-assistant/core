@@ -61,7 +61,30 @@ async def test_auth_error_raises_config_entry_auth_failed(
 async def test_rate_limit_raises_update_failed_with_reset(
     coordinator: NatureRemoCoordinator, mock_client: AsyncMock
 ) -> None:
-    """A 429 reports when requests are accepted again, not a raw epoch."""
+    """A 429 names when requests are accepted again and defers the next poll."""
+    reset = int(dt_util.utcnow().timestamp()) + 120
+    mock_client.get_appliances.side_effect = NatureRemoRateLimitError(
+        429, "limited", reset=reset
+    )
+
+    with pytest.raises(UpdateFailed) as exc_info:
+        await coordinator._async_update_data()
+    assert exc_info.value.translation_key == "update_rate_limited"
+    assert exc_info.value.translation_placeholders is not None
+    reported = exc_info.value.translation_placeholders["reset"]
+    assert datetime.fromisoformat(reported) == dt_util.utc_from_timestamp(reset)
+    assert exc_info.value.retry_after is not None
+    assert 0 < exc_info.value.retry_after <= 120
+
+
+async def test_rate_limit_with_a_past_reset_keeps_the_normal_interval(
+    coordinator: NatureRemoCoordinator, mock_client: AsyncMock
+) -> None:
+    """A reset already behind us must not schedule an immediate retry.
+
+    ``retry_after`` becomes the next update interval verbatim, so a zero
+    or negative delay would poll in a tight loop.
+    """
     mock_client.get_appliances.side_effect = NatureRemoRateLimitError(
         429, "limited", reset=1752825600
     )
@@ -69,9 +92,7 @@ async def test_rate_limit_raises_update_failed_with_reset(
     with pytest.raises(UpdateFailed) as exc_info:
         await coordinator._async_update_data()
     assert exc_info.value.translation_key == "update_rate_limited"
-    assert exc_info.value.translation_placeholders is not None
-    reset = exc_info.value.translation_placeholders["reset"]
-    assert datetime.fromisoformat(reset) == dt_util.utc_from_timestamp(1752825600)
+    assert exc_info.value.retry_after is None
 
 
 async def test_rate_limit_without_reset_raises_update_failed(

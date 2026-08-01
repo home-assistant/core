@@ -28,8 +28,15 @@ def build_remo_device_info(device: Device) -> DeviceInfo:
     return device_info
 
 
-def build_appliance_device_info(appliance: Appliance) -> DeviceInfo:
-    """Build device-registry info for an appliance behind a Remo."""
+def build_appliance_device_info(
+    appliance: Appliance, via_device_id: str | None = None
+) -> DeviceInfo:
+    """Build device-registry info for an appliance behind a Remo.
+
+    ``via_device_id`` is the registry id of the hub, which only the caller
+    that just registered that hub knows; entities leave it out and attach
+    to the device the setup registration already linked.
+    """
     model = appliance.model
     device_info = DeviceInfo(
         identifiers={(DOMAIN, appliance.id)},
@@ -37,8 +44,8 @@ def build_appliance_device_info(appliance: Appliance) -> DeviceInfo:
         manufacturer=model.manufacturer if model else None,
         model=(model.name or model.remote_name) if model else None,
     )
-    if appliance.device_id:
-        device_info["via_device"] = (DOMAIN, appliance.device_id)
+    if via_device_id:
+        device_info["via_device_id"] = via_device_id
     return device_info
 
 
@@ -99,12 +106,13 @@ class NatureRemoApplianceEntity(CoordinatorEntity[NatureRemoCoordinator]):
     @property
     @override
     def available(self) -> bool:
-        """Unavailable when the appliance or the hub reporting it is gone.
+        """Unavailable when the appliance, or the hub reporting it, is gone.
 
-        The hub is what reaches the appliance, so one that reports itself
-        offline leaves the appliance's readings stale even though the
-        cloud keeps serving them. ``online`` is three-valued, so only an
-        explicit False counts as unreachable.
+        The appliance is only reachable through its Remo, so a hub that
+        dropped out of the account or reports itself offline leaves the
+        readings the cloud still serves stale. ``online`` is three-valued:
+        older firmware never reports it, so only an explicit False counts
+        as offline.
         """
         if (
             not super().available
@@ -113,4 +121,4 @@ class NatureRemoApplianceEntity(CoordinatorEntity[NatureRemoCoordinator]):
             return False
         hub_id = self.appliance.device_id
         hub = self.coordinator.data.devices.get(hub_id) if hub_id else None
-        return hub is None or hub.online is not False
+        return hub is not None and hub.online is not False
