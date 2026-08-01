@@ -208,9 +208,13 @@ async def test_device_via_device_link(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    home_device = device_registry.async_get_device(identifiers={(DOMAIN, HOME_ID)})
+    home_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, HOME_ID), config_entry.entry_id
+    )
     assert home_device is not None
 
-    point_device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+    point_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID), config_entry.entry_id
+    )
     assert point_device is not None
     assert point_device.via_device_id == home_device.id
