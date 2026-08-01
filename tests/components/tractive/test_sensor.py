@@ -49,6 +49,7 @@ async def test_sensor_device_assignment(
 
     pet_device = device_registry.async_get_device(identifiers={(DOMAIN, "pet_id_123")})
     assert pet_device is not None
+    assert pet_device.via_device_id == tracker_device.id
 
     for entity_id in (
         "sensor.tracker_device_id_123_battery",
