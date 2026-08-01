@@ -90,6 +90,7 @@ OSI_APPROVED_LICENSES_SPDX = {
     "PSF-2.0",
     "Python-2.0",
     "Unlicense",
+    "UPL-1.0",
     "Zlib",
     "ZPL-2.1",
 }
