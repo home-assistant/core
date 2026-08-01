@@ -186,20 +186,11 @@
       "humidity_sensor": {
         "name": "Humidity sensor"
       },
-      "humidity_sensor_enabled": {
-        "name": "Humidity sensor enabled"
-      },
       "is_dark": {
         "name": "Is dark"
       },
       "light_sensor": {
         "name": "Light sensor"
-      },
-      "light_sensor_enabled": {
-        "name": "Light sensor enabled"
-      },
-      "motion_detection_enabled": {
-        "name": "Motion detection enabled"
       },
       "object_detected": {
         "name": "Object detected"
@@ -239,9 +230,6 @@
       },
       "temperature_sensor": {
         "name": "Temperature sensor"
-      },
-      "temperature_sensor_enabled": {
-        "name": "Temperature sensor enabled"
       },
       "tracking_person": {
         "name": "Tracking: person"

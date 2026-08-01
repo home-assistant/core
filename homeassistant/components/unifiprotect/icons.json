@@ -6,9 +6,6 @@
       }
     },
     "binary_sensor": {
-      "alarm_sound_detection": {
-        "default": "mdi:alarm-bell"
-      },
       "animal_detected": {
         "default": "mdi:paw"
       },
@@ -93,20 +90,11 @@
       "humidity_sensor": {
         "default": "mdi:water-percent"
       },
-      "humidity_sensor_enabled": {
-        "default": "mdi:water-percent"
-      },
       "is_dark": {
         "default": "mdi:brightness-6"
       },
       "light_sensor": {
         "default": "mdi:brightness-5"
-      },
-      "light_sensor_enabled": {
-        "default": "mdi:brightness-5"
-      },
-      "motion_detection_enabled": {
-        "default": "mdi:walk"
       },
       "object_detected": {
         "default": "mdi:eye"
@@ -145,9 +133,6 @@
         "default": "mdi:speaker"
       },
       "temperature_sensor": {
-        "default": "mdi:thermometer"
-      },
-      "temperature_sensor_enabled": {
         "default": "mdi:thermometer"
       },
       "tracking_person": {
@@ -321,9 +306,6 @@
       },
       "resolution_hd_video": {
         "default": "mdi:cctv"
-      },
-      "sensitivity": {
-        "default": "mdi:walk"
       },
       "storage_utilization": {
         "default": "mdi:harddisk"
