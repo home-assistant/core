@@ -64,9 +64,7 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: done
-  entity-category:
-    status: exempt
-    comment: All entities are user-facing primary sensors.
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
     status: exempt

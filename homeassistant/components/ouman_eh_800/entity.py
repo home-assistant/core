@@ -1,9 +1,11 @@
 """Base entity for Ouman EH-800."""
 
 from dataclasses import dataclass
+from typing import override
 
 from ouman_eh_800_api import OumanEndpoint
 
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -39,4 +41,9 @@ class OumanEh800Entity(CoordinatorEntity[OumanEh800Coordinator]):
             f"{coordinator.config_entry.entry_id}"
             f"_{description.device}_{description.key}"
         )
-        self._attr_device_info = coordinator.device_info[description.device]
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return self.coordinator.device_info(self.entity_description.device)

@@ -162,9 +162,7 @@ async def async_setup_entry(
     async_add_entities(sensors_list)
 
 
-class MikrotikSensorEntity(
-    MikrotikEntity[MikrotikSensorEntityDescription], SensorEntity
-):
+class MikrotikSensorEntity(MikrotikEntity, SensorEntity):
     """Sensor device."""
 
     entity_description: MikrotikSensorEntityDescription
