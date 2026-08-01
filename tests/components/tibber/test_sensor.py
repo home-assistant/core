@@ -71,15 +71,28 @@ async def test_price_sensor_state_unit_and_attributes(
     assert state.attributes["off_peak_2"] == 1.0
 
 
-async def test_data_api_sensors_are_created(
-    recorder_mock: Recorder,
+@pytest.mark.usefixtures("recorder_mock", "setup_credentials")
+async def test_data_api_sensors_migrate_to_device_id(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     data_api_client_mock: AsyncMock,
-    setup_credentials: None,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Ensure Data API sensors are created and expose values from the coordinator."""
+    """Test Data API sensors migrate to Tibber device IDs."""
+    legacy_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "external-id")},
+        name="Test Device",
+    )
+    legacy_entity = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "external-id_storage.stateOfCharge",
+        suggested_object_id="legacy_state_of_charge",
+        config_entry=config_entry,
+        device_id=legacy_device.id,
+    )
     data_api_client_mock.get_all_devices = AsyncMock(
         return_value={"device-id": create_tibber_device(state_of_charge=72.0)}
     )
@@ -93,9 +106,15 @@ async def test_data_api_sensors_are_created(
     data_api_client_mock.get_all_devices.assert_awaited_once()
     data_api_client_mock.update_devices.assert_awaited_once()
 
-    unique_id = "external-id_storage.stateOfCharge"
+    unique_id = "device-id_storage.stateOfCharge"
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-    assert entity_id is not None
+    assert entity_id == legacy_entity.entity_id
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "device-id"), config_entry.entry_id
+    )
+    assert device is not None
+    assert device.id == legacy_device.id
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -251,7 +270,7 @@ async def test_new_data_api_sensor_values(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    unique_id = f"external-id_{sensor_id}"
+    unique_id = f"device-id_{sensor_id}"
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
     assert entity_id is not None, f"Entity not found for {description}"
 
@@ -311,7 +330,7 @@ async def test_new_data_api_sensors_with_disabled_by_default(
     ]
 
     for sensor_id in disabled_sensors:
-        unique_id = f"external-id_{sensor_id}"
+        unique_id = f"device-id_{sensor_id}"
         entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
         assert entity_id is not None, f"Entity not found for sensor {sensor_id}"
 

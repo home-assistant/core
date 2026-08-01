@@ -54,47 +54,40 @@ def _migrate_data_api_registry_entries(
     entry: TibberConfigEntry,
     coordinator: TibberDataAPICoordinator,
 ) -> None:
-    """Migrate registry entries for devices without an external ID."""
-    devices = [device for device in coordinator.data.values() if not device.external_id]
-    if not devices:
-        return
-
+    """Migrate Data API registry entries to Tibber device IDs."""
     entity_registry = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
-    device_registry = dr.async_get(hass)
-    legacy_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, ""), entry.entry_id
-    )
-    legacy_unique_ids = {
-        entity_entry.unique_id
-        for entity_entry in entity_entries
-        if legacy_device and entity_entry.device_id == legacy_device.id
-    }
-
-    unique_id_migrations: dict[str, str] = {}
-    legacy_device_identifier: str | None = None
-    for device in devices:
+    migrations: dict[str, tuple[str, str]] = {}
+    for device in coordinator.data.values():
         for sensor in device.sensors:
-            legacy_unique_id = f"_{sensor.id}"
-            device_unique_id = f"{device.id}_{sensor.id}"
-            unique_id_migrations.setdefault(legacy_unique_id, device_unique_id)
-            if legacy_device_identifier is None and (
-                legacy_unique_id in legacy_unique_ids
-                or device_unique_id in legacy_unique_ids
-            ):
-                legacy_device_identifier = device.id
+            new_unique_id = f"{device.id}_{sensor.id}"
+            migration = (new_unique_id, device.id)
+            migrations.setdefault(f"{device.external_id}_{sensor.id}", migration)
+            migrations.setdefault(new_unique_id, migration)
 
-    if legacy_device and legacy_device_identifier:
-        device_registry.async_update_device(
-            legacy_device.id,
-            new_identifiers={(DOMAIN, legacy_device_identifier)},
-        )
-
+    device_migrations: dict[str, str] = {}
     for entity_entry in entity_entries:
-        if new_unique_id := unique_id_migrations.get(entity_entry.unique_id):
+        if not (registry_migration := migrations.get(entity_entry.unique_id)):
+            continue
+        new_unique_id, device_id = registry_migration
+        if entity_entry.device_id:
+            device_migrations.setdefault(entity_entry.device_id, device_id)
+        if entity_entry.unique_id != new_unique_id:
             entity_registry.async_update_entity(
                 entity_entry.entity_id, new_unique_id=new_unique_id
+            )
+
+    device_registry = dr.async_get(hass)
+    for registry_device_id, tibber_device_id in device_migrations.items():
+        registry_device = device_registry.async_get(registry_device_id)
+        if (
+            registry_device
+            and (DOMAIN, tibber_device_id) not in registry_device.identifiers
+        ):
+            device_registry.async_update_device(
+                registry_device_id,
+                new_identifiers={(DOMAIN, tibber_device_id)},
             )
 
 
