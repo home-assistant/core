@@ -2,8 +2,6 @@
 
 from typing import cast, override
 
-from midealocal.device import MideaDevice
-
 from homeassistant.components.sensor import (
     EntityCategory,
     SensorDeviceClass,
@@ -274,15 +272,6 @@ async def async_setup_entry(
 
 class MideaSensor(MideaEntity, SensorEntity):
     """Represent a Midea  sensor."""
-
-    def __init__(
-        self,
-        device: MideaDevice,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Midea Sensor entity init."""
-        super().__init__(device, description.key)
-        self.entity_description = description
 
     @property
     @override
