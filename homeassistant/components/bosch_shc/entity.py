@@ -21,7 +21,7 @@ async def async_remove_devices(
         (DOMAIN, entity.device_id), entry_id
     )
     if device is not None:
-        dev_registry.async_update_device(device.id, remove_config_entry_id=entry_id)
+        dev_registry.async_remove_device(device.id)
 
 
 class SHCBaseEntity(Entity):
