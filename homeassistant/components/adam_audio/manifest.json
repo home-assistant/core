@@ -7,7 +7,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pyadamaudiocontroller"],
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["pyadamaudiocontroller==1.1.0"],
   "zeroconf": [
     {
