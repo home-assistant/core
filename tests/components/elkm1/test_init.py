@@ -79,12 +79,14 @@ async def test_light_via_device_links_to_system_device(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    system_device = device_registry.async_get_device(identifiers={(DOMAIN, "_system")})
+    system_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "_system"), config_entry.entry_id
+    )
     assert system_device is not None
     assert system_device.name == "ElkM1"
 
-    light_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "elkm1_test_light")}
+    light_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "elkm1_test_light"), config_entry.entry_id
     )
     assert light_device is not None
     assert light_device.via_device_id == system_device.id
