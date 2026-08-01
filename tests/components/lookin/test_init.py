@@ -71,11 +71,13 @@ async def test_controlled_device_links_to_lookin_device(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    lookin_device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+    lookin_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID), entry.entry_id
+    )
     assert lookin_device is not None
 
-    controlled_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MEDIA_UUID)}
+    controlled_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MEDIA_UUID), entry.entry_id
     )
     assert controlled_device is not None
     assert controlled_device.via_device_id == lookin_device.id
