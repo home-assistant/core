@@ -10,6 +10,7 @@ import pytest
 
 from homeassistant.components.omie.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from . import price_enc, spot_price_fetcher
 
@@ -85,7 +86,7 @@ def mock_omie_results_jan15() -> OMIEResults:
         ],
     )
     return OMIEResults(
-        updated_at=dt.datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        updated_at=dt_util.now(),
         market_date=test_date,
         contents=spot_data,
         raw=json.dumps(spot_data),
@@ -120,7 +121,7 @@ def mock_omie_results_oct15() -> OMIEResults:
         ],
     )
     return OMIEResults(
-        updated_at=dt.datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        updated_at=dt_util.now(),
         market_date=test_date,
         contents=spot_data,
         raw=json.dumps(spot_data),
@@ -155,7 +156,7 @@ def mock_omie_results_oct26_dst() -> OMIEResults:
         ],
     )
     return OMIEResults(
-        updated_at=dt.datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        updated_at=dt_util.now(),
         market_date=test_date,
         contents=spot_data,
         raw=json.dumps(spot_data),
@@ -190,7 +191,7 @@ def mock_omie_results_jan16() -> OMIEResults:
         ],
     )
     return OMIEResults(
-        updated_at=dt.datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        updated_at=dt_util.now(),
         market_date=test_date,
         contents=spot_data,
         raw=json.dumps(spot_data),
