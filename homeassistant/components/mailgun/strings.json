@@ -19,5 +19,10 @@
         "title": "Set up the Mailgun webhook"
       }
     }
+  },
+  "exceptions": {
+    "send_message_failed": {
+      "message": "Failed to send the Mailgun notification."
+    }
   }
 }
