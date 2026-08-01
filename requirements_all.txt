@@ -3333,7 +3333,7 @@ vizaio==0.3.2
 vobject==0.9.9
 
 # homeassistant.components.voip
-voip-utils==0.4.0
+voip-utils==0.4.2
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0
