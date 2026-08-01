@@ -2414,6 +2414,63 @@ async def test_reconfigure_mode_round_trip(
     assert ufp_reauth_entry.data[CONF_API_KEY] == "new-api-key"
 
 
+async def test_reconfigure_flip_to_full_clears_session(
+    hass: HomeAssistant,
+    bootstrap: Bootstrap,
+    nvr: NVR,
+    ufp_reauth_entry: MockConfigEntry,
+    mock_api_bootstrap: Mock,
+    mock_api_meta_info: Mock,
+    mock_setup: AsyncMock,
+) -> None:
+    """Flipping back to full access with a new password clears the old session.
+
+    The entry is still marked API-key-only while the clear runs, and a
+    public-only client cannot clear anything, so this has to go through a
+    full-access client.
+    """
+    ufp_reauth_entry.add_to_hass(hass)
+    nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
+    bootstrap.nvr = nvr
+
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    result = await _advance_menu(hass, result, "reconfigure_api_key")
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=_meta_info(),
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
+            return_value=nvr.mac,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": DEFAULT_HOST, "api_key": "new-api-key"},
+        )
+        await hass.async_block_till_done()
+
+    assert ufp_reauth_entry.data[CONF_CONNECTION_MODE] == CONNECTION_MODE_API_KEY_ONLY
+
+    session_client = Mock(spec=ProtectApiClient)
+    session_client.clear_session = AsyncMock()
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    result = await _advance_menu(hass, result, "reconfigure_full")
+    with patch(
+        "homeassistant.components.unifiprotect.config_flow.async_create_session_client",
+        return_value=session_client,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**BASE_USER_INPUT, CONF_PASSWORD: "new-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["reason"] == "reconfigure_successful"
+    assert session_client.clear_session.called
+
+
 async def test_reconfigure_flip_wrong_nvr(
     hass: HomeAssistant,
     ufp_reauth_entry: MockConfigEntry,
