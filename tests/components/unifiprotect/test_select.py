@@ -562,6 +562,35 @@ async def test_select_set_option_camera_recording(
 
 
 @pytest.mark.parametrize(
+    ("mode", "expected"),
+    [
+        (IRLEDMode.CUSTOM_FILTER_ONLY, "custom_filter_only"),
+        (IRLEDMode.MANUAL, "manual"),
+        (IRLEDMode.CUSTOM, "custom"),
+    ],
+)
+async def test_select_camera_ir_current_option(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    mode: IRLEDMode,
+    expected: str,
+) -> None:
+    """A camera already in one of these modes reports it as the current option."""
+    doorbell.isp_settings.ir_led_mode = mode
+
+    await init_entry(hass, ufp, [doorbell])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, doorbell, CAMERA_SELECTS[1]
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected
+    assert expected in state.attributes[ATTR_OPTIONS]
+
+
+@pytest.mark.parametrize(
     ("option", "expected"),
     [
         ("on", IRLEDMode.ON),
