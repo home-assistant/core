@@ -623,8 +623,6 @@ class EntityTriggerBase(Trigger):
             if not self.is_valid_state(to_state, report_not_triggered):
                 return
 
-            # The trigger should never fire if the origin state is excluded
-            # or the transition is not valid.
             if (
                 from_state.state in self._excluded_from_states
                 or not self.is_valid_transition(from_state, to_state)
@@ -657,9 +655,6 @@ class EntityTriggerBase(Trigger):
             @callback
             def call_action() -> None:
                 """Call action with right context."""
-                # After a `for` delay, keep the original triggering event payload.
-                # `async_track_same_state` only verifies the state remained valid
-                # for the configured duration before firing the action.
                 run_action(
                     {
                         ATTR_ENTITY_ID: entity_id,
@@ -672,7 +667,6 @@ class EntityTriggerBase(Trigger):
                 )
 
             if not self._duration:
-                # Call action immediately if duration is not specified or 0
                 call_action()
                 return
 
