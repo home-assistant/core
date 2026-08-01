@@ -81,11 +81,11 @@ async def test_sub_blind_links_to_gateway_device(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    gateway_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_GATEWAY_MAC)}
+    gateway_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_GATEWAY_MAC), entry.entry_id
     )
-    blind_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_BLIND_MAC)}
+    blind_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_BLIND_MAC), entry.entry_id
     )
 
     assert gateway_device is not None
