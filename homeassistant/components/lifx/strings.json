@@ -4,10 +4,13 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_device": "The device at this address is not the one this entry was set up for."
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_serial": "This is not a valid LIFX serial number."
     },
     "flow_title": "{label} ({group})",
     "step": {
@@ -17,16 +20,30 @@
       "pick_device": {
         "data": {
           "device": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "device": "The discovered LIFX device to add."
         }
       },
-      "user": {
+      "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your LIFX device."
+          "host": "The new hostname or IP address of this LIFX device."
         },
-        "description": "If you leave the host empty, discovery will be used to find devices."
+        "description": "Update where Home Assistant reaches this LIFX device. The serial number is not changed, so this has to be the same device."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "serial": "Serial number"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your LIFX device.",
+          "serial": "The twelve character serial number printed on your LIFX device. On its own, it is resolved by broadcasting to your network."
+        },
+        "description": "Fill in the host, the serial number, or both. If you leave both empty, discovery will be used to find devices."
       }
     }
   },
@@ -36,9 +53,14 @@
         "name": "Clean cycle"
       }
     },
-    "select": {
+    "number": {
       "infrared_brightness": {
         "name": "Infrared brightness"
+      }
+    },
+    "select": {
+      "infrared_brightness": {
+        "name": "[%key:component::lifx::entity::number::infrared_brightness::name%]"
       },
       "theme": {
         "name": "Theme"
@@ -48,6 +70,55 @@
       "rssi": {
         "name": "RSSI"
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to the LIFX device at {host}"
+    },
+    "device_error": {
+      "message": "Error communicating with the LIFX device: {error}"
+    },
+    "invalid_color": {
+      "message": "The requested color is not valid: {error}"
+    },
+    "invalid_serial": {
+      "message": "The LIFX device identified by {unique_id} cannot be migrated because that is not a LIFX serial number. Delete the entry and add the device again."
+    },
+    "no_hev": {
+      "message": "{entity_id} does not have HEV LEDs"
+    },
+    "no_infrared": {
+      "message": "{entity_id} does not have infrared LEDs"
+    },
+    "no_lifx_target": {
+      "message": "The targets of action lifx.{service} include no LIFX light"
+    },
+    "no_matrix_target": {
+      "message": "The targets of action lifx.{service} include no LIFX matrix light"
+    },
+    "no_multizone_target": {
+      "message": "The targets of action lifx.{service} include no LIFX multizone light"
+    },
+    "update_failed": {
+      "message": "Error fetching the state of the LIFX device: {error}"
+    }
+  },
+  "issues": {
+    "deprecated_infrared_select": {
+      "fix_flow": {
+        "abort": {
+          "already_removed": "The select entity {entity_name} (`{entity_id}`) has already been removed.",
+          "in_use": "The select entity {entity_name} (`{entity_id}`) was not removed because it is still being used by:\n\n{used_by}\n\nSwitch them to use `{replacement_entity_id}` instead, then try again."
+        },
+        "step": {
+          "confirm": {
+            "description": "The select entity {entity_name} (`{entity_id}`) only offers four predefined brightness levels but brightness can be set to any valid percentage, so it has been replaced by `{replacement_entity_id}`.\n\nSelect **Submit** to remove the select.",
+            "title": "[%key:component::lifx::issues::deprecated_infrared_select::title%]"
+          }
+        }
+      },
+      "title": "The infrared brightness select entity is deprecated"
     }
   },
   "services": {
