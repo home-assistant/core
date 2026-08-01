@@ -1,5 +1,6 @@
 """Tests for the Proxmox VE integration initialization."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 from proxmoxer import AuthenticationError
@@ -16,6 +17,8 @@ from homeassistant.components.proxmoxve.const import (
     DOMAIN,
 )
 from homeassistant.components.proxmoxve.coordinator import (
+    ProxmoxCoordinator,
+    ProxmoxNodeData,
     ProxmoxNodesNotFoundError,
     ProxmoxPermissionsError,
 )
@@ -404,9 +407,9 @@ async def test_new_container_creates_entity(
     "child_identifier",
     ["vm_100", "vm_101", "container_200", "container_201", "storage_local"],
 )
+@pytest.mark.usefixtures("mock_proxmox_client")
 async def test_child_devices_link_to_node(
     hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     child_identifier: str,
@@ -416,16 +419,63 @@ async def test_child_devices_link_to_node(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     entry_id = mock_config_entry.entry_id
-    node_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{entry_id}_node_node/pve1")}
+    node_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_node_node/pve1"), entry_id
     )
     assert node_device is not None
 
-    child_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{entry_id}_{child_identifier}")}
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_{child_identifier}"), entry_id
     )
     assert child_device is not None
     assert child_device.via_device_id == node_device.id
+
+
+async def test_new_node_device_registered_before_resource_callbacks(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a newly discovered node's device exists before new VM/container/storage callbacks run.
+
+    Regression test for a race where a newly discovered node's VM/container/
+    storage entities could be built before the node's own device was
+    registered, causing via_device_id resolution to raise ValueError.
+    """
+    mock_config_entry.add_to_hass(hass)
+    coordinator = ProxmoxCoordinator(hass, mock_config_entry)
+
+    entry_id = mock_config_entry.entry_id
+    resolved_via_device_ids: list[str] = []
+
+    def _resolve_via_device_on_new_vms(
+        vms: list[tuple[ProxmoxNodeData, dict[str, Any]]],
+    ) -> None:
+        """Mimic what ProxmoxVMEntity.__init__ does when a VM is discovered."""
+        for node_data, _vm in vms:
+            resolved_via_device_ids.append(
+                dr.async_get_device_id_by_identifier(
+                    hass,
+                    (DOMAIN, f"{entry_id}_node_{node_data.node['id']}"),
+                    config_entry_id=entry_id,
+                )
+            )
+
+    coordinator.new_vms_callbacks.append(_resolve_via_device_on_new_vms)
+
+    node_data = ProxmoxNodeData(
+        node={"id": "node/pve2", "node": "pve2"},
+        vms={300: {"vmid": 300, "name": "vm-pve2"}},
+    )
+    coordinator._async_add_remove_nodes({"pve2": node_data})
+
+    assert resolved_via_device_ids
+
+    node_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_node_node/pve2"), entry_id
+    )
+    assert node_device is not None
+    assert resolved_via_device_ids == [node_device.id]
 
 
 async def test_stale_devices_removed(

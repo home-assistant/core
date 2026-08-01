@@ -14,8 +14,7 @@ from .const import (
     CONF_REALM,
     DEFAULT_REALM,
 )
-from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator
-from .entity import node_device_info
+from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, node_device_info
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
