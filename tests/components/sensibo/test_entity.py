@@ -43,8 +43,8 @@ async def test_device(
 
 
 @pytest.mark.parametrize("load_platforms", [[Platform.BINARY_SENSOR]])
+@pytest.mark.usefixtures("hass")
 async def test_motion_sensor_via_device(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     load_int: ConfigEntry,
 ) -> None:
@@ -54,11 +54,13 @@ async def test_motion_sensor_via_device(
     solely registered during setup, guarding against the child resolving its
     via_device_id before the parent exists.
     """
-    parent_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "ABC999111")}
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "ABC999111"), load_int.entry_id
     )
     assert parent_device
-    motion_device = device_registry.async_get_device(identifiers={(DOMAIN, "AABBCC")})
+    motion_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "AABBCC"), load_int.entry_id
+    )
     assert motion_device
     assert motion_device.via_device_id == parent_device.id
 
@@ -95,8 +97,12 @@ async def test_motion_sensor_via_device_dynamic_add(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "ABC999111")})
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "AABBCC")})
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "ABC999111"), load_int.entry_id
+    )
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "AABBCC"), load_int.entry_id
+    )
 
     mock_client.async_get_devices.return_value = get_data[2]
     mock_client.async_get_devices_data.return_value = get_data[0]
@@ -105,11 +111,13 @@ async def test_motion_sensor_via_device_dynamic_add(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    parent_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "ABC999111")}
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "ABC999111"), load_int.entry_id
     )
     assert parent_device
-    motion_device = device_registry.async_get_device(identifiers={(DOMAIN, "AABBCC")})
+    motion_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "AABBCC"), load_int.entry_id
+    )
     assert motion_device
     assert motion_device.via_device_id == parent_device.id
 
