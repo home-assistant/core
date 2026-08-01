@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any, Concatenate, override
+from typing import TYPE_CHECKING, Any, Concatenate, cast, override
 
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.types import EheimDigitalClientError, MsgTitle
@@ -15,7 +15,25 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import EheimDigitalDeviceUpdateCoordinator
+from .coordinator import (
+    EheimDigitalDeviceUpdateCoordinator,
+    EheimDigitalUpdateCoordinator,
+)
+
+
+def async_main_device_info(coordinator: EheimDigitalUpdateCoordinator) -> DeviceInfo:
+    """Return the base device info for the main EHEIM Digital device."""
+    device = cast(EheimDigitalDevice, coordinator.hub.main)
+    return DeviceInfo(
+        configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
+        name=device.name,
+        connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
+        manufacturer="EHEIM",
+        model=device.model_name,
+        identifiers={(DOMAIN, device.mac_address)},
+        suggested_area=device.aquarium_name,
+        sw_version=device.sw_version,
+    )
 
 
 def async_device_info[_DeviceT: EheimDigitalDevice](
@@ -63,7 +81,7 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
             except ValueError:
                 # If for some reason the main device is not yet created in the registry, create it here
                 main_device = (
-                    dr.async_get(self.hass)
+                    dr.async_get(coordinator.hass)
                     .async_get_or_create(
                         config_entry_id=coordinator.main_coordinator.config_entry.entry_id,
                         **async_device_info(

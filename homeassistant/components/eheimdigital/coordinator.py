@@ -67,6 +67,9 @@ class EheimDigitalUpdateCoordinator(DataUpdateCoordinator[None]):
     ) -> None:
         """Add the setup callbacks from a specific platform."""
         self.platform_callbacks.add(async_setup_device_entities)
+        for device in self.device_coordinators.values():
+            for coordinator in device.values():
+                async_setup_device_entities(coordinator)
 
     async def _async_device_found(
         self, device_address: str, device_type: EheimDeviceType
@@ -122,6 +125,12 @@ class EheimDigitalUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_setup(self) -> None:
         try:
             await self.hub.connect()
+            async with asyncio.timeout(2):
+                # This event gets triggered when the first message is received from
+                # the device, it contains the data necessary to create the main device.
+                # This removes the race condition where the main device is accessed
+                # before the response from the device is parsed.
+                await self.main_device_added_event.wait()
             await self.hub.update()
             self.async_add_listener(lambda: None, None)
         except (TimeoutError, EheimDigitalClientError) as err:
