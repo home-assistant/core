@@ -151,7 +151,7 @@ adguardhome==0.8.1
 advantage-air==0.4.4
 
 # homeassistant.components.frontier_silicon
-afsapi==1.0.1
+afsapi==1.0.2
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.24
@@ -264,7 +264,7 @@ aioesphomeapi==45.6.1
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
-aiofiles==24.1.0
+aiofiles==25.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -300,7 +300,7 @@ aiohomekit==4.0.0
 aiohttp_sse==2.2.0
 
 # homeassistant.components.hue
-aiohue==4.8.1
+aiohue==4.9.0
 
 # homeassistant.components.imap
 aioimaplib==2.0.1
@@ -812,7 +812,7 @@ debugpy==1.8.21
 decora-wifi==1.4
 
 # homeassistant.components.ecovacs
-deebot-client==18.4.0
+deebot-client==18.5.1
 
 # homeassistant.components.ihc
 # homeassistant.components.ohmconnect
@@ -889,7 +889,7 @@ ecoaliface==0.4.0
 egauge-async==0.4.0
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.7.0
+eheimdigital==1.7.1
 
 # homeassistant.components.ekeybionyx
 ekey-bionyxpy==1.0.1
@@ -940,7 +940,7 @@ enocean-async==0.4.2
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.17.0
+env-canada==0.18.0
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1278,10 +1278,10 @@ hole==0.9.2
 holidays==0.101
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260729.0
+home-assistant-frontend==20260729.3
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.6.24
+home-assistant-intents==2026.7.30
 
 # homeassistant.components.homekit
 homekit-audio-proxy==1.2.1
@@ -2345,7 +2345,7 @@ pylgnetcast==0.3.9
 pylibrespot-java==0.1.1
 
 # homeassistant.components.liebherr
-pyliebherrhomeapi==0.5.0
+pyliebherrhomeapi==0.5.1
 
 # homeassistant.components.litejet
 pylitejet==0.6.3
@@ -2488,7 +2488,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.42
+pyportainer==1.0.43
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2689,7 +2689,7 @@ python-google-weather-api==0.0.6
 python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==10.1.0
+python-homewizard-energy==10.2.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2778,9 +2778,6 @@ python-technove==2.1.1
 
 # homeassistant.components.telegram_bot
 python-telegram-bot[socks]==22.7
-
-# homeassistant.components.vlc
-python-vlc==3.0.18122
 
 # homeassistant.components.xbox
 python-xbox==0.2.0
@@ -3181,7 +3178,7 @@ tesla-powerwall==0.5.3
 tesla-wall-connector==1.2.0
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.9.2
+teslemetry-stream==0.10.0
 
 # homeassistant.components.tessie
 tessie-api==0.1.3

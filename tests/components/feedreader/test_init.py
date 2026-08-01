@@ -237,6 +237,34 @@ async def test_feed_updates(
         assert len(events) == 2
 
 
+async def test_unsorted_feed_updates(
+    hass: HomeAssistant, events, feed_unsorted, feed_unsorted_update
+) -> None:
+    """Test feed updates."""
+    side_effect = [
+        feed_unsorted,
+        feed_unsorted_update,
+    ]
+
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.feedreader.coordinator.feedparser.http.get",
+        side_effect=side_effect,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert len(events) == 3
+
+        # Change time and fetch one more unordered entry
+        future = dt_util.utcnow() + timedelta(hours=1, seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert len(events) == 4
+
+
 async def test_feed_default_max_length(
     hass: HomeAssistant, events, feed_21_events
 ) -> None:

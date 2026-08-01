@@ -231,11 +231,17 @@ async def test_remove_entry_not_loaded_clear_session_fails(
         assert mock_api.clear_session.called
 
 
+@pytest.mark.parametrize("version", ["1.19.0", "7.0.107"])
 async def test_setup_too_old(
-    hass: HomeAssistant, ufp: MockUFPFixture, old_nvr: NVR
+    hass: HomeAssistant, ufp: MockUFPFixture, old_nvr: NVR, version: str
 ) -> None:
-    """Test setup of unifiprotect entry with too old of version of UniFi Protect."""
+    """Test setup of unifiprotect entry with too old of version of UniFi Protect.
 
+    7.0.107 is the last release before the public API gained the camera and
+    sensor fields the integration reads, so it has to be rejected too.
+    """
+
+    old_nvr.version = Version(version)
     old_bootstrap = ufp.api.bootstrap.model_copy()
     old_bootstrap.nvr = old_nvr
     ufp.api.update.return_value = old_bootstrap
@@ -244,6 +250,7 @@ async def test_setup_too_old(
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
     assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
+    assert ufp.entry.error_reason_translation_key == "protect_version"
 
 
 async def test_setup_cloud_account(
