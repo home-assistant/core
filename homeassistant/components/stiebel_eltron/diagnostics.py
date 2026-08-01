@@ -20,9 +20,6 @@ async def async_get_config_entry_diagnostics(
     return {
         "entry_data": async_redact_data(entry.data, TO_REDACT),
         "model": coordinator.device_info["model"],
-        "modbus": {
-            "is_connected": coordinator.api_client.is_connected,
-        },
         "data": {
             "current_temp": coordinator.api_client.get_current_temp(),
             "target_temp": coordinator.api_client.get_target_temp(),

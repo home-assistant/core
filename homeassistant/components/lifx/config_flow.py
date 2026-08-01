@@ -16,10 +16,10 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
-    _LOGGER,
     CONF_SERIAL,
     DEFAULT_ATTEMPTS,
     DOMAIN,
+    LOGGER,
     OVERALL_TIMEOUT,
     TARGET_ANY,
 )
@@ -131,7 +131,7 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         assert self._discovered_device is not None
         discovered = self._discovered_device
-        _LOGGER.debug(
+        LOGGER.debug(
             "Confirming discovery of %s (%s) [%s]",
             discovered.label,
             discovered.group,

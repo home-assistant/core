@@ -171,7 +171,7 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         *,
         scope: str,
         category_id: str,
-        icon: str | None | UndefinedType = UNDEFINED,
+        icon: str | UndefinedType | None = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
     ) -> CategoryEntry:
         """Update name or icon of the category."""

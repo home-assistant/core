@@ -6,17 +6,26 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from google_health_api.model import (
+    BODY_FAT,
     DAILY_RESTING_HEART_RATE,
+    SLEEP,
     WEIGHT,
+    ActiveEnergyBurnedRollupValue,
     DailyRollupDataPoint,
     DataPoint,
     DataType,
     DistanceRollupValue,
+    FloorsRollupValue,
+    HydrationLogRollupValue,
     Identity,
     ListDataPointResult,
+    ListPairedDevicesResult,
+    NutritionLogRollupValue,
     StepsRollupValue,
+    TotalCaloriesRollupValue,
     UserInfo,
     _ListDataPointsModel,
+    _ListPairedDevicesModel,
 )
 import pytest
 
@@ -56,6 +65,12 @@ def _list_fixture(filename: str, data_type: DataType) -> ListDataPointResult:
     return ListDataPointResult(_ListDataPointsModel(data_points=data_points))
 
 
+def _paired_devices_fixture(filename: str) -> ListPairedDevicesResult:
+    """Build a list of paired devices result from a fixture."""
+    raw_json = load_json_object_fixture(filename, DOMAIN)
+    return ListPairedDevicesResult(_ListPairedDevicesModel.from_dict(raw_json))
+
+
 @pytest.fixture(name="expires_at")
 def mock_expires_at() -> int:
     """Fixture to set the oauth token expiration time."""
@@ -63,9 +78,9 @@ def mock_expires_at() -> int:
 
 
 @pytest.fixture
-def scopes() -> list[str]:
+def scopes(request: pytest.FixtureRequest) -> list[str]:
     """Fixture with scopes to set up."""
-    return OAUTH_SCOPES
+    return getattr(request, "param", OAUTH_SCOPES)
 
 
 @pytest.fixture(name="token_entry")
@@ -129,6 +144,31 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         client.distance.today.return_value = _rollup_fixture(
             "distance.json", DistanceRollupValue, "distance"
         )
+        client.active_energy_burned = AsyncMock()
+        client.active_energy_burned.today.return_value = _rollup_fixture(
+            "active_energy_burned.json",
+            ActiveEnergyBurnedRollupValue,
+            "activeEnergyBurned",
+        )
+        client.total_calories = AsyncMock()
+        client.total_calories.today.return_value = _rollup_fixture(
+            "total_calories.json", TotalCaloriesRollupValue, "totalCalories"
+        )
+        client.floors = AsyncMock()
+        client.floors.today.return_value = _rollup_fixture(
+            "floors.json", FloorsRollupValue, "floors"
+        )
+        client.hydration_log = AsyncMock()
+        client.hydration_log.today.return_value = _rollup_fixture(
+            "hydration.json", HydrationLogRollupValue, "hydrationLog"
+        )
+        client.hydration_log.required_read_scopes = [
+            "https://www.googleapis.com/auth/googlehealth.nutrition.readonly"
+        ]
+        client.nutrition_log = AsyncMock()
+        client.nutrition_log.today.return_value = _rollup_fixture(
+            "nutrition.json", NutritionLogRollupValue, "nutritionLog"
+        )
         client.weight = AsyncMock()
         client.weight.list.return_value = _list_fixture("weight.json", WEIGHT)
         client.weight.required_read_scopes = [
@@ -138,12 +178,27 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         client.daily_resting_heart_rate.list.return_value = _list_fixture(
             "resting_heart_rate.json", DAILY_RESTING_HEART_RATE
         )
+        client.body_fat = AsyncMock()
+        client.body_fat.list.return_value = _list_fixture("body_fat.json", BODY_FAT)
+        client.paired_devices = AsyncMock()
+        client.paired_devices.list.return_value = _paired_devices_fixture(
+            "paired_devices.json"
+        )
+        client.paired_devices.required_read_scopes = [
+            "https://www.googleapis.com/auth/googlehealth.settings.readonly"
+        ]
+        client.sleep = AsyncMock()
+        client.sleep.list.return_value = _list_fixture("sleep.json", SLEEP)
+        client.sleep.required_read_scopes = [
+            "https://www.googleapis.com/auth/googlehealth.sleep.readonly"
+        ]
         client.get_identity.return_value = Identity.from_dict(
             load_json_object_fixture("identity.json", DOMAIN)
         )
         client.get_user_info.return_value = UserInfo.from_dict(
             load_json_object_fixture("userinfo.json", DOMAIN)
         )
+
         yield client
 
 

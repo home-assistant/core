@@ -162,15 +162,15 @@ async def test_service_recreate_container(
     [
         (
             PortainerAuthenticationError("auth"),
-            "invalid_auth_no_details",
+            "invalid_auth",
         ),
         (
             PortainerConnectionError("conn"),
-            "cannot_connect_no_details",
+            "cannot_connect",
         ),
         (
             PortainerTimeoutError("timeout"),
-            "timeout_connect_no_details",
+            "timeout_connect",
         ),
     ],
 )

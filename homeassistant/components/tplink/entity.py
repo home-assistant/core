@@ -380,7 +380,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
             # HA logic is to name entities based on the following logic:
             # _attr_name > translation.name > description.name
             # > device_class (if base platform supports).
-            name: str | None | UndefinedType = UNDEFINED
+            name: str | UndefinedType | None = UNDEFINED
 
             # The state feature gets the device name or the child device
             # name if it's a child device

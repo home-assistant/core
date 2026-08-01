@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2026
-MINOR_VERSION: Final = 8
+MINOR_VERSION: Final = 9
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -474,6 +474,8 @@ class EntityStateAttribute(StrEnum):
     ENTITY_PICTURE = "entity_picture"
     FRIENDLY_NAME = "friendly_name"
     ICON = "icon"
+    LATITUDE = "latitude"
+    LONGITUDE = "longitude"
     RESTORED = "restored"
     SUPPORTED_FEATURES = "supported_features"
     UNIT_OF_MEASUREMENT = "unit_of_measurement"

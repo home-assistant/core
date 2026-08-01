@@ -253,7 +253,9 @@ async def async_migrate_entity_unique_ids(
     new_base_unique_id = base_info.gateway_din
 
     dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get_device(identifiers={(DOMAIN, old_base_unique_id)}):
+    if device := dev_reg.async_get_device_by_identifier(
+        (DOMAIN, old_base_unique_id), entry.entry_id
+    ):
         dev_reg.async_update_device(
             device.id, new_identifiers={(DOMAIN, new_base_unique_id)}
         )
