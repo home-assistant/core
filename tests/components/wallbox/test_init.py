@@ -1,6 +1,7 @@
 """Test Wallbox Init Component."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
+import time
 from unittest.mock import patch
 
 import pytest
@@ -12,14 +13,13 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.util import dt as dt_util
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 from .conftest import http_403_error, http_429_error, setup_integration
 from .const import (
     MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
     WALLBOX_STATUS_RESPONSE_NO_POWER_BOOST,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_wallbox_setup_unload_entry(
@@ -60,8 +60,7 @@ async def test_wallbox_refresh_failed_error_auth(
     assert entry.state is ConfigEntryState.LOADED
 
     data = dict(entry.data)
-    # Reemplazamos datetime.now() por dt_util.utcnow() y quitamos el comentario de pylint
-    data[CHARGER_JWT_TTL] = (dt_util.utcnow() - timedelta(hours=1)).timestamp() * 1000
+    data[CHARGER_JWT_TTL] = (time.time() - 3600) * 1000
     hass.config_entries.async_update_entry(entry, data=data)
 
     with (
@@ -142,7 +141,7 @@ async def test_wallbox_refresh_failed_connection_error(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_wallbox_setup_load_entry_no_eco_mode(
+async def test_wallbox_refresh_failed_too_many_requests_no_eco_mode(
     hass: HomeAssistant, entry: MockConfigEntry, mock_wallbox
 ) -> None:
     """Test Wallbox Unload."""
