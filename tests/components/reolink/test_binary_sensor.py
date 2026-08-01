@@ -196,6 +196,36 @@ async def test_dual_lens_sub_devices_nvr(
     assert lens_device.via_device_id == parent_device.id
 
 
+async def test_dual_lens_sub_devices_nvr_multi_channel(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a lens sub-device on channel >= 1 links to its camera device on a NVR host."""
+    reolink_host.model = TEST_DUO_MODEL
+    reolink_host.channels = [0, 1]
+    reolink_host.stream_channels = [0, 1]
+    # channel 1 camera device uses the "_ch{channel}" id (no UID support)
+    reolink_host.supported.side_effect = lambda ch, cap: (
+        not (cap == "UID" and ch is not None)
+    )
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BINARY_SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_UID}_ch1"), config_entry.entry_id
+    )
+    assert parent_device is not None
+    lens_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_UID}_lens1"), config_entry.entry_id
+    )
+    assert lens_device is not None
+    assert lens_device.via_device_id == parent_device.id
+
+
 async def test_smart_ai_sensor(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
