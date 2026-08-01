@@ -54,101 +54,99 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_create_wiim_device() -> Generator[AsyncMock]:
-    """Patch async_create_wiim_device and return the factory itself."""
+def mock_wiim_device() -> Generator[AsyncMock]:
+    """Patch async_create_wiim_device and return the mocked WiimDevice instance."""
     with patch(
         "homeassistant.components.wiim.async_create_wiim_device",
         autospec=True,
     ) as mock_create:
-        yield mock_create
+        mock = mock_create.return_value
+        mock.udn = "uuid:test-udn-1234"
+        mock.name = "Test WiiM Device"
+        mock.model_name = "WiiM Pro"
+        mock.manufacturer = "Linkplay Tech"
+        mock.firmware_version = "4.8.523456"
+        mock.ip_address = "192.168.1.100"
+        mock.http_api_url = "http://192.168.1.100:8080"
+        mock.presentation_url = "http://192.168.1.100:8080/web_interface"
+        mock.available = True
 
+        def set_available(available: bool) -> None:
+            mock.available = available
 
-@pytest.fixture
-def mock_wiim_device(mock_create_wiim_device: AsyncMock) -> AsyncMock:
-    """Return the mocked WiimDevice instance the factory hands back."""
-    mock = mock_create_wiim_device.return_value
-    mock.udn = "uuid:test-udn-1234"
-    mock.name = "Test WiiM Device"
-    mock.model_name = "WiiM Pro"
-    mock.manufacturer = "Linkplay Tech"
-    mock.firmware_version = "4.8.523456"
-    mock.ip_address = "192.168.1.100"
-    mock.http_api_url = "http://192.168.1.100:8080"
-    mock.presentation_url = "http://192.168.1.100:8080/web_interface"
-    mock.available = True
-
-    def set_available(available: bool) -> None:
-        mock.available = available
-
-    mock.set_available = MagicMock(side_effect=set_available)
-    mock.model = "WiiM Pro"
-    mock.volume = 50
-    mock.is_muted = False
-    mock.supports_http_api = False
-    mock.playing_status = PlayingStatus.STOPPED
-    mock.loop_mode = LoopMode.SHUFFLE_DISABLE_REPEAT_NONE
-    mock.loop_state = WiimLoopState(
-        repeat=WiimRepeatMode.OFF,
-        shuffle=False,
-    )
-    mock.input_mode = InputMode.LINE_IN
-    mock.audio_output_hw_mode = AudioOutputHwMode.SPEAKER_OUT.display_name  # type: ignore[attr-defined]
-    mock.mac_address = "AA:BB:CC:DD:EE:FF"
-    mock.current_track_info = {}
-    mock.current_media = None
-    mock.current_track_duration = 0
-    mock.play_mode = "Network"
-    mock.equalizer_mode = ""
-    mock.current_position = 0
-    mock.next_track_uri = ""
-    mock.event_data = {}
-    mock.general_event_callback = None
-    mock.av_transport_event_callback = None
-    mock.rendering_control_event_callback = None
-    mock.play_queue_event_callback = None
-    mock.output_mode = "speaker"
-    mock.supported_input_modes = (InputMode.LINE_IN.display_name,)  # type: ignore[attr-defined]
-    mock.supported_output_modes = (
-        AudioOutputHwMode.SPEAKER_OUT.display_name,  # type: ignore[attr-defined]
-    )
-
-    upnp_device = MagicMock()
-    upnp_device.udn = mock.udn
-    upnp_device.friendly_name = mock.name
-    upnp_device.model_name = mock.model_name
-    upnp_device.manufacturer = mock.manufacturer
-    upnp_device.serial_number = "TESTSERIAL123"
-    upnp_device.presentation_url = mock.presentation_url
-    upnp_device.get_device_info = MagicMock(
-        return_value={
-            "udn": mock.udn,
-            "friendly_name": mock.name,
-            "model_name": mock.model_name,
-            "manufacturer": mock.manufacturer,
-            "serial_number": upnp_device.serial_number,
-        }
-    )
-    mock.upnp_device = upnp_device
-
-    mock.get_audio_output_hw_mode = AsyncMock(return_value="speaker")
-    mock.async_get_play_queue = AsyncMock(return_value=[])
-    mock.async_get_audio_output_modes = AsyncMock(return_value=[])
-    mock.async_get_input_modes = AsyncMock(return_value=[])
-    mock.async_get_play_mediums = AsyncMock(return_value=[])
-    mock.async_get_transport_capabilities = AsyncMock(
-        return_value=WiimTransportCapabilities(
-            can_next=False,
-            can_previous=False,
-            can_repeat=False,
-            can_shuffle=False,
+        mock.set_available = MagicMock(side_effect=set_available)
+        mock.model = "WiiM Pro"
+        mock.volume = 50
+        mock.is_muted = False
+        mock.supports_http_api = False
+        mock.playing_status = PlayingStatus.STOPPED
+        mock.loop_mode = LoopMode.SHUFFLE_DISABLE_REPEAT_NONE
+        mock.loop_state = WiimLoopState(
+            repeat=WiimRepeatMode.OFF,
+            shuffle=False,
         )
-    )
-    mock.async_get_presets = AsyncMock(return_value=())
-    mock.async_get_queue_snapshot = AsyncMock(return_value=WiimQueueSnapshot(items=()))
-    mock.as_diagnostics = MagicMock()
-    mock.build_loop_mode = MagicMock(return_value=LoopMode.SHUFFLE_DISABLE_REPEAT_NONE)
+        mock.input_mode = InputMode.LINE_IN
+        mock.audio_output_hw_mode = AudioOutputHwMode.SPEAKER_OUT.display_name  # type: ignore[attr-defined]
+        mock.mac_address = "AA:BB:CC:DD:EE:FF"
+        mock.current_track_info = {}
+        mock.current_media = None
+        mock.current_track_duration = 0
+        mock.play_mode = "Network"
+        mock.equalizer_mode = ""
+        mock.current_position = 0
+        mock.next_track_uri = ""
+        mock.event_data = {}
+        mock.general_event_callback = None
+        mock.av_transport_event_callback = None
+        mock.rendering_control_event_callback = None
+        mock.play_queue_event_callback = None
+        mock.output_mode = "speaker"
+        mock.supported_input_modes = (InputMode.LINE_IN.display_name,)  # type: ignore[attr-defined]
+        mock.supported_output_modes = (
+            AudioOutputHwMode.SPEAKER_OUT.display_name,  # type: ignore[attr-defined]
+        )
 
-    return mock
+        upnp_device = MagicMock()
+        upnp_device.udn = mock.udn
+        upnp_device.friendly_name = mock.name
+        upnp_device.model_name = mock.model_name
+        upnp_device.manufacturer = mock.manufacturer
+        upnp_device.serial_number = "TESTSERIAL123"
+        upnp_device.presentation_url = mock.presentation_url
+        upnp_device.get_device_info = MagicMock(
+            return_value={
+                "udn": mock.udn,
+                "friendly_name": mock.name,
+                "model_name": mock.model_name,
+                "manufacturer": mock.manufacturer,
+                "serial_number": upnp_device.serial_number,
+            }
+        )
+        mock.upnp_device = upnp_device
+
+        mock.get_audio_output_hw_mode = AsyncMock(return_value="speaker")
+        mock.async_get_play_queue = AsyncMock(return_value=[])
+        mock.async_get_audio_output_modes = AsyncMock(return_value=[])
+        mock.async_get_input_modes = AsyncMock(return_value=[])
+        mock.async_get_play_mediums = AsyncMock(return_value=[])
+        mock.async_get_transport_capabilities = AsyncMock(
+            return_value=WiimTransportCapabilities(
+                can_next=False,
+                can_previous=False,
+                can_repeat=False,
+                can_shuffle=False,
+            )
+        )
+        mock.async_get_presets = AsyncMock(return_value=())
+        mock.async_get_queue_snapshot = AsyncMock(
+            return_value=WiimQueueSnapshot(items=())
+        )
+        mock.as_diagnostics = MagicMock()
+        mock.build_loop_mode = MagicMock(
+            return_value=LoopMode.SHUFFLE_DISABLE_REPEAT_NONE
+        )
+
+        yield mock
 
 
 @pytest.fixture
