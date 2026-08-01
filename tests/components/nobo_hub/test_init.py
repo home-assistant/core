@@ -262,6 +262,34 @@ async def test_setup_registers_hub_device_with_mac(
     }
 
 
+@pytest.mark.parametrize(
+    "platforms", [[Platform.CLIMATE, Platform.SENSOR]], indirect=True
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_zone_and_component_devices_link_to_hub(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Zone and component devices reference the hub device via via_device_id."""
+    entry_id = mock_config_entry.entry_id
+    hub_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), entry_id
+    )
+    assert hub_device is not None
+
+    zone_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{SERIAL}:1"), entry_id
+    )
+    assert zone_device is not None
+    assert zone_device.via_device_id == hub_device.id
+
+    component_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "200000059091"), entry_id
+    )
+    assert component_device is not None
+    assert component_device.via_device_id == hub_device.id
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_entity_available_when_hub_connected(hass: HomeAssistant) -> None:
     """Entities are available when the hub reports connected."""
