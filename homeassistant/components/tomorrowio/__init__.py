@@ -69,10 +69,11 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         api_key = entry.data[CONF_API_KEY]
         location = entry.data[CONF_LOCATION]
 
+        # The title reflects UI renames while data[CONF_NAME] is frozen at
+        # creation, so the title is the user's current name for the location.
         # Default titles were "Tomorrow.io - <zone>"; under a parent entry
         # already titled Tomorrow.io only the zone part is meaningful.
-        name = entry.data.get(CONF_NAME, entry.title)
-        name = name.removeprefix(f"{INTEGRATION_NAME} - ") or name
+        name = entry.title.removeprefix(f"{INTEGRATION_NAME} - ") or entry.title
 
         subentry = ConfigSubentry(
             data=MappingProxyType(

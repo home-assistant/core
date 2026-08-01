@@ -468,3 +468,21 @@ async def test_migration_resumes_after_subentry_persisted(
     assert moved is not None
     assert moved.config_entry_id == migrated.entry_id
     assert moved.config_subentry_id == work_subentry_id
+
+
+async def test_migration_uses_customized_entry_title(hass: HomeAssistant) -> None:
+    """Test a UI-renamed entry keeps its custom name for the location.
+
+    Renames update the entry title but not the stored CONF_NAME, so the
+    title must win.
+    """
+    config_entry = make_v1_config_entry(API_KEY, HOME_LOCATION, "Tomorrow.io - Home", 1)
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(config_entry, title="Casa")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry = next(iter(config_entry.subentries.values()))
+    assert subentry.title == "Casa"
+    assert subentry.data[CONF_NAME] == "Casa"
