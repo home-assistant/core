@@ -39,17 +39,21 @@ async def test_setup_unauthorized(
     assert mock_config_entry.state is entry_state
 
 
+@pytest.mark.usefixtures("mock_yardian_client", "switch_platform_only")
 async def test_zone_device_via_device(
     hass: HomeAssistant,
-    mock_yardian_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that zone child devices link to the main device via via_device_id."""
     await setup_integration(hass, mock_config_entry)
 
-    main_device = device_registry.async_get_device(identifiers={(DOMAIN, "yid123")})
-    zone_device = device_registry.async_get_device(identifiers={(DOMAIN, "yid123_0")})
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "yid123"), mock_config_entry.entry_id
+    )
+    zone_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "yid123_0"), mock_config_entry.entry_id
+    )
 
     assert main_device is not None
     assert zone_device is not None
