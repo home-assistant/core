@@ -70,7 +70,11 @@ class AdamAudioConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 device_name, description, serial = result
-                await self.async_set_unique_id(serial or device_name)
+                # device_name is the device's hardware model name, not
+                # guaranteed unique across units (see AdamAudioCoordinator.
+                # entity_unique_id_base) — fall back to the host so two
+                # same-model speakers configured manually don't collide.
+                await self.async_set_unique_id(serial or f"{device_name}-{host}")
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: host, CONF_PORT: port}
                 )

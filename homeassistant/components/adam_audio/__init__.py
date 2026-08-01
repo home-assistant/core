@@ -15,7 +15,7 @@ from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_SERIAL, DOMAIN, LOGGER
 from .coordinator import AdamAudioCoordinator
 from .data import AdamAudioConfigEntry, AdamAudioData, AdamAudioIntegrationData
 
@@ -191,7 +191,11 @@ def _async_migrate_entry_unique_id(
         )
         return
     old_unique_id = entry.unique_id
-    hass.config_entries.async_update_entry(entry, unique_id=coordinator.device_serial)
+    hass.config_entries.async_update_entry(
+        entry,
+        unique_id=coordinator.device_serial,
+        data={**entry.data, CONF_SERIAL: coordinator.device_serial},
+    )
     LOGGER.debug(
         "Migrated entry %s unique_id from %s to serial %s",
         entry.entry_id,
