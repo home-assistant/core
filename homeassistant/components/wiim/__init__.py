@@ -6,7 +6,7 @@ from wiim.exceptions import WiimDeviceException, WiimRequestException
 
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DATA_WIIM, DOMAIN, LOGGER, PLATFORMS, UPNP_PORT, WiimConfigEntry
@@ -48,7 +48,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
     host = entry.data[CONF_HOST]
     upnp_location = f"http://{host}:{UPNP_PORT}/description.xml"
 
-    local_host = await async_get_event_callback_host(hass, upnp_location)
+    try:
+        local_host = await async_get_event_callback_host(hass, upnp_location)
+    except HomeAssistantError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="callback_host_unavailable",
+        ) from err
 
     try:
         wiim_device = await async_create_wiim_device(

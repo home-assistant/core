@@ -10,6 +10,7 @@ from homeassistant.components.wiim.util import async_get_event_callback_host
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
 
@@ -119,6 +120,27 @@ async def test_event_callback_host_falls_back_to_source_ip(
         )
 
     mock_source_ip.assert_awaited_once_with(hass, target_ip="192.168.1.100")
+
+
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_setup_retries_when_no_local_address(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_local_ip: AsyncMock,
+) -> None:
+    """Test setup retries when no local address can be determined."""
+    mock_local_ip.side_effect = OSError("network is unreachable")
+
+    with patch(
+        "homeassistant.components.wiim.util.async_get_source_ip",
+        side_effect=HomeAssistantError("no enabled IPv4 addresses"),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "callback_host_unavailable"
 
 
 async def test_setup_no_url_after_core_config(
