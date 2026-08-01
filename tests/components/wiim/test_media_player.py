@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from wiim.consts import PlayingStatus
-from wiim.exceptions import WiimRequestException
+from wiim.exceptions import WiimDeviceException, WiimRequestException
 from wiim.models import (
     WiimGroupRole,
     WiimGroupSnapshot,
@@ -54,7 +54,7 @@ from homeassistant.components.media_player import (
 )
 import homeassistant.components.wiim as wiim_component
 from homeassistant.components.wiim.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -321,6 +321,28 @@ async def test_command_error_uses_translation(
         "command": "async_media_play",
         "entity_id": MEDIA_PLAYER_ENTITY_ID,
     }
+
+
+async def test_command_error_keeps_device_available(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+) -> None:
+    """Test a rejected command does not mark the device unavailable."""
+    await setup_integration(hass, mock_config_entry)
+    mock_wiim_device.async_pause.side_effect = WiimDeviceException("not allowed")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_MEDIA_PAUSE,
+            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_wiim_device.set_available.assert_not_called()
+    assert hass.states.get(MEDIA_PLAYER_ENTITY_ID).state != STATE_UNAVAILABLE
 
 
 async def test_repeat_and_shuffle_services_update_state_machine(

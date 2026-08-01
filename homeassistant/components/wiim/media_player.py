@@ -95,7 +95,6 @@ def media_player_exception_wrap[
         try:
             result = await func(self, *args, **kwargs)
         except (WiimDeviceException, WiimRequestException, WiimException) as err:
-            await self._async_handle_critical_error(err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
