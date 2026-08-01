@@ -1,0 +1,87 @@
+"""Test the Tado coordinator."""
+
+from unittest.mock import MagicMock
+
+import pytest
+
+from homeassistant.components.tado import CONF_REFRESH_TOKEN, DOMAIN
+from homeassistant.components.tado.coordinator import TadoDataUpdateCoordinator
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
+
+from tests.common import MockConfigEntry
+
+
+async def test_refresh_token_is_persisted_even_if_update_fails(
+    hass: HomeAssistant,
+) -> None:
+    """A rotated refresh token must be saved even if a later API call fails.
+
+    Tado rotates the refresh token whenever the short-lived access token is
+    refreshed, which PyTado does lazily on the first API call of a cycle
+    (``get_me``/``get_zones``/``get_devices``). If a later call in that same
+    cycle fails, the newly rotated token must still be persisted to the
+    config entry - otherwise a restart before the next successful cycle
+    leaves Home Assistant holding a stale, already-invalidated token and
+    forces the user to re-authenticate (home-assistant/core#176592).
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_REFRESH_TOKEN: "old-token"},
+        unique_id="1",
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
+    tado = MagicMock()
+    tado.get_me.return_value = {"homes": [{"id": 1, "name": "Home"}]}
+    tado.get_zones.return_value = []
+    # Empty devices makes _async_update_devices raise UpdateFailed, simulating
+    # a failure that happens *after* the token has already rotated during the
+    # earlier get_me/get_zones/get_devices calls above.
+    tado.get_devices.return_value = []
+    # The token has already rotated in PyTado's in-memory client by the time
+    # this cycle fails.
+    tado.get_refresh_token.return_value = "new-token"
+
+    coordinator = TadoDataUpdateCoordinator(hass, entry, tado)
+
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+    assert entry.data[CONF_REFRESH_TOKEN] == "new-token"
+
+
+async def test_refresh_token_is_persisted_on_success(hass: HomeAssistant) -> None:
+    """Sanity check: the existing happy-path persist behavior still works."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_REFRESH_TOKEN: "old-token"},
+        unique_id="1",
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
+    tado = MagicMock()
+    tado.get_me.return_value = {"homes": [{"id": 1, "name": "Home"}]}
+    tado.get_zones.return_value = []
+    tado.get_devices.return_value = []
+    tado.get_zone_states.return_value = {"zoneStates": {}}
+    tado.get_weather.return_value = {}
+    tado.get_home_state.return_value = {}
+    tado.get_refresh_token.return_value = "new-token"
+    tado.rate_limit_info.return_value = {"remaining": "999"}
+
+    coordinator = TadoDataUpdateCoordinator(hass, entry, tado)
+
+    # Avoid the empty-devices UpdateFailed short-circuit so we exercise the
+    # full happy path.
+    with pytest.MonkeyPatch().context() as mp:
+        mp.setattr(coordinator, "_async_update_devices", _return_empty_dict)
+        await coordinator._async_update_data()
+
+    assert entry.data[CONF_REFRESH_TOKEN] == "new-token"
+
+
+async def _return_empty_dict(*_args, **_kwargs) -> dict:
+    return {}
