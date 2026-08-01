@@ -11,7 +11,7 @@ created to control all speakers simultaneously.
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -69,6 +69,7 @@ async def async_setup_entry(
 
     _async_migrate_device_identifiers(hass, coordinator)
     _async_migrate_entry_unique_id(hass, entry, coordinator)
+    _async_migrate_entity_unique_ids(hass, entry, coordinator)
 
     entry.runtime_data = AdamAudioData(
         client=coordinator.client,
@@ -202,6 +203,49 @@ def _async_migrate_entry_unique_id(
         old_unique_id,
         coordinator.device_serial,
     )
+
+
+def _async_migrate_entity_unique_ids(
+    hass: HomeAssistant, entry: AdamAudioConfigEntry, coordinator: AdamAudioCoordinator
+) -> None:
+    """Rename this entry's entities from the hardware-name unique_id to the serial.
+
+    Versions up to 0.3.x built entity unique_ids from the hardware name
+    (see AdamAudioCoordinator.entity_unique_id_base); entities now build
+    theirs from the serial once it's known. Without this, existing
+    registry entries keep the old unique_id — which nothing provides
+    anymore, so they go unavailable — while a duplicate set of entities is
+    created under the new unique_id. Renaming the existing entries in
+    place keeps their entity_id (and history) intact.
+    """
+    if (
+        not coordinator.device_serial
+        or coordinator.device_serial == coordinator.device_unique_id
+    ):
+        return
+    old_prefix = f"{DOMAIN}_{coordinator.device_unique_id}_"
+    new_prefix = f"{DOMAIN}_{coordinator.device_serial}_"
+    entity_registry = er.async_get(hass)
+    for reg_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if not reg_entry.unique_id.startswith(old_prefix):
+            continue
+        new_unique_id = new_prefix + reg_entry.unique_id[len(old_prefix) :]
+        if entity_registry.async_get_entity_id(reg_entry.domain, DOMAIN, new_unique_id):
+            LOGGER.warning(
+                "Entity %s was not migrated to unique_id %s: already in use",
+                reg_entry.entity_id,
+                new_unique_id,
+            )
+            continue
+        entity_registry.async_update_entity(
+            reg_entry.entity_id, new_unique_id=new_unique_id
+        )
+        LOGGER.debug(
+            "Migrated entity %s unique_id from %s to %s",
+            reg_entry.entity_id,
+            reg_entry.unique_id,
+            new_unique_id,
+        )
 
 
 async def _async_reload_entry(

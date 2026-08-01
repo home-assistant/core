@@ -9,10 +9,12 @@ from homeassistant.components.adam_audio.const import (
     CONF_DEVICE_NAME,
     CONF_SERIAL,
     DOMAIN,
+    ENTITY_MUTE,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_DESCRIPTION, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DESCRIPTION, CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
     MOCK_DESCRIPTION,
@@ -309,6 +311,116 @@ async def test_no_unique_id_migration_without_serial(
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.unique_id == MOCK_DEVICE_NAME  # unchanged, nothing to migrate to
+
+
+async def test_migrates_stale_hardware_name_entity_unique_ids(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entities are renamed from the hardware-name unique_id to the serial.
+
+    Regression test: entities used to build their unique_id from the
+    hardware name (see AdamAudioCoordinator.entity_unique_id_base).  Once a
+    serial is known, entities build theirs from the serial instead; without
+    renaming the existing registry entries, they'd go unavailable (nothing
+    provides the old unique_id anymore) while a duplicate set of entities
+    gets created under the new one.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_DESCRIPTION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_DEVICE_NAME: MOCK_DEVICE_NAME,
+            CONF_DESCRIPTION: MOCK_DESCRIPTION,
+            CONF_SERIAL: MOCK_SERIAL,
+        },
+        source="user",
+        unique_id=MOCK_SERIAL,
+    )
+    entry.add_to_hass(hass)
+
+    stale_unique_id = f"{DOMAIN}_{MOCK_DEVICE_NAME}_{ENTITY_MUTE}"
+    reg_entry = entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        stale_unique_id,
+        config_entry=entry,
+        suggested_object_id="left_speaker_mute",
+    )
+
+    with patch(
+        "homeassistant.components.adam_audio.coordinator.AdamAudioClient",
+        return_value=mock_client,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    migrated = entity_registry.async_get(reg_entry.entity_id)
+    assert migrated is not None
+    assert migrated.unique_id == f"{DOMAIN}_{MOCK_SERIAL}_{ENTITY_MUTE}"
+    # Same entity_id kept (no duplicate entity created under it)
+    assert migrated.entity_id == reg_entry.entity_id
+
+
+async def test_entity_unique_id_migration_skips_existing_target(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the entity migration refuses to collide with an existing entity.
+
+    If an entity already exists under the target (serial-based) unique_id
+    -- e.g. a leftover from a previous partial migration -- renaming the
+    stale entity onto it would silently merge two distinct registry
+    entries. It should be left alone instead.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_DESCRIPTION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_DEVICE_NAME: MOCK_DEVICE_NAME,
+            CONF_DESCRIPTION: MOCK_DESCRIPTION,
+            CONF_SERIAL: MOCK_SERIAL,
+        },
+        source="user",
+        unique_id=MOCK_SERIAL,
+    )
+    entry.add_to_hass(hass)
+
+    stale_unique_id = f"{DOMAIN}_{MOCK_DEVICE_NAME}_{ENTITY_MUTE}"
+    target_unique_id = f"{DOMAIN}_{MOCK_SERIAL}_{ENTITY_MUTE}"
+    stale_entry = entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        stale_unique_id,
+        config_entry=entry,
+        suggested_object_id="left_speaker_mute",
+    )
+    entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        target_unique_id,
+        config_entry=entry,
+        suggested_object_id="left_speaker_mute_2",
+    )
+
+    with patch(
+        "homeassistant.components.adam_audio.coordinator.AdamAudioClient",
+        return_value=mock_client,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    untouched = entity_registry.async_get(stale_entry.entity_id)
+    assert untouched is not None
+    assert untouched.unique_id == stale_unique_id  # left alone
 
 
 async def test_coordinator_update_failure(
