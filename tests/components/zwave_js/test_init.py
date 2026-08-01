@@ -467,12 +467,12 @@ async def test_new_entity_on_value_added(
     assert hass.states.get("sensor.multisensor_6_ultraviolet_10") is not None
 
 
-@pytest.mark.usefixtures("integration")
 async def test_on_node_added_ready(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     multisensor_6_state: NodeDataType,
     client: MagicMock,
+    integration: MockConfigEntry,
 ) -> None:
     """Test we handle a node added event with a ready node."""
     node = Node(client, deepcopy(multisensor_6_state))
@@ -493,9 +493,21 @@ async def test_on_node_added_ready(
 
     assert state  # entity and device added
     assert state.state != STATE_UNAVAILABLE
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, air_temperature_device_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, air_temperature_device_id), integration.entry_id
     )
+    assert device
+
+    controller_node = client.driver.controller.own_node
+    assert controller_node
+    controller_device_id = (
+        f"{client.driver.controller.home_id}-{controller_node.node_id}"
+    )
+    controller_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, controller_device_id), integration.entry_id
+    )
+    assert controller_device
+    assert device.via_device_id == controller_device.id
 
 
 async def test_check_pre_provisioned_device_update_device(
