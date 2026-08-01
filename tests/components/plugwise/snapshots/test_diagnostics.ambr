@@ -132,6 +132,7 @@
     '446ac08dd04d4eff8ac57489757b7314': dict({
       'active_preset': 'no_frost',
       'available_schedules': list([
+        'off',
       ]),
       'climate_mode': 'heat',
       'control_state': 'idle',
@@ -145,7 +146,7 @@
         'vacation',
         'no_frost',
       ]),
-      'select_schedule': None,
+      'select_schedule': 'off',
       'sensors': dict({
         'temperature': 15.6,
       }),
