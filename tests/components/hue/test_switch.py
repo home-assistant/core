@@ -2,12 +2,22 @@
 
 from unittest.mock import Mock
 
+import pytest
+
+from homeassistant.components.hue.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_platform
-from .const import FAKE_BINARY_SENSOR, FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY
+from .const import (
+    FAKE_BEHAVIOR_INSTANCE,
+    FAKE_BEHAVIOR_SCRIPT,
+    FAKE_BINARY_SENSOR,
+    FAKE_DEVICE,
+    FAKE_ZIGBEE_CONNECTIVITY,
+)
 
 
 async def test_switch(
@@ -131,3 +141,60 @@ async def test_switch_added(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is not None
     assert test_entity.state == "off"
+
+
+@pytest.mark.parametrize(
+    "metadata",
+    [
+        pytest.param(
+            {"name": "Hue Accessories", "category": "accessory"}, id="accessory"
+        ),
+        pytest.param(
+            {"name": "Light state after streaming", "category": "entertainment"},
+            id="entertainment",
+        ),
+        pytest.param({"name": "Old bridge script"}, id="no_category"),
+    ],
+)
+async def test_internal_behavior_instance_not_added(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    metadata: dict,
+) -> None:
+    """Test internal behavior instances are not exposed as switches.
+
+    The bridge accepts a change to `enabled` on these but keeps running them,
+    so a switch for them would silently do nothing. Bridges that do not report
+    a category at all are skipped for the same reason.
+    """
+    internal_script = {**FAKE_BEHAVIOR_SCRIPT, "metadata": metadata}
+    await mock_bridge_v2.api.load_test_data(
+        [*v2_resources_test_data, internal_script, FAKE_BEHAVIOR_INSTANCE]
+    )
+
+    await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
+
+    assert hass.states.get("switch.philips_hue_automation_wall_switch_hallway") is None
+    assert hass.states.get("switch.philips_hue_automation_timer_test") is not None
+    assert len(hass.states.async_all()) == 4
+
+
+async def test_internal_behavior_instance_entity_removed(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a previously created entity for an internal instance is removed."""
+    # Simulate an entity created with a previous version of the integration
+    stale_entity = entity_registry.async_get_or_create(
+        Platform.SWITCH, DOMAIN, FAKE_BEHAVIOR_INSTANCE["id"]
+    )
+    await mock_bridge_v2.api.load_test_data(
+        [*v2_resources_test_data, FAKE_BEHAVIOR_SCRIPT, FAKE_BEHAVIOR_INSTANCE]
+    )
+
+    await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
+
+    assert entity_registry.async_get(stale_entity.entity_id) is None
