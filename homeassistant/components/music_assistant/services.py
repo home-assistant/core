@@ -122,6 +122,7 @@ def register_actions(hass: HomeAssistant) -> None:
                 vol.Optional(ATTR_ORDER_BY): cv.string,
                 vol.Optional(ATTR_ALBUM_TYPE): list[MediaType],
                 vol.Optional(ATTR_ALBUM_ARTISTS_ONLY): cv.boolean,
+                vol.Optional(ATTR_USERNAME): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -245,12 +246,16 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
     limit = call.data.get(ATTR_LIMIT, DEFAULT_LIMIT)
     offset = call.data.get(ATTR_OFFSET, DEFAULT_OFFSET)
     order_by = call.data.get(ATTR_ORDER_BY, DEFAULT_SORT_ORDER)
+    username = call.data.get(ATTR_USERNAME)
+    if username is not None:
+        await async_verify_mass_username_availability(mass=mass, username=username)
     base_params = {
         "favorite": call.data.get(ATTR_FAVORITE),
         "search": call.data.get(ATTR_SEARCH),
         "limit": limit,
         "offset": offset,
         "order_by": order_by,
+        "user": username,
     }
     library_result: (
         list[Album]
