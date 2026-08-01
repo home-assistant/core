@@ -6,7 +6,8 @@ from matter_server.common.models import EventType
 import pytest
 
 from homeassistant.components.matter.adapter import get_clean_name
-from homeassistant.components.matter.const import DOMAIN
+from homeassistant.components.matter.const import DOMAIN, ID_TYPE_DEVICE_ID
+from homeassistant.components.matter.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -142,6 +143,56 @@ async def test_node_added_subscription(
 
     entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
+
+
+async def test_endpoint_added_sets_up_bridge_before_child(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    integration: MockConfigEntry,
+) -> None:
+    """Test a bridged child endpoint resolves via_device_id set up out of order.
+
+    The bridge device (endpoint 0) must be registered before a bridged child
+    endpoint, even if the child's ENDPOINT_ADDED event is the only one that
+    arrives (the bridge itself was never separately set up).
+    """
+    node = create_node_from_fixture("atios_knx_bridge")
+    matter_client.get_node.return_value = node
+
+    def identifier_for(endpoint_id: int) -> tuple[str, str]:
+        endpoint = node.endpoints[endpoint_id]
+        device_id = get_device_id(matter_client.server_info, endpoint)
+        return (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{device_id}")
+
+    endpoint_added_callback = next(
+        call.kwargs["callback"]
+        for call in matter_client.subscribe_events.call_args_list
+        if call.kwargs["event_filter"] == EventType.ENDPOINT_ADDED
+    )
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            identifier_for(0), integration.entry_id
+        )
+        is None
+    )
+
+    endpoint_added_callback(
+        EventType.ENDPOINT_ADDED, {"node_id": node.node_id, "endpoint_id": 29}
+    )
+    await hass.async_block_till_done()
+
+    bridge_entry = device_registry.async_get_device_by_identifier(
+        identifier_for(0), integration.entry_id
+    )
+    assert bridge_entry is not None
+
+    child_entry = device_registry.async_get_device_by_identifier(
+        identifier_for(29), integration.entry_id
+    )
+    assert child_entry is not None
+    assert child_entry.via_device_id == bridge_entry.id
 
 
 @pytest.mark.usefixtures("matter_node")
