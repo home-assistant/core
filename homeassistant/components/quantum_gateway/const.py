@@ -1,7 +1,5 @@
-"""Constants for Quantum Gateway."""
+"""Constants for Verizon FiOS Quantum Gateway."""
 
-import logging
-
-LOGGER = logging.getLogger(__package__)
+DOMAIN = "quantum_gateway"
 
 DEFAULT_HOST = "myfiosgateway.com"
