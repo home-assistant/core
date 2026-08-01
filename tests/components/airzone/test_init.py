@@ -135,19 +135,19 @@ async def test_device_via_device_links(
 
     config_entry = await async_init_integration(hass)
 
-    ws_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{config_entry.entry_id}_ws")}
+    ws_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{config_entry.entry_id}_ws"), config_entry.entry_id
     )
     assert ws_device is not None
 
-    system_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{config_entry.entry_id}_1")}
+    system_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{config_entry.entry_id}_1"), config_entry.entry_id
     )
     assert system_device is not None
     assert system_device.via_device_id == ws_device.id
 
-    zone_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{config_entry.entry_id}_1:1")}
+    zone_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{config_entry.entry_id}_1:1"), config_entry.entry_id
     )
     assert zone_device is not None
     assert zone_device.via_device_id == system_device.id

@@ -6,9 +6,11 @@ from typing import Any
 from aioairzone.const import (
     AZD_FIRMWARE,
     AZD_FULL_NAME,
+    AZD_HOT_WATER,
     AZD_ID,
     AZD_MAC,
     AZD_MODEL,
+    AZD_NAME,
     AZD_SYSTEMS,
     AZD_WEBSERVER,
     DEFAULT_SYSTEM_ID,
@@ -97,11 +99,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
 
     @callback
     def _async_register_devices() -> None:
-        """Register the WebServer and System via_device parents.
+        """Register the WebServer, System, and DHW via_device parents.
 
-        The WebServer and Systems can appear on later coordinator updates, so
-        this runs on every update (before the platform listeners) to keep the
-        via_device parents registered before their child entities are added.
+        The WebServer, Systems, and DHW can appear on later coordinator
+        updates, so this runs on every update (before the platform
+        listeners) to keep the via_device parents registered before their
+        child entities are added.
         """
         ws_device_id: str | None = None
         ws_data: dict[str, Any] | None = coordinator.data.get(AZD_WEBSERVER)
@@ -128,6 +131,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
                 model=system_data.get(AZD_MODEL),
                 name=f"System {system_id}",
                 sw_version=system_data.get(AZD_FIRMWARE),
+                via_device_id=ws_device_id,
+            )
+
+        dhw_data: dict[str, Any] | None = coordinator.data.get(AZD_HOT_WATER)
+        if dhw_data is not None:
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(DOMAIN, f"{entry.entry_id}_dhw")},
+                manufacturer=MANUFACTURER,
+                model="DHW",
+                name=dhw_data.get(AZD_NAME),
                 via_device_id=ws_device_id,
             )
 
