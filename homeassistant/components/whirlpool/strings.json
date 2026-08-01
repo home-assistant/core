@@ -68,7 +68,57 @@
         "name": "Upper oven light"
       }
     },
+    "number": {
+      "oven_target_temperature": {
+        "name": "Target temperature"
+      },
+      "oven_target_temperature_lower": {
+        "name": "Lower oven target temperature"
+      },
+      "oven_target_temperature_upper": {
+        "name": "Upper oven target temperature"
+      }
+    },
     "select": {
+      "oven_cook_mode": {
+        "name": "Cook mode",
+        "state": {
+          "air_fry": "Air fry",
+          "bake": "Bake",
+          "broil": "Broil",
+          "convection_bake": "Convection bake",
+          "convection_broil": "Convection broil",
+          "convection_roast": "Convection roast",
+          "keep_warm": "Keep warm",
+          "standby": "[%key:common::state::standby%]"
+        }
+      },
+      "oven_cook_mode_lower": {
+        "name": "Lower oven cook mode",
+        "state": {
+          "air_fry": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::air_fry%]",
+          "bake": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::bake%]",
+          "broil": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::broil%]",
+          "convection_bake": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::convection_bake%]",
+          "convection_broil": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::convection_broil%]",
+          "convection_roast": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::convection_roast%]",
+          "keep_warm": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::keep_warm%]",
+          "standby": "[%key:common::state::standby%]"
+        }
+      },
+      "oven_cook_mode_upper": {
+        "name": "Upper oven cook mode",
+        "state": {
+          "air_fry": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::air_fry%]",
+          "bake": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::bake%]",
+          "broil": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::broil%]",
+          "convection_bake": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::convection_bake%]",
+          "convection_broil": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::convection_broil%]",
+          "convection_roast": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::convection_roast%]",
+          "keep_warm": "[%key:component::whirlpool::entity::select::oven_cook_mode::state::keep_warm%]",
+          "standby": "[%key:common::state::standby%]"
+        }
+      },
       "refrigerator_temperature_level": {
         "name": "Temperature level"
       }
@@ -249,6 +299,24 @@
     },
     "request_failed": {
       "message": "Request failed"
+    }
+  },
+  "issues": {
+    "deprecated_oven_cook_mode": {
+      "description": "The `{entity_id}` ({entity_name}) sensor is deprecated and has been replaced by the **Cook mode** select entity, which can both read and change the oven cook mode.\n\nUpdate any dashboards, templates, automations or scripts to use the new select entity, then disable `{entity_id}` to have it removed.",
+      "title": "The Whirlpool oven cook mode sensor is deprecated"
+    },
+    "deprecated_oven_cook_mode_scripts": {
+      "description": "The `{entity_id}` ({entity_name}) sensor is deprecated and has been replaced by the **Cook mode** select entity, which can both read and change the oven cook mode.\n\nIt is still used in the following automations or scripts:\n{items}\n\nUpdate them to use the new select entity, then disable `{entity_id}` to have it removed.",
+      "title": "[%key:component::whirlpool::issues::deprecated_oven_cook_mode::title%]"
+    },
+    "deprecated_oven_target_temperature": {
+      "description": "The `{entity_id}` ({entity_name}) sensor is deprecated and has been replaced by the **Target temperature** number entity, which can both read and change the oven target temperature.\n\nUpdate any dashboards, templates, automations or scripts to use the new number entity, then disable `{entity_id}` to have it removed.",
+      "title": "The Whirlpool oven target temperature sensor is deprecated"
+    },
+    "deprecated_oven_target_temperature_scripts": {
+      "description": "The `{entity_id}` ({entity_name}) sensor is deprecated and has been replaced by the **Target temperature** number entity, which can both read and change the oven target temperature.\n\nIt is still used in the following automations or scripts:\n{items}\n\nUpdate them to use the new number entity, then disable `{entity_id}` to have it removed.",
+      "title": "[%key:component::whirlpool::issues::deprecated_oven_target_temperature::title%]"
     }
   }
 }

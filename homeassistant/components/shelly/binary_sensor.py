@@ -123,7 +123,12 @@ class RpcBluTrvBinarySensor(RpcBinarySensor):
         ble_addr: str = coordinator.device.config[key]["addr"]
         fw_ver = coordinator.device.status[key].get("fw_ver")
         self._attr_device_info = get_blu_trv_device_info(
-            coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            coordinator.device.config[key],
+            ble_addr,
+            coordinator.mac,
+            fw_ver,
         )
 
 
@@ -237,6 +242,21 @@ RPC_SENSORS: Final = {
         translation_key="external_power",
         value=lambda status, _: status["present"],
         device_class=BinarySensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "cb_output": RpcBinarySensorDescription(
+        key="cb",
+        sub_key="output",
+        translation_key="output",
+        device_class=BinarySensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "cb_safety": RpcBinarySensorDescription(
+        key="cb",
+        sub_key="safety",
+        translation_key="safety_switch",
+        device_class=BinarySensorDeviceClass.LOCK,
+        value=lambda status, _: not status,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "overtemp": RpcBinarySensorDescription(

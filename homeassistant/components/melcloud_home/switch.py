@@ -5,11 +5,6 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from aiomelcloudhome import ATAUnit, ATWUnit, MELCloudHome
-from aiomelcloudhome.exceptions import (
-    MelCloudHomeAuthenticationError,
-    MelCloudHomeConnectionError,
-    MelCloudHomeTimeoutError,
-)
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -18,11 +13,9 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import async_setup_unit_entities, unit_ids
-from .const import DOMAIN
+from .common import async_setup_unit_entities, perform_action, unit_ids
 from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity
 
@@ -109,32 +102,6 @@ ATW_SWITCHES: tuple[MelCloudHomeSwitchEntityDescription[ATWUnit], ...] = (
 )
 
 
-async def _perform_action(
-    coordinator: MelCloudHomeCoordinator,
-    coroutine: Coroutine[Any, Any, None],
-) -> None:
-    """Perform a MELCloud Home action with error handling and coordinator refresh."""
-    try:
-        await coroutine
-    except MelCloudHomeAuthenticationError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_auth",
-        ) from err
-    except MelCloudHomeConnectionError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-        ) from err
-    except MelCloudHomeTimeoutError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="timeout_connect",
-        ) from err
-    else:
-        await coordinator.async_request_refresh()
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: MelCloudHomeConfigEntry,
@@ -189,7 +156,7 @@ class ATASwitch(MelCloudHomeATAUnitEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable the protection."""
-        await _perform_action(
+        await perform_action(
             self.coordinator,
             self.entity_description.turn_on_fn(self.coordinator.client, self.unit),
         )
@@ -197,7 +164,7 @@ class ATASwitch(MelCloudHomeATAUnitEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable the protection."""
-        await _perform_action(
+        await perform_action(
             self.coordinator,
             self.entity_description.turn_off_fn(self.coordinator.client, self.unit),
         )
@@ -234,7 +201,7 @@ class ATWSwitch(MelCloudHomeATWUnitEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable the protection."""
-        await _perform_action(
+        await perform_action(
             self.coordinator,
             self.entity_description.turn_on_fn(self.coordinator.client, self.unit),
         )
@@ -242,7 +209,7 @@ class ATWSwitch(MelCloudHomeATWUnitEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable the protection."""
-        await _perform_action(
+        await perform_action(
             self.coordinator,
             self.entity_description.turn_off_fn(self.coordinator.client, self.unit),
         )

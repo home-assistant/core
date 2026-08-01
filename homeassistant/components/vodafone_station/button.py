@@ -23,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
 
 # Coordinator is used to centralize the data updates
@@ -81,7 +81,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    _LOGGER.debug("Setting up Vodafone Station buttons")
+    LOGGER.debug("Setting up Vodafone Station buttons")
 
     coordinator = entry.runtime_data
 

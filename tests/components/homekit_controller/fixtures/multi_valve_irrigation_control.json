@@ -1,0 +1,424 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 2,
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "perms": ["pw"]
+          },
+          {
+            "iid": 3,
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "description": "Manufacturer",
+            "format": "string",
+            "value": "GARDENA",
+            "perms": ["pr"]
+          },
+          {
+            "iid": 4,
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "description": "Model",
+            "format": "string",
+            "value": "Irrigation Control",
+            "perms": ["pr"]
+          },
+          {
+            "iid": 5,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "description": "Name",
+            "format": "string",
+            "value": "Irrigation Control 00000000",
+            "perms": ["pr"]
+          },
+          {
+            "iid": 6,
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "description": "Serial Number",
+            "format": "string",
+            "value": "**REDACTED**",
+            "perms": ["pr"]
+          },
+          {
+            "iid": 7,
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "description": "Firmware Revision",
+            "format": "string",
+            "value": "2.5.0",
+            "perms": ["pr"]
+          },
+          {
+            "iid": 8,
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "description": "Hardware Revision",
+            "format": "string",
+            "value": "0.0.0",
+            "perms": ["pr"]
+          }
+        ]
+      },
+      {
+        "iid": 256,
+        "type": "000000CF-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [512, 544, 576],
+        "characteristics": [
+          {
+            "iid": 258,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "description": "Name",
+            "format": "string",
+            "value": "Irrigation Control 00000000",
+            "perms": ["pr"]
+          },
+          {
+            "iid": 259,
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "description": "Active",
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "pw", "ev"]
+          },
+          {
+            "iid": 260,
+            "type": "000000D1-0000-1000-8000-0026BB765291",
+            "description": "Program Mode",
+            "format": "uint8",
+            "value": 1,
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          },
+          {
+            "iid": 261,
+            "type": "000000D2-0000-1000-8000-0026BB765291",
+            "description": "In Use",
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          },
+          {
+            "iid": 262,
+            "type": "000000D4-0000-1000-8000-0026BB765291",
+            "description": "Remaining Duration",
+            "format": "uint32",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 36000,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          },
+          {
+            "iid": 263,
+            "type": "00000077-0000-1000-8000-0026BB765291",
+            "description": "Status Fault",
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          }
+        ]
+      },
+      {
+        "iid": 512,
+        "type": "000000D0-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 514,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "description": "Name",
+            "format": "string",
+            "value": "Valve 1",
+            "perms": ["pr"]
+          },
+          {
+            "iid": 515,
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "description": "Active",
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "pw", "ev"]
+          },
+          {
+            "iid": 516,
+            "type": "000000D2-0000-1000-8000-0026BB765291",
+            "description": "In Use",
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          },
+          {
+            "iid": 517,
+            "type": "000000D5-0000-1000-8000-0026BB765291",
+            "description": "Valve Type",
+            "format": "uint8",
+            "value": 1,
+            "minValue": 0,
+            "maxValue": 3,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          },
+          {
+            "iid": 518,
+            "type": "000000D3-0000-1000-8000-0026BB765291",
+            "description": "Set Duration",
+            "format": "uint32",
+            "value": 1200,
+            "minValue": 30,
+            "maxValue": 5400,
+            "minStep": 1,
+            "perms": ["pr", "pw", "ev"]
+          },
+          {
+            "iid": 519,
+            "type": "000000D4-0000-1000-8000-0026BB765291",
+            "description": "Remaining Duration",
+            "format": "uint32",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 36000,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          },
+          {
+            "iid": 520,
+            "type": "000000CB-0000-1000-8000-0026BB765291",
+            "description": "Service Label Index",
+            "format": "uint8",
+            "value": 1,
+            "minValue": 1,
+            "maxValue": 6,
+            "minStep": 1,
+            "perms": ["pr"]
+          },
+          {
+            "iid": 521,
+            "type": "00000077-0000-1000-8000-0026BB765291",
+            "description": "Status Fault",
+            "format": "uint8",
+            "value": 1,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          }
+        ]
+      },
+      {
+        "iid": 544,
+        "type": "000000D0-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 546,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "description": "Name",
+            "format": "string",
+            "value": "Valve 2",
+            "perms": ["pr"]
+          },
+          {
+            "iid": 547,
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "description": "Active",
+            "format": "uint8",
+            "value": 1,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "pw", "ev"]
+          },
+          {
+            "iid": 548,
+            "type": "000000D2-0000-1000-8000-0026BB765291",
+            "description": "In Use",
+            "format": "uint8",
+            "value": 1,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          },
+          {
+            "iid": 549,
+            "type": "000000D5-0000-1000-8000-0026BB765291",
+            "description": "Valve Type",
+            "format": "uint8",
+            "value": 1,
+            "minValue": 0,
+            "maxValue": 3,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          },
+          {
+            "iid": 550,
+            "type": "000000D3-0000-1000-8000-0026BB765291",
+            "description": "Set Duration",
+            "format": "uint32",
+            "value": 1200,
+            "minValue": 30,
+            "maxValue": 5400,
+            "minStep": 1,
+            "perms": ["pr", "pw", "ev"]
+          },
+          {
+            "iid": 551,
+            "type": "000000D4-0000-1000-8000-0026BB765291",
+            "description": "Remaining Duration",
+            "format": "uint32",
+            "value": 1163,
+            "minValue": 0,
+            "maxValue": 36000,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          },
+          {
+            "iid": 552,
+            "type": "000000CB-0000-1000-8000-0026BB765291",
+            "description": "Service Label Index",
+            "format": "uint8",
+            "value": 2,
+            "minValue": 1,
+            "maxValue": 6,
+            "minStep": 1,
+            "perms": ["pr"]
+          },
+          {
+            "iid": 553,
+            "type": "00000077-0000-1000-8000-0026BB765291",
+            "description": "Status Fault",
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          }
+        ]
+      },
+      {
+        "iid": 576,
+        "type": "000000D0-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 578,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "description": "Name",
+            "format": "string",
+            "value": "Valve 3",
+            "perms": ["pr"]
+          },
+          {
+            "iid": 579,
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "description": "Active",
+            "format": "uint8",
+            "value": 1,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "pw", "ev"]
+          },
+          {
+            "iid": 580,
+            "type": "000000D2-0000-1000-8000-0026BB765291",
+            "description": "In Use",
+            "format": "uint8",
+            "value": 1,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          },
+          {
+            "iid": 581,
+            "type": "000000D5-0000-1000-8000-0026BB765291",
+            "description": "Valve Type",
+            "format": "uint8",
+            "value": 1,
+            "minValue": 0,
+            "maxValue": 3,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          },
+          {
+            "iid": 582,
+            "type": "000000D3-0000-1000-8000-0026BB765291",
+            "description": "Set Duration",
+            "format": "uint32",
+            "value": 1200,
+            "minValue": 30,
+            "maxValue": 5400,
+            "minStep": 1,
+            "perms": ["pr", "pw", "ev"]
+          },
+          {
+            "iid": 583,
+            "type": "000000D4-0000-1000-8000-0026BB765291",
+            "description": "Remaining Duration",
+            "format": "uint32",
+            "value": 1166,
+            "minValue": 0,
+            "maxValue": 36000,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          },
+          {
+            "iid": 584,
+            "type": "000000CB-0000-1000-8000-0026BB765291",
+            "description": "Service Label Index",
+            "format": "uint8",
+            "value": 3,
+            "minValue": 1,
+            "maxValue": 6,
+            "minStep": 1,
+            "perms": ["pr"]
+          },
+          {
+            "iid": 585,
+            "type": "00000077-0000-1000-8000-0026BB765291",
+            "description": "Status Fault",
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "perms": ["pr", "ev"]
+          }
+        ]
+      }
+    ]
+  }
+]

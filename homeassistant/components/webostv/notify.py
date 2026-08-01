@@ -44,7 +44,7 @@ class LgWebOSNotificationService(BaseNotificationService):
     @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the tv."""
-        client: WebOsClient = self._entry.runtime_data
+        client: WebOsClient = self._entry.runtime_data.client
         data = kwargs[ATTR_DATA]
         icon_path = data.get(ATTR_ICON) if data else None
 
