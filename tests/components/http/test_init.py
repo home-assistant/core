@@ -32,8 +32,8 @@ from homeassistant.components.http.config import (
     default_server_port,
 )
 from homeassistant.components.http.const import ENV_SETUP_PORT, ENV_SUPERVISOR
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HASSIO_USER_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HASSIO_USER_NAME, SERVER_PORT
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.http import KEY_HASS
@@ -1127,6 +1127,39 @@ async def test_yaml_migration_to_storage(
     assert stored["stable"] == _DEFAULT_CONFIG  # untouched defaults
     assert stored["pending"] == _stored_config(
         yaml_conf, created_at=dt_util.utcnow().isoformat()
+    )
+
+
+@pytest.mark.usefixtures("freezer")
+async def test_yaml_migration_without_port_keeps_previous_default_port(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """YAML that configures something else than the port migrates to port 8123.
+
+    A YAML install ran on the previous default port 8123, so the migration must
+    keep that port instead of silently moving the user to the new Supervisor
+    default of port 80.
+    """
+    yaml_conf = {
+        "use_x_forwarded_for": True,
+        "trusted_proxies": ["10.11.12.0/24"],
+    }
+
+    with _supervisor_default_config():
+        assert await async_setup_component(hass, DOMAIN, {"http": yaml_conf})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+        assert hass.config.api.port == SERVER_PORT
+        store = await async_get_and_load_store(hass)
+        assert store.active_config_type is ActiveConfigType.PENDING
+
+    stored = hass_storage[DOMAIN]["data"]
+    assert stored["yaml_migration_done"] is True
+    assert stored["pending"] == _stored_config(
+        {**yaml_conf, "server_port": SERVER_PORT},
+        created_at=dt_util.utcnow().isoformat(),
     )
 
 
@@ -2260,6 +2293,58 @@ async def test_websocket_configure_same_port_skips_bind_check(
     assert response["success"]
     assert response["result"] == {"restart": True}
     assert hass_storage[DOMAIN]["data"]["pending"]["server_port"] == current_port
+
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "core_state",
+    [CoreState.not_running, CoreState.starting],
+    ids=["not-running", "starting"],
+)
+async def test_websocket_configure_rejected_while_not_running(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    mock_create_server: Mock,
+    core_state: CoreState,
+) -> None:
+    """Staging a new config is rejected while Home Assistant is not running yet."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+    ws_client = await hass_ws_client(hass)
+
+    hass.set_state(core_state)
+    await ws_client.send_json_auto_id(
+        {"type": "http/config/configure", "config": {"server_port": 9123}}
+    )
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "not_running"
+    assert response["error"]["message"] == (
+        "The HTTP configuration can only be changed while Home Assistant is "
+        f"running, current state: {core_state.value}"
+    )
+
+    # The config is neither probed nor stored, and no restart is triggered.
+    assert mock_create_server.call_count == 1
+    assert hass_storage[DOMAIN]["data"]["pending"] is None
+    assert len(restart_calls) == 0
+
+    # Once the start finished, the same config is accepted.
+    hass.set_state(CoreState.running)
+    await ws_client.send_json_auto_id(
+        {"type": "http/config/configure", "config": {"server_port": 9123}}
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"restart": True}
+    assert hass_storage[DOMAIN]["data"]["pending"]["server_port"] == 9123
 
     await hass.async_block_till_done()
     assert len(restart_calls) == 1
