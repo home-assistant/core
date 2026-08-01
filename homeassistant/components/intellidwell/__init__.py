@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .coordinator import IntelliDwellCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 type IntelliDwellConfigEntry = ConfigEntry[IntelliDwellCoordinator]
 
