@@ -31,9 +31,6 @@ class ClickyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            # Data is updated in real-time on Clicky.
-            # For now, limit to one fetch per minute.
-            # Consider make this a config entry in the future.
             update_interval=timedelta(minutes=1),
         )
 
