@@ -71,11 +71,15 @@ async def test_child_device_links_to_parent(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    parent = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    parent = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
     assert parent is not None
     assert parent.name == "Alarm Panel"
     assert parent.model == "Lupusec-XT2"
 
-    child = device_registry.async_get_device(identifiers={(DOMAIN, "sensor_1")})
+    child = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "sensor_1"), entry.entry_id
+    )
     assert child is not None
     assert child.via_device_id == parent.id
