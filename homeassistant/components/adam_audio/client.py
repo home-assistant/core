@@ -189,15 +189,21 @@ class AdamAudioClient:
             if not responses or len(responses) < 8:
                 return False
 
-            # Maps response indices to state attributes
-            self.state.mute = responses[0].params[0].value == 5
-            self.state.sleep = bool(responses[1].params[0].value)
-            self.state.input_source = int(responses[2].params[0].value)
-            self.state.voicing = int(responses[3].params[0].value)
-            self.state.bass = int(responses[4].params[0].value)
-            self.state.desk = int(responses[5].params[0].value)
-            self.state.presence = int(responses[6].params[0].value)
-            self.state.treble = int(responses[7].params[0].value)
+            # Maps response indices to state attributes.  Built as a whole
+            # before being published: a conversion failure part-way through
+            # would otherwise leave self.state holding a mix of this poll's
+            # values and the previous one's, even though the poll is reported
+            # as failed and the caller keeps the old state.
+            new_state = AdamAudioState(
+                mute=responses[0].params[0].value == 5,
+                sleep=bool(responses[1].params[0].value),
+                input_source=int(responses[2].params[0].value),
+                voicing=int(responses[3].params[0].value),
+                bass=int(responses[4].params[0].value),
+                desk=int(responses[5].params[0].value),
+                presence=int(responses[6].params[0].value),
+                treble=int(responses[7].params[0].value),
+            )
         except (
             OSError,
             TimeoutError,
@@ -210,6 +216,7 @@ class AdamAudioClient:
             LOGGER.debug("Batched poll failed for %s", self.host, exc_info=True)
             return False
         else:
+            self.state = new_state
             return True
 
     @property

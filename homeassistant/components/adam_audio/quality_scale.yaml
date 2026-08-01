@@ -54,27 +54,17 @@ rules:
     comment: Not yet implemented.
   discovery: done
   discovery-update-info: done
-  docs-data-update:
-    status: todo
-    comment: Not yet verified against the documentation page.
-  docs-examples:
-    status: todo
-    comment: Not yet verified against the documentation page.
-  docs-known-limitations:
-    status: todo
-    comment: Not yet verified against the documentation page.
-  docs-supported-devices:
-    status: todo
-    comment: Not yet verified against the documentation page.
-  docs-supported-functions:
-    status: todo
-    comment: Not yet verified against the documentation page.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
   docs-troubleshooting:
     status: todo
-    comment: Not yet verified against the documentation page.
+    comment: The documentation page has no troubleshooting section yet.
   docs-use-cases:
     status: todo
-    comment: Not yet verified against the documentation page.
+    comment: The documentation page does not yet describe concrete use cases.
   dynamic-devices:
     status: exempt
     comment: Each config entry represents a single physical speaker; new speakers are added via their own discovery-driven config entry.

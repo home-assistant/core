@@ -1,5 +1,6 @@
 """Tests for ADAM Audio client."""
 
+from dataclasses import replace
 import time
 from unittest.mock import MagicMock, patch
 
@@ -64,6 +65,30 @@ async def test_client_fetch_state_failure(adam_client: AdamAudioClient) -> None:
     success = await adam_client.async_fetch_state()
     assert success is False
     assert adam_client.available is False
+
+
+async def test_client_fetch_state_keeps_previous_state_on_partial_failure(
+    adam_client: AdamAudioClient,
+) -> None:
+    """A response that fails to convert must not publish a half-updated state.
+
+    The values are read from the responses in order, so a bad value at index 5
+    comes after five good ones. Those must not reach client.state: the poll is
+    reported as failed and entities keep serving the last complete snapshot.
+    """
+    adam_client._device.get_full_state_pdus.return_value = _state_pdus(
+        (5, 1, 1, 2, 1, 0, -1, 0)
+    )
+    assert await adam_client.async_fetch_state() is True
+    good_state = replace(adam_client.state)
+
+    # Same poll, except desk (index 5) is unconvertible.
+    bad_pdus = _state_pdus((0, 0, 0, 0, 0, 0, 0, 0))
+    bad_pdus[5].params[0].value = "not-an-int"
+    adam_client._device.get_full_state_pdus.return_value = bad_pdus
+
+    assert await adam_client.async_fetch_state() is False
+    assert adam_client.state == good_state
 
 
 async def test_client_fetch_state_tolerates_single_failure(
