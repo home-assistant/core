@@ -1,6 +1,6 @@
 """Vizio SmartCast Device support."""
 
-from typing import Any, override
+from typing import Any, cast, override
 
 from vizaio import AppConfig, AppRecord, RemoteKey
 from vizaio.apps import (
@@ -162,12 +162,12 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
     @property
     def _volume_step(self) -> int:
         """Return the configured volume step."""
-        return self._config_entry.options[CONF_VOLUME_STEP]
+        return cast(int, self._config_entry.options[CONF_VOLUME_STEP])
 
     @property
-    def _conf_apps(self) -> dict:
+    def _conf_apps(self) -> dict[str, Any]:
         """Return the configured app filter options."""
-        return self._config_entry.options.get(CONF_APPS, {})
+        return cast("dict[str, Any]", self._config_entry.options.get(CONF_APPS, {}))
 
     def _apps_list(self, apps: list[str]) -> list[str]:
         """Return process apps list based on configured filters."""
@@ -348,8 +348,13 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
 
     @property
     @override
-    def app_id(self):
-        """Return the ID of the current app if it is unknown by vizaio."""
+    # pylint: disable-next=home-assistant-return-type
+    def app_id(self) -> dict[str, Any] | None:  # type: ignore[override]
+        """Return the app config of the current app if it is unknown by vizaio.
+
+        Documented way for users to obtain app configs for additional_configs;
+        intentionally returns a dict instead of the app ID string.
+        """
         if self._current_app_config and self.source == UNKNOWN_APP:
             return {
                 CONF_APP_ID: self._current_app_config.app_id,

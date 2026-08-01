@@ -624,6 +624,7 @@ homeassistant.components.velux.*
 homeassistant.components.victron_gx.*
 homeassistant.components.vistapool.*
 homeassistant.components.vivotek.*
+homeassistant.components.vizio.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.vodafone_station.*
 homeassistant.components.volvo.*
