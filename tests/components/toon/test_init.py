@@ -135,7 +135,10 @@ async def test_device_registry_via_devices(
     assert config_entry.state is ConfigEntryState.LOADED
 
     def get_device(*identifier: str) -> dr.DeviceEntry:
-        device = device_registry.async_get_device(identifiers={(DOMAIN, *identifier)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, *identifier),  # type: ignore[arg-type]
+            config_entry.entry_id,
+        )
         assert device is not None
         return device
 
