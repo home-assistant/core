@@ -4,10 +4,11 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
-from pyclicky import ClickyAPIError, ClickyClient
+from pyclicky import AuthenticationError, ClickyAPIError, ClickyClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, METRICS
@@ -47,6 +48,8 @@ class ClickyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             for key, val in METRICS.items():
                 try:
                     response = await service.query(val)
+                except AuthenticationError as error:
+                    raise ConfigEntryAuthFailed("API authentication failed") from error
                 except ClickyAPIError as error:
                     raise UpdateFailed(
                         f"Error fetching data from API: {error}"
