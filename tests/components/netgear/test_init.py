@@ -77,11 +77,13 @@ async def test_tracked_device_links_to_router(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    router_device = device_registry.async_get_device(identifiers={(DOMAIN, SERIAL)})
+    router_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), entry.entry_id
+    )
     assert router_device is not None
 
-    tracked_device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(TRACKED_DEVICE.mac))}
+    tracked_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(TRACKED_DEVICE.mac)), entry.entry_id
     )
     assert tracked_device is not None
     assert tracked_device.via_device_id == router_device.id
