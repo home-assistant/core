@@ -69,6 +69,9 @@
       },
       "temperature_target": {
         "name": "Target temperature"
+      },
+      "timer": {
+        "name": "Timer"
       }
     },
     "select": {
