@@ -160,6 +160,23 @@ def config_entry_secondary() -> MockConfigEntry:
 
 
 @pytest.fixture
+def config_entry_non_default_port() -> MockConfigEntry:
+    """Return a mocked config entry for a non-default-port player.
+
+    Shares its mac (via player_mocks) with the leader `config_entry` at the
+    default port.
+    """
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.1.1.2",
+            CONF_PORT: 11001,
+        },
+        unique_id="ff:ff:01:01:01:01-11001",
+    )
+
+
+@pytest.fixture
 async def setup_config_entry(
     hass: HomeAssistant, config_entry: MockConfigEntry, player_mocks: PlayerMocks
 ) -> None:
