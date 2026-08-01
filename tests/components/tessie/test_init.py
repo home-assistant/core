@@ -11,8 +11,11 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 
+from homeassistant.components.tessie.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .common import setup_platform
 
@@ -151,3 +154,23 @@ async def test_aiohttp_client_error_on_live_status_retries(
     ):
         entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_wall_connector_via_device_id(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test that a wall connector device links to its energy site via via_device_id."""
+
+    entry = await setup_platform(hass, [Platform.SENSOR])
+
+    energy_site_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456"), entry.entry_id
+    )
+    assert energy_site_device is not None
+
+    wall_connector_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "abd-123"), entry.entry_id
+    )
+    assert wall_connector_device is not None
+    assert wall_connector_device.via_device_id == energy_site_device.id
