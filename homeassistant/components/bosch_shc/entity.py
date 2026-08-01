@@ -72,15 +72,20 @@ class SHCEntity(SHCBaseEntity):
     ) -> None:
         """Initialize generic SHC device."""
         self._attr_unique_id = device.serial
-        self._attr_device_info = DeviceInfo(
+        device_info = DeviceInfo(
             identifiers={(DOMAIN, device.id)},
             manufacturer=device.manufacturer,
             model=device.device_model,
             name=device.name,
-            via_device_id=dr.async_get_device_id_by_identifier(
-                hass, (DOMAIN, device.root_device_id), config_entry_id=entry_id
-            ),
         )
+        # boschshcpy may render the hub identifier (shc_info.unique_id) and a
+        # device's root_device_id differently, so the lookup can miss; link only
+        # when it resolves instead of raising out of setup.
+        if hub := dr.async_get(hass).async_get_device_by_identifier(
+            (DOMAIN, device.root_device_id), entry_id
+        ):
+            device_info["via_device_id"] = hub.id
+        self._attr_device_info = device_info
         super().__init__(device=device, parent_id=parent_id, entry_id=entry_id)
 
     @override
@@ -122,15 +127,17 @@ class SHCDomainEntity(SHCBaseEntity):
     ) -> None:
         """Initialize the generic SHC device."""
         self._attr_unique_id = domain.id
-        self._attr_device_info = DeviceInfo(
+        device_info = DeviceInfo(
             identifiers={(DOMAIN, domain.id)},
             manufacturer=domain.manufacturer,
             model=domain.device_model,
             name=domain.name,
-            via_device_id=dr.async_get_device_id_by_identifier(
-                hass, (DOMAIN, parent_id), config_entry_id=entry_id
-            ),
         )
+        if hub := dr.async_get(hass).async_get_device_by_identifier(
+            (DOMAIN, parent_id), entry_id
+        ):
+            device_info["via_device_id"] = hub.id
+        self._attr_device_info = device_info
         super().__init__(device=domain, parent_id=parent_id, entry_id=entry_id)
 
     @property
