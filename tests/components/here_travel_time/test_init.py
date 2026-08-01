@@ -1,6 +1,6 @@
 """The test for the HERE Travel Time integration."""
 
-from datetime import datetime
+from typing import Any
 
 import pytest
 
@@ -19,6 +19,7 @@ from homeassistant.components.here_travel_time.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_CONFIG
 
@@ -32,18 +33,18 @@ from tests.common import MockConfigEntry
         DEFAULT_OPTIONS,
         {
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_DEPARTURE_TIME: datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+            CONF_DEPARTURE_TIME: dt_util.now(),
         },
         {
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_ARRIVAL_TIME: datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+            CONF_ARRIVAL_TIME: dt_util.now(),
         },
         {
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         },
     ],
 )
-async def test_unload_entry(hass: HomeAssistant, options) -> None:
+async def test_unload_entry(hass: HomeAssistant, options: dict[str, Any]) -> None:
     """Test that unloading an entry works."""
     entry = MockConfigEntry(
         domain=DOMAIN,
