@@ -1,7 +1,7 @@
 """Config flow for bluesound."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyblu import Player, SyncStatus
 from pyblu.errors import PlayerUnreachableError
@@ -31,6 +31,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
         self._port = DEFAULT_PORT
         self._sync_status: SyncStatus | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -71,6 +72,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

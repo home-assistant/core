@@ -1,6 +1,6 @@
 """Sensor that can display the current Home Assistant versions."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import CONF_NAME, CONF_SOURCE
@@ -41,11 +41,13 @@ class VersionSensorEntity(VersionEntity, SensorEntity):
     """Version sensor entity class."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the native value of this sensor."""
         return self.coordinator.version
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra state attributes of this sensor."""
         return self.coordinator.version_data

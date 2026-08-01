@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
@@ -43,10 +43,12 @@ class MadvrRemote(MadVREntity, RemoteEntity):
         self._attr_unique_id = coordinator.mac
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the device is on."""
         return self.madvr_client.is_on
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         _LOGGER.debug("Turning off")
@@ -56,6 +58,7 @@ class MadvrRemote(MadVREntity, RemoteEntity):
         except (ConnectionError, NotImplementedError) as err:
             _LOGGER.error("Failed to turn off device %s", err)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         _LOGGER.debug("Turning on device")
@@ -66,6 +69,7 @@ class MadvrRemote(MadVREntity, RemoteEntity):
         except (ConnectionError, NotImplementedError) as err:
             _LOGGER.error("Failed to turn on device %s", err)
 
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         _LOGGER.debug("adding command %s", command)

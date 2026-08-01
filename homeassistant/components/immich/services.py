@@ -53,7 +53,7 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
 
     if target_album := service_call.data.get(CONF_ALBUM_ID):
         try:
-            await coordinator.api.albums.async_get_album_info(target_album, True)
+            await coordinator.api.albums.async_get_album_info(target_album)
         except ImmichError as ex:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

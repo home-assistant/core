@@ -39,8 +39,8 @@
 # name: test_all_entities[binary_sensor.mock_title_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Title Alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_alarm',
@@ -90,7 +90,7 @@
 # name: test_all_entities[binary_sensor.mock_title_boost_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Boost state',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Boost state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_boost_state',
@@ -140,8 +140,8 @@
 # name: test_all_entities[binary_sensor.mock_title_warning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Title Warning',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Warning',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_warning',

@@ -1,7 +1,7 @@
 """Config flow for AlarmDecoder."""
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from adext import AdExt
 from alarmdecoder.devices import Device, SerialDevice, SocketDevice
@@ -65,12 +65,14 @@ class AlarmDecoderFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> AlarmDecoderOptionsFlowHandler:
         """Get the options flow for AlarmDecoder."""
         return AlarmDecoderOptionsFlowHandler(config_entry)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

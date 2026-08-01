@@ -12,9 +12,15 @@ rules:
   docs-actions:
     status: exempt
     comment: No integration-specific service actions to document
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -29,13 +35,15 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: No options flow
+  docs-installation-parameters: todo
   docs-troubleshooting: done
   entity-category: done
   entity-disabled-by-default: done
+  entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
@@ -51,7 +59,8 @@ rules:
   docs-supported-devices: done
   docs-supported-functions: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
+  entity-device-class: todo
   entity-translations: done
   exception-translations: done
   icon-translations: done

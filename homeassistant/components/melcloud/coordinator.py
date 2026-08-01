@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from pymelcloud import Device
@@ -113,6 +113,7 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
             via_device=(DOMAIN, f"{dev.mac}-{dev.serial}"),
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data for this specific device from MELCloud."""
         try:

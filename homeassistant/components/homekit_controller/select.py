@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from enum import IntEnum
+from typing import override
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.characteristics.const import (
@@ -88,11 +89,13 @@ class HomeKitSelect(BaseHomeKitSelect):
 
         super().__init__(conn, info, char)
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [self._char.type]
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the device if any."""
         if name := self.accessory.name:
@@ -100,10 +103,12 @@ class HomeKitSelect(BaseHomeKitSelect):
         return self.entity_description.name
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current selected option."""
         return self._enum_to_choice.get(self._char.value)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the current option."""
         await self.async_put_characteristics(
@@ -118,12 +123,14 @@ class EcobeeModeSelect(BaseHomeKitSelect):
     _attr_translation_key = "ecobee_mode"
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device if any."""
         if name := super().name:
             return f"{name} Current Mode"
         return "Current Mode"
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -131,10 +138,12 @@ class EcobeeModeSelect(BaseHomeKitSelect):
         ]
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current selected option."""
         return _ECOBEE_MODE_TO_TEXT.get(self._char.value)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the current mode."""
         option_int = _ECOBEE_MODE_TO_NUMBERS[option]

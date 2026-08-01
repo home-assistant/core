@@ -1,6 +1,7 @@
 """Base entity for zimi integrations."""
 
 import logging
+from typing import override
 
 from zcc import ControlPoint
 from zcc.device import ControlPointDevice
@@ -41,15 +42,18 @@ class ZimiEntity(Entity):
         self._attr_suggested_area = device.room
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if HA can read state and control the device."""
         return self._device.is_connected
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the events."""
         await super().async_added_to_hass()
         self._device.subscribe(self)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Cleanup ZimiLight with removal of notification prior to removal."""
         self._device.unsubscribe(self)

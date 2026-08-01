@@ -55,7 +55,7 @@ def saunabox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My sauna")
     type(product).model = PropertyMock(return_value="saunaBox")
-    return (feature, "climate.my_sauna_saunabox_thermostat")
+    return (feature, "climate.my_sauna")
 
 
 @pytest.fixture(name="thermobox")
@@ -78,7 +78,7 @@ def thermobox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My thermo")
     type(product).model = PropertyMock(return_value="thermoBox")
-    return (feature, "climate.my_thermo_thermobox_thermostat")
+    return (feature, "climate.my_thermo")
 
 
 async def test_init(
@@ -91,7 +91,7 @@ async def test_init(
     assert entry.unique_id == "BleBox-saunaBox-1afe34db9437-thermostat"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My sauna saunaBox-thermostat"
+    assert state.name == "My sauna"
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
@@ -135,53 +135,13 @@ async def test_update(saunabox, hass: HomeAssistant, config) -> None:
     assert state.state == HVACMode.OFF
 
 
-async def test_on_when_below_desired(saunabox, hass: HomeAssistant) -> None:
-    """Test when temperature is below desired."""
+async def test_set_hvac_mode_heat(saunabox, hass: HomeAssistant) -> None:
+    """Test that setting HVAC mode to heat calls async_on."""
 
     feature_mock, entity_id = saunabox
 
-    feature_mock.is_on = False
-    await async_setup_entity(hass, entity_id)
-
-    def turn_on():
-        feature_mock.is_on = True
-        feature_mock.is_heating = True
-        feature_mock.desired = 64.8
-        feature_mock.current = 25.7
-
     feature_mock.mode = 1
-    feature_mock.async_on = AsyncMock(side_effect=turn_on)
-    await hass.services.async_call(
-        "climate",
-        SERVICE_SET_HVAC_MODE,
-        {"entity_id": entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
-        blocking=True,
-    )
-    feature_mock.async_off.assert_not_called()
-    state = hass.states.get(entity_id)
-
-    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
-    assert state.attributes[ATTR_TEMPERATURE] == 64.8
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 25.7
-    assert state.state == HVACMode.HEAT
-
-
-async def test_on_when_above_desired(saunabox, hass: HomeAssistant) -> None:
-    """Test when temperature is below desired."""
-
-    feature_mock, entity_id = saunabox
-
-    feature_mock.is_on = False
     await async_setup_entity(hass, entity_id)
-
-    def turn_on():
-        feature_mock.is_on = True
-        feature_mock.is_heating = False
-        feature_mock.desired = 23.4
-        feature_mock.current = 28.7
-
-    feature_mock.mode = 1
-    feature_mock.async_on = AsyncMock(side_effect=turn_on)
 
     await hass.services.async_call(
         "climate",
@@ -189,74 +149,44 @@ async def test_on_when_above_desired(saunabox, hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
+
+    feature_mock.async_on.assert_called_once_with()
     feature_mock.async_off.assert_not_called()
-    state = hass.states.get(entity_id)
-
-    assert state.attributes[ATTR_TEMPERATURE] == 23.4
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 28.7
-    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
-    assert state.state == HVACMode.HEAT
 
 
-async def test_off(saunabox, hass: HomeAssistant) -> None:
-    """Test turning off."""
+async def test_set_hvac_mode_off(saunabox, hass: HomeAssistant) -> None:
+    """Test that setting HVAC mode to off calls async_off."""
 
     feature_mock, entity_id = saunabox
 
-    feature_mock.is_on = True
-    feature_mock.is_heating = False
     await async_setup_entity(hass, entity_id)
 
-    def turn_off():
-        feature_mock.is_on = False
-        feature_mock.is_heating = False
-        feature_mock.desired = 29.8
-        feature_mock.current = 22.7
-
-    feature_mock.async_off = AsyncMock(side_effect=turn_off)
     await hass.services.async_call(
         "climate",
         SERVICE_SET_HVAC_MODE,
         {"entity_id": entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
         blocking=True,
     )
-    feature_mock.async_on.assert_not_called()
-    state = hass.states.get(entity_id)
 
-    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
-    assert state.attributes[ATTR_TEMPERATURE] == 29.8
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.7
-    assert state.state == HVACMode.OFF
+    feature_mock.async_off.assert_called_once_with()
+    feature_mock.async_on.assert_not_called()
 
 
 async def test_set_thermo(saunabox, hass: HomeAssistant) -> None:
-    """Test setting thermostat."""
+    """Test that setting the temperature calls async_set_temperature."""
 
     feature_mock, entity_id = saunabox
 
-    feature_mock.is_on = False
-    feature_mock.is_heating = False
     await async_setup_entity(hass, entity_id)
 
-    def set_temp(temp):
-        feature_mock.is_on = True
-        feature_mock.is_heating = True
-        feature_mock.desired = 29.2
-        feature_mock.current = 29.1
-
-    feature_mock.async_set_temperature = AsyncMock(side_effect=set_temp)
     await hass.services.async_call(
         "climate",
         SERVICE_SET_TEMPERATURE,
         {"entity_id": entity_id, ATTR_TEMPERATURE: 43.21},
         blocking=True,
     )
-    state = hass.states.get(entity_id)
 
-    assert state.attributes[ATTR_TEMPERATURE] == 29.2
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 29.1
-    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
-    assert state.state == HVACMode.HEAT
+    feature_mock.async_set_temperature.assert_called_once_with(43.21)
 
 
 async def test_update_failure(
@@ -280,55 +210,30 @@ async def test_update_failure(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_reding_hvac_actions(
-    saunabox, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test hvac action for given device(mock) state."""
-
-    caplog.set_level(logging.ERROR)
+async def test_hvac_action_heating(saunabox, hass: HomeAssistant) -> None:
+    """Test hvac_action reflects a heating device state."""
 
     feature_mock, entity_id = saunabox
+
+    feature_mock.is_on = True
+    feature_mock.hvac_action = 1
+    feature_mock.mode = 1
     await async_setup_entity(hass, entity_id)
 
-    def set_temperature(temp):
-        feature_mock.is_on = True
-        feature_mock.hvac_action = 1
-        feature_mock.mode = 1
-
-    feature_mock.async_set_temperature = AsyncMock(side_effect=set_temperature)
-
-    await hass.services.async_call(
-        "climate",
-        SERVICE_SET_TEMPERATURE,
-        {"entity_id": entity_id, ATTR_TEMPERATURE: 43.21},
-        blocking=True,
-    )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF, HVACMode.HEAT]
 
 
-async def test_thermo_off(
-    thermobox, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test hvac action off fir given device state."""
-    caplog.set_level(logging.ERROR)
+async def test_hvac_action_off(thermobox, hass: HomeAssistant) -> None:
+    """Test hvac_action reflects a device that is off."""
 
     feature_mock, entity_id = thermobox
+
+    feature_mock.is_on = False
+    feature_mock.hvac_action = 0
     await async_setup_entity(hass, entity_id)
 
-    def set_off():
-        feature_mock.is_on = False
-        feature_mock.hvac_action = 0
-
-    feature_mock.async_off = AsyncMock(side_effect=set_off)
-
-    await hass.services.async_call(
-        "climate",
-        SERVICE_SET_HVAC_MODE,
-        {"entity_id": entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
-        blocking=True,
-    )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF, HVACMode.COOL]

@@ -1,6 +1,6 @@
 """BleBox climate entity."""
 
-from typing import Any
+from typing import Any, override
 
 import blebox_uniapi.climate
 
@@ -51,6 +51,7 @@ async def async_setup_entry(
 class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEntity):
     """Representation of a BleBox climate feature (saunaBox)."""
 
+    _attr_name = None
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TURN_OFF
@@ -59,6 +60,7 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return list of supported HVAC modes."""
         if self._feature.mode is None:
@@ -66,6 +68,7 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
         return [HVACMode.OFF, BLEBOX_TO_HVACMODE[self._feature.mode]]
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return the desired HVAC mode."""
         if self._feature.is_on is None:
@@ -77,6 +80,7 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
         return HVACMode.HEAT if self._feature.is_on else HVACMode.OFF
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the actual current HVAC action."""
         if self._feature.hvac_action is not None:
@@ -90,26 +94,31 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
         return HVACAction.HEATING if self._feature.is_heating else HVACAction.IDLE
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature supported."""
         return self._feature.max_temp
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the maximum temperature supported."""
         return self._feature.min_temp
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._feature.current
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the desired thermostat temperature."""
         return self._feature.desired
 
     @blebox_command
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate entity mode."""
         if hvac_mode in [HVACMode.HEAT, HVACMode.COOL]:
@@ -119,6 +128,7 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
         await self._feature.async_off()
 
     @blebox_command
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the thermostat temperature."""
         value = kwargs[ATTR_TEMPERATURE]

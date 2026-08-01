@@ -3,7 +3,7 @@
 import datetime
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import growattServer
 from growattServer import GrowattV1ApiErrorCode
@@ -201,7 +201,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     ) from err
                 total_info["todayEnergy"] = total_info["today_energy"]
                 total_info["totalEnergy"] = total_info["total_energy"]
-                total_info["invTodayPpv"] = total_info["current_power"]
+                # V1 API returns current_power in kW, convert to W
+                total_info["invTodayPpv"] = total_info["current_power"] * 1000
             else:
                 # Classic API: use plant_info as before.
                 # Copy the response to avoid mutating the dict returned by the library
@@ -330,6 +331,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return self.data
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Asynchronously update data via library."""
         try:

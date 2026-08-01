@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyprusalink import JobInfo, LegacyPrinterStatus, PrinterStatus, PrusaLink
 from pyprusalink.types import Conflict, PrinterState
@@ -102,6 +102,7 @@ class PrusaLinkButtonEntity(PrusaLinkEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         job_id = self.coordinator.data["job"]["id"]

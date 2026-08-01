@@ -1,5 +1,5 @@
 {
   "domain": "mitsubishi",
   "name": "Mitsubishi",
-  "integrations": ["melcloud", "mitsubishi_comfort"]
+  "integrations": ["melcloud", "melcloud_home", "mitsubishi_comfort"]
 }

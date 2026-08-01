@@ -42,10 +42,10 @@
 # name: test_all_entities[sensor.zurich_bern_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by transport.opendata.ch',
-      'device_class': 'duration',
-      'friendly_name': 'Zürich Bern Delay',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by transport.opendata.ch',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zürich Bern Delay',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.zurich_bern_delay',
@@ -95,9 +95,9 @@
 # name: test_all_entities[sensor.zurich_bern_departure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by transport.opendata.ch',
-      'device_class': 'timestamp',
-      'friendly_name': 'Zürich Bern Departure',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by transport.opendata.ch',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zürich Bern Departure',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.zurich_bern_departure',
@@ -147,9 +147,9 @@
 # name: test_all_entities[sensor.zurich_bern_departure_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by transport.opendata.ch',
-      'device_class': 'timestamp',
-      'friendly_name': 'Zürich Bern Departure +1',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by transport.opendata.ch',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zürich Bern Departure +1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.zurich_bern_departure_1',
@@ -199,9 +199,9 @@
 # name: test_all_entities[sensor.zurich_bern_departure_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by transport.opendata.ch',
-      'device_class': 'timestamp',
-      'friendly_name': 'Zürich Bern Departure +2',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by transport.opendata.ch',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zürich Bern Departure +2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.zurich_bern_departure_2',
@@ -251,8 +251,8 @@
 # name: test_all_entities[sensor.zurich_bern_line-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by transport.opendata.ch',
-      'friendly_name': 'Zürich Bern Line',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by transport.opendata.ch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zürich Bern Line',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.zurich_bern_line',
@@ -302,8 +302,8 @@
 # name: test_all_entities[sensor.zurich_bern_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by transport.opendata.ch',
-      'friendly_name': 'Zürich Bern Platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by transport.opendata.ch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zürich Bern Platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.zurich_bern_platform',
@@ -353,8 +353,8 @@
 # name: test_all_entities[sensor.zurich_bern_transfers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by transport.opendata.ch',
-      'friendly_name': 'Zürich Bern Transfers',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by transport.opendata.ch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zürich Bern Transfers',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.zurich_bern_transfers',
@@ -410,10 +410,10 @@
 # name: test_all_entities[sensor.zurich_bern_trip_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by transport.opendata.ch',
-      'device_class': 'duration',
-      'friendly_name': 'Zürich Bern Trip duration',
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by transport.opendata.ch',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zürich Bern Trip duration',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.zurich_bern_trip_duration',

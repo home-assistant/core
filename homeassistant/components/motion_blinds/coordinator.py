@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from motionblinds import DEVICE_TYPES_WIFI, MotionGateway, ParseException
 
@@ -77,6 +78,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
 
         return {ATTR_AVAILABLE: True}
 
+    @override
     async def _async_update_data(self):
         """Fetch the latest data from the gateway and blinds."""
         data = {}

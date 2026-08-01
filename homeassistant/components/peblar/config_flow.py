@@ -1,7 +1,7 @@
 """Config flow to configure the Peblar integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiohttp import CookieJar
 from peblar import Peblar, PeblarAuthenticationError, PeblarConnectionError
@@ -27,6 +27,7 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
 
     _discovery_info: ZeroconfServiceInfo
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -125,6 +126,7 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

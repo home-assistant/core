@@ -1,7 +1,5 @@
 """BleBox devices setup tests."""
 
-import logging
-
 import blebox_uniapi
 import pytest
 
@@ -17,36 +15,42 @@ from .conftest import (
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        (blebox_uniapi.error.ConnectionError, ConfigEntryState.SETUP_RETRY),
+        (blebox_uniapi.error.HttpError, ConfigEntryState.SETUP_RETRY),
+        (blebox_uniapi.error.UnsupportedBoxVersion, ConfigEntryState.SETUP_ERROR),
+        (blebox_uniapi.error.UnsupportedBoxResponse, ConfigEntryState.SETUP_ERROR),
+        (blebox_uniapi.error.UnauthorizedRequest, ConfigEntryState.SETUP_ERROR),
+        (blebox_uniapi.error.Error, ConfigEntryState.SETUP_ERROR),
+    ],
+)
 async def test_setup_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
+    exception: type[Exception],
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test that setup failure is handled and logged."""
-
-    patch_product_identify(None, side_effect=blebox_uniapi.error.ClientError)
-
-    caplog.set_level(logging.ERROR)
+    """Test that setup failures map to the correct config entry state."""
+    patch_product_identify(None, side_effect=exception)
     await async_setup_config_entry(hass, config_entry)
-
-    assert "Identify failed at 172.100.123.4:80 ()" in caplog.text
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is expected_state
 
 
-async def test_setup_failure_on_connection(
+async def test_setup_auth_failure_triggers_reauth(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that setup failure is handled and logged."""
-
-    patch_product_identify(None, side_effect=blebox_uniapi.error.ConnectionError)
-
-    caplog.set_level(logging.ERROR)
+    """Test that UnauthorizedRequest during setup triggers a reauth flow."""
+    patch_product_identify(None, side_effect=blebox_uniapi.error.UnauthorizedRequest)
     await async_setup_config_entry(hass, config_entry)
 
-    assert "Identify failed at 172.100.123.4:80 ()" in caplog.text
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        f["handler"] == "blebox" and f["context"]["source"] == "reauth" for f in flows
+    )
 
 
 async def test_unload_config_entry(

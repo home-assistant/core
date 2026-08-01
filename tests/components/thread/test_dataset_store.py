@@ -782,6 +782,64 @@ async def test_set_preferred_extended_address(hass: HomeAssistant) -> None:
     assert list(store.datasets.values())[2].preferred_extended_address == "blah"
 
 
+async def test_refresh_preferred_extended_address(hass: HomeAssistant) -> None:
+    """Test the preferred extended address is refreshed when the border agent ID matches.
+
+    An OTBR upgrade can regenerate the extended address while keeping the same
+    border agent ID. In that case the stored extended address should be updated
+    so the preferred border agent keeps being recognized.
+    """
+    await dataset_store.async_add_dataset(
+        hass,
+        "source",
+        DATASET_1,
+        preferred_border_agent_id="baid",
+        preferred_extended_address="old_address",
+    )
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    entry = list(store.datasets.values())[0]
+    assert entry.preferred_border_agent_id == "baid"
+    assert entry.preferred_extended_address == "old_address"
+
+    # Same dataset and border agent ID, new extended address: refresh the address
+    await dataset_store.async_add_dataset(
+        hass,
+        "source",
+        DATASET_1,
+        preferred_border_agent_id="baid",
+        preferred_extended_address="new_address",
+    )
+    entry = list(store.datasets.values())[0]
+    assert entry.preferred_border_agent_id == "baid"
+    assert entry.preferred_extended_address == "new_address"
+
+    # Different border agent ID: leave the preferred border agent untouched
+    await dataset_store.async_add_dataset(
+        hass,
+        "source",
+        DATASET_1,
+        preferred_border_agent_id="other_baid",
+        preferred_extended_address="other_address",
+    )
+    entry = list(store.datasets.values())[0]
+    assert entry.preferred_border_agent_id == "baid"
+    assert entry.preferred_extended_address == "new_address"
+
+    # Newer dataset (same extended PAN ID) with matching border agent ID: refresh
+    await dataset_store.async_add_dataset(
+        hass,
+        "source",
+        DATASET_1_LARGER_TIMESTAMP,
+        preferred_border_agent_id="baid",
+        preferred_extended_address="newest_address",
+    )
+    entry = list(store.datasets.values())[0]
+    assert entry.preferred_border_agent_id == "baid"
+    assert entry.preferred_extended_address == "newest_address"
+
+
 async def test_automatically_set_preferred_dataset(
     hass: HomeAssistant, mock_async_zeroconf: MagicMock
 ) -> None:
