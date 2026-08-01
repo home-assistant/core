@@ -9,6 +9,7 @@ from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
     config_validation as cv,
+    device_registry as dr,
 )
 
 from .api import (
@@ -18,6 +19,7 @@ from .api import (
 )
 from .const import DOMAIN
 from .coordinator import LyricConfigEntry, LyricDataUpdateCoordinator
+from .entity import create_thermostat_device_info
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -58,6 +60,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: LyricConfigEntry) -> boo
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
+
+    # Register the thermostat devices up front so the accessory (room sensor)
+    # entities can resolve them as their via_device parent regardless of the
+    # order the platforms are set up in.
+    device_registry = dr.async_get(hass)
+    for location in coordinator.data.locations:
+        for device in location.devices:
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                **create_thermostat_device_info(device),
+            )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
