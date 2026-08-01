@@ -7,6 +7,7 @@
             "state": {
               "advanced_sleep": "mdi:sleep",
               "auto": "mdi:fan-auto",
+              "eco": "mdi:leaf",
               "pet": "mdi:paw",
               "sleep": "mdi:sleep",
               "turbo": "mdi:weather-tornado"

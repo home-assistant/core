@@ -258,6 +258,9 @@ OVEN_CAVITY_SENSORS: tuple[WhirlpoolOvenCavitySensorEntityDescription, ...] = (
     ),
 )
 
+# Sensors replaced by more capable entities (select and number respectively).
+DEPRECATED_OVEN_SENSOR_KEYS = ("oven_cook_mode", "oven_target_temperature")
+
 
 def _build_oven_cavity_sensors(
     hass: HomeAssistant,
@@ -269,14 +272,15 @@ def _build_oven_cavity_sensors(
     suffix = WhirlpoolOvenEntity.cavity_suffix(oven, cavity)
     sensors: list[SensorEntity] = []
     for description in OVEN_CAVITY_SENSORS:
-        # The oven cook mode sensor has been replaced by a select entity.
-        if description.key == "oven_cook_mode" and not deprecate_entity(
+        # The oven cook mode and target temperature sensors have been replaced
+        # by select and number entities respectively.
+        if description.key in DEPRECATED_OVEN_SENSOR_KEYS and not deprecate_entity(
             hass,
             entity_registry,
             platform_domain=Platform.SENSOR,
-            entity_unique_id=f"{oven.said}-oven_cook_mode{suffix}",
-            issue_id=f"deprecated_oven_cook_mode_{oven.said}{suffix}",
-            translation_key="deprecated_oven_cook_mode",
+            entity_unique_id=f"{oven.said}-{description.key}{suffix}",
+            issue_id=f"deprecated_{description.key}_{oven.said}{suffix}",
+            translation_key=f"deprecated_{description.key}",
         ):
             continue
         sensors.append(WhirlpoolOvenCavitySensor(oven, cavity, description))

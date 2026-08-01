@@ -95,6 +95,9 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_brightness")
+    # State comes from the public API; the base class primes the object and
+    # subscribes to the public devices websocket on this flag.
+    _ufp_uses_public = True
 
     def __init__(
         self,
@@ -128,18 +131,6 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     async def async_removed_from_registry(self) -> None:
         """Release the device for a future public add offer."""
         self.data.async_forget_public_device(self.device.mac)
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Read state from the public API (primed before the first update)."""
-        self._ufp_uses_public = True
-        self._ufp_public_obj = self.data.async_get_public_device(self.device)
-        self.async_on_remove(
-            self.data.async_subscribe_public(
-                self.device.mac, self._async_public_updated
-            )
-        )
-        await super().async_added_to_hass()
 
     @callback
     @override

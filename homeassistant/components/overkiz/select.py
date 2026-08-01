@@ -122,6 +122,9 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
 SUPPORTED_STATES = {description.key: description for description in SELECT_DESCRIPTIONS}
 
 
+PARALLEL_UPDATES = 0
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OverkizDataConfigEntry,

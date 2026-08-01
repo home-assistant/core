@@ -105,8 +105,8 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
     def _async_update_device_info(self, name: str) -> None:
         """Update the device info."""
         device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, self.data.device_info["mac"])},
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, self.data.device_info["mac"]), self.config_entry.entry_id
         )
         if device:
             device_registry.async_update_device(

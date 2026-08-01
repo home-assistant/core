@@ -645,3 +645,129 @@
     'state': 'GF7  Woonkamer',
   })
 # ---
+# name: test_anna_entities_with_dhw_mode_select[platforms0-True-anna_loria_cooling_active][select.anna_thermostat_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'Winter',
+        'Test ',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.anna_thermostat_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thermostat schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thermostat schedule',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'select_schedule',
+    'unique_id': '582dfbdace4d4aeb832923ce7d1ddda0-select_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_anna_entities_with_dhw_mode_select[platforms0-True-anna_loria_cooling_active][select.anna_thermostat_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Anna Thermostat schedule',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'Winter',
+        'Test ',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.anna_thermostat_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Winter',
+  })
+# ---
+# name: test_anna_entities_with_dhw_mode_select[platforms0-True-anna_loria_cooling_active][select.opentherm_dhw_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'auto',
+        'boost',
+        'eco',
+        'comfort',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.opentherm_dhw_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'DHW mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DHW mode',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'select_dhw_mode',
+    'unique_id': 'bfb5ee0a88e14e5f97bfa725a760cc49-select_dhw_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_anna_entities_with_dhw_mode_select[platforms0-True-anna_loria_cooling_active][select.opentherm_dhw_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenTherm DHW mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'auto',
+        'boost',
+        'eco',
+        'comfort',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.opentherm_dhw_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
