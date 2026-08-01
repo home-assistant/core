@@ -67,6 +67,28 @@ async def test_setup_creates_nvr_device(
     assert nvr_device == snapshot
 
 
+async def test_device_links_to_nvr_via_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+) -> None:
+    """Test that a standard Protect device's via_device_id points at the NVR device."""
+    await init_entry(hass, ufp, [light])
+
+    nvr = ufp.api.bootstrap.nvr
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, nvr.mac), ufp.entry.entry_id
+    )
+    assert nvr_device is not None
+
+    light_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, light.mac), ufp.entry.entry_id
+    )
+    assert light_device is not None
+    assert light_device.via_device_id == nvr_device.id
+
+
 async def test_setup(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
     """Test working setup of unifiprotect entry."""
 
