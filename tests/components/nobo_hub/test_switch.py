@@ -136,3 +136,35 @@ async def test_new_zone_adds_switch(
     await fire_hub_update(hass, mock_nobo_hub)
 
     assert unique_id in entity_unique_ids(entity_registry, entry_id)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_readded_zone_reappears_switch(
+    hass: HomeAssistant,
+    mock_nobo_hub: MagicMock,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A zone removed and re-added under the same id (the hub reuses ids) restores its switch."""
+    entry_id = mock_config_entry.entry_id
+    unique_id = f"{SERIAL}:2:disable_global_override"
+    zone = {
+        "zone_id": "2",
+        "name": "Bedroom",
+        "week_profile_id": "0",
+        "temp_comfort_c": "22",
+        "temp_eco_c": "18",
+        "override_allowed": "1",
+    }
+
+    mock_nobo_hub.zones["2"] = zone
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert unique_id in entity_unique_ids(entity_registry, entry_id)
+
+    del mock_nobo_hub.zones["2"]
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert unique_id not in entity_unique_ids(entity_registry, entry_id)
+
+    mock_nobo_hub.zones["2"] = zone
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert unique_id in entity_unique_ids(entity_registry, entry_id)
