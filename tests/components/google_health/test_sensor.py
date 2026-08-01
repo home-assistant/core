@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from google_health_api.const import HealthApiScope
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -143,6 +144,11 @@ async def test_sensor_unit_conversions(
         assert state.attributes.get("unit_of_measurement") == expected_unit
 
 
+@pytest.mark.parametrize(
+    "scopes",
+    [[HealthApiScope.PROFILE_READ, HealthApiScope.SETTINGS_READ]],
+    indirect=True,
+)
 @pytest.mark.usefixtures("mock_google_health_client")
 async def test_device_sensor_via_device_id(
     hass: HomeAssistant,
@@ -150,7 +156,12 @@ async def test_device_sensor_via_device_id(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
-    """Test a paired device is linked to the account device via via_device_id."""
+    """Test a paired device is linked to the account device via via_device_id.
+
+    Only the profile and settings scopes are granted so the account device
+    can only come from the up-front registration, not from account-level
+    sensors that scopes outside of this test would also create.
+    """
     with patch("homeassistant.components.google_health._PLATFORMS", [Platform.SENSOR]):
         assert await integration_setup()
 
