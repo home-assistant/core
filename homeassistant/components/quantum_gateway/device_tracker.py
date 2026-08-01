@@ -3,6 +3,7 @@
 import logging
 from typing import override
 
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -127,17 +128,24 @@ class QuantumGatewayScannerEntity(
 ):
     """Representation of a device connected to a Quantum Gateway."""
 
+    _attr_mac_address: str
+
     def __init__(
         self, coordinator: QuantumGatewayDataUpdateCoordinator, mac: str
     ) -> None:
         """Initialize the tracked device."""
         super().__init__(coordinator)
         self._attr_mac_address = mac
-        self._attr_hostname = coordinator.data.get(mac)
-        self._attr_name = self._attr_hostname
+        self._attr_name = self.hostname
 
     @override
     @property
     def is_connected(self) -> bool:
         """Return true if the device is connected to the Quantum Gateway."""
         return self._attr_mac_address in self.coordinator.data
+
+    @override
+    @cached_property
+    def hostname(self) -> str | None:
+        """Return hostname of the device."""
+        return self.coordinator.data.get(self._attr_mac_address)
