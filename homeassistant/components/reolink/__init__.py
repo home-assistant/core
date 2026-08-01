@@ -58,6 +58,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.TIME,
     Platform.UPDATE,
 ]
 FIRMWARE_UPDATE_INTERVAL = timedelta(hours=24)
