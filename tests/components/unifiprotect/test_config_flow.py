@@ -2036,7 +2036,7 @@ async def test_reconfigure_clears_session_failure_continues(
 
     # Simulate session clear failure - should still continue
     with patch(
-        "homeassistant.components.unifiprotect.config_flow.async_create_api_client"
+        "homeassistant.components.unifiprotect.config_flow.async_create_session_client"
     ) as mock_create_client:
         mock_protect = AsyncMock()
         mock_protect.clear_session = AsyncMock(side_effect=Exception("Session error"))

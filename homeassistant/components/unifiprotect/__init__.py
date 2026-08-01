@@ -5,6 +5,7 @@ import logging
 from typing import NoReturn
 
 from aiohttp.client_exceptions import ServerDisconnectedError
+from uiprotect import ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import Bootstrap
 from uiprotect.data.public_devices import PublicDeviceModel, PublicNVR
@@ -47,6 +48,7 @@ from .services import async_setup_services
 from .utils import (
     _async_unifi_mac_from_hass,
     async_create_api_client,
+    async_create_session_client,
     async_get_devices,
 )
 from .views import (
@@ -328,20 +330,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool
 
 async def async_remove_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
     """Handle removal of a config entry."""
-    # Clear the stored session credentials when the integration is removed
-    if entry.state is ConfigEntryState.LOADED:
-        # Integration is loaded, use the existing API client
-        try:
-            await entry.runtime_data.api.clear_session()
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.warning("Failed to clear session credentials: %s", err)
-    else:
-        # Integration is not loaded, create temporary client to clear session
-        protect = async_create_api_client(hass, entry)
-        try:
-            await protect.clear_session()
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.warning("Failed to clear session credentials: %s", err)
+    # Clear the stored session credentials when the integration is removed. A
+    # public-only client cannot do it (no username), and an entry switched to
+    # API-key-only keeps its credentials, so that case builds a full client.
+    protect: ProtectApiClient | None
+    if (
+        entry.state is ConfigEntryState.LOADED
+        and not entry.runtime_data.api.is_public_only
+    ):
+        protect = entry.runtime_data.api
+    elif (protect := async_create_session_client(hass, entry)) is None:
+        return
+    try:
+        await protect.clear_session()
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.warning("Failed to clear session credentials: %s", err)
 
 
 async def async_remove_config_entry_device(

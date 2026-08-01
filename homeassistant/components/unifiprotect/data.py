@@ -368,8 +368,10 @@ class ProtectData:
             # library always emits DISCONNECTED first (uiprotect 15.12.2+),
             # so the data is already marked stale by the branch below. Fires
             # in both modes (the public websocket runs in hybrid too), and is
-            # the only reauth trigger in public-only mode.
-            self._entry.async_start_reauth(self._hass)
+            # the only reauth trigger in public-only mode. While the entry is
+            # still setting up, the 401 buffering there owns the decision.
+            if self._entry.state is ConfigEntryState.LOADED:
+                self._entry.async_start_reauth(self._hass)
             return
         success = state is WebsocketState.CONNECTED
         if success == self.last_public_update_success:

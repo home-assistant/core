@@ -40,7 +40,11 @@ from .const import (
 )
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
-from .utils import async_ufp_instance_command, get_camera_base_name
+from .utils import (
+    _async_unifi_mac_from_hass,
+    async_ufp_instance_command,
+    get_camera_base_name,
+)
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -311,16 +315,18 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             return
         # public-only: no market_name/firmware_version/protect_url, and
         # ``type`` only on newer firmware, so device identity is limited. The
-        # NVR link is omitted — an API-key-only client has no private
-        # bootstrap to read the NVR mac from, and resolving it publicly is
-        # async; the public-only config mode wires it at setup instead.
+        # NVR mac comes from the public bootstrap, which setup primes (and
+        # aborts without), matching the identifier of the device it registers.
         public = self._public
-        self._attr_device_info = DeviceInfo(
+        device_info = DeviceInfo(
             name=public.display_name,
             model=public.type,
             manufacturer=DEFAULT_BRAND,
             connections={(dr.CONNECTION_NETWORK_MAC, public.mac)},
         )
+        if (nvr := self.data.api.public_bootstrap.nvr) is not None and nvr.mac:
+            device_info["via_device"] = (DOMAIN, _async_unifi_mac_from_hass(nvr.mac))
+        self._attr_device_info = device_info
 
     @callback
     @override

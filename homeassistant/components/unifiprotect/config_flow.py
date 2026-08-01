@@ -58,7 +58,7 @@ from .utils import (
     _async_resolve,
     _async_short_mac,
     _async_unifi_mac_from_hass,
-    async_create_api_client,
+    async_create_session_client,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,7 +97,8 @@ async def _async_clear_session_if_credentials_changed(
         CONF_USERNAME
     ) or existing_data.get(CONF_PASSWORD) != new_data.get(CONF_PASSWORD):
         _LOGGER.debug("Credentials changed, clearing stored session")
-        protect = async_create_api_client(hass, entry)
+        if (protect := async_create_session_client(hass, entry)) is None:
+            return
         try:
             await protect.clear_session()
         except Exception as ex:  # noqa: BLE001

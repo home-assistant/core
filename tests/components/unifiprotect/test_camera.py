@@ -437,14 +437,18 @@ async def test_public_only_camera(
     # diagnostics have no public equivalent and degrade to None
     assert state.attributes["fps"] is None
 
-    # device identity degrades to name-only; the NVR link is omitted (resolving
-    # the NVR identity publicly is wired with the config-mode setup)
+    # device identity degrades to name-only, but the NVR link still resolves
+    # from the public bootstrap
     device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     device = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, public.mac)}
     )
     assert device is not None
-    assert device.via_device_id is None
+    nvr_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, ufp.api.public_bootstrap.nvr.mac)}
+    )
+    assert nvr_device is not None
+    assert device.via_device_id == nvr_device.id
     assert device.name == camera.display_name
     assert device.model == camera.type
 

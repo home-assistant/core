@@ -18,13 +18,16 @@ from homeassistant.components.unifiprotect import async_remove_config_entry_devi
 from homeassistant.components.unifiprotect.const import (
     AUTH_RETRIES,
     CONF_ALLOW_EA,
+    CONF_CONNECTION_MODE,
+    CONNECTION_MODE_API_KEY_ONLY,
     DOMAIN,
 )
 from homeassistant.components.unifiprotect.data import (
     async_ufp_instance_for_config_entry_ids,
 )
+from homeassistant.components.unifiprotect.utils import async_create_session_client
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE, Platform
+from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -179,7 +182,7 @@ async def test_remove_entry_not_loaded(
     ufp.api.clear_session = AsyncMock()
 
     with patch(
-        "homeassistant.components.unifiprotect.async_create_api_client",
+        "homeassistant.components.unifiprotect.async_create_session_client",
         return_value=ufp.api,
     ):
         await hass.config_entries.async_remove(ufp.entry.entry_id)
@@ -217,7 +220,7 @@ async def test_remove_entry_not_loaded_clear_session_fails(
 
     # Mock clear_session to raise an exception for the temporary client
     with patch(
-        "homeassistant.components.unifiprotect.async_create_api_client"
+        "homeassistant.components.unifiprotect.async_create_session_client"
     ) as mock_create:
         mock_api = Mock(spec=ProtectApiClient)
         mock_api.clear_session = AsyncMock(side_effect=OSError("Read-only file system"))
@@ -229,6 +232,38 @@ async def test_remove_entry_not_loaded_clear_session_fails(
 
         # Verify clear_session was attempted
         assert mock_api.clear_session.called
+
+
+async def test_session_client_is_full_access_for_api_key_only_entry(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """A session clear on an API-key-only entry goes through a full client.
+
+    A public-only client carries no username, so its ``clear_session`` returns
+    early and a session stored before the mode switch would survive.
+    """
+    hass.config_entries.async_update_entry(
+        ufp.entry,
+        data={**ufp.entry.data, CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY},
+    )
+
+    protect = async_create_session_client(hass, ufp.entry)
+
+    assert protect is not None
+    assert not protect.is_public_only
+
+
+async def test_session_client_none_without_credentials(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """An entry created in API-key-only mode has no session to clear."""
+    data = {k: v for k, v in ufp.entry.data.items() if k != CONF_PASSWORD}
+    hass.config_entries.async_update_entry(
+        ufp.entry,
+        data={**data, CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY},
+    )
+
+    assert async_create_session_client(hass, ufp.entry) is None
 
 
 @pytest.mark.parametrize("version", ["1.19.0", "7.0.107"])

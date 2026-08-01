@@ -5,14 +5,13 @@ from datetime import datetime, timedelta
 from typing import Any, cast
 from unittest.mock import AsyncMock, Mock
 
-from aiohttp import ClientResponse, web
+from aiohttp import ClientResponse
 import pytest
 from uiprotect.data import Camera, Event, EventType, ModelType
 from uiprotect.exceptions import ClientError
 
 from homeassistant.components.unifiprotect.data import async_get_data_for_nvr_id
 from homeassistant.components.unifiprotect.views import (
-    ThumbnailProxyView,
     async_generate_event_video_url,
     async_generate_proxy_event_video_url,
     async_generate_snapshot_url,
@@ -972,17 +971,19 @@ async def test_event_video(
 
 
 async def test_public_only_entry_id_lookup_404(
-    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     ufp_public_only: MockUFPFixture,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
     """The media proxy views reject a public-only entry id with a 404."""
     await setup_public_only()
 
-    view = ThumbnailProxyView(hass)
-    result = view._get_data_or_404(ufp_public_only.entry.entry_id)
-    assert isinstance(result, web.Response)
-    assert result.status == 404
+    url = async_generate_thumbnail_url("test_id", ufp_public_only.entry.entry_id)
+
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(url))
+
+    assert response.status == 404
 
 
 async def test_public_only_entry_skipped_by_nvr_id_lookup(
