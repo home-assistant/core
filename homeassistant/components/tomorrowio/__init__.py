@@ -98,18 +98,16 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
 
         parent_entry, all_disabled = api_keys_entries[api_key]
 
-        if (
-            existing_subentry := next(
-                (
-                    existing
-                    for existing in parent_entry.get_subentries_of_type(
-                        SUBENTRY_TYPE_LOCATION
-                    )
-                    if existing.unique_id == subentry.unique_id
-                ),
-                None,
-            )
-        ) is not None:
+        if existing_subentry := next(
+            (
+                existing
+                for existing in parent_entry.get_subentries_of_type(
+                    SUBENTRY_TYPE_LOCATION
+                )
+                if existing.unique_id == subentry.unique_id
+            ),
+            None,
+        ):
             # An interrupted earlier run already persisted this subentry but
             # not yet the removal of its source entry; finish that work.
             subentry = existing_subentry
@@ -142,7 +140,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 disabled_by=entity_disabled_by,
             )
 
-        if device is not None:
+        if device:
             # Device and entity registries don't update the disabled_by flag when
             # moving a device or entity from one config entry to another, so we
             # need to do it manually.

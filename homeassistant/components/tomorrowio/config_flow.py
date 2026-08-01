@@ -154,7 +154,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             ):
                 return self.async_abort(reason="already_configured")
 
-            if reconfigure_subentry is not None:
+            if reconfigure_subentry:
                 # Entity unique IDs embed the coordinates; moving the
                 # location must rewrite them so entities and their history
                 # survive instead of being orphaned by the reload.
@@ -193,7 +193,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             )
 
         suggested_values: Mapping[str, Any] | None = None
-        if reconfigure_subentry is not None:
+        if reconfigure_subentry:
             suggested_values = {
                 CONF_NAME: reconfigure_subentry.data[CONF_NAME],
                 CONF_LOCATION: dict(reconfigure_subentry.data[CONF_LOCATION]),
