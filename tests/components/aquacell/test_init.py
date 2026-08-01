@@ -1,9 +1,10 @@
 """Test the Aquacell init module."""
 
 import time
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aioaquacell import AquacellApiException, AuthenticationFailed
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.aquacell.const import (
@@ -65,16 +66,14 @@ async def test_coordinator_update_valid_refresh_token(
 
 async def test_coordinator_update_expired_refresh_token(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_aquacell_api: AsyncMock,
     mock_config_entry_expired: MockConfigEntry,
 ) -> None:
     """Test load and unload entry."""
     mock_aquacell_api.authenticate.return_value = "new-refresh-token"
 
-    now = time.time()
-    with patch("homeassistant.components.aquacell.coordinator.time") as time_mock:
-        time_mock.time.return_value = now
-        await setup_integration(hass, mock_config_entry_expired)
+    await setup_integration(hass, mock_config_entry_expired)
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
@@ -85,7 +84,7 @@ async def test_coordinator_update_expired_refresh_token(
     assert len(mock_aquacell_api.get_all_softeners.mock_calls) == 1
 
     assert entry.data[CONF_REFRESH_TOKEN] == "new-refresh-token"
-    assert entry.data[CONF_REFRESH_TOKEN_CREATION_TIME] == now
+    assert entry.data[CONF_REFRESH_TOKEN_CREATION_TIME] == time.time()
 
 
 @pytest.mark.parametrize(
