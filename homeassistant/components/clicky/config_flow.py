@@ -29,12 +29,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data[CONF_USERNAME], data[CONF_PASSWORD]
-    # )
-
     session = async_get_clientsession(hass)
     client = ClickyClient(
         site_id=data[CONF_SITE_ID],
@@ -52,7 +46,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except ClickyAPIError as error:
         raise ConfigEntryAuthFailed(f"API failed for {data[CONF_NICKNAME]}") from error
 
-    # Return info that you want to store in the config entry.
     return {"title": data[CONF_NICKNAME]}
 
 

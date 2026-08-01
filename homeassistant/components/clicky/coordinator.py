@@ -44,9 +44,6 @@ class ClickyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
     ) -> dict[str, Any]:
         """Fetch data from API endpoint."""
-        # raise ConfigEntryAuthFailed from err
-
-        # self.config_entry has: name, site_id, site_key
         ret: dict[str, Any] = {}
 
         async with self.client as service:
