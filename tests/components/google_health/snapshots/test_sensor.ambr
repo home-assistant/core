@@ -14,7 +14,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.device_battery',
     'has_entity_name': True,
     'hidden_by': None,
@@ -67,7 +67,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.device_last_sync_time',
     'has_entity_name': True,
     'hidden_by': None,
@@ -120,7 +120,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.fitbit_charge_6_battery',
     'has_entity_name': True,
     'hidden_by': None,
@@ -173,7 +173,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.fitbit_charge_6_last_sync_time',
     'has_entity_name': True,
     'hidden_by': None,
@@ -237,8 +237,11 @@
     'name': None,
     'object_id_base': 'Active calories',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Active calories',
     'platform': 'google_health',
@@ -253,6 +256,7 @@
 # name: test_all_entities[sensor.google_health_active_calories-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Active calories',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_CALORIE: 'kcal'>,
@@ -345,8 +349,11 @@
     'name': None,
     'object_id_base': 'Calories consumed',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Calories consumed',
     'platform': 'google_health',
@@ -361,6 +368,7 @@
 # name: test_all_entities[sensor.google_health_calories_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Calories consumed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_CALORIE: 'kcal'>,
@@ -402,6 +410,9 @@
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
@@ -412,7 +423,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_distance',
-    'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
 # name: test_all_entities[sensor.google_health_distance-state]
@@ -421,14 +432,14 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Distance',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.METERS: 'm'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.google_health_distance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5000.0',
+    'state': '5.0',
   })
 # ---
 # name: test_all_entities[sensor.google_health_floors-entry]
@@ -908,8 +919,11 @@
     'name': None,
     'object_id_base': 'Total calories',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total calories',
     'platform': 'google_health',
@@ -924,6 +938,7 @@
 # name: test_all_entities[sensor.google_health_total_calories-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Total calories',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_CALORIE: 'kcal'>,
@@ -1067,7 +1082,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.scale_battery',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1120,7 +1135,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.scale_last_sync_time',
     'has_entity_name': True,
     'hidden_by': None,
