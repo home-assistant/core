@@ -30,14 +30,17 @@ from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerV
 from pyportainer.models.portainer import Endpoint
 from pyportainer.models.stacks import Stack
 from pyportainer.watcher import PortainerImageWatcher
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 from .util import sanitize_container_name
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
@@ -411,6 +414,52 @@ class PortainerCoordinator(
 
         return mapped_endpoints
 
+    def async_register_endpoint_and_stack_devices(
+        self,
+        mapped_endpoints: dict[int, PortainerCoordinatorData],
+        endpoint_ids: set[int],
+        stack_keys: set[tuple[int, str]],
+    ) -> None:
+        """Register endpoint and stack devices.
+
+        Must run for an endpoint/stack before any entity that resolves it
+        as its via device is constructed, both during initial setup and
+        when a later refresh discovers new endpoints or stacks.
+        """
+        device_registry = dr.async_get(self.hass)
+        base_url = self.config_entry.data[CONF_URL]
+        entry_id = self.config_entry.entry_id
+
+        for endpoint_id in endpoint_ids:
+            endpoint = mapped_endpoints[endpoint_id].endpoint
+            device_registry.async_get_or_create(
+                config_entry_id=entry_id,
+                identifiers={(DOMAIN, f"{entry_id}_{endpoint_id}")},
+                configuration_url=URL(f"{base_url}#!/{endpoint_id}/docker/dashboard"),
+                manufacturer=DEFAULT_NAME,
+                model="Endpoint",
+                name=endpoint.name,
+                entry_type=DeviceEntryType.SERVICE,
+            )
+
+        for endpoint_id, stack_name in stack_keys:
+            stack = mapped_endpoints[endpoint_id].stacks[stack_name].stack
+            device_registry.async_get_or_create(
+                config_entry_id=entry_id,
+                identifiers={(DOMAIN, f"{entry_id}_{endpoint_id}_stack_{stack.id}")},
+                configuration_url=URL(
+                    f"{base_url}#!/{endpoint_id}/docker/stacks/{stack.name}"
+                ),
+                manufacturer=DEFAULT_NAME,
+                model="Stack",
+                name=stack.name,
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    self.hass,
+                    (DOMAIN, f"{entry_id}_{endpoint_id}"),
+                    config_entry_id=entry_id,
+                ),
+            )
+
     def _async_add_remove_endpoints(
         self, mapped_endpoints: dict[int, PortainerCoordinatorData]
     ) -> None:
@@ -418,6 +467,22 @@ class PortainerCoordinator(
         current_endpoints = {endpoint.id for endpoint in mapped_endpoints.values()}
         self.known_endpoints &= current_endpoints
         new_endpoints = current_endpoints - self.known_endpoints
+
+        current_stacks = {
+            (endpoint.id, stack_name)
+            for endpoint in mapped_endpoints.values()
+            for stack_name in endpoint.stacks
+        }
+        self.known_stacks &= current_stacks
+        new_stacks = current_stacks - self.known_stacks
+
+        if new_endpoints or new_stacks:
+            # Register devices before any callback below constructs an
+            # entity that resolves one of them as its via device.
+            self.async_register_endpoint_and_stack_devices(
+                mapped_endpoints, new_endpoints, new_stacks
+            )
+
         if new_endpoints:
             _LOGGER.debug("New endpoints found: %s", new_endpoints)
             self.known_endpoints.update(new_endpoints)
@@ -473,14 +538,6 @@ class PortainerCoordinator(
                 volume_callback(new_volume_data)
 
         # Stack management
-        current_stacks = {
-            (endpoint.id, stack_name)
-            for endpoint in mapped_endpoints.values()
-            for stack_name in endpoint.stacks
-        }
-
-        self.known_stacks &= current_stacks
-        new_stacks = current_stacks - self.known_stacks
         if new_stacks:
             _LOGGER.debug("New stacks found: %s", new_stacks)
             self.known_stacks.update(new_stacks)

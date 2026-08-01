@@ -364,6 +364,7 @@ async def test_new_endpoint_callback(
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test new endpoint creates entities after refresh."""
     mock_portainer_client.get_endpoints.return_value = []
@@ -390,6 +391,21 @@ async def test_new_endpoint_callback(
         entity_registry, mock_config_entry.entry_id
     )
     assert len(entities) > 0
+
+    # The endpoint and its stacks are discovered together on this refresh, so
+    # the stack device must resolve the freshly-created endpoint device as its
+    # via device instead of racing its creation.
+    endpoint_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1"), mock_config_entry.entry_id
+    )
+    assert endpoint_device is not None
+
+    stack_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_stack_2"),
+        mock_config_entry.entry_id,
+    )
+    assert stack_device is not None
+    assert stack_device.via_device_id == endpoint_device.id
 
 
 async def test_new_container_callback(
