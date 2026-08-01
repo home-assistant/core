@@ -2094,6 +2094,9 @@ pychannels==1.2.3
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.1
 
+# homeassistant.components.clicky
+pyclicky==0.2.0
+
 # homeassistant.components.cmus
 pycmus==0.1.1
 

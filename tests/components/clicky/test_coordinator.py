@@ -1,0 +1,98 @@
+"""Tests for the Clicky coordinator."""
+
+from datetime import timedelta
+from unittest.mock import AsyncMock, Mock
+
+from pyclicky import ClickyAPIError
+import pytest
+
+from homeassistant.components.clicky.const import DOMAIN
+from homeassistant.components.clicky.coordinator import ClickyCoordinator
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
+
+
+def test_coordinator_init(hass: HomeAssistant) -> None:
+    """Test coordinator initialization."""
+
+    entry = Mock()
+    client = Mock()
+
+    coordinator = ClickyCoordinator(
+        hass=hass,
+        config_entry=entry,
+        client=client,
+    )
+
+    assert coordinator.client is client
+    assert coordinator.name == DOMAIN
+    assert coordinator.update_interval == timedelta(minutes=1)
+
+
+@pytest.mark.asyncio
+async def test_async_update_data_success(hass: HomeAssistant) -> None:
+    """Test successful update."""
+
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.__aexit__.return_value = None
+
+    client.query.side_effect = [
+        [
+            {
+                "dates": [
+                    {
+                        "items": [
+                            {"value": 12},
+                        ]
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "dates": [
+                    {
+                        "items": [
+                            {"value": 345},
+                        ]
+                    }
+                ]
+            }
+        ],
+    ]
+
+    coordinator = ClickyCoordinator(
+        hass=hass,
+        config_entry=Mock(),
+        client=client,
+    )
+
+    data = await coordinator._async_update_data()
+
+    assert data == {
+        "visitorsOnline": 12,
+        "timeTotal": 345,
+    }
+
+    assert client.query.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_async_update_data_failure(hass: HomeAssistant) -> None:
+    """Test that API errors become UpdateFailed."""
+
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.__aexit__.return_value = None
+
+    client.query.side_effect = ClickyAPIError("Unexpected Error")
+
+    coordinator = ClickyCoordinator(
+        hass=hass,
+        config_entry=Mock(),
+        client=client,
+    )
+
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()

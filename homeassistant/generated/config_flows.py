@@ -132,6 +132,7 @@ FLOWS = {
         "chef_iq",
         "chess_com",
         "cielo_home",
+        "clicky",
         "cloudflare",
         "cloudflare_r2",
         "co2signal",
