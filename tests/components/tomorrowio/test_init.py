@@ -25,6 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import (
     TEST_LOCATION,
@@ -486,3 +487,35 @@ async def test_migration_uses_customized_entry_title(hass: HomeAssistant) -> Non
     subentry = next(iter(config_entry.subentries.values()))
     assert subentry.title == "Casa"
     assert subentry.data[CONF_NAME] == "Casa"
+
+
+async def test_polling_disabled_pref(
+    hass: HomeAssistant,
+    tomorrowio_config_entry_update: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the system option to disable polling is honored (issue #177695).
+
+    The coordinator previously had no config entry, so the preference was
+    ignored. Scheduled refreshes must stop; manual refresh must still work.
+    """
+    config_entry = make_v2_config_entry()
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(config_entry, pref_disable_polling=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    tomorrowio_config_entry_update.reset_mock()
+
+    freezer.tick(timedelta(minutes=65))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(tomorrowio_config_entry_update.call_args_list) == 0
+
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": "weather.tomorrow_io_daily"},
+        blocking=True,
+    )
+    assert len(tomorrowio_config_entry_update.call_args_list) == 1

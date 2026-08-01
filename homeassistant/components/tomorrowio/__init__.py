@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_NAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -43,134 +43,147 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_integration(hass: HomeAssistant) -> None:
     """Migrate to one config entry per API key with location subentries."""
-    # Make sure we get enabled config entries first
-    entries = sorted(
-        hass.config_entries.async_entries(DOMAIN),
-        key=lambda e: e.disabled_by is not None,
-    )
+    entries = hass.config_entries.async_entries(DOMAIN)
     if not any(entry.version == 1 for entry in entries):
         return
 
-    api_keys_entries: dict[str, tuple[TomorrowioConfigEntry, bool]] = {}
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
-    # A previous run may have been interrupted: entries already migrated to
-    # version 2 become parents for any v1 siblings still sharing their key.
+    groups: dict[str, list[TomorrowioConfigEntry]] = {}
     for entry in entries:
-        if entry.version != 1:
-            api_keys_entries.setdefault(
-                entry.data[CONF_API_KEY], (entry, entry.disabled_by is not None)
+        groups.setdefault(entry.data[CONF_API_KEY], []).append(entry)
+
+    for api_key, group in groups.items():
+        # Prefer an already-migrated entry (an interrupted earlier run), then
+        # an enabled one, as the surviving parent entry.
+        parent_entry = min(
+            group, key=lambda e: (e.version == 1, e.disabled_by is not None)
+        )
+        all_disabled = all(e.disabled_by is not None for e in group)
+
+        for entry in group:
+            if entry.version != 1:
+                continue
+            subentry = _async_get_or_create_subentry(hass, parent_entry, entry)
+            _async_move_registry_rows(
+                device_registry,
+                entity_registry,
+                entry,
+                parent_entry,
+                subentry,
+                all_disabled,
             )
+            if parent_entry.entry_id != entry.entry_id:
+                await hass.config_entries.async_remove(entry.entry_id)
+            else:
+                hass.config_entries.async_update_entry(
+                    entry,
+                    data={CONF_API_KEY: api_key},
+                    options={},
+                    title=INTEGRATION_NAME,
+                    unique_id=api_key,
+                    version=2,
+                )
 
-    for entry in entries:
-        if entry.version != 1:
-            continue
-        api_key = entry.data[CONF_API_KEY]
-        location = entry.data[CONF_LOCATION]
 
-        # The title reflects UI renames while data[CONF_NAME] is frozen at
-        # creation, so the title is the user's current name for the location.
-        # Default titles were "Tomorrow.io - <zone>"; under a parent entry
-        # already titled Tomorrow.io only the zone part is meaningful.
-        name = entry.title.removeprefix(f"{INTEGRATION_NAME} - ") or entry.title
+@callback
+def _async_get_or_create_subentry(
+    hass: HomeAssistant,
+    parent_entry: TomorrowioConfigEntry,
+    entry: TomorrowioConfigEntry,
+) -> ConfigSubentry:
+    """Return the location subentry for a v1 entry, creating it if needed.
 
-        subentry = ConfigSubentry(
-            data=MappingProxyType(
-                {
-                    CONF_LOCATION: location,
-                    CONF_NAME: name,
-                    CONF_TIMESTEP: entry.options.get(CONF_TIMESTEP, DEFAULT_TIMESTEP),
-                }
-            ),
-            subentry_type=SUBENTRY_TYPE_LOCATION,
-            title=name,
-            unique_id=f"{location[CONF_LATITUDE]}_{location[CONF_LONGITUDE]}",
+    An interrupted earlier run may already have persisted the subentry
+    without having removed its source entry; reuse it in that case.
+    """
+    location = entry.data[CONF_LOCATION]
+    unique_id = f"{location[CONF_LATITUDE]}_{location[CONF_LONGITUDE]}"
+    if existing := next(
+        (
+            subentry
+            for subentry in parent_entry.get_subentries_of_type(SUBENTRY_TYPE_LOCATION)
+            if subentry.unique_id == unique_id
+        ),
+        None,
+    ):
+        return existing
+    # The title reflects UI renames while data[CONF_NAME] is frozen at
+    # creation, so the title is the user's current name for the location.
+    # Default titles were "Tomorrow.io - <zone>"; under a parent entry
+    # already titled Tomorrow.io only the zone part is meaningful.
+    name = entry.title.removeprefix(f"{INTEGRATION_NAME} - ") or entry.title
+    subentry = ConfigSubentry(
+        data=MappingProxyType(
+            {
+                CONF_LOCATION: location,
+                CONF_NAME: name,
+                CONF_TIMESTEP: entry.options.get(CONF_TIMESTEP, DEFAULT_TIMESTEP),
+            }
+        ),
+        subentry_type=SUBENTRY_TYPE_LOCATION,
+        title=name,
+        unique_id=unique_id,
+    )
+    hass.config_entries.async_add_subentry(parent_entry, subentry)
+    return subentry
+
+
+@callback
+def _async_move_registry_rows(
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entry: TomorrowioConfigEntry,
+    parent_entry: TomorrowioConfigEntry,
+    subentry: ConfigSubentry,
+    all_disabled: bool,
+) -> None:
+    """Move a v1 entry's device and entities onto its location subentry.
+
+    The registries reset a CONFIG_ENTRY disabled_by when a row moves onto an
+    enabled entry, so it is recomputed manually unless the whole API-key
+    group is disabled.
+    """
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    device = devices[0] if devices else None
+
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        entity_disabled_by = entity_entry.disabled_by
+        if (
+            entity_disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
+            and not all_disabled
+        ):
+            entity_disabled_by = (
+                er.RegistryEntryDisabler.DEVICE
+                if device
+                else er.RegistryEntryDisabler.USER
+            )
+        entity_registry.async_update_entity(
+            entity_entry.entity_id,
+            config_entry_id=parent_entry.entry_id,
+            config_subentry_id=subentry.subentry_id,
+            disabled_by=entity_disabled_by,
         )
 
-        if api_key not in api_keys_entries:
-            all_disabled = all(
-                e.disabled_by is not None
-                for e in entries
-                if e.data[CONF_API_KEY] == api_key
-            )
-            api_keys_entries[api_key] = (entry, all_disabled)
-
-        parent_entry, all_disabled = api_keys_entries[api_key]
-
-        if existing_subentry := next(
-            (
-                existing
-                for existing in parent_entry.get_subentries_of_type(
-                    SUBENTRY_TYPE_LOCATION
-                )
-                if existing.unique_id == subentry.unique_id
-            ),
-            None,
+    if device:
+        device_disabled_by = device.disabled_by
+        if (
+            device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+            and not all_disabled
         ):
-            # An interrupted earlier run already persisted this subentry but
-            # not yet the removal of its source entry; finish that work.
-            subentry = existing_subentry
-        else:
-            hass.config_entries.async_add_subentry(parent_entry, subentry)
-
-        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-        device = devices[0] if devices else None
-
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_registry, entry.entry_id
-        ):
-            entity_disabled_by = entity_entry.disabled_by
-            if (
-                entity_disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
-                and not all_disabled
-            ):
-                # Device and entity registries don't update the disabled_by flag
-                # when moving a device or entity from one config entry to another,
-                # so we need to do it manually.
-                entity_disabled_by = (
-                    er.RegistryEntryDisabler.DEVICE
-                    if device
-                    else er.RegistryEntryDisabler.USER
-                )
-            entity_registry.async_update_entity(
-                entity_entry.entity_id,
-                config_entry_id=parent_entry.entry_id,
-                config_subentry_id=subentry.subentry_id,
-                disabled_by=entity_disabled_by,
-            )
-
-        if device:
-            # Device and entity registries don't update the disabled_by flag when
-            # moving a device or entity from one config entry to another, so we
-            # need to do it manually.
-            device_disabled_by = device.disabled_by
-            if (
-                device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
-                and not all_disabled
-            ):
-                device_disabled_by = dr.DeviceEntryDisabler.USER
-            device_registry.async_update_device(
-                device.id,
-                disabled_by=device_disabled_by,
-                # The old identifiers, based on the API key, are not unique per
-                # location so each location device is re-identified by its subentry
-                new_identifiers={(DOMAIN, subentry.subentry_id)},
-                new_config_entry_id=parent_entry.entry_id,
-                new_config_subentry_id=subentry.subentry_id,
-            )
-
-        if parent_entry.entry_id != entry.entry_id:
-            await hass.config_entries.async_remove(entry.entry_id)
-        else:
-            hass.config_entries.async_update_entry(
-                entry,
-                data={CONF_API_KEY: api_key},
-                options={},
-                title=INTEGRATION_NAME,
-                unique_id=api_key,
-                version=2,
-            )
+            device_disabled_by = dr.DeviceEntryDisabler.USER
+        device_registry.async_update_device(
+            device.id,
+            disabled_by=device_disabled_by,
+            # The old identifiers, based on the API key, are not unique per
+            # location so each location device is re-identified by its subentry
+            new_identifiers={(DOMAIN, subentry.subentry_id)},
+            new_config_entry_id=parent_entry.entry_id,
+            new_config_subentry_id=subentry.subentry_id,
+        )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TomorrowioConfigEntry) -> bool:
