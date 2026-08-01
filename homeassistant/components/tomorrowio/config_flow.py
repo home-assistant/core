@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
@@ -40,6 +41,7 @@ from .const import (
     SUBENTRY_TYPE_LOCATION,
     TMRW_ATTR_TEMPERATURE,
 )
+from .entity import async_get_base_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,6 +155,29 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                 return self.async_abort(reason="already_configured")
 
             if reconfigure_subentry is not None:
+                # Entity unique IDs embed the coordinates; moving the
+                # location must rewrite them so entities and their history
+                # survive instead of being orphaned by the reload.
+                api_key: str = entry.data[CONF_API_KEY]
+                old_base = async_get_base_unique_id(
+                    api_key, reconfigure_subentry.data[CONF_LOCATION]
+                )
+                new_base = async_get_base_unique_id(api_key, user_input[CONF_LOCATION])
+                if new_base != old_base:
+                    entity_registry = er.async_get(self.hass)
+                    for entity_entry in er.async_entries_for_config_entry(
+                        entity_registry, entry.entry_id
+                    ):
+                        if (
+                            entity_entry.config_subentry_id
+                            == reconfigure_subentry.subentry_id
+                        ):
+                            entity_registry.async_update_entity(
+                                entity_entry.entity_id,
+                                new_unique_id=entity_entry.unique_id.replace(
+                                    old_base, new_base, 1
+                                ),
+                            )
                 return self.async_update_and_abort(
                     entry,
                     reconfigure_subentry,

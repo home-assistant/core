@@ -21,6 +21,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LOCATION,
     UnitOfDensity,
     UnitOfIrradiance,
     UnitOfLength,
@@ -368,9 +370,7 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
         """Initialize Tomorrow.io Sensor Entity."""
         super().__init__(config_entry, subentry, coordinator, api_version)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{async_get_base_unique_id(config_entry, subentry)}_{description.key}"
-        )
+        self._attr_unique_id = f"{async_get_base_unique_id(config_entry.data[CONF_API_KEY], subentry.data[CONF_LOCATION])}_{description.key}"
         if self.entity_description.native_unit_of_measurement is None:
             self._attr_native_unit_of_measurement = description.unit_metric
             if hass.config.units is US_CUSTOMARY_SYSTEM:

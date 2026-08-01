@@ -23,6 +23,8 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LOCATION,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -77,7 +79,9 @@ async def async_setup_entry(
         ]
 
         # Add hourly and nowcast entities to legacy locations
-        base_unique_id = async_get_base_unique_id(config_entry, subentry)
+        base_unique_id = async_get_base_unique_id(
+            config_entry.data[CONF_API_KEY], subentry.data[CONF_LOCATION]
+        )
         for forecast_type in (HOURLY, NOWCAST):
             if not entity_registry.async_get_entity_id(
                 WEATHER_DOMAIN,
@@ -127,7 +131,10 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
         )
         self._attr_name = forecast_type.title()
         self._attr_unique_id = _calculate_unique_id(
-            async_get_base_unique_id(config_entry, subentry), forecast_type
+            async_get_base_unique_id(
+                config_entry.data[CONF_API_KEY], subentry.data[CONF_LOCATION]
+            ),
+            forecast_type,
         )
 
     def _forecast_dict(

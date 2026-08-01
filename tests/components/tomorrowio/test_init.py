@@ -8,6 +8,8 @@ from pytomorrowio.exceptions import CantConnectException
 
 from homeassistant.components.tomorrowio.const import (
     CONF_TIMESTEP,
+    DEFAULT_NAME,
+    DEFAULT_TIMESTEP,
     DOMAIN,
     SUBENTRY_TYPE_LOCATION,
 )
@@ -21,9 +23,15 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import make_location_subentry_data, make_v2_config_entry
+from . import (
+    TEST_LOCATION,
+    TEST_SUBENTRY_ID,
+    make_location_subentry_data,
+    make_v2_config_entry,
+)
 from .const import API_KEY
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -359,3 +367,63 @@ async def test_migrate_entry_v1_to_v2_disabled_entry(
     assert migrated_entity_entry is not None
     assert migrated_entity_entry.disabled_by is er.RegistryEntryDisabler.DEVICE
     assert migrated_entity_entry.config_subentry_id == work_subentry.subentry_id
+
+
+async def test_migration_resumes_after_interruption(hass: HomeAssistant) -> None:
+    """Test an interrupted migration completes on the next start.
+
+    A previously migrated v2 entry must not crash the migration and must
+    adopt remaining v1 entries sharing its API key as subentries.
+    """
+    migrated = make_v2_config_entry()
+    migrated.add_to_hass(hass)
+    leftover = make_v1_config_entry(API_KEY, WORK_LOCATION, "Work", 5)
+    leftover.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(migrated.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_get_entry(leftover.entry_id) is None
+    assert migrated.version == 2
+    assert migrated.state is ConfigEntryState.LOADED
+    subentries = migrated.get_subentries_of_type(SUBENTRY_TYPE_LOCATION)
+    assert len(subentries) == 2
+    work_subentry = next(s for s in subentries if s.title == "Work")
+    assert work_subentry.data[CONF_TIMESTEP] == 5
+
+
+async def test_reconfigure_location_move_keeps_entity_ids(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test moving a location's coordinates preserves entity identities."""
+    config_entry = make_v2_config_entry()
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    weather_entity_id = "weather.tomorrow_io_daily"
+    entry_before = entity_registry.async_get(weather_entity_id)
+    assert entry_before is not None
+    assert f"_{TEST_LOCATION[CONF_LATITUDE]}_" in entry_before.unique_id
+
+    result = await config_entry.start_subentry_reconfigure_flow(hass, TEST_SUBENTRY_ID)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: DEFAULT_NAME,
+            CONF_LOCATION: WORK_LOCATION,
+            CONF_TIMESTEP: DEFAULT_TIMESTEP,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+
+    entry_after = entity_registry.async_get(weather_entity_id)
+    assert entry_after is not None
+    assert entry_after.id == entry_before.id
+    assert f"_{WORK_LOCATION[CONF_LATITUDE]}_" in entry_after.unique_id
+    subentry = next(iter(config_entry.subentries.values()))
+    assert subentry.unique_id == (
+        f"{WORK_LOCATION[CONF_LATITUDE]}_{WORK_LOCATION[CONF_LONGITUDE]}"
+    )

@@ -1,16 +1,12 @@
 """The Tomorrow.io integration."""
 
+from collections.abc import Mapping
 from typing import Any
 
 from pytomorrowio.const import CURRENT
 
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LOCATION,
-    CONF_LONGITUDE,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -20,20 +16,13 @@ from .coordinator import TomorrowioConfigEntry, TomorrowioDataUpdateCoordinator
 
 
 @callback
-def async_get_base_unique_id(
-    config_entry: TomorrowioConfigEntry, subentry: ConfigSubentry
-) -> str:
-    """Return the base unique ID for a location subentry.
+def async_get_base_unique_id(api_key: str, location: Mapping[str, Any]) -> str:
+    """Return the base unique ID for a location.
 
     This must reproduce the unique ID of the pre-subentry config entries
     byte-for-byte so migrated entities keep their unique IDs.
     """
-    location = subentry.data[CONF_LOCATION]
-    return (
-        f"{config_entry.data[CONF_API_KEY]}"
-        f"_{location[CONF_LATITUDE]}"
-        f"_{location[CONF_LONGITUDE]}"
-    )
+    return f"{api_key}_{location[CONF_LATITUDE]}_{location[CONF_LONGITUDE]}"
 
 
 class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):

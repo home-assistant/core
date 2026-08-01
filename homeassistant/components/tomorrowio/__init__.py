@@ -55,7 +55,17 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
+    # A previous run may have been interrupted: entries already migrated to
+    # version 2 become parents for any v1 siblings still sharing their key.
     for entry in entries:
+        if entry.version != 1:
+            api_keys_entries.setdefault(
+                entry.data[CONF_API_KEY], (entry, entry.disabled_by is not None)
+            )
+
+    for entry in entries:
+        if entry.version != 1:
+            continue
         api_key = entry.data[CONF_API_KEY]
         location = entry.data[CONF_LOCATION]
 
