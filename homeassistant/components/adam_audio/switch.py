@@ -11,9 +11,10 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import get_integration_data
 from .const import DOMAIN, ENTITY_MUTE, ENTITY_SLEEP, GROUP_DEVICE_ID
 from .coordinator import AdamAudioCoordinator
-from .data import AdamAudioConfigEntry, AdamAudioIntegrationData
+from .data import AdamAudioConfigEntry
 from .entity import AdamAudioEntity, AdamAudioGroupEntity
 
 PARALLEL_UPDATES = 0
@@ -26,10 +27,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the switch platform."""
     coordinator = entry.runtime_data.coordinator
-    # Tracks group entities across ALL config entries (one per speaker), so it
-    # can't live on a single entry's runtime_data.
-    # pylint: disable-next=home-assistant-use-runtime-data
-    integration_data: AdamAudioIntegrationData = hass.data[DOMAIN]
+    integration_data = get_integration_data(hass)
 
     entities: list[SwitchEntity] = [
         AdamAudioSleepSwitch(coordinator),

@@ -161,62 +161,6 @@ async def test_async_reload_entry(hass: HomeAssistant, mock_config_entry) -> Non
         mock_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
-async def test_coordinator_update_failure(
-    hass: HomeAssistant, mock_config_entry, mock_client: MagicMock
-) -> None:
-    """Test coordinator raises UpdateFailed once the client reports unavailable.
-
-    Poll-failure debouncing lives in AdamAudioClient (see test_client.py); the
-    coordinator's job is just to trust `client.available` after the poll
-    runs, so here we simulate the debounce threshold already being exceeded.
-    """
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.adam_audio.coordinator.AdamAudioClient",
-        return_value=mock_client,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    mock_client.async_fetch_state = AsyncMock(return_value=False)
-    mock_client.available = False
-
-    coordinator = mock_config_entry.runtime_data.coordinator
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    assert coordinator.last_update_success is False
-
-
-async def test_coordinator_survives_single_failed_poll(
-    hass: HomeAssistant, mock_config_entry, mock_client: MagicMock
-) -> None:
-    """Test a single failed poll does not mark the coordinator's data stale.
-
-    Within the client's debounce window, entities must stay available.
-    """
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.adam_audio.coordinator.AdamAudioClient",
-        return_value=mock_client,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # This poll failed, but the client hasn't hit its failure threshold yet
-    # so it still reports itself as available.
-    mock_client.async_fetch_state = AsyncMock(return_value=False)
-    mock_client.available = True
-
-    coordinator = mock_config_entry.runtime_data.coordinator
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    assert coordinator.last_update_success is True
-
-
 async def test_migrates_stale_hardware_name_unique_id(
     hass: HomeAssistant,
     mock_client: MagicMock,
@@ -362,3 +306,62 @@ async def test_no_unique_id_migration_without_serial(
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.unique_id == MOCK_DEVICE_NAME  # unchanged, nothing to migrate to
+
+
+async def test_coordinator_update_failure(
+    hass: HomeAssistant, mock_config_entry, mock_client: MagicMock
+) -> None:
+    """Test coordinator raises UpdateFailed once the client reports unavailable.
+
+    Poll-failure debouncing lives in AdamAudioClient (see test_client.py); the
+    coordinator's job is just to trust `client.available` after the poll
+    runs, so here we simulate the debounce threshold already being exceeded.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.adam_audio.coordinator.AdamAudioClient",
+        return_value=mock_client,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_client.async_fetch_state = AsyncMock(return_value=False)
+    mock_client.available = False
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is False
+
+
+async def test_coordinator_survives_single_failed_poll(
+    hass: HomeAssistant, mock_config_entry, mock_client: MagicMock
+) -> None:
+    """Test a single failed poll does not mark the coordinator's data stale.
+
+    Within the client's debounce window, entities must stay available.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.adam_audio.coordinator.AdamAudioClient",
+        return_value=mock_client,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # This poll failed, but the client hasn't hit its failure threshold yet
+    # so it still reports itself as available.
+    mock_client.async_fetch_state = AsyncMock(return_value=False)
+    mock_client.available = True
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is True

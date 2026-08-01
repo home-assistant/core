@@ -11,6 +11,7 @@ from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import get_integration_data
 from .client import AdamAudioState
 from .const import (
     BASS_MAX,
@@ -31,7 +32,7 @@ from .const import (
     TREBLE_MIN,
 )
 from .coordinator import AdamAudioCoordinator
-from .data import AdamAudioConfigEntry, AdamAudioIntegrationData
+from .data import AdamAudioConfigEntry
 from .entity import AdamAudioEntity, AdamAudioGroupEntity
 
 PARALLEL_UPDATES = 0
@@ -106,10 +107,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the number platform."""
     coordinator = entry.runtime_data.coordinator
-    # Tracks group entities across ALL config entries (one per speaker), so it
-    # can't live on a single entry's runtime_data.
-    # pylint: disable-next=home-assistant-use-runtime-data
-    integration_data: AdamAudioIntegrationData = hass.data[DOMAIN]
+    integration_data = get_integration_data(hass)
 
     entities: list[NumberEntity] = [
         AdamAudioNumber(coordinator, desc) for desc in _NUMBER_DESCRIPTORS

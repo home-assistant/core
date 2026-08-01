@@ -38,6 +38,17 @@ async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
     return True
 
 
+def get_integration_data(hass: HomeAssistant) -> AdamAudioIntegrationData:
+    """Return this integration's cross-entry state.
+
+    Tracks group entities across ALL config entries (one per speaker), so it
+    can't live on a single entry's runtime_data. Only valid once
+    async_setup_entry has run for at least one entry.
+    """
+    # pylint: disable-next=home-assistant-use-runtime-data
+    return hass.data[DOMAIN]
+
+
 def get_coordinators(hass: HomeAssistant) -> list[AdamAudioCoordinator]:
     """Return all currently loaded ADAM Audio coordinators."""
     # pylint: disable-next=home-assistant-use-runtime-data
