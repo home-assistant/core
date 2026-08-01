@@ -142,11 +142,13 @@ async def test_media_player_via_device(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    account_device = device_registry.async_get_device(identifiers={(DOMAIN, PSN_ID)})
+    account_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, PSN_ID), config_entry.entry_id
+    )
     assert account_device is not None
 
-    media_player_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{PSN_ID}_PS5")}
+    media_player_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{PSN_ID}_PS5"), config_entry.entry_id
     )
     assert media_player_device is not None
     assert media_player_device.via_device_id == account_device.id
