@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
-from motionblinds import DEVICE_TYPES_GATEWAY, BlindType
+from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, BlindType
 from motionblinds.motion_blinds import DEVICE_TYPE_BLIND
 import pytest
 
@@ -66,11 +66,27 @@ def mock_connect_fixture(mock_gateway: Mock) -> Generator[None]:
         yield
 
 
+@pytest.mark.parametrize(
+    "gateway_device_type",
+    [
+        pytest.param(DEVICE_TYPES_GATEWAY[0], id="reported-gateway-type"),
+        pytest.param(DEVICE_TYPES_WIFI[0], id="unexpected-non-gateway-type"),
+    ],
+)
 async def test_sub_blind_links_to_gateway_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    mock_gateway: Mock,
+    gateway_device_type: str,
 ) -> None:
-    """Test that a sub-blind device links to the gateway device as its parent."""
+    """Test that a sub-blind device links to the gateway device as its parent.
+
+    The gateway device must be registered up front even when the gateway
+    self-reports a device_type outside DEVICE_TYPES_GATEWAY, so RF (non-Wi-Fi)
+    blinds can still resolve it as their via_device parent.
+    """
+    mock_gateway.device_type = gateway_device_type
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_MAC,
