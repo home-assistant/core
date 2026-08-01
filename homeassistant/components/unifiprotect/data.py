@@ -29,6 +29,7 @@ from uiprotect.utils import log_event
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
@@ -41,6 +42,7 @@ from .const import (
     AUTH_RETRIES,
     CONF_DISABLE_RTSP,
     CONF_MAX_MEDIA,
+    CONF_OVERRIDE_CHOST,
     DEFAULT_MAX_MEDIA,
     DEVICES_THAT_ADOPT,
     DISPATCH_ADD,
@@ -115,6 +117,16 @@ class ProtectData:
     def max_events(self) -> int:
         """Max number of events to load at once."""
         return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)  # type: ignore[no-any-return]
+
+    @property
+    def override_connection_host(self) -> bool:
+        """Check if the connection host should be overridden on stream URLs."""
+        return self._entry.options.get(CONF_OVERRIDE_CHOST, False)  # type: ignore[no-any-return]
+
+    @property
+    def connection_host(self) -> str:
+        """The configured connection host for this config entry."""
+        return self._entry.data[CONF_HOST]  # type: ignore[no-any-return]
 
     def get_rtsps_streams(self, camera_id: str) -> RTSPSStreams | None:
         """Return the library-owned public-API RTSPS streams for a camera.

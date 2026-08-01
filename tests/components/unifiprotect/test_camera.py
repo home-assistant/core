@@ -23,7 +23,11 @@ from homeassistant.components.camera import (
     async_get_image,
     async_get_stream_source,
 )
-from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
+from homeassistant.components.unifiprotect.const import (
+    CONF_DISABLE_RTSP,
+    CONF_OVERRIDE_CHOST,
+    DOMAIN,
+)
 from homeassistant.components.unifiprotect.utils import get_camera_base_name
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
@@ -36,6 +40,7 @@ from homeassistant.helpers import (
 )
 
 from . import patch_ufp_method
+from .conftest import DEFAULT_HOST
 from .utils import (
     MockUFPFixture,
     adopt_devices,
@@ -206,6 +211,41 @@ async def test_disable_rtsp(
 
     high_id = _assert_entity(hass, camera_all, 0, enabled=True)
     assert await async_get_stream_source(hass, high_id) is None
+
+
+async def test_override_connection_host_default_off(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera_all: ProtectCamera
+) -> None:
+    """Without the override, the public API's own host is used verbatim."""
+    await init_entry(hass, ufp, [camera_all])
+
+    high_id = _assert_entity(hass, camera_all, 0, enabled=True)
+    source = await async_get_stream_source(hass, high_id)
+    assert source == camera_all.channels[0].rtsps_no_srtp_url
+    assert DEFAULT_HOST not in source
+
+
+@pytest.mark.parametrize("ufp_options", [{CONF_OVERRIDE_CHOST: True}], indirect=True)
+async def test_override_connection_host(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera_all: ProtectCamera
+) -> None:
+    """Enabling the override rewrites the public-API stream URL's host.
+
+    The public API returns the console's self-advertised host (here mocked as
+    127.0.0.1, distinct from the configured entry host), which can be
+    unreachable (stacked NVRs, NAT, multi-homed consoles). With the override
+    enabled the entry's configured host must be used instead, with port/path
+    preserved.
+    """
+    await init_entry(hass, ufp, [camera_all])
+
+    high_id = _assert_entity(hass, camera_all, 0, enabled=True)
+    source = await async_get_stream_source(hass, high_id)
+    original = camera_all.channels[0].rtsps_no_srtp_url
+
+    assert source is not None
+    assert source != original
+    assert source == original.replace("127.0.0.1", DEFAULT_HOST)
 
 
 async def test_camera_image(

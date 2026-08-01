@@ -3,6 +3,7 @@
 from collections.abc import Iterable
 import logging
 from typing import cast, override
+from urllib.parse import urlsplit, urlunsplit
 
 from uiprotect.data import (
     Camera as UFPCamera,
@@ -51,6 +52,21 @@ _MAIN_QUALITIES = (
     ChannelQuality.MEDIUM,
     ChannelQuality.LOW,
 )
+
+
+def _async_override_stream_host(url: str, host: str) -> str:
+    """Replace the host of a public-API stream URL, keeping port/path/query.
+
+    The public API returns the console's self-advertised host (``nvr.hosts``),
+    which is unreachable when it differs from the address the config entry
+    was set up with (stacked NVRs, NAT, multi-homed consoles). This mirrors
+    the "Override connection host" behaviour that already applies to the
+    private bootstrap connection.
+    """
+    parts = urlsplit(url)
+    netloc_host = f"[{host}]" if ":" in host else host
+    netloc = netloc_host if parts.port is None else f"{netloc_host}:{parts.port}"
+    return urlunsplit(parts._replace(netloc=netloc))
 
 
 @callback
@@ -300,6 +316,8 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
                 )
         else:
             source = streams.get_stream_url(quality, srtp=False)
+            if source and self.data.override_connection_host:
+                source = _async_override_stream_host(source, self.data.connection_host)
         self._attr_supported_features = _ENABLE_FEATURE if source else _DISABLE_FEATURE
         self._stream_source = source
 
