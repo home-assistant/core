@@ -135,14 +135,14 @@ async def test_child_device_via_device(
         )
     await hass.async_block_till_done()
 
-    main_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "00:00:00:00:00:01")}
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:01"), mock_config_entry.entry_id
     )
     assert main_device is not None
     assert main_device.via_device_id is None
 
-    child_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "00:00:00:00:00:02")}
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:02"), mock_config_entry.entry_id
     )
     assert child_device is not None
     assert child_device.via_device_id == main_device.id
