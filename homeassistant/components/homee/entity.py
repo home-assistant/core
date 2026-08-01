@@ -37,11 +37,6 @@ class HomeeEntity(Entity):
             f"{entry.runtime_data.settings.uid}-{attribute.node_id}-{attribute.id}"
         )
         self._entry = entry
-        if attribute.name:
-            self._attr_name = attribute.name
-
-        self._host_connected = entry.runtime_data.connected
-
         node = entry.runtime_data.get_node_by_id(attribute.node_id)
         # Homee hub itself has node-id -1
         assert node is not None
@@ -65,6 +60,10 @@ class HomeeEntity(Entity):
                     config_entry_id=entry.entry_id,
                 ),
             )
+        if attribute.name:
+            self._attr_name = attribute.name
+
+        self._host_connected = entry.runtime_data.connected
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -126,8 +125,6 @@ class HomeeNodeEntity(Entity):
         self._attr_unique_id = f"{entry.unique_id}-{node.id}"
         self._entry = entry
 
-        self._host_connected = entry.runtime_data.connected
-
         ## Homee hub itself has node-id -1
         if node.id == -1:
             self._attr_device_info = DeviceInfo(
@@ -145,6 +142,8 @@ class HomeeNodeEntity(Entity):
                     config_entry_id=entry.entry_id,
                 ),
             )
+
+        self._host_connected = entry.runtime_data.connected
 
     @override
     async def async_added_to_hass(self) -> None:
