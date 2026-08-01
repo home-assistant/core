@@ -3,6 +3,7 @@
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiolyric import Lyric
 from aiolyric.objects.location import LyricLocation
 from aiolyric.objects.priority import LyricRoom
 
@@ -36,7 +37,7 @@ def test_get_datetime_from_future_time_valid() -> None:
 
 
 def _mock_lyric() -> MagicMock:
-    """Build a mock Lyric client with one thermostat and one room accessory."""
+    """Build a fake aiolyric Lyric client with one thermostat and one room accessory."""
     client = MagicMock()
     location = LyricLocation(
         client,
@@ -67,7 +68,9 @@ def _mock_lyric() -> MagicMock:
         }
     )
 
-    lyric = MagicMock()
+    lyric = MagicMock(spec=Lyric)
+    lyric.get_locations = AsyncMock()
+    lyric.get_thermostat_rooms = AsyncMock()
     lyric.locations = [location]
     lyric.locations_dict = {1234: location}
     lyric.rooms_dict = {_MAC: {1: room}}
@@ -77,12 +80,7 @@ def _mock_lyric() -> MagicMock:
 async def test_accessory_links_to_thermostat_via_device(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test room accessory devices resolve the thermostat as their via_device.
-
-    The accessory device_info resolves the thermostat by identifier through the
-    (raising) via_device_id helper, so setup only succeeds because the thermostat
-    device is registered up front, before the platforms are forwarded.
-    """
+    """Test room accessory devices resolve the thermostat as their via_device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -107,10 +105,7 @@ async def test_accessory_links_to_thermostat_via_device(
             return_value=implementation,
         ),
         patch("homeassistant.components.lyric.PLATFORMS", [Platform.SENSOR]),
-        patch(
-            "homeassistant.components.lyric.coordinator.LyricDataUpdateCoordinator._async_update_data",
-            new=AsyncMock(return_value=_mock_lyric()),
-        ),
+        patch("homeassistant.components.lyric.Lyric", return_value=_mock_lyric()),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
