@@ -16,7 +16,7 @@ from .discovery import async_setup_discovery
 from .entity import async_repair_device_registry
 from .manager import LIFXManager
 from .migration import async_migrate_serials
-from .util import normalize_serial
+from .util import async_resolve_host, normalize_serial
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
@@ -104,9 +104,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool
     assert entry.unique_id is not None
     host = entry.data[CONF_HOST]
     try:
-        device = await Device.connect(ip=host, serial=entry.data[CONF_SERIAL])
-    # A host that is not a literal address raises ValueError, which an entry
-    # created before the migration to lifx-async can still hold
+        # An entry created before the migration to lifx-async can hold a
+        # hostname, which the library rejects, so it is resolved every time
+        # rather than rewritten into the entry behind the user's back
+        device = await Device.connect(
+            ip=await async_resolve_host(hass, host), serial=entry.data[CONF_SERIAL]
+        )
+    # An unresolvable hostname raises OSError and a serial the library will not
+    # accept raises ValueError
     except (LifxError, OSError, ValueError) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -120,7 +125,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool
     async_repair_device_registry(hass, entry, coordinator.data)
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, NUMBER_PLATFORM)
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        # A failed setup only runs the unload callbacks, so the platform that
+        # was forwarded on its own has to be taken back down here
+        await hass.config_entries.async_unload_platforms(entry, NUMBER_PLATFORM)
+        raise
     return True
 
 

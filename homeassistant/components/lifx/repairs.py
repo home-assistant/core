@@ -7,6 +7,9 @@ from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.issue_registry import async_delete_issue
+
+from .const import DOMAIN
 
 
 @callback
@@ -55,6 +58,9 @@ class DeprecatedInfraredSelectRepairFlow(RepairsFlow):
         }
         registry = er.async_get(self.hass)
         if registry.async_get(self.entity_id) is None:
+            # An abort leaves the issue in place, but nothing can recreate it
+            # once the entity it is about has been removed by hand
+            async_delete_issue(self.hass, DOMAIN, self.issue_id)
             return self.async_abort(
                 reason="already_removed", description_placeholders=placeholders
             )

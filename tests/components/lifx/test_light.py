@@ -1052,6 +1052,44 @@ async def test_multizone_selection_outside_the_strip_writes_nothing(
     device.set_waveform_optional.assert_not_awaited()
 
 
+@pytest.mark.parametrize(
+    ("service_data", "reads_expected"),
+    [
+        pytest.param({ATTR_HS_COLOR: (120.0, 50.0)}, 1, id="partial_change_reads"),
+        pytest.param(
+            {ATTR_HS_COLOR: (120.0, 50.0), ATTR_BRIGHTNESS: 128},
+            0,
+            id="full_overwrite_skips_read",
+        ),
+    ],
+)
+async def test_matrix_reads_the_tiles_before_merging_over_them(
+    hass: HomeAssistant, service_data: dict[str, Any], reads_expected: int
+) -> None:
+    """Test tiles are only merged over after the device has been read."""
+    device = create_mock_matrix_light()
+    device.state.power = 65535
+    await async_setup_lifx_entry(hass, device)
+    device.refresh_state.reset_mock()
+
+    reads_before_write = None
+
+    async def _record_reads(*args: Any, **kwargs: Any) -> None:
+        nonlocal reads_before_write
+        reads_before_write = device.refresh_state.await_count
+
+    device.set_matrix_colors.side_effect = _record_reads
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        blocking=True,
+    )
+
+    assert reads_before_write == reads_expected
+
+
 async def test_matrix_without_tile_colors_sets_the_whole_device(
     hass: HomeAssistant,
 ) -> None:
