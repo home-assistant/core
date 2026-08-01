@@ -137,8 +137,9 @@ async def test_hap_reset_unloads_entry_if_setup(
     assert config_entries[0].state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures("simple_mock_home")
 async def test_hap_create(
-    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry
 ) -> None:
     """Mock AsyncHome to execute get_hap."""
     hass.config.components.add(DOMAIN)
