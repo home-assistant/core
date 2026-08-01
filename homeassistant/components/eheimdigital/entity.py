@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any, Concatenate, override
 
 from eheimdigital.device import EheimDigitalDevice
-from eheimdigital.types import EheimDigitalClientError
+from eheimdigital.types import EheimDigitalClientError, MsgTitle
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
@@ -19,7 +19,7 @@ from .coordinator import EheimDigitalDeviceUpdateCoordinator
 
 
 def async_device_info[_DeviceT: EheimDigitalDevice](
-    coordinator: EheimDigitalDeviceUpdateCoordinator[_DeviceT]
+    coordinator: EheimDigitalDeviceUpdateCoordinator[_DeviceT],
 ) -> DeviceInfo:
     """Return the base device info for an EHEIM Digital device."""
     return DeviceInfo(
@@ -53,15 +53,30 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
             assert isinstance(main, EheimDigitalDevice)
         self._attr_device_info = async_device_info(coordinator)
         if coordinator.data.mac_address != main.mac_address:
-            # The main device is registered during setup, before the platforms
-            # are forwarded, so this link always resolves deterministically.
-            self._attr_device_info["via_device_id"] = (
-                dr.async_get_device_id_by_identifier(
+            main_device = None
+            try:
+                main_device = dr.async_get_device_id_by_identifier(
                     coordinator.hass,
                     (DOMAIN, main.mac_address),
                     config_entry_id=coordinator.main_coordinator.config_entry.entry_id,
                 )
-            )
+            except ValueError:
+                # If for some reason the main device is not yet created in the registry, create it here
+                main_device = (
+                    dr.async_get(self.hass)
+                    .async_get_or_create(
+                        config_entry_id=coordinator.main_coordinator.config_entry.entry_id,
+                        **async_device_info(
+                            coordinator.main_coordinator.device_coordinators[
+                                main.mac_address
+                            ][MsgTitle.USRDTA]
+                        ),
+                    )
+                    .id
+                )
+            finally:
+                if main_device is not None:
+                    self._attr_device_info["via_device_id"] = main_device
         self._device = coordinator.data
         self._device_address = coordinator.data.mac_address
 
