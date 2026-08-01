@@ -36,7 +36,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.smartthings.const import MAIN
+from homeassistant.components.smartthings.const import DOMAIN, MAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -47,7 +47,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
     set_attribute_value,
@@ -1157,6 +1157,30 @@ async def test_heat_pump_state_attributes_update(
         hass.states.get("climate.eco_heating_system_indoor").attributes[state_attribute]
         == expected_value
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+@pytest.mark.usefixtures("devices")
+async def test_heat_pump_zone_via_device_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test heat pump zone devices are linked to their parent device."""
+    await setup_integration(hass, mock_config_entry)
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "3810e5ad-5351-d9f9-12ff-000001200000"), mock_config_entry.entry_id
+    )
+    assert parent_device is not None
+
+    for component in ("INDOOR1", "INDOOR2"):
+        zone_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"3810e5ad-5351-d9f9-12ff-000001200000_{component}"),
+            mock_config_entry.entry_id,
+        )
+        assert zone_device is not None
+        assert zone_device.via_device_id == parent_device.id
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
