@@ -209,7 +209,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         if "regulation_modes" in self._gateway_data:
             hvac_modes.append(HVACMode.OFF)
 
-        if self.device.get("available_schedules"):
+        if (schedules := self.device.get("available_schedules")) and len(schedules) > 1:
             hvac_modes.append(HVACMode.AUTO)
 
         if self._api.cooling_present:
