@@ -339,6 +339,36 @@ async def test_removing_chime(
     assert sorted(device_models) == sorted(expected_models)
 
 
+async def test_via_device_id_chain(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_chime: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the host -> camera -> chime devices are linked via via_device_id."""
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    host_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_UID), config_entry.entry_id
+    )
+    assert host_device is not None
+
+    camera_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_UID}_{TEST_UID_CAM}"), config_entry.entry_id
+    )
+    assert camera_device is not None
+    assert camera_device.via_device_id == host_device.id
+
+    chime_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_UID}_chime{reolink_chime.dev_id}"), config_entry.entry_id
+    )
+    assert chime_device is not None
+    assert chime_device.via_device_id == camera_device.id
+
+
 @pytest.mark.parametrize(
     (
         "original_id",
