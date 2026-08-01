@@ -267,6 +267,8 @@ async def async_setup_entry(
 
         # Doors always report, even on a failed/empty fetch; windows/locks
         # are omitted from vehicle_status when unsupported, so gate those.
+        # Built once at setup like MIL below: a vehicle whose first fetch
+        # fails entirely won't get window/lock entities until a reload.
         descriptions: list[SubaruBinarySensorEntityDescription] = [
             description
             for description in BINARY_SENSORS
