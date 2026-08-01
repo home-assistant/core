@@ -44,7 +44,7 @@ async def check_controller_model(host: str, port: int) -> str | None:
             await get_controller_model(connection.for_unit(UNIT_ID))
         finally:
             await connection.close()
-    except StiebelEltronModbusError, ModbusError:
+    except (StiebelEltronModbusError, ModbusError):
         _LOGGER.debug("Cannot connect to Stiebel Eltron device", exc_info=True)
         return "cannot_connect"
     except Exception:

@@ -234,7 +234,7 @@ class RMVDepartureData:
                 max_journeys=50,
             )
 
-        except RMVtransportApiConnectionError, RMVtransportDataError:
+        except (RMVtransportApiConnectionError, RMVtransportDataError):
             self.departures = []
             _LOGGER.warning("Could not retrieve data from rmv.de")
             return

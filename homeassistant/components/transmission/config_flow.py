@@ -87,7 +87,7 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
             except TransmissionAuthError:
                 errors[CONF_USERNAME] = "invalid_auth"
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except TransmissionConnectError, TransmissionError:
+            except (TransmissionConnectError, TransmissionError):
                 errors["base"] = "cannot_connect"
             else:
                 version = create_version(api.server_version)
@@ -125,7 +125,7 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
 
             except TransmissionAuthError:
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except TransmissionConnectError, TransmissionError:
+            except (TransmissionConnectError, TransmissionError):
                 errors["base"] = "cannot_connect"
             else:
                 version = create_version(api.server_version)

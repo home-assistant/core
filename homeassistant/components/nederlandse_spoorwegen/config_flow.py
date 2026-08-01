@@ -49,7 +49,7 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(client.get_stations)
         except HTTPError:
             errors["base"] = "invalid_auth"
-        except RequestsConnectionError, Timeout:
+        except (RequestsConnectionError, Timeout):
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception validating API key")

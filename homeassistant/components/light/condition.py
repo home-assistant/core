@@ -32,7 +32,7 @@ class BrightnessCondition(EntityNumericalConditionBase):
             return None
         try:
             return (float(raw) / 255.0) * 100.0
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             return None
 
 

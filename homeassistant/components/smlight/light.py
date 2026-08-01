@@ -107,7 +107,7 @@ class SmLightEntity(SmEntity, LightEntity):
             return None
         try:
             return self.entity_description.effect_list[int(mode)]
-        except IndexError, ValueError:
+        except (IndexError, ValueError):
             return None
 
     def _parse_rgb_color(self, color: str | None) -> tuple[int, int, int] | None:

@@ -357,7 +357,7 @@ class LightExtraStoredData(ExtraStoredData):
                 supported_color_modes=supported_color_modes,
                 xy_color=restored["xy_color"],
             )
-        except KeyError, ValueError:
+        except (KeyError, ValueError):
             return None
 
 

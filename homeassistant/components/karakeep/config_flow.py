@@ -50,7 +50,7 @@ class KarakeepConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except KarakeepConnectionError:
             errors["base"] = "cannot_connect"
-        except KarakeepApiError, KarakeepInvalidResponseError:
+        except (KarakeepApiError, KarakeepInvalidResponseError):
             errors["base"] = "api_error"
         except Exception:
             _LOGGER.exception("Unexpected exception")

@@ -295,7 +295,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
             except KeyError:
                 pass
-            except TypeError, ValueError:
+            except (TypeError, ValueError):
                 _LOGGER.warning(
                     "Invalid brightness value '%s' received for entity %s",
                     values["brightness"],

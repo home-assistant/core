@@ -63,7 +63,7 @@ async def async_probe_camera(config: HarborCameraConfig) -> str | None:
             await connected.wait()
         try:
             settings = await client.get_settings()
-        except TimeoutError, ConnectionError:
+        except (TimeoutError, ConnectionError):
             return None
         if settings.settings is None:
             return None

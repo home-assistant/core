@@ -54,7 +54,7 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             api = PajGpsApi(email=email, password=password, websession=websession)
             auth = await api.login()
-        except AuthenticationError, TokenRefreshError:
+        except (AuthenticationError, TokenRefreshError):
             return "invalid_auth", None
         except ClientError:
             return "cannot_connect", None

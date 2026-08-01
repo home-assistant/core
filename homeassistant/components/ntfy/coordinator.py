@@ -113,7 +113,7 @@ class NtfyVersionDataUpdateCoordinator(BaseDataUpdateCoordinator[Version | None]
         """Fetch version data from ntfy."""
         try:
             version = await self.ntfy.version()
-        except NtfyUnauthorizedAuthenticationError, NtfyNotFoundPageError:
+        except (NtfyUnauthorizedAuthenticationError, NtfyNotFoundPageError):
             # /v1/version endpoint is only accessible to admins and
             # available in ntfy since version 2.17.0
             return None

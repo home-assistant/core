@@ -174,7 +174,7 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
                 frequency="1H",
                 timezone_str=self.hass.config.time_zone,
             )
-        except WFCredentialError, WFError:
+        except (WFCredentialError, WFError):
             try:
                 self.client.login()
             except WFCredentialError as err:
@@ -278,7 +278,7 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
                     break
                 batch_end = batch_start
                 continue
-            except UpdateFailed, WFException:
+            except (UpdateFailed, WFException):
                 _LOGGER.exception("Error fetching energy data during backfill")
                 break
 

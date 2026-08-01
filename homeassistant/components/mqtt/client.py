@@ -1357,7 +1357,7 @@ class MQTT:
             if subscription.encoding is not None:
                 try:
                     payload = msg.payload.decode(subscription.encoding)
-                except AttributeError, UnicodeDecodeError:
+                except (AttributeError, UnicodeDecodeError):
                     _LOGGER.warning(
                         "Can't decode payload %s on %s with encoding %s (for %s)",
                         msg.payload[0:8192],

@@ -129,7 +129,7 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 GREENCELL_DISC_TOPIC,
                 self._async_mqtt_message_received,
             )
-        except HomeAssistantError, ValueError:
+        except (HomeAssistantError, ValueError):
             return self.async_abort(reason="mqtt_subscription_failed")
 
         try:

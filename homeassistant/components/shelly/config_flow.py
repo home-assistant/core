@@ -317,7 +317,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             # Ping to verify connection is still alive
             try:
                 await self._ble_rpc_device.update_status()
-            except DeviceConnectionError, RpcCallError:
+            except (DeviceConnectionError, RpcCallError):
                 # Connection dropped, need to reconnect
                 LOGGER.debug("BLE connection lost, reconnecting")
                 await self._async_disconnect_ble()
@@ -332,7 +332,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             await device.initialize()
-        except DeviceConnectionError, RpcCallError:
+        except (DeviceConnectionError, RpcCallError):
             await device.shutdown()
             raise
         self._ble_rpc_device = device
@@ -1270,7 +1270,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await self._async_get_info(host, port, verify_ssl)
-            except DeviceConnectionError, InvalidAuthError:
+            except (DeviceConnectionError, InvalidAuthError):
                 return self.async_abort(reason="reauth_unsuccessful")
 
             if get_device_entry_gen(reauth_entry) != 1:
@@ -1282,7 +1282,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(
                     self.hass, host, port, info, user_input, verify_ssl
                 )
-            except DeviceConnectionError, InvalidAuthError:
+            except (DeviceConnectionError, InvalidAuthError):
                 return self.async_abort(reason="reauth_unsuccessful")
             except MacAddressMismatchError:
                 return self.async_abort(reason="mac_address_mismatch")

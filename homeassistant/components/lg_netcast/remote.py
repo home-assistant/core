@@ -77,7 +77,7 @@ class LgNetCastRemote(RemoteEntity):
                         if j > 0:
                             time.sleep(delay_secs)
                         client.send_command(lg_command)
-            except LgNetCastError, RequestException:
+            except (LgNetCastError, RequestException):
                 self._attr_is_on = False
                 self.schedule_update_ha_state()
                 return

@@ -32,7 +32,7 @@ class OMIEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             cet_today = dt_util.now().astimezone(CET).date()
             try:
                 await pyomie.spot_price(session, cet_today)
-            except ClientError, TimeoutError:
+            except (ClientError, TimeoutError):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(title=DEFAULT_NAME, data={})

@@ -286,7 +286,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
         try:
             return self._get_remote() is not None
-        except UnhandledResponse, AccessDenied:
+        except (UnhandledResponse, AccessDenied):
             # We got a response so it's working.
             return True
 
@@ -348,7 +348,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                 self.auth_failed = True
                 self._notify_reauth_callback()
                 raise
-            except ConnectionClosed, OSError:
+            except (ConnectionClosed, OSError):
                 pass
         return self._remote
 
@@ -373,7 +373,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                     if remote := self._get_remote():
                         remote.control(key)
                     break
-                except ConnectionClosed, BrokenPipeError:
+                except (ConnectionClosed, BrokenPipeError):
                     # BrokenPipe can occur when the commands is sent to fast
                     self._remote = None
         except (UnhandledResponse, AccessDenied) as err:

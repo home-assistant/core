@@ -72,7 +72,7 @@ def _records_from_storage(
             )
             for item in data
         )
-    except KeyError, TypeError:
+    except (KeyError, TypeError):
         return None
 
 

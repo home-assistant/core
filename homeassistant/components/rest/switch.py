@@ -115,7 +115,7 @@ async def async_setup_platform(
             _LOGGER.error("Got non-ok response from resource: %s", req.status_code)
         else:
             async_add_entities([switch])
-    except TypeError, ValueError:
+    except (TypeError, ValueError):
         _LOGGER.error(
             "Missing resource or schema in configuration. "
             "Add http:// or https:// to your URL"

@@ -55,9 +55,9 @@ class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_PORT],
                     user_input.get(CONF_PASSWORD),
                 )
-            except TimeoutError, OSError:
+            except (TimeoutError, OSError):
                 errors["base"] = "cannot_connect"
-            except RuntimeError, ProjectorError:
+            except (RuntimeError, ProjectorError):
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -83,9 +83,9 @@ class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             projector_name = await self.hass.async_add_executor_job(
                 validate_projector_connection, host, port, password
             )
-        except TimeoutError, OSError:
+        except (TimeoutError, OSError):
             return self.async_abort(reason="cannot_connect")
-        except RuntimeError, ProjectorError:
+        except (RuntimeError, ProjectorError):
             return self.async_abort(reason="invalid_auth")
         except Exception:
             _LOGGER.exception("Unexpected exception")

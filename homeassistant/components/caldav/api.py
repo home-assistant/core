@@ -28,7 +28,7 @@ async def async_get_calendars(
         for calendar in client.principal().calendars():
             try:
                 supported_components = calendar.get_supported_components()
-            except KeyError, DAVError:
+            except (KeyError, DAVError):
                 needs_warning.append((str(calendar.url), calendar.name, component))
 
                 if component in ASSUMED_COMPONENTS:

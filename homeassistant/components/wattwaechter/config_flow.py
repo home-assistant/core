@@ -61,7 +61,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}, None, None
         try:
             settings = await client.settings()
-        except WattwaechterConnectionError, WattwaechterAuthenticationError:
+        except (WattwaechterConnectionError, WattwaechterAuthenticationError):
             device_name = None
         else:
             device_name = settings.device_name

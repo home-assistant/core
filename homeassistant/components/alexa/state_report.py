@@ -389,7 +389,7 @@ async def async_send_changereport_message(
     """
     try:
         token = await config.async_get_access_token()
-    except RequireRelink, NoTokenAvailable:
+    except (RequireRelink, NoTokenAvailable):
         await config.set_authorized(False)
         _LOGGER.error(
             "Error when sending ChangeReport to Alexa, could not get access token"

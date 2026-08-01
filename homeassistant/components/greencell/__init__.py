@@ -33,7 +33,7 @@ def make_ready_handler(
             return
         try:
             data = json.loads(message.payload)
-        except ValueError, TypeError:
+        except (ValueError, TypeError):
             return
 
         if message.topic == GREENCELL_DISC_TOPIC:

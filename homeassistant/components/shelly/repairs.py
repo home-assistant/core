@@ -302,7 +302,7 @@ class FirmwareUpdateFlow(ShellyRpcRepairsFlow):
             return self.async_abort(reason="update_not_available")
         try:
             await self._device.trigger_ota_update()
-        except DeviceConnectionError, RpcCallError:
+        except (DeviceConnectionError, RpcCallError):
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(title="", data={})
@@ -326,7 +326,7 @@ class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
             )
             if result["restart_required"]:
                 await self._device.trigger_reboot()
-        except DeviceConnectionError, RpcCallError:
+        except (DeviceConnectionError, RpcCallError):
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(title="", data={})
@@ -362,7 +362,7 @@ class DisableOpenWiFiApFlow(RepairsFlow):
             result = await self._device.wifi_setconfig(ap_enable=False)
             if result.get("restart_required"):
                 await self._device.trigger_reboot()
-        except DeviceConnectionError, RpcCallError:
+        except (DeviceConnectionError, RpcCallError):
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(title="", data={})

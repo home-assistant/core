@@ -50,7 +50,7 @@ class LuciConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.async_add_executor_job(_try_connect, user_input)
-            except ConnectionError, RequestsConnectionError:
+            except (ConnectionError, RequestsConnectionError):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
@@ -89,7 +89,7 @@ class LuciConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     _try_connect, reauth_entry.data | user_input
                 )
-            except ConnectionError, RequestsConnectionError:
+            except (ConnectionError, RequestsConnectionError):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
@@ -115,7 +115,7 @@ class LuciConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self.hass.async_add_executor_job(_try_connect, import_data)
-        except ConnectionError, RequestsConnectionError:
+        except (ConnectionError, RequestsConnectionError):
             return self.async_abort(reason="cannot_connect")
         except InvalidAuth:
             return self.async_abort(reason="invalid_auth")

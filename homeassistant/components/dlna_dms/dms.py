@@ -233,7 +233,7 @@ class DmsDeviceSource:
         try:
             bootid_str = info.ssdp_headers[ssdp.ATTR_SSDP_BOOTID]
             bootid: int | None = int(bootid_str, 10)
-        except KeyError, ValueError:
+        except (KeyError, ValueError):
             bootid = None
 
         if change is ssdp.SsdpChange.UPDATE:
@@ -244,7 +244,7 @@ class DmsDeviceSource:
                 try:
                     next_bootid_str = info.ssdp_headers[ssdp.ATTR_SSDP_NEXTBOOTID]
                     self._bootid = int(next_bootid_str, 10)
-                except KeyError, ValueError:
+                except (KeyError, ValueError):
                     pass
             # Nothing left to do until ssdp:alive comes through
             return

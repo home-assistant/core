@@ -862,7 +862,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
             return None
         try:
             return float(state.state)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             # Entity state is not a valid number
             report_not_triggered(
                 "threshold_value_not_numeric",
@@ -887,7 +887,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
 
         try:
             return float(raw_value)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             # Entity state is not a valid number
             return None
 
@@ -1000,7 +1000,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
             raw_value = state.attributes.get(domain_spec.value_source)
         try:
             float(raw_value)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             report_not_triggered(
                 "entity_value_not_numeric",
                 entity_id=state.entity_id,
@@ -1038,7 +1038,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
             return None
         try:
             value = float(state.state)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             # Entity state is not a valid number
             report_not_triggered(
                 "threshold_value_not_numeric",
@@ -1071,7 +1071,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
 
         try:
             value = float(raw_value)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             # Entity state is not a valid number
             return None
 

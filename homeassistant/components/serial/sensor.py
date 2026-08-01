@@ -185,7 +185,7 @@ class SerialSensor(SensorEntity):
                 while True:
                     try:
                         line_bytes = await reader.readline()
-                    except OSError, SerialException:
+                    except (OSError, SerialException):
                         _LOGGER.exception(
                             "Error while reading serial device %s", device
                         )

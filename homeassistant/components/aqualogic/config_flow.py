@@ -103,7 +103,7 @@ class AquaLogicConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(
                 _verify_device, import_data[CONF_HOST], import_data[CONF_PORT]
             )
-        except CannotConnect, InvalidDevice:
+        except (CannotConnect, InvalidDevice):
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(title="AquaLogic", data=import_data)

@@ -30,7 +30,7 @@ async def _async_validate_access_token(
         await Tessie(async_get_clientsession(hass), access_token).list_vehicles(
             only_active=only_active
         )
-    except InvalidToken, MissingToken:
+    except (InvalidToken, MissingToken):
         return {CONF_ACCESS_TOKEN: "invalid_access_token"}
     except ClientConnectionError:
         return {"base": "cannot_connect"}

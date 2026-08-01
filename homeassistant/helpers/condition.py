@@ -1000,7 +1000,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
             return None
         try:
             return float(entity_state.state)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             # Entity state is not a valid number
             return None
 
@@ -1023,7 +1023,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
         """Check if the state is within the specified range."""
         try:
             value = float(self._get_tracked_value(entity_state))
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             return False
 
         if self._threshold_type == NumericThresholdType.ABOVE:
@@ -1119,7 +1119,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
             return None
         try:
             value = float(entity_state.state)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             # Entity state is not a valid number
             return None
 
@@ -1145,7 +1145,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
 
         try:
             value = float(raw_value)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             return None
 
         try:

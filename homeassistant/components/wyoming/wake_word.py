@@ -191,7 +191,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                     for task in pending:
                         task.cancel()
 
-        except OSError, WyomingError:
+        except (OSError, WyomingError):
             _LOGGER.exception("Error processing audio stream")
 
         return None

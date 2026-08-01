@@ -260,7 +260,7 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
 
                 if season_start <= local_date < season_end:
                     return season_name
-            except KeyError, ValueError:
+            except (KeyError, ValueError):
                 continue
 
         return None

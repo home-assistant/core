@@ -333,7 +333,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
                     MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL
                 )
             )
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             return None
 
     @property

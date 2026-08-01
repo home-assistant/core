@@ -49,7 +49,7 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
             return {"base": "timeout_connect"}
         except ConnectionRefusedError:
             return {"base": "connection_refused"}
-        except ConnectionFailed, OSError:
+        except (ConnectionFailed, OSError):
             return {"base": "cannot_connect"}
         finally:
             await client.stop()

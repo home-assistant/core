@@ -100,7 +100,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._host
         try:
             model = await async_find_receiver_model(self._host)
-        except TimeoutError, OSError:
+        except (TimeoutError, OSError):
             return self.async_abort(reason="cannot_connect")
         if not model:
             return self.async_abort(reason="unsupported_model")

@@ -322,7 +322,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 aiohttp_session=session,
             )
             LOGGER.debug("Successfully created long-lived token")
-        except TimeoutError, CannotConnect:
+        except (TimeoutError, CannotConnect):
             return self.async_abort(reason="cannot_connect")
         except (AuthenticationFailed, InvalidToken) as err:
             LOGGER.error("Authentication failed: %s", err)
@@ -365,7 +365,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             except InvalidServerVersion:
                 return self.async_abort(reason="invalid_server_version")
-            except AuthenticationFailed, InvalidToken:
+            except (AuthenticationFailed, InvalidToken):
                 errors["base"] = "auth_failed"
             except MusicAssistantClientException:
                 LOGGER.exception("Unexpected exception during manual auth")

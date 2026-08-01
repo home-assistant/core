@@ -375,7 +375,7 @@ def handle_get_states(
 
     try:
         serialized_states = [state.as_dict_json for state in states]
-    except ValueError, TypeError:
+    except (ValueError, TypeError):
         pass
     else:
         _send_handle_get_states_response(connection, msg["id"], serialized_states)
@@ -386,7 +386,7 @@ def handle_get_states(
     for state in states:
         try:
             serialized_states.append(state.as_dict_json)
-        except ValueError, TypeError:
+        except (ValueError, TypeError):
             connection.logger.error(
                 "Unable to serialize to JSON. Bad data found at %s",
                 format_unserializable_data(
@@ -483,7 +483,7 @@ def handle_subscribe_entities(
         else:
             # Fast path when not filtering
             serialized_states = [state.as_compressed_state_json for state in states]
-    except ValueError, TypeError:
+    except (ValueError, TypeError):
         pass
     else:
         _send_handle_entities_init_response(
@@ -499,7 +499,7 @@ def handle_subscribe_entities(
             continue
         try:
             serialized_states.append(state.as_compressed_state_json)
-        except ValueError, TypeError:
+        except (ValueError, TypeError):
             connection.logger.error(
                 "Unable to serialize to JSON. Bad data found at %s",
                 format_unserializable_data(
