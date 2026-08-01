@@ -211,18 +211,16 @@ class HueMotionAwareSensor(HueMotionSensor):
         # so the zone is the only reliable signal that it stopped reporting motion
         if not zone.enabled or zone.health == MotionAreaHealth.NOT_RUNNING:
             return None
-        # a zone that is bound to lights enables its convenience service, and that
-        # service is then the only one reporting: the security service goes on
-        # advertising a valid reading that never changes again
-        convenience = self._convenience_service
-        source = (
-            convenience
-            if convenience is not None and convenience.enabled
-            else self.resource
-        )
-        if not source.enabled or source.motion is None:
-            return None
-        return source.motion.value
+        # either service can be the one reporting a zone, with the other left holding
+        # a reading that no longer changes, so take the first that has a valid one.
+        # The convenience service comes first because a zone that is bound to lights
+        # reports on that service.
+        for source in (self._convenience_service, self.resource):
+            if source is None or not source.enabled or source.motion is None:
+                continue
+            if (value := source.motion.value) is not None:
+                return value
+        return None
 
     def __init__(
         self,
@@ -253,25 +251,31 @@ class HueMotionAwareSensor(HueMotionSensor):
             )
         )
         # zones that are bound to lights report their motion on the convenience service
-        if (convenience := self._convenience_service) is not None:
+        if (service_id := self._convenience_service_id) is not None:
             self.async_on_remove(
                 self.bridge.api.sensors.convenience_area_motion.subscribe(
-                    self._handle_event, convenience.id
+                    self._handle_event, service_id
                 )
             )
 
     @property
-    def _convenience_service(self) -> ConvenienceAreaMotion | None:
-        """Return the ConvenienceAreaMotion service of this zone, if it has one."""
-        controller = self.bridge.api.sensors.convenience_area_motion
+    def _convenience_service_id(self) -> str | None:
+        """Return the id of this zone's ConvenienceAreaMotion service, if it has one."""
         return next(
             (
-                resource
+                service.rid
                 for service in self._motion_area_configuration.services
-                if (resource := controller.get(service.rid)) is not None
+                if service.rtype == ResourceTypes.CONVENIENCE_AREA_MOTION
             ),
             None,
         )
+
+    @property
+    def _convenience_service(self) -> ConvenienceAreaMotion | None:
+        """Return this zone's ConvenienceAreaMotion resource, if the bridge has it."""
+        if (service_id := self._convenience_service_id) is None:
+            return None
+        return self.bridge.api.sensors.convenience_area_motion.get(service_id)
 
 
 # pylint: disable-next=home-assistant-enforce-class-module

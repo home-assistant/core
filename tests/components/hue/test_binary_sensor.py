@@ -62,6 +62,8 @@ def replace_resources(
 ) -> JsonArrayType:
     """Return the test data with each resource of the same id replaced."""
     replacements = {resource["id"]: resource for resource in resources}
+    missing = replacements.keys() - {resource["id"] for resource in data}
+    assert not missing, f"resource id(s) not present in the test data: {missing}"
     return [replacements.get(resource["id"], resource) for resource in data]
 
 
@@ -326,13 +328,15 @@ async def test_motion_aware_sensor(
             "unknown",
             id="not_bound_to_lights_without_valid_reading",
         ),
+        # a real zone can have its convenience service enabled while only the security
+        # service reports, so an enabled service without a reading must not win
         pytest.param(
             [
                 area_motion_service("security_area_motion", motion=MOTION_DETECTED),
                 area_motion_service("convenience_area_motion", motion=MOTION_INVALID),
             ],
-            "unknown",
-            id="bound_to_lights_does_not_fall_back_to_security",
+            "on",
+            id="falls_back_to_security_when_convenience_has_no_reading",
         ),
     ],
 )
@@ -379,23 +383,80 @@ async def test_motion_aware_sensor_follows_convenience_service(
     assert hass.states.get(MOTION_AWARE_ENTITY_ID).state == "on"
 
 
-async def test_motion_aware_sensor_zone_disabled(
+async def test_motion_aware_sensor_follows_security_service(
     hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
 ) -> None:
-    """Test the MotionAware sensor reports unknown while its zone is switched off."""
+    """Test the MotionAware sensor updates on events of the security service."""
+    await mock_bridge_v2.api.load_test_data(
+        replace_resources(
+            v2_resources_test_data,
+            [
+                area_motion_service("security_area_motion", motion=MOTION_CLEARED),
+                area_motion_service(
+                    "convenience_area_motion", enabled=False, motion=MOTION_CLEARED
+                ),
+            ],
+        )
+    )
+    await setup_platform(hass, mock_bridge_v2, Platform.BINARY_SENSOR)
+
+    assert hass.states.get(MOTION_AWARE_ENTITY_ID).state == "off"
+
+    mock_bridge_v2.api.emit_event(
+        "update",
+        area_motion_service("security_area_motion", motion=MOTION_DETECTED),
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(MOTION_AWARE_ENTITY_ID).state == "on"
+
+
+async def test_motion_aware_sensor_without_convenience_resource(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test the MotionAware sensor works when the convenience service is missing."""
+    # the zone still lists the service, but the bridge never delivered the resource
+    data = replace_resources(
+        v2_resources_test_data,
+        [area_motion_service("security_area_motion", motion=MOTION_DETECTED)],
+    )
+    convenience_id = AREA_MOTION_SERVICE_IDS["convenience_area_motion"]
+    await mock_bridge_v2.api.load_test_data(
+        [resource for resource in data if resource["id"] != convenience_id]
+    )
+    await setup_platform(hass, mock_bridge_v2, Platform.BINARY_SENSOR)
+
+    assert hass.states.get(MOTION_AWARE_ENTITY_ID).state == "on"
+
+
+@pytest.mark.parametrize(
+    ("zone_update", "zone_restore"),
+    [
+        pytest.param({"enabled": False}, {"enabled": True}, id="zone_switched_off"),
+        pytest.param(
+            {"health": "not_running"}, {"health": "healthy"}, id="zone_not_running"
+        ),
+    ],
+)
+async def test_motion_aware_sensor_zone_not_reporting(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    zone_update: dict[str, Any],
+    zone_restore: dict[str, Any],
+) -> None:
+    """Test the MotionAware sensor reports unknown while its zone is not reporting."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, Platform.BINARY_SENSOR)
 
     assert hass.states.get(MOTION_AWARE_ENTITY_ID).state == "off"
 
-    # the services keep reporting a valid state while the zone is switched off
+    # the services keep reporting a valid state while the zone itself does not
     mock_bridge_v2.api.emit_event(
         "update",
         {
             "id": MOTION_AREA_CONFIGURATION_ID,
             "type": "motion_area_configuration",
-            "enabled": False,
-            "health": "not_running",
+            **zone_update,
         },
     )
     await hass.async_block_till_done()
@@ -406,8 +467,7 @@ async def test_motion_aware_sensor_zone_disabled(
         {
             "id": MOTION_AREA_CONFIGURATION_ID,
             "type": "motion_area_configuration",
-            "enabled": True,
-            "health": "healthy",
+            **zone_restore,
         },
     )
     await hass.async_block_till_done()
