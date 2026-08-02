@@ -37,7 +37,7 @@ class PulseHub:
         """Set up a hub based on host parameter."""
         self.api = hub = aiopulse.Hub(self.host)
 
-        hub.callback_subscribe(self.async_handle_update)
+        hub.callback_subscribe(self.async_notify_update)
 
         LOGGER.debug("Hub setup complete")
         return True
@@ -58,7 +58,7 @@ class PulseHub:
         if self.api is None:
             return False
 
-        self.api.callback_unsubscribe(self.async_handle_update)
+        self.api.callback_unsubscribe(self.async_notify_update)
         await self.api.stop()
         del self.api
         self.api = None
