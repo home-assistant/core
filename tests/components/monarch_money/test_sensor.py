@@ -33,6 +33,12 @@ async def test_account_owner_attribute(
     mock_config_api: AsyncMock,
 ) -> None:
     """Test the account owner attribute is exposed."""
+    account = mock_config_api.return_value.get_accounts.return_value[0]
+    account.account_owner = {"id": "900000010", "displayName": "Alex"}
+    mock_config_api.return_value.get_accounts_as_dict_with_id_key.return_value[
+        account.id
+    ].account_owner = account.account_owner
+
     with patch("homeassistant.components.monarch_money.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 

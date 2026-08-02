@@ -60,11 +60,6 @@
         "url": "https://rando.brokerage/",
         "__typename": "Institution"
       },
-      "ownedByUser": {
-        "id": "900000010",
-        "displayName": "Alex",
-        "__typename": "User"
-      },
       "__typename": "Account"
     },
     {
