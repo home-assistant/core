@@ -12,7 +12,7 @@ from pyhap.camera import (
     VIDEO_CODEC_PARAM_PROFILE_ID_TYPES,
     Camera as PyhapCamera,
 )
-from pyhap.const import CATEGORY_CAMERA
+from pyhap.const import CATEGORY_CAMERA, CATEGORY_VIDEO_DOOR_BELL
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import camera
@@ -38,6 +38,7 @@ from .const import (
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
+    CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
@@ -205,6 +206,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             "stream_count": config[CONF_STREAM_COUNT],
         }
 
+        linked_doorbell_sensor = config.get(CONF_LINKED_DOORBELL_SENSOR)
         super().__init__(
             hass,
             driver,
@@ -212,7 +214,15 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             entity_id,
             aid,
             config,
-            category=CATEGORY_CAMERA,
+            # A camera is only promoted to the Video Doorbell category when
+            # its linked doorbell sensor actually exists; HomeDoorbellAccessory
+            # only adds the Doorbell service in that same case (see doorbell.py),
+            # so category and services stay consistent.
+            category=(
+                CATEGORY_VIDEO_DOOR_BELL
+                if linked_doorbell_sensor and hass.states.get(linked_doorbell_sensor)
+                else CATEGORY_CAMERA
+            ),
             options=options,
         )
 
