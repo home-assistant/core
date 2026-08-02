@@ -1,6 +1,5 @@
 """Code to handle a Pulse Hub."""
 
-import asyncio
 from collections.abc import Callable
 
 import aiopulse
@@ -22,7 +21,6 @@ class PulseHub:
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
-        self.tasks: list[asyncio.Task[None]] = []
         self.cleanup_callbacks: list[Callable[[], None]] = []
 
     @property
@@ -40,13 +38,18 @@ class PulseHub:
         self.api = hub = aiopulse.Hub(self.host)
 
         hub.callback_subscribe(self.async_notify_update)
-        self.tasks.append(asyncio.create_task(hub.run()))
 
         LOGGER.debug("Hub setup complete")
         return True
 
+    async def async_start(self) -> None:
+        """Start the hub task."""
+        LOGGER.debug("Hub task started")
+        await self.api.run()
+
     async def async_reset(self) -> bool:
         """Reset this hub to default state."""
+        LOGGER.debug("Resetting hub %s", self.title)
 
         for cleanup_callback in self.cleanup_callbacks:
             cleanup_callback()
@@ -60,9 +63,6 @@ class PulseHub:
         del self.api
         self.api = None
 
-        # Wait for any running tasks to complete
-        await asyncio.wait(self.tasks)
-
         return True
 
     async def async_notify_update(self, update_type: aiopulse.UpdateType) -> None:
@@ -70,6 +70,11 @@ class PulseHub:
         LOGGER.debug("Hub %s updated", update_type.name)
 
         if update_type == aiopulse.UpdateType.rollers:
+            LOGGER.debug(
+                "Hub %s rollers updated, updating devices %s",
+                self.title,
+                self.api.rollers,
+            )
             await update_devices(self.hass, self.config_entry, self.api.rollers)
             self.hass.config_entries.async_update_entry(
                 self.config_entry, title=self.title

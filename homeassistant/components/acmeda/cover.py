@@ -12,7 +12,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AcmedaConfigEntry
-from .const import ACMEDA_HUB_UPDATE
+from .const import ACMEDA_HUB_UPDATE, LOGGER
 from .entity import AcmedaEntity
 from .helpers import async_add_acmeda_entities
 
@@ -24,11 +24,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Acmeda Rollers from a config entry."""
     hub = config_entry.runtime_data
+    LOGGER.debug(
+        "Setting up cover platform, connecting dispatcher for entry %s",
+        config_entry.entry_id,
+    )
 
     current: set[int] = set()
 
     @callback
     def async_add_acmeda_covers() -> None:
+        LOGGER.debug("async_add_acmeda_covers callback fired - adding new covers")
         async_add_acmeda_entities(
             hass, AcmedaCover, config_entry, current, async_add_entities
         )
@@ -40,6 +45,7 @@ async def async_setup_entry(
             async_add_acmeda_covers,
         )
     )
+    LOGGER.debug("Cover dispatcher connected")
 
 
 class AcmedaCover(AcmedaEntity, CoverEntity):
