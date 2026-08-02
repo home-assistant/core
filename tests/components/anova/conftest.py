@@ -70,6 +70,7 @@ class MockedAnovaWebsocketHandler(AnovaWebsocketHandler):
         super().__init__(firebase_jwt, jwt, session)
         self.connect_messages = connect_messages
         self.post_connect_messages = post_connect_messages
+        self._disconnect_event: asyncio.Event = asyncio.Event()
 
     async def connect(self) -> None:
         """Create a future for the message listener."""
@@ -79,6 +80,16 @@ class MockedAnovaWebsocketHandler(AnovaWebsocketHandler):
         # RUF006 ignored as it replicates the parent library
         # https://github.com/Lash-L/anova_wifi/issues/35
         asyncio.ensure_future(self.message_listener())  # noqa: RUF006
+        if self.devices:
+            self._message_listener = asyncio.ensure_future(self._wait_for_disconnect())
+
+    async def _wait_for_disconnect(self) -> None:
+        """Block until simulate_disconnect() is called."""
+        await self._disconnect_event.wait()
+
+    def simulate_disconnect(self) -> None:
+        """Simulate the websocket connection dropping."""
+        self._disconnect_event.set()
 
 
 def anova_api_mock(
