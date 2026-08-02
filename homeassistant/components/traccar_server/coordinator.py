@@ -242,12 +242,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
             )
 
     async def subscribe(self) -> None:
-        """Subscribe to events, reconnecting for the life of the config entry.
-
-        Retries via a loop rather than recursion, since recursing on every
-        reconnect would grow the call stack unboundedly over a long-lived
-        connection.
-        """
+        """Subscribe to events, reconnecting for the life of the config entry."""
         while True:
             try:
                 await self.client.subscribe(self.handle_subscription_data)
