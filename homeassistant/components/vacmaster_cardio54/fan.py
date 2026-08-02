@@ -106,12 +106,6 @@ class VacmasterCardio54Fan(VacmasterCardio54Entity, FanEntity, RestoreEntity):
             # percentage attribute; default to the lowest speed so the fan
             # comes back at a sensible level instead of "off".
             self._level = 1
-        # The base ``async_added_to_hass`` writes the initial state with
-        # ``_level == 0``; if restore set a non-zero level, the UI would
-        # otherwise show ``off`` until the next command. Push the restored
-        # state once.
-        if self._level > 0:
-            self.async_write_ha_state()
 
     @override
     async def async_turn_on(
