@@ -9,7 +9,10 @@ from anova_wifi.exceptions import LoginUnreachable
 import pytest
 
 from homeassistant.components.anova.const import DOMAIN
-from homeassistant.components.anova.coordinator import RECONNECT_RETRY_DELAY
+from homeassistant.components.anova.coordinator import (
+    DEVICE_STALE_THRESHOLD,
+    RECONNECT_RETRY_DELAY,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -199,6 +202,52 @@ async def test_coordinator_poll_does_not_reconnect_when_connected(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.runtime_data.api.create_websocket.call_count == initial_call_count
+
+
+async def test_device_marked_unavailable_after_prolonged_silence(
+    hass: HomeAssistant,
+    anova_api: AnovaApi,
+) -> None:
+    """Test a device is marked unavailable after DEVICE_STALE_THRESHOLD.
+
+    This applies even though the websocket transport to Anova's cloud is
+    still alive - Anova has no disconnect signal for a specific device.
+    """
+    entry = await async_init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[0]
+    assert coordinator.anova_device.last_update_received_at is not None
+    assert hass.states.get("switch.anova_precision_cooker_cook").state == "off"
+
+    coordinator.anova_device.last_update_received_at = (
+        dt_util.utcnow() - DEVICE_STALE_THRESHOLD - timedelta(seconds=1)
+    )
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RECONNECT_RETRY_DELAY + 1)
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.data is None
+    assert hass.states.get("switch.anova_precision_cooker_cook").state == "unavailable"
+
+
+async def test_device_stays_available_when_recently_seen(
+    hass: HomeAssistant,
+    anova_api: AnovaApi,
+) -> None:
+    """Test the periodic poll alone does not mark a device unavailable.
+
+    Only prolonged silence should trigger it.
+    """
+    entry = await async_init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[0]
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RECONNECT_RETRY_DELAY + 1)
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.data is not None
+    assert hass.states.get("switch.anova_precision_cooker_cook").state == "off"
 
 
 async def test_websocket_reconnect_retries_after_transient_failure(

@@ -20,12 +20,23 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 RECONNECT_RETRY_DELAY = 60
+
+# Anova's protocol has no offline/disconnect signal for a device that's still
+# reachable over the websocket transport but has gone quiet (e.g. unplugged) -
+# confirmed against the developer docs and by observing a real device unplug
+# live (no EVENT_APC_WIFI_REMOVED, no message of any kind, ever arrives). The
+# official app faces the same gap and also falls back to a silence timeout.
+# Observed push cadence is ~2s continuously whether idle or cooking, so this
+# is a large safety margin (~150x) against false positives, and spans several
+# of this coordinator's own RECONNECT_RETRY_DELAY poll cycles.
+DEVICE_STALE_THRESHOLD = timedelta(minutes=5)
 
 
 @dataclass
@@ -114,6 +125,16 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate | None]):
 
         ws_handler._message_listener.add_done_callback(_on_done)  # noqa: SLF001
 
+    def _data_if_fresh(self) -> APCUpdate | None:
+        """Return the last push, or None if the device has gone quiet.
+
+        "Quiet" means no push for longer than DEVICE_STALE_THRESHOLD.
+        """
+        last_seen = self.anova_device.last_update_received_at
+        if last_seen is None or dt_util.utcnow() - last_seen > DEVICE_STALE_THRESHOLD:
+            return None
+        return self.data
+
     @override
     async def _async_update_data(self) -> APCUpdate | None:
         """Reconnect the websocket if it has dropped; return current push data."""
@@ -121,17 +142,17 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate | None]):
         if ws_handler is not None:
             listener = ws_handler._message_listener  # noqa: SLF001
             if listener is not None and not listener.done():
-                return self.data
+                return self._data_if_fresh()
 
         async with self.config_entry.runtime_data.reconnect_lock:
             ws_handler = self.config_entry.runtime_data.api.websocket_handler
             if ws_handler is not None:
                 listener = ws_handler._message_listener  # noqa: SLF001
                 if listener is not None and not listener.done():
-                    return self.data
+                    return self._data_if_fresh()
             await self._async_reconnect()
 
-        return self.data
+        return self._data_if_fresh()
 
     async def _async_reconnect(self) -> None:
         """Reconnect the Anova websocket and re-wire all device coordinators."""
