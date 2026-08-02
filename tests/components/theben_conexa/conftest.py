@@ -1,9 +1,21 @@
 """Common fixtures for the Theben Conexa Smartmeter gateway tests."""
 
 from collections.abc import Generator
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+from homeassistant.components.theben_conexa.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+
+from tests.common import MockConfigEntry
+
+TEST_CONFIG_DATA = {
+    CONF_HOST: "1.1.1.1",
+    CONF_USERNAME: "test-username",
+    CONF_PASSWORD: "test-password",
+}
 
 
 @pytest.fixture
@@ -16,27 +28,66 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_conexa_smgw() -> Generator[MagicMock]:
-    """Mock a shared ConexaSMGW client instance used by the integration."""
-    mock_smgw = MagicMock()
-    mock_smgw.gatewayInfo.smgwID = "test-gateway-id"
+def mock_network() -> Generator[AsyncMock]:
+    """Mock the network connection check."""
+    mock_network = AsyncMock(return_value=None)
 
     with (
+        patch("theben_conexa_smgw.checkNetworkConnection", mock_network),
         patch(
             "homeassistant.components.theben_conexa.coordinator.checkNetworkConnection",
-            AsyncMock(return_value=None),
+            mock_network,
         ),
         patch(
             "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection",
-            AsyncMock(return_value=None),
+            mock_network,
         ),
+    ):
+        yield mock_network
+
+
+@pytest.fixture
+def mock_create() -> Generator[AsyncMock]:
+    """Mock the client creation call."""
+    mock_create = AsyncMock()
+
+    with (
+        patch("theben_conexa_smgw.ConexaSMGW.create", mock_create),
         patch(
             "homeassistant.components.theben_conexa.coordinator.ConexaSMGW.create",
-            AsyncMock(return_value=mock_smgw),
+            mock_create,
         ),
         patch(
             "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.create",
-            AsyncMock(return_value=mock_smgw),
+            mock_create,
         ),
     ):
-        yield mock_smgw
+        yield mock_create
+
+
+@pytest.fixture
+def mock_conexa_smgw(
+    mock_network: AsyncMock,
+    mock_create: AsyncMock,
+) -> SimpleNamespace:
+    """Mock the Theben Conexa API surface used by the integration."""
+    mock_smgw = MagicMock()
+    mock_smgw.gatewayInfo.smgwID = "test-gateway-id"
+    mock_smgw.getLatestValues = AsyncMock(return_value={})
+    mock_create.return_value = mock_smgw
+
+    return SimpleNamespace(
+        network=mock_network,
+        create=mock_create,
+        client=mock_smgw,
+    )
+
+
+@pytest.fixture
+def mock_config_entry(mock_conexa_smgw: SimpleNamespace) -> MockConfigEntry:
+    """Create a configured MockConfigEntry for the integration."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"{mock_conexa_smgw.client.gatewayInfo.smgwID}-test-username",
+        data=TEST_CONFIG_DATA,
+    )

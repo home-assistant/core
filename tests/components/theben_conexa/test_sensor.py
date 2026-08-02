@@ -26,7 +26,7 @@ async def test_async_setup_entry_logs_unsupported_keys(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Supported keys are added while unsupported ones are skipped."""
-    mock_conexa_smgw.getLatestValues = AsyncMock(
+    mock_conexa_smgw.client.getLatestValues = AsyncMock(
         return_value={
             OBIS_IN: SimpleNamespace(value=1, unit="Wh"),
             OBIS_OUT: SimpleNamespace(value=2, unit="Wh"),
@@ -42,8 +42,8 @@ async def test_async_setup_entry_logs_unsupported_keys(
 
     entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     assert {entry.unique_id for entry in entity_entries} == {
-        f"{mock_conexa_smgw.gatewayInfo.smgwID}-{TEST_CONFIG_DATA[CONF_USERNAME]}-{OBIS_IN}",
-        f"{mock_conexa_smgw.gatewayInfo.smgwID}-{TEST_CONFIG_DATA[CONF_USERNAME]}-{OBIS_OUT}",
+        f"{mock_conexa_smgw.client.gatewayInfo.smgwID}-{TEST_CONFIG_DATA[CONF_USERNAME]}-{OBIS_IN}",
+        f"{mock_conexa_smgw.client.gatewayInfo.smgwID}-{TEST_CONFIG_DATA[CONF_USERNAME]}-{OBIS_OUT}",
     }
     assert len(hass.states.async_entity_ids("sensor")) == 2
     assert "Skipping unsupported Conexa SMGW key" in caplog.text
