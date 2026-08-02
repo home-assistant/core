@@ -30,7 +30,7 @@ async def test_power_state_and_unique_ids(
         SWITCH_DOMAIN, "redfish", "uuid-1_power"
     )
     fallback_entity_id = entity_registry.async_get_entity_id(
-        SWITCH_DOMAIN, "redfish", "redfish-entry_2_power"
+        SWITCH_DOMAIN, "redfish", "https://bmc.example_2_power"
     )
     assert entity_id is not None
     assert fallback_entity_id is not None
@@ -100,7 +100,7 @@ async def test_unsupported_primary_power_action(
 ) -> None:
     """Test unsupported power actions do not issue a reset request."""
     entity_id = entity_registry.async_get_entity_id(
-        SWITCH_DOMAIN, "redfish", "redfish-entry_2_power"
+        SWITCH_DOMAIN, "redfish", "https://bmc.example_2_power"
     )
     assert entity_id is not None
 

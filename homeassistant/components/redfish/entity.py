@@ -23,8 +23,9 @@ class RedfishSystemEntity(CoordinatorEntity[RedfishDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._system_id = system_id
         system = coordinator.data.systems[system_id]
+        assert coordinator.config_entry.unique_id is not None
         self._system_identity = system.uuid or (
-            f"{coordinator.config_entry.entry_id}_{system.system_id}"
+            f"{coordinator.config_entry.unique_id}_{system.system_id}"
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._system_identity)},
