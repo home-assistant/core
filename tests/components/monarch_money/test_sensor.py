@@ -25,3 +25,18 @@ async def test_all_entities(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_account_owner_attribute(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_config_api: AsyncMock,
+) -> None:
+    """Test the account owner attribute is exposed."""
+    with patch("homeassistant.components.monarch_money.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert any(
+        state.attributes.get("account_owner") == "Bradley"
+        for state in hass.states.async_all("sensor")
+    )
