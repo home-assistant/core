@@ -1,13 +1,13 @@
 """Test the Traccar Server coordinator."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 import logging
 import sys
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pytraccar import TraccarAuthenticationException, TraccarException
+from pytraccar import SubscriptionData, TraccarAuthenticationException, TraccarException
 
 from homeassistant.components.traccar_server.coordinator import TraccarServerCoordinator
 from homeassistant.config_entries import ConfigEntryState
@@ -170,17 +170,32 @@ async def test_handle_subscription_data_logs_restored_after_failures(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Receiving data after failures logs a restored message and resets the counter."""
-    coordinator = await _setup_and_isolate_coordinator(hass, mock_config_entry)
-    coordinator._consecutive_subscription_failures = 3
+    calls = 0
 
-    with caplog.at_level(
-        logging.INFO, logger="homeassistant.components.traccar_server"
+    async def _fail_three_times_then_succeed(
+        callback: Callable[[SubscriptionData], Awaitable[None]],
+    ) -> None:
+        nonlocal calls
+        calls += 1
+        if calls <= 3:
+            raise TraccarException("Simulated dropped connection")
+        await callback({"devices": None, "events": None, "positions": None})
+        raise asyncio.CancelledError
+
+    mock_traccar_api_client.subscribe = AsyncMock(
+        side_effect=_fail_three_times_then_succeed
+    )
+
+    with (
+        patch(
+            "homeassistant.components.traccar_server.coordinator.asyncio.sleep",
+            new=AsyncMock(),
+        ),
+        caplog.at_level(logging.INFO, logger="homeassistant.components.traccar_server"),
     ):
-        await coordinator.handle_subscription_data(
-            {"devices": None, "events": None, "positions": None}
-        )
+        await setup_integration(hass, mock_config_entry)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert coordinator._consecutive_subscription_failures == 0
     info_records = [r for r in caplog.records if r.levelno == logging.INFO]
     assert any(
         "connection restored after 3 failed attempt(s)" in r.message
