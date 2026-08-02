@@ -15,12 +15,15 @@ LOGGER = logging.getLogger(__name__)
 async def test_sensors(hass: HomeAssistant, anova_api: AnovaApi) -> None:
     """Test setting up creates the sensors."""
     await async_init_integration(hass)
-    assert len(hass.states.async_all("sensor")) == 8
+    assert len(hass.states.async_all("sensor")) == 9
     assert (
         hass.states.get("sensor.anova_precision_cooker_cook_time_remaining").state
         == "0"
     )
     assert hass.states.get("sensor.anova_precision_cooker_cook_time").state == "0"
+    assert (
+        hass.states.get("sensor.anova_precision_cooker_time_maintaining").state == "0"
+    )
     assert (
         hass.states.get("sensor.anova_precision_cooker_heater_temperature").state
         == "22.37"

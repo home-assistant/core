@@ -67,6 +67,14 @@ SENSOR_DESCRIPTIONS: list[AnovaSensorEntityDescription] = [
         value_fn=lambda data: data.cook_time_remaining,
     ),
     AnovaSensorEntityDescription(
+        key="time_maintaining",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        translation_key="time_maintaining",
+        device_class=SensorDeviceClass.DURATION,
+        value_fn=lambda data: data.time_maintaining,
+    ),
+    AnovaSensorEntityDescription(
         key="heater_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
