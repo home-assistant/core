@@ -32,6 +32,7 @@ from homeassistant.components.knx.const import (
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_KNXKEY_FILENAME,
     CONF_KNX_KNXKEY_PASSWORD,
+    CONF_KNX_LLM_BUS_TOOLS,
     CONF_KNX_LOCAL_IP,
     CONF_KNX_MCAST_GRP,
     CONF_KNX_MCAST_PORT,
@@ -1707,6 +1708,7 @@ async def test_options_communication_settings(
     assert result["data"] == {
         CONF_KNX_STATE_UPDATER: False,
         CONF_KNX_RATE_LIMIT: 40,
+        CONF_KNX_LLM_BUS_TOOLS: False,
         CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: 30,
         CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
         CONF_KNX_TELEGRAM_DB_BACKEND: KNX_TELEGRAM_BACKEND_SQLITE,
@@ -1715,6 +1717,7 @@ async def test_options_communication_settings(
     assert mock_config_entry.options == {
         CONF_KNX_STATE_UPDATER: False,
         CONF_KNX_RATE_LIMIT: 40,
+        CONF_KNX_LLM_BUS_TOOLS: False,
         CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: 30,
         CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
         CONF_KNX_TELEGRAM_DB_BACKEND: KNX_TELEGRAM_BACKEND_SQLITE,
