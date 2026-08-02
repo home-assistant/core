@@ -864,13 +864,16 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             CONF_NAME, self._radio_mgr.device_path or ""
         )
 
-        # ZHA is single-instance: confirming a discovery while a network already
-        # exists switches ZHA to the discovered radio. Warn before re-homing a
-        # working coordinator (e.g. one already used by another integration).
-        if zha_config_entries:
+        # ZHA is single-instance: confirming a passive discovery re-homes the
+        # existing network onto the discovered adapter. The hardware wizard sets
+        # _flow_strategy and has already opted into migration, so warn only here.
+        if zha_config_entries and self._flow_strategy is None:
             return self.async_show_form(
                 step_id="confirm_migration",
-                description_placeholders={CONF_NAME: name},
+                description_placeholders={
+                    CONF_NAME: name,
+                    "current": zha_config_entries[0].title,
+                },
             )
 
         return self.async_show_form(

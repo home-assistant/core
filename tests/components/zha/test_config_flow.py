@@ -1514,7 +1514,7 @@ async def test_hardware_migration_flow_strategy_advanced(
         )
 
         assert result_hardware["type"] is FlowResultType.FORM
-        assert result_hardware["step_id"] == "confirm_migration"
+        assert result_hardware["step_id"] == "confirm"
 
         result_confirm = await hass.config_entries.flow.async_configure(
             result_hardware["flow_id"], user_input={}
@@ -1594,7 +1594,7 @@ async def test_hardware_migration_flow_strategy_recommended(
         )
 
         assert result_hardware["type"] is FlowResultType.FORM
-        assert result_hardware["step_id"] == "confirm_migration"
+        assert result_hardware["step_id"] == "confirm"
 
         result_migrate = await hass.config_entries.flow.async_configure(
             result_hardware["flow_id"], user_input={}
