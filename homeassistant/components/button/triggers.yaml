@@ -16,3 +16,11 @@ hold_started:
   target: *event_button_target
 hold_ended:
   target: *event_button_target
+being_held:
+  target: *event_button_target
+  fields:
+    repeat_interval:
+      required: true
+      default: 00:00:01
+      selector:
+        duration:
