@@ -153,7 +153,7 @@ async def test_legacy_anna_select_entities(
     mock_smile_legacy_anna: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test "off" to be the selected option for legacy Anna without schedule."""
+    """Test that "off" is the selected option for legacy Anna without schedule."""
     assert (state := hass.states.get("select.anna_thermostat_schedule"))
     assert state.state == "off"
 
