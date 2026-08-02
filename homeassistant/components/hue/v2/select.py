@@ -14,7 +14,6 @@ from aiohue.v2.scene_activity import SceneActivityTracker
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -150,11 +149,7 @@ class HueSceneSelectEntity(SceneActivityBaseEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Activate the scene with the given name."""
-        scene_id = self._option_to_scene_id.get(option)
-        if scene_id is None:
-            raise HomeAssistantError(
-                f"Scene option '{option}' not found in group {self._group_id}"
-            )
+        scene_id = self._option_to_scene_id[option]
         await self.bridge.async_request_call(
             self.bridge.api.scenes.recall,
             scene_id,
