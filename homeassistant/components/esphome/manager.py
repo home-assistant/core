@@ -221,6 +221,7 @@ class ESPHomeManager:
     __slots__ = (
         "_cancel_subscribe_logs",
         "_dashboard_key_sync_warned",
+        "_dashboard_key_synced",
         "_log_level",
         "cli",
         "device_id",
@@ -256,7 +257,8 @@ class ESPHomeManager:
         self.zeroconf_instance = zeroconf_instance
         self.entry_data = entry.runtime_data
         self._cancel_subscribe_logs: CALLBACK_TYPE | None = None
-        self._dashboard_key_sync_warned = False
+        self._dashboard_key_sync_warned: set[str] = set()
+        self._dashboard_key_synced = False
         self._log_level = LogLevel.LOG_LEVEL_NONE
 
     async def on_stop(self, event: Event) -> None:
@@ -932,25 +934,28 @@ class ESPHomeManager:
             else:
                 self._async_warn_dashboard_key_sync_failed(device_info, err)
             return
-        if result.get("result") in _DASHBOARD_KEY_SYNC_OK:
+        if isinstance(result, dict) and result.get("result") in _DASHBOARD_KEY_SYNC_OK:
+            self._dashboard_key_synced = True
             _LOGGER.debug(
                 "Synced encryption key for %s to the ESPHome dashboard: %s",
                 device_info.name,
                 result,
             )
             return
+        reason = result.get("reason") if isinstance(result, dict) else None
         self._async_warn_dashboard_key_sync_failed(
-            device_info, result.get("reason") or f"unexpected response {result}"
+            device_info, reason or f"unexpected response {result}"
         )
 
     @callback
     def _async_warn_dashboard_key_sync_failed(
         self, device_info: EsphomeDeviceInfo, cause: Exception | str
     ) -> None:
-        """Warn once that the dashboard did not store the key."""
-        if self._dashboard_key_sync_warned:
+        """Warn once per distinct cause that the dashboard did not store the key."""
+        cause_text = str(cause)
+        if cause_text in self._dashboard_key_sync_warned:
             return
-        self._dashboard_key_sync_warned = True
+        self._dashboard_key_sync_warned.add(cause_text)
         _LOGGER.warning(
             "The ESPHome dashboard could not store the encryption key for "
             "%s (%s), so installing that configuration may use a different "
@@ -970,6 +975,10 @@ class ESPHomeManager:
         """
         noise_psk: str | None = self.entry.data.get(CONF_NOISE_PSK)
         if noise_psk:
+            if self._dashboard_key_synced:
+                # Already delivered this manager's lifetime; a dashboard
+                # change reloads the entry and resets the latch.
+                return
             # We're already connected with this key, so it's proven valid;
             # re-offer it so a dashboard that missed the original handoff
             # (added later, upgraded, or temporarily unreachable) catches
