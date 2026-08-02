@@ -1,6 +1,6 @@
 """Vizio SmartCast Device support."""
 
-from typing import Any, override
+from typing import Any, cast, override
 
 from vizaio import AppConfig, AppRecord, RemoteKey
 from vizaio.apps import (
@@ -19,9 +19,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DATA_APPS
 from .const import (
@@ -33,7 +31,6 @@ from .const import (
     CONF_NAME_SPACE,
     CONF_VOLUME_STEP,
     DEFAULT_VOLUME_STEP,
-    DOMAIN,
     SUPPORTED_COMMANDS,
     VIZIO_AUDIO_SETTINGS,
     VIZIO_MUTE,
@@ -41,11 +38,8 @@ from .const import (
     VIZIO_SOUND_MODE,
     VIZIO_VOLUME,
 )
-from .coordinator import (
-    VizioAppsDataUpdateCoordinator,
-    VizioConfigEntry,
-    VizioDeviceCoordinator,
-)
+from .coordinator import VizioAppsDataUpdateCoordinator, VizioConfigEntry
+from .entity import VizioEntity
 from .helpers import async_device_command
 
 PARALLEL_UPDATES = 0
@@ -98,7 +92,6 @@ async def async_setup_entry(
     entity = VizioDevice(
         config_entry,
         device_class,
-        config_entry.runtime_data.device_coordinator,
         hass.data.get(DATA_APPS) if device_class == MediaPlayerDeviceClass.TV else None,
     )
 
@@ -114,10 +107,9 @@ def _app_config_from_conf(config: dict[str, Any]) -> AppConfig:
     )
 
 
-class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
+class VizioDevice(VizioEntity, MediaPlayerEntity):
     """Media Player implementation which performs REST requests to device."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _current_input: str | None = None
     _current_app_config: AppConfig | None = None
@@ -126,11 +118,10 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         self,
         config_entry: VizioConfigEntry,
         device_class: MediaPlayerDeviceClass,
-        coordinator: VizioDeviceCoordinator,
         apps_coordinator: VizioAppsDataUpdateCoordinator | None,
     ) -> None:
         """Initialize Vizio device."""
-        super().__init__(coordinator)
+        super().__init__(config_entry)
 
         self._config_entry = config_entry
         self._apps_coordinator = apps_coordinator
@@ -142,7 +133,6 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         self._additional_app_configs = config_entry.data.get(CONF_APPS, {}).get(
             CONF_ADDITIONAL_CONFIGS, []
         )
-        self._device = coordinator.device
         if apps_coordinator:
             self._device.set_app_catalog(apps_coordinator.data)
             self._device.set_app_availability(apps_coordinator.availability)
@@ -151,23 +141,17 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
         # Entity class attributes that will change with each update (we only include
         # the ones that are initialized differently from the defaults)
         self._attr_supported_features = SUPPORTED_COMMANDS[device_class]
-
-        # Entity class attributes that will not change
-        unique_id = config_entry.unique_id
-        assert unique_id
-        self._attr_unique_id = unique_id
         self._attr_device_class = device_class
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
 
     @property
     def _volume_step(self) -> int:
         """Return the configured volume step."""
-        return self._config_entry.options[CONF_VOLUME_STEP]
+        return cast(int, self._config_entry.options[CONF_VOLUME_STEP])
 
     @property
-    def _conf_apps(self) -> dict:
+    def _conf_apps(self) -> dict[str, Any]:
         """Return the configured app filter options."""
-        return self._config_entry.options.get(CONF_APPS, {})
+        return cast("dict[str, Any]", self._config_entry.options.get(CONF_APPS, {}))
 
     def _apps_list(self, apps: list[str]) -> list[str]:
         """Return process apps list based on configured filters."""
@@ -348,8 +332,13 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
 
     @property
     @override
-    def app_id(self):
-        """Return the ID of the current app if it is unknown by vizaio."""
+    # pylint: disable-next=home-assistant-return-type
+    def app_id(self) -> dict[str, Any] | None:  # type: ignore[override]
+        """Return the app config of the current app if it is unknown by vizaio.
+
+        Documented way for users to obtain app configs for additional_configs;
+        intentionally returns a dict instead of the app ID string.
+        """
         if self._current_app_config and self.source == UNKNOWN_APP:
             return {
                 CONF_APP_ID: self._current_app_config.app_id,
