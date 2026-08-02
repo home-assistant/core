@@ -289,7 +289,6 @@ async def test_adam_none_restore(
     hass: HomeAssistant,
     mock_smile_adam_heat_cool: MagicMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test last_active_schedule restored as None from before the plugwise v1.14.3 bump."""
     mock_restore_cache_with_extra_data(
@@ -333,7 +332,6 @@ async def test_adam_off_regulation_mode_change(
     hass: HomeAssistant,
     mock_smile_adam_heat_cool: MagicMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test changing from regulation off mode."""
     mock_restore_cache_with_extra_data(
