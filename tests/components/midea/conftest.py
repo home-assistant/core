@@ -32,7 +32,7 @@ class DummyDevice:
 
     def __init__(
         self,
-        device_type: int,
+        device_type: DeviceType,
         *,
         attributes: dict | None = None,
     ) -> None:
