@@ -4,7 +4,6 @@ from datetime import timedelta
 
 DOMAIN = "wibeee"
 
-DEFAULT_TIMEOUT = timedelta(seconds=10)
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 CONF_MAC_ADDRESS = "mac_address"
