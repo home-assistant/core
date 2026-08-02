@@ -349,13 +349,13 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         area_id: str,
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
-        floor_id: str | None | UndefinedType = UNDEFINED,
-        humidity_entity_id: str | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
+        floor_id: str | UndefinedType | None = UNDEFINED,
+        humidity_entity_id: str | UndefinedType | None = UNDEFINED,
+        icon: str | UndefinedType | None = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
-        picture: str | None | UndefinedType = UNDEFINED,
-        temperature_entity_id: str | None | UndefinedType = UNDEFINED,
+        picture: str | UndefinedType | None = UNDEFINED,
+        temperature_entity_id: str | UndefinedType | None = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
         updated = self._async_update(
@@ -385,13 +385,13 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         area_id: str,
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
-        floor_id: str | None | UndefinedType = UNDEFINED,
-        humidity_entity_id: str | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
+        floor_id: str | UndefinedType | None = UNDEFINED,
+        humidity_entity_id: str | UndefinedType | None = UNDEFINED,
+        icon: str | UndefinedType | None = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
-        picture: str | None | UndefinedType = UNDEFINED,
-        temperature_entity_id: str | None | UndefinedType = UNDEFINED,
+        picture: str | UndefinedType | None = UNDEFINED,
+        temperature_entity_id: str | UndefinedType | None = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
         old = self.areas[area_id]

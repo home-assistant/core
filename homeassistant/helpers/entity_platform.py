@@ -40,7 +40,7 @@ from homeassistant.util.hass_dict import HassKey
 from . import device_registry as dr, entity_registry as er, service, translation
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later
-from .frame import report_usage
+from .frame import ReportBehavior, report_usage
 from .issue_registry import IssueSeverity, async_create_issue
 from .typing import UNDEFINED, ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 
@@ -54,6 +54,10 @@ SLOW_ADD_ENTITY_MAX_WAIT = 15  # Per Entity
 SLOW_ADD_MIN_TIMEOUT = 500
 
 MAX_ENABLED_ENTITIES_PER_CONFIG_ENTRY = 10000
+
+# Protocol integrations act as bridges for entire networks and legitimately
+# create large numbers of entities, so they are exempt from the entity limit.
+ENTITY_LIMIT_EXEMPT_DOMAINS = {"hue", "matter", "mqtt", "zha", "zwave_js"}
 
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM: HassKey[dict[str, list[EntityPlatform]]] = HassKey(
@@ -206,7 +210,7 @@ class PlatformData:
             return await translation.async_get_translations(
                 self.hass, language, category, {integration}
             )
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             _LOGGER.debug(
                 "Could not load translations for %s",
                 integration,
@@ -829,6 +833,21 @@ class EntityPlatform:
                 already_exists = True
         return (already_exists, restored)
 
+    def _check_device_attach(self, entity: Entity, reason: str) -> None:
+        """Check the entity does not attach a device and report it if it does.
+
+        A device can only be attached to an entity which has a unique ID and
+        belongs to a config entry.
+        """
+        if entity.device_info is None and entity.device_entry is None:
+            return
+        report_usage(
+            f"attempts to attach a device to an entity {reason}",
+            core_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2027.8.0",
+            integration_domain=self.platform_name,
+        )
+
     async def _async_add_entity(  # noqa: C901
         self,
         entity: Entity,
@@ -951,7 +970,9 @@ class EntityPlatform:
                 else:
                     device = entity.device_entry
             else:
+                self._check_device_attach(entity, "without a config entry")
                 device = None
+                entity.device_entry = None
 
             suggested_object_id, object_id_base = _async_derive_object_ids(entity, self)
 
@@ -967,6 +988,7 @@ class EntityPlatform:
                 disabled_by is None
                 and not registered_entity_id
                 and self.config_entry is not None
+                and self.config_entry.domain not in ENTITY_LIMIT_EXEMPT_DOMAINS
                 and entity_registry.entities.get_enabled_count_for_config_entry_id(
                     self.config_entry.entry_id
                 )
@@ -1020,7 +1042,10 @@ class EntityPlatform:
             entity.registry_entry = entry
             entity.entity_id = entry.entity_id
 
-        else:  # entity.unique_id is None  # noqa: PLR5501
+        else:  # entity.unique_id is None
+            self._check_device_attach(entity, "without a unique ID")
+            entity.device_entry = None
+
             # We won't generate an entity ID if the platform has already set one
             # We will however make sure that platform cannot pick a registered ID
             if entity.entity_id is None or entity_registry.async_is_registered(
