@@ -908,6 +908,16 @@ class ESPHomeManager:
                 err,
             )
             return
+        if result.get("result") == "not_writable":
+            _LOGGER.warning(
+                "The ESPHome dashboard could not store the encryption key for "
+                "%s (%s), so installing that configuration may use a different "
+                "key and lock Home Assistant out: %s",
+                device_info.name,
+                self.entry.unique_id,
+                result.get("reason", "unknown reason"),
+            )
+            return
         _LOGGER.debug(
             "Synced encryption key for %s to the ESPHome dashboard: %s",
             device_info.name,
@@ -924,7 +934,17 @@ class ESPHomeManager:
         """
         noise_psk: str | None = self.entry.data.get(CONF_NOISE_PSK)
         if noise_psk:
-            # we're already connected with a noise PSK - nothing to do
+            # We're already connected with this key, so it's proven valid;
+            # re-offer it so a dashboard that missed the original handoff
+            # (added later, upgraded, or temporarily unreachable) catches
+            # up. The dashboard no-ops when it already has the same key.
+            # Background task: this runs on every connect and must not
+            # delay entity setup.
+            self.entry.async_create_background_task(
+                self.hass,
+                self._async_sync_encryption_key_to_dashboard(device_info, noise_psk),
+                "esphome-sync-encryption-key",
+            )
             return
 
         if not device_info.api_encryption_supported:
