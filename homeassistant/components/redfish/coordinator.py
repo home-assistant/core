@@ -1,6 +1,7 @@
 """Data coordinator for Redfish."""
 
 import asyncio
+from dataclasses import replace
 import logging
 from typing import Any, override
 
@@ -14,7 +15,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_BASE_URL, DOMAIN, REQUEST_TIMEOUT, UPDATE_INTERVAL
-from .models import RedfishData, RedfishSystem, parse_system
+from .models import (
+    RedfishData,
+    RedfishSystem,
+    get_reset_action_info_target,
+    parse_reset_action_info,
+    parse_system,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,6 +111,15 @@ class RedfishClient:
         systems = {}
         for payload in await self._async_members(link):
             if system := parse_system(payload):
+                if system.reset_target is not None and (
+                    action_info_target := get_reset_action_info_target(payload)
+                ):
+                    action_info = await self._async_get(action_info_target)
+                    system = replace(
+                        system,
+                        reset_types=system.reset_types
+                        | parse_reset_action_info(action_info),
+                    )
                 systems[system.system_id] = system
         return systems
 
@@ -115,17 +131,29 @@ class RedfishClient:
             or not path.strip()
         ):
             return []
-        collection = await self._async_get(path)
-        members = collection.get("Members")
-        if not isinstance(members, list):
-            return []
-        return [
-            await self._async_get(member_path)
-            for member in members
-            if isinstance(member, dict)
-            and isinstance(member_path := member.get("@odata.id"), str)
-            and member_path.strip()
-        ]
+        payloads = []
+        seen_paths = set[str]()
+        while True:
+            if path in seen_paths:
+                raise RedfishError
+            seen_paths.add(path)
+            collection = await self._async_get(path)
+            members = collection.get("Members")
+            if not isinstance(members, list):
+                return []
+            payloads.extend(
+                [
+                    await self._async_get(member_path)
+                    for member in members
+                    if isinstance(member, dict)
+                    and isinstance(member_path := member.get("@odata.id"), str)
+                    and member_path.strip()
+                ]
+            )
+            next_path = collection.get("Members@odata.nextLink")
+            if not isinstance(next_path, str) or not next_path.strip():
+                return payloads
+            path = next_path
 
     @staticmethod
     def _check_response(response: aiohttp.ClientResponse) -> None:

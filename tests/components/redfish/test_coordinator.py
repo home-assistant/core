@@ -137,6 +137,106 @@ async def test_discover_systems(
     }
 
 
+async def test_discover_paginated_systems(
+    hass: HomeAssistant,
+    aiohttp_server: Callable[[], TestServer],
+) -> None:
+    """Test ComputerSystem discovery follows collection pagination."""
+    resources: dict[str, dict[str, Any]] = {
+        "/redfish/v1/": {
+            "Systems": {"@odata.id": "/redfish/v1/Systems"},
+        },
+        "/redfish/v1/Systems": {
+            "Members": [{"@odata.id": "/redfish/v1/Systems/1"}],
+            "Members@odata.nextLink": "/redfish/v1/Systems?page=2",
+        },
+        "/redfish/v1/Systems?page=2": {
+            "Members": [{"@odata.id": "/redfish/v1/Systems/2"}],
+        },
+        "/redfish/v1/Systems/1": {
+            "@odata.id": "/redfish/v1/Systems/1",
+            "Id": "1",
+        },
+        "/redfish/v1/Systems/2": {
+            "@odata.id": "/redfish/v1/Systems/2",
+            "Id": "2",
+        },
+    }
+    app = web.Application()
+
+    async def response(request: web.Request) -> web.Response:
+        return web.json_response(resources[request.path_qs])
+
+    app.router.add_get("/{path:.*}", response)
+    server = await aiohttp_server(app)
+    client = RedfishClient(
+        async_get_clientsession(hass),
+        str(server.make_url("")),
+        "user",
+        "password",
+    )
+
+    systems = await client.async_get_systems()
+
+    assert systems.keys() == {"1", "2"}
+
+
+async def test_discover_reset_types_from_action_info(
+    hass: HomeAssistant,
+    aiohttp_server: Callable[[], TestServer],
+) -> None:
+    """Test reset types are discovered from standard ActionInfo."""
+    resources: dict[str, dict[str, Any]] = {
+        "/redfish/v1/": {
+            "Systems": {"@odata.id": "/redfish/v1/Systems"},
+        },
+        "/redfish/v1/Systems": {
+            "Members": [{"@odata.id": "/redfish/v1/Systems/1"}],
+        },
+        "/redfish/v1/Systems/1": {
+            "@odata.id": "/redfish/v1/Systems/1",
+            "Id": "1",
+            "Actions": {
+                "#ComputerSystem.Reset": {
+                    "target": "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset",
+                    "@Redfish.ActionInfo": "/redfish/v1/Systems/1/ResetActionInfo",
+                }
+            },
+        },
+        "/redfish/v1/Systems/1/ResetActionInfo": {
+            "Parameters": [
+                {
+                    "Name": "ResetType",
+                    "AllowableValues": [
+                        "On",
+                        "GracefulShutdown",
+                        "VendorReset",
+                        1,
+                    ],
+                },
+                {"Name": "OtherParameter", "AllowableValues": ["ForceOff"]},
+            ]
+        },
+    }
+    app = web.Application()
+
+    async def response(request: web.Request) -> web.Response:
+        return web.json_response(resources[request.path])
+
+    app.router.add_get("/{path:.*}", response)
+    server = await aiohttp_server(app)
+    client = RedfishClient(
+        async_get_clientsession(hass),
+        str(server.make_url("")),
+        "user",
+        "password",
+    )
+
+    systems = await client.async_get_systems()
+
+    assert systems["1"].reset_types == frozenset({"On", "GracefulShutdown"})
+
+
 async def test_post_reset_uses_advertised_target_and_type(
     hass: HomeAssistant,
     aiohttp_server: Callable[[], TestServer],
