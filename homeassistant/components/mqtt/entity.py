@@ -1319,8 +1319,8 @@ def ensure_via_device_exists(
     if (
         device_info is None
         or CONF_VIA_DEVICE not in device_info
-        or (device_registry := dr.async_get(hass)).async_get_device(
-            identifiers={device_info["via_device"]}
+        or (device_registry := dr.async_get(hass)).async_get_device_by_identifier(
+            device_info["via_device"], config_entry.entry_id
         )
     ):
         return
@@ -1601,7 +1601,7 @@ class MqttEntity(
 
     def _set_entity_name(self, config: ConfigType) -> None:
         """Help setting the entity name if needed."""
-        entity_name: str | None | UndefinedType = config.get(CONF_NAME, UNDEFINED)
+        entity_name: str | UndefinedType | None = config.get(CONF_NAME, UNDEFINED)
         # Only set _attr_name if it is needed
         if entity_name is not UNDEFINED:
             self._attr_name = entity_name
