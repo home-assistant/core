@@ -40,8 +40,6 @@ API_PROMPT = (
     'device addresses like "1.1.5", DPTs like "9.001".'
 )
 
-# A tool callable receives the running KNX module and the validated arguments and
-# returns a library result dataclass (or a list of them).
 type _ToolFunc = Callable[["KNXModule", dict[str, Any]], Awaitable[Any]]
 
 
@@ -51,9 +49,11 @@ def _validator(annotation: Any) -> Any:
     if origin in (Union, types.UnionType):
         non_none = [arg for arg in get_args(annotation) if arg is not type(None)]
         allows_none = len(non_none) != len(get_args(annotation))
-        # A single concrete type maps to its validator; a union of scalar payload
-        # types (e.g. a group value) passes through unchanged.
-        inner = _validator(non_none[0]) if len(non_none) == 1 else object
+        inner = (
+            _validator(non_none[0])
+            if len(non_none) == 1
+            else vol.Any(*(_validator(arg) for arg in non_none))
+        )
         return vol.Maybe(inner) if allows_none else inner
     if annotation is str:
         return str

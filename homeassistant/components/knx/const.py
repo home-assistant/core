@@ -156,7 +156,7 @@ class KNXConfigEntryOptions(TypedDict, total=False):
     telegram_db_load_hours: int
     telegram_db_backend: str  # sqlite | postgres
     telegram_db_postgres_dsn: str
-    llm_bus_tools: bool  # expose KNX bus read/write tools to the LLM API
+    llm_bus_tools: bool
 
 
 class ColorTempModes(Enum):
