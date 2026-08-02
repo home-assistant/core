@@ -369,7 +369,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
-      'account_owner': 'Alex',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'data:image/png;base64,base64Nonce',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Bank Checking Balance',
@@ -425,7 +424,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
-      'account_owner': 'Alex',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Bank Checking Data age',
     }),
@@ -480,6 +478,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
+      'account_owner': 'Alex',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'base64Nonce',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Brokerage Brokerage Balance',
@@ -535,6 +534,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
+      'account_owner': 'Alex',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Brokerage Brokerage Data age',
     }),
