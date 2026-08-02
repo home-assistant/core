@@ -264,10 +264,47 @@ async def test_post_reset_uses_advertised_target_and_type(
     ]
 
 
+async def test_post_reset_accepts_same_origin_scheme_relative_target(
+    hass: HomeAssistant,
+    aiohttp_server: Callable[[], TestServer],
+    redfish_app: web.Application,
+) -> None:
+    """Test a same-origin scheme-relative action target is accepted."""
+    server = await aiohttp_server(redfish_app)
+    client = RedfishClient(
+        async_get_clientsession(hass),
+        str(server.make_url("")),
+        "user",
+        "password",
+    )
+
+    target = server.make_url(
+        "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset"
+    ).with_scheme("")
+    await client.async_reset(str(target), "On")
+
+    assert redfish_app["requests"] == [
+        (
+            "POST",
+            "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset",
+            {"ResetType": "On"},
+            "Basic dXNlcjpwYXNzd29yZA==",
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    "scheme",
+    [
+        pytest.param("http", id="absolute"),
+        pytest.param("", id="scheme-relative"),
+    ],
+)
 async def test_reject_cross_origin_advertised_target(
     hass: HomeAssistant,
     aiohttp_server: Callable[[], TestServer],
     redfish_app: web.Application,
+    scheme: str,
 ) -> None:
     """Test credentials are never sent to a cross-origin advertised target."""
     server = await aiohttp_server(redfish_app)
@@ -287,8 +324,9 @@ async def test_reject_cross_origin_advertised_target(
         "password",
     )
 
+    target = malicious_server.make_url("/redfish/reset").with_scheme(scheme)
     with pytest.raises(RedfishError):
-        await client.async_reset(str(malicious_server.make_url("/redfish/reset")), "On")
+        await client.async_reset(str(target), "On")
 
     assert malicious_requests == []
 

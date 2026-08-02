@@ -52,13 +52,11 @@ class RedfishClient:
         self._headers = {"Authorization": aiohttp.encode_basic_auth(username, password)}
 
     def _resolve_url(self, target: str) -> URL:
-        """Resolve a relative Redfish target against the configured service."""
-        target_url = URL(target)
-        if target_url.is_absolute():
-            if target_url.origin() != self._base_url.origin():
-                raise RedfishError
-            return target_url
-        return self._base_url.join(target_url)
+        """Resolve a Redfish target and require the configured origin."""
+        target_url = self._base_url.join(URL(target))
+        if target_url.origin() != self._base_url.origin():
+            raise RedfishError
+        return target_url
 
     async def _async_get(self, path: str) -> dict[str, Any]:
         """Get a Redfish resource."""
