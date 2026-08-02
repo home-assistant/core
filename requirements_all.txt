@@ -1438,7 +1438,7 @@ knocki==0.4.2
 knx-frontend==2026.7.23.145751
 
 # homeassistant.components.knx
-knx-telegram-store[sqlite,postgres]==0.11.1
+knx-telegram-store[sqlite,postgres]==0.11.2
 
 # homeassistant.components.kraken
 krakenex==2.2.2
@@ -3409,10 +3409,10 @@ wyoming==1.10.0
 xiaomi-ble==1.11.0
 
 # homeassistant.components.knx
-xknx==3.17.0
+xknx==3.18.0
 
 # homeassistant.components.knx
-xknxproject==3.9.0
+xknxproject==3.10.0
 
 # homeassistant.components.fritz
 # homeassistant.components.rest
