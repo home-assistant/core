@@ -886,6 +886,17 @@ class ESPHomeManager:
             await cli.disconnect(force=True)
         return False
 
+    @callback
+    def _async_schedule_dashboard_key_sync(
+        self, device_info: EsphomeDeviceInfo, key: str
+    ) -> None:
+        """Schedule the best-effort dashboard key sync off the connect path."""
+        self.entry.async_create_background_task(
+            self.hass,
+            self._async_sync_encryption_key_to_dashboard(device_info, key),
+            "esphome-sync-encryption-key",
+        )
+
     async def _async_sync_encryption_key_to_dashboard(
         self, device_info: EsphomeDeviceInfo, key: str
     ) -> None:
@@ -951,13 +962,7 @@ class ESPHomeManager:
             if self.entry.unique_id and (
                 await storage.async_get_key(self.entry.unique_id) == noise_psk
             ):
-                self.entry.async_create_background_task(
-                    self.hass,
-                    self._async_sync_encryption_key_to_dashboard(
-                        device_info, noise_psk
-                    ),
-                    "esphome-sync-encryption-key",
-                )
+                self._async_schedule_dashboard_key_sync(device_info, noise_psk)
             return
 
         if not device_info.api_encryption_supported:
@@ -1028,8 +1033,9 @@ class ESPHomeManager:
         )
 
         # The dashboard must learn the key or its next adoption/flash of
-        # this device bakes in a competing key and locks HA out.
-        await self._async_sync_encryption_key_to_dashboard(device_info, new_key_str)
+        # this device bakes in a competing key and locks HA out. Background
+        # task: an unreachable dashboard must not stall entity setup.
+        self._async_schedule_dashboard_key_sync(device_info, new_key_str)
 
         if from_storage:
             _LOGGER.info(
