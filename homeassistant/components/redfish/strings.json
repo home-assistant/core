@@ -1,0 +1,46 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Redfish service is already configured"
+    },
+    "error": {
+      "cannot_connect": "Cannot connect",
+      "invalid_auth": "Invalid authentication",
+      "invalid_url": "Invalid Redfish base URL",
+      "no_systems": "No ComputerSystem resources found",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "base_url": "Redfish base URL",
+          "password": "Password",
+          "username": "Username",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "base_url": "Base URL including the HTTPS scheme",
+          "password": "Password for the Redfish account",
+          "username": "Username for the Redfish account",
+          "verify_ssl": "[%key:common::config_flow::description::verify_ssl%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "power": { "name": "Power" }
+    }
+  },
+  "exceptions": {
+    "reset_failed": {
+      "message": "Failed to perform {reset_type} on the system"
+    },
+    "reset_not_supported": {
+      "message": "Reset type {reset_type} is not supported by this system"
+    },
+    "update_failed": {
+      "message": "Error communicating with the Redfish service"
+    }
+  }
+}
