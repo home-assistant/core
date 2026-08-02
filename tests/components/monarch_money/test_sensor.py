@@ -37,6 +37,6 @@ async def test_account_owner_attribute(
         await setup_integration(hass, mock_config_entry)
 
     assert any(
-        state.attributes.get("account_owner") == "Bradley"
+        state.attributes.get("account_owner") == "Alex"
         for state in hass.states.async_all("sensor")
     )
