@@ -2,8 +2,6 @@
 
 from typing import Any, override
 
-from hotspring import HotSpringConnectionError, HotSpringError
-
 from homeassistant.components.water_heater import (
     STATE_OFF,
     WaterHeaterEntity,
@@ -11,12 +9,10 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import HotSpringConfigEntry, HotSpringDataUpdateCoordinator
-from .entity import HotSpringEntity
+from .entity import HotSpringEntity, exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -63,24 +59,9 @@ class HotSpringWaterHeaterEntity(HotSpringEntity, WaterHeaterEntity):
             return STATE_ON
         return STATE_OFF
 
+    @exception_handler
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            try:
-                await self.coordinator.hotspring.set_temperature(temperature)
-            except HotSpringConnectionError as error:
-                self.coordinator.last_update_success = False
-                self.coordinator.async_update_listeners()
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="cannot_connect",
-                    translation_placeholders={"error": str(error)},
-                ) from error
-            except HotSpringError as error:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_response",
-                    translation_placeholders={"error": str(error)},
-                ) from error
-            await self.coordinator.async_request_refresh()
+        await self.coordinator.hotspring.set_temperature(kwargs[ATTR_TEMPERATURE])
+        await self.coordinator.async_request_refresh()
