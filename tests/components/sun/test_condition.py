@@ -1111,12 +1111,9 @@ async def test_if_action_before_sunset_no_offset_kotzebue(
     """Test if action was before sunset.
 
     Local timezone: Alaska time (America/Anchorage)
-    Location: Kotzebue, Alaska, whose far-west longitude skews local time so
-    far that a naive per-day sunset lookup for 2015-08-08 resolves to
-    2015-08-07 23:59:23 local - already in the past by the time that day
-    starts. The day-rollover heuristic in `sun()` detects this and looks up
-    2015-08-09 instead, landing on the actual sunset for 2015-08-08 at
-    23:55:07 local. Before sunset is true until that rolled-over time.
+    Location: Kotzebue, Alaska, whose far-west longitude skews local time by
+    ~4 hours, so in early August sunset is ~23:55 local. Before sunset is true
+    from local midnight until sunset.
     """
     await hass.config.async_set_time_zone("America/Anchorage")
     hass.config.latitude = 66.8983
@@ -1195,12 +1192,9 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
     """Test if action was after sunset.
 
     Local timezone: Alaska time (America/Anchorage)
-    Location: Kotzebue, Alaska, whose far-west longitude skews local time so
-    far that a naive per-day sunset lookup for 2015-08-08 resolves to
-    2015-08-07 23:59:23 local - already in the past by the time that day
-    starts. The day-rollover heuristic in `sun()` detects this and looks up
-    2015-08-09 instead, landing on the actual sunset for 2015-08-08 at
-    23:55:07 local.
+    Location: Kotzebue, Alaska, whose far-west longitude skews local time by
+    ~4 hours, so in early August sunset is ~23:55 local. After sunset is true
+    from sunset until local midnight.
     """
     await hass.config.async_set_time_zone("America/Anchorage")
     hass.config.latitude = 66.8983
