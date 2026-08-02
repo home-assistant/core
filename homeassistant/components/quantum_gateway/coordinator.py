@@ -65,6 +65,8 @@ class QuantumGatewayDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]])
             macs = await self.hass.async_add_executor_job(self.scanner.scan_devices)
             return {mac: self.scanner.get_device_name(mac) for mac in macs}
 
+        except ConfigEntryAuthFailed:
+            raise
         except Exception as err:
             raise UpdateFailed(
                 f"Failed to fetch data from Quantum Gateway {self.config_entry.data[CONF_HOST]}"
