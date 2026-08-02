@@ -52,12 +52,12 @@ async def test_set_temperature(
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: 103,
+            ATTR_TEMPERATURE: 38,
         },
         blocking=True,
     )
 
-    mock_hotspring.set_temperature.assert_called_once_with(217.4)
+    mock_hotspring.set_temperature.assert_called_once_with(100.4)
 
 
 async def test_set_temperature_connection_error(
@@ -80,7 +80,7 @@ async def test_set_temperature_connection_error(
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_TEMPERATURE: 103,
+                ATTR_TEMPERATURE: 38,
             },
             blocking=True,
         )
@@ -106,7 +106,7 @@ async def test_set_temperature_api_error(
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_TEMPERATURE: 103,
+                ATTR_TEMPERATURE: 38,
             },
             blocking=True,
         )
