@@ -6,16 +6,16 @@ from typing import override
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
-    ScannerEntity,
+    BaseScannerEntity,
+    SourceType,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_IMPORTED_BY, DOMAIN
+from .const import CONF_IMPORTED_BY
 from .coordinator import PingConfigEntry, PingUpdateCoordinator
+from .entity import PingEntity
 
 
 async def async_setup_entry(
@@ -24,49 +24,30 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Ping config entry."""
-    async_add_entities([PingDeviceTracker(hass, entry, entry.runtime_data)])
+    async_add_entities([PingDeviceTracker(entry, entry.runtime_data)])
 
 
-class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity):
+class PingDeviceTracker(PingEntity, BaseScannerEntity):
     """Representation of a Ping device tracker."""
 
+    _attr_name = None
+    _attr_source_type = SourceType.ROUTER
     _last_seen: datetime | None = None
 
     def __init__(
         self,
-        hass: HomeAssistant,
         config_entry: PingConfigEntry,
         coordinator: PingUpdateCoordinator,
     ) -> None:
         """Initialize the Ping device tracker."""
-        super().__init__(coordinator)
+        super().__init__(config_entry, coordinator, config_entry.entry_id)
 
-        self._attr_name = config_entry.title
         self.config_entry = config_entry
         self._consider_home_interval = timedelta(
             seconds=config_entry.options.get(
                 CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.seconds
             )
         )
-
-        if (
-            device := dr.async_get(hass).async_get_device_by_identifier(
-                (DOMAIN, config_entry.entry_id), config_entry.entry_id
-            )
-        ) is not None:
-            self.device_entry = device
-
-    @property
-    @override
-    def ip_address(self) -> str:
-        """Return the primary ip address of the device."""
-        return self.coordinator.data.ip_address
-
-    @property
-    @override
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self.config_entry.entry_id
 
     @property
     @override
