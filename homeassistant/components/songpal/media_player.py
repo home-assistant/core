@@ -218,7 +218,9 @@ class SongpalEntity(MediaPlayerEntity):
                     # back from a disconnected state.
                     await self.async_update_ha_state(force_refresh=True)
 
-            self.hass.loop.create_task(self._dev.listen_notifications())
+            self.hass.async_create_background_task(
+                self._dev.listen_notifications(), "songpal-listen-notifications"
+            )
             _LOGGER.warning(
                 "[%s(%s)] Connection reestablished", self.name, self._dev.endpoint
             )
@@ -234,7 +236,9 @@ class SongpalEntity(MediaPlayerEntity):
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
 
-        self.hass.loop.create_task(self._dev.listen_notifications())
+        self.hass.async_create_background_task(
+            self._dev.listen_notifications(), "songpal-listen-notifications"
+        )
 
     @property
     @override
