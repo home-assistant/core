@@ -20,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for the EARN-E P1 Meter."""
 
+    config_entry: EarnEP1ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -49,8 +51,8 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.sw_version = device.sw_version
             device_registry = dr.async_get(self.hass)
             if (
-                device_entry := device_registry.async_get_device(
-                    identifiers={(DOMAIN, self.identifier)}
+                device_entry := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, self.identifier), self.config_entry.entry_id
                 )
             ) is not None:
                 device_registry.async_update_device(

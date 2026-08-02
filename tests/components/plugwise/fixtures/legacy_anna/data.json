@@ -16,6 +16,7 @@
     "dev_class": "heater_central",
     "location": "0000aaaa0000aaaa0000aaaa0000aa00",
     "maximum_boiler_temperature": {
+      "current": 23.6,
       "lower_bound": 50.0,
       "resolution": 1.0,
       "setpoint": 50.0,

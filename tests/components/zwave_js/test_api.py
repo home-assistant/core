@@ -744,6 +744,25 @@ async def test_add_node(
     assert msg["event"]["stage"] == "NodeInfo"
 
     event = Event(
+        type="interview progress",
+        data={
+            "source": "node",
+            "event": "interview progress",
+            "nodeId": 67,
+            "stage": "CommandClasses",
+            "progress": 42.5,
+            "endpoint": 0,
+            "commandClass": 112,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview progress"
+    assert msg["event"]["stage"] == "CommandClasses"
+    assert msg["event"]["progress"] == 42.5
+
+    event = Event(
         type="interview completed",
         data={"source": "node", "event": "interview completed", "nodeId": 67},
     )
@@ -2161,6 +2180,25 @@ async def test_replace_failed_node(
     assert msg["event"]["stage"] == "NodeInfo"
 
     event = Event(
+        type="interview progress",
+        data={
+            "source": "node",
+            "event": "interview progress",
+            "nodeId": 67,
+            "stage": "CommandClasses",
+            "progress": 42.5,
+            "endpoint": 0,
+            "commandClass": 112,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview progress"
+    assert msg["event"]["stage"] == "CommandClasses"
+    assert msg["event"]["progress"] == 42.5
+
+    event = Event(
         type="interview completed",
         data={"source": "node", "event": "interview completed", "nodeId": 67},
     )
@@ -2763,6 +2801,25 @@ async def test_refresh_node_info(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "interview stage completed"
     assert msg["event"]["stage"] == "NodeInfo"
+
+    event = Event(
+        type="interview progress",
+        data={
+            "source": "node",
+            "event": "interview progress",
+            "nodeId": 52,
+            "stage": "CommandClasses",
+            "progress": 42.5,
+            "endpoint": 0,
+            "commandClass": 112,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview progress"
+    assert msg["event"]["stage"] == "CommandClasses"
+    assert msg["event"]["progress"] == 42.5
 
     event = Event(
         type="interview completed",
@@ -3481,6 +3538,107 @@ async def test_get_raw_config_parameter(
             TYPE: "zwave_js/get_raw_config_parameter",
             DEVICE_ID: device.id,
             PROPERTY: 102,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_subscribe_config_parameter_updates(
+    hass: HomeAssistant,
+    multisensor_6,
+    integration,
+    client,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the subscribe_config_parameter_updates command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+    multisensor_6_device = get_device(hass, multisensor_6)
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/subscribe_config_parameter_updates",
+            DEVICE_ID: multisensor_6_device.id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    # Fire value updated
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": multisensor_6.node_id,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 2,
+                "newValue": 1,
+                "prevValue": 0,
+                "propertyName": "Stay Awake in Battery Mode",
+            },
+        },
+    )
+    client.driver.controller.receive_event(event)
+    msg = await ws_client.receive_json()
+    # The initial state is no longer right since a config parameter has been updated
+    assert msg["event"] == {"id": "52-112-0-2", "value": 1}
+
+    # Validate that a non config parameter value update does not trigger an event
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": multisensor_6.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "Air temperature",
+                "newValue": 68,
+                "prevValue": 9,
+                "propertyName": "Air temperature",
+            },
+        },
+    )
+    client.driver.controller.receive_event(event)
+    await hass.async_block_till_done()
+
+    with pytest.raises(TimeoutError):
+        await ws_client.receive_json(timeout=0.1)
+
+    # Test sending command with improper entry ID fails
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/subscribe_config_parameter_updates",
+            DEVICE_ID: "fake_device",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/subscribe_config_parameter_updates",
+            DEVICE_ID: multisensor_6_device.id,
         }
     )
     msg = await ws_client.receive_json()

@@ -56,6 +56,8 @@ class ImouEntity(CoordinatorEntity[ImouDataUpdateCoordinator]):
             or self._device_key not in self.coordinator.devices_by_key
         ):
             return False
+        if self._entity_type == PARAM_STATUS:
+            return True
         if PARAM_STATUS not in self.device.sensors:
             return False
         return (

@@ -17,7 +17,9 @@ async def async_remove_devices(
 ) -> None:
     """Get item that is removed from session."""
     dev_registry = dr.async_get(hass)
-    device = dev_registry.async_get_device(identifiers={(DOMAIN, entity.device_id)})
+    device = dev_registry.async_get_device_by_identifier(
+        (DOMAIN, entity.device_id), entry_id
+    )
     if device is not None:
         dev_registry.async_update_device(device.id, remove_config_entry_id=entry_id)
 
@@ -63,6 +65,8 @@ class SHCBaseEntity(Entity):
 class SHCEntity(SHCBaseEntity):
     """Representation of a SHC device entity."""
 
+    _device: SHCDevice
+
     def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
         """Initialize generic SHC device."""
         self._attr_unique_id = device.serial
@@ -102,6 +106,8 @@ class SHCEntity(SHCBaseEntity):
 
 class SHCDomainEntity(SHCBaseEntity):
     """Representation of a SHC domain service entity."""
+
+    _device: SHCIntrusionSystem
 
     def __init__(
         self, domain: SHCIntrusionSystem, parent_id: str, entry_id: str

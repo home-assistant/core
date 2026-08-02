@@ -22,6 +22,7 @@ from .const import (
     DHCP_DATA,
     MOCK_DATA,
     MOCK_OPTIONS,
+    UPDATE_DATA,
     WIRELESS_DATA,
 )
 
@@ -54,7 +55,11 @@ def mock_device_registry_devices(
 
 
 def mock_command(
-    self, cmd: str, params: dict[str, Any] | None = None, suppress_errors: bool = False
+    self,
+    cmd: str,
+    params: dict[str, Any] | None = None,
+    suppress_errors: bool = False,
+    during_setup: bool = False,
 ) -> Any:
     """Mock the Mikrotik command method."""
     if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIRELESS]:
@@ -63,6 +68,8 @@ def mock_command(
         return DHCP_DATA
     if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.WIRELESS]:
         return WIRELESS_DATA
+    if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.UPDATE]:
+        return UPDATE_DATA
     return {}
 
 

@@ -112,8 +112,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
         """Call when a node is removed."""
         if add:
             return
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{entry.runtime_data.settings.uid}-{node.id}")}
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{entry.runtime_data.settings.uid}-{node.id}"), entry.entry_id
         )
         if device:
             _LOGGER.info("Removing device %s", device.name)

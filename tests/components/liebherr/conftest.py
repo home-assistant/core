@@ -104,12 +104,14 @@ MOCK_DEVICE_STATE = DeviceState(
             name="hydrobreeze",
             type="HydroBreezeControl",
             zone_id=1,
+            zone_position=ZonePosition.TOP,
             current_mode=HydroBreezeMode.LOW,
         ),
         BioFreshPlusControl(
             name="biofreshplus",
             type="BioFreshPlusControl",
             zone_id=1,
+            zone_position=ZonePosition.TOP,
             current_mode=BioFreshPlusMode.ZERO_ZERO,
             supported_modes=[
                 BioFreshPlusMode.ZERO_ZERO,

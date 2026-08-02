@@ -59,6 +59,11 @@ def mock_wiim_device() -> Generator[AsyncMock]:
         mock.http_api_url = "http://192.168.1.100:8080"
         mock.presentation_url = "http://192.168.1.100:8080/web_interface"
         mock.available = True
+
+        def set_available(available: bool) -> None:
+            mock.available = available
+
+        mock.set_available = MagicMock(side_effect=set_available)
         mock.model = "WiiM Pro"
         mock.volume = 50
         mock.is_muted = False
@@ -125,6 +130,7 @@ def mock_wiim_device() -> Generator[AsyncMock]:
         mock.async_get_queue_snapshot = AsyncMock(
             return_value=WiimQueueSnapshot(items=())
         )
+        mock.as_diagnostics = MagicMock()
         mock.build_loop_mode = MagicMock(
             return_value=LoopMode.SHUFFLE_DISABLE_REPEAT_NONE
         )

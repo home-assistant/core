@@ -3,15 +3,10 @@
 import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
-from datetime import timedelta
 from functools import wraps
 from http import HTTPStatus
-import logging
 from typing import Any, Concatenate, cast, override
 
-from aiowebostv import WebOsTvPairError, WebOsTvState
-
-from homeassistant import util
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -20,13 +15,13 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.const import EntityStateAttribute
-from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.trigger import PluggableAction
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_PAYLOAD,
@@ -34,12 +29,11 @@ from .const import (
     CONF_SOURCES,
     DOMAIN,
     LIVE_TV_APP_ID,
+    LOGGER,
     WEBOSTV_EXCEPTIONS,
 )
-from .helpers import WebOsTvConfigEntry, update_client_key
+from .coordinator import WebOsTvConfigEntry, WebOsTvDataUpdateCoordinator
 from .triggers.turn_on import async_get_turn_on_trigger
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_WEBOSTV = (
     MediaPlayerEntityFeature.TURN_OFF
@@ -56,10 +50,7 @@ SUPPORT_WEBOSTV_VOLUME = (
     MediaPlayerEntityFeature.VOLUME_MUTE | MediaPlayerEntityFeature.VOLUME_STEP
 )
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 PARALLEL_UPDATES = 0
-SCAN_INTERVAL = timedelta(seconds=10)
 
 
 async def async_setup_entry(
@@ -107,7 +98,9 @@ def cmd[_R, **_P](
     return cmd_wrapper
 
 
-class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
+class LgWebOSMediaPlayerEntity(
+    CoordinatorEntity[WebOsTvDataUpdateCoordinator], RestoreEntity, MediaPlayerEntity
+):
     """Representation of a LG webOS TV."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
@@ -116,17 +109,16 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
     def __init__(self, entry: WebOsTvConfigEntry) -> None:
         """Initialize the webos device."""
+        super().__init__(entry.runtime_data)
         self._entry = entry
-        self._client = entry.runtime_data
+        self._client = entry.runtime_data.client
         self._attr_assumed_state = True
-        self._unavailable_logged = False
         self._device_name = entry.title
         self._attr_unique_id = entry.unique_id
         self._sources = entry.options.get(CONF_SOURCES)
 
         # Assume that the TV is not paused
         self._paused = False
-        self._turn_on = PluggableAction(self.async_write_ha_state)
         self._current_source = None
         self._source_list: dict = {}
 
@@ -140,14 +132,10 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
         if (entry := self.registry_entry) and entry.device_id:
             self.async_on_remove(
-                self._turn_on.async_register(
+                self.coordinator.turn_on.async_register(
                     self.hass, async_get_turn_on_trigger(entry.device_id)
                 )
             )
-
-        await self._client.register_state_update_callback(
-            self.async_handle_state_update
-        )
 
         if (
             self.state == MediaPlayerState.OFF
@@ -161,12 +149,10 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                 & ~MediaPlayerEntityFeature.TURN_ON
             )
 
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Call disconnect on removal."""
-        self._client.unregister_state_update_callback(self.async_handle_state_update)
+        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
 
-    async def async_handle_state_update(self, tv_state: WebOsTvState) -> None:
+    @callback
+    def _update_callback(self) -> None:
         """Update state from WebOsClient."""
         self._update_states()
         self.async_write_ha_state()
@@ -174,11 +160,37 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     def _update_states(self) -> None:
         """Update entity state attributes."""
         tv_state = self._client.tv_state
+
+        self._attr_extra_state_attributes = {}
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, cast(str, self.unique_id))},
+            manufacturer="LG",
+            name=self._device_name,
+        )
+
+        if tv_state.is_on or not self._supported_features:
+            supported = SUPPORT_WEBOSTV
+            if tv_state.sound_output == "external_speaker":
+                supported = supported | SUPPORT_WEBOSTV_VOLUME
+            elif tv_state.sound_output != "lineout":
+                supported = (
+                    supported
+                    | SUPPORT_WEBOSTV_VOLUME
+                    | MediaPlayerEntityFeature.VOLUME_SET
+                )
+
+            self._supported_features = supported
+
+        if not tv_state.is_on:
+            self._attr_state = MediaPlayerState.OFF
+            self._attr_assumed_state = False
+            return
+
+        self._attr_state = MediaPlayerState.ON
+
         self._update_sources()
 
-        self._attr_state = (
-            MediaPlayerState.ON if tv_state.is_on else MediaPlayerState.OFF
-        )
         self._attr_is_volume_muted = cast(bool, tv_state.muted)
 
         self._attr_volume_level = None
@@ -207,27 +219,8 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                 icon = tv_state.apps[tv_state.current_app_id]["icon"]
             self._attr_media_image_url = icon
 
-        if self.state != MediaPlayerState.OFF or not self._supported_features:
-            supported = SUPPORT_WEBOSTV
-            if tv_state.sound_output == "external_speaker":
-                supported = supported | SUPPORT_WEBOSTV_VOLUME
-            elif tv_state.sound_output != "lineout":
-                supported = (
-                    supported
-                    | SUPPORT_WEBOSTV_VOLUME
-                    | MediaPlayerEntityFeature.VOLUME_SET
-                )
-
-            self._supported_features = supported
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, cast(str, self.unique_id))},
-            manufacturer="LG",
-            name=self._device_name,
-        )
-
         self._attr_assumed_state = True
-        if tv_state.is_on and tv_state.media_state:
+        if tv_state.media_state:
             self._attr_assumed_state = False
             for entry in tv_state.media_state:
                 if entry.get("playState") == "playing":
@@ -238,20 +231,18 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                     self._attr_state = MediaPlayerState.IDLE
 
         tv_info = self._client.tv_info
-        if self.state != MediaPlayerState.OFF:
-            maj_v = tv_info.software.get("major_ver")
-            min_v = tv_info.software.get("minor_ver")
-            if maj_v and min_v:
-                self._attr_device_info["sw_version"] = f"{maj_v}.{min_v}"
+        maj_v = tv_info.software.get("major_ver")
+        min_v = tv_info.software.get("minor_ver")
+        if maj_v and min_v:
+            self._attr_device_info["sw_version"] = f"{maj_v}.{min_v}"
 
-            if model := tv_info.system.get("modelName"):
-                self._attr_device_info["model"] = model
+        if model := tv_info.system.get("modelName"):
+            self._attr_device_info["model"] = model
 
-            if serial_number := tv_info.system.get("serialNumber"):
-                self._attr_device_info["serial_number"] = serial_number
+        if serial_number := tv_info.system.get("serialNumber"):
+            self._attr_device_info["serial_number"] = serial_number
 
-        self._attr_extra_state_attributes = {}
-        if tv_state.sound_output is not None or self.state != MediaPlayerState.OFF:
+        if tv_state.sound_output is not None:
             self._attr_extra_state_attributes = {
                 ATTR_SOUND_OUTPUT: tv_state.sound_output
             }
@@ -309,37 +300,11 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             ):
                 self._source_list["Live TV"] = app
 
-    def _set_availability(self, available: bool) -> None:
-        """Set availability and log changes only once."""
-        self._attr_available = available
-        if not available and not self._unavailable_logged:
-            _LOGGER.info("LG webOS TV entity %s is unavailable", self.entity_id)
-            self._unavailable_logged = True
-        elif available and self._unavailable_logged:
-            _LOGGER.info("LG webOS TV entity %s is back online", self.entity_id)
-            self._unavailable_logged = False
-
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    async def async_update(self) -> None:
-        """Connect."""
-        if self._client.is_connected():
-            return
-
-        try:
-            await self._client.connect()
-        except WEBOSTV_EXCEPTIONS:
-            self._set_availability(bool(self._turn_on))
-        except WebOsTvPairError:
-            self._entry.async_start_reauth(self.hass)
-        else:
-            self._set_availability(True)
-            update_client_key(self.hass, self._entry)
-
     @property
     @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        if self._turn_on:
+        if self.coordinator.turn_on:
             return self._supported_features | MediaPlayerEntityFeature.TURN_ON
 
         return self._supported_features
@@ -353,7 +318,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     @override
     async def async_turn_on(self) -> None:
         """Turn on media player."""
-        await self._turn_on.async_run(self.hass, self._context)
+        await self.coordinator.turn_on.async_run(self.hass, self._context)
 
     @cmd
     @override
@@ -418,10 +383,10 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
-        _LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)
+        LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)
 
         if media_type == MediaType.CHANNEL and self._client.tv_state.channels:
-            _LOGGER.debug("Searching channel")
+            LOGGER.debug("Searching channel")
             partial_match_channel_id = None
             perfect_match_channel_id = None
 
@@ -438,13 +403,13 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                     partial_match_channel_id = channel["channelId"]
 
             if perfect_match_channel_id is not None:
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Switching to channel <%s> with perfect match",
                     perfect_match_channel_id,
                 )
                 await self._client.set_channel(perfect_match_channel_id)
             elif partial_match_channel_id is not None:
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Switching to channel <%s> with partial match",
                     partial_match_channel_id,
                 )
@@ -515,6 +480,6 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                     content = await response.read()
 
         if content is None:
-            _LOGGER.warning("Error retrieving proxied image from %s", url)
+            LOGGER.warning("Error retrieving proxied image from %s", url)
 
         return content, None

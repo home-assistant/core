@@ -93,10 +93,12 @@ async def coordinator_for_device(
     manageable_by_webhook: bool = False,
 ) -> SwitchBotCoordinator:
     """Instantiate coordinator and adds to list for gathering."""
-    coordinator = coordinators_by_id.setdefault(
-        device.device_id,
-        SwitchBotCoordinator(hass, entry, api, device, manageable_by_webhook),
-    )
+    coordinator = coordinators_by_id.get(device.device_id)
+    if coordinator is None:
+        coordinator = SwitchBotCoordinator(
+            hass, entry, api, device, manageable_by_webhook
+        )
+        coordinators_by_id[device.device_id] = coordinator
 
     if coordinator.data is None:
         await coordinator.async_config_entry_first_refresh()
@@ -215,20 +217,6 @@ async def make_device_data(
         devices_data.binary_sensors.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
 
-    if isinstance(device, Device) and device.device_type in [
-        "Battery Circulator Fan",
-        "Standing Fan",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.fans.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "Circulator Fan":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.fans.append((device, coordinator))
     if isinstance(device, Device) and device.device_type in [
         "Curtain",
         "Curtain3",

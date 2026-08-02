@@ -3,13 +3,30 @@
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import DOMAIN, HomeeConfigEntry
 
-TO_REDACT = [CONF_PASSWORD, CONF_USERNAME, "latitude", "longitude", "wlan_ssid"]
+TO_REDACT = [
+    CONF_ADDRESS,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    "available_ssids",
+    "city",
+    "webhooks_key",
+    "wlan_ssid",
+    "zip",
+]
 
 
 async def async_get_config_entry_diagnostics(

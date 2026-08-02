@@ -1,5 +1,13 @@
 {
   "entity": {
+    "button": {
+      "backup": {
+        "default": "mdi:backup-restore"
+      },
+      "shutdown": {
+        "default": "mdi:power"
+      }
+    },
     "sensor": {
       "cpu_load": {
         "default": "mdi:chip"
