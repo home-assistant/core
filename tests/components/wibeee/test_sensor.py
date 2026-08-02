@@ -82,7 +82,9 @@ async def test_sensor_unavailable_on_missing_key(
 
 
 async def test_sensors_polling_mode_keeps_all_keys(
-    hass: HomeAssistant, mock_wibeee_api: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_wibeee_api: MagicMock,
 ) -> None:
     """Polling mode keeps all sensors, including disabled-by-default metrics."""
     mock_wibeee_api.async_fetch_sensors_data.return_value = {
@@ -106,13 +108,12 @@ async def test_sensors_polling_mode_keeps_all_keys(
     await hass.async_block_till_done()
 
     # angle is disabled-by-default, so check the entity registry
-    registry = er.async_get(hass)
     assert (
-        registry.async_get(f"sensor.wibeee_{MOCK_MAC[-4:]}_total_active_power")
+        entity_registry.async_get(f"sensor.wibeee_{MOCK_MAC[-4:]}_total_active_power")
         is not None
     )
     assert (
-        registry.async_get(f"sensor.wibeee_{MOCK_MAC[-4:]}_total_phase_angle")
+        entity_registry.async_get(f"sensor.wibeee_{MOCK_MAC[-4:]}_total_phase_angle")
         is not None
     )
 

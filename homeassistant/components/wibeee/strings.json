@@ -48,11 +48,19 @@
       "phase_angle": { "name": "{phase_name} phase angle" },
       "power_factor": { "name": "{phase_name} power factor" },
       "thd_current": { "name": "{phase_name} THD current" },
-      "thd_current_fundamental": { "name": "{phase_name} THD current fundamental" },
-      "thd_current_harmonic": { "name": "{phase_name} THD current harmonic {order}" },
+      "thd_current_fundamental": {
+        "name": "{phase_name} THD current fundamental"
+      },
+      "thd_current_harmonic": {
+        "name": "{phase_name} THD current harmonic {order}"
+      },
       "thd_voltage": { "name": "{phase_name} THD voltage" },
-      "thd_voltage_fundamental": { "name": "{phase_name} THD voltage fundamental" },
-      "thd_voltage_harmonic": { "name": "{phase_name} THD voltage harmonic {order}" },
+      "thd_voltage_fundamental": {
+        "name": "{phase_name} THD voltage fundamental"
+      },
+      "thd_voltage_harmonic": {
+        "name": "{phase_name} THD voltage harmonic {order}"
+      },
       "voltage": { "name": "{phase_name} voltage" }
     }
   }
