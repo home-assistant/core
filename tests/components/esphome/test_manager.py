@@ -2982,12 +2982,23 @@ async def test_dynamic_encryption_key_from_storage_synced_to_dashboard(
 
 
 @pytest.mark.parametrize(
-    "sync_error",
+    ("sync_error", "expect_warning"),
     [
-        aiohttp.ClientResponseError(request_info=Mock(), history=(), status=404),
-        aiohttp.ClientError("boom"),
-        TimeoutError(),
-        json.JSONDecodeError("boom", "x", 0),
+        (
+            aiohttp.ClientResponseError(request_info=Mock(), history=(), status=404),
+            False,
+        ),
+        (
+            aiohttp.ClientResponseError(request_info=Mock(), history=(), status=405),
+            False,
+        ),
+        (
+            aiohttp.ClientResponseError(request_info=Mock(), history=(), status=500),
+            True,
+        ),
+        (aiohttp.ClientError("boom"), True),
+        (TimeoutError(), True),
+        (json.JSONDecodeError("boom", "x", 0), True),
     ],
 )
 @patch("homeassistant.components.esphome.manager.secrets.token_bytes")
@@ -3000,6 +3011,8 @@ async def test_dynamic_encryption_key_dashboard_sync_failure_is_not_fatal(
     hass_storage: dict[str, Any],
     mock_dashboard: dict[str, Any],
     sync_error: Exception,
+    expect_warning: bool,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test an old dashboard (404) or a flaky one never fails the connect flow."""
     mac_address = "11:22:33:44:55:aa"
@@ -3044,6 +3057,50 @@ async def test_dynamic_encryption_key_dashboard_sync_failure_is_not_fatal(
         hass_storage[ENCRYPTION_KEY_STORAGE_KEY]["data"]["keys"][mac_address]
         == expected_key
     )
+    # Endpoint-absent (404/405) stays debug; real failures warn so the
+    # possible lockout is visible.
+    assert ("could not store the encryption key" in caplog.text) is expect_warning
+
+
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
+async def test_dashboard_unexpected_sync_result_logs_warning(
+    mock_token_bytes: Mock,
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
+    mock_dashboard: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an unrecognized dashboard response is treated as a failed handoff."""
+    mac_address = "11:22:33:44:55:aa"
+    mock_token_bytes.return_value = b"test_key_32_bytes_long_exactly!"
+
+    entry = _make_provisionable_entry(hass, mac_address)
+    mock_client.noise_encryption_set_key = AsyncMock(return_value=True)
+
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.post_encryption_key",
+        new_callable=AsyncMock,
+        return_value={"error": "unknown device"},
+    ):
+        device = await mock_esphome_device(
+            mock_client=mock_client,
+            entry=entry,
+            device_info={
+                "uses_password": False,
+                "name": "test-device",
+                "mac_address": mac_address,
+                "esphome_version": "2023.12.0",
+                "api_encryption_supported": True,
+            },
+        )
+        await device.mock_disconnect(True)
+        await device.mock_connect()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("could not store the encryption key") == 1
+    assert "unexpected response" in caplog.text
 
 
 async def test_existing_key_resynced_to_dashboard_on_connect(

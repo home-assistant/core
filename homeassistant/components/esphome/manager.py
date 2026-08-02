@@ -137,6 +137,9 @@ _LOGGER = logging.getLogger(__name__)
 # Max time to wait at startup for a BLE proxy to register its scanner.
 STARTUP_SCANNER_WAIT: Final = 3.0
 
+# Dashboard responses that mean the encryption-key handoff landed.
+_DASHBOARD_KEY_SYNC_OK: Final = frozenset({"stored", "updated", "unchanged"})
+
 LOG_LEVEL_TO_LOGGER = {
     LogLevel.LOG_LEVEL_NONE: logging.DEBUG,
     LogLevel.LOG_LEVEL_ERROR: logging.ERROR,
@@ -915,29 +918,46 @@ class ESPHomeManager:
                 device_info.name, key, mac=self.entry.unique_id
             )
         except (aiohttp.ClientError, TimeoutError, json.JSONDecodeError) as err:
+            if isinstance(err, aiohttp.ClientResponseError) and err.status in (
+                404,
+                405,
+            ):
+                # Endpoint absent — an old dashboard, not a failed store.
+                _LOGGER.debug(
+                    "The ESPHome dashboard does not support the encryption key "
+                    "handoff for %s: %s",
+                    device_info.name,
+                    err,
+                )
+            else:
+                self._async_warn_dashboard_key_sync_failed(device_info, err)
+            return
+        if result.get("result") in _DASHBOARD_KEY_SYNC_OK:
             _LOGGER.debug(
-                "Could not sync encryption key for %s to the ESPHome dashboard "
-                "(the dashboard may not support it yet): %s",
+                "Synced encryption key for %s to the ESPHome dashboard: %s",
                 device_info.name,
-                err,
+                result,
             )
             return
-        if result.get("result") == "not_writable":
-            if not self._dashboard_key_sync_warned:
-                self._dashboard_key_sync_warned = True
-                _LOGGER.warning(
-                    "The ESPHome dashboard could not store the encryption key for "
-                    "%s (%s), so installing that configuration may use a different "
-                    "key and lock Home Assistant out: %s",
-                    device_info.name,
-                    self.entry.unique_id,
-                    result.get("reason", "unknown reason"),
-                )
+        self._async_warn_dashboard_key_sync_failed(
+            device_info, result.get("reason") or f"unexpected response {result}"
+        )
+
+    @callback
+    def _async_warn_dashboard_key_sync_failed(
+        self, device_info: EsphomeDeviceInfo, cause: Exception | str
+    ) -> None:
+        """Warn once that the dashboard did not store the key."""
+        if self._dashboard_key_sync_warned:
             return
-        _LOGGER.debug(
-            "Synced encryption key for %s to the ESPHome dashboard: %s",
+        self._dashboard_key_sync_warned = True
+        _LOGGER.warning(
+            "The ESPHome dashboard could not store the encryption key for "
+            "%s (%s), so installing that configuration may use a different "
+            "key and lock Home Assistant out: %s",
             device_info.name,
-            result,
+            self.entry.unique_id,
+            cause,
         )
 
     async def _handle_dynamic_encryption_key(
