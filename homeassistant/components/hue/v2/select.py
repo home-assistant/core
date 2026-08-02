@@ -79,7 +79,6 @@ class SceneActivityBaseEntity(HueBaseEntity):
         # Attach to the virtual Hue group device (same as grouped lights and scenes).
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.resource.id)},
-            name=self.resource.metadata.name,
         )
 
     @override
