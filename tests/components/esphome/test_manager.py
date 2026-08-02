@@ -2994,6 +2994,7 @@ async def test_dynamic_encryption_key_from_storage_synced_to_dashboard(
 async def test_dynamic_encryption_key_dashboard_sync_failure_is_not_fatal(
     mock_token_bytes: Mock,
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
     hass_storage: dict[str, Any],
@@ -3031,8 +3032,13 @@ async def test_dynamic_encryption_key_dashboard_sync_failure_is_not_fatal(
 
     assert mock_post_key.await_count >= 1
     # The flow must have run to completion — a sync exception escaping
-    # _on_connect would skip everything after the handoff.
-    assert entry.runtime_data.first_connect_done.is_set()
+    # _on_connect would skip the device-registry setup after the handoff.
+    assert (
+        device_registry.async_get_device(
+            connections={(dr.CONNECTION_NETWORK_MAC, mac_address)}
+        )
+        is not None
+    )
     assert entry.data[CONF_NOISE_PSK] == expected_key
     assert (
         hass_storage[ENCRYPTION_KEY_STORAGE_KEY]["data"]["keys"][mac_address]
