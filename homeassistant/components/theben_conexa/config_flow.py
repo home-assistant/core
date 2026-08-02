@@ -39,12 +39,10 @@ class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                try:
-                    # This function tries to establish a TCP connection and raises an exception on error
-                    await checkNetworkConnection(user_input[CONF_HOST])
-                except (OSError, aiohttp.ClientError) as e:
-                    raise CannotConnect from e
-
+                await checkNetworkConnection(user_input[CONF_HOST])
+            except (OSError, aiohttp.ClientError) as e:
+                errors["base"] = "cannot_connect"
+            else:
                 try:
                     local_api = await ConexaSMGW.create(
                         async_get_clientsession(self.hass),
@@ -60,18 +58,12 @@ class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
                 except (OSError, aiohttp.ClientError) as e:
                     # The smgw unfortunately does not reply with invalid auth it just times out
                     # So after we checked that connection is possible we assume Invalid auth if something happens
-                    raise InvalidAuth from e
+                    errors["base"] = "invalid_auth"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
 
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except AbortFlow:
-                raise  # error str is already set by _abort_if_unique_id_configured
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            if not errors:
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title="Smartmeter Gateway", data=user_input

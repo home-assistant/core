@@ -46,7 +46,6 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
         """Asynchronous Initialization and registering the update schedule."""
 
         try:
-            # This function tries to establish a TCP connection and raises an exception on error
             await checkNetworkConnection(self.config_entry.data[CONF_HOST])
         except (TimeoutError, ConnectionRefusedError, OSError) as e:
             raise ConfigEntryNotReady("Device is not reachable") from e
