@@ -191,9 +191,11 @@ async def test_reconfigure(
 @pytest.mark.parametrize(
     ("side_effect", "return_value", "error"),
     [
-        (TimeoutError(), None, "cannot_connect"),
-        (ConnectionRefusedError(), None, "cannot_connect"),
-        (None, {}, "no_units"),
+        pytest.param(TimeoutError(), None, "cannot_connect", id="timeout"),
+        pytest.param(
+            ConnectionRefusedError(), None, "cannot_connect", id="connection_refused"
+        ),
+        pytest.param(None, {}, "no_units", id="no_units"),
     ],
 )
 async def test_reconfigure_errors(
