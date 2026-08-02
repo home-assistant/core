@@ -5,7 +5,7 @@ from collections.abc import Callable
 import aiopulse
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import ACMEDA_HUB_UPDATE, LOGGER
@@ -15,7 +15,7 @@ from .helpers import update_devices
 class PulseHub:
     """Manages a single Pulse Hub."""
 
-    api: aiopulse.Hub
+    api: aiopulse.Hub | None
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the system."""
@@ -37,10 +37,18 @@ class PulseHub:
         """Set up a hub based on host parameter."""
         self.api = hub = aiopulse.Hub(self.host)
 
-        hub.callback_subscribe(self.async_notify_update)
+        hub.callback_subscribe(self._async_handle_update)
 
         LOGGER.debug("Hub setup complete")
         return True
+
+    @callback
+    def _async_handle_update(self, update_type: aiopulse.UpdateType) -> None:
+        """Handle hub update callback."""
+        self.hass.async_create_task(
+            self.async_notify_update(update_type),
+            f"acmeda hub update {update_type.name}",
+        )
 
     async def async_start(self) -> None:
         """Start the hub task."""
@@ -58,7 +66,7 @@ class PulseHub:
         if self.api is None:
             return False
 
-        self.api.callback_unsubscribe(self.async_notify_update)
+        self.api.callback_unsubscribe(self._async_handle_update)
         await self.api.stop()
         del self.api
         self.api = None
@@ -69,7 +77,7 @@ class PulseHub:
         """Evaluate entities when hub reports that update has occurred."""
         LOGGER.debug("Hub %s updated", update_type.name)
 
-        if update_type == aiopulse.UpdateType.rollers:
+        if update_type is aiopulse.UpdateType.rollers:
             LOGGER.debug(
                 "Hub %s rollers updated, updating devices %s",
                 self.title,

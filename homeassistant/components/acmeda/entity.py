@@ -45,7 +45,7 @@ class AcmedaEntity(entity.Entity):
     @property
     def device_id(self) -> str:
         """Return the ID of this roller."""
-        return self.roller.id  # type: ignore[no-any-return]
+        return str(self.roller.id)
 
     @property
     @override

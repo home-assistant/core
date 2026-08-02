@@ -54,7 +54,7 @@ class AcmedaFlowHandler(ConfigFlow, domain=DOMAIN):
         if len(hubs) == 1:
             return await self.async_create(hubs[0])
 
-        self.discovered_hubs = {hub.id: hub for hub in hubs}
+        self.discovered_hubs = {hub.id: hub for hub in hubs if hub.id is not None}
 
         return self.async_show_form(
             step_id="user",
@@ -70,4 +70,4 @@ class AcmedaFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_create(self, hub: aiopulse.Hub) -> ConfigFlowResult:
         """Create the Acmeda Hub entry."""
         await self.async_set_unique_id(hub.id, raise_on_progress=False)
-        return self.async_create_entry(title=hub.id, data={CONF_HOST: hub.host})
+        return self.async_create_entry(title=hub.id or "", data={CONF_HOST: hub.host})

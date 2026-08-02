@@ -61,7 +61,7 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
         None is unknown, 0 is closed, 100 is fully open.
         """
         position = None
-        if self.roller.type != 7:
+        if self.roller.type != 7 and self.roller.closed_percent is not None:
             position = 100 - self.roller.closed_percent
         return position
 
@@ -73,7 +73,7 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
         None is unknown, 0 is closed, 100 is fully open.
         """
         position = None
-        if self.roller.type in (7, 10):
+        if self.roller.type in (7, 10) and self.roller.closed_percent is not None:
             position = 100 - self.roller.closed_percent
         return position
 
@@ -103,7 +103,7 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
     @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
-        return self.roller.closed_percent == 100  # type: ignore[no-any-return]
+        return self.roller.closed_percent == 100
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
