@@ -45,6 +45,9 @@ class PulseHub:
     async def async_start(self) -> None:
         """Start the hub task."""
         LOGGER.debug("Hub task started")
+        # If not setup
+        if self.api is None:
+            return
         await self.api.run()
 
     async def async_reset(self) -> bool:
@@ -68,6 +71,10 @@ class PulseHub:
     async def async_notify_update(self, update_type: aiopulse.UpdateType) -> None:
         """Evaluate entities when hub reports that update has occurred."""
         LOGGER.debug("Hub %s updated", update_type.name)
+
+        # If not setup
+        if self.api is None:
+            return
 
         if update_type is aiopulse.UpdateType.rollers:
             LOGGER.debug(

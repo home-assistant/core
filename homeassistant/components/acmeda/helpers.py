@@ -27,6 +27,10 @@ def async_add_acmeda_entities(
     hub = config_entry.runtime_data
     LOGGER.debug("Looking for new %s on: %s", entity_class.__name__, hub.host)
 
+    # If not setup
+    if hub.api is None:
+        return
+
     api = hub.api.rollers
 
     new_items = []
