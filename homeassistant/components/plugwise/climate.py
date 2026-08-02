@@ -294,7 +294,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             await self._api.set_regulation_mode(hvac_mode.value)
             return
 
-        current_schedule = self.device.get("select_schedule")
+        current_schedule = self.device["select_schedule"]
         schedule_is_active = current_schedule != STATE_OFF
         desired_schedule = (
             current_schedule if schedule_is_active else self._last_active_schedule
