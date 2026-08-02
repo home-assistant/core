@@ -10,6 +10,7 @@ from aiohue.v2.models.room import Room
 from aiohue.v2.models.scene import Scene as HueScene
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene
 from aiohue.v2.models.zone import Zone
+from aiohue.v2.scene_activity import SceneActivityTracker
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
@@ -20,7 +21,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from ..bridge import HueBridge, HueConfigEntry
 from ..const import DOMAIN
 from .entity import HueBaseEntity
-from .scene_activity import SceneActivityTracker
 
 
 def _build_scene_option_maps(

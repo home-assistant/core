@@ -9,6 +9,7 @@ import aiohttp
 from aiohttp import client_exceptions
 from aiohue import HueBridgeV1, HueBridgeV2, LinkButtonNotPressed, Unauthorized
 from aiohue.errors import AiohueException, BridgeBusy
+from aiohue.v2.scene_activity import SceneActivityTracker
 
 from homeassistant import core
 from homeassistant.components import persistent_notification
@@ -21,7 +22,6 @@ from .const import DOMAIN
 from .v1.sensor_base import SensorManager
 from .v2.device import async_setup_devices
 from .v2.hue_event import async_setup_hue_events
-from .v2.scene_activity import SceneActivityTracker
 
 # How long should we sleep if the hub is busy
 HUB_BUSY_SLEEP = 0.5

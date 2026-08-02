@@ -10,12 +10,12 @@ from unittest.mock import AsyncMock, Mock, patch
 import aiohue.v1 as aiohue_v1
 import aiohue.v2 as aiohue_v2
 from aiohue.v2.controllers.events import EventType
+from aiohue.v2.scene_activity import SceneActivityTracker
 import pytest
 
 from homeassistant.components import hue
 from homeassistant.components.hue.v1 import sensor_base as hue_sensor_base
 from homeassistant.components.hue.v2.device import async_setup_devices
-from homeassistant.components.hue.v2.scene_activity import SceneActivityTracker
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
