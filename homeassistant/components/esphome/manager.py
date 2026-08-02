@@ -221,7 +221,6 @@ class ESPHomeManager:
     __slots__ = (
         "_cancel_subscribe_logs",
         "_dashboard_key_sync_warned",
-        "_dashboard_key_synced",
         "_log_level",
         "cli",
         "device_id",
@@ -258,7 +257,6 @@ class ESPHomeManager:
         self.entry_data = entry.runtime_data
         self._cancel_subscribe_logs: CALLBACK_TYPE | None = None
         self._dashboard_key_sync_warned = False
-        self._dashboard_key_synced = False
         self._log_level = LogLevel.LOG_LEVEL_NONE
 
     async def on_stop(self, event: Event) -> None:
@@ -939,11 +937,9 @@ class ESPHomeManager:
         if isinstance(result_value, str) and result_value in _DASHBOARD_KEY_SYNC_OK:
             if reason:
                 # Partial success: a duplicate-name sibling refused the
-                # key and flashing it can still lock HA out — warn and
-                # keep retrying instead of latching.
+                # key and flashing it can still lock HA out.
                 self._async_warn_dashboard_key_sync_failed(device_info, reason)
                 return
-            self._dashboard_key_synced = True
             _LOGGER.debug(
                 "Synced encryption key for %s to the ESPHome dashboard: %s",
                 device_info.name,
@@ -981,14 +977,13 @@ class ESPHomeManager:
         """
         noise_psk: str | None = self.entry.data.get(CONF_NOISE_PSK)
         if noise_psk:
-            if self._dashboard_key_synced:
-                # Already delivered this manager's lifetime; a dashboard
-                # change reloads the entry and resets the latch.
-                return
             # We're already connected with this key, so it's proven valid;
             # re-offer it so a dashboard that missed the original handoff
             # (added later, upgraded, or temporarily unreachable) catches
-            # up. The dashboard no-ops when it already has the same key.
+            # up. Deliberately re-offered on every connect (no success
+            # latch): the dashboard no-ops on an identical key, and a
+            # dashboard whose copy was deleted out from under it gets it
+            # back on the next connect.
             # Only keys in our storage are ours to push — a user-authored
             # YAML key is not (mirrors _async_clear_dynamic_encryption_key).
             # Background task: this runs on every connect and must not

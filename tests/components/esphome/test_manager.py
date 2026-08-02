@@ -2927,8 +2927,10 @@ async def test_dynamic_encryption_key_synced_to_dashboard(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.data[CONF_NOISE_PSK] == expected_key
-    # The success latch makes the provisioning-time push the only one.
-    mock_post_key.assert_awaited_once_with("test-device", expected_key, mac=mac_address)
+    # Provisioning-time push first; the reconnect re-offers the same key.
+    assert mock_post_key.await_args_list[0] == call(
+        "test-device", expected_key, mac=mac_address
+    )
 
 
 async def test_dynamic_encryption_key_from_storage_synced_to_dashboard(
@@ -2973,7 +2975,9 @@ async def test_dynamic_encryption_key_from_storage_synced_to_dashboard(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.data[CONF_NOISE_PSK] == test_key
-    mock_post_key.assert_awaited_once_with("test-device", test_key, mac=mac_address)
+    assert mock_post_key.await_args_list[0] == call(
+        "test-device", test_key, mac=mac_address
+    )
 
 
 @pytest.mark.parametrize(
@@ -3159,8 +3163,9 @@ async def test_existing_key_resynced_to_dashboard_on_connect(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_post_key.assert_awaited_with("test-device", test_key, mac=mac_address)
-    # The success latch stops the re-offer on subsequent connects.
-    assert mock_post_key.await_count == 1
+    # No success latch: every connect re-offers so a dashboard whose
+    # copy was deleted gets it back; the dashboard no-ops otherwise.
+    assert mock_post_key.await_count == 2
 
 
 async def test_user_provided_key_not_resynced_to_dashboard(
@@ -3299,7 +3304,7 @@ async def test_dashboard_partial_success_warns_and_keeps_retrying(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     # The duplicate-name sibling still carries a competing key: warn
-    # (deduped) and keep the sync unlatched so reconnects retry.
+    # (once) while reconnects keep retrying.
     assert caplog.text.count("could not store the encryption key") == 1
     assert "!secret" in caplog.text
     assert mock_post_key.await_count == 2
