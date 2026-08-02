@@ -29,6 +29,7 @@ from aioesphomeapi import (
     ZWaveProxyRequestType,
     parse_log_message,
 )
+import aiohttp
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
@@ -882,6 +883,37 @@ class ESPHomeManager:
             await cli.disconnect(force=True)
         return False
 
+    async def _async_sync_encryption_key_to_dashboard(
+        self, device_info: EsphomeDeviceInfo, key: str
+    ) -> None:
+        """Best effort: tell the ESPHome dashboard about the provisioned key.
+
+        Without this the dashboard has no way to know the key HA set on
+        the device, so adopting the device generates a competing key and
+        the next flash locks HA out. Dashboards without the endpoint
+        (or errors) are logged at debug level and never fail the
+        connect flow.
+        """
+        if (dashboard := async_get_dashboard(self.hass)) is None:
+            return
+        try:
+            result = await dashboard.api.post_encryption_key(
+                device_info.name, key, mac=self.entry.unique_id
+            )
+        except (aiohttp.ClientError, TimeoutError) as err:
+            _LOGGER.debug(
+                "Could not sync encryption key for %s to the ESPHome dashboard "
+                "(the dashboard may not support it yet): %s",
+                device_info.name,
+                err,
+            )
+            return
+        _LOGGER.debug(
+            "Synced encryption key for %s to the ESPHome dashboard: %s",
+            device_info.name,
+            result,
+        )
+
     async def _handle_dynamic_encryption_key(
         self, device_info: EsphomeDeviceInfo
     ) -> None:
@@ -961,6 +993,10 @@ class ESPHomeManager:
             self.entry,
             data={**self.entry.data, CONF_NOISE_PSK: new_key_str},
         )
+
+        # The dashboard must learn the key or its next adoption/flash of
+        # this device bakes in a competing key and locks HA out.
+        await self._async_sync_encryption_key_to_dashboard(device_info, new_key_str)
 
         if from_storage:
             _LOGGER.info(

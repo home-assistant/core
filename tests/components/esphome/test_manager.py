@@ -31,6 +31,7 @@ from aioesphomeapi import (
     ZWaveProxyRequest,
     ZWaveProxyRequestType,
 )
+import aiohttp
 import pytest
 import voluptuous as vol
 
@@ -2884,6 +2885,220 @@ async def test_dynamic_encryption_key_provisioned_over_zero_psk_from_storage(
     )
     mock_client.noise_encryption_set_key.assert_not_called()
     assert entry.data[CONF_NOISE_PSK] == test_key
+
+
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
+async def test_dynamic_encryption_key_synced_to_dashboard(
+    mock_token_bytes: Mock,
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
+    mock_dashboard: dict[str, Any],
+) -> None:
+    """Test a newly generated key is pushed to the dashboard."""
+    mac_address = "11:22:33:44:55:aa"
+    test_key_bytes = b"test_key_32_bytes_long_exactly!"
+    mock_token_bytes.return_value = test_key_bytes
+    expected_key = base64.b64encode(test_key_bytes).decode()
+
+    entry = _make_provisionable_entry(hass, mac_address)
+    mock_client.noise_encryption_set_key = AsyncMock(return_value=True)
+
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.post_encryption_key",
+        new_callable=AsyncMock,
+        return_value={"result": "stored"},
+    ) as mock_post_key:
+        device = await mock_esphome_device(
+            mock_client=mock_client,
+            entry=entry,
+            device_info={
+                "uses_password": False,
+                "name": "test-device",
+                "mac_address": mac_address,
+                "esphome_version": "2023.12.0",
+                "api_encryption_supported": True,
+            },
+        )
+        await device.mock_disconnect(True)
+        await device.mock_connect()
+
+    assert entry.data[CONF_NOISE_PSK] == expected_key
+    mock_post_key.assert_awaited_once_with("test-device", expected_key, mac=mac_address)
+
+
+async def test_dynamic_encryption_key_from_storage_synced_to_dashboard(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
+    mock_dashboard: dict[str, Any],
+) -> None:
+    """Test a storage-recovered key is pushed to the dashboard too."""
+    mac_address = "11:22:33:44:55:aa"
+    test_key = base64.b64encode(b"existing_key_32_bytes_long!!!").decode()
+
+    hass_storage[ENCRYPTION_KEY_STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": ENCRYPTION_KEY_STORAGE_KEY,
+        "data": {"keys": {mac_address: test_key}},
+    }
+
+    entry = _make_provisionable_entry(hass, mac_address)
+    mock_client.noise_encryption_set_key = AsyncMock(return_value=True)
+
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.post_encryption_key",
+        new_callable=AsyncMock,
+        return_value={"result": "stored"},
+    ) as mock_post_key:
+        device = await mock_esphome_device(
+            mock_client=mock_client,
+            entry=entry,
+            device_info={
+                "uses_password": False,
+                "name": "test-device",
+                "mac_address": mac_address,
+                "esphome_version": "2023.12.0",
+                "api_encryption_supported": True,
+            },
+        )
+        await device.mock_disconnect(True)
+        await device.mock_connect()
+
+    assert entry.data[CONF_NOISE_PSK] == test_key
+    mock_post_key.assert_awaited_once_with("test-device", test_key, mac=mac_address)
+
+
+@pytest.mark.parametrize(
+    "sync_error",
+    [
+        aiohttp.ClientResponseError(request_info=Mock(), history=(), status=404),
+        aiohttp.ClientError("boom"),
+        TimeoutError(),
+    ],
+)
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
+async def test_dynamic_encryption_key_dashboard_sync_failure_is_not_fatal(
+    mock_token_bytes: Mock,
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
+    mock_dashboard: dict[str, Any],
+    sync_error: Exception,
+) -> None:
+    """Test an old dashboard (404) or a flaky one never fails the connect flow."""
+    mac_address = "11:22:33:44:55:aa"
+    test_key_bytes = b"test_key_32_bytes_long_exactly!"
+    mock_token_bytes.return_value = test_key_bytes
+    expected_key = base64.b64encode(test_key_bytes).decode()
+
+    entry = _make_provisionable_entry(hass, mac_address)
+    mock_client.noise_encryption_set_key = AsyncMock(return_value=True)
+
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.post_encryption_key",
+        new_callable=AsyncMock,
+        side_effect=sync_error,
+    ) as mock_post_key:
+        device = await mock_esphome_device(
+            mock_client=mock_client,
+            entry=entry,
+            device_info={
+                "uses_password": False,
+                "name": "test-device",
+                "mac_address": mac_address,
+                "esphome_version": "2023.12.0",
+                "api_encryption_supported": True,
+            },
+        )
+        await device.mock_disconnect(True)
+        await device.mock_connect()
+
+    mock_post_key.assert_awaited_once()
+    assert entry.data[CONF_NOISE_PSK] == expected_key
+    assert (
+        hass_storage[ENCRYPTION_KEY_STORAGE_KEY]["data"]["keys"][mac_address]
+        == expected_key
+    )
+
+
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
+async def test_dynamic_encryption_key_not_synced_without_dashboard(
+    mock_token_bytes: Mock,
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test no dashboard registered means no push is attempted."""
+    mac_address = "11:22:33:44:55:aa"
+    mock_token_bytes.return_value = b"test_key_32_bytes_long_exactly!"
+
+    entry = _make_provisionable_entry(hass, mac_address)
+    mock_client.noise_encryption_set_key = AsyncMock(return_value=True)
+
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.post_encryption_key",
+        new_callable=AsyncMock,
+    ) as mock_post_key:
+        device = await mock_esphome_device(
+            mock_client=mock_client,
+            entry=entry,
+            device_info={
+                "uses_password": False,
+                "name": "test-device",
+                "mac_address": mac_address,
+                "esphome_version": "2023.12.0",
+                "api_encryption_supported": True,
+            },
+        )
+        await device.mock_disconnect(True)
+        await device.mock_connect()
+
+    assert entry.data[CONF_NOISE_PSK] != ""
+    mock_post_key.assert_not_awaited()
+
+
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
+async def test_dynamic_encryption_key_not_synced_when_provisioning_fails(
+    mock_token_bytes: Mock,
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
+    mock_dashboard: dict[str, Any],
+) -> None:
+    """Test a key the device rejected is never pushed to the dashboard."""
+    mac_address = "11:22:33:44:55:aa"
+    mock_token_bytes.return_value = b"test_key_32_bytes_long_exactly!"
+
+    entry = _make_provisionable_entry(hass, mac_address)
+    mock_client.noise_encryption_set_key = AsyncMock(return_value=False)
+
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.post_encryption_key",
+        new_callable=AsyncMock,
+    ) as mock_post_key:
+        device = await mock_esphome_device(
+            mock_client=mock_client,
+            entry=entry,
+            device_info={
+                "uses_password": False,
+                "name": "test-device",
+                "mac_address": mac_address,
+                "esphome_version": "2023.12.0",
+                "api_encryption_supported": True,
+            },
+        )
+        await device.mock_disconnect(True)
+        await device.mock_connect()
+
+    assert CONF_NOISE_PSK not in entry.data or entry.data[CONF_NOISE_PSK] == ""
+    mock_post_key.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
