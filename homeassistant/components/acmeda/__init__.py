@@ -29,7 +29,7 @@ async def async_setup_entry(
     config_entry.runtime_data = hub
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    hass.async_create_background_task(
+    config_entry.async_create_background_task(
         hub.async_start(),
         f"acmeda hub {hub.host}",
     )
