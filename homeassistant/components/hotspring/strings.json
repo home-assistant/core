@@ -9,7 +9,6 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
-    "flow_title": "{name}",
     "step": {
       "user": {
         "data": {
@@ -20,6 +19,14 @@
         },
         "description": "Set up your Hot Spring Home Network Adapter (HNA) to integrate with Home Assistant."
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Error communicating with Hot Spring API: {error}"
+    },
+    "invalid_response": {
+      "message": "Invalid response from Hot Spring API: {error}"
     }
   }
 }

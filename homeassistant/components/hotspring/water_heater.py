@@ -14,8 +14,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import HotSpringConfigEntry, HotSpringDataUpdateCoordinator
 from .entity import HotSpringEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -69,8 +72,15 @@ class HotSpringWaterHeaterEntity(HotSpringEntity, WaterHeaterEntity):
             except HotSpringConnectionError as error:
                 self.coordinator.last_update_success = False
                 self.coordinator.async_update_listeners()
-                raise HomeAssistantError("Error communicating with Hot Spring API") from error
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                    translation_placeholders={"error": str(error)},
+                ) from error
             except HotSpringError as error:
-                raise HomeAssistantError("Invalid response from Hot Spring API") from error
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_response",
+                    translation_placeholders={"error": str(error)},
+                ) from error
             await self.coordinator.async_request_refresh()
-
