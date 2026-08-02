@@ -96,6 +96,6 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
         if not self.account_data.account_owner:
             return {}
         owner_name = self.account_data.account_owner.get(
-            "displayName", self.account_data.account_owner.get("name")
-        )
+            "displayName"
+        ) or self.account_data.account_owner.get("name")
         return {"account_owner": owner_name} if owner_name else {}
