@@ -38,18 +38,18 @@ async def async_setup_entry(
     hub = config_entry.runtime_data
 
     entities: list[WebControlProGenericEntity] = []
-    for d in hub.dests.values():
-        if d.hasAction(ACTION_DESC.AwningDrive):
-            entities.append(WebControlProAwning(config_entry.entry_id, d))
-            if d.hasAction(ACTION_DESC.ValanceDrive):
-                entities.append(WebControlProValance(config_entry.entry_id, d))
-        elif d.hasAction(ACTION_DESC.RollerShutterBlindDrive):
-            entities.append(WebControlProRollerShutter(config_entry.entry_id, d))
-        elif d.hasAction(ACTION_DESC.SlatDrive):
-            if d.hasAction(ACTION_DESC.SlatRotate):
-                entities.append(WebControlProSlatRotate(config_entry.entry_id, d))
+    for dest in hub.dests.values():
+        if dest.hasAction(ACTION_DESC.AwningDrive):
+            entities.append(WebControlProAwning(config_entry.entry_id, dest))
+            if dest.hasAction(ACTION_DESC.ValanceDrive):
+                entities.append(WebControlProValance(config_entry.entry_id, dest))
+        elif dest.hasAction(ACTION_DESC.RollerShutterBlindDrive):
+            entities.append(WebControlProRollerShutter(config_entry.entry_id, dest))
+        elif dest.hasAction(ACTION_DESC.SlatDrive):
+            if dest.hasAction(ACTION_DESC.SlatRotate):
+                entities.append(WebControlProSlatRotate(config_entry.entry_id, dest))
             else:
-                entities.append(WebControlProSlat(config_entry.entry_id, d))
+                entities.append(WebControlProSlat(config_entry.entry_id, dest))
 
     async_add_entities(entities)
 

@@ -6,7 +6,7 @@ from xknx.devices import ExposeSensor as XknxExposeSensor, RawValue as XknxRawVa
 
 from homeassistant import config_entries
 from homeassistant.components.button import ButtonEntity
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, CONF_PAYLOAD, Platform
+from homeassistant.const import CONF_NAME, CONF_PAYLOAD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -15,7 +15,12 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_PAYLOAD_LENGTH, CONF_VALUE, DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .storage.const import CONF_DATA, CONF_ENTITY, CONF_GA_SEND
 from .storage.util import ConfigExtractor
@@ -82,9 +87,10 @@ class KnxYamlButton(_KnxButton, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=f"{self._device.remote_value.group_address}_{self._payload}",
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            unique_id=build_yaml_unique_id(
+                self._device.remote_value.group_address, self._payload
+            ),
+            entity_config=config,
         )
 
 

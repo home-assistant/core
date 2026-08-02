@@ -475,6 +475,34 @@ async def test_remove_config_entry_device(
     assert response["success"]
 
 
+@pytest.mark.parametrize("mock_envoy", ["envoy_acb_batt"], indirect=["mock_envoy"])
+async def test_remove_config_entry_device_acb(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test removing ACB devices is blocked while they are in the inventory."""
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration(hass, config_entry)
+
+    hass_client = await hass_ws_client(hass)
+
+    # the ACB aggregate device can not be removed
+    entity = entity_registry.entities["sensor.acb_1234_power"]
+    device_entry = device_registry.async_get(entity.device_id)
+    response = await hass_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+
+    # an individual AC Battery device can not be removed
+    entity = entity_registry.entities["sensor.ac_battery_121000000001_state_of_charge"]
+    device_entry = device_registry.async_get(entity.device_id)
+    response = await hass_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+
+
 async def test_option_change_reload(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

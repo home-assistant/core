@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_VIA_DEVICE,
     PERCENTAGE,
-    SIGNAL_STRENGTH_DECIBELS,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -133,7 +133,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     HomeWizardSensorEntityDescription(
         key="wifi_rssi",
         translation_key="wifi_rssi",
-        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -834,7 +834,8 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
             identifiers={(DOMAIN, device_unique_id)},
             name=description.device_name,
             manufacturer="HomeWizard",
-            model=coordinator.data.device.product_type,
+            model_id=coordinator.data.device.product_type,
+            model=coordinator.data.device.model_name,
             serial_number=device_unique_id,
         )
         if coordinator.data.device.serial is not None:

@@ -30,7 +30,7 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from .const import _LOGGER, CONF_ACCOUNT, CONF_KEY, CONF_SERVER, CONF_SUBTYPE, DOMAIN
+from .const import CONF_ACCOUNT, CONF_KEY, CONF_SERVER, CONF_SUBTYPE, DOMAIN, LOGGER
 from .device_catalog import MIDEA_DEVICE_NAMES
 
 DEFAULT_CLOUD: str = get_default_cloud()
@@ -142,7 +142,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input={CONF_DEVICE: self.found_device[CONF_DEVICE_ID]},
                 )
             # return error with login failed
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Failed to login to %s cloud with user credentials",
                 cloud_server,
             )
@@ -340,12 +340,12 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         # check cloud login after self.cloud exist
         if await self.cloud.login():
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Cloud login succeeded for %s",
                 cloud_name,
             )
             return True
-        _LOGGER.debug(
+        LOGGER.debug(
             "Unable to login to %s cloud",
             cloud_name,
         )
@@ -385,11 +385,11 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             if connected:
                 return value
             # return debug log with failed key
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Connect device using method %s token/key failed",
                 k,
             )
-        _LOGGER.debug(
+        LOGGER.debug(
             "Unable to connect device with all the token/key",
         )
         return {"error": "connect_error"}
@@ -432,7 +432,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 # no available key, continue the phase 2
                 if not keys.get("token") or not keys.get("key"):
-                    _LOGGER.debug(
+                    LOGGER.debug(
                         "Can't get valid token using user credentials on %s",
                         self._login_data[CONF_SERVER],
                     )
@@ -451,7 +451,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     # phase 2 got no available token/key, disable device add
                     if not keys.get("token") or not keys.get("key"):
-                        _LOGGER.debug(
+                        LOGGER.debug(
                             "Can't get available token from Midea server for device %s",
                             device_id,
                         )
@@ -622,7 +622,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 # no available token/key, disable device add
                 if not keys.get("token") or not keys.get("key"):
-                    _LOGGER.debug(
+                    LOGGER.debug(
                         "Can't get a valid token from Midea server for device %s",
                         user_input[CONF_DEVICE_ID],
                     )

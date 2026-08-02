@@ -77,7 +77,7 @@ class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
     _attr_options = list(_modes.values())
     _attr_current_option: str | None = None
 
-    def __init__(self, hub: nobo, override_type) -> None:
+    def __init__(self, hub: nobo, override_type: str) -> None:
         """Initialize the global override selector."""
         super().__init__(hub)
         self._attr_unique_id = hub.hub_serial

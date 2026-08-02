@@ -8,6 +8,7 @@ from gatus_api import EndpointStatus, GatusClient, GatusClientError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -25,6 +26,17 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, EndpointStatus]
         """Initialize the coordinator."""
         self.url = url.rstrip("/")
         self.client = GatusClient(url=self.url, session=async_get_clientsession(hass))
+        self._entry_id = entry.entry_id
+        device_registry = dr.async_get(hass)
+        self._known_endpoint_keys = {
+            identifier[1].removeprefix(f"{entry.entry_id}_")
+            for device in dr.async_entries_for_config_entry(
+                device_registry, entry.entry_id
+            )
+            for identifier in device.identifiers
+            if identifier[0] == DOMAIN
+            and identifier[1].startswith(f"{entry.entry_id}_")
+        }
 
         super().__init__(
             hass,
@@ -44,5 +56,24 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, EndpointStatus]
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from err
+
+        current_keys = {ep.key for ep in raw_endpoints}
+        stale_keys = self._known_endpoint_keys - current_keys
+        if stale_keys:
+            device_registry = dr.async_get(self.hass)
+            for device in dr.async_entries_for_config_entry(
+                device_registry, self._entry_id
+            ):
+                if any(
+                    identifier[0] == DOMAIN
+                    and identifier[1].startswith(f"{self._entry_id}_")
+                    and identifier[1].removeprefix(f"{self._entry_id}_") in stale_keys
+                    for identifier in device.identifiers
+                ):
+                    device_registry.async_update_device(
+                        device.id,
+                        remove_config_entry_id=self._entry_id,
+                    )
+        self._known_endpoint_keys = current_keys
 
         return {ep.key: ep for ep in raw_endpoints}

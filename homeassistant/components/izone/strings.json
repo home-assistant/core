@@ -21,11 +21,50 @@
     }
   },
   "exceptions": {
+    "bridge_unpaired": {
+      "message": "iZone bridge is not paired with an air conditioner"
+    },
+    "cannot_connect": {
+      "message": "Unable to connect to iZone controller at {host}"
+    },
     "command_rejected": {
       "message": "Controller {uid} rejected command: {error}"
     },
+    "controller_not_found": {
+      "message": "No iZone controller found for unique_id {uid}"
+    },
+    "discovery_failed_host": {
+      "message": "iZone discovery failed while resolving config entry host"
+    },
+    "discovery_failed_legacy": {
+      "message": "iZone discovery failed while resolving legacy config entry"
+    },
+    "discovery_start_failed": {
+      "message": "iZone discovery service failed to start"
+    },
+    "missing_host": {
+      "message": "iZone config entry is missing host"
+    },
+    "missing_unique_id": {
+      "message": "iZone config entry is missing unique_id"
+    },
+    "multiple_eligible_controllers": {
+      "message": "Multiple eligible iZone controllers found for a legacy config entry; delete this entry and re-add each controller individually"
+    },
+    "no_eligible_controller": {
+      "message": "No eligible iZone controller found to bind to legacy config entry"
+    },
+    "refresh_rejected": {
+      "message": "iZone controller rejected refresh: {error}"
+    },
+    "setup_rejected": {
+      "message": "iZone controller at {host} rejected setup"
+    },
     "unable_to_connect": {
       "message": "Unable to connect to controller {uid}"
+    },
+    "update_failed": {
+      "message": "Error communicating with iZone controller: {error}"
     }
   },
   "services": {

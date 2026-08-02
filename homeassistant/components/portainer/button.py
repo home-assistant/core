@@ -42,7 +42,7 @@ class PortainerEndpointButtonDescription(ButtonEntityDescription):
 
     press_action: Callable[
         [Portainer, int],
-        Coroutine[Any, Any, None | DockerContainer],
+        Coroutine[Any, Any, DockerContainer | None],
     ]
 
 
@@ -52,7 +52,7 @@ class PortainerContainerButtonDescription(ButtonEntityDescription):
 
     press_action: Callable[
         [Portainer, int, str],
-        Coroutine[Any, Any, None | DockerContainer],
+        Coroutine[Any, Any, DockerContainer | None],
     ]
 
 

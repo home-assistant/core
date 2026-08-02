@@ -77,10 +77,14 @@ DESCRIPTIONS = (
     GardenaBluetoothSensorEntityDescription(
         key=Valve.activation_reason.unique_id,
         translation_key="activation_reason",
-        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
         char=Valve.activation_reason,
+        get=lambda x: (
+            x.name.lower() if isinstance(x, Valve.activation_reason.enum) else None
+        ),
+        options=[member.name.lower() for member in Valve.activation_reason.enum],
     ),
     GardenaBluetoothSensorEntityDescription(
         key=Battery.battery_level.unique_id,
