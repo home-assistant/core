@@ -26,6 +26,9 @@ class PulseHub:
     @property
     def title(self) -> str:
         """Return the title of the hub shown in the integrations list."""
+        # If not setup
+        if self.api is None:
+            return self.config_entry.data["host"]  # type: ignore[no-any-return]
         return f"{self.api.id} ({self.api.host})"
 
     @property
