@@ -1,6 +1,7 @@
 """Tests for Search integration."""
 
 import attr
+import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components.search import DOMAIN, ItemType, Searcher
@@ -1217,3 +1218,138 @@ async def test_search_pre_migration_composite_device(
     }
     assert search(ItemType.AUTOMATION, "automation.composite") == expected_reverse
     assert search(ItemType.SCRIPT, "script.composite") == expected_reverse
+
+
+@pytest.fixture(name="disabled_entity_ids")
+async def disabled_entity_ids_fixture(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> dict[ItemType, str]:
+    """Set up a device in an area on a floor, owning enabled and disabled entities.
+
+    Returns the searchable id per item type.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    floor = floor_registry.async_create("First floor")
+    area = area_registry.async_create("Kitchen", floor_id=floor.floor_id)
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("test", "1")}
+    )
+    device_registry.async_update_device(device.id, area_id=area.id)
+
+    entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "enabled",
+        suggested_object_id="enabled",
+        config_entry=config_entry,
+        device_id=device.id,
+    )
+    entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "disabled",
+        suggested_object_id="disabled",
+        config_entry=config_entry,
+        device_id=device.id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    # A disabled entity that overrides its area instead of inheriting it from the
+    # device is reached through the area index, which has no disabled filter.
+    disabled_area_override_entity = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "disabled_area_override",
+        suggested_object_id="disabled_area_override",
+        config_entry=config_entry,
+        device_id=device.id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    entity_registry.async_update_entity(
+        disabled_area_override_entity.entity_id, area_id=area.id
+    )
+
+    return {
+        ItemType.FLOOR: floor.floor_id,
+        ItemType.AREA: area.id,
+        ItemType.DEVICE: device.id,
+    }
+
+
+ALL_ENTITIES = {"light.enabled", "light.disabled", "light.disabled_area_override"}
+
+
+@pytest.mark.parametrize(
+    ("item_type", "expected_default"),
+    [
+        pytest.param(ItemType.DEVICE, {"light.enabled"}, id="device"),
+        pytest.param(
+            ItemType.AREA,
+            {"light.enabled", "light.disabled_area_override"},
+            id="area",
+        ),
+        pytest.param(
+            ItemType.FLOOR,
+            {"light.enabled", "light.disabled_area_override"},
+            id="floor",
+        ),
+    ],
+)
+async def test_search_include_disabled_entities(
+    hass: HomeAssistant,
+    disabled_entity_ids: dict[ItemType, str],
+    item_type: ItemType,
+    expected_default: set[str],
+) -> None:
+    """Test disabled entities are only returned when explicitly requested."""
+    item_id = disabled_entity_ids[item_type]
+
+    searcher = Searcher(hass, {})
+    assert (
+        searcher.async_search(item_type, item_id)[ItemType.ENTITY] == expected_default
+    )
+
+    searcher = Searcher(hass, {}, include_disabled_entities=True)
+    assert searcher.async_search(item_type, item_id)[ItemType.ENTITY] == ALL_ENTITIES
+
+
+@pytest.mark.parametrize(
+    ("extra_msg", "expected"),
+    [
+        pytest.param({}, {"light.enabled"}, id="key_omitted"),
+        pytest.param(
+            {"include_disabled_entities": False}, {"light.enabled"}, id="explicit_false"
+        ),
+        pytest.param(
+            {"include_disabled_entities": True}, ALL_ENTITIES, id="explicit_true"
+        ),
+    ],
+)
+async def test_search_related_include_disabled_entities_websocket(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    disabled_entity_ids: dict[ItemType, str],
+    extra_msg: dict[str, bool],
+    expected: set[str],
+) -> None:
+    """Test the websocket command accepts the new option, and defaults it to False."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "search/related",
+            "item_type": "device",
+            "item_id": disabled_entity_ids[ItemType.DEVICE],
+        }
+        | extra_msg
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"][ItemType.ENTITY] == unordered(list(expected))
