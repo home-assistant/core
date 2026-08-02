@@ -3030,6 +3030,9 @@ async def test_dynamic_encryption_key_dashboard_sync_failure_is_not_fatal(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_post_key.await_count >= 1
+    # The flow must have run to completion — a sync exception escaping
+    # _on_connect would skip everything after the handoff.
+    assert entry.runtime_data.first_connect_done.is_set()
     assert entry.data[CONF_NOISE_PSK] == expected_key
     assert (
         hass_storage[ENCRYPTION_KEY_STORAGE_KEY]["data"]["keys"][mac_address]
@@ -3181,7 +3184,7 @@ async def test_dashboard_not_writable_response_logs_warning(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.data[CONF_NOISE_PSK] == expected_key
-    assert "could not store the encryption key" in caplog.text
+    assert caplog.text.count("could not store the encryption key") == 1
     assert "!secret" in caplog.text
 
 
@@ -3217,6 +3220,7 @@ async def test_dynamic_encryption_key_not_synced_without_dashboard(
         )
         await device.mock_disconnect(True)
         await device.mock_connect()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.data[CONF_NOISE_PSK] != ""
     mock_post_key.assert_not_awaited()
@@ -3255,6 +3259,7 @@ async def test_dynamic_encryption_key_not_synced_when_provisioning_fails(
         )
         await device.mock_disconnect(True)
         await device.mock_connect()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert CONF_NOISE_PSK not in entry.data or entry.data[CONF_NOISE_PSK] == ""
     mock_post_key.assert_not_awaited()
