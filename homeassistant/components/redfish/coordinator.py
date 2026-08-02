@@ -14,7 +14,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_BASE_URL, DOMAIN, REQUEST_TIMEOUT, UPDATE_INTERVAL
+from .const import (
+    COLLECTION_TIMEOUT,
+    CONF_BASE_URL,
+    DOMAIN,
+    REQUEST_TIMEOUT,
+    UPDATE_INTERVAL,
+)
 from .models import (
     RedfishData,
     RedfishSystem,
@@ -107,7 +113,12 @@ class RedfishClient:
     async def _async_systems(self, link: Any) -> dict[str, RedfishSystem]:
         """Resolve and parse ComputerSystem resources."""
         systems = {}
-        for payload in await self._async_members(link):
+        try:
+            async with asyncio.timeout(COLLECTION_TIMEOUT):
+                payloads = await self._async_members(link)
+        except TimeoutError as err:
+            raise RedfishError from err
+        for payload in payloads:
             if system := parse_system(payload):
                 if system.reset_target is not None and (
                     action_info_target := get_reset_action_info_target(payload)

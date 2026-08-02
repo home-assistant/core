@@ -1,5 +1,6 @@
 """Tests for the Redfish coordinator."""
 
+import asyncio
 from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
@@ -250,6 +251,43 @@ async def test_reject_cyclic_system_collection_pagination(
 
     with pytest.raises(RedfishError):
         await client.async_get_systems()
+
+
+async def test_reject_unbounded_unique_system_collection_pagination(
+    hass: HomeAssistant,
+) -> None:
+    """Test unique pagination links cannot keep discovery running indefinitely."""
+    client = RedfishClient(
+        async_get_clientsession(hass),
+        "https://bmc.example",
+        "user",
+        "password",
+    )
+    page = 0
+
+    async def get_resource(path: str) -> dict[str, Any]:
+        nonlocal page
+        await asyncio.sleep(0)
+        if path == "/redfish/v1/":
+            return {"Systems": {"@odata.id": "/redfish/v1/Systems?page=0"}}
+        page += 1
+        return {
+            "Members": [],
+            "Members@odata.nextLink": f"/redfish/v1/Systems?page={page}",
+        }
+
+    with (
+        patch.object(client, "_async_get", side_effect=get_resource),
+        patch(
+            "homeassistant.components.redfish.coordinator.COLLECTION_TIMEOUT",
+            0.01,
+        ),
+        pytest.raises(RedfishError),
+    ):
+        async with asyncio.timeout(0.1):
+            await client.async_get_systems()
+
+    assert page > 1
 
 
 async def test_discover_reset_types_from_action_info(
