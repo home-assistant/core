@@ -1,6 +1,5 @@
 """Config flow to configure Coolmaster."""
 
-from collections.abc import Mapping
 from typing import Any, override
 
 from pycoolmasternet_async import CoolMasterNet
@@ -49,28 +48,10 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def _validate_connection(host: str, send_wakeup_prompt: bool) -> bool:
-    cool = CoolMasterNet(host, DEFAULT_PORT, send_initial_line_feed=send_wakeup_prompt)
+async def _validate_connection(host: str, port: int, send_wakeup_prompt: bool) -> bool:
+    cool = CoolMasterNet(host, port, send_initial_line_feed=send_wakeup_prompt)
     units = await cool.status()
     return bool(units)
-
-
-def _supported_modes(user_input: Mapping[str, Any]) -> list[str]:
-    """Collect the modes enabled in the form into the stored list."""
-    return [mode for mode in AVAILABLE_MODES if user_input.get(mode)]
-
-
-def _entry_data_as_form(data: Mapping[str, Any]) -> dict[str, Any]:
-    """Map stored entry data onto the form, which uses a boolean per mode."""
-    supported_modes = data.get(CONF_SUPPORTED_MODES, AVAILABLE_MODES)
-    return {
-        CONF_HOST: data[CONF_HOST],
-        **{mode: mode in supported_modes for mode in AVAILABLE_MODES},
-        CONF_SWING_SUPPORT: data.get(CONF_SWING_SUPPORT, False),
-        CONF_MORE_OPTIONS: {
-            CONF_SEND_WAKEUP_PROMPT: data.get(CONF_SEND_WAKEUP_PROMPT, False)
-        },
-    }
 
 
 class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -86,7 +67,9 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: data[CONF_HOST],
                 CONF_PORT: DEFAULT_PORT,
-                CONF_SUPPORTED_MODES: _supported_modes(data),
+                CONF_SUPPORTED_MODES: [
+                    mode for mode in AVAILABLE_MODES if data.get(mode)
+                ],
                 CONF_SWING_SUPPORT: data[CONF_SWING_SUPPORT],
                 CONF_SEND_WAKEUP_PROMPT: more_options.get(
                     CONF_SEND_WAKEUP_PROMPT, False
@@ -94,18 +77,23 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _async_validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
+    async def _async_validate_input(
+        self, user_input: dict[str, Any], port: int
+    ) -> dict[str, str]:
         """Check we can still talk to the bridge and that it reports units."""
         more_options = user_input.get(CONF_MORE_OPTIONS, {})
         errors: dict[str, str] = {}
         try:
-            if not await _validate_connection(
+            has_units = await _validate_connection(
                 user_input[CONF_HOST],
+                port,
                 more_options.get(CONF_SEND_WAKEUP_PROMPT, False),
-            ):
-                errors["base"] = "no_units"
+            )
         except OSError:
             errors["base"] = "cannot_connect"
+        else:
+            if not has_units:
+                errors["base"] = "no_units"
         return errors
 
     @override
@@ -116,7 +104,7 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
-        if errors := await self._async_validate_input(user_input):
+        if errors := await self._async_validate_input(user_input, DEFAULT_PORT):
             return self.async_show_form(
                 step_id="user", data_schema=DATA_SCHEMA, errors=errors
             )
@@ -128,17 +116,26 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration of an existing entry."""
         reconfigure_entry = self._get_reconfigure_entry()
+        entry_data = reconfigure_entry.data
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if not (errors := await self._async_validate_input(user_input)):
-                more_options = user_input.get(CONF_MORE_OPTIONS, {})
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            more_options = user_input.get(CONF_MORE_OPTIONS, {})
+            # The port is not part of the form, so keep validating the stored one.
+            if not (
+                errors := await self._async_validate_input(
+                    user_input, entry_data[CONF_PORT]
+                )
+            ):
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     title=user_input[CONF_HOST],
                     data_updates={
                         CONF_HOST: user_input[CONF_HOST],
-                        CONF_SUPPORTED_MODES: _supported_modes(user_input),
+                        CONF_SUPPORTED_MODES: [
+                            mode for mode in AVAILABLE_MODES if user_input.get(mode)
+                        ],
                         CONF_SWING_SUPPORT: user_input[CONF_SWING_SUPPORT],
                         CONF_SEND_WAKEUP_PROMPT: more_options.get(
                             CONF_SEND_WAKEUP_PROMPT, False
@@ -146,11 +143,22 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+        supported_modes = entry_data.get(CONF_SUPPORTED_MODES, AVAILABLE_MODES)
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 DATA_SCHEMA,
-                user_input or _entry_data_as_form(reconfigure_entry.data),
+                user_input
+                or {
+                    CONF_HOST: entry_data[CONF_HOST],
+                    **{mode: mode in supported_modes for mode in AVAILABLE_MODES},
+                    CONF_SWING_SUPPORT: entry_data.get(CONF_SWING_SUPPORT, False),
+                    CONF_MORE_OPTIONS: {
+                        CONF_SEND_WAKEUP_PROMPT: entry_data.get(
+                            CONF_SEND_WAKEUP_PROMPT, False
+                        )
+                    },
+                },
             ),
             errors=errors,
         )

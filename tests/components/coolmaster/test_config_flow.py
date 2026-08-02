@@ -129,7 +129,16 @@ async def test_form_no_units(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "no_units"}
 
 
-async def test_reconfigure(hass: HomeAssistant, load_int: MockConfigEntry) -> None:
+@pytest.mark.parametrize(
+    "new_host",
+    [
+        pytest.param("1.2.3.4", id="same_host"),
+        pytest.param("5.6.7.8", id="changed_host"),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant, load_int: MockConfigEntry, new_host: str
+) -> None:
     """Test reconfiguring an existing entry updates the supported modes."""
     result = await load_int.start_reconfigure_flow(hass)
 
@@ -159,7 +168,7 @@ async def test_reconfigure(hass: HomeAssistant, load_int: MockConfigEntry) -> No
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             _flow_data(
-                host="5.6.7.8",
+                host=new_host,
                 modes=[HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.DRY],
             ),
         )
@@ -168,7 +177,7 @@ async def test_reconfigure(hass: HomeAssistant, load_int: MockConfigEntry) -> No
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
-    assert load_int.data["host"] == "5.6.7.8"
+    assert load_int.data["host"] == new_host
     assert load_int.data["supported_modes"] == [
         HVACMode.OFF,
         HVACMode.HEAT,
@@ -232,3 +241,56 @@ async def test_reconfigure_errors(
     assert result["reason"] == "reconfigure_successful"
     assert load_int.data["host"] == "1.1.1.1"
     assert load_int.data["supported_modes"] == AVAILABLE_MODES
+
+
+async def test_reconfigure_uses_stored_port(
+    hass: HomeAssistant, load_int: MockConfigEntry
+) -> None:
+    """Test reconfigure validates against the port stored on the entry."""
+    result = await load_int.start_reconfigure_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.coolmaster.config_flow.CoolMasterNet",
+            autospec=True,
+        ) as mock_coolmaster,
+        patch(
+            "homeassistant.components.coolmaster.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        mock_coolmaster.return_value.status.return_value = {"test_id": "test_unit"}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _flow_data()
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    # The entry stores port 1234, which must be used over the default 10102.
+    assert mock_coolmaster.call_args.args[1] == 1234
+    assert load_int.data["port"] == 1234
+
+
+async def test_reconfigure_duplicate_host(
+    hass: HomeAssistant, load_int: MockConfigEntry
+) -> None:
+    """Test reconfigure aborts when another entry already uses the host."""
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "9.9.9.9",
+            "port": 10102,
+            "supported_modes": AVAILABLE_MODES,
+        },
+    )
+    other_entry.add_to_hass(hass)
+
+    result = await load_int.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _flow_data(host="9.9.9.9")
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert load_int.data["host"] == "1.2.3.4"
