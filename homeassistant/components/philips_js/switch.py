@@ -50,7 +50,7 @@ class PhilipsTVScreenSwitch(PhilipsJsEntity, SwitchEntity):
             return False
         if not self.coordinator.api.on:
             return False
-        return self.coordinator.api.powerstate == "On"
+        return self.coordinator.api.powerstate in ("On", None)
 
     @property
     @override
@@ -92,7 +92,7 @@ class PhilipsTVAmbilightHueSwitch(PhilipsJsEntity, SwitchEntity):
             return False
         if not self.coordinator.api.on:
             return False
-        return self.coordinator.api.powerstate == "On"
+        return self.coordinator.api.powerstate in ("On", None)
 
     @property
     @override

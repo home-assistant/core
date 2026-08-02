@@ -460,6 +460,12 @@ class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
         if self._tv.on:
             if self._tv.powerstate in ("Standby", "StandbyKeep"):
                 self._attr_state = MediaPlayerState.OFF
+            elif self._tv.powerstate is None and self._tv.screenstate is not None:
+                self._attr_state = (
+                    MediaPlayerState.ON
+                    if self._tv.screenstate == "On"
+                    else MediaPlayerState.OFF
+                )
             else:
                 self._attr_state = MediaPlayerState.ON
         else:
