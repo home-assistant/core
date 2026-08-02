@@ -1,5 +1,6 @@
 """Support for switch platform for Hue resources (V2 only)."""
 
+from collections.abc import Callable
 from typing import Any, override
 
 from aiohue.v2 import HueBridgeV2
@@ -16,14 +17,16 @@ from aiohue.v2.controllers.sensors import (
     Motion,
     MotionController,
 )
+from aiohue.v2.models.behavior_script import BehaviorScriptCategory
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -57,6 +60,7 @@ async def async_setup_entry(
             | HueMotionAreaConfigurationEnabledEntity
             | HueMotionSensorEnabledEntity
         ],
+        resource_filter: Callable[[Any], bool] | None = None,
     ):
         @callback
         def async_add_entity(
@@ -64,6 +68,8 @@ async def async_setup_entry(
             resource: BehaviorInstance | LightLevel | MotionAreaConfiguration | Motion,
         ) -> None:
             """Add entity from Hue resource."""
+            if resource_filter is not None and not resource_filter(resource):
+                return
             async_add_entities([switch_class(bridge, controller, resource)])
 
         # add all current items in controller
@@ -77,10 +83,38 @@ async def async_setup_entry(
             )
         )
 
+    @callback
+    def is_user_automation(resource: BehaviorInstance) -> bool:
+        """Return if the behavior instance is an automation from the Hue app.
+
+        Anything else is device configuration, which the bridge keeps running
+        even after it accepts switching it off. Categories we do not recognise
+        are skipped too, better no switch than one that does nothing.
+        """
+        script = api.config.behavior_script.get(resource.script_id)
+        return (
+            script is not None
+            and script.metadata.category is BehaviorScriptCategory.AUTOMATION
+        )
+
+    # clean up entities previously created for internal behavior instances
+    entity_registry = er.async_get(hass)
+    for resource in api.config.behavior_instance:
+        if is_user_automation(resource):
+            continue
+        if entity_id := entity_registry.async_get_entity_id(
+            Platform.SWITCH, DOMAIN, resource.id
+        ):
+            entity_registry.async_remove(entity_id)
+
     # setup for each switch-type hue resource
     register_items(api.sensors.motion, HueMotionSensorEnabledEntity)
     register_items(api.sensors.light_level, HueLightSensorEnabledEntity)
-    register_items(api.config.behavior_instance, HueBehaviorInstanceEnabledEntity)
+    register_items(
+        api.config.behavior_instance,
+        HueBehaviorInstanceEnabledEntity,
+        is_user_automation,
+    )
     register_items(
         api.config.motion_area_configuration, HueMotionAreaConfigurationEnabledEntity
     )

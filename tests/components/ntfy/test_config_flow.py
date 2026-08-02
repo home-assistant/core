@@ -1,6 +1,6 @@
 """Test the ntfy config flow."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -450,8 +450,7 @@ async def test_flow_reauth(
         },
     )
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken",
-        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        token="newtoken", last_access=datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC)
     )
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reauth_flow(hass)
@@ -510,8 +509,7 @@ async def test_form_reauth_errors(
     )
     mock_aiontfy.account.side_effect = exception
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken",
-        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        token="newtoken", last_access=datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC)
     )
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reauth_flow(hass)
@@ -597,8 +595,7 @@ async def test_flow_reconfigure(
         },
     )
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken",
-        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        token="newtoken", last_access=datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC)
     )
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
@@ -700,8 +697,7 @@ async def test_flow_reconfigure_errors(
         },
     )
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken",
-        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        token="newtoken", last_access=datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC)
     )
     mock_aiontfy.account.side_effect = exception
 

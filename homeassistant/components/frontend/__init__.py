@@ -907,6 +907,10 @@ class ManifestJSONView(HomeAssistantView):
     """View to return a manifest.json."""
 
     requires_auth = False
+    # The landing page detects Core availability by reading this public
+    # resource cross-origin when its request is redirected from the legacy
+    # HTTP port to the default port.
+    cors_allowed = True
     url = "/manifest.json"
     name = "manifestjson"
 
