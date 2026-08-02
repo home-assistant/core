@@ -47,7 +47,6 @@ def mock_tv():
     tv.powerstate = None
     tv.screenstate = None
     tv.source_id = None
-    tv.huelamp_power = None
     tv.ambilight_current_configuration = None
     tv.ambilight_styles = {}
     tv.ambilight_cached = {}

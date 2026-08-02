@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
 
 from . import LOGGER as _LOGGER
+from .const import TV_STATE_OFF
 from .coordinator import PhilipsTVConfigEntry, PhilipsTVDataUpdateCoordinator
 from .entity import PhilipsJsEntity
 from .helpers import async_get_turn_on_trigger
@@ -458,14 +459,10 @@ class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
     @callback
     def _update_from_coordinator(self):
         if self._tv.on:
-            if self._tv.powerstate in ("Standby", "StandbyKeep"):
+            if self._tv.powerstate in ("Standby", "StandbyKeep") or (
+                self._tv.powerstate is None and self._tv.screenstate == TV_STATE_OFF
+            ):
                 self._attr_state = MediaPlayerState.OFF
-            elif self._tv.powerstate is None and self._tv.screenstate is not None:
-                self._attr_state = (
-                    MediaPlayerState.ON
-                    if self._tv.screenstate == "On"
-                    else MediaPlayerState.OFF
-                )
             else:
                 self._attr_state = MediaPlayerState.ON
         else:
