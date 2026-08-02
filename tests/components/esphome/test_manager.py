@@ -3262,6 +3262,54 @@ async def test_dashboard_not_writable_response_logs_warning(
 
 
 @patch("homeassistant.components.esphome.manager.secrets.token_bytes")
+async def test_dashboard_partial_success_warns_and_keeps_retrying(
+    mock_token_bytes: Mock,
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
+    mock_dashboard: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an updated-with-reason response warns and does not latch success."""
+    mac_address = "11:22:33:44:55:aa"
+    mock_token_bytes.return_value = b"test_key_32_bytes_long_exactly!"
+
+    entry = _make_provisionable_entry(hass, mac_address)
+    mock_client.noise_encryption_set_key = AsyncMock(return_value=True)
+
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.post_encryption_key",
+        new_callable=AsyncMock,
+        return_value={
+            "result": "updated",
+            "configurations": ["test-device.yaml", "test-device (1).yaml"],
+            "reason": "the key is provided via !secret or a substitution",
+        },
+    ) as mock_post_key:
+        device = await mock_esphome_device(
+            mock_client=mock_client,
+            entry=entry,
+            device_info={
+                "uses_password": False,
+                "name": "test-device",
+                "mac_address": mac_address,
+                "esphome_version": "2023.12.0",
+                "api_encryption_supported": True,
+            },
+        )
+        await device.mock_disconnect(True)
+        await device.mock_connect()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The duplicate-name sibling still carries a competing key: warn
+    # (deduped) and keep the sync unlatched so reconnects retry.
+    assert caplog.text.count("could not store the encryption key") == 1
+    assert "!secret" in caplog.text
+    assert mock_post_key.await_count == 2
+
+
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
 async def test_dashboard_sync_warns_once_per_distinct_cause(
     mock_token_bytes: Mock,
     hass: HomeAssistant,

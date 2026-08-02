@@ -934,7 +934,14 @@ class ESPHomeManager:
             else:
                 self._async_warn_dashboard_key_sync_failed(device_info, err)
             return
+        reason = result.get("reason") if isinstance(result, dict) else None
         if isinstance(result, dict) and result.get("result") in _DASHBOARD_KEY_SYNC_OK:
+            if reason:
+                # Partial success: a duplicate-name sibling refused the
+                # key and flashing it can still lock HA out — warn and
+                # keep retrying instead of latching.
+                self._async_warn_dashboard_key_sync_failed(device_info, reason)
+                return
             self._dashboard_key_synced = True
             _LOGGER.debug(
                 "Synced encryption key for %s to the ESPHome dashboard: %s",
@@ -942,7 +949,6 @@ class ESPHomeManager:
                 result,
             )
             return
-        reason = result.get("reason") if isinstance(result, dict) else None
         self._async_warn_dashboard_key_sync_failed(
             device_info, reason or f"unexpected response {result}"
         )
