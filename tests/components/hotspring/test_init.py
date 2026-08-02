@@ -2,7 +2,8 @@
 
 from unittest.mock import MagicMock
 
-from hotspring import HotSpringConnectionError
+from hotspring import HotSpringConnectionError, HotSpringError
+import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -21,13 +22,18 @@ async def test_async_setup_entry(
     assert init_integration.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_async_setup_connection_error(
+@pytest.mark.parametrize(
+    "exception",
+    [HotSpringConnectionError, HotSpringError],
+)
+async def test_async_setup_error(
     hass: HomeAssistant,
     mock_hotspring: MagicMock,
     mock_config_entry: MockConfigEntry,
+    exception: type[Exception],
 ) -> None:
-    """Test a connection error during setup."""
-    mock_hotspring.update.side_effect = HotSpringConnectionError
+    """Test a setup error when updating spa data."""
+    mock_hotspring.update.side_effect = exception
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
