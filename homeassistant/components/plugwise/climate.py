@@ -112,7 +112,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         self._location = device_id
         if (location := self.device.get("location")) is not None:
             self._location = location
-        self._previous_action_mode = HVACAction.HEATING.value
+        self._previous_action_mode = str | None = None
 
         # Determine supported features
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
@@ -144,7 +144,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             plugwise_extra_data = PlugwiseClimateExtraStoredData.from_dict(
                 extra_data.as_dict()
             )
-            self._last_active_schedule = plugwise_extra_data.last_active_schedule
+            self._last_active_schedule = plugwise_extra_data.last_active_schedule or STATE_OFF
             self._previous_action_mode = (
                 plugwise_extra_data.previous_action_mode or HVACAction.HEATING.value
             )
