@@ -257,7 +257,7 @@ class ESPHomeManager:
         self.zeroconf_instance = zeroconf_instance
         self.entry_data = entry.runtime_data
         self._cancel_subscribe_logs: CALLBACK_TYPE | None = None
-        self._dashboard_key_sync_warned: set[str] = set()
+        self._dashboard_key_sync_warned = False
         self._dashboard_key_synced = False
         self._log_level = LogLevel.LOG_LEVEL_NONE
 
@@ -934,8 +934,9 @@ class ESPHomeManager:
             else:
                 self._async_warn_dashboard_key_sync_failed(device_info, err)
             return
+        result_value = result.get("result") if isinstance(result, dict) else None
         reason = result.get("reason") if isinstance(result, dict) else None
-        if isinstance(result, dict) and result.get("result") in _DASHBOARD_KEY_SYNC_OK:
+        if isinstance(result_value, str) and result_value in _DASHBOARD_KEY_SYNC_OK:
             if reason:
                 # Partial success: a duplicate-name sibling refused the
                 # key and flashing it can still lock HA out — warn and
@@ -957,11 +958,10 @@ class ESPHomeManager:
     def _async_warn_dashboard_key_sync_failed(
         self, device_info: EsphomeDeviceInfo, cause: Exception | str
     ) -> None:
-        """Warn once per distinct cause that the dashboard did not store the key."""
-        cause_text = str(cause)
-        if cause_text in self._dashboard_key_sync_warned:
+        """Warn once that the dashboard did not store the key."""
+        if self._dashboard_key_sync_warned:
             return
-        self._dashboard_key_sync_warned.add(cause_text)
+        self._dashboard_key_sync_warned = True
         _LOGGER.warning(
             "The ESPHome dashboard could not store the encryption key for "
             "%s (%s), so installing that configuration may use a different "

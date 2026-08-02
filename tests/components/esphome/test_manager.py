@@ -2927,11 +2927,8 @@ async def test_dynamic_encryption_key_synced_to_dashboard(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.data[CONF_NOISE_PSK] == expected_key
-    # The test's second connect sees the stored key and re-offers it as
-    # a background task; assert on the provisioning-time call.
-    assert mock_post_key.await_args_list[0] == call(
-        "test-device", expected_key, mac=mac_address
-    )
+    # The success latch makes the provisioning-time push the only one.
+    mock_post_key.assert_awaited_once_with("test-device", expected_key, mac=mac_address)
 
 
 async def test_dynamic_encryption_key_from_storage_synced_to_dashboard(
@@ -2976,9 +2973,7 @@ async def test_dynamic_encryption_key_from_storage_synced_to_dashboard(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.data[CONF_NOISE_PSK] == test_key
-    assert mock_post_key.await_args_list[0] == call(
-        "test-device", test_key, mac=mac_address
-    )
+    mock_post_key.assert_awaited_once_with("test-device", test_key, mac=mac_address)
 
 
 @pytest.mark.parametrize(
@@ -3067,6 +3062,7 @@ async def test_dynamic_encryption_key_dashboard_sync_failure_is_not_fatal(
     [
         pytest.param({"error": "unknown device"}, id="not_an_outcome"),
         pytest.param(["valid", "json", "wrong", "shape"], id="not_a_dict"),
+        pytest.param({"result": ["updated"]}, id="unhashable_result"),
     ],
 )
 @patch("homeassistant.components.esphome.manager.secrets.token_bytes")
@@ -3310,7 +3306,7 @@ async def test_dashboard_partial_success_warns_and_keeps_retrying(
 
 
 @patch("homeassistant.components.esphome.manager.secrets.token_bytes")
-async def test_dashboard_sync_warns_once_per_distinct_cause(
+async def test_dashboard_sync_warns_once_across_causes(
     mock_token_bytes: Mock,
     hass: HomeAssistant,
     mock_client: APIClient,
@@ -3319,7 +3315,7 @@ async def test_dashboard_sync_warns_once_per_distinct_cause(
     mock_dashboard: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a transient error does not mute a later distinct decline."""
+    """Test the handoff warns exactly once regardless of failure causes."""
     mac_address = "11:22:33:44:55:aa"
     mock_token_bytes.return_value = b"test_key_32_bytes_long_exactly!"
 
@@ -3349,9 +3345,9 @@ async def test_dashboard_sync_warns_once_per_distinct_cause(
         await device.mock_connect()
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert caplog.text.count("could not store the encryption key") == 2
+    assert caplog.text.count("could not store the encryption key") == 1
     assert "boom" in caplog.text
-    assert "!secret" in caplog.text
+    assert "!secret" not in caplog.text
 
 
 @patch("homeassistant.components.esphome.manager.secrets.token_bytes")
