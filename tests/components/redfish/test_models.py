@@ -2,7 +2,38 @@
 
 import pytest
 
-from homeassistant.components.redfish.models import RedfishSystem, parse_system
+from homeassistant.components.redfish.models import (
+    RedfishSystem,
+    get_reset_action_info_target,
+    parse_reset_action_info,
+    parse_system,
+)
+
+
+def test_get_reset_action_info_target_without_reset_action() -> None:
+    """Test an ActionInfo target requires a reset action."""
+    assert get_reset_action_info_target({}) is None
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param({}, id="missing-parameters"),
+        pytest.param(
+            {"Parameters": [{"Name": "ResetType"}]},
+            id="missing-allowable-values",
+        ),
+        pytest.param(
+            {"Parameters": [None, {"Name": "OtherParameter"}]},
+            id="missing-reset-type-parameter",
+        ),
+    ],
+)
+def test_parse_reset_action_info_without_usable_values(
+    payload: dict[str, object],
+) -> None:
+    """Test malformed ActionInfo parameters produce no reset types."""
+    assert parse_reset_action_info(payload) == frozenset()
 
 
 def test_parse_system_metadata_and_actions() -> None:

@@ -181,6 +181,77 @@ async def test_discover_paginated_systems(
     assert systems.keys() == {"1", "2"}
 
 
+@pytest.mark.parametrize(
+    "resources",
+    [
+        pytest.param(
+            {"/redfish/v1/": {}},
+            id="missing-systems-link",
+        ),
+        pytest.param(
+            {
+                "/redfish/v1/": {"Systems": {"@odata.id": "/redfish/v1/Systems"}},
+                "/redfish/v1/Systems": {"Members": {}},
+            },
+            id="malformed-members",
+        ),
+    ],
+)
+async def test_discover_without_usable_system_collection(
+    hass: HomeAssistant,
+    aiohttp_server: Callable[[], TestServer],
+    resources: dict[str, dict[str, Any]],
+) -> None:
+    """Test malformed system collection data produces no systems."""
+    app = web.Application()
+
+    async def response(request: web.Request) -> web.Response:
+        return web.json_response(resources[request.path])
+
+    app.router.add_get("/{path:.*}", response)
+    server = await aiohttp_server(app)
+    client = RedfishClient(
+        async_get_clientsession(hass),
+        str(server.make_url("")),
+        "user",
+        "password",
+    )
+
+    assert await client.async_get_systems() == {}
+
+
+async def test_reject_cyclic_system_collection_pagination(
+    hass: HomeAssistant,
+    aiohttp_server: Callable[[], TestServer],
+) -> None:
+    """Test cyclic system collection pagination is rejected."""
+    resources: dict[str, dict[str, Any]] = {
+        "/redfish/v1/": {
+            "Systems": {"@odata.id": "/redfish/v1/Systems"},
+        },
+        "/redfish/v1/Systems": {
+            "Members": [],
+            "Members@odata.nextLink": "/redfish/v1/Systems",
+        },
+    }
+    app = web.Application()
+
+    async def response(request: web.Request) -> web.Response:
+        return web.json_response(resources[request.path])
+
+    app.router.add_get("/{path:.*}", response)
+    server = await aiohttp_server(app)
+    client = RedfishClient(
+        async_get_clientsession(hass),
+        str(server.make_url("")),
+        "user",
+        "password",
+    )
+
+    with pytest.raises(RedfishError):
+        await client.async_get_systems()
+
+
 async def test_discover_reset_types_from_action_info(
     hass: HomeAssistant,
     aiohttp_server: Callable[[], TestServer],
@@ -291,6 +362,42 @@ async def test_post_reset_accepts_same_origin_scheme_relative_target(
             "Basic dXNlcjpwYXNzd29yZA==",
         )
     ]
+
+
+async def test_reset_authentication_error(
+    hass: HomeAssistant,
+    aiohttp_server: Callable[[], TestServer],
+) -> None:
+    """Test reset authentication errors are preserved."""
+    app = web.Application()
+
+    async def response(_request: web.Request) -> web.Response:
+        return web.Response(status=401)
+
+    app.router.add_post("/{path:.*}", response)
+    server = await aiohttp_server(app)
+    client = RedfishClient(
+        async_get_clientsession(hass),
+        str(server.make_url("")),
+        "user",
+        "password",
+    )
+
+    with pytest.raises(RedfishAuthError):
+        await client.async_reset("/redfish/reset", "On")
+
+
+async def test_reset_rejects_malformed_target(hass: HomeAssistant) -> None:
+    """Test a malformed advertised reset target is rejected."""
+    client = RedfishClient(
+        async_get_clientsession(hass),
+        "https://bmc.example",
+        "user",
+        "password",
+    )
+
+    with pytest.raises(RedfishError):
+        await client.async_reset("https://[", "On")
 
 
 @pytest.mark.parametrize(
@@ -413,4 +520,27 @@ async def test_get_response_errors(
     )
 
     with pytest.raises(expected_exception):
+        await client.async_get_systems()
+
+
+async def test_get_rejects_malformed_json(
+    hass: HomeAssistant,
+    aiohttp_server: Callable[[], TestServer],
+) -> None:
+    """Test malformed JSON is translated to a Redfish error."""
+    app = web.Application()
+
+    async def response(_request: web.Request) -> web.Response:
+        return web.Response(text="{", content_type="application/json")
+
+    app.router.add_get("/{path:.*}", response)
+    server = await aiohttp_server(app)
+    client = RedfishClient(
+        async_get_clientsession(hass),
+        str(server.make_url("")),
+        "user",
+        "password",
+    )
+
+    with pytest.raises(RedfishError):
         await client.async_get_systems()

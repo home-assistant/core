@@ -130,6 +130,7 @@ async def test_user_flow_errors(
         "bmc.example",
         "http://bmc.example",
         "ftp://bmc.example",
+        "https://[",
         "https://user:password@bmc.example",
         "https://bmc.example/path",
         "https://bmc.example?query=value",
