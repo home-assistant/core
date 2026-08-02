@@ -283,7 +283,12 @@ class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
 
         self._attr_unique_id = f"{format_ble_addr(ble_addr)}-{key}-{attribute}"
         self._attr_device_info = get_blu_trv_device_info(
-            config, ble_addr, coordinator.mac, fw_ver
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            config,
+            ble_addr,
+            coordinator.mac,
+            fw_ver,
         )
 
     @rpc_call
