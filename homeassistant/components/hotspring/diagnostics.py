@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import HotSpringConfigEntry
 
-TO_REDACT = {"unique_id", "mac_address"}
+TO_REDACT = {"hostname", "mac_address", "ssid", "unique_id"}
 
 
 async def async_get_config_entry_diagnostics(

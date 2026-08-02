@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from hotspring import HotSpringConnectionError
+from hotspring import HotSpringConnectionError, HotSpringError
 import pytest
 
 from homeassistant.components.hotspring.const import DOMAIN
@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
-
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_hotspring")
@@ -55,9 +54,15 @@ async def test_user_device_exists_abort(
     assert result.get("reason") == "already_configured"
 
 
-async def test_connection_error(hass: HomeAssistant, mock_hotspring: MagicMock) -> None:
+@pytest.mark.parametrize(
+    "exception",
+    [HotSpringConnectionError, HotSpringError],
+)
+async def test_connection_error(
+    hass: HomeAssistant, mock_hotspring: MagicMock, exception: type[Exception]
+) -> None:
     """Test we show user form on Hot Spring connection error."""
-    mock_hotspring.update.side_effect = HotSpringConnectionError
+    mock_hotspring.update.side_effect = exception
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
