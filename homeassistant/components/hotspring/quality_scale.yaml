@@ -51,15 +51,9 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: exempt
-    comment: Diagnostics will be added in a follow-up PR.
-  discovery-update-info:
-    status: exempt
-    comment: Integration does not use discovery.
-  discovery:
-    status: exempt
-    comment: Integration does not use discovery.
+  diagnostics: todo
+  discovery-update-info: todo
+  discovery: todo
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
