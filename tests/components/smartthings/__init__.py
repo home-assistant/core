@@ -39,6 +39,7 @@ DEVICE_FIXTURES = [
     "copper_water_meter_v03",
     "base_electric_meter",
     "smart_plug",
+    "fibaro_dimmer_2",
     "vd_stv_2017_k",
     "c2c_arlo_pro_3_switch",
     "yale_push_button_deadbolt_lock",

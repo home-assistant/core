@@ -9,6 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
@@ -24,7 +25,13 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.plugwise.climate import PlugwiseClimateExtraStoredData
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -112,8 +119,8 @@ async def test_adam_climate_entity_climate_changes(
     assert mock_smile_adam.set_schedule_state.call_count == 2
     mock_smile_adam.set_schedule_state.assert_called_with(
         "c50f167537524366a5af7aa3942feb1e",
-        STATE_OFF,
         "GF7  Woonkamer",
+        STATE_OFF,
     )
 
     with pytest.raises(
@@ -235,7 +242,9 @@ async def test_adam_restore_state_climate(
         )
         # Verify set_schedule_state was called with the restored schedule
         mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
-            "f871b8c4d63549319221e294e4f88074", STATE_ON, "Badkamer"
+            "f871b8c4d63549319221e294e4f88074",
+            "Badkamer",
+            STATE_ON,
         )
         assert mock_smile_adam_heat_cool.set_schedule_state.call_count == 1
 
@@ -329,7 +338,9 @@ async def test_adam_off_regulation_mode_change(
         blocking=True,
     )
     mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
-        "f871b8c4d63549319221e294e4f88074", STATE_OFF, "Badkamer"
+        "f871b8c4d63549319221e294e4f88074",
+        "Badkamer",
+        STATE_OFF,
     )
 
 
@@ -487,8 +498,8 @@ async def test_adam_3_climate_entity_attributes(
         # And set_schedule_state was called with the restored last_active_schedule
         mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
             "f871b8c4d63549319221e294e4f88074",
-            STATE_ON,
             "Badkamer",
+            STATE_ON,
         )
 
 
@@ -615,8 +626,8 @@ async def test_anna_climate_entity_climate_changes(
     assert mock_smile_anna.set_schedule_state.call_count == 1
     mock_smile_anna.set_schedule_state.assert_called_with(
         "c784ee9fdab44e1395b8dee7d7a497d5",
-        STATE_OFF,
         "standaard",
+        STATE_OFF,
     )
 
     data = mock_smile_anna.async_update.return_value
@@ -635,8 +646,8 @@ async def test_anna_climate_entity_climate_changes(
         assert mock_smile_anna.set_schedule_state.call_count == 2
         mock_smile_anna.set_schedule_state.assert_called_with(
             "c784ee9fdab44e1395b8dee7d7a497d5",
-            STATE_ON,
             "standaard",
+            STATE_ON,
         )
 
     # Mock user deleting last schedule from app or browser
@@ -680,3 +691,22 @@ async def test_anna_p1_climate_snapshot(
 ) -> None:
     """Test Anna P1 climate snapshot."""
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+@pytest.mark.parametrize("chosen_env", ["m_adam_cooling"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
+async def test_tom_without_temperature_measurement(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smile_adam_heat_cool: MagicMock,
+) -> None:
+    """Test Tom without temperature measurement."""
+    data = mock_smile_adam_heat_cool.async_update.return_value
+    del data["f871b8c4d63549319221e294e4f88074"]["sensors"]["temperature"]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("climate.bathroom")) is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None

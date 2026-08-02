@@ -3,7 +3,7 @@
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from miio import Device as MiioDevice
 
@@ -235,6 +235,7 @@ class XiaomiGenericBinarySensor(
         self._attr_is_on = self._determine_native_value()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         self._attr_is_on = self._determine_native_value()
 

@@ -214,6 +214,24 @@ async def test_energy_details_sensor_unknown_when_no_meters(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_energy_details_sensor_keeps_unit_when_api_fails(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+) -> None:
+    """Test energy detail sensors keep their unit when the initial API call fails."""
+    solaredge_api.get_energy_details.return_value = {}
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.solaredge_produced_energy")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes["unit_of_measurement"] == "Wh"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_energy_details_filters_meters(
     recorder_mock: Recorder,
     hass: HomeAssistant,

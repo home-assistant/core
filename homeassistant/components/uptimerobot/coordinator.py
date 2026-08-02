@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the uptimerobot integration."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pyuptimerobot import (
     UptimeRobot,
@@ -43,6 +43,7 @@ class UptimeRobotDataUpdateCoordinator(
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> dict[int, UptimeRobotMonitor]:
         """Update data."""
         try:
@@ -68,8 +69,8 @@ class UptimeRobotDataUpdateCoordinator(
             device_registry = dr.async_get(self.hass)
 
             for monitor_id in stale_ids:
-                if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, str(monitor_id))}
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, str(monitor_id)), self.config_entry.entry_id
                 ):
                     device_registry.async_update_device(
                         device_id=device.id,

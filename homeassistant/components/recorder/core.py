@@ -10,7 +10,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from propcache.api import cached_property
 import psutil_home_assistant as ha_psutil
@@ -566,8 +566,8 @@ class Recorder(threading.Thread):
         statistic_id: str,
         *,
         new_statistic_id: str | UndefinedType = UNDEFINED,
-        new_unit_class: str | None | UndefinedType = UNDEFINED,
-        new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+        new_unit_class: str | UndefinedType | None = UNDEFINED,
+        new_unit_of_measurement: str | UndefinedType | None = UNDEFINED,
         on_done: Callable[[], None] | None = None,
     ) -> None:
         """Update statistics metadata for a statistic_id."""
@@ -668,6 +668,7 @@ class Recorder(threading.Thread):
             )
             return SHUTDOWN_TASK
 
+    @override
     def run(self) -> None:
         """Run the recorder thread."""
         self.is_running = True

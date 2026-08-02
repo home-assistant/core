@@ -22,7 +22,7 @@ async def test_upnp_binary_sensors(
     # Second poll.
     mock_igd_device: IgdDevice = mock_config_entry.igd_device
     mock_igd_device.async_get_traffic_and_status_data.return_value = IgdState(
-        timestamp=datetime.now(),
+        timestamp=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
         bytes_received=0,
         bytes_sent=0,
         packets_received=0,
@@ -35,6 +35,10 @@ async def test_upnp_binary_sensors(
         kibibytes_per_sec_sent=None,
         packets_per_sec_received=None,
         packets_per_sec_sent=None,
+        kibibytes_per_sec_received_no_rollover=None,
+        kibibytes_per_sec_sent_no_rollover=None,
+        packets_per_sec_received_no_rollover=None,
+        packets_per_sec_sent_no_rollover=None,
         port_mapping_number_of_entries=0,
     )
 

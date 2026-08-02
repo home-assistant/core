@@ -1,22 +1,20 @@
 """FRITZ image integration."""
 
 from io import BytesIO
-import logging
+from typing import override
 
 from requests.exceptions import RequestException
 
 from homeassistant.components.image import ImageEntity
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import DOMAIN, Platform
+from .const import DOMAIN, LOGGER
 from .coordinator import AvmWrapper, FritzConfigEntry
 from .entity import FritzBoxBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -41,7 +39,7 @@ async def _migrate_to_new_unique_id(
         return
 
     entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
-    _LOGGER.debug(
+    LOGGER.debug(
         "Migrating guest Wi-Fi image unique_id from [%s] to [%s]",
         old_unique_id,
         new_unique_id,
@@ -98,10 +96,11 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
             "png", border=2
         )
         qr_bytes = qr_stream.getvalue()
-        _LOGGER.debug("fetched %s bytes", len(qr_bytes))
+        LOGGER.debug("fetched %s bytes", len(qr_bytes))
 
         return qr_bytes
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Fetch and set initial data and state."""
         self._current_qr_bytes = await self.hass.async_add_executor_job(
@@ -121,11 +120,12 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
 
         if self._current_qr_bytes != qr_bytes:
             dt_now = dt_util.utcnow()
-            _LOGGER.debug("qr code has changed, reset image last updated property")
+            LOGGER.debug("qr code has changed, reset image last updated property")
             self._attr_image_last_updated = dt_now
             self._current_qr_bytes = qr_bytes
             self.async_write_ha_state()
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
         return self._current_qr_bytes

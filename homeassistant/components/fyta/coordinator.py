@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from fyta_cli.fyta_connector import FytaConnector
 from fyta_cli.fyta_exceptions import (
@@ -47,6 +48,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
         self._plants_last_update: set[int] = set()
         self.new_device_callbacks: list[Callable[[int], None]] = []
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[int, Plant]:
@@ -54,7 +56,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
 
         if (
             self.fyta.expiration is None
-            or self.fyta.expiration.timestamp() < datetime.now().timestamp()
+            or self.fyta.expiration.timestamp() < datetime.now().timestamp()  # pylint: disable=home-assistant-enforce-naive-now
         ):
             await self.renew_authentication()
 
@@ -95,13 +97,9 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
 
             device_registry = dr.async_get(self.hass)
             for plant_id in removed_plants:
-                if device := device_registry.async_get_device(
-                    identifiers={
-                        (
-                            DOMAIN,
-                            f"{self.config_entry.entry_id}-{plant_id}",
-                        )
-                    }
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, f"{self.config_entry.entry_id}-{plant_id}"),
+                    self.config_entry.entry_id,
                 ):
                     device_registry.async_update_device(
                         device_id=device.id,

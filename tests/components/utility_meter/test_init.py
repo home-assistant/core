@@ -651,19 +651,11 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     utility_meter_config_entry: MockConfigEntry,
-    sensor_config_entry: ConfigEntry,
     sensor_device: dr.DeviceEntry,
     sensor_entity_entry: er.RegistryEntry,
     expected_entities: set[str],
 ) -> None:
-    """Test config entry is removed when the source entity is removed."""
-    # Add another config entry to the sensor device
-    other_config_entry = MockConfigEntry()
-    other_config_entry.add_to_hass(hass)
-    device_registry.async_update_device(
-        sensor_device.id, add_config_entry_id=other_config_entry.entry_id
-    )
-
+    """Test the source entity is removed while the source device survives."""
     assert await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -682,15 +674,12 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     sensor_device = device_registry.async_get(sensor_device.id)
     assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
 
-    # Remove the source sensor's config entry from the device, this removes the
-    # source sensor
+    # Remove the source sensor
     with patch(
         "homeassistant.components.utility_meter.async_unload_entry",
         wraps=utility_meter.async_unload_entry,
     ) as mock_unload_entry:
-        device_registry.async_update_device(
-            sensor_device.id, remove_config_entry_id=sensor_config_entry.entry_id
-        )
+        entity_registry.async_remove(sensor_entity_entry.entity_id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     mock_unload_entry.assert_not_called()
@@ -703,8 +692,10 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     ):
         assert utility_meter_entity.device_id is None
 
-    # Check that the utility_meter config entry is not in the device
+    # Check that the source device survives and does not contain the utility_meter
+    # config entry
     sensor_device = device_registry.async_get(sensor_device.id)
+    assert sensor_device is not None
     assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
 
     # Check that the utility_meter config entry is not removed
@@ -962,7 +953,7 @@ async def test_migration_2_1(
     tariffs: list[str],
     expected_entities: set[str],
 ) -> None:
-    """Test migration from v2.1 removes utility_meter config entry from device."""
+    """Test migration from v2.1 does not add the utility_meter config entry to the device."""
 
     utility_meter_config_entry = MockConfigEntry(
         data={},
@@ -983,25 +974,15 @@ async def test_migration_2_1(
     )
     utility_meter_config_entry.add_to_hass(hass)
 
-    # Add the helper config entry to the device
-    device_registry.async_update_device(
-        sensor_device.id, add_config_entry_id=utility_meter_config_entry.entry_id
-    )
-
-    # Check preconditions
-    sensor_device = device_registry.async_get(sensor_device.id)
-    assert utility_meter_config_entry.entry_id in sensor_device.config_entries
-
     await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert utility_meter_config_entry.state is ConfigEntryState.LOADED
 
-    # Check that the helper config entry is removed from the device and the helper
+    # Check that the helper config entry is not in the device and the helper
     # entities are linked to the source device
     sensor_device = device_registry.async_get(sensor_device.id)
     assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
-    # Check that the entities are linked to the other device
     entities = set()
     for (
         utility_meter_entity

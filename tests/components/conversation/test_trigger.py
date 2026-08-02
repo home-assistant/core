@@ -573,6 +573,21 @@ async def test_fails_on_no_sentences(hass: HomeAssistant) -> None:
         )
 
 
+async def test_fails_on_bad_parse(hass: HomeAssistant) -> None:
+    """Test that validation fails when sentence is malformed."""
+    with pytest.raises(vol.Invalid):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "id": "trigger1",
+                    "platform": "conversation",
+                    "command": ["[test)"],
+                },
+            ],
+        )
+
+
 async def test_wildcards(hass: HomeAssistant, service_calls: list[ServiceCall]) -> None:
     """Test wildcards in trigger sentences."""
     assert await async_setup_component(
@@ -695,4 +710,39 @@ async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
     assert (
         result.response.speech["plain"]["speech"]
         == "my_device - assist_satellite.my_satellite"
+    )
+
+
+async def test_inline_range_list(hass: HomeAssistant) -> None:
+    """Test sentence trigger and response with an inline number range list."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["set brightness to {0..100:brightness} percent"],
+                },
+                "action": {
+                    "set_conversation_response": "Brightness set to"
+                    " {{trigger.slots.brightness|int}}"
+                    " ({{trigger.details.brightness.text}}) percent",
+                },
+            }
+        },
+    )
+
+    service_response = await hass.services.async_call(
+        "conversation",
+        "process",
+        {
+            "text": "set brightness to forty two percent",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert (
+        service_response["response"]["speech"]["plain"]["speech"]
+        == "Brightness set to 42 (forty two) percent"
     )

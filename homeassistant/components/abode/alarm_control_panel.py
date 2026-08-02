@@ -1,5 +1,7 @@
 """Support for Abode Security System alarm control panels."""
 
+from typing import override
+
 from jaraco.abode.devices.alarm import Alarm
 
 from homeassistant.components.alarm_control_panel import (
@@ -38,6 +40,7 @@ class AbodeAlarm(AbodeDevice, AlarmControlPanelEntity):
     _device: Alarm
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         if self._device.is_standby:
@@ -48,19 +51,23 @@ class AbodeAlarm(AbodeDevice, AlarmControlPanelEntity):
             return AlarmControlPanelState.ARMED_HOME
         return None
 
+    @override
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._device.set_standby()
 
+    @override
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._device.set_home()
 
+    @override
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._device.set_away()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {

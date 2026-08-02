@@ -5,6 +5,7 @@ import logging
 import pytest
 
 from homeassistant.components import automation
+from homeassistant.components.knx import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
@@ -242,7 +243,7 @@ async def test_telegram_trigger_options(
         assert len(service_calls) == 0
 
     await hass.services.async_call(
-        "knx",
+        DOMAIN,
         "send",
         {"address": "0/0/1", "payload": True},
         blocking=True,

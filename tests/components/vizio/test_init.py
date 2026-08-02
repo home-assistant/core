@@ -6,7 +6,10 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.media_player import MediaPlayerDeviceClass
+from homeassistant.components.media_player import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    MediaPlayerDeviceClass,
+)
 from homeassistant.components.vizio import DATA_APPS
 from homeassistant.components.vizio.const import DOMAIN
 from homeassistant.const import (
@@ -15,13 +18,12 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     STATE_UNAVAILABLE,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import setup_integration
-from .const import APP_LIST, HOST2, MODEL, NAME2, UNIQUE_ID, VERSION
+from .const import APP_RECORDS, HOST2, MODEL, NAME2, UNIQUE_ID, VERSION
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -32,12 +34,12 @@ async def test_tv_load_and_unload(
 ) -> None:
     """Test loading and unloading TV entry."""
     await setup_integration(hass, mock_tv_config_entry)
-    assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 1
+    assert len(hass.states.async_entity_ids(MEDIA_PLAYER_DOMAIN)) == 1
     assert DATA_APPS in hass.data
 
     assert await hass.config_entries.async_unload(mock_tv_config_entry.entry_id)
     await hass.async_block_till_done()
-    entities = hass.states.async_entity_ids(Platform.MEDIA_PLAYER)
+    entities = hass.states.async_entity_ids(MEDIA_PLAYER_DOMAIN)
     assert len(entities) == 1
     for entity in entities:
         assert hass.states.get(entity).state == STATE_UNAVAILABLE
@@ -50,11 +52,11 @@ async def test_speaker_load_and_unload(
 ) -> None:
     """Test loading and unloading speaker entry."""
     await setup_integration(hass, mock_speaker_config_entry)
-    assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 1
+    assert len(hass.states.async_entity_ids(MEDIA_PLAYER_DOMAIN)) == 1
 
     assert await hass.config_entries.async_unload(mock_speaker_config_entry.entry_id)
     await hass.async_block_till_done()
-    entities = hass.states.async_entity_ids(Platform.MEDIA_PLAYER)
+    entities = hass.states.async_entity_ids(MEDIA_PLAYER_DOMAIN)
     assert len(entities) == 1
     for entity in entities:
         assert hass.states.get(entity).state == STATE_UNAVAILABLE
@@ -71,7 +73,7 @@ async def test_coordinator_update_failure(
 ) -> None:
     """Test coordinator update failure after 10 days."""
     await setup_integration(hass, mock_tv_config_entry)
-    assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 1
+    assert len(hass.states.async_entity_ids(MEDIA_PLAYER_DOMAIN)) == 1
     assert DATA_APPS in hass.data
 
     # Failing 25 days in a row should result in a single log message
@@ -107,15 +109,15 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     config_entry_2.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry_2.entry_id)
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids(Platform.MEDIA_PLAYER)) == 2
+    assert len(hass.states.async_entity_ids(MEDIA_PLAYER_DOMAIN)) == 2
 
     # Unload first TV — coordinator should still be fetching apps
     assert await hass.config_entries.async_unload(mock_tv_config_entry.entry_id)
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
-        return_value=APP_LIST,
+        "homeassistant.components.vizio.coordinator.fetch_remote_app_catalog",
+        return_value=APP_RECORDS,
     ) as mock_fetch:
         freezer.tick(timedelta(days=1))
         async_fire_time_changed(hass)
@@ -127,8 +129,8 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
-        return_value=APP_LIST,
+        "homeassistant.components.vizio.coordinator.fetch_remote_app_catalog",
+        return_value=APP_RECORDS,
     ) as mock_fetch:
         freezer.tick(timedelta(days=2))
         async_fire_time_changed(hass)

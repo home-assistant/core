@@ -1,6 +1,7 @@
 """Sensor platform for the Ouman EH-800 integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from ouman_eh_800_api import (
     L1BaseEndpoints,
@@ -179,6 +180,7 @@ class OumanEh800SensorEntity(OumanEh800Entity, SensorEntity):
     entity_description: OumanEh800SensorDescription
 
     @property
+    @override
     def native_value(self) -> float | str:
         """Return the current sensor value."""
         value = self.coordinator.data[self._endpoint]

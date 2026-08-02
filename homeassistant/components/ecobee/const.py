@@ -17,7 +17,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import Platform
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "ecobee"
 ATTR_AVAILABLE_SENSORS = "available_sensors"

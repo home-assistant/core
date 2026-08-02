@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import attr
 from httpx import ConnectError
 from ollama import ResponseError
 import pytest
@@ -129,6 +130,31 @@ async def test_async_setup_entry_auth_failed_on_response_error(
         await hass.async_block_till_done()
 
         assert mock_config_entry.state is entry_state
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        ConnectError(message="Connect error"),
+        ConnectionError("Failed to connect to Ollama."),
+        TimeoutError(),
+    ],
+)
+async def test_async_setup_entry_not_ready_on_connection_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+) -> None:
+    """Test async_setup_entry raises ConfigEntryNotReady on connection errors."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(side_effect=side_effect)
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_migration_from_v1(
@@ -707,7 +733,7 @@ async def test_migration_from_v2_1(
     device_1 = device_registry.async_update_device(
         device_1.id, add_config_entry_id="mock_entry_id", add_config_subentry_id=None
     )
-    assert device_1.config_entries_subentries == {"mock_entry_id": {None, "mock_id_1"}}
+    assert device_1.config_entries_subentries == {"mock_entry_id": {"mock_id_1"}}
     entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,
@@ -1021,13 +1047,19 @@ async def test_migrate_entry_from_v3_2(
     conversation_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=conversation_subentry_id,
-        disabled_by=device_disabled_by,
         identifiers={(DOMAIN, mock_config_entry.entry_id)},
         name=mock_config_entry.title,
         manufacturer="Ollama",
         model="Ollama",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
+    # A stale disabled_by flag can't be set through the registry API, which
+    # validates it against the config entry's disabled state; write it
+    # directly to simulate existing storage.
+    conversation_device = attr.evolve(
+        conversation_device, disabled_by=device_disabled_by
+    )
+    device_registry.devices[conversation_device.id] = conversation_device
     conversation_entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,

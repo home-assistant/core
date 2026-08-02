@@ -27,6 +27,7 @@ from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
 from habluetooth import (
     BaseHaRemoteScanner,
     BaseHaScanner,
+    BluetoothReachabilityIntent,
     BluetoothScannerDevice,
     BluetoothScanningMode,
     HaBluetoothConnector,
@@ -55,6 +56,7 @@ from . import passive_update_processor, websocket_api
 from .api import (
     _get_manager,
     async_address_present,
+    async_address_reachability_diagnostics,
     async_ble_device_from_address,
     async_clear_address_from_match_history,
     async_clear_advertisement_history,
@@ -92,7 +94,7 @@ from .const import (
 )
 from .manager import HomeAssistantBluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
-from .models import BluetoothCallback, BluetoothChange
+from .models import BluetoothCallback, BluetoothCallbackReplay, BluetoothChange
 from .storage import BluetoothStorage
 from .util import adapter_title, resolve_scanning_mode
 
@@ -107,13 +109,16 @@ __all__ = [
     "BaseHaScanner",
     "BluetoothCallback",
     "BluetoothCallbackMatcher",
+    "BluetoothCallbackReplay",
     "BluetoothChange",
+    "BluetoothReachabilityIntent",
     "BluetoothScannerDevice",
     "BluetoothScanningMode",
     "BluetoothServiceInfo",
     "BluetoothServiceInfoBleak",
     "HaBluetoothConnector",
     "async_address_present",
+    "async_address_reachability_diagnostics",
     "async_ble_device_from_address",
     "async_clear_address_from_match_history",
     "async_clear_advertisement_history",

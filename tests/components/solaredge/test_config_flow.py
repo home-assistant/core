@@ -175,7 +175,7 @@ async def test_ignored_entry_does_not_cause_error(
 ) -> None:
     """Test an ignored entry does not cause an error on new entry."""
     MockConfigEntry(
-        domain="solaredge",
+        domain=DOMAIN,
         data={CONF_NAME: DEFAULT_NAME, CONF_API_KEY: API_KEY},
         source=SOURCE_IGNORE,
     ).add_to_hass(hass)

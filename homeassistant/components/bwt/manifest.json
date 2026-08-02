@@ -1,0 +1,6 @@
+{
+  "domain": "bwt",
+  "name": "BWT",
+  "integration_type": "virtual",
+  "supported_by": "pooldose"
+}

@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from fivem import FiveM, FiveMServerOfflineError
 
@@ -58,6 +58,7 @@ class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.version = info["version"]
         self.game_name = info["vars"]["gamename"]
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Get server data from 3rd party library and update properties."""
         try:

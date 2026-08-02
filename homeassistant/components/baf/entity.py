@@ -1,5 +1,7 @@
 """The baf integration entities."""
 
+from typing import override
+
 from aiobafi6 import Device
 
 from homeassistant.core import callback
@@ -38,10 +40,12 @@ class BAFEntity(Entity):
         self._async_update_attrs()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add data updated listener after this object has been initialized."""
         self._device.add_callback(self._async_update_from_device)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove data updated listener after this object has been initialized."""
         self._device.remove_callback(self._async_update_from_device)

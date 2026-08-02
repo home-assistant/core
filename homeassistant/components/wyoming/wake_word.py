@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import AsyncIterable
 import logging
+from typing import override
 
 from wyoming.audio import AudioChunk, AudioStart
 from wyoming.client import AsyncTcpClient
@@ -54,8 +55,9 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
             for ww in wake_service.models
         ]
         self._attr_name = wake_service.name
-        self._attr_unique_id = f"{config_entry.entry_id}-wake_word"
+        self._attr_unique_id = f"{config_entry.entry_id}-wake_word"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
+    @override
     async def get_supported_wake_words(self) -> list[wake_word.WakeWord]:
         """Return a list of supported wake words."""
         info = await load_wyoming_info(
@@ -75,6 +77,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
 
         return self._supported_wake_words
 
+    @override
     async def _async_process_audio_stream(
         self, stream: AsyncIterable[tuple[bytes, int]], wake_word_id: str | None
     ) -> wake_word.DetectionResult | None:

@@ -48,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the HomematicIP Cloud component."""
+    """Set up the HomematicIP Cloud integration."""
     accesspoints = config.get(DOMAIN, [])
 
     for conf in accesspoints:
@@ -126,8 +126,6 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
 ) -> bool:
     """Migrate the config entry from version 1 to version 2."""
-    if config_entry.version > 2:
-        return False
 
     if config_entry.version == 1:
         _LOGGER.debug("Migrating HomematicIP Cloud config entry to version 2")

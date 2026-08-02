@@ -7,6 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "silver",
-  "requirements": ["pyomie==1.1.1"],
+  "requirements": ["pyomie==1.1.3"],
   "single_config_entry": true
 }

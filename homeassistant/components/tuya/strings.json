@@ -15,6 +15,9 @@
         "description": "The Tuya integration now uses an improved login method. To reauthenticate with your Smart Life or Tuya Smart account, you need to enter your user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case-sensitive, please be sure to enter it exactly as shown in the app."
       },
       "scan": {
+        "data": {
+          "QR": "QR code"
+        },
         "description": "Use the Smart Life app or Tuya Smart app to scan the following QR code to complete the login.\n\nContinue to the next step once you have completed this step in the app."
       },
       "user": {
@@ -478,6 +481,15 @@
           "1": "Continuous working mode"
         }
       },
+      "kettle_work_mode": {
+        "name": "Work mode",
+        "state": {
+          "boiling_quick": "Quick boil",
+          "setting_quick": "Quick heat",
+          "temp_boiling": "Boil and keep warm",
+          "temp_setting": "Heat and keep warm"
+        }
+      },
       "led_type": {
         "name": "Light source type",
         "state": {
@@ -513,6 +525,16 @@
         "state": {
           "interim": "Interim",
           "smart": "Smart"
+        }
+      },
+      "quick_heat_temperature": {
+        "name": "Quick heat temperature",
+        "state": {
+          "80": "80 °C",
+          "85": "85 °C",
+          "90": "90 °C",
+          "95": "95 °C",
+          "100": "100 °C"
         }
       },
       "record_mode": {

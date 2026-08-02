@@ -54,7 +54,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.SWITCH]
 
@@ -623,7 +623,7 @@ async def test_power_switch_service_validation_errors(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     exception_match: str,
     entity_id: str,
-    allowed_values: list[str | None] | None | HomeConnectError,
+    allowed_values: list[str | None] | HomeConnectError | None,
     service: str,
 ) -> None:
     """Test power switch functionality validation errors."""

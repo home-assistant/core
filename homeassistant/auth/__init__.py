@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from datetime import datetime, timedelta
 from functools import partial
 import time
-from typing import Any, cast
+from typing import Any, cast, override
 
 import jwt
 
@@ -109,6 +109,7 @@ class AuthManagerFlowManager(
         super().__init__(hass)
         self.auth_manager = auth_manager
 
+    @override
     async def async_create_flow(
         self,
         handler_key: tuple[str, str],
@@ -122,6 +123,7 @@ class AuthManagerFlowManager(
             raise KeyError(f"Unknown auth provider {handler_key}")
         return await auth_provider.async_login_flow(context)
 
+    @override
     async def async_finish_flow(
         self,
         flow: FlowHandler[AuthFlowContext, AuthFlowResult, tuple[str, str]],
@@ -673,7 +675,7 @@ class AuthManager:
             jwt_wrapper.verify_and_decode(
                 token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"]
             )
-        except jwt.InvalidTokenError:
+        except jwt.InvalidTokenError, jwt.InvalidKeyError:
             return None
 
         if refresh_token is None or not refresh_token.user.is_active:

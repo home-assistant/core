@@ -802,7 +802,7 @@ def test_date() -> None:
         with pytest.raises(vol.Invalid):
             schema(value)
 
-    schema(datetime.now().date())
+    schema(datetime.now().date())  # pylint: disable=home-assistant-enforce-naive-now
     schema("2016-11-23")
 
 
@@ -814,7 +814,7 @@ def test_time() -> None:
         with pytest.raises(vol.Invalid):
             schema(value)
 
-    schema(datetime.now().time())
+    schema(datetime.now().time())  # pylint: disable=home-assistant-enforce-naive-now
     schema("23:42:00")
     schema("23:42")
 
@@ -826,7 +826,7 @@ def test_datetime() -> None:
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    schema(datetime.now())
+    schema(datetime.now())  # pylint: disable=home-assistant-enforce-naive-now
     schema("2016-11-23T18:59:08")
 
 
@@ -2034,7 +2034,7 @@ def test_stop_action_schema_error_false_with_response() -> None:
     assert config["response_variable"] == "result"
 
 
-_COMMENT_SCHEMA_PARAMS = [
+_NOTE_SCHEMA_PARAMS = [
     pytest.param(
         cv.TRIGGER_BASE_SCHEMA,
         {"platform": "event"},
@@ -2053,20 +2053,20 @@ _COMMENT_SCHEMA_PARAMS = [
 ]
 
 
-@pytest.mark.parametrize(("validator", "base_config"), _COMMENT_SCHEMA_PARAMS)
+@pytest.mark.parametrize(("validator", "base_config"), _NOTE_SCHEMA_PARAMS)
 @pytest.mark.usefixtures("hass")
-def test_base_schemas_accept_comment(
+def test_base_schemas_accept_note(
     validator: Callable[[dict[str, Any]], dict[str, Any]],
     base_config: dict[str, Any],
 ) -> None:
-    """Test that the comment field is accepted and stripped from the output."""
-    validated = validator({**base_config, "comment": "Single line"})
-    assert "comment" not in validated
+    """Test that the note field is accepted and stripped from the output."""
+    validated = validator({**base_config, "note": "Single line"})
+    assert "note" not in validated
 
 
-@pytest.mark.parametrize(("validator", "base_config"), _COMMENT_SCHEMA_PARAMS)
+@pytest.mark.parametrize(("validator", "base_config"), _NOTE_SCHEMA_PARAMS)
 @pytest.mark.parametrize(
-    "invalid_comment",
+    "invalid_note",
     [
         pytest.param(None, id="none"),
         pytest.param(42, id="int"),
@@ -2076,11 +2076,47 @@ def test_base_schemas_accept_comment(
     ],
 )
 @pytest.mark.usefixtures("hass")
-def test_base_schemas_reject_invalid_comment(
+def test_base_schemas_reject_invalid_note(
     validator: Callable[[dict[str, Any]], dict[str, Any]],
     base_config: dict[str, Any],
-    invalid_comment: Any,
+    invalid_note: Any,
 ) -> None:
-    """Test that script, condition, trigger base schemas reject non-string comments."""
+    """Test that script, condition, trigger base schemas reject non-string notes."""
     with pytest.raises(vol.Invalid):
-        validator({**base_config, "comment": invalid_comment})
+        validator({**base_config, "note": invalid_note})
+
+
+_CHOOSE_OPTION_BASE_CONFIG = {
+    "conditions": [
+        {"condition": "state", "entity_id": "sun.sun", "state": "above_horizon"}
+    ],
+    "sequence": [{"action": "test.foo"}],
+}
+
+
+@pytest.mark.usefixtures("hass")
+def test_choose_option_accepts_note() -> None:
+    """Test that the note field is accepted and stripped from a choose option."""
+    validated = cv.script_action(
+        {"choose": [{**_CHOOSE_OPTION_BASE_CONFIG, "note": "Single line"}]}
+    )
+    assert "note" not in validated["choose"][0]
+
+
+@pytest.mark.parametrize(
+    "invalid_note",
+    [
+        pytest.param(None, id="none"),
+        pytest.param(42, id="int"),
+        pytest.param(True, id="bool"),
+        pytest.param([], id="list"),
+        pytest.param({}, id="dict"),
+    ],
+)
+@pytest.mark.usefixtures("hass")
+def test_choose_option_rejects_invalid_note(invalid_note: Any) -> None:
+    """Test that choose option schemas reject non-string notes."""
+    with pytest.raises(vol.Invalid):
+        cv.script_action(
+            {"choose": [{**_CHOOSE_OPTION_BASE_CONFIG, "note": invalid_note}]}
+        )

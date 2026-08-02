@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate, Literal
+from typing import Any, Concatenate, Literal, override
 
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, CommandError, ConnectError
@@ -211,11 +211,13 @@ class VlcDevice(MediaPlayerEntity):
                 self._attr_media_title = media_title
 
     @catch_vlc_errors()
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Seek the media to a specific location."""
         await self._vlc.seek(round(position))
 
     @catch_vlc_errors()
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         assert self._attr_volume_level is not None
@@ -228,6 +230,7 @@ class VlcDevice(MediaPlayerEntity):
         self._attr_is_volume_muted = mute
 
     @catch_vlc_errors()
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._vlc.set_volume(round(volume * MAX_VOLUME))
@@ -238,6 +241,7 @@ class VlcDevice(MediaPlayerEntity):
             self._attr_is_volume_muted = False
 
     @catch_vlc_errors()
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         status = await self._vlc.status()
@@ -249,6 +253,7 @@ class VlcDevice(MediaPlayerEntity):
         self._attr_state = MediaPlayerState.PLAYING
 
     @catch_vlc_errors()
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         status = await self._vlc.status()
@@ -259,12 +264,14 @@ class VlcDevice(MediaPlayerEntity):
         self._attr_state = MediaPlayerState.PAUSED
 
     @catch_vlc_errors()
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._vlc.stop()
         self._attr_state = MediaPlayerState.IDLE
 
     @catch_vlc_errors()
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -285,26 +292,31 @@ class VlcDevice(MediaPlayerEntity):
         self._attr_state = MediaPlayerState.PLAYING
 
     @catch_vlc_errors()
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._vlc.prev()
 
     @catch_vlc_errors()
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._vlc.next()
 
     @catch_vlc_errors()
+    @override
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         await self._vlc.clear()
 
     @catch_vlc_errors()
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         shuffle_command: Literal["on", "off"] = "on" if shuffle else "off"
         await self._vlc.random(shuffle_command)
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,

@@ -3,6 +3,7 @@
 import datetime as dt
 from datetime import timedelta
 import logging
+from typing import override
 
 import pyomie.main as pyomie
 from pyomie.model import OMIEResults, SpotData
@@ -39,13 +40,14 @@ class OMIECoordinator(DataUpdateCoordinator[OMIEResults[SpotData]]):
         )
         self._client_session = async_get_clientsession(hass)
 
+    @override
     async def _async_update_data(self) -> OMIEResults[SpotData]:
         """Update OMIE data, fetching the current CET day."""
         cet_today = dt_util.now().astimezone(CET).date()
         if self.data and self.data.market_date == cet_today:
             data = self.data
         else:
-            data = await self._spot_price(cet_today)
+            data = await self.async_get_spot_price(cet_today)
 
         self._set_update_interval()
         return data
@@ -56,7 +58,7 @@ class OMIECoordinator(DataUpdateCoordinator[OMIEResults[SpotData]]):
         self.update_interval = calc_update_interval(now)
         _LOGGER.debug("Next refresh at %s", (now + self.update_interval).isoformat())
 
-    async def _spot_price(self, date: dt.date) -> OMIEResults[SpotData]:
+    async def async_get_spot_price(self, date: dt.date) -> OMIEResults[SpotData]:
         """Fetch OMIE spot price data for the given date."""
         _LOGGER.debug("Fetching OMIE spot data for %s", date)
         return await pyomie.spot_price(self._client_session, date)

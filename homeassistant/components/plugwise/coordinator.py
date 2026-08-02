@@ -1,5 +1,7 @@
 """DataUpdateCoordinator for Plugwise."""
 
+from typing import override
+
 from packaging.version import Version
 from plugwise import GwEntityData, Smile
 from plugwise.exceptions import (
@@ -79,6 +81,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         if self._connected and self.api.smile.type == "power":
             self.update_interval = P1_UPDATE_INTERVAL
 
+    @override
     async def _async_setup(self) -> None:
         """Initialize the update_data process."""
         device_reg = dr.async_get(self.hass)
@@ -92,6 +95,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
             if identifier[0] == DOMAIN
         }
 
+    @override
     async def _async_update_data(self) -> dict[str, GwEntityData]:
         """Fetch data from Plugwise."""
         try:
@@ -157,7 +161,9 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         device_reg = dr.async_get(self.hass)
         for device_id in removed_devices:
             if (
-                device_entry := device_reg.async_get_device({(DOMAIN, device_id)})
+                device_entry := device_reg.async_get_device_by_identifier(
+                    (DOMAIN, device_id), self.config_entry.entry_id
+                )
             ) is not None:
                 device_reg.async_update_device(
                     device_entry.id, remove_config_entry_id=self.config_entry.entry_id
@@ -193,7 +199,9 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         """Update device sw_version in device_registry."""
         device_reg = dr.async_get(self.hass)
         if (
-            device_entry := device_reg.async_get_device({(DOMAIN, device_id)})
+            device_entry := device_reg.async_get_device_by_identifier(
+                (DOMAIN, device_id), self.config_entry.entry_id
+            )
         ) is not None:
             device_reg.async_update_device(device_entry.id, sw_version=firmware)
             LOGGER.debug(

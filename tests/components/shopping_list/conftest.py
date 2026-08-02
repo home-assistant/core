@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.shopping_list import intent as sl_intent
+from homeassistant.components.shopping_list import DOMAIN, intent as sl_intent
 from homeassistant.components.shopping_list.common import PERSISTENCE
 from homeassistant.core import HomeAssistant
 
@@ -30,7 +30,7 @@ def shopping_list_tmp_path(tmp_path: Path, hass: HomeAssistant) -> Generator[Non
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Config Entry fixture."""
-    return MockConfigEntry(domain="shopping_list")
+    return MockConfigEntry(domain=DOMAIN)
 
 
 @pytest.fixture

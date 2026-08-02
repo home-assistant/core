@@ -79,14 +79,24 @@ async def test_set_value(
             "authentication_error",
             None,
         ),
-        (TimeoutError("timed out"), HomeAssistantError, "communication_error", None),
+        (
+            TimeoutError("timed out"),
+            HomeAssistantError,
+            "communication_error",
+            None,
+        ),
         (
             ServerTimeoutError("timed out"),
             HomeAssistantError,
             "communication_error",
             None,
         ),
-        (ParseJSONError("bad json"), HomeAssistantError, "communication_error", None),
+        (
+            ParseJSONError("bad json"),
+            HomeAssistantError,
+            "communication_error",
+            None,
+        ),
         (
             UnsupportedFeature("old firmware"),
             HomeAssistantError,

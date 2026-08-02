@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from linkplay.bridge import LinkPlayBridge, LinkPlayPlayer
 from linkplay.consts import AudioOutputHwMode
@@ -106,6 +106,7 @@ class LinkPlaySelect(LinkPlayBaseEntity, SelectEntity):
             self._attr_current_option = None
 
     @exception_wrap
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         await self.entity_description.set_option_fn(self._bridge, option)

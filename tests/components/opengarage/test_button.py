@@ -1,6 +1,9 @@
 """Test the OpenGarage Browser buttons."""
 
+import logging
 from unittest.mock import MagicMock
+
+import pytest
 
 from homeassistant.components import button
 from homeassistant.const import ATTR_ENTITY_ID
@@ -32,3 +35,24 @@ async def test_buttons(
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
+
+
+async def test_device_info_sw_version_is_string(
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that sw_version is a string even when API returns int."""
+    mock_config_entry.add_to_hass(hass)
+    with caplog.at_level(logging.WARNING, logger="homeassistant.helpers.frame"):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")}
+    )
+    assert device_entry
+    assert device_entry.sw_version == "120"
+    assert "non-string value" not in caplog.text

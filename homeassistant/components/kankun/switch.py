@@ -1,7 +1,7 @@
 """Support for customised Kankun SP3 Wifi switch."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import requests
 import voluptuous as vol
@@ -111,11 +111,13 @@ class KankunSwitch(SwitchEntity):
         """Update device state."""
         self._attr_is_on = self._query_state()
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._switch("on"):
             self._attr_is_on = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._switch("off"):

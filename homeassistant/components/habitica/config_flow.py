@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 from uuid import UUID
 
 from aiohttp import ClientError
@@ -139,6 +139,7 @@ _LOGGER = logging.getLogger(__name__)
 class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for habitica."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -389,6 +390,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:

@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import patch
 
 from homeassistant.components import mill
+from homeassistant.components.mill import DOMAIN
 from homeassistant.components.mill.coordinator import MillDataUpdateCoordinator
 from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
@@ -30,7 +31,7 @@ async def test_setup_with_cloud_config(
         patch("mill.Mill.fetch_heater_and_sensor_data", return_value={}) as mock_fetch,
         patch("mill.Mill.connect", return_value=True) as mock_connect,
     ):
-        assert await async_setup_component(hass, "mill", {})
+        assert await async_setup_component(hass, DOMAIN, {})
     assert len(mock_fetch.mock_calls) == 1
     assert len(mock_connect.mock_calls) == 1
 
@@ -49,7 +50,7 @@ async def test_setup_with_cloud_config_fails(
     )
     entry.add_to_hass(hass)
     with patch("mill.Mill.connect", return_value=False):
-        assert await async_setup_component(hass, "mill", {})
+        assert await async_setup_component(hass, DOMAIN, {})
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
@@ -87,7 +88,7 @@ async def test_setup_with_old_cloud_config(
         patch("mill.Mill.fetch_heater_and_sensor_data", return_value={}),
         patch("mill.Mill.connect", return_value=True) as mock_connect,
     ):
-        assert await async_setup_component(hass, "mill", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert len(mock_connect.mock_calls) == 1
 
@@ -125,7 +126,7 @@ async def test_setup_with_local_config(
             },
         ) as mock_connect,
     ):
-        assert await async_setup_component(hass, "mill", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert len(mock_fetch.mock_calls) == 1
     assert len(mock_connect.mock_calls) == 1
@@ -155,7 +156,7 @@ async def test_unload_entry(recorder_mock: Recorder, hass: HomeAssistant) -> Non
             return_value=True,
         ),
     ):
-        assert await async_setup_component(hass, "mill", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
         assert isinstance(entry.runtime_data, MillDataUpdateCoordinator)
 

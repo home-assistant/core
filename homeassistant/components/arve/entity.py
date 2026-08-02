@@ -1,5 +1,7 @@
 """Arve base entity."""
 
+from typing import override
+
 from asyncarve import ArveDeviceInfo
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -39,6 +41,7 @@ class ArveDeviceEntity(CoordinatorEntity[ArveCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Check if device is available."""
         return super()._attr_available and (

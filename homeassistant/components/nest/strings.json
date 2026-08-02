@@ -130,6 +130,11 @@
           }
         }
       }
+    },
+    "sensor": {
+      "fan_timer_timeout": {
+        "name": "Fan timer timeout"
+      }
     }
   },
   "exceptions": {

@@ -1,6 +1,7 @@
 """Coordinator for the World Air Quality Index (WAQI) integration."""
 
 from datetime import timedelta
+from typing import override
 
 from aiowaqi import WAQIAirQuality, WAQIClient, WAQIError
 
@@ -36,6 +37,7 @@ class WAQIDataUpdateCoordinator(DataUpdateCoordinator[WAQIAirQuality]):
         self._client = client
         self.subentry = subentry
 
+    @override
     async def _async_update_data(self) -> WAQIAirQuality:
         try:
             return await self._client.get_by_station_number(

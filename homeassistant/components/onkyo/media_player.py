@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aioonkyo import Code, Kind, Status, Zone, command, query, status
 
@@ -237,15 +237,18 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
         self._attr_extra_state_attributes = {}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity has been added to hass."""
         await self.query_state()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity will be removed from hass."""
         self.cancel_tasks()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self._manager.connected
@@ -273,16 +276,19 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             self._query_av_info_task.cancel()
             self._query_av_info_task = None
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         message = command.Power(self._zone, command.Power.Param.ON)
         await self._manager.write(message)
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         message = command.Power(self._zone, command.Power.Param.STANDBY)
         await self._manager.write(message)
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1.
 
@@ -297,16 +303,19 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         message = command.Volume(self._zone, value)
         await self._manager.write(message)
 
+    @override
     async def async_volume_up(self) -> None:
         """Increase volume by 1 step."""
         message = command.Volume(self._zone, command.Volume.Param.UP)
         await self._manager.write(message)
 
+    @override
     async def async_volume_down(self) -> None:
         """Decrease volume by 1 step."""
         message = command.Volume(self._zone, command.Volume.Param.DOWN)
         await self._manager.write(message)
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         message = command.Muting(
@@ -314,6 +323,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         )
         await self._manager.write(message)
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if source not in self._rev_source_mapping:
@@ -329,6 +339,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         message = command.InputSource(self._zone, self._rev_source_mapping[source])
         await self._manager.write(message)
 
+    @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select listening sound mode."""
         if sound_mode not in self._rev_sound_mode_mapping:
@@ -351,6 +362,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         message = command.HDMIOutput(self._rev_hdmi_output_mapping[hdmi_output])
         await self._manager.write(message)
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:

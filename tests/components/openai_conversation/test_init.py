@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
+import attr
 import httpx
 from openai import (
     APIConnectionError,
@@ -118,7 +119,7 @@ async def test_generate_image_service(
         ),
     ) as mock_create:
         response = await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             "generate_image",
             service_data,
             blocking=True,
@@ -154,7 +155,7 @@ async def test_generate_image_service_error(
         pytest.raises(HomeAssistantError, match="Error generating image: Reason"),
     ):
         await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             "generate_image",
             {
                 "config_entry": mock_config_entry.entry_id,
@@ -182,7 +183,7 @@ async def test_generate_image_service_error(
         pytest.raises(HomeAssistantError, match="No image returned"),
     ):
         await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             "generate_image",
             {
                 "config_entry": mock_config_entry.entry_id,
@@ -212,7 +213,7 @@ async def test_generate_content_service_with_image_not_allowed_path(
         ),
     ):
         await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             "generate_content",
             {
                 "config_entry": mock_config_entry.entry_id,
@@ -245,7 +246,7 @@ async def test_invalid_config_entry(
     }
     with pytest.raises(ServiceValidationError, match=error):
         await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             service_name,
             service_data,
             blocking=True,
@@ -284,7 +285,7 @@ async def test_init_error(
         "openai.resources.models.AsyncModels.list",
         side_effect=side_effect,
     ):
-        assert await async_setup_component(hass, "openai_conversation", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert error in caplog.text
         assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -305,7 +306,7 @@ async def test_init_auth_error(
             message="",
         ),
     ):
-        assert await async_setup_component(hass, "openai_conversation", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -473,7 +474,7 @@ async def test_generate_content_service(
         )
 
         response = await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             "generate_content",
             service_data,
             blocking=True,
@@ -546,7 +547,7 @@ async def test_generate_content_service_invalid(
     ):
         with pytest.raises(HomeAssistantError, match=error):
             await hass.services.async_call(
-                "openai_conversation",
+                DOMAIN,
                 "generate_content",
                 service_data,
                 blocking=True,
@@ -575,7 +576,7 @@ async def test_generate_content_service_error(
         pytest.raises(HomeAssistantError, match="Error generating content: Reason"),
     ):
         await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             "generate_content",
             {
                 "config_entry": mock_config_entry.entry_id,
@@ -615,7 +616,7 @@ async def test_service_auth_error(
         pytest.raises(HomeAssistantError, match="Authentication error"),
     ):
         await hass.services.async_call(
-            "openai_conversation",
+            DOMAIN,
             service_name,
             {
                 "config_entry": mock_config_entry.entry_id,
@@ -1278,7 +1279,7 @@ async def test_migration_from_v2_1(
     device_1 = device_registry.async_update_device(
         device_1.id, add_config_entry_id="mock_entry_id", add_config_subentry_id=None
     )
-    assert device_1.config_entries_subentries == {"mock_entry_id": {None, "mock_id_1"}}
+    assert device_1.config_entries_subentries == {"mock_entry_id": {"mock_id_1"}}
     entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,
@@ -1631,13 +1632,19 @@ async def test_migrate_entry_from_v2_3(
     conversation_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=conversation_subentry_id,
-        disabled_by=device_disabled_by,
         identifiers={(DOMAIN, mock_config_entry.entry_id)},
         name=mock_config_entry.title,
         manufacturer="OpenAI",
         model="ChatGPT",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
+    # A stale disabled_by flag can't be set through the registry API, which
+    # validates it against the config entry's disabled state; write it
+    # directly to simulate existing storage.
+    conversation_device = attr.evolve(
+        conversation_device, disabled_by=device_disabled_by
+    )
+    device_registry.devices[conversation_device.id] = conversation_device
     conversation_entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,

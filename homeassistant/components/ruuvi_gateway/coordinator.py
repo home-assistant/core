@@ -1,6 +1,7 @@
 """Update coordinator for Ruuvi Gateway."""
 
 import logging
+from typing import override
 
 from aioruuvigateway.api import get_gateway_history_data
 from aioruuvigateway.models import TagData
@@ -37,6 +38,7 @@ class RuuviGatewayUpdateCoordinator(DataUpdateCoordinator[list[TagData]]):
         self.token = config_entry.data[CONF_TOKEN]
         self.last_tag_datas: dict[str, TagData] = {}
 
+    @override
     async def _async_update_data(self) -> list[TagData]:
         changed_tag_datas: list[TagData] = []
         async with get_async_client(self.hass) as client:

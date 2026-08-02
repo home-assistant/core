@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 import logging
+from typing import override
 
 from aiolookin import (
     POWER_CMD,
@@ -179,6 +180,7 @@ class LookinPowerPushRemoteEntity(LookinPowerEntity):
         await self.coordinator.async_refresh()
         self._attr_name = self._remote.name
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         await super().async_added_to_hass()

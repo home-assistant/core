@@ -1,5 +1,7 @@
 """Button entity to set the time of the Alpha2 base."""
 
+from typing import override
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -34,6 +36,7 @@ class Alpha2TimeSyncButton(CoordinatorEntity[Alpha2BaseCoordinator], ButtonEntit
 
         self._attr_unique_id = f"{entry_id}:sync_time"
 
+    @override
     async def async_press(self) -> None:
         """Synchronize current local time from HA instance to base station."""
         await self.coordinator.base.set_datetime(dt_util.now())

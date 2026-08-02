@@ -5,6 +5,9 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.homeassistant_hardware.repair_helpers import (
+    ISSUE_MULTI_PAN_MIGRATION,
+)
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
@@ -26,6 +29,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -302,6 +306,79 @@ async def test_config_entry_migration_v5_prefers_active_entry(
     assert active_entry.unique_id == serial_number
 
 
+async def test_config_entry_migration_v5_removes_duplicates_of_migrated_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test v1.5 migration removes duplicates of an already migrated entry.
+
+    A migrated entry (minor version 5) never runs the migration again, so the
+    remaining minor version 4 duplicates have to remove themselves instead of
+    relying on the canonical entry's migration to remove them.
+    """
+    serial_number = "9e2adbd75b8beb119fe564a0f320645d"
+    data = {
+        "description": "SkyConnect v1.0",
+        "device": (
+            "/dev/serial/by-id/"
+            "usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+        ),
+        "vid": "10C4",
+        "pid": "EA60",
+        "serial_number": serial_number,
+        "manufacturer": "Nabu Casa",
+        "product": "SkyConnect v1.0",
+        "firmware": "ezsp",
+        "firmware_version": "7.4.4.0",
+    }
+
+    older_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=(
+            "10C4:EA60_9e2adbd75b8beb119fe564a0f320645d_Nabu Casa_SkyConnect v1.0"
+        ),
+        source="usb",
+        data=dict(data),
+        version=1,
+        minor_version=4,
+    )
+    older_entry.add_to_hass(hass)
+
+    duplicate_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="10C4:EA60_9e2adbd75b8beb119fe564a0f320645d_Nabu_Casa_SkyConnect",
+        source="import",
+        data=dict(data),
+        version=1,
+        minor_version=4,
+    )
+    duplicate_entry.add_to_hass(hass)
+
+    migrated_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=serial_number,
+        source="import",
+        data=dict(data),
+        version=1,
+        minor_version=5,
+    )
+    migrated_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+        return_value=True,
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    remaining = hass.config_entries.async_entries(DOMAIN)
+    assert len(remaining) == 1
+    assert remaining[0].entry_id == migrated_entry.entry_id
+    assert remaining[0].minor_version == 5
+    assert remaining[0].unique_id == serial_number
+    assert hass.config_entries.async_get_entry(older_entry.entry_id) is None
+    assert hass.config_entries.async_get_entry(duplicate_entry.entry_id) is None
+
+
 async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:
     """Test setup failing when the USB port is missing."""
 
@@ -416,13 +493,14 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
         await hass.async_block_till_done(wait_background_tasks=True)
         assert config_entry.state is ConfigEntryState.LOADED
 
-        # Wait for a bit for the USB scan debouncer to cool off
-        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=5))
-
-        # Unplug the stick
+        # Unplug the stick before advancing time: the forced polling watcher rescans on
+        # the time jump used to cool off the request debouncer, so the device must
+        # already be gone or that scan would reload it as still present
         mock_exists.return_value = False
 
         with patch_scanned_serial_ports(return_value=[]):
+            # Wait for a bit for the USB scan debouncer to cool off
+            async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=5))
             await async_request_scan(hass)
 
         # The integration has reloaded and is now in a failed state
@@ -526,7 +604,7 @@ async def test_bad_config_entry_fixing(hass: HomeAssistant) -> None:
             )
         ],
     ):
-        await async_setup_component(hass, "homeassistant_sky_connect", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert hass.config_entries.async_get_entry(new_entry.entry_id) is not None
     assert hass.config_entries.async_get_entry(old_entry.entry_id) is not None
@@ -550,3 +628,127 @@ async def test_bad_config_entry_fixing(hass: HomeAssistant) -> None:
 
     untouched_bad_entry = hass.config_entries.async_get_entry(bad_entry.entry_id)
     assert untouched_bad_entry.minor_version == 3
+
+
+def _multi_pan_sky_connect_entry(firmware: str) -> MockConfigEntry:
+    """Return a SkyConnect config entry with the given firmware type."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="some_unique_id",
+        data={
+            "description": "SkyConnect v1.0",
+            "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+            "vid": "10C4",
+            "pid": "EA60",
+            "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
+            "manufacturer": "Nabu Casa",
+            "product": "SkyConnect v1.0",
+            "firmware": firmware,
+            "firmware_version": None,
+        },
+        title="Home Assistant SkyConnect",
+        version=1,
+        minor_version=4,
+    )
+
+
+async def test_multi_pan_migration_issue_not_created_for_cpc(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test no repair issue is created for CPC firmware when the addon is not running."""
+    config_entry = _multi_pan_sky_connect_entry(ApplicationType.CPC.value)
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.multi_pan_addon_using_device",
+            return_value=False,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        )
+        is None
+    )
+
+
+async def test_multi_pan_migration_issue_created_for_addon(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the repair issue is created when the multi-PAN addon is running."""
+    config_entry = _multi_pan_sky_connect_entry(ApplicationType.SPINEL.value)
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.multi_pan_addon_using_device",
+            return_value=True,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+    )
+    assert issue is not None
+    assert issue.translation_key == ISSUE_MULTI_PAN_MIGRATION
+    assert issue.translation_placeholders == {
+        "hardware_name": "Home Assistant SkyConnect"
+    }
+    assert issue.data == {"entry_id": config_entry.entry_id}
+    assert issue.is_fixable
+
+
+async def test_multi_pan_migration_issue_deleted_for_ezsp(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the multi-PAN migration repair issue is removed when not using multi-PAN."""
+    config_entry = _multi_pan_sky_connect_entry(ApplicationType.EZSP.value)
+    config_entry.add_to_hass(hass)
+
+    ir.async_create_issue(
+        hass,
+        domain=DOMAIN,
+        issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=ISSUE_MULTI_PAN_MIGRATION,
+        translation_placeholders={"hardware_name": "Home Assistant SkyConnect"},
+        data={"entry_id": config_entry.entry_id},
+    )
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.multi_pan_addon_using_device",
+            return_value=False,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        )
+        is None
+    )

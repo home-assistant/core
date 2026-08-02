@@ -1,5 +1,7 @@
 """Platform for Sunricher DALI binary sensor entities."""
 
+from typing import override
+
 from PySrDaliGateway import CallbackEventType, Device
 from PySrDaliGateway.helper import is_motion_sensor
 from PySrDaliGateway.types import MotionState, MotionStatus
@@ -63,6 +65,7 @@ class SunricherDaliMotionSensor(DaliDeviceEntity, BinarySensorEntity):
             via_device=(DOMAIN, device.gw_sn),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to Home Assistant."""
         await super().async_added_to_hass()
@@ -105,6 +108,7 @@ class SunricherDaliOccupancySensor(DaliDeviceEntity, BinarySensorEntity):
             via_device=(DOMAIN, device.gw_sn),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to Home Assistant."""
         await super().async_added_to_hass()
