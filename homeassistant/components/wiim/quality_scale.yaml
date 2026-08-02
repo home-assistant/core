@@ -45,10 +45,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow: todo
-  test-coverage:
-    status: todo
-    comment: |
-      - Increase test coverage for the media_player platform
+  test-coverage: done
 
   # Gold
   devices: done
