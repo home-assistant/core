@@ -28,6 +28,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
+from .conftest import MockConfigEntryFactory
 
 from tests.common import async_fire_time_changed
 
@@ -59,7 +60,9 @@ def _command_side_effect(
     return side_effect
 
 
-async def test_successful_config_entry(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_successful_config_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntryFactory
+) -> None:
     """Test config entry successful setup."""
     entry = mock_config_entry()
     await setup_integration(hass, entry, command_responses={})
@@ -72,7 +75,10 @@ async def test_successful_config_entry(hass: HomeAssistant, mock_config_entry) -
     ids=["connection_closed", "os_error", "timeout_error"],
 )
 async def test_hub_connection_error(
-    hass: HomeAssistant, mock_api: MagicMock, mock_config_entry, error: Exception
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+    mock_config_entry: MockConfigEntryFactory,
+    error: Exception,
 ) -> None:
     """Test setup retries when the hub can't be reached after connecting."""
     entry = mock_config_entry()
@@ -96,7 +102,9 @@ async def test_hub_connection_error(
     ids=["cannot_connect", "os_error", "timeout_error", "connection_closed"],
 )
 async def test_hub_connect_error_retries_setup(
-    hass: HomeAssistant, mock_config_entry, error: Exception
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
+    error: Exception,
 ) -> None:
     """Test setup retries when the initial connection to the hub fails."""
     entry = mock_config_entry()
@@ -110,7 +118,7 @@ async def test_hub_connect_error_retries_setup(
 
 
 async def test_hub_login_error_starts_reauth(
-    hass: HomeAssistant, mock_config_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntryFactory
 ) -> None:
     """Test setup starts a reauth flow when the hub rejects the credentials."""
     entry = mock_config_entry()
@@ -128,7 +136,7 @@ async def test_hub_login_error_starts_reauth(
 
 
 async def test_optional_command_error_is_suppressed(
-    hass: HomeAssistant, mock_api: MagicMock, mock_config_entry
+    hass: HomeAssistant, mock_api: MagicMock, mock_config_entry: MockConfigEntryFactory
 ) -> None:
     """Test setup succeeds when an optional command isn't supported by the hub."""
     entry = mock_config_entry()
@@ -145,7 +153,7 @@ async def test_optional_command_error_is_suppressed(
 
 
 async def test_optional_command_unexpected_error_fails_setup(
-    hass: HomeAssistant, mock_api: MagicMock, mock_config_entry
+    hass: HomeAssistant, mock_api: MagicMock, mock_config_entry: MockConfigEntryFactory
 ) -> None:
     """Test setup fails when an optional command raises an unexpected error."""
     entry = mock_config_entry()
@@ -162,7 +170,7 @@ async def test_optional_command_unexpected_error_fails_setup(
 
 
 async def test_required_command_error_fails_setup(
-    hass: HomeAssistant, mock_api: MagicMock, mock_config_entry
+    hass: HomeAssistant, mock_api: MagicMock, mock_config_entry: MockConfigEntryFactory
 ) -> None:
     """Test setup fails on a required command even with a suppressible message."""
     entry = mock_config_entry()
@@ -184,7 +192,9 @@ async def test_required_command_error_fails_setup(
     ids=["os_error", "timeout_error", "connection_closed"],
 )
 async def test_connection_lost_during_refresh_raises_update_failed(
-    hass: HomeAssistant, mock_config_entry, error: Exception
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
+    error: Exception,
 ) -> None:
     """Test a lost connection during a scheduled refresh is treated as UpdateFailed.
 
@@ -212,7 +222,7 @@ async def test_connection_lost_during_refresh_raises_update_failed(
 
 
 async def test_hub_reconnect_error_during_refresh_raises_update_failed(
-    hass: HomeAssistant, mock_config_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntryFactory
 ) -> None:
     """Test a failed reconnect during a scheduled refresh is treated as UpdateFailed."""
     entry = mock_config_entry()
@@ -230,7 +240,9 @@ async def test_hub_reconnect_error_during_refresh_raises_update_failed(
     assert isinstance(coordinator.last_exception, UpdateFailed)
 
 
-async def test_unload_entry(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_unload_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntryFactory
+) -> None:
     """Test unloading an entry."""
     entry = mock_config_entry()
     await setup_integration(hass, entry, command_responses={})

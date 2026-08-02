@@ -1,15 +1,19 @@
 """Mikrotik test configuration."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from . import create_mock_config_entry
 
+from tests.common import MockConfigEntry
+
+type MockConfigEntryFactory = Callable[..., MockConfigEntry]
+
 
 @pytest.fixture
-def mock_config_entry():
+def mock_config_entry() -> MockConfigEntryFactory:
     """Create Mikrotik config entries with optional overrides."""
     return create_mock_config_entry
 
