@@ -1,6 +1,5 @@
 """Select entities for Hue scene selection per group."""
 
-from collections import Counter
 from typing import override
 
 from aiohue.v2 import HueBridgeV2
@@ -28,28 +27,16 @@ def _build_scene_option_maps(
     """Build bidirectional option maps for a scene collection."""
     # Sort for a stable option order across restarts and updates.
     scenes = sorted(scenes, key=lambda s: (s.metadata.name, s.id))
-    name_counts = Counter(scene.metadata.name for scene in scenes)
-    scene_names = set(name_counts)
     option_to_scene_id: dict[str, str] = {}
     scene_id_to_option: dict[str, str] = {}
 
     for scene in scenes:
+        # Hue allows duplicate scene names within a group; number the repeats.
         option = scene.metadata.name
-        if name_counts[option] > 1:
-            compact_id = scene.id.replace("-", "")
-            prefix_length = min(8, len(compact_id))
-            option = f"{option} ({compact_id[:prefix_length]})"
-            while option in scene_names or option in option_to_scene_id:
-                if prefix_length < len(compact_id):
-                    prefix_length += 1
-                    option = f"{scene.metadata.name} ({compact_id[:prefix_length]})"
-                    continue
-                suffix = 2
-                while (
-                    option := f"{scene.metadata.name} ({compact_id}) [{suffix}]"
-                ) in scene_names or option in option_to_scene_id:
-                    suffix += 1
-                break
+        repeat = 1
+        while option in option_to_scene_id:
+            repeat += 1
+            option = f"{scene.metadata.name} ({repeat})"
         option_to_scene_id[option] = scene.id
         scene_id_to_option[scene.id] = option
 

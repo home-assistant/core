@@ -155,9 +155,10 @@ async def test_scene_select_disambiguates_duplicate_names(
     state = hass.states.get("select.test_room_test_room_scene")
     assert state is not None
     assert state.state == "Smart Test Scene"
+    # The duplicate sorts before the original on scene id, so it keeps the bare name.
     assert state.attributes["options"] == [
-        "Regular Test Scene (22222222)",
-        "Regular Test Scene (cdbf3740)",
+        "Regular Test Scene",
+        "Regular Test Scene (2)",
         "Smart Test Scene",
     ]
 
@@ -166,7 +167,7 @@ async def test_scene_select_disambiguates_duplicate_names(
         "select_option",
         {
             "entity_id": "select.test_room_test_room_scene",
-            "option": "Regular Test Scene (22222222)",
+            "option": "Regular Test Scene",
         },
         blocking=True,
     )
@@ -198,7 +199,7 @@ async def test_scene_select_disambiguated_label_does_not_shadow_scene_name(
     literal_suffix_scene = deepcopy(regular_scene)
     literal_suffix_scene_id = "33333333-4444-4555-8666-777777777777"
     literal_suffix_scene["id"] = literal_suffix_scene_id
-    literal_suffix_scene["metadata"]["name"] = "Regular Test Scene (22222222)"
+    literal_suffix_scene["metadata"]["name"] = "Regular Test Scene (2)"
     literal_suffix_scene["status"]["active"] = "inactive"
     test_data.append(literal_suffix_scene)
 
@@ -208,15 +209,15 @@ async def test_scene_select_disambiguated_label_does_not_shadow_scene_name(
     state = hass.states.get("select.test_room_test_room_scene")
     assert state is not None
     assert state.attributes["options"] == [
-        "Regular Test Scene (222222223)",
-        "Regular Test Scene (cdbf3740)",
-        "Regular Test Scene (22222222)",
+        "Regular Test Scene",
+        "Regular Test Scene (2)",
+        "Regular Test Scene (2) (2)",
         "Smart Test Scene",
     ]
 
     for option, scene_id in (
-        ("Regular Test Scene (222222223)", duplicate_scene_id),
-        ("Regular Test Scene (22222222)", literal_suffix_scene_id),
+        ("Regular Test Scene", duplicate_scene_id),
+        ("Regular Test Scene (2) (2)", literal_suffix_scene_id),
     ):
         mock_bridge_v2.mock_requests.clear()
         await hass.services.async_call(
@@ -410,11 +411,12 @@ async def test_scene_select_disambiguates_duplicate_smart_scene_names(
 
     state = hass.states.get("select.test_room_test_room_scene")
     assert state is not None
-    assert state.state == "Smart Test Scene (8abe5a3e)"
+    # The duplicate sorts before the original on scene id, so it keeps the bare name.
+    assert state.state == "Smart Test Scene (2)"
     assert state.attributes["options"] == [
         "Regular Test Scene",
-        "Smart Test Scene (11111111)",
-        "Smart Test Scene (8abe5a3e)",
+        "Smart Test Scene",
+        "Smart Test Scene (2)",
     ]
 
     await hass.services.async_call(
@@ -422,7 +424,7 @@ async def test_scene_select_disambiguates_duplicate_smart_scene_names(
         "select_option",
         {
             "entity_id": "select.test_room_test_room_scene",
-            "option": "Smart Test Scene (11111111)",
+            "option": "Smart Test Scene",
         },
         blocking=True,
     )
@@ -448,10 +450,11 @@ async def test_scene_select_disambiguates_names_across_scene_types(
 
     state = hass.states.get("select.test_room_test_room_scene")
     assert state is not None
-    assert state.state == "Regular Test Scene (8abe5a3e)"
+    # The smart scene sorts before the regular scene on scene id.
+    assert state.state == "Regular Test Scene"
     assert state.attributes["options"] == [
-        "Regular Test Scene (8abe5a3e)",
-        "Regular Test Scene (cdbf3740)",
+        "Regular Test Scene",
+        "Regular Test Scene (2)",
     ]
 
     mock_bridge_v2.mock_requests.clear()
@@ -460,7 +463,7 @@ async def test_scene_select_disambiguates_names_across_scene_types(
         "select_option",
         {
             "entity_id": "select.test_room_test_room_scene",
-            "option": "Regular Test Scene (cdbf3740)",
+            "option": "Regular Test Scene (2)",
         },
         blocking=True,
     )
@@ -472,7 +475,7 @@ async def test_scene_select_disambiguates_names_across_scene_types(
         "select_option",
         {
             "entity_id": "select.test_room_test_room_scene",
-            "option": "Regular Test Scene (8abe5a3e)",
+            "option": "Regular Test Scene",
         },
         blocking=True,
     )
