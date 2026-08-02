@@ -1,6 +1,6 @@
 """Tests for the SwitchBot Cloud integration init."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -20,6 +20,7 @@ from homeassistant.components.switchbot_cloud.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
+from homeassistant.components.switchbot_cloud.coordinator import SwitchBotCoordinator
 from homeassistant.components.webhook import DOMAIN as WEBHOOK_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -744,3 +745,35 @@ async def test_remove_entry_with_cloud_unavailable(
         await hass.async_block_till_done()
 
         assert not hass.config_entries.async_entries("switchbot_cloud")
+
+
+async def test_single_coordinator_for_multi_platform_device(
+    hass: HomeAssistant, mock_list_devices: AsyncMock, mock_get_status: AsyncMock
+) -> None:
+    """Test a device matching multiple platforms creates only one coordinator.
+
+    A Relay Switch 1PM matches both the switch and sensor platform branches,
+    each of which requests a coordinator. Only one coordinator may be
+    constructed per device: every constructed coordinator registers an unload
+    callback on the config entry, so a discarded duplicate would stay
+    registered (and retained) until the entry is unloaded.
+    """
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="relay-switch-pm-id-1",
+            deviceName="relay-switch-pm-1",
+            deviceType="Relay Switch 1PM",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.return_value = {"switchStatus": 0}
+
+    with patch(
+        "homeassistant.components.switchbot_cloud.SwitchBotCoordinator",
+        wraps=SwitchBotCoordinator,
+    ) as coordinator_cls:
+        entry = await configure_integration(hass)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert coordinator_cls.call_count == 1
