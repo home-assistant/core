@@ -907,9 +907,9 @@ class ESPHomeManager:
 
         Without this the dashboard has no way to know the key HA set on
         the device, so adopting the device generates a competing key and
-        the next flash locks HA out. Dashboards without the endpoint
-        (or errors) are logged at debug level and never fail the
-        connect flow.
+        the next flash locks HA out. Never fails the connect flow: a
+        dashboard without the endpoint (404/405) logs at debug, any
+        other failure warns once per manager.
         """
         if (dashboard := async_get_dashboard(self.hass)) is None:
             return
