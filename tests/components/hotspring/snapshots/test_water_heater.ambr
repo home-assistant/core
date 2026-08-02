@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_water_heater_state
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 38.9,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ConnectedSpa_C59C9C',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 40.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 26.7,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 1>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 40.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.connectedspa_c59c9c',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_water_heater_state.1
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 40.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 26.7,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.connectedspa_c59c9c',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'hotspring',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': 'AA:AA:AA:AA:AA:BB_water_heater',
+    'unit_of_measurement': None,
+  })
+# ---

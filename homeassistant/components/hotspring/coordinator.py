@@ -40,6 +40,14 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[Spa]):
         try:
             return await self.hotspring.update()
         except HotSpringConnectionError as error:
-            raise UpdateFailed(f"Error communicating with API: {error}") from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": str(error)},
+            ) from error
         except HotSpringError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}") from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response",
+                translation_placeholders={"error": str(error)},
+            ) from error

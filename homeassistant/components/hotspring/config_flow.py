@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from hotspring import HotSpring, HotSpringConnectionError, Spa
+from hotspring import HotSpring, HotSpringConnectionError, HotSpringError, Spa
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -30,7 +30,7 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 spa = await self._async_get_spa(user_input[CONF_HOST])
-            except HotSpringConnectionError:
+            except HotSpringConnectionError, HotSpringError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(
@@ -83,4 +83,3 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get information from a Hot Spring spa."""
         api = HotSpring(host, session=async_get_clientsession(self.hass))
         return await api.update()
-

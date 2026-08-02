@@ -20,7 +20,7 @@ from . import setup_with_selected_platforms
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID = "water_heater.connectedspa_c59c9c_water_heater"
+ENTITY_ID = "water_heater.connectedspa_c59c9c"
 
 
 async def test_water_heater_state(
@@ -57,7 +57,7 @@ async def test_set_temperature(
         blocking=True,
     )
 
-    mock_hotspring.set_temperature.assert_called_once_with(103.0)
+    mock_hotspring.set_temperature.assert_called_once_with(217.4)
 
 
 async def test_set_temperature_connection_error(
@@ -72,7 +72,9 @@ async def test_set_temperature_connection_error(
 
     mock_hotspring.set_temperature.side_effect = HotSpringConnectionError
 
-    with pytest.raises(HomeAssistantError, match="Error communicating with Hot Spring API"):
+    with pytest.raises(
+        HomeAssistantError, match="Error communicating with Hot Spring API"
+    ):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -96,7 +98,9 @@ async def test_set_temperature_api_error(
 
     mock_hotspring.set_temperature.side_effect = HotSpringError
 
-    with pytest.raises(HomeAssistantError, match="Invalid response from Hot Spring API"):
+    with pytest.raises(
+        HomeAssistantError, match="Invalid response from Hot Spring API"
+    ):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
             SERVICE_SET_TEMPERATURE,
