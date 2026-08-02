@@ -1,13 +1,4 @@
-"""Wibeee sensor platform for Home Assistant.
-
-Creates sensor entities for each phase and sensor type detected on the
-Wibeee energy monitor device. All sensors are ``CoordinatorEntity``
-instances backed by a single polling ``WibeeeCoordinator``.
-
-Phases are discovered from the initial data fetch (hardware-dependent).
-For each discovered phase, entities are created only for ``SENSOR_TYPES``
-whose keys are present in the initial phase data.
-"""
+"""Support for Wibeee energy monitor sensors."""
 
 from dataclasses import dataclass
 import logging
@@ -39,9 +30,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import WibeeeConfigEntry
 from .const import DOMAIN, KNOWN_MODELS
-from .coordinator import WibeeeCoordinator
+from .coordinator import WibeeeConfigEntry, WibeeeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,19 +47,21 @@ class WibeeeSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
     "vrms": WibeeeSensorEntityDescription(
         key="vrms",
-        translation_key="phase_voltage",
+        translation_key="voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "irms": WibeeeSensorEntityDescription(
         key="irms",
+        translation_key="current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "p_aparent": WibeeeSensorEntityDescription(
         key="p_aparent",
+        translation_key="apparent_power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -98,12 +90,14 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
     ),
     "frecuencia": WibeeeSensorEntityDescription(
         key="frecuencia",
+        translation_key="frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "factor_potencia": WibeeeSensorEntityDescription(
         key="factor_potencia",
+        translation_key="power_factor",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -129,10 +123,10 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
     ),
     "angle": WibeeeSensorEntityDescription(
         key="angle",
-        translation_key="angle",
+        translation_key="phase_angle",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
         entity_registry_enabled_default=False,
     ),
     "thd_total": WibeeeSensorEntityDescription(
@@ -154,7 +148,8 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
     ),
     "thd_ar3": WibeeeSensorEntityDescription(
         key="thd_ar3",
-        translation_key="thd_current_harmonic_3",
+        translation_key="thd_current_harmonic",
+        translation_placeholders={"order": "3"},
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
@@ -163,7 +158,8 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
     ),
     "thd_ar5": WibeeeSensorEntityDescription(
         key="thd_ar5",
-        translation_key="thd_current_harmonic_5",
+        translation_key="thd_current_harmonic",
+        translation_placeholders={"order": "5"},
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
@@ -172,7 +168,8 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
     ),
     "thd_ar7": WibeeeSensorEntityDescription(
         key="thd_ar7",
-        translation_key="thd_current_harmonic_7",
+        translation_key="thd_current_harmonic",
+        translation_placeholders={"order": "7"},
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
@@ -181,7 +178,8 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
     ),
     "thd_ar9": WibeeeSensorEntityDescription(
         key="thd_ar9",
-        translation_key="thd_current_harmonic_9",
+        translation_key="thd_current_harmonic",
+        translation_placeholders={"order": "9"},
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
@@ -207,7 +205,8 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
     ),
     "thd_ar3_V": WibeeeSensorEntityDescription(
         key="thd_ar3_V",
-        translation_key="thd_voltage_harmonic_3",
+        translation_key="thd_voltage_harmonic",
+        translation_placeholders={"order": "3"},
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -216,7 +215,8 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
     ),
     "thd_ar5_V": WibeeeSensorEntityDescription(
         key="thd_ar5_V",
-        translation_key="thd_voltage_harmonic_5",
+        translation_key="thd_voltage_harmonic",
+        translation_placeholders={"order": "5"},
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -225,7 +225,8 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
     ),
     "thd_ar7_V": WibeeeSensorEntityDescription(
         key="thd_ar7_V",
-        translation_key="thd_voltage_harmonic_7",
+        translation_key="thd_voltage_harmonic",
+        translation_placeholders={"order": "7"},
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -234,7 +235,8 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
     ),
     "thd_ar9_V": WibeeeSensorEntityDescription(
         key="thd_ar9_V",
-        translation_key="thd_voltage_harmonic_9",
+        translation_key="thd_voltage_harmonic",
+        translation_placeholders={"order": "9"},
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -243,7 +245,6 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
     ),
 }
 
-# Map phase names to human-readable labels
 PHASE_NAMES: dict[str, str] = {
     "fase1": "L1",
     "fase2": "L2",
@@ -258,12 +259,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Wibeee sensor entities from a config entry."""
-    runtime = entry.runtime_data
-    coordinator = runtime.coordinator
-    device_info = runtime.device_info
+    coordinator = entry.runtime_data
+    device_info = coordinator.device_info
 
-    # Discover phases from initial data (hardware-dependent).
-    # Single-phase: fase1 + fase4. Three-phase: fase1-3 + fase4.
     data = coordinator.data
     discovered_phases = [p for p in data if p in PHASE_NAMES]
     if not discovered_phases:
@@ -274,74 +272,33 @@ async def async_setup_entry(
         )
         return
 
-    # Build entities: discovered phases x sensor types present in data.
-    # Process fase4 (Total) first to ensure the parent device exists.
-    sorted_phases = sorted(
-        discovered_phases,
-        key=lambda p: (0 if p == "fase4" else 1, p),
-    )
-    entities: list[WibeeeSensor] = [
+    async_add_entities(
         WibeeeSensor(
             coordinator=coordinator,
             device_info=device_info,
             phase_key=phase_key,
             description=description,
         )
-        for phase_key in sorted_phases
+        for phase_key in discovered_phases
         for sensor_key, description in SENSOR_TYPES.items()
         if sensor_key in data[phase_key]
-    ]
-
-    async_add_entities(entities)
-    _LOGGER.debug(
-        "Added %d sensors for Wibeee %s (%s) across %d phases",
-        len(entities),
-        device_info.mac_addr_short,
-        device_info.ip_addr,
-        len(sorted_phases),
     )
 
 
-# ---------------------------------------------------------------------------
-# Device info builder
-# ---------------------------------------------------------------------------
-
-
-def _build_device_info(device_info: WibeeeDeviceInfo, phase_key: str) -> dr.DeviceInfo:
-    """Build HA DeviceInfo for a sensor entity."""
-    model_name = KNOWN_MODELS.get(device_info.model, f"Wibeee {device_info.model}")
-    is_phase = phase_key in ("fase1", "fase2", "fase3")
-    phase_label = PHASE_NAMES.get(phase_key, phase_key)
-
-    if is_phase:
-        return dr.DeviceInfo(
-            identifiers={(DOMAIN, f"{device_info.mac_addr_formatted}_{phase_key}")},
-            via_device=(DOMAIN, device_info.mac_addr_formatted),
-            name=f"Wibeee {device_info.mac_addr_short} {phase_label}",
-            model=f"{model_name} Clamp",
-            manufacturer="Smilics",
-        )
+def _build_device_info(device_info: WibeeeDeviceInfo) -> dr.DeviceInfo:
+    """Build HA DeviceInfo for the Wibeee device."""
     return dr.DeviceInfo(
         identifiers={(DOMAIN, device_info.mac_addr_formatted)},
         name=f"Wibeee {device_info.mac_addr_short}",
-        model=model_name,
+        model=KNOWN_MODELS.get(device_info.model, f"Wibeee {device_info.model}"),
         manufacturer="Smilics",
         sw_version=device_info.firmware_version,
         configuration_url=f"http://{device_info.ip_addr}/",
     )
 
 
-# ---------------------------------------------------------------------------
-# Sensor entity
-# ---------------------------------------------------------------------------
-
-
 class WibeeeSensor(CoordinatorEntity[WibeeeCoordinator], SensorEntity):
-    """Wibeee sensor entity backed by the polling coordinator.
-
-    The coordinator provides the data; the sensor reads its specific
-    phase/key from it.
-    """
+    """Wibeee sensor entity backed by the polling coordinator."""
 
     _attr_has_entity_name = True
     entity_description: WibeeeSensorEntityDescription
@@ -362,20 +319,29 @@ class WibeeeSensor(CoordinatorEntity[WibeeeCoordinator], SensorEntity):
         self._attr_unique_id = (
             f"{device_info.mac_addr_formatted}_{phase_key}_{description.key}"
         )
-        self._attr_device_info = _build_device_info(device_info, phase_key)
+        self._attr_device_info = _build_device_info(device_info)
+        self._attr_translation_placeholders = {
+            "phase_name": PHASE_NAMES[phase_key],
+            **(description.translation_placeholders or {}),
+        }
 
     @property
     @override
     def native_value(self) -> float | None:
         """Return the sensor value."""
         try:
-            value = self.coordinator.data[self._phase_key][self.entity_description.key]
-            return float(value)
-        except KeyError, ValueError, TypeError:
+            return float(
+                self.coordinator.data[self._phase_key][self.entity_description.key]
+            )
+        except ValueError:
             return None
 
     @property
     @override
     def available(self) -> bool:
-        """Return True if the coordinator has a valid value for this sensor."""
-        return super().available and self.native_value is not None
+        """Return True if the phase data contains this sensor's key."""
+        return (
+            super().available
+            and self.entity_description.key
+            in self.coordinator.data.get(self._phase_key, {})
+        )

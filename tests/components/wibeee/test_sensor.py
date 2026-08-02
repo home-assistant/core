@@ -7,7 +7,7 @@ from homeassistant.components.wibeee.const import (
     CONF_WIBEEE_ID,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -21,7 +21,7 @@ async def test_sensors_created(
 ) -> None:
     """Test that sensor entities are created."""
     entity_ids = {state.entity_id for state in hass.states.async_all("sensor")}
-    assert "sensor.wibeee_2233_active_power" in entity_ids
+    assert "sensor.wibeee_2233_total_active_power" in entity_ids
     assert "sensor.wibeee_2233_l1_active_power" in entity_ids
 
 
@@ -29,7 +29,7 @@ async def test_sensor_state_class(
     hass: HomeAssistant, loaded_entry: MockConfigEntry
 ) -> None:
     """Test sensor has correct state class."""
-    state = hass.states.get("sensor.wibeee_2233_active_power")
+    state = hass.states.get("sensor.wibeee_2233_total_active_power")
     assert state.attributes.get("state_class") == "measurement"
 
 
@@ -39,19 +39,19 @@ async def test_sensor_unavailable_on_coordinator_failure(
     """Sensors go unavailable when a coordinator refresh fails."""
     mock_wibeee_api.async_fetch_sensors_data.side_effect = TimeoutError
 
-    coordinator = loaded_entry.runtime_data.coordinator
+    coordinator = loaded_entry.runtime_data
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.wibeee_2233_active_power")
+    state = hass.states.get("sensor.wibeee_2233_total_active_power")
     assert state.state == STATE_UNAVAILABLE
 
 
 async def test_sensor_invalid_value(
     hass: HomeAssistant, loaded_entry: MockConfigEntry
 ) -> None:
-    """Test a sensor goes unavailable when its value is not numeric."""
-    coordinator = loaded_entry.runtime_data.coordinator
+    """Test a sensor becomes unknown when its value is not numeric."""
+    coordinator = loaded_entry.runtime_data
     coordinator.async_set_updated_data(
         {
             "fase1": {"vrms": "230.5", "p_activa": "277"},
@@ -60,15 +60,15 @@ async def test_sensor_invalid_value(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.wibeee_2233_active_power")
-    assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("sensor.wibeee_2233_total_active_power")
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_sensor_unavailable_on_missing_key(
     hass: HomeAssistant, loaded_entry: MockConfigEntry
 ) -> None:
     """Test a sensor goes unavailable when a later payload omits its key."""
-    coordinator = loaded_entry.runtime_data.coordinator
+    coordinator = loaded_entry.runtime_data
     coordinator.async_set_updated_data(
         {
             "fase1": {"vrms": "230.5", "p_activa": "277"},
@@ -77,7 +77,7 @@ async def test_sensor_unavailable_on_missing_key(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.wibeee_2233_active_power")
+    state = hass.states.get("sensor.wibeee_2233_total_active_power")
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -107,8 +107,14 @@ async def test_sensors_polling_mode_keeps_all_keys(
 
     # angle is disabled-by-default, so check the entity registry
     registry = er.async_get(hass)
-    assert registry.async_get(f"sensor.wibeee_{MOCK_MAC[-4:]}_active_power") is not None
-    assert registry.async_get(f"sensor.wibeee_{MOCK_MAC[-4:]}_angle") is not None
+    assert (
+        registry.async_get(f"sensor.wibeee_{MOCK_MAC[-4:]}_total_active_power")
+        is not None
+    )
+    assert (
+        registry.async_get(f"sensor.wibeee_{MOCK_MAC[-4:]}_total_phase_angle")
+        is not None
+    )
 
 
 async def test_sensor_setup_no_known_phases(

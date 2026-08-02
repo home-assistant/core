@@ -54,7 +54,6 @@ async def test_user_step_connection_error(
     mock_wibeee_api_config_flow: MagicMock,
 ) -> None:
     """Test user step handles connection error."""
-    # validate_input calls async_fetch_device_info
     mock_wibeee_api_config_flow.async_fetch_device_info.side_effect = TimeoutError(
         "error"
     )
@@ -99,7 +98,7 @@ async def test_dhcp_discovery(
     mock_setup_entry: AsyncMock,
     mock_wibeee_api_config_flow: MagicMock,
 ) -> None:
-    """Test DHCP discovery flow creates an entry."""
+    """Test DHCP discovery shows a confirmation form and creates an entry."""
     discovery_info = DhcpServiceInfo(
         ip=MOCK_HOST,
         macaddress=MOCK_MAC,
@@ -111,12 +110,40 @@ async def test_dhcp_discovery(
         context={"source": config_entries.SOURCE_DHCP},
         data=discovery_info,
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
 
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == MOCK_HOST
 
 
-# -- DHCP and exception-path tests --
+async def test_dhcp_discovery_confirm_cannot_connect(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_wibeee_api_config_flow: MagicMock,
+) -> None:
+    """Test DHCP discovery aborts when the device stops responding on confirm."""
+    discovery_info = DhcpServiceInfo(
+        ip=MOCK_HOST,
+        macaddress=MOCK_MAC,
+        hostname="wibeee_test",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=discovery_info,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    mock_wibeee_api_config_flow.async_fetch_device_info.side_effect = TimeoutError(
+        "error"
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_dhcp_already_configured_updates_host(

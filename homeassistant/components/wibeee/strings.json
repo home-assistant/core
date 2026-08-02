@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "Device is already configured",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "not_wibeee_device": "Discovered device is not a WiBeee energy monitor"
     },
     "error": {
@@ -9,6 +10,10 @@
       "unknown": "An unknown error occurred."
     },
     "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up the WiBeee energy monitor at {host}?",
+        "title": "Discovered WiBeee device"
+      },
       "user": {
         "data": {
           "host": "Hostname or IP address"
@@ -23,26 +28,32 @@
   },
   "entity": {
     "sensor": {
-      "active_energy": { "name": "Active Energy" },
-      "active_power": { "name": "Active Power" },
-      "angle": { "name": "Angle" },
-      "capacitive_reactive_energy": { "name": "Capacitive Reactive Energy" },
-      "capacitive_reactive_power": { "name": "Capacitive Reactive Power" },
-      "inductive_reactive_energy": { "name": "Inductive Reactive Energy" },
-      "inductive_reactive_power": { "name": "Inductive Reactive Power" },
-      "phase_voltage": { "name": "Phase Voltage" },
-      "thd_current": { "name": "THD Current" },
-      "thd_current_fundamental": { "name": "THD Current Fundamental" },
-      "thd_current_harmonic_3": { "name": "THD Current Harmonic 3" },
-      "thd_current_harmonic_5": { "name": "THD Current Harmonic 5" },
-      "thd_current_harmonic_7": { "name": "THD Current Harmonic 7" },
-      "thd_current_harmonic_9": { "name": "THD Current Harmonic 9" },
-      "thd_voltage": { "name": "THD Voltage" },
-      "thd_voltage_fundamental": { "name": "THD Voltage Fundamental" },
-      "thd_voltage_harmonic_3": { "name": "THD Voltage Harmonic 3" },
-      "thd_voltage_harmonic_5": { "name": "THD Voltage Harmonic 5" },
-      "thd_voltage_harmonic_7": { "name": "THD Voltage Harmonic 7" },
-      "thd_voltage_harmonic_9": { "name": "THD Voltage Harmonic 9" }
+      "active_energy": { "name": "{phase_name} active energy" },
+      "active_power": { "name": "{phase_name} active power" },
+      "apparent_power": { "name": "{phase_name} apparent power" },
+      "capacitive_reactive_energy": {
+        "name": "{phase_name} capacitive reactive energy"
+      },
+      "capacitive_reactive_power": {
+        "name": "{phase_name} capacitive reactive power"
+      },
+      "current": { "name": "{phase_name} current" },
+      "frequency": { "name": "{phase_name} frequency" },
+      "inductive_reactive_energy": {
+        "name": "{phase_name} inductive reactive energy"
+      },
+      "inductive_reactive_power": {
+        "name": "{phase_name} inductive reactive power"
+      },
+      "phase_angle": { "name": "{phase_name} phase angle" },
+      "power_factor": { "name": "{phase_name} power factor" },
+      "thd_current": { "name": "{phase_name} THD current" },
+      "thd_current_fundamental": { "name": "{phase_name} THD current fundamental" },
+      "thd_current_harmonic": { "name": "{phase_name} THD current harmonic {order}" },
+      "thd_voltage": { "name": "{phase_name} THD voltage" },
+      "thd_voltage_fundamental": { "name": "{phase_name} THD voltage fundamental" },
+      "thd_voltage_harmonic": { "name": "{phase_name} THD voltage harmonic {order}" },
+      "voltage": { "name": "{phase_name} voltage" }
     }
   }
 }

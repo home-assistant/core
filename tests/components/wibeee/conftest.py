@@ -97,7 +97,6 @@ def mock_wibeee_api() -> Generator[MagicMock]:
     _setup_mock_api(api)
     with (
         patch("pywibeee.WibeeeAPI", return_value=api) as mock_cls,
-        patch("homeassistant.components.wibeee.WibeeeAPI", return_value=api),
         patch(
             "homeassistant.components.wibeee.config_flow.WibeeeAPI",
             return_value=api,

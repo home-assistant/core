@@ -78,7 +78,32 @@ class WibeeeConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_wibeee_device")
 
         self._discovered_host = host
-        return await self.async_step_user()
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm setup of the discovered Wibeee device."""
+        assert self._discovered_host is not None
+
+        if user_input is not None:
+            try:
+                title, unique_id, data = await validate_input(
+                    self.hass, {CONF_HOST: self._discovered_host}
+                )
+            except NoDeviceInfo:
+                return self.async_abort(reason="cannot_connect")
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: self._discovered_host}
+            )
+            return self.async_create_entry(title=title, data=data)
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders={"host": self._discovered_host},
+        )
 
     @override
     async def async_step_user(
@@ -86,9 +111,6 @@ class WibeeeConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the user step: enter the device IP address."""
         errors: dict[str, str] = {}
-
-        if user_input is None and self._discovered_host:
-            user_input = {CONF_HOST: self._discovered_host}
 
         if user_input is not None:
             try:
@@ -103,7 +125,7 @@ class WibeeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(title=title, data=data)
 
-        default_host = (user_input or {}).get(CONF_HOST) or self._discovered_host or ""
+        default_host = (user_input or {}).get(CONF_HOST, "")
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
