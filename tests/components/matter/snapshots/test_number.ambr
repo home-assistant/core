@@ -654,6 +654,67 @@
     'state': '255',
   })
 # ---
+# name: test_numbers[color_temperature_light][number.mock_color_temperature_light_on_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_color_temperature_light_on_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[color_temperature_light][number.mock_color_temperature_light_on_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Color Temperature Light On time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_color_temperature_light_on_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_numbers[color_temperature_light][number.mock_color_temperature_light_power_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -711,6 +772,250 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
+  })
+# ---
+# name: test_numbers[eve_energy_20ecn4101][number.eve_energy_20ecn4101_on_time_bottom-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.eve_energy_20ecn4101_on_time_bottom',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time (bottom)',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time (bottom)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-2-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[eve_energy_20ecn4101][number.eve_energy_20ecn4101_on_time_bottom-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 On time (bottom)',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.eve_energy_20ecn4101_on_time_bottom',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_numbers[eve_energy_20ecn4101][number.eve_energy_20ecn4101_on_time_top-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.eve_energy_20ecn4101_on_time_top',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time (top)',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time (top)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[eve_energy_20ecn4101][number.eve_energy_20ecn4101_on_time_top-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 On time (top)',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.eve_energy_20ecn4101_on_time_top',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_numbers[eve_energy_plug][number.eve_energy_plug_on_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.eve_energy_plug_on_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[eve_energy_plug][number.eve_energy_plug_on_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Plug On time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.eve_energy_plug_on_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_numbers[eve_energy_plug_patched][number.eve_energy_plug_patched_on_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.eve_energy_plug_patched_on_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[eve_energy_plug_patched][number.eve_energy_plug_patched_on_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Plug Patched On time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.eve_energy_plug_patched_on_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_numbers[eve_thermo_v4][number.eve_thermo_20ebp1701_temperature_offset-entry]
@@ -953,6 +1258,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '255',
+  })
+# ---
+# name: test_numbers[extended_color_light][number.mock_extended_color_light_on_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_extended_color_light_on_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-000000000000000A-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[extended_color_light][number.mock_extended_color_light_on_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Extended Color Light On time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_extended_color_light_on_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_numbers[extended_color_light][number.mock_extended_color_light_power_on_level-entry]
@@ -1549,6 +1915,128 @@
     'state': '0.0',
   })
 # ---
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_time_load_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.white_series_onoff_switch_on_time_load_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time (Load Control)',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time (Load Control)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_time_load_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch On time (Load Control)',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.white_series_onoff_switch_on_time_load_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_time_rgb_indicator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.white_series_onoff_switch_on_time_rgb_indicator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time (RGB Indicator)',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time (RGB Indicator)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-6-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_time_rgb_indicator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch On time (RGB Indicator)',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.white_series_onoff_switch_on_time_rgb_indicator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_transition_time_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1965,6 +2453,128 @@
     'state': '0.5',
   })
 # ---
+# name: test_numbers[inovelli_vtm31][number.inovelli_on_time_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.inovelli_on_time_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time (1)',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[inovelli_vtm31][number.inovelli_on_time_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli On time (1)',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.inovelli_on_time_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_numbers[inovelli_vtm31][number.inovelli_on_time_6-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.inovelli_on_time_6',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time (6)',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time (6)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-6-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[inovelli_vtm31][number.inovelli_on_time_6-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli On time (6)',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.inovelli_on_time_6',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_numbers[inovelli_vtm31][number.inovelli_on_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2322,6 +2932,67 @@
     'state': '0.0',
   })
 # ---
+# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_dimmable_light_on_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Dimmable Light On time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_dimmable_light_on_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2558,6 +3229,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
+  })
+# ---
+# name: test_numbers[mock_dimmable_plugin_unit][number.dimmable_plugin_unit_on_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.dimmable_plugin_unit_on_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_dimmable_plugin_unit][number.dimmable_plugin_unit_on_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmable Plugin Unit On time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.dimmable_plugin_unit_on_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_numbers[mock_dimmable_plugin_unit][number.dimmable_plugin_unit_power_on_level-entry]
@@ -3276,6 +4008,67 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_numbers[mock_mounted_dimmable_load_control_fixture][number.mock_mounted_dimmable_load_control_on_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_mounted_dimmable_load_control_on_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-000000000000000E-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_mounted_dimmable_load_control_fixture][number.mock_mounted_dimmable_load_control_on_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Mounted dimmable load control On time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_mounted_dimmable_load_control_on_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_numbers[mock_mounted_dimmable_load_control_fixture][number.mock_mounted_dimmable_load_control_power_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3693,6 +4486,67 @@
     'state': '0.0',
   })
 # ---
+# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_onoffpluginunit_on_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock OnOffPluginUnit On time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_onoffpluginunit_on_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3810,6 +4664,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '255',
+  })
+# ---
+# name: test_numbers[mock_onoff_light][number.mock_onoff_light_on_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_onoff_light_on_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-000000000000001E-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_onoff_light][number.mock_onoff_light_on_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock OnOff Light On time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_onoff_light_on_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_off_transition_time-entry]
@@ -3989,6 +4904,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_time_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_onoff_light_on_time_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_time_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock OnOff Light On time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_onoff_light_on_time_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_transition_time-entry]
@@ -4287,6 +5263,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_light_on_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Light On time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_light_on_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_transition_time-entry]
@@ -4647,6 +5684,67 @@
     'state': '47',
   })
 # ---
+# name: test_numbers[mock_switch_unit][number.mock_switchunit_on_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_switchunit_on_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-0000000000000023-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_switch_unit][number.mock_switchunit_on_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock SwitchUnit On time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_switchunit_on_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_numbers[mock_thermostat][number.mock_thermostat_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4885,6 +5983,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_numbers[onoff_light_with_levelcontrol_present][number.d215s_on_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.d215s_on_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[onoff_light_with_levelcontrol_present][number.d215s_on_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'D215S On time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.d215s_on_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_numbers[onoff_light_with_levelcontrol_present][number.d215s_power_on_level-entry]
@@ -5185,6 +6344,67 @@
     'state': '0.0',
   })
 # ---
+# name: test_numbers[silabs_range_hood][number.sl_rangehood_on_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.sl_rangehood_on_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-0000000000000072-MatterNodeDevice-2-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[silabs_range_hood][number.sl_rangehood_on_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SL-RangeHood On time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.sl_rangehood_on_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_numbers[silabs_refrigerator][number.refrigerator_temperature_setpoint_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -5303,5 +6523,66 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.0',
+  })
+# ---
+# name: test_numbers[yandex_smart_socket][number.yndx_00540_on_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.yndx_00540_on_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'On time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_time',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-on_time-6-16385',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[yandex_smart_socket][number.yndx_00540_on_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'YNDX-00540 On time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6553,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.yndx_00540_on_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---

@@ -262,6 +262,9 @@
       "on_off_transition_time": {
         "name": "On/Off transition time"
       },
+      "on_time": {
+        "name": "On time"
+      },
       "on_transition_time": {
         "name": "On transition time"
       },
