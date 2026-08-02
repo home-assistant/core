@@ -22,7 +22,8 @@ from homeassistant.const import CONF_API_KEY, CONF_DOMAIN, CONF_RECIPIENT, CONF_
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_SANDBOX, DOMAIN
+from . import CONF_SANDBOX
+from .const import DATA_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,9 +43,7 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MailgunNotificationService | None:
     """Get the Mailgun notification service."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    data = hass.data[DOMAIN]
+    data = hass.data[DATA_CONFIG]
     mailgun_service = MailgunNotificationService(
         data.get(CONF_DOMAIN),
         data.get(CONF_SANDBOX),
