@@ -153,7 +153,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             camera = await self.hass.async_add_executor_job(
-                HikCamera, url, port, username, password, ssl, verify_ssl
+                HikCamera, url, port, username, password, verify_ssl
             )
         except requests.exceptions.RequestException:
             return self.async_abort(reason="cannot_connect")
