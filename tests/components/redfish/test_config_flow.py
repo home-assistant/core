@@ -154,7 +154,14 @@ async def test_user_flow_rejects_invalid_base_url(
     get_systems.assert_not_called()
 
 
-async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "base_url",
+    [
+        pytest.param("https://bmc.example/", id="trailing-slash"),
+        pytest.param("https://bmc.example:443", id="default-port"),
+    ],
+)
+async def test_user_flow_already_configured(hass: HomeAssistant, base_url: str) -> None:
     """Test duplicate normalized base URLs are rejected."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -169,7 +176,7 @@ async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=USER_INPUT,
+            data={**USER_INPUT, CONF_BASE_URL: base_url},
         )
 
     assert result["type"] is FlowResultType.ABORT
