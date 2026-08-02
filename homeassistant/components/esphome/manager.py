@@ -3,6 +3,7 @@
 import asyncio
 import base64
 from functools import partial
+import json
 import logging
 import secrets
 import struct
@@ -216,6 +217,7 @@ class ESPHomeManager:
 
     __slots__ = (
         "_cancel_subscribe_logs",
+        "_dashboard_key_sync_warned",
         "_log_level",
         "cli",
         "device_id",
@@ -251,6 +253,7 @@ class ESPHomeManager:
         self.zeroconf_instance = zeroconf_instance
         self.entry_data = entry.runtime_data
         self._cancel_subscribe_logs: CALLBACK_TYPE | None = None
+        self._dashboard_key_sync_warned = False
         self._log_level = LogLevel.LOG_LEVEL_NONE
 
     async def on_stop(self, event: Event) -> None:
@@ -900,7 +903,7 @@ class ESPHomeManager:
             result = await dashboard.api.post_encryption_key(
                 device_info.name, key, mac=self.entry.unique_id
             )
-        except (aiohttp.ClientError, TimeoutError) as err:
+        except (aiohttp.ClientError, TimeoutError, json.JSONDecodeError) as err:
             _LOGGER.debug(
                 "Could not sync encryption key for %s to the ESPHome dashboard "
                 "(the dashboard may not support it yet): %s",
@@ -909,14 +912,16 @@ class ESPHomeManager:
             )
             return
         if result.get("result") == "not_writable":
-            _LOGGER.warning(
-                "The ESPHome dashboard could not store the encryption key for "
-                "%s (%s), so installing that configuration may use a different "
-                "key and lock Home Assistant out: %s",
-                device_info.name,
-                self.entry.unique_id,
-                result.get("reason", "unknown reason"),
-            )
+            if not self._dashboard_key_sync_warned:
+                self._dashboard_key_sync_warned = True
+                _LOGGER.warning(
+                    "The ESPHome dashboard could not store the encryption key for "
+                    "%s (%s), so installing that configuration may use a different "
+                    "key and lock Home Assistant out: %s",
+                    device_info.name,
+                    self.entry.unique_id,
+                    result.get("reason", "unknown reason"),
+                )
             return
         _LOGGER.debug(
             "Synced encryption key for %s to the ESPHome dashboard: %s",
@@ -938,13 +943,21 @@ class ESPHomeManager:
             # re-offer it so a dashboard that missed the original handoff
             # (added later, upgraded, or temporarily unreachable) catches
             # up. The dashboard no-ops when it already has the same key.
+            # Only keys in our storage are ours to push — a user-authored
+            # YAML key is not (mirrors _async_clear_dynamic_encryption_key).
             # Background task: this runs on every connect and must not
             # delay entity setup.
-            self.entry.async_create_background_task(
-                self.hass,
-                self._async_sync_encryption_key_to_dashboard(device_info, noise_psk),
-                "esphome-sync-encryption-key",
-            )
+            storage = await async_get_encryption_key_storage(self.hass)
+            if self.entry.unique_id and (
+                await storage.async_get_key(self.entry.unique_id) == noise_psk
+            ):
+                self.entry.async_create_background_task(
+                    self.hass,
+                    self._async_sync_encryption_key_to_dashboard(
+                        device_info, noise_psk
+                    ),
+                    "esphome-sync-encryption-key",
+                )
             return
 
         if not device_info.api_encryption_supported:
