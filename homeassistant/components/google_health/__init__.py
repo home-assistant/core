@@ -123,6 +123,7 @@ async def async_setup_entry(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
         manufacturer="Google",
+        entry_type=dr.DeviceEntryType.SERVICE,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)

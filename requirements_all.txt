@@ -1688,7 +1688,7 @@ nextdns==5.0.1
 nhc==0.8.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.22.0
+nibe==2.24.0
 
 # homeassistant.components.nice_go
 nice-go==1.0.2
@@ -2786,7 +2786,7 @@ python-xbox==0.2.0
 pythonegardia==1.0.52
 
 # homeassistant.components.uptime_kuma
-pythonkuma==0.5.1
+pythonkuma==0.5.2
 
 # homeassistant.components.tile
 pytile==2024.12.0
@@ -2916,7 +2916,7 @@ renault-api==0.5.12
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.21.7
+reolink-aio==0.21.8
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.3.0
