@@ -1,12 +1,14 @@
 """Tracks devices by sending a ICMP echo request (ping)."""
 
+from collections.abc import Mapping
 from datetime import datetime, timedelta
-from typing import override
+from typing import Any, override
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
     BaseScannerEntity,
+    ScannerEntityStateAttribute,
     SourceType,
 )
 from homeassistant.core import HomeAssistant
@@ -48,6 +50,15 @@ class PingDeviceTracker(PingEntity, BaseScannerEntity):
                 CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.seconds
             )
         )
+
+    @property
+    @override
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the state attributes."""
+        attrs: dict[str, Any] = {
+            ScannerEntityStateAttribute.IP: self.coordinator.data.ip_address,
+        }
+        return {key: value for key, value in attrs.items() if value is not None}
 
     @property
     @override
