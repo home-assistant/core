@@ -525,7 +525,7 @@ androidtvremote2==0.3.1
 anel-pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.anova
-anova-wifi==0.17.1
+anova-wifi==1.0.1
 
 # homeassistant.components.anthemav
 anthemav==1.4.2
@@ -922,7 +922,7 @@ emoji==2.8.0
 emulated-roku==0.3.0
 
 # homeassistant.components.energieleser
-energieleser==0.1.5
+energieleser==0.1.6
 
 # homeassistant.components.huisbaasje
 energyflip-client==0.2.2
@@ -961,7 +961,7 @@ eq3btsmart==2.3.0
 esios_api==4.4.0
 
 # homeassistant.components.esphome
-esphome-dashboard-api==1.3.0
+esphome-dashboard-api==1.4.0
 
 # homeassistant.components.essent
 essent-dynamic-pricing==0.3.1
@@ -1438,7 +1438,7 @@ knocki==0.4.2
 knx-frontend==2026.7.23.145751
 
 # homeassistant.components.knx
-knx-telegram-store[sqlite,postgres]==0.11.1
+knx-telegram-store[sqlite,postgres]==0.11.2
 
 # homeassistant.components.kraken
 krakenex==2.2.2
@@ -1688,7 +1688,7 @@ nextdns==5.0.1
 nhc==0.8.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.22.0
+nibe==2.24.0
 
 # homeassistant.components.nice_go
 nice-go==1.0.2
@@ -2267,7 +2267,7 @@ pyimouapi==1.3.0
 pyinsteon==1.6.4
 
 # homeassistant.components.intelliclima
-pyintelliclima==0.3.1
+pyintelliclima==0.4.0
 
 # homeassistant.components.intesishome
 pyintesishome==2.0.3
@@ -2789,7 +2789,7 @@ python-xbox==0.2.0
 pythonegardia==1.0.52
 
 # homeassistant.components.uptime_kuma
-pythonkuma==0.5.1
+pythonkuma==0.5.2
 
 # homeassistant.components.tile
 pytile==2024.12.0
@@ -2919,7 +2919,7 @@ renault-api==0.5.12
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.21.7
+reolink-aio==0.21.8
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.3.0
@@ -3409,10 +3409,10 @@ wyoming==1.10.0
 xiaomi-ble==1.11.0
 
 # homeassistant.components.knx
-xknx==3.17.0
+xknx==3.18.0
 
 # homeassistant.components.knx
-xknxproject==3.9.0
+xknxproject==3.10.0
 
 # homeassistant.components.fritz
 # homeassistant.components.rest
