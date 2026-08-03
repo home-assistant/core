@@ -208,6 +208,30 @@ async def test_per_chat_devices(
         assert entity_registry.async_get(notify_entity_id).device_id == chat_device.id
 
 
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that per-chat devices link to the bot device via via_device_id."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    bot_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456"), mock_broadcast_config_entry.entry_id
+    )
+    assert bot_device is not None
+
+    for chat_id in (123456, 654321):
+        chat_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"123456_{chat_id}"), mock_broadcast_config_entry.entry_id
+        )
+        assert chat_device is not None
+        assert chat_device.via_device_id == bot_device.id
+
+
 async def test_remove_chat_subentry_removes_per_chat_device(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
