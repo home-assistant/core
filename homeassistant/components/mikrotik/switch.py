@@ -43,7 +43,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     switch_list = [
-        MikrotikSwitchEntity(coordinator, switch_desc, interface)
+        MikrotikSwitchEntity(entry, coordinator, switch_desc, interface)
         for switch_desc in SENSORS
         for interface in coordinator.api.interfaces
         if interface.get("type") == switch_desc.key
