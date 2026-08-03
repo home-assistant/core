@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.fan import (
@@ -28,6 +30,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.radio_frequency.common import MockRadioFrequencyEntity
@@ -343,3 +346,52 @@ async def test_unavailable_when_transmitter_goes_offline(
 
     state = hass.states.get(ENTITY_ID)
     assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (SERVICE_TURN_ON, {}),
+        (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 66}),
+        (SERVICE_TURN_OFF, {}),
+    ],
+)
+async def test_commands_while_transmitter_unavailable(
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+    init_vacmaster_cardio54: MockConfigEntry,
+    service: str,
+    service_data: dict[str, int],
+) -> None:
+    """Commands fail loudly while the transmitter is gone, and keep the state.
+
+    The fan is assumed-state, so silently accepting a command that never
+    reached the air would leave Home Assistant reporting a speed the fan
+    never received.
+    """
+    # Put the fan into a known "on" state while the transmitter still works.
+    await hass.services.async_call(
+        FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+    before = hass.states.get(ENTITY_ID)
+    assert before.state == STATE_ON
+    sends_before = len(mock_rf_entity.send_command_calls)
+
+    with (
+        patch(
+            "homeassistant.components.vacmaster_cardio54.fan.async_send_command",
+            side_effect=HomeAssistantError("transmitter gone"),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            blocking=True,
+        )
+
+    after = hass.states.get(ENTITY_ID)
+    assert after.state == before.state
+    assert after.attributes[ATTR_PERCENTAGE] == before.attributes[ATTR_PERCENTAGE]
+    assert len(mock_rf_entity.send_command_calls) == sends_before

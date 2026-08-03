@@ -32,7 +32,9 @@ rules:
   runtime-data:
     status: exempt
     comment: |
-      The transmitter and device ID are read from the config entry data.
+      There is no runtime state to share: the transmitter and device ID are
+      static config entry data, and the one-way protocol keeps no client or
+      connection object that would belong in entry.runtime_data.
   test-before-configure: done
   test-before-setup:
     status: exempt

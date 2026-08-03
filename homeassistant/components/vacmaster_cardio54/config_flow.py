@@ -1,7 +1,7 @@
 """Config flow for the Vacmaster Cardio54 integration."""
 
 import random
-from typing import Any, override
+from typing import Any, Final, override
 
 from rf_protocols.commands.ev1527 import EV1527Command
 import voluptuous as vol
@@ -27,6 +27,12 @@ from .const import (
     PAIR_FRAME_REPEATS,
     TIMEBASE_US,
 )
+
+# Bounded retry for device-ID allocation. The 20-bit space holds ~1M IDs, so
+# even with thousands of entries on one transmitter the chance of this many
+# draws colliding in a row is negligible; the bound exists only so a
+# pathologically full transmitter cannot spin the event loop forever.
+DEVICE_ID_MAX_ATTEMPTS: Final = 1000
 
 
 class VacmasterCardio54ConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -56,7 +62,7 @@ class VacmasterCardio54ConfigFlow(ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries()
             if entry.data.get(CONF_TRANSMITTER) == transmitter_id
         }
-        for _ in range(1000):
+        for _ in range(DEVICE_ID_MAX_ATTEMPTS):
             candidate = random.getrandbits(DEVICE_ID_BITS)
             if candidate not in used:
                 return candidate
