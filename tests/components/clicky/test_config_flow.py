@@ -12,7 +12,7 @@ from .const import TEST_SITE_ID, TEST_SITEKEY
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+    """Test that we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -73,9 +73,6 @@ async def test_form_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
     with patch(
         "homeassistant.components.clicky.config_flow.ClickyClient",
     ) as mock_lib:
@@ -126,10 +123,6 @@ async def test_form_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-
     with patch(
         "homeassistant.components.clicky.config_flow.ClickyClient",
     ) as mock_lib:
@@ -177,10 +170,6 @@ async def test_form_unknown(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
 
     with patch(
         "homeassistant.components.clicky.config_flow.ClickyClient",
