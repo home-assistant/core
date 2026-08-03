@@ -32,10 +32,10 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     select_list = [
-        MikrotikSelectEntity(entry, coordinator, switch_desc, interface)
-        for switch_desc in SELECTS
+        MikrotikSelectEntity(entry, coordinator, select_desc, interface)
+        for select_desc in SELECTS
         for interface in coordinator.api.interfaces
-        if interface.get(switch_desc.key) is not None
+        if interface.get(select_desc.key) is not None
     ]
 
     async_add_entities(select_list)
