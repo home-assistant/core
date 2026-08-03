@@ -3244,7 +3244,7 @@ ttn_client==1.3.0
 tuya-device-handlers==0.0.26
 
 # homeassistant.components.tuya
-tuya-device-sharing-sdk==0.2.10
+tuya-device-sharing-sdk==0.2.14
 
 # homeassistant.components.twentemilieu
 twentemilieu==3.0.0
