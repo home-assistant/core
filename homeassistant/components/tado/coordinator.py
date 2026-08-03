@@ -70,6 +70,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.zones: list[dict[Any, Any]] = []
         self.devices: list[dict[Any, Any]] = []
         self.heating_circuits: dict[str, dict[str, Any]] = {}
+        # Tracks that the one-time fetch was attempted, not that it produced
+        # anything: a home without circuits, or a failed optional request, must
+        # not make us retry on every refresh.
+        self._heating_circuits_loaded = False
         self.data: dict[str, Any] = {
             "device": {},
             "weather": {},
@@ -120,7 +124,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Heating circuits and their per-zone assignment are configuration, not
         # state: they only change when the user rewires the home or changes the
         # assignment. Fetching them once keeps the recurring call count at zero.
-        if not self.heating_circuits:
+        if not self._heating_circuits_loaded:
+            self._heating_circuits_loaded = True
             await self._async_update_heating_circuits()
 
         devices = await self._async_update_devices()
@@ -483,8 +488,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch the heating circuits and their current per-zone assignment.
 
         Only called once per config entry setup. A failure is not fatal: the
-        select entities simply stay unavailable, every other platform is
-        unaffected.
+        select entities are simply not created, every other platform is
+        unaffected. It is not retried either, so that a home without circuits
+        or a failing optional request cannot turn into a recurring call on
+        every refresh; reload the entry to try again.
         """
 
         def _load() -> tuple[list[dict[str, Any]], dict[int, dict[str, Any]]]:

@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from requests import RequestException
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -118,3 +119,46 @@ async def test_unknown_for_unlisted_circuit(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_no_retry_when_home_has_no_circuits(hass: HomeAssistant) -> None:
+    """Test an empty circuit list is not fetched again on every refresh."""
+    coordinator = hass.config_entries.async_entries("tado")[0].runtime_data
+    coordinator.heating_circuits = {}
+
+    with (
+        patch(
+            "PyTado.interface.api.my_tado.Tado.get_heating_circuits"
+        ) as mock_circuits,
+        patch("PyTado.interface.api.my_tado.Tado.get_zone_control") as mock_control,
+    ):
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    mock_circuits.assert_not_called()
+    mock_control.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_no_retry_after_failed_fetch(hass: HomeAssistant) -> None:
+    """Test a failed circuit fetch is not retried on every refresh."""
+    coordinator = hass.config_entries.async_entries("tado")[0].runtime_data
+
+    # Pretend the one-time fetch happened and raised.
+    coordinator.heating_circuits = {}
+    coordinator._heating_circuits_loaded = False  # noqa: SLF001
+
+    with patch(
+        "PyTado.interface.api.my_tado.Tado.get_heating_circuits",
+        side_effect=RequestException("boom"),
+    ) as mock_circuits:
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+        assert mock_circuits.call_count == 1
+
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    assert mock_circuits.call_count == 1
+    assert hass.states.get(ENTITY_ID) is not None
