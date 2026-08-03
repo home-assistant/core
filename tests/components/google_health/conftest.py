@@ -78,9 +78,9 @@ def mock_expires_at() -> int:
 
 
 @pytest.fixture
-def scopes() -> list[str]:
+def scopes(request: pytest.FixtureRequest) -> list[str]:
     """Fixture with scopes to set up."""
-    return OAUTH_SCOPES
+    return getattr(request, "param", OAUTH_SCOPES)
 
 
 @pytest.fixture(name="token_entry")

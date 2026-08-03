@@ -1,11 +1,9 @@
 """Support for interface with an LG webOS TV."""
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from contextlib import suppress
-from functools import wraps
 from http import HTTPStatus
-from typing import Any, Concatenate, cast, override
+from typing import Any, cast, override
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -18,10 +16,8 @@ from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_PAYLOAD,
@@ -30,9 +26,9 @@ from .const import (
     DOMAIN,
     LIVE_TV_APP_ID,
     LOGGER,
-    WEBOSTV_EXCEPTIONS,
 )
-from .coordinator import WebOsTvConfigEntry, WebOsTvDataUpdateCoordinator
+from .coordinator import WebOsTvConfigEntry
+from .entity import WebOsTvEntity, cmd
 from .triggers.turn_on import async_get_turn_on_trigger
 
 SUPPORT_WEBOSTV = (
@@ -63,57 +59,16 @@ async def async_setup_entry(
     async_add_entities([LgWebOSMediaPlayerEntity(entry)])
 
 
-def cmd[_R, **_P](
-    func: Callable[Concatenate[LgWebOSMediaPlayerEntity, _P], Coroutine[Any, Any, _R]],
-) -> Callable[Concatenate[LgWebOSMediaPlayerEntity, _P], Coroutine[Any, Any, _R]]:
-    """Catch command exceptions."""
-
-    @wraps(func)
-    async def cmd_wrapper(
-        self: LgWebOSMediaPlayerEntity, *args: _P.args, **kwargs: _P.kwargs
-    ) -> _R:
-        """Wrap all command methods."""
-        if self.state is MediaPlayerState.OFF and func.__name__ != "async_turn_off":
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="device_off",
-                translation_placeholders={
-                    "name": str(self._entry.title),
-                    "func": func.__name__,
-                },
-            )
-        try:
-            return await func(self, *args, **kwargs)
-        except WEBOSTV_EXCEPTIONS as error:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={
-                    "name": str(self._entry.title),
-                    "func": func.__name__,
-                    "error": str(error),
-                },
-            ) from error
-
-    return cmd_wrapper
-
-
-class LgWebOSMediaPlayerEntity(
-    CoordinatorEntity[WebOsTvDataUpdateCoordinator], RestoreEntity, MediaPlayerEntity
-):
+class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
     """Representation of a LG webOS TV."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(self, entry: WebOsTvConfigEntry) -> None:
         """Initialize the webos device."""
-        super().__init__(entry.runtime_data)
-        self._entry = entry
-        self._client = entry.runtime_data.client
+        super().__init__(entry)
         self._attr_assumed_state = True
-        self._device_name = entry.title
         self._attr_unique_id = entry.unique_id
         self._sources = entry.options.get(CONF_SOURCES)
 
@@ -160,11 +115,31 @@ class LgWebOSMediaPlayerEntity(
     def _update_states(self) -> None:
         """Update entity state attributes."""
         tv_state = self._client.tv_state
+
+        self._attr_extra_state_attributes = {}
+
+        if tv_state.is_on or not self._supported_features:
+            supported = SUPPORT_WEBOSTV
+            if tv_state.sound_output == "external_speaker":
+                supported = supported | SUPPORT_WEBOSTV_VOLUME
+            elif tv_state.sound_output != "lineout":
+                supported = (
+                    supported
+                    | SUPPORT_WEBOSTV_VOLUME
+                    | MediaPlayerEntityFeature.VOLUME_SET
+                )
+
+            self._supported_features = supported
+
+        if not tv_state.is_on:
+            self._attr_state = MediaPlayerState.OFF
+            self._attr_assumed_state = False
+            return
+
+        self._attr_state = MediaPlayerState.ON
+
         self._update_sources()
 
-        self._attr_state = (
-            MediaPlayerState.ON if tv_state.is_on else MediaPlayerState.OFF
-        )
         self._attr_is_volume_muted = cast(bool, tv_state.muted)
 
         self._attr_volume_level = None
@@ -193,27 +168,8 @@ class LgWebOSMediaPlayerEntity(
                 icon = tv_state.apps[tv_state.current_app_id]["icon"]
             self._attr_media_image_url = icon
 
-        if self.state != MediaPlayerState.OFF or not self._supported_features:
-            supported = SUPPORT_WEBOSTV
-            if tv_state.sound_output == "external_speaker":
-                supported = supported | SUPPORT_WEBOSTV_VOLUME
-            elif tv_state.sound_output != "lineout":
-                supported = (
-                    supported
-                    | SUPPORT_WEBOSTV_VOLUME
-                    | MediaPlayerEntityFeature.VOLUME_SET
-                )
-
-            self._supported_features = supported
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, cast(str, self.unique_id))},
-            manufacturer="LG",
-            name=self._device_name,
-        )
-
         self._attr_assumed_state = True
-        if tv_state.is_on and tv_state.media_state:
+        if tv_state.media_state:
             self._attr_assumed_state = False
             for entry in tv_state.media_state:
                 if entry.get("playState") == "playing":
@@ -224,20 +180,18 @@ class LgWebOSMediaPlayerEntity(
                     self._attr_state = MediaPlayerState.IDLE
 
         tv_info = self._client.tv_info
-        if self.state != MediaPlayerState.OFF:
-            maj_v = tv_info.software.get("major_ver")
-            min_v = tv_info.software.get("minor_ver")
-            if maj_v and min_v:
-                self._attr_device_info["sw_version"] = f"{maj_v}.{min_v}"
+        maj_v = tv_info.software.get("major_ver")
+        min_v = tv_info.software.get("minor_ver")
+        if maj_v and min_v:
+            self._attr_device_info["sw_version"] = f"{maj_v}.{min_v}"
 
-            if model := tv_info.system.get("modelName"):
-                self._attr_device_info["model"] = model
+        if model := tv_info.system.get("modelName"):
+            self._attr_device_info["model"] = model
 
-            if serial_number := tv_info.system.get("serialNumber"):
-                self._attr_device_info["serial_number"] = serial_number
+        if serial_number := tv_info.system.get("serialNumber"):
+            self._attr_device_info["serial_number"] = serial_number
 
-        self._attr_extra_state_attributes = {}
-        if tv_state.sound_output is not None or self.state != MediaPlayerState.OFF:
+        if tv_state.sound_output is not None:
             self._attr_extra_state_attributes = {
                 ATTR_SOUND_OUTPUT: tv_state.sound_output
             }
