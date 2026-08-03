@@ -62,11 +62,14 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
 
             # Update initial device statuses
             await self._async_update_data()
-        except (TimeoutError, ClientError) as error:
-            _LOGGER.error("Error setting up coordinator: %s", error)
+        except TimeoutError as error:
+            _LOGGER.error("Timeout setting up coordinator: %s", error)
             await self.api_client.async_cleanup()
             return False
-
+        except ClientError as error:
+            _LOGGER.error("Other client error: %s", error)
+            await self.api_client.async_cleanup()
+            return False
         return True
 
     async def _async_update_data(self):
