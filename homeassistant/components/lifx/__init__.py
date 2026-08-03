@@ -210,9 +210,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool
     coordinator.async_setup()
     try:
         await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
+    except ConfigEntryNotReady as ex:
         connection.async_stop()
-        raise
+        raise ConfigEntryNotReady(f"{host}: {ex}") from ex
 
     serial = formatted_serial(coordinator.serial_number)
     if serial != entry.unique_id:

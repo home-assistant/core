@@ -92,7 +92,9 @@ async def test_config_entry_reload(hass: HomeAssistant) -> None:
         assert already_migrated_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_config_entry_retry(hass: HomeAssistant) -> None:
+async def test_config_entry_retry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that a config entry can be retried."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
@@ -106,6 +108,8 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    assert IP_ADDRESS in caplog.text
 
 
 async def test_get_version_fails(hass: HomeAssistant) -> None:
