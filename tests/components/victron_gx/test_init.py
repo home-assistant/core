@@ -154,13 +154,13 @@ async def test_hub_start_success(
     assert victron_hub.installation_id == MOCK_INSTALLATION_ID
 
 
-async def test_child_device_via_device_links_to_parent_in_registry(
+async def test_device_via_device_links(
     hass: HomeAssistant,
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test non-root device is linked to its parent device in the HA device registry."""
-    victron_hub, _mock_config_entry = init_integration
+    """Test a child device links to its registered parent via via_device_id."""
+    victron_hub, mock_config_entry = init_integration
 
     # Inject a system metric first so system_0 is registered as the gateway device.
     await inject_message(
@@ -177,15 +177,15 @@ async def test_child_device_via_device_links_to_parent_in_registry(
     await finalize_injection(victron_hub)
     await hass.async_block_till_done()
 
-    system_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0")}
+    system_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0"), mock_config_entry.entry_id
     )
     assert system_device is not None
     # The GX gateway has no parent — it IS the root.
     assert system_device.via_device_id is None
 
-    battery_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_battery_0")}
+    battery_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_INSTALLATION_ID}_battery_0"), mock_config_entry.entry_id
     )
     assert battery_device is not None
     # Battery is a child of the GX gateway, not an orphan.
