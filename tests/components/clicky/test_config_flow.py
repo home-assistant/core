@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pyclicky import AuthenticationError, ConnectionError
+
 from homeassistant import config_entries
 from homeassistant.components.clicky.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.clicky.const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN
@@ -229,3 +231,59 @@ async def test_form_duplicate_site_id(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_form_authentication_error(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that AuthenticationError is mapped to invalid_auth."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.clicky.config_flow.ClickyClient",
+    ) as mock_lib:
+        client = mock_lib.return_value
+        client.query = AsyncMock(side_effect=AuthenticationError)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SITE_ID: TEST_SITE_ID,
+                CONF_SITEKEY: TEST_SITEKEY,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_form_connection_error(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that ConnectionError is mapped to cannot_connect."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.clicky.config_flow.ClickyClient",
+    ) as mock_lib:
+        client = mock_lib.return_value
+        client.query = AsyncMock(side_effect=ConnectionError)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SITE_ID: TEST_SITE_ID,
+                CONF_SITEKEY: TEST_SITEKEY,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert len(mock_setup_entry.mock_calls) == 0
