@@ -392,6 +392,9 @@ async def test_mcp_tools_list(
     assert tool.inputSchema.get("type") == "object"
     properties = tool.inputSchema.get("properties")
     assert properties.get("name") == {"type": "string"}
+    # Clients need to know which arguments are mandatory, so the converted
+    # schema is passed through whole rather than only its properties.
+    assert "required" in tool.inputSchema
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])

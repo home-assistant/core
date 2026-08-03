@@ -42,14 +42,10 @@ def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
 ) -> types.Tool:
     """Format tool specification."""
-    input_schema = convert(tool.parameters, custom_serializer=custom_serializer)
     return types.Tool(
         name=tool.name,
         description=tool.description or "",
-        inputSchema={
-            "type": "object",
-            "properties": input_schema["properties"],
-        },
+        inputSchema=convert(tool.parameters, custom_serializer=custom_serializer),
     )
 
 
