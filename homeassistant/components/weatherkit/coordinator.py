@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for WeatherKit integration."""
 
-import time
 from datetime import timedelta
+import time
 from typing import override
 
 from apple_weatherkit import DataSetType
