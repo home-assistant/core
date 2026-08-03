@@ -8,7 +8,7 @@ from freebox_api.exceptions import HttpRequestError
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN, PLATFORMS
@@ -95,6 +95,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> b
     )
 
     entry.runtime_data = router
+
+    # Register the router device up front so child devices (home devices, disks)
+    # can deterministically resolve it as their via_device on any platform.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, **router.device_info
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

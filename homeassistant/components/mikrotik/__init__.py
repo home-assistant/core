@@ -17,9 +17,11 @@ from .coordinator import (
 )
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.UPDATE,
 ]
 
@@ -43,8 +45,6 @@ async def async_setup_entry(
 
     config_entry.runtime_data = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -54,6 +54,8 @@ async def async_setup_entry(
         name=coordinator.hostname,
         sw_version=coordinator.firmware,
     )
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
