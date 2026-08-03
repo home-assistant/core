@@ -57,7 +57,7 @@ async def test_event_entity(
     hass: HomeAssistant,
     request: pytest.FixtureRequest,
     fixture_name: str,
-    expected_attributes: dict,
+    expected_attributes: dict[str, str],
 ) -> None:
     """Test feed event entity."""
     entry = create_mock_entry(VALID_CONFIG_DEFAULT)
@@ -76,7 +76,7 @@ async def test_event_entity(
 
 
 async def test_event_new_entry_sorted(
-    hass: HomeAssistant, feed_one_event, feed_two_event
+    hass: HomeAssistant, feed_one_event: bytes, feed_two_event: bytes
 ) -> None:
     """Test feed event entity fires on new event."""
     entry = create_mock_entry(VALID_CONFIG_DEFAULT)
@@ -107,7 +107,7 @@ async def test_event_new_entry_sorted(
 
 
 async def test_event_new_entry_unsorted(
-    hass: HomeAssistant, feed_unsorted, feed_unsorted_update
+    hass: HomeAssistant, feed_unsorted: bytes, feed_unsorted_update: bytes
 ) -> None:
     """Test feed event entity fires on new event."""
     entry = create_mock_entry(VALID_CONFIG_DEFAULT)
@@ -143,7 +143,7 @@ async def test_event_new_entry_unsorted(
 async def test_event_htmlentities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    fixture_name,
+    fixture_name: str,
     request: pytest.FixtureRequest,
 ) -> None:
     """Test feed event entity with HTML Entities."""
@@ -161,7 +161,7 @@ async def test_event_htmlentities(
         assert state.attributes == snapshot
 
 
-async def test_event_no_new_entry(hass: HomeAssistant, feed_two_event) -> None:
+async def test_event_no_new_entry(hass: HomeAssistant, feed_two_event: bytes) -> None:
     """Test feed event entity is not firing when there are no new entries."""
     entry = create_mock_entry(VALID_CONFIG_DEFAULT)
     entry.add_to_hass(hass)
