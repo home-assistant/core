@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/mobility_database",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver",
+  "quality_scale": "bronze",
   "requirements": ["aiomobilitydatabase[feeds]==0.2.1"]
 }
