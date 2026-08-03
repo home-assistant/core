@@ -1057,9 +1057,9 @@ async def async_setup_entry(
     status = coordinator.data
 
     # Dynamically add outlet sensors to valid sensors dictionary
-    if (num_outlets := status.get("outlet.count")) is not None:
+    if outlet_numbers := outlet_numbers_from_status(status):
         additional_sensor_types: dict[str, SensorEntityDescription] = {}
-        for outlet_num in range(1, int(num_outlets) + 1):
+        for outlet_num in sorted(outlet_numbers):
             outlet_num_str: str = str(outlet_num)
             outlet_name: str = (
                 status.get(f"outlet.{outlet_num_str}.name") or outlet_num_str
