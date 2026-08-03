@@ -141,7 +141,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
             if refresh_token and refresh_token != self._refresh_token:
-                _LOGGER.debug("New refresh token obtained from Tado: %s", refresh_token)
+                _LOGGER.debug("New refresh token obtained from Tado")
                 self._refresh_token = refresh_token
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
