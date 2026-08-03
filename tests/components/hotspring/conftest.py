@@ -19,7 +19,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.100"},
-        unique_id="AA:AA:AA:AA:AA:BB",
+        unique_id="AA:BB:CC:DD:EE:FF",
     )
 
 
@@ -47,11 +47,13 @@ def device_fixture() -> Spa:
     """Return the device fixture for a Hot Spring spa."""
     spa = MagicMock(spec=Spa)
     spa.info = SpaInfo(
-        hostname="ConnectedSpa_C59C9C",
-        mac_address="AA:AA:AA:AA:AA:BB",
-        model="Relay",
-        ssid="MyWiFi",
+        hostname="ConnectedSpa_DDEEFF",
+        root_topic="mySpaAABBCCDDEEFF",
         sna_ready=True,
+        brand_name="Hot Spring",
+        collection_type="Highlife",
+        model_type="Relay",
+        volume=335,
     )
     heater = MagicMock(spec=Heater)
     heater.current_temperature = 102.0

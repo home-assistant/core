@@ -29,10 +29,10 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={CONF_HOST: "192.168.1.100"}
     )
 
-    assert result["title"] == "ConnectedSpa_C59C9C"
+    assert result["title"] == "ConnectedSpa_DDEEFF"
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == "192.168.1.100"
-    assert result["result"].unique_id == "AA:AA:AA:AA:AA:BB"
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 @pytest.mark.usefixtures("mock_hotspring")
@@ -83,7 +83,7 @@ async def test_form_cannot_connect(
         result["flow_id"], user_input={CONF_HOST: "192.168.1.100"}
     )
 
-    assert result["title"] == "ConnectedSpa_C59C9C"
+    assert result["title"] == "ConnectedSpa_DDEEFF"
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == "192.168.1.100"
-    assert result["result"].unique_id == "AA:AA:AA:AA:AA:BB"
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
