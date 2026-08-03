@@ -4,8 +4,8 @@ from collections.abc import Callable
 
 import aiopulse
 
-from homeassistant.config_entries import ConfigEntry, callback
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import ACMEDA_HUB_UPDATE, LOGGER
