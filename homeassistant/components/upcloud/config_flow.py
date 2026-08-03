@@ -1,7 +1,7 @@
 """Config flow for UpCloud."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import requests.exceptions
 import upcloud_api
@@ -25,6 +25,7 @@ class UpCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     username: str
     password: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -85,6 +86,7 @@ class UpCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: UpCloudConfigEntry,
     ) -> UpCloudOptionsFlow:

@@ -39,8 +39,8 @@
 # name: test_entity[switch.prise-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Prise',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Prise',
     }),
     'context': <ANY>,
     'entity_id': 'switch.prise',

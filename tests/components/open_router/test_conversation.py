@@ -69,7 +69,7 @@ async def test_default_prompt(
         agent_id="conversation.gpt_3_5_turbo",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert mock_chat_log.content[1:] == snapshot
     call = mock_openai_client.chat.completions.create.call_args_list[0][1]
     assert call["model"] == "openai/gpt-3.5-turbo"
@@ -80,16 +80,25 @@ async def test_default_prompt(
 
 
 @pytest.mark.parametrize(
-    ("web_search", "expected_model_suffix"),
-    [(True, ":online"), (False, "")],
-    ids=["web_search_enabled", "web_search_disabled"],
+    ("web_search", "expected_server_tools", "expected_model_suffix"),
+    [
+        ("plugin", None, ":online"),
+        (
+            "tool",
+            [{"type": "openrouter:web_search", "parameters": {"engine": "auto"}}],
+            "",
+        ),
+        ("off", None, ""),
+    ],
+    ids=["web_search_plugin_enabled", "web_search_enabled", "web_search_disabled"],
 )
 async def test_web_search(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openai_client: AsyncMock,
     mock_chat_log: MockChatLog,  # noqa: F811
-    web_search: bool,
+    web_search: str,
+    expected_server_tools: dict[str, str] | None,
     expected_model_suffix: str,
 ) -> None:
     """Test that web search adds :online suffix to model."""
@@ -101,10 +110,10 @@ async def test_web_search(
         Context(),
         agent_id="conversation.gpt_3_5_turbo",
     )
-
     call = mock_openai_client.chat.completions.create.call_args_list[0][1]
-    expected_model = f"openai/gpt-3.5-turbo{expected_model_suffix}"
+    expected_model = "openai/gpt-3.5-turbo" + expected_model_suffix
     assert call["model"] == expected_model
+    assert call["extra_body"].get("tools") == expected_server_tools
 
 
 async def test_empty_api_response(
@@ -136,7 +145,7 @@ async def test_empty_api_response(
         agent_id="conversation.gpt_3_5_turbo",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
 
 
 @pytest.mark.parametrize("enable_assist", [True])
@@ -258,7 +267,7 @@ async def test_function_call(
         agent_id="conversation.gpt_3_5_turbo",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
     assert mock_chat_log.content[1:] == snapshot
     assert mock_openai_client.chat.completions.create.call_count == 2

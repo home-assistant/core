@@ -2,10 +2,11 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
+from aioshelly.exceptions import RpcCallError
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.switch import (
@@ -15,17 +16,20 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
+    DOMAIN,
     MODEL_FRANKEVER_IRRIGATION_CONTROLLER,
     MODEL_LINKEDGO_ST802_THERMOSTAT,
     MODEL_LINKEDGO_ST1820_THERMOSTAT,
     MODEL_NEO_WATER_VALVE,
     MODEL_TOP_EV_CHARGER_EVE01,
     ROLE_GENERIC,
+    RPC_ERROR_CODE_REMOTE_DISABLED,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
@@ -82,7 +86,105 @@ class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
     method_params_fn: Callable[[int | None, bool], tuple]
 
 
-RPC_RELAY_SWITCHES = {
+class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
+    """Entity that controls a switch on RPC based Shelly devices."""
+
+    entity_description: RpcSwitchDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSwitchDescription,
+    ) -> None:
+        """Initialize switch."""
+        super().__init__(coordinator, key, attribute, description)
+
+        if description.key in ("cb", "switch", "script"):
+            self._attr_name = get_rpc_channel_name(coordinator.device, key)
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """If switch is on."""
+        return self.entity_description.is_on(self.status)
+
+    @rpc_call
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on switch."""
+        method = getattr(self.coordinator.device, self.entity_description.method_on)
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        params = self.entity_description.method_params_fn(self._id, True)
+        await method(*params)
+
+    @rpc_call
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off switch."""
+        method = getattr(self.coordinator.device, self.entity_description.method_off)
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        params = self.entity_description.method_params_fn(self._id, False)
+        await method(*params)
+
+
+class RpcCircuitBreakerSwitch(RpcSwitch):
+    """Entity that controls a circuit breaker on RPC based Shelly devices."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and not self.status["safety"]
+
+    @rpc_call
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on circuit breaker."""
+        method = getattr(self.coordinator.device, self.entity_description.method_on)
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        params = self.entity_description.method_params_fn(self._id, True)
+        try:
+            await method(*params)
+        except RpcCallError as err:
+            if err.code == RPC_ERROR_CODE_REMOTE_DISABLED:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="circuit_breaker_remote_disabled",
+                    translation_placeholders={
+                        "entity": self.entity_id,
+                        "device": self.coordinator.name,
+                    },
+                ) from err
+            raise
+
+
+class RpcRelaySwitch(RpcSwitch):
+    """Entity that controls a switch on RPC based Shelly devices."""
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSwitchDescription,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(coordinator, key, attribute, description)
+        self._attr_unique_id: str = f"{coordinator.mac}-{key}"
+
+
+RPC_SWITCHES = {
     "switch": RpcSwitchDescription(
         key="switch",
         sub_key="output",
@@ -91,10 +193,17 @@ RPC_RELAY_SWITCHES = {
         method_on="switch_set",
         method_off="switch_set",
         method_params_fn=lambda id, value: (id, value),
+        entity_class=RpcRelaySwitch,
     ),
-}
-
-RPC_SWITCHES = {
+    "cb": RpcSwitchDescription(
+        key="cb",
+        sub_key="output",
+        is_on=lambda status: bool(status["output"]),
+        method_on="cb_set",
+        method_off="cb_set",
+        method_params_fn=lambda id, value: (id, value),
+        entity_class=RpcCircuitBreakerSwitch,
+    ),
     "boolean_generic": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
@@ -261,7 +370,6 @@ RPC_SWITCHES = {
         method_on="cury_set",
         method_off="cury_set",
         method_params_fn=lambda id, value: (id, "left", value),
-        entity_registry_enabled_default=True,
         available=lambda status: (
             (left := status["left"]) is not None
             and left.get("vial", {}).get("level", -1) != -1
@@ -275,7 +383,6 @@ RPC_SWITCHES = {
         method_on="cury_boost",
         method_off="cury_stop_boost",
         method_params_fn=lambda id, _: (id, "left"),
-        entity_registry_enabled_default=True,
         available=lambda status: (
             (left := status["left"]) is not None
             and left.get("vial", {}).get("level", -1) != -1
@@ -289,7 +396,6 @@ RPC_SWITCHES = {
         method_on="cury_set",
         method_off="cury_set",
         method_params_fn=lambda id, value: (id, "right", value),
-        entity_registry_enabled_default=True,
         available=lambda status: (
             (right := status["right"]) is not None
             and right.get("vial", {}).get("level", -1) != -1
@@ -303,7 +409,6 @@ RPC_SWITCHES = {
         method_on="cury_boost",
         method_off="cury_stop_boost",
         method_params_fn=lambda id, _: (id, "right"),
-        entity_registry_enabled_default=True,
         available=lambda status: (
             (right := status["right"]) is not None
             and right.get("vial", {}).get("level", -1) != -1
@@ -367,10 +472,6 @@ def _async_setup_rpc_entry(
     assert coordinator
 
     async_setup_entry_rpc(
-        hass, config_entry, async_add_entities, RPC_RELAY_SWITCHES, RpcRelaySwitch
-    )
-
-    async_setup_entry_rpc(
         hass, config_entry, async_add_entities, RPC_SWITCHES, RpcSwitch
     )
 
@@ -431,6 +532,7 @@ class BlockSleepingMotionSwitch(
         self.last_state: State | None = None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """If motion is active."""
         if self.block is not None:
@@ -441,16 +543,19 @@ class BlockSleepingMotionSwitch(
 
         return self.last_state.state == STATE_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Activate switch."""
         await self.coordinator.device.set_shelly_motion_detection(True)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Deactivate switch."""
         await self.coordinator.device.set_shelly_motion_detection(False)
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -477,6 +582,7 @@ class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
         self._attr_unique_id: str = f"{coordinator.mac}-{block.description}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """If switch is on."""
         if self.control_result:
@@ -484,79 +590,21 @@ class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
 
         return bool(self.block.output)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
         self.control_result = await self.set_state(turn="on")
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off relay."""
         self.control_result = await self.set_state(turn="off")
         self.async_write_ha_state()
 
     @callback
+    @override
     def _update_callback(self) -> None:
         """When device updates, clear control result that overrides state."""
         self.control_result = None
         super()._update_callback()
-
-
-class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
-    """Entity that controls a switch on RPC based Shelly devices."""
-
-    entity_description: RpcSwitchDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcSwitchDescription,
-    ) -> None:
-        """Initialize select."""
-        super().__init__(coordinator, key, attribute, description)
-
-        if description.key in ("switch", "script"):
-            self._attr_name = get_rpc_channel_name(coordinator.device, key)
-
-    @property
-    def is_on(self) -> bool:
-        """If switch is on."""
-        return self.entity_description.is_on(self.status)
-
-    @rpc_call
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on switch."""
-        method = getattr(self.coordinator.device, self.entity_description.method_on)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
-        params = self.entity_description.method_params_fn(self._id, True)
-        await method(*params)
-
-    @rpc_call
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off switch."""
-        method = getattr(self.coordinator.device, self.entity_description.method_off)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
-        params = self.entity_description.method_params_fn(self._id, False)
-        await method(*params)
-
-
-class RpcRelaySwitch(RpcSwitch):
-    """Entity that controls a switch on RPC based Shelly devices."""
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcSwitchDescription,
-    ) -> None:
-        """Initialize the switch."""
-        super().__init__(coordinator, key, attribute, description)
-        self._attr_unique_id: str = f"{coordinator.mac}-{key}"

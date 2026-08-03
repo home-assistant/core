@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Generator
 import dataclasses
+from datetime import UTC, datetime
 from ipaddress import ip_address
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
@@ -993,7 +994,13 @@ async def test_usb_discovery_migration(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes") as mock_file:
+    with (
+        patch("pathlib.Path.write_bytes") as mock_file,
+        patch(
+            "homeassistant.components.zwave_js.config_flow.dt_util.now",
+            return_value=datetime(2026, 8, 2, 12, 34, 56, tzinfo=UTC),
+        ),
+    ):
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -1005,6 +1012,9 @@ async def test_usb_discovery_migration(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
+    assert result["description_placeholders"] == {
+        "file_path": hass.config.path("zwavejs_nvm_backup_2026-08-02_12-34-56.bin")
+    }
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -1185,6 +1195,23 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     assert entry.data["use_addon"] is True
     assert entry.unique_id == "1234"
     assert "keep_old_devices" in entry.data
+
+
+@pytest.mark.usefixtures("supervisor", "addon_info")
+async def test_esphome_discovery_title_placeholders(hass: HomeAssistant) -> None:
+    """Test ESPHome discovery sets the name placeholder for the flow_title."""
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO,
+    )
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert (
+        flows[0]["context"]["title_placeholders"]["name"]
+        == "Network 0x000004d2 via mock-name (ESPHome)"
+    )
 
 
 @pytest.mark.parametrize(
@@ -1442,7 +1469,7 @@ async def test_esphome_discovery_already_configured_unmanaged_addon(
     addon_options: dict[str, Any],
     stop_addon: AsyncMock,
 ) -> None:
-    """Test ESPHome discovery aborts when home ID already configured with unmanaged add-on."""
+    """Test ESPHome discovery aborts when home ID already configured."""
     addon_options[CONF_ADDON_SOCKET] = "esphome://existing-device:6053"
     addon_options["another_key"] = "should_not_be_touched"
 
@@ -3412,7 +3439,7 @@ async def test_reconfigure_addon_running_no_changes(
     form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
 ) -> None:
-    """Test reconfigure flow without changes, and add-on already running on Supervisor."""
+    """Test reconfigure flow without changes, add-on running."""
     addon_options.update(old_addon_options)
     entry = integration
     data = {**entry.data, **entry_data}
@@ -4087,9 +4114,10 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     flow = flows[0]
-    assert flow["context"]["title_placeholders"]["host"] == "127.0.0.1"
-    assert flow["context"]["title_placeholders"]["port"] == "3000"
-    assert flow["context"]["title_placeholders"]["home_id"] == "0x000004d2"  # 1234
+    assert (
+        flow["context"]["title_placeholders"]["name"]
+        == "Network 0x000004d2 at 127.0.0.1:3000"
+    )
 
     with (
         patch(
@@ -4899,7 +4927,7 @@ async def test_configure_addon_usb_ports_failure(
 
 
 async def test_get_usb_ports_filtering(hass: HomeAssistant) -> None:
-    """Test that get_usb_ports filters out 'n/a' descriptions when other ports are available."""
+    """Test get_usb_ports filters out 'n/a' when others exist."""
     mock_ports = [
         USBDevice(
             device="/dev/ttyUSB0",
@@ -4951,7 +4979,7 @@ async def test_get_usb_ports_filtering(hass: HomeAssistant) -> None:
 
 
 async def test_get_usb_ports_all_na(hass: HomeAssistant) -> None:
-    """Test that get_usb_ports returns all ports as-is when only 'n/a' descriptions exist."""
+    """Test get_usb_ports returns all when only 'n/a' descriptions."""
     mock_ports = [
         USBDevice(
             device="/dev/ttyUSB0",
@@ -4999,7 +5027,7 @@ async def test_get_usb_ports_all_na(hass: HomeAssistant) -> None:
 
 
 async def test_get_usb_ports_mixed_case_filtering(hass: HomeAssistant) -> None:
-    """Test that get_usb_ports filters out 'n/a' descriptions with different case variations."""
+    """Test get_usb_ports filters 'n/a' case-insensitively."""
     mock_ports = [
         USBDevice(
             device="/dev/ttyUSB0",
@@ -5051,7 +5079,8 @@ async def test_get_usb_ports_mixed_case_filtering(hass: HomeAssistant) -> None:
 
         descriptions = list(result.values())
 
-        # Verify that only non-"n/a" descriptions are returned (case-insensitive filtering)
+        # Verify only non-"n/a" descriptions are returned
+        # (case-insensitive filtering)
         assert descriptions == [
             "Device A - /dev/ttyUSB1, s/n: n/a - 1234:5678",
             "Device B - /dev/ttyUSB4, s/n: n/a - 1234:5678",
@@ -5071,7 +5100,7 @@ async def test_get_usb_ports_empty_list(hass: HomeAssistant) -> None:
 
 
 async def test_get_usb_ports_single_na_port(hass: HomeAssistant) -> None:
-    """Test that get_usb_ports returns single 'n/a' port when it's the only one available."""
+    """Test get_usb_ports returns single 'n/a' port when alone."""
     mock_ports = [
         USBDevice(
             device="/dev/ttyUSB0",
@@ -5190,7 +5219,8 @@ async def test_get_usb_ports_ignored_devices(hass: HomeAssistant) -> None:
 
         assert descriptions == [
             "ZWA-2 - /dev/ttyUSB3, s/n: n/a - Nabu Casa - 10C4:EA60",
-            "Z-Wave USB Adapter - /dev/ttyUSB4, s/n: n/a - Another Manufacturer - 10C4:EA60",
+            "Z-Wave USB Adapter - /dev/ttyUSB4, s/n: n/a"
+            " - Another Manufacturer - 10C4:EA60",
             "/dev/ttyUSB5, s/n: n/a - 10C4:EA60",
         ]
 

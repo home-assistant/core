@@ -1,5 +1,7 @@
 """Button entity for LIFX devices.."""
 
+from typing import override
+
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
@@ -56,6 +58,7 @@ class LIFXRestartButton(LIFXButton):
 
     entity_description = RESTART_BUTTON_DESCRIPTION
 
+    @override
     async def async_press(self) -> None:
         """Restart the bulb on button press."""
         self.bulb.set_reboot()
@@ -66,6 +69,7 @@ class LIFXIdentifyButton(LIFXButton):
 
     entity_description = IDENTIFY_BUTTON_DESCRIPTION
 
+    @override
     async def async_press(self) -> None:
         """Identify the bulb by flashing it when the button is pressed."""
         await self.coordinator.async_identify_bulb()

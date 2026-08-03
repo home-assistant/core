@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass
 import logging
 import time
+from typing import override
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
@@ -123,6 +124,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
         self._can_stream = True
         self._http_mpeg_stream_running = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call update attributes after the device is added to the platform."""
         await super().async_added_to_hass()
@@ -130,11 +132,13 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
         self._ffmpeg_manager = ffmpeg.get_ffmpeg_manager(self.hass)
 
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_is_on = self._camera_module.is_on
         return self.entity_description.available_fn(self._device)
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         return self._camera_module.stream_rtsp_url(
@@ -160,6 +164,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
                     {"device": self._device},
                 )
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -196,7 +201,8 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
                     _LOGGER.debug(
                         "Empty camera image returned for %s", self._device.host
                     )
-                    # image could be empty if a stream is running so check for explicit auth error
+                    # image could be empty if a stream is
+                    # running so check for explicit auth error
                     await self._async_check_stream_auth(video_url)
                 else:
                     _LOGGER.debug(
@@ -205,6 +211,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
 
         return self._image
 
+    @override
     async def handle_async_mjpeg_stream(
         self, request: web.Request
     ) -> web.StreamResponse | None:
@@ -233,10 +240,12 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
             await mjpeg_stream.close()
             _LOGGER.debug("Stopped http mjpeg stream for %s", self._device.host)
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
         await self._camera_module.set_state(True)
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off camera."""
         await self._camera_module.set_state(False)

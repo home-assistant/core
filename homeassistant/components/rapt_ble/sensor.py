@@ -1,5 +1,7 @@
 """Support for RAPT Pill hydrometers."""
 
+from typing import override
+
 from rapt_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -105,7 +107,9 @@ async def async_setup_entry(
             RAPTPillBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class RAPTPillBluetoothSensorEntity(
@@ -117,6 +121,7 @@ class RAPTPillBluetoothSensorEntity(
     """Representation of a RAPT Pill BLE sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

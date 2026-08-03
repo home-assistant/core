@@ -1,7 +1,7 @@
 """Representation of the Damper for AirTouch 5 Devices."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient
 from airtouch5py.packets.zone_control import (
@@ -88,25 +88,30 @@ class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
             self._attr_is_closed = False
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add data updated listener after this object has been initialized."""
         await super().async_added_to_hass()
         self._client.zone_status_callbacks.append(self._async_update_attrs)
         self._async_update_attrs(self._client.latest_zone_status)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove data updated listener after this object has been initialized."""
         await super().async_will_remove_from_hass()
         self._client.zone_status_callbacks.remove(self._async_update_attrs)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the damper."""
         await self._set_cover_position(100)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close damper."""
         await self._set_cover_position(0)
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Update the damper to a specific position."""
 

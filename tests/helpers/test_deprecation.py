@@ -335,7 +335,8 @@ def _get_value(
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
-            ". It will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
+            ". It will be removed in HA Core 2099.1."
+            " Use TestDeprecatedConstantEnum.TEST instead",
             "constant",
         ),
         (
@@ -414,7 +415,8 @@ def test_check_if_deprecated_constant(
     assert (
         module_name,
         logging.WARNING,
-        f"The deprecated {description} TEST_CONSTANT was used from hue{extra_msg}{extra_extra_msg}",
+        f"The deprecated {description} TEST_CONSTANT"
+        f" was used from hue{extra_msg}{extra_extra_msg}",
     ) in caplog.record_tuples
 
 
@@ -438,7 +440,8 @@ def test_check_if_deprecated_constant(
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
-            " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
+            " which will be removed in HA Core 2099.1."
+            " Use TestDeprecatedConstantEnum.TEST instead",
             "constant",
         ),
         (

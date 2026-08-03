@@ -82,7 +82,7 @@ async def test_init_unauthorized(
             return_value=False,  # async_query returns False on auth failure
         ),
         patch(
-            "homeassistant.components.squeezebox.Server",  # Patch the Server class itself
+            "homeassistant.components.squeezebox.Server",
             autospec=True,
         ) as mock_server_instance,
     ):
@@ -121,6 +121,25 @@ async def test_device_registry(
     reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[0])})
     assert reg_device is not None
     assert reg_device == snapshot
+
+
+async def test_device_registry_numeric_firmware(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    config_entry: MockConfigEntry,
+    lms: MagicMock,
+) -> None:
+    """Test that numeric firmware values are stored as strings in the device registry."""
+    players = await lms.async_get_players()
+    players[0].firmware = 137
+
+    with patch("homeassistant.components.squeezebox.Server", return_value=lms):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[0])})
+    assert reg_device is not None
+    assert reg_device.hw_version == "137"
 
 
 async def test_device_registry_server_merged(

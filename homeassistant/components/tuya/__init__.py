@@ -61,7 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
         listener.async_register_device(device_registry, device)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    # If the device does not register any entities, the device does not need to subscribe
+    # If the device does not register any entities,
+    # the device does not need to subscribe
     # So the subscription is here
     await hass.async_add_executor_job(manager.refresh_mq)
     return True
@@ -77,9 +78,7 @@ async def cleanup_device_registry(
     ):
         for item in device_entry.identifiers:
             if item[0] == DOMAIN and item[1] not in device_manager.device_map:
-                device_registry.async_update_device(
-                    device_entry.id, remove_config_entry_id=entry.entry_id
-                )
+                device_registry.async_remove_device(device_entry.id)
                 break
 
 

@@ -40,7 +40,7 @@ class MockDeviceConnection(DeviceConnection):
     request_status_motor_position = AsyncMock()
     request_status_binary_sensors = AsyncMock()
     request_status_variable = AsyncMock()
-    request_status_led_and_logic_ops = AsyncMock()
+    request_status_leds_and_logic_ops = AsyncMock()
     request_status_locked_keys = AsyncMock()
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -111,7 +111,9 @@ async def init_integration(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> MockPchkConnectionManager:
     """Set up the LCN integration in Home Assistant."""
-    hass.http = Mock()  # needs to be mocked as hass.http.register_static_path is called when registering the frontend
+    # needs to be mocked as hass.http.register_static_path is
+    # called when registering the frontend
+    hass.http = Mock()
     lcn_connection = None
 
     def lcn_connection_factory(*args, **kwargs):

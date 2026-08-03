@@ -5,7 +5,7 @@ import functools
 import json
 import logging
 from time import time
-from typing import Any, cast
+from typing import Any, cast, override
 
 from botocore.exceptions import BotoCoreError
 
@@ -17,10 +17,11 @@ from homeassistant.components.backup import (
     OnProgressCallback,
     suggested_filename,
 )
+from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant, callback
 
 from . import R2ConfigEntry
-from .const import CONF_BUCKET, CONF_PREFIX, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import CONF_BUCKET, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 CACHE_TTL = 300
@@ -107,6 +108,7 @@ class R2BackupAgent(BackupAgent):
         return f"{self._prefix}/{key}"
 
     @handle_boto_errors
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -125,6 +127,7 @@ class R2BackupAgent(BackupAgent):
         )
         return response["Body"].iter_chunks()
 
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -288,6 +291,7 @@ class R2BackupAgent(BackupAgent):
             raise
 
     @handle_boto_errors
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -312,12 +316,14 @@ class R2BackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_boto_errors
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         backups = await self._list_backups()
         return list(backups.values())
 
     @handle_boto_errors
+    @override
     async def async_get_backup(
         self,
         backup_id: str,

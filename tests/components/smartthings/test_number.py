@@ -52,7 +52,7 @@ async def test_set_value(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.washer_rinse_cycles", ATTR_VALUE: 3},
+        {ATTR_ENTITY_ID: "number.theater_washer_rinse_cycles", ATTR_VALUE: 3},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -73,7 +73,7 @@ async def test_state_update(
     """Test state update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("number.washer_rinse_cycles").state == "2"
+    assert hass.states.get("number.theater_washer_rinse_cycles").state == "2"
 
     await trigger_update(
         hass,
@@ -84,7 +84,7 @@ async def test_state_update(
         "3",
     )
 
-    assert hass.states.get("number.washer_rinse_cycles").state == "3"
+    assert hass.states.get("number.theater_washer_rinse_cycles").state == "3"
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_wm_000001"])
@@ -96,19 +96,21 @@ async def test_availability(
     """Test availability."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("number.washer_rinse_cycles").state == "2"
+    assert hass.states.get("number.theater_washer_rinse_cycles").state == "2"
 
     await trigger_health_update(
         hass, devices, "f984b91d-f250-9d42-3436-33f09a422a47", HealthStatus.OFFLINE
     )
 
-    assert hass.states.get("number.washer_rinse_cycles").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("number.theater_washer_rinse_cycles").state == STATE_UNAVAILABLE
+    )
 
     await trigger_health_update(
         hass, devices, "f984b91d-f250-9d42-3436-33f09a422a47", HealthStatus.ONLINE
     )
 
-    assert hass.states.get("number.washer_rinse_cycles").state == "2"
+    assert hass.states.get("number.theater_washer_rinse_cycles").state == "2"
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_wm_000001"])
@@ -119,4 +121,6 @@ async def test_availability_at_start(
 ) -> None:
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get("number.washer_rinse_cycles").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("number.theater_washer_rinse_cycles").state == STATE_UNAVAILABLE
+    )

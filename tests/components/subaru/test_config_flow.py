@@ -395,7 +395,7 @@ async def test_option_flow(hass: HomeAssistant, options_form) -> None:
 async def user_form(hass: HomeAssistant) -> ConfigFlowResult:
     """Return initial form for Subaru config flow."""
     return await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
 

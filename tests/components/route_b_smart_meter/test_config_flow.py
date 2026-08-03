@@ -80,11 +80,11 @@ async def test_step_user_form(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_user_form_errors(
     hass: HomeAssistant,
     error: Exception,
     message: str,
-    mock_setup_entry: AsyncMock,
     mock_serial_ports: AsyncMock,
     mock_momonga: AsyncMock,
     user_input: dict[str, str],

@@ -62,7 +62,7 @@ async def test_switch_states(
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        state = hass.states.get("switch.test_mower_1_enable_schedule")
+        state = hass.states.get("switch.garden_test_mower_1_enable_schedule")
         assert state.state == expected_state
 
 
@@ -86,7 +86,7 @@ async def test_switch_commands(
     await hass.services.async_call(
         domain=SWITCH_DOMAIN,
         service=service,
-        service_data={ATTR_ENTITY_ID: "switch.test_mower_1_enable_schedule"},
+        service_data={ATTR_ENTITY_ID: "switch.garden_test_mower_1_enable_schedule"},
         blocking=True,
     )
     mocked_method = getattr(mock_automower_client.commands, aioautomower_command)
@@ -100,7 +100,7 @@ async def test_switch_commands(
         await hass.services.async_call(
             domain=SWITCH_DOMAIN,
             service=service,
-            service_data={ATTR_ENTITY_ID: "switch.test_mower_1_enable_schedule"},
+            service_data={ATTR_ENTITY_ID: "switch.garden_test_mower_1_enable_schedule"},
             blocking=True,
         )
     assert len(mocked_method.mock_calls) == 2
@@ -125,7 +125,7 @@ async def test_stay_out_zone_switch_commands(
     mower_time_zone: zoneinfo.ZoneInfo,
 ) -> None:
     """Test switch commands."""
-    entity_id = "switch.test_mower_1_avoid_danger_zone"
+    entity_id = "switch.garden_test_mower_1_avoid_danger_zone"
     await setup_integration(hass, mock_config_entry)
     values = mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN),
@@ -182,7 +182,7 @@ async def test_work_area_switch_commands(
     values: dict[str, MowerAttributes],
 ) -> None:
     """Test switch commands."""
-    entity_id = "switch.test_mower_1_my_lawn"
+    entity_id = "switch.garden_test_mower_1_my_lawn"
     await setup_integration(hass, mock_config_entry)
     values = mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN),

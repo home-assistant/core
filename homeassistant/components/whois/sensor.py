@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import cast
+from typing import cast, override
 
 from whois import Domain
 
@@ -63,8 +63,10 @@ def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
 def _get_status_type(status: str | None) -> str | None:
     """Get the status type from the status string.
 
-    Returns the status type in snake_case, so it can be used as a key for the translations.
-    E.g: "clientDeleteProhibited https://icann.org/epp#clientDeleteProhibited" -> "client_delete_prohibited".
+    Return the status type in snake_case for translations.
+
+    E.g: "clientDeleteProhibited https://icann.org/epp#clientDeleteProhibited"
+    -> "client_delete_prohibited".
     """
     if status is None:
         return None
@@ -196,6 +198,7 @@ class WhoisSensorEntity(CoordinatorEntity[WhoisCoordinator], SensorEntity):
         self._domain = domain
 
     @property
+    @override
     def native_value(self) -> datetime | int | str | None:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
@@ -203,6 +206,7 @@ class WhoisSensorEntity(CoordinatorEntity[WhoisCoordinator], SensorEntity):
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, int | float | None] | None:
         """Return the state attributes of the monitored installation."""
 

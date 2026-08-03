@@ -533,7 +533,7 @@ async def test_segments_changed_issue(
     mock_vacuum.async_create_segments_issue()
 
     issue_id = f"segments_changed_{entity_entry.id}"
-    issue = ir.async_get(hass).async_get_issue(DOMAIN, issue_id)
+    issue = ir.async_get(hass).async_get_issue(DOMAIN, issue_id)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "segments_changed"
@@ -551,7 +551,7 @@ async def test_segments_changed_issue(
     )
     await hass.async_block_till_done()
 
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None  # pylint: disable=home-assistant-tests-registry-fixtures
 
 
 @pytest.mark.parametrize(("is_built_in", "log_warnings"), [(True, 0), (False, 3)])
@@ -627,7 +627,7 @@ async def test_vacuum_log_deprecated_battery_using_attr(
     is_built_in: bool,
     log_warnings: int,
 ) -> None:
-    """Test incorrectly using _attr_battery_* attribute does log issue and raise repair."""
+    """Test _attr_battery_* attribute logs issue and raises repair."""
 
     class MockLegacyVacuum(MockVacuum):
         """Mocked vacuum entity."""

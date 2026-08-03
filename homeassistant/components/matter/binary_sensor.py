@@ -1,7 +1,7 @@
 """Matter binary sensors."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import uint
@@ -45,6 +45,7 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
     entity_description: MatterBinarySensorEntityDescription
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value: bool | uint | int | Nullable | None
@@ -57,6 +58,9 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
             value = cast(bool | None, value)
         self._attr_is_on = value
 
+
+_PUMP_STATUS = clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap
+_VALVE_FAULT = clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap
 
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
@@ -374,11 +378,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
             # DeviceFault or SupplyFault bit enabled
             device_to_ha=lambda x: bool(
-                x
-                & (
-                    clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kDeviceFault
-                    | clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kSupplyFault
-                )
+                x & (_PUMP_STATUS.kDeviceFault | _PUMP_STATUS.kSupplyFault)
             ),
         ),
         entity_class=MatterBinarySensor,
@@ -393,10 +393,7 @@ DISCOVERY_SCHEMAS = [
             key="PumpStatusRunning",
             translation_key="pump_running",
             device_class=BinarySensorDeviceClass.RUNNING,
-            device_to_ha=lambda x: bool(
-                x
-                & clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRunning
-            ),
+            device_to_ha=lambda x: bool(x & _PUMP_STATUS.kRunning),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(
@@ -442,10 +439,7 @@ DISCOVERY_SCHEMAS = [
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             # GeneralFault bit from ValveFault attribute
-            device_to_ha=lambda x: bool(
-                x
-                & clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kGeneralFault
-            ),
+            device_to_ha=lambda x: bool(x & _VALVE_FAULT.kGeneralFault),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(
@@ -461,10 +455,7 @@ DISCOVERY_SCHEMAS = [
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             # Blocked bit from ValveFault attribute
-            device_to_ha=lambda x: bool(
-                x
-                & clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kBlocked
-            ),
+            device_to_ha=lambda x: bool(x & _VALVE_FAULT.kBlocked),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(
@@ -480,10 +471,7 @@ DISCOVERY_SCHEMAS = [
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             # Leaking bit from ValveFault attribute
-            device_to_ha=lambda x: bool(
-                x
-                & clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kLeaking
-            ),
+            device_to_ha=lambda x: bool(x & _VALVE_FAULT.kLeaking),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(
@@ -568,5 +556,49 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.Thermostat.Attributes.RemoteSensing,),
         featuremap_contains=clusters.Thermostat.Bitmaps.Feature.kOccupancy,
         allow_multi=True,
+    ),
+    # GeneralDiagnostics active fault sensors
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="GeneralDiagnosticsActiveHardwareFaults",
+            translation_key="active_hardware_faults",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            device_to_ha=bool,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(
+            clusters.GeneralDiagnostics.Attributes.ActiveHardwareFaults,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="GeneralDiagnosticsActiveRadioFaults",
+            translation_key="active_radio_faults",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            device_to_ha=bool,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.GeneralDiagnostics.Attributes.ActiveRadioFaults,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="GeneralDiagnosticsActiveNetworkFaults",
+            translation_key="active_network_faults",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            device_to_ha=bool,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(
+            clusters.GeneralDiagnostics.Attributes.ActiveNetworkFaults,
+        ),
     ),
 ]

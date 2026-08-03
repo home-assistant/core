@@ -5,7 +5,7 @@ from collections.abc import Callable
 import contextlib
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from hegel_ip_client import (
     COMMANDS,
@@ -20,6 +20,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
 from . import HegelConfigEntry
-from .const import CONF_MODEL, DOMAIN, HEARTBEAT_TIMEOUT_MINUTES, MODEL_INPUTS
+from .const import DOMAIN, HEARTBEAT_TIMEOUT_MINUTES, MODEL_INPUTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,6 +109,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
         self._push_task: asyncio.Task[None] | None = None
         self._push_handler: Callable[[str], None] | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity added to Home Assistant."""
         await super().async_added_to_hass()
@@ -210,6 +212,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
         except (HegelConnectionError, OSError) as err:
             _LOGGER.warning("Connected watcher failed: %s", err)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity removal from Home Assistant.
 
@@ -245,11 +248,13 @@ class HegelMediaPlayer(MediaPlayerEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the client is connected."""
         return self._client.is_connected()
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the current state of the media player."""
         power = self._state.get("power")
@@ -258,6 +263,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
         return MediaPlayerState.ON if power else MediaPlayerState.OFF
 
     @property
+    @override
     def volume_level(self) -> float | None:
         """Return the volume level."""
         volume = self._state.get("volume")
@@ -266,21 +272,25 @@ class HegelMediaPlayer(MediaPlayerEntity):
         return float(volume)
 
     @property
+    @override
     def is_volume_muted(self) -> bool | None:
         """Return whether volume is muted."""
         return bool(self._state.get("mute", False))
 
     @property
+    @override
     def source(self) -> str | None:
         """Return the current input source."""
         idx = self._state.get("input")
         return self._source_map.get(idx, f"Input {idx}") if idx else None
 
     @property
+    @override
     def source_list(self) -> list[str] | None:
         """Return the list of available input sources."""
         return [self._source_map[k] for k in sorted(self._source_map.keys())] or None
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on the media player."""
         try:
@@ -288,6 +298,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
         except (HegelConnectionError, TimeoutError, OSError) as err:
             raise HomeAssistantError(f"Failed to turn on: {err}") from err
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off the media player."""
         try:
@@ -295,6 +306,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
         except (HegelConnectionError, TimeoutError, OSError) as err:
             raise HomeAssistantError(f"Failed to turn off: {err}") from err
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         vol = max(0.0, min(volume, 1.0))
@@ -304,6 +316,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
         except (HegelConnectionError, TimeoutError, OSError) as err:
             raise HomeAssistantError(f"Failed to set volume: {err}") from err
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute the volume."""
         try:
@@ -313,6 +326,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
         except (HegelConnectionError, TimeoutError, OSError) as err:
             raise HomeAssistantError(f"Failed to set mute: {err}") from err
 
+    @override
     async def async_volume_up(self) -> None:
         """Increase volume."""
         try:
@@ -320,6 +334,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
         except (HegelConnectionError, TimeoutError, OSError) as err:
             raise HomeAssistantError(f"Failed to increase volume: {err}") from err
 
+    @override
     async def async_volume_down(self) -> None:
         """Decrease volume."""
         try:
@@ -327,6 +342,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
         except (HegelConnectionError, TimeoutError, OSError) as err:
             raise HomeAssistantError(f"Failed to decrease volume: {err}") from err
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         inv = {v: k for k, v in self._source_map.items()}

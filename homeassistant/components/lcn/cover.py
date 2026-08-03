@@ -3,7 +3,7 @@
 from collections.abc import Coroutine, Iterable
 from datetime import timedelta
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 import pypck
 
@@ -97,6 +97,7 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
         else:
             self.reverse_time = None
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         state = pypck.lcn_defs.MotorStateModifier.DOWN
@@ -108,6 +109,7 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
         self._attr_is_closing = True
         self.async_write_ha_state()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         state = pypck.lcn_defs.MotorStateModifier.UP
@@ -120,6 +122,7 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
         self._attr_is_closing = False
         self.async_write_ha_state()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         state = pypck.lcn_defs.MotorStateModifier.STOP
@@ -143,6 +146,7 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
                 ]
             )
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set cover states when LCN input object (command) is received."""
         if (
@@ -191,7 +195,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
             )
         )
 
-        if self.positioning_mode != pypck.lcn_defs.MotorPositioningMode.NONE:
+        if self.positioning_mode is not pypck.lcn_defs.MotorPositioningMode.NONE:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
         self.motor = pypck.lcn_defs.MotorPort[config[CONF_DOMAIN_DATA][CONF_MOTOR]]
@@ -202,6 +206,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         self._is_closing = False
         self._is_opening = False
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if not await self.device_connection.control_motor_relays(
@@ -214,6 +219,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         self._attr_is_closing = True
         self.async_write_ha_state()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if not await self.device_connection.control_motor_relays(
@@ -227,6 +233,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         self._attr_is_closing = False
         self.async_write_ha_state()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         if not await self.device_connection.control_motor_relays(
@@ -239,6 +246,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         self._attr_is_opening = False
         self.async_write_ha_state()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
@@ -267,7 +275,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
                 | None,
             ]
         ] = [self.device_connection.request_status_relays(SCAN_INTERVAL.seconds)]
-        if self.positioning_mode == pypck.lcn_defs.MotorPositioningMode.BS4:
+        if self.positioning_mode is pypck.lcn_defs.MotorPositioningMode.BS4:
             coros.append(
                 self.device_connection.request_status_motor_position(
                     self.motor, self.positioning_mode, SCAN_INTERVAL.seconds
@@ -275,6 +283,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
             )
         self._attr_available = any([await coro for coro in coros])
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set cover states when LCN input object (command) is received."""
         if isinstance(input_obj, pypck.inputs.ModStatusRelays):
@@ -282,7 +291,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
             self._attr_is_opening = input_obj.is_opening(self.motor.value)
             self._attr_is_closing = input_obj.is_closing(self.motor.value)
 
-            if self.positioning_mode == pypck.lcn_defs.MotorPositioningMode.NONE:
+            if self.positioning_mode is pypck.lcn_defs.MotorPositioningMode.NONE:
                 self._attr_is_closed = input_obj.is_assumed_closed(self.motor.value)
             self.async_write_ha_state()
         elif (

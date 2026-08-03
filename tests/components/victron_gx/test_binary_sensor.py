@@ -24,7 +24,7 @@ async def test_victron_binary_sensor(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test BINARY_SENSOR MetricKind - EV charger connected sensor is created and updated."""
+    """Test EV charger connected binary sensor is created and updated."""
     victron_hub, mock_config_entry = init_integration
 
     await inject_message(

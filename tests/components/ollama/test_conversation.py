@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components import conversation, ollama
 from homeassistant.components.conversation import trace
+from homeassistant.components.llm import LLMTools
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -84,7 +85,7 @@ async def test_chat(
             Message(role="user", content="test message"),
         ]
 
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE, (
             result
         )
         assert result.response.speech["plain"]["speech"] == "test response"
@@ -147,7 +148,7 @@ async def test_chat_stream(
             Message(role="user", content="test message"),
         ]
 
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE, (
             result
         )
         assert result.response.speech["plain"]["speech"] == "test response"
@@ -172,6 +173,7 @@ async def test_thinking_content(
             ollama.CONF_THINK: True,
         },
     )
+    await hass.async_block_till_done()
 
     conversation_id = "conversation_id_1234"
 
@@ -254,7 +256,7 @@ async def test_template_variables(
             hass, "hello", None, context, agent_id=mock_config_entry.entry_id
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE, (
         result
     )
 
@@ -292,7 +294,7 @@ async def test_template_variables(
         ),
     ],
 )
-@patch("homeassistant.components.ollama.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 async def test_function_call(
     mock_get_tools,
     hass: HomeAssistant,
@@ -314,7 +316,7 @@ async def test_function_call(
     )
     mock_tool.async_call.return_value = "Test response"
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     def completion_result(*args, messages, **kwargs):
         for message in messages:
@@ -357,7 +359,7 @@ async def test_function_call(
         )
 
     assert mock_chat.call_count == 2
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "I have successfully called the function"
@@ -379,7 +381,7 @@ async def test_function_call(
     )
 
 
-@patch("homeassistant.components.ollama.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 async def test_function_exception(
     mock_get_tools,
     hass: HomeAssistant,
@@ -398,7 +400,7 @@ async def test_function_exception(
     )
     mock_tool.async_call.side_effect = HomeAssistantError("Test tool exception")
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     def completion_result(*args, messages, **kwargs):
         for message in messages:
@@ -441,7 +443,7 @@ async def test_function_exception(
         )
 
     assert mock_chat.call_count == 2
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "There was an error calling the function"
@@ -547,13 +549,19 @@ async def test_history_conversion(
             ),
             Message(
                 role="tool",
-                content='{"speech":{"plain":{"speech":"4:24 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"16:24:17.813343"},"data":{"success":[],"failed":[]}}',
+                content=(
+                    '{"speech":{"plain":{"speech":"4:24 PM",'
+                    '"extra_data":null}},'
+                    '"response_type":"action_done",'
+                    '"speech_slots":{"time":"16:24:17.813343"},'
+                    '"data":{"success":[],"failed":[]}}'
+                ),
             ),
             Message(role="assistant", content="4:24 PM"),
             Message(role="user", content="test message"),
         ]
 
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE, (
             result
         )
         assert result.response.speech["plain"]["speech"] == "test response"
@@ -618,7 +626,7 @@ async def test_message_history_trimming(
                 agent_id=mock_config_entry.entry_id,
             )
             assert (
-                result.response.response_type == intent.IntentResponseType.ACTION_DONE
+                result.response.response_type is intent.IntentResponseType.ACTION_DONE
             ), result
 
         assert mock_chat.call_count == 5
@@ -710,6 +718,7 @@ async def test_message_history_unlimited(
             subentry,
             data={**subentry.data, ollama.CONF_MAX_HISTORY: 0},
         )
+        await hass.async_block_till_done()
         for i in range(100):
             result = await conversation.async_converse(
                 hass,
@@ -719,7 +728,7 @@ async def test_message_history_unlimited(
                 agent_id=mock_config_entry.entry_id,
             )
             assert (
-                result.response.response_type == intent.IntentResponseType.ACTION_DONE
+                result.response.response_type is intent.IntentResponseType.ACTION_DONE
             ), result
 
         args = mock_chat.call_args_list
@@ -744,7 +753,7 @@ async def test_error_handling(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
 
 
@@ -770,7 +779,7 @@ async def test_template_error(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
 
 
@@ -887,6 +896,7 @@ async def test_reasoning_filter(
             ollama.CONF_THINK: think,
         },
     )
+    await hass.async_block_till_done()
 
     with patch(
         "ollama.AsyncClient.chat",

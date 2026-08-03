@@ -25,7 +25,7 @@ from . import MOCK_DEVICE, MOCK_MODEL
 
 from tests.common import MockConfigEntry
 
-ZoneName = Literal["main", "zone_2", "zone_3"]
+type ZoneName = Literal["main", "zone_2", "zone_3"]
 
 
 class MockState(ReceiverState):
@@ -99,6 +99,7 @@ def _default_state() -> MockState:
             digital_input=DigitalInputMode.AUTO,
             tuner_band=TunerBand.FM,
             tuner_mode=TunerMode.AUTO,
+            tuner_frequency="009930",
         ),
         zone_2=ZoneState(
             power=True,

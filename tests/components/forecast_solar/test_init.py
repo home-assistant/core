@@ -30,7 +30,7 @@ async def test_load_unload_config_entry(
 ) -> None:
     """Test the Forecast.Solar configuration entry loading/unloading."""
     mock_config_entry.add_to_hass(hass)
-    await async_setup_component(hass, "forecast_solar", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 

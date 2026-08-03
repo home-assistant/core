@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import requests
 
@@ -30,8 +30,8 @@ def log_rate_limits(
 ) -> None:
     """Output rate limit log line at given level."""
     rate_limits = resp["rateLimits"]
-    resetsAt = dt_util.parse_datetime(rate_limits["resetsAt"])
-    resetsAtTime = resetsAt - dt_util.utcnow() if resetsAt is not None else "---"
+    resets_at = dt_util.parse_datetime(rate_limits["resetsAt"])
+    resets_at_time = resets_at - dt_util.utcnow() if resets_at is not None else "---"
     rate_limit_msg = (
         "iOS push notification rate limits for %s: "
         "%d sent, %d allowed, %d errors, "
@@ -44,7 +44,7 @@ def log_rate_limits(
         rate_limits["successful"],
         rate_limits["maximum"],
         rate_limits["errors"],
-        str(resetsAtTime).split(".", maxsplit=1)[0],
+        str(resets_at_time).split(".", maxsplit=1)[0],
     )
 
 
@@ -71,10 +71,12 @@ class iOSNotificationService(BaseNotificationService):
         """Initialize the service."""
 
     @property
+    @override
     def targets(self) -> dict[str, str]:
         """Return a dictionary of registered targets."""
         return devices_with_push(self.hass)
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the Lambda APNS gateway."""
         data: dict[str, Any] = {ATTR_MESSAGE: message}

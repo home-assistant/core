@@ -1,7 +1,7 @@
 """Config flow for Idasen Desk integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak.exc import BleakError
 from bluetooth_data_tools import human_readable_name
@@ -9,6 +9,7 @@ from idasen_ha import Desk
 from idasen_ha.errors import AuthFailedError
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -31,6 +32,7 @@ class IdasenDeskConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -45,6 +47,7 @@ class IdasenDeskConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -85,6 +88,7 @@ class IdasenDeskConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery := self._discovery_info:
             self._discovered_devices[discovery.address] = discovery
         else:
+            await bluetooth.async_request_active_scan(self.hass)
             current_addresses = self._async_current_ids(include_ignore=False)
             for discovery in async_discovered_service_info(self.hass):
                 if (

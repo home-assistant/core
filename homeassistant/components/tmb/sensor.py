@@ -1,8 +1,8 @@
-"""Support for TMB (Transports Metropolitans de Barcelona) Barcelona public transport."""
+"""Support for TMB Barcelona public transport."""
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from requests import HTTPError
 from tmb import IBus
@@ -87,26 +87,31 @@ class TMBSensor(SensorEntity):
         self._state = None
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
 
     @property
+    @override
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
         return f"{self._stop}_{self._line}"
 
     @property
+    @override
     def native_value(self):
         """Return the next departure time."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the last update."""
         return {

@@ -29,7 +29,9 @@ def rename_keys(project_id, to_migrate):
     from_key_data = lokalise.keys_list({"filter_keys": ",".join(to_migrate)})
     if len(from_key_data) != len(to_migrate):
         print(
-            f"Looking up keys in Lokalise returns {len(from_key_data)} results, expected {len(to_migrate)}"
+            f"Looking up keys in Lokalise returns"
+            f" {len(from_key_data)} results,"
+            f" expected {len(to_migrate)}"
         )
         return
 
@@ -74,7 +76,9 @@ def list_keys_helper(lokalise, keys, params=None, *, validate=True):
             continue
 
         print(
-            f"Looking up keys in Lokalise returns {len(from_key_data)} results, expected {len(keys)}"
+            f"Looking up keys in Lokalise returns"
+            f" {len(from_key_data)} results,"
+            f" expected {len(keys)}"
         )
         searched = set(filter_keys)
         returned = set(create_lookup(from_key_data))
@@ -348,7 +352,10 @@ def apply_data_references(to_migrate):
                         pass
                     else:
                         print(
-                            f"{strings_file}: Skipped swapping '{key}': '{value}' does not contain '{key}'"
+                            f"{strings_file}: Skipped"
+                            f" swapping '{key}':"
+                            f" '{value}' does not"
+                            f" contain '{key}'"
                         )
 
         if not changed:

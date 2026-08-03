@@ -75,7 +75,9 @@ SERVICES_SET_PROGRAM_AND_OPTIONS = [
             "device_id": "DEVICE_ID",
             "affects_to": "active_program",
             "program": "consumer_products_coffee_maker_program_beverage_coffee",
-            "consumer_products_coffee_maker_option_bean_amount": "consumer_products_coffee_maker_enum_type_bean_amount_normal",
+            "consumer_products_coffee_maker_option_bean_amount": (
+                "consumer_products_coffee_maker_enum_type_bean_amount_normal"
+            ),
         },
         "blocking": True,
     },
@@ -85,7 +87,9 @@ SERVICES_SET_PROGRAM_AND_OPTIONS = [
         "service_data": {
             "device_id": "DEVICE_ID",
             "affects_to": "active_program",
-            "consumer_products_coffee_maker_option_coffee_milk_ratio": "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent",
+            "consumer_products_coffee_maker_option_coffee_milk_ratio": (
+                "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent"
+            ),
         },
         "blocking": True,
     },
@@ -124,14 +128,16 @@ def test_services_yaml_set_program_and_options_option_keys() -> None:
     for group in groups.values():
         for option, option_data in group["fields"].items():
             assert option in PROGRAM_ENUM_OPTIONS or option in PROGRAM_OPTIONS, (
-                f"{option} is missing from both PROGRAM_ENUM_OPTIONS and PROGRAM_OPTIONS"
+                f"{option} is missing from both"
+                " PROGRAM_ENUM_OPTIONS and PROGRAM_OPTIONS"
             )
             if option in PROGRAM_ENUM_OPTIONS:
                 enum_values = set(PROGRAM_ENUM_OPTIONS[option][1])
                 assert enum_values == set(
                     option_data["selector"]["select"]["options"]
                 ), (
-                    f"Options for {option} do not match between services.yaml and constants.py"
+                    f"Options for {option} do not match between"
+                    " services.yaml and constants.py"
                 )
                 assert "example" in option_data, (
                     f"Example value for {option} is missing"

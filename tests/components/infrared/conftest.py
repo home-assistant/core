@@ -16,7 +16,8 @@ async def mock_infrared_emitter_entity(
 ) -> MockInfraredEntity | MockInfraredEmitterEntity:
     """Return a mock infrared emitter entity.
 
-    This overrides the default common fixture to also test the deprecated MockInfraredEntity.
+    This overrides the default common fixture to also test the deprecated
+    MockInfraredEntity.
     """
     entity = request.param("test_ir_emitter")
     component = hass.data[DATA_COMPONENT]

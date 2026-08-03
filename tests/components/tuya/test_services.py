@@ -154,7 +154,9 @@ async def test_set_feeder_meal_plan_unsupported_device(
     mock_device.product_id = "unsupported_product"
     with pytest.raises(
         ServiceValidationError,
-        match=f"Feeder with ID {mock_device.id} does not support meal plan functionality",
+        match=(
+            f"Feeder with ID {mock_device.id} does not support meal plan functionality"
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -200,7 +202,7 @@ async def test_get_tuya_device_error_non_tuya_device(
     """Test service error when target device is not a Tuya device."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     non_tuya_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("other_domain", "some_id")},
@@ -229,7 +231,7 @@ async def test_get_tuya_device_error_unknown_tuya_device(
     """Test service error when Tuya identifier is not present in manager map."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     tuya_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "unknown_tuya_id")},

@@ -1,6 +1,6 @@
 """Counter for the days until an HTTPS (TLS) certificate will expire."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -13,9 +13,12 @@ class CertExpiryEntity(CoordinatorEntity[CertExpiryDataUpdateCoordinator]):
     _attr_has_entity_name = True
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return additional sensor state attributes."""
         return {
             "is_valid": self.coordinator.is_cert_valid,
-            "error": str(self.coordinator.cert_error),
+            "error": str(self.coordinator.cert_error)
+            if self.coordinator.cert_error
+            else None,
         }

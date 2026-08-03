@@ -108,7 +108,9 @@ def mock_config_entry_with_subentries(
             MOCK_PARTITION_SUBENTRY.subentry_id: MOCK_PARTITION_SUBENTRY,
             MOCK_ZONE_SUBENTRY.subentry_id: MOCK_ZONE_SUBENTRY,
             MOCK_OUTPUT_SUBENTRY.subentry_id: MOCK_OUTPUT_SUBENTRY,
-            MOCK_SWITCHABLE_OUTPUT_SUBENTRY.subentry_id: MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
+            MOCK_SWITCHABLE_OUTPUT_SUBENTRY.subentry_id: (
+                MOCK_SWITCHABLE_OUTPUT_SUBENTRY
+            ),
         }
     )
     return mock_config_entry

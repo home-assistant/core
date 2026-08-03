@@ -116,7 +116,8 @@ def test_urlencode_various_types(hass: HomeAssistant) -> None:
     # Test with nested dictionary values
     result = render(
         hass,
-        "{% set data = {'key': 'value with spaces', 'num': 123} %}{{ data | urlencode }}",
+        "{% set data = {'key': 'value with spaces', 'num': 123} %}"
+        "{{ data | urlencode }}",
     )
     # URL encoding can have different order, so check both parts are present
     # Note: urllib.parse.urlencode uses + for spaces in form data

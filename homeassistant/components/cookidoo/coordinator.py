@@ -1,8 +1,9 @@
 """DataUpdateCoordinator for the Cookidoo integration."""
 
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import timedelta
 import logging
+from typing import override
 
 from cookidoo_api import (
     Cookidoo,
@@ -21,6 +22,7 @@ from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -58,6 +60,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
         )
         self.cookidoo = cookidoo
 
+    @override
     async def _async_setup(self) -> None:
         try:
             await self.cookidoo.login()
@@ -76,15 +79,18 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                 },
             ) from e
 
+    @override
     async def _async_update_data(self) -> CookidooData:
         try:
             ingredient_items = await self.cookidoo.get_ingredient_items()
             additional_items = await self.cookidoo.get_additional_items()
             subscription = await self.cookidoo.get_active_subscription()
-            week_plan = await self.cookidoo.get_recipes_in_calendar_week(date.today())  # noqa: DTZ011
+            week_plan = await self.cookidoo.get_recipes_in_calendar_week(
+                dt_util.now().date()
+            )
         except CookidooAuthException:
             try:
-                await self.cookidoo.refresh_token()
+                await self.cookidoo.login()
             except CookidooAuthException as exc:
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
@@ -92,6 +98,11 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                     translation_placeholders={
                         CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
                     },
+                ) from exc
+            except CookidooRequestException as exc:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_request_exception",
                 ) from exc
             _LOGGER.debug(
                 "Authentication failed but re-authentication"

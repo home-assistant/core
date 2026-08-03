@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import cast, override
 
 from letpot.deviceclient import LetPotDeviceClient
 from letpot.exceptions import LetPotAuthenticationException, LetPotException
@@ -54,6 +54,7 @@ class LetPotDeviceCoordinator[_DataT: LetPotDeviceStatus](
         """Distribute status update to entities."""
         self.async_set_updated_data(data=status)
 
+    @override
     async def _async_setup(self) -> None:
         """Set up subscription for coordinator."""
         try:
@@ -64,6 +65,7 @@ class LetPotDeviceCoordinator[_DataT: LetPotDeviceStatus](
         except LetPotAuthenticationException as exc:
             raise ConfigEntryAuthFailed from exc
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Request an update from the device and wait for a status update or timeout."""
         try:

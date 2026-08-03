@@ -140,8 +140,9 @@ async def test_service_set_guest_wifi_password_unloaded(
         )
         assert not mock_async_trigger_set_guest_password.called
         assert (
-            'ServiceValidationError: Failed to perform action "set_guest_wifi_password". Config entry for target not found'
-            in caplog.text
+            "ServiceValidationError: Failed to perform action"
+            ' "set_guest_wifi_password".'
+            " Config entry for target not found" in caplog.text
         )
 
 
@@ -324,8 +325,8 @@ async def test_service_dial_failed(
         )
         assert mock_async_trigger_dial.called
         assert (
-            "HomeAssistantError: Failed to dial, check if the click to dial service of the FRITZ!Box is activated"
-            in caplog.text
+            "HomeAssistantError: Failed to dial, check if the"
+            " click to dial service of the FRITZ!Box is activated" in caplog.text
         )
 
 
@@ -348,6 +349,7 @@ async def test_service_dial_unloaded(
         )
         assert not mock_async_trigger_dial.called
         assert (
-            f'ServiceValidationError: Failed to perform action "{SERVICE_DIAL}". Config entry for target not found'
-            in caplog.text
+            "ServiceValidationError: Failed to perform action"
+            f' "{SERVICE_DIAL}".'
+            " Config entry for target not found" in caplog.text
         )

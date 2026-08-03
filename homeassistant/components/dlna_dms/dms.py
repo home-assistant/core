@@ -236,7 +236,7 @@ class DmsDeviceSource:
         except KeyError, ValueError:
             bootid = None
 
-        if change == ssdp.SsdpChange.UPDATE:
+        if change is ssdp.SsdpChange.UPDATE:
             # This is an announcement that bootid is about to change
             if self._bootid is not None and self._bootid == bootid:
                 # Store the new value (because our old value matches) so that we
@@ -258,7 +258,7 @@ class DmsDeviceSource:
                 await self.device_disconnect()
         self._bootid = bootid
 
-        if change == ssdp.SsdpChange.BYEBYE:
+        if change is ssdp.SsdpChange.BYEBYE:
             # Device is going away
             if self._device:
                 # Disconnect from gone device
@@ -267,7 +267,7 @@ class DmsDeviceSource:
             self._ssdp_connect_failed = False
 
         if (
-            change == ssdp.SsdpChange.ALIVE
+            change is ssdp.SsdpChange.ALIVE
             and not self._device
             and not self._ssdp_connect_failed
         ):

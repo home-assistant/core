@@ -139,7 +139,7 @@ class LegacyTriggerFormat(TriggerFormat):
 
 @dataclass
 class TargetTriggerFormat(TriggerFormat):
-    """Target trigger format using platform: calendar.event_started/ended with target."""
+    """Target trigger format using event_started/ended."""
 
     id: str = "target"
 
@@ -331,10 +331,14 @@ def target_calendars(
     label_on_devices = label_registry.async_create("label_on_devices")
 
     device_calendar_1 = dr.DeviceEntry(
-        id="device_calendar_1", labels=[label_on_devices.label_id]
+        config_entry_id="mock-config-entry",
+        id="device_calendar_1",
+        labels=[label_on_devices.label_id],
     )
     device_calendar_2 = dr.DeviceEntry(
-        id="device_calendar_2", labels=[label_on_devices.label_id]
+        config_entry_id="mock-config-entry",
+        id="device_calendar_2",
+        labels=[label_on_devices.label_id],
     )
     mock_device_registry(
         hass,

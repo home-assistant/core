@@ -121,7 +121,8 @@ async def test_switch_callback(
     output_update_method({1: 0})
     assert hass.states.get("switch.switchable_output").state == STATE_OFF
 
-    # The client library should always report all entries, but test that we set the status correctly if it doesn't
+    # The client library should always report all entries, but test
+    # that we set the status correctly if it doesn't
     output_update_method({2: 1})
     assert hass.states.get("switch.switchable_output").state == STATE_UNKNOWN
 

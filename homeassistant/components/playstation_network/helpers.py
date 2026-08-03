@@ -182,7 +182,7 @@ class PlaystationNetwork:
                 for title in self.trophy_titles
                 if game_title_info["titleName"]
                 == normalize_title(title.title_name or "")
-                and next(iter(title.title_platform)) == PlatformType.PS_VITA
+                and next(iter(title.title_platform)) is PlatformType.PS_VITA
             ),
             None,
         )

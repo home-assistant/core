@@ -18,10 +18,9 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_ignores_limit_entities_with_wrong_unit,
     assert_trigger_options_supported,
     parametrize_numerical_attribute_changed_trigger_states,
@@ -57,20 +56,6 @@ async def target_weathers(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "weather")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "humidity.changed",
-        "humidity.crossed_threshold",
-    ],
-)
-async def test_humidity_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the humidity triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 
 _PERCENT_CROSSED_THRESHOLD = {
@@ -81,7 +66,6 @@ _PERCENT_CROSSED_THRESHOLD = {
 }
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -109,7 +93,6 @@ async def test_humidity_trigger_options_validation(
 # --- Sensor domain tests (value in state.state) ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -129,7 +112,7 @@ async def test_humidity_trigger_options_validation(
         ),
     ],
 )
-async def test_humidity_trigger_sensor_behavior_any(
+async def test_humidity_trigger_sensor_behavior_each(
     hass: HomeAssistant,
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -140,7 +123,7 @@ async def test_humidity_trigger_sensor_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity trigger fires for sensor entities with device_class humidity."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
@@ -152,7 +135,6 @@ async def test_humidity_trigger_sensor_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -177,7 +159,7 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test humidity crossed_threshold trigger fires on the first sensor state change."""
+    """Test humidity crossed_threshold trigger fires on first sensor change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_sensors,
@@ -190,7 +172,6 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -205,7 +186,7 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_first(
         ),
     ],
 )
-async def test_humidity_trigger_sensor_crossed_threshold_behavior_last(
+async def test_humidity_trigger_sensor_crossed_threshold_behavior_all(
     hass: HomeAssistant,
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -215,8 +196,8 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test humidity crossed_threshold trigger fires when the last sensor changes state."""
-    await assert_trigger_behavior_last(
+    """Test crossed_threshold trigger fires when last sensor changes."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
@@ -231,7 +212,6 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_last(
 # --- Climate domain tests (value in current_humidity attribute) ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -253,7 +233,7 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_last(
         ),
     ],
 )
-async def test_humidity_trigger_climate_behavior_any(
+async def test_humidity_trigger_climate_behavior_each(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -264,7 +244,7 @@ async def test_humidity_trigger_climate_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity trigger fires for climate entities."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
@@ -276,7 +256,6 @@ async def test_humidity_trigger_climate_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -302,7 +281,7 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test humidity crossed_threshold trigger fires on the first climate state change."""
+    """Test humidity crossed_threshold trigger fires on first climate change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_climates,
@@ -315,7 +294,6 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -331,7 +309,7 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_first(
         ),
     ],
 )
-async def test_humidity_trigger_climate_crossed_threshold_behavior_last(
+async def test_humidity_trigger_climate_crossed_threshold_behavior_all(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -341,8 +319,8 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test humidity crossed_threshold trigger fires when the last climate changes state."""
-    await assert_trigger_behavior_last(
+    """Test crossed_threshold trigger fires when all climate entities have changed."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
@@ -357,7 +335,6 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_last(
 # --- Humidifier domain tests (value in current_humidity attribute) ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -379,7 +356,7 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_last(
         ),
     ],
 )
-async def test_humidity_trigger_humidifier_behavior_any(
+async def test_humidity_trigger_humidifier_behavior_each(
     hass: HomeAssistant,
     target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -390,7 +367,7 @@ async def test_humidity_trigger_humidifier_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity trigger fires for humidifier entities."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_humidifiers,
         trigger_target_config=trigger_target_config,
@@ -402,7 +379,6 @@ async def test_humidity_trigger_humidifier_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -428,7 +404,7 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test humidity crossed_threshold trigger fires on the first humidifier state change."""
+    """Test crossed_threshold trigger fires on first humidifier change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_humidifiers,
@@ -441,7 +417,6 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -457,7 +432,7 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_first(
         ),
     ],
 )
-async def test_humidity_trigger_humidifier_crossed_threshold_behavior_last(
+async def test_humidity_trigger_humidifier_crossed_threshold_behavior_all(
     hass: HomeAssistant,
     target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -467,8 +442,8 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test humidity crossed_threshold trigger fires when the last humidifier changes state."""
-    await assert_trigger_behavior_last(
+    """Test crossed_threshold trigger fires when all humidifiers have changed."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_humidifiers,
         trigger_target_config=trigger_target_config,
@@ -483,7 +458,6 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_last(
 # --- Weather domain tests (value in humidity attribute) ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("weather"),
@@ -505,7 +479,7 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_last(
         ),
     ],
 )
-async def test_humidity_trigger_weather_behavior_any(
+async def test_humidity_trigger_weather_behavior_each(
     hass: HomeAssistant,
     target_weathers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -516,7 +490,7 @@ async def test_humidity_trigger_weather_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity trigger fires for weather entities."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_weathers,
         trigger_target_config=trigger_target_config,
@@ -528,7 +502,6 @@ async def test_humidity_trigger_weather_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("weather"),
@@ -554,7 +527,7 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test humidity crossed_threshold trigger fires on the first weather state change."""
+    """Test humidity crossed_threshold trigger fires on first weather change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_weathers,
@@ -567,7 +540,6 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("weather"),
@@ -583,7 +555,7 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_first(
         ),
     ],
 )
-async def test_humidity_trigger_weather_crossed_threshold_behavior_last(
+async def test_humidity_trigger_weather_crossed_threshold_behavior_all(
     hass: HomeAssistant,
     target_weathers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -593,8 +565,8 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test humidity crossed_threshold trigger fires when the last weather changes state."""
-    await assert_trigger_behavior_last(
+    """Test crossed_threshold trigger fires when all weather entities have changed."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_weathers,
         trigger_target_config=trigger_target_config,
@@ -633,7 +605,6 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_last(
         ),
     ],
 )
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_humidity_trigger_ignores_limit_entity_with_wrong_unit(
     hass: HomeAssistant,
     trigger: str,

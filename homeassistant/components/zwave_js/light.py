@@ -1,6 +1,6 @@
 """Support for Z-Wave lights."""
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from zwave_js_server.const import (
     TARGET_VALUE_PROPERTY,
@@ -205,11 +205,13 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._set_optimistic_state: bool = False
 
     @callback
+    @override
     def on_value_update(self) -> None:
         """Call when a watched value is added or updated."""
         self._calculate_color_values()
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255.
 
@@ -220,6 +222,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         return round((cast(int, self.info.primary_value.value) / 99) * 255)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on (brightness above 0)."""
         if self._set_optimistic_state:
@@ -228,6 +231,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         brightness = self.brightness
         return brightness > 0 if brightness is not None else None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
 
@@ -245,6 +249,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # set brightness (or turn on if dimming is not supported)
         await self._async_set_brightness(brightness, transition)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._async_set_brightness(0, kwargs.get(ATTR_TRANSITION))
@@ -510,7 +515,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
 
 class ZwaveColorOnOffLight(ZwaveLight):
-    """Representation of a colored Z-Wave light with an optional binary switch to turn on/off.
+    """Colored Z-Wave light with optional binary switch.
 
     Dimming for RGB lights is realized by scaling the color channels.
     """
@@ -525,6 +530,7 @@ class ZwaveColorOnOffLight(ZwaveLight):
         self._last_brightness: int | None = None
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255.
 
@@ -544,6 +550,7 @@ class ZwaveColorOnOffLight(ZwaveLight):
         ]
         return max(color_values) if color_values else 0
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
 
@@ -580,7 +587,8 @@ class ZwaveColorOnOffLight(ZwaveLight):
                     ColorComponent.BLUE: 255,
                 }
         elif brightness is not None:
-            # If brightness gets set, preserve the color and mix it with the new brightness
+            # If brightness gets set, preserve the color
+            # and mix it with the new brightness
             if self.color_mode == ColorMode.HS:
                 scale = brightness / 255
             if self._last_on_color is not None:
@@ -617,6 +625,7 @@ class ZwaveColorOnOffLight(ZwaveLight):
         # Turn the binary switch on if there is one
         await self._async_set_brightness(brightness, transition)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
 

@@ -6,7 +6,7 @@ from datetime import datetime
 from functools import wraps
 import json
 import logging
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate, override
 
 import pychromecast.config
 import pychromecast.const
@@ -338,6 +338,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         ]:
             self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Create chromecast object when added to hass."""
         self._async_setup(self.entity_id)
@@ -346,6 +347,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             self.hass, SIGNAL_HASS_CAST_SHOW_VIEW, self._handle_signal_show_view
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect Chromecast object when removed."""
         await self._async_tear_down()
@@ -354,6 +356,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             self._cast_view_remove_handler()
             self._cast_view_remove_handler = None
 
+    @override
     async def _async_connect_to_chromecast(self):
         """Set up the chromecast object."""
         await super()._async_connect_to_chromecast()
@@ -363,6 +366,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self.media_status = self._chromecast.media_controller.status
         self.async_write_ha_state()
 
+    @override
     async def _async_disconnect(self):
         """Disconnect Chromecast object if it is set."""
         await super()._async_disconnect()
@@ -370,6 +374,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self._attr_available = False
         self.async_write_ha_state()
 
+    @override
     def _invalidate(self):
         """Invalidate some attributes."""
         super()._invalidate()
@@ -528,6 +533,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         """Start an app."""
         self._get_chromecast().start_app(app_id)
 
+    @override
     def turn_on(self) -> None:
         """Turn on the cast device."""
 
@@ -548,51 +554,60 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             self._start_app(pychromecast.config.APP_MEDIA_RECEIVER)
 
     @api_error
+    @override
     def turn_off(self) -> None:
         """Turn off the cast device."""
         self._get_chromecast().quit_app()
 
     @api_error
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         self._get_chromecast().set_volume_muted(mute)
 
     @api_error
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._get_chromecast().set_volume(volume)
 
     @api_error
+    @override
     def media_play(self) -> None:
         """Send play command."""
         media_controller = self._media_controller()
         media_controller.play()
 
     @api_error
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         media_controller = self._media_controller()
         media_controller.pause()
 
     @api_error
+    @override
     def media_stop(self) -> None:
         """Send stop command."""
         media_controller = self._media_controller()
         media_controller.stop()
 
     @api_error
+    @override
     def media_previous_track(self) -> None:
         """Send previous track command."""
         media_controller = self._media_controller()
         media_controller.queue_prev()
 
     @api_error
+    @override
     def media_next_track(self) -> None:
         """Send next track command."""
         media_controller = self._media_controller()
         media_controller.queue_next()
 
     @api_error
+    @override
     def media_seek(self, position: float) -> None:
         """Seek the media to a specific location."""
         media_controller = self._media_controller()
@@ -602,7 +617,10 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         """Generate root node."""
         children = []
         # Add media browsers
-        for platform in self._config_entry.runtime_data.cast_platforms.values():
+        cast_platforms = (
+            await self._config_entry.runtime_data.cast_platforms.async_get_platforms()
+        )
+        for platform in cast_platforms.values():
             children.extend(
                 await platform.async_get_media_browser_root_object(
                     self.hass, self._chromecast.cast_type
@@ -636,6 +654,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             children=sorted(children, key=lambda c: c.title),
         )
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -661,7 +680,10 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         platform: CastProtocol
         assert media_content_type is not None
-        for platform in self._config_entry.runtime_data.cast_platforms.values():
+        cast_platforms = (
+            await self._config_entry.runtime_data.cast_platforms.async_get_platforms()
+        )
+        for platform in cast_platforms.values():
             browse_media = await platform.async_browse_media(
                 self.hass,
                 media_content_type,
@@ -675,6 +697,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             self.hass, media_content_id, content_filter=content_filter
         )
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -718,13 +741,19 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                 await self.hass.async_add_executor_job(
                     self._quick_play, app_name, app_data
                 )
-            # pylint: disable-next=home-assistant-action-swallowed-exception
-            except NotImplementedError:
-                _LOGGER.error("App %s not supported", app_name)
+            except NotImplementedError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="app_not_supported",
+                    translation_placeholders={"app_name": app_name},
+                ) from err
             return
 
         # Try the cast platforms
-        for platform in self._config_entry.runtime_data.cast_platforms.values():
+        cast_platforms = (
+            await self._config_entry.runtime_data.cast_platforms.async_get_platforms()
+        )
+        for platform in cast_platforms.values():
             result = await platform.async_play_media(
                 self.hass, self.entity_id, chromecast, media_type, media_id
             )
@@ -769,6 +798,8 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                     media_id,
                     err,
                 )
+            # Fallback: if playlist parsing fails, forward the raw URL to the device
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except PlaylistError as err:
                 _LOGGER.warning(
                     "[%s %s] Failed to parse playlist %s: %s",
@@ -812,6 +843,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return (media_status, media_status_received)
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         if (chromecast := self._chromecast) is None or (
@@ -854,6 +886,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return MediaPlayerState.IDLE
 
     @property
+    @override
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         # The lovelace app loops media to prevent timing out, don't show that
@@ -863,6 +896,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return media_status.content_id if media_status else None
 
     @property
+    @override
     def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         # The lovelace app loops media to prevent timing out, don't show that
@@ -887,6 +921,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return MediaType.VIDEO
 
     @property
+    @override
     def media_duration(self):
         """Duration of current playing media in seconds."""
         # The lovelace app loops media to prevent timing out, don't show that
@@ -896,6 +931,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return media_status.duration if media_status else None
 
     @property
+    @override
     def media_image_url(self):
         """Image url of current playing media."""
         if (media_status := self._media_status()[0]) is None:
@@ -906,64 +942,75 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return images[0].url if images and images[0].url else None
 
     @property
+    @override
     def media_title(self):
         """Title of current playing media."""
         media_status = self._media_status()[0]
         return media_status.title if media_status else None
 
     @property
+    @override
     def media_artist(self):
         """Artist of current playing media (Music track only)."""
         media_status = self._media_status()[0]
         return media_status.artist if media_status else None
 
     @property
+    @override
     def media_album_name(self):
         """Album of current playing media (Music track only)."""
         media_status = self._media_status()[0]
         return media_status.album_name if media_status else None
 
     @property
+    @override
     def media_album_artist(self):
         """Album artist of current playing media (Music track only)."""
         media_status = self._media_status()[0]
         return media_status.album_artist if media_status else None
 
     @property
+    @override
     def media_track(self):
         """Track number of current playing media (Music track only)."""
         media_status = self._media_status()[0]
         return media_status.track if media_status else None
 
     @property
+    @override
     def media_series_title(self):
         """Return the title of the series of current playing media."""
         media_status = self._media_status()[0]
         return media_status.series_title if media_status else None
 
     @property
+    @override
     def media_season(self):
         """Season of current playing media (TV Show only)."""
         media_status = self._media_status()[0]
         return media_status.season if media_status else None
 
     @property
+    @override
     def media_episode(self):
         """Episode of current playing media (TV Show only)."""
         media_status = self._media_status()[0]
         return media_status.episode if media_status else None
 
     @property
+    @override
     def app_id(self):
         """Return the ID of the current running app."""
         return self._chromecast.app_id if self._chromecast else None
 
     @property
+    @override
     def app_name(self):
         """Name of the current running app."""
         return self._chromecast.app_display_name if self._chromecast else None
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         support = (
@@ -1002,6 +1049,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return support
 
     @property
+    @override
     def media_position(self):
         """Position of current playing media in seconds."""
         # The lovelace app loops media to prevent timing out, don't show that
@@ -1017,6 +1065,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return media_status.current_time
 
     @property
+    @override
     def media_position_updated_at(self):
         """When was the position of the current playing media valid.
 
@@ -1070,6 +1119,7 @@ class DynamicCastGroup(CastDevice):
         """Create chromecast object."""
         self._async_setup("Dynamic group")
 
+    @override
     async def _async_cast_removed(self, discover: ChromecastInfo):
         """Handle removal of Chromecast."""
         if self._cast_info.uuid != discover.uuid:

@@ -85,7 +85,7 @@ async def test_switch_availability(
     device_available,
     expected_state,
 ) -> None:
-    """Test switch availability and state under different gateway and device availability conditions."""
+    """Test switch availability under gateway/device conditions."""
 
     switch_state = await setup_entity(
         entity_config,

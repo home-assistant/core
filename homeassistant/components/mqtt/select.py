@@ -2,13 +2,19 @@
 
 from collections.abc import Callable
 import logging
+from typing import override
 
 import voluptuous as vol
 
 from homeassistant.components import select
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_OPTIMISTIC,
+    CONF_OPTIONS,
+    CONF_VALUE_TEMPLATE,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -18,12 +24,7 @@ from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
-from .const import (
-    CONF_COMMAND_TEMPLATE,
-    CONF_COMMAND_TOPIC,
-    CONF_OPTIONS,
-    CONF_STATE_TOPIC,
-)
+from .const import CONF_COMMAND_TEMPLATE, CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
@@ -87,10 +88,12 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
     _optimistic: bool = False
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_assumed_state = config[CONF_OPTIMISTIC]
@@ -130,6 +133,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         self._attr_current_option = payload
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         if not self.add_subscription(
@@ -139,6 +143,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             self._attr_assumed_state = True
             return
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -148,6 +153,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         ):
             self._attr_current_option = last_state.state
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Update the current value."""
         payload = self._command_template(option)

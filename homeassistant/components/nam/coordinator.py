@@ -1,7 +1,7 @@
 """The Nettigo Air Monitor coordinator."""
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from nettigo_air_monitor import (
     ApiError,
@@ -57,6 +57,7 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):
             update_interval=DEFAULT_UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> NAMSensors:
         """Update data via library."""
         try:

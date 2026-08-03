@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ACTIONS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
@@ -41,7 +41,6 @@ from .const import (
     CONF_ACTION_SHOW_IN_CARPLAY,
     CONF_ACTION_SHOW_IN_WATCH,
     CONF_ACTION_USE_CUSTOM_COLORS,
-    CONF_ACTIONS,
     DOMAIN,
 )
 
@@ -343,7 +342,7 @@ class iOSIdentifyDeviceView(HomeAssistantView):
 
         hass = request.app[KEY_HASS]
 
-        data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()
+        data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()  # pylint: disable=home-assistant-enforce-naive-now
 
         device_id = data[ATTR_DEVICE_ID]
 

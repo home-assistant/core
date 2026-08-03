@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -81,7 +82,6 @@ BINARY_SENSORS: list[DROPBinarySensorEntityDescription] = [
     ),
     DROPBinarySensorEntityDescription(
         key=POWER,
-        translation_key=None,  # Use name provided by binary sensor device class
         device_class=BinarySensorDeviceClass.POWER,
         value_fn=lambda device: device.drop_api.power(),
     ),
@@ -136,6 +136,7 @@ class DROPBinarySensor(DROPEntity, BinarySensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
         return self.entity_description.value_fn(self.coordinator) == 1

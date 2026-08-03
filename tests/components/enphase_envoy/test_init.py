@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from jwt import encode
@@ -13,14 +13,17 @@ import respx
 
 from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.components.enphase_envoy.const import (
+    OPERATIONAL_RETRY_TIMEOUT,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DISABLE_KEEP_ALIVE,
+    SETUP_RETRY_TIMEOUT,
     Platform,
 )
 from homeassistant.components.enphase_envoy.coordinator import (
     FIRMWARE_REFRESH_INTERVAL,
     MAC_VERIFICATION_DELAY,
     SCAN_INTERVAL,
+    TOKEN_REPAIR_ID,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -32,12 +35,16 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -129,6 +136,104 @@ async def test_expired_token_in_config(
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
     assert entity_state.state == "116"
+
+
+@pytest.mark.parametrize(
+    ("config_entry"),
+    [("manual")],
+    indirect=True,
+)
+@respx.mock
+async def test_not_expired_token_with_manual_token(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator with 365 day token in config and manual token option on."""
+    mock_envoy.auth = EnvoyTokenAuth(
+        "127.0.0.1",
+        token=config_entry.data[CONF_TOKEN],
+        envoy_serial="1234",
+    )
+    caplog.set_level(logging.DEBUG)
+
+    await setup_integration(hass, config_entry)
+
+    assert (
+        "Envoy 1234: 365 days remaining on token, fresh=True, manual token mode=True"
+        in caplog.text
+    )
+    assert (entity_state := hass.states.get("sensor.inverter_1"))
+    assert entity_state.state == "116"
+
+
+@pytest.mark.parametrize(
+    ("config_entry"),
+    [["manual", 25]],  # expires in 25 days
+    indirect=True,
+)
+@respx.mock
+async def test_almost_expired_token_with_manual_token(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator with token within warning time in config and manual token option on."""
+    caplog.set_level(logging.DEBUG)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    # Make sure to mock pyenphase.auth.EnvoyTokenAuth._obtain_token
+    # when specifying username and password in EnvoyTokenauth
+    mock_envoy.auth = EnvoyTokenAuth(
+        "127.0.0.1",
+        token=config_entry.data[CONF_TOKEN],
+        envoy_serial="1234",
+    )
+    await setup_integration(
+        hass,
+        config_entry,
+    )
+    assert (
+        "Envoy 1234: 25 days remaining on token, fresh=False, manual token mode=True"
+        in caplog.text
+    )
+
+    # verify repair was issued
+    assert len(events) == 1
+    assert events[0].data == {
+        "action": "create",
+        "domain": DOMAIN,
+        "issue_id": f"{TOKEN_REPAIR_ID}_1234",
+    }
+
+    assert (entity_state := hass.states.get("sensor.inverter_1"))
+    assert entity_state.state == "116"
+
+
+@pytest.mark.parametrize(
+    ("config_entry"),
+    [["manual", -1]],  # expired yesterday
+    indirect=True,
+)
+@respx.mock
+async def test_expired_token_with_manual_token(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator with expired token in config and manual token option on."""
+
+    # manual token mode has no option to use username/pw to refresh token
+    mock_envoy.authenticate.side_effect = EnvoyAuthenticationError(
+        "fail authentication"
+    )
+    # setup should fail with expired token
+    await setup_integration(
+        hass, config_entry, expected_state=ConfigEntryState.SETUP_ERROR
+    )
 
 
 async def test_coordinator_update_error(
@@ -370,6 +475,67 @@ async def test_remove_config_entry_device(
     assert response["success"]
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_metered_batt_relay",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("mock_envoy")
+async def test_dry_contact_relay_via_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the via_device chain relay -> Enpower -> Envoy is set up correctly."""
+    await setup_integration(hass, config_entry)
+
+    envoy_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234"), config_entry.entry_id
+    )
+    assert envoy_device is not None
+    enpower_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "654321"), config_entry.entry_id
+    )
+    assert enpower_device is not None
+    relay_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "NC1"), config_entry.entry_id
+    )
+    assert relay_device is not None
+
+    assert enpower_device.via_device_id == envoy_device.id
+    assert relay_device.via_device_id == enpower_device.id
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_acb_batt"], indirect=["mock_envoy"])
+async def test_remove_config_entry_device_acb(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test removing ACB devices is blocked while they are in the inventory."""
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration(hass, config_entry)
+
+    hass_client = await hass_ws_client(hass)
+
+    # the ACB aggregate device can not be removed
+    entity = entity_registry.entities["sensor.acb_1234_power"]
+    device_entry = device_registry.async_get(entity.device_id)
+    response = await hass_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+
+    # an individual AC Battery device can not be removed
+    entity = entity_registry.entities["sensor.ac_battery_121000000001_state_of_charge"]
+    device_entry = device_registry.async_get(entity.device_id)
+    response = await hass_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+
+
 async def test_option_change_reload(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -454,8 +620,8 @@ async def test_coordinator_firmware_refresh(
         await hass.async_block_till_done(wait_background_tasks=True)
 
         assert (
-            "Envoy firmware changed from: 7.6.175 to: 9.9.9999, reloading config entry Envoy 1234"
-            in caplog.text
+            "Envoy firmware changed from: 7.6.175 to: 9.9.9999,"
+            " reloading config entry Envoy 1234" in caplog.text
         )
         envoy = config_entry.runtime_data.envoy
         assert envoy.firmware == "9.9.9999"
@@ -581,7 +747,7 @@ async def test_coordinator_interface_information_mac_also_in_other_device(
     caplog: pytest.LogCaptureFixture,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test coordinator interface mac verification with MAC also in other existing device."""
+    """Test coordinator interface mac verification with other device."""
     await setup_integration(hass, config_entry)
 
     caplog.set_level(logging.DEBUG)
@@ -627,3 +793,42 @@ async def test_coordinator_interface_information_mac_also_in_other_device(
             "00:11:22:33:44:55",
         )
     }
+
+
+@pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
+async def test_retry_timeout_settings(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator with token provided from config."""
+    token = encode(
+        payload={"name": "envoy", "exp": 1907837780},
+        key="secret",
+        algorithm="HS256",
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
+        title="Envoy 1234",
+        unique_id="1234",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: token,
+        },
+    )
+    mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
+    await setup_integration(hass, entry)
+
+    assert (entity_state := hass.states.get("sensor.inverter_1"))
+    assert entity_state.state == "116"
+
+    assert mock_envoy.mock_calls[0] == call.set_retry_policy(
+        max_delay=SETUP_RETRY_TIMEOUT
+    )
+    assert mock_envoy.mock_calls[-1] == call.set_retry_policy(
+        max_delay=OPERATIONAL_RETRY_TIMEOUT
+    )

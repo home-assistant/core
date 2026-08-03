@@ -42,6 +42,7 @@
         }
       },
       "subscribers": { "name": "Subscribers" },
+      "videos": { "name": "Videos" },
       "views": { "name": "Views" }
     }
   },

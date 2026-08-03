@@ -1,7 +1,7 @@
 """Config flow for Anthem A/V Receivers integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import anthemav
 from anthemav.connection import Connection
@@ -40,6 +40,7 @@ class AnthemAVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

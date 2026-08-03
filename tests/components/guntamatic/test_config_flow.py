@@ -50,9 +50,9 @@ async def test_form(
         (Exception("Unknown error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     side_effect: Exception,
     expected_error: str,
     mock_heater: MagicMock,
@@ -80,11 +80,9 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_already_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_heater: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_heater: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test we abort if already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -100,11 +98,8 @@ async def test_form_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_discovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_heater: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp_discovery(hass: HomeAssistant, mock_heater: MagicMock) -> None:
     """Test DHCP discovery shows confirmation form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -135,9 +130,9 @@ async def test_dhcp_discovery(
         (NoSerialException, "bad_data"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     side_effect: Exception,
     expected_error: str,
     mock_heater: MagicMock,

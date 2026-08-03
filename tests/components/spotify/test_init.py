@@ -64,7 +64,8 @@ async def test_setup_free_account_is_failing(
 ) -> None:
     """Test the Spotify setup with a free account is failing."""
     mock_spotify.return_value.get_current_user.side_effect = SpotifyForbiddenError(
-        "Check settings on developer.spotify.com/dashboard, the user may not be registered."
+        "Check settings on developer.spotify.com/dashboard,"
+        " the user may not be registered."
     )
     mock_config_entry.add_to_hass(hass)
 

@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.tuya.const import (
@@ -139,3 +140,13 @@ def notification_helper(
 ) -> TuyaNotificationHelper:
     """Fixture for Tuya NotificationHelper."""
     return TuyaNotificationHelper(hass, mock_manager)
+
+
+@pytest.fixture
+def no_quirk() -> Generator[None]:
+    """Fixture to bypass all quirk registration."""
+    with (
+        patch.dict(TUYA_QUIRKS_REGISTRY._quirks, clear=True),
+        patch("homeassistant.components.tuya.coordinator.register_tuya_quirks"),
+    ):
+        yield

@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from denonavr import DenonAVR
 from denonavr.const import (
@@ -20,6 +20,8 @@ from denonavr.const import (
 from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
+    AvrIncompleteResponseError,
+    AvrInvalidResponseError,
     AvrNetworkError,
     AvrProcessingError,
     AvrTimoutError,
@@ -191,6 +193,17 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
                     self._receiver.host,
                 )
                 self._attr_available = False
+        except AvrInvalidResponseError, AvrIncompleteResponseError:
+            available = False
+            if self.available:
+                _LOGGER.warning(
+                    (
+                        "Denon AVR receiver at host %s returned malformed response. "
+                        "Device is unavailable"
+                    ),
+                    self._receiver.host,
+                )
+                self._attr_available = False
         except AvrCommandError as err:
             available = False
             _LOGGER.error(
@@ -269,10 +282,12 @@ class DenonDevice(MediaPlayerEntity):
             return
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register for telnet events."""
         self._receiver.register_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up the entity."""
         if self._receiver.telnet_connected:
@@ -295,21 +310,25 @@ class DenonDevice(MediaPlayerEntity):
             await receiver.async_update_audyssey()
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         return DENON_STATE_MAPPING.get(self._receiver.state)
 
     @property
+    @override
     def source_list(self) -> list[str]:
         """Return a list of available input sources."""
         return self._receiver.input_func_list
 
     @property
+    @override
     def is_volume_muted(self) -> bool:
         """Return boolean if volume is currently muted."""
         return self._receiver.muted
 
     @property
+    @override
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         # Volume is sent in a format like -50.0. Minimum is -80.0,
@@ -319,16 +338,19 @@ class DenonDevice(MediaPlayerEntity):
         return (float(self._receiver.volume) + 80) / 100
 
     @property
+    @override
     def source(self) -> str | None:
         """Return the current input source."""
         return self._receiver.input_func
 
     @property
+    @override
     def sound_mode(self) -> str | None:
         """Return the current matched sound mode."""
         return self._receiver.sound_mode
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self._receiver.input_func in self._receiver.netaudio_func_list:
@@ -336,6 +358,7 @@ class DenonDevice(MediaPlayerEntity):
         return self._supported_features_base
 
     @property
+    @override
     def media_content_type(self) -> MediaType:
         """Content type of current playing media."""
         if self._receiver.state in {MediaPlayerState.PLAYING, MediaPlayerState.PAUSED}:
@@ -343,6 +366,7 @@ class DenonDevice(MediaPlayerEntity):
         return MediaType.CHANNEL
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         if self._receiver.input_func in self._receiver.playing_func_list:
@@ -350,6 +374,7 @@ class DenonDevice(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Title of current playing media."""
         if self._receiver.input_func not in self._receiver.playing_func_list:
@@ -359,6 +384,7 @@ class DenonDevice(MediaPlayerEntity):
         return self._receiver.frequency
 
     @property
+    @override
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         if self._receiver.artist is not None:
@@ -366,6 +392,7 @@ class DenonDevice(MediaPlayerEntity):
         return self._receiver.band
 
     @property
+    @override
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
         if self._receiver.album is not None:
@@ -373,6 +400,7 @@ class DenonDevice(MediaPlayerEntity):
         return self._receiver.station
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         receiver = self._receiver
@@ -394,78 +422,91 @@ class DenonDevice(MediaPlayerEntity):
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
+    @override
     async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
         await self._receiver.async_toggle_play_pause()
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._receiver.async_play()
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._receiver.async_pause()
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._receiver.async_stop()
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._receiver.async_previous_track()
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._receiver.async_next_track()
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self._receiver.async_set_input_func(source)
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
+    @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         await self._receiver.async_set_sound_mode(sound_mode)
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
+    @override
     async def async_turn_on(self) -> None:
         """Turn on media player."""
         await self._receiver.async_power_on()
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
+    @override
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await self._receiver.async_power_off()
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
+    @override
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
         await self._receiver.async_volume_up()
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
+    @override
     async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self._receiver.async_volume_down()
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         # Volume has to be sent in a format like -50.0. Minimum is -80.0,
@@ -477,6 +518,7 @@ class DenonDevice(MediaPlayerEntity):
 
     # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self._receiver.async_mute(mute)

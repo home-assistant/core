@@ -170,7 +170,7 @@ async def test_new_data_api_sensors_with_disabled_by_default(
     setup_credentials: None,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that sensors with entity_registry_enabled_default=False are disabled by default."""
+    """Test that sensors with entity_registry_enabled_default=False are disabled."""
     sensor_values = {
         "cellular.rssi": -75.0,
         "energyFlow.hour.battery.source.grid": 500.0,

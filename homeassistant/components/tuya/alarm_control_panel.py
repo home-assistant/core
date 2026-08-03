@@ -1,5 +1,7 @@
 """Support for Tuya Alarm."""
 
+from typing import override
+
 from tuya_device_handlers.definition.alarm_control_panel import (
     AlarmControlPanelDefinition,
     get_default_definition,
@@ -41,7 +43,9 @@ _TUYA_TO_HA_STATE_MAPPINGS = {
     TuyaAlarmControlPanelState.ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
     TuyaAlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelState.ARMED_NIGHT,
     TuyaAlarmControlPanelState.ARMED_VACATION: AlarmControlPanelState.ARMED_VACATION,
-    TuyaAlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+    TuyaAlarmControlPanelState.ARMED_CUSTOM_BYPASS: (
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS
+    ),
     TuyaAlarmControlPanelState.PENDING: AlarmControlPanelState.PENDING,
     TuyaAlarmControlPanelState.ARMING: AlarmControlPanelState.ARMING,
     TuyaAlarmControlPanelState.DISARMING: AlarmControlPanelState.DISARMING,
@@ -106,34 +110,40 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
             self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         tuya_value = self._read_wrapper(self._state_wrapper)
         return _TUYA_TO_HA_STATE_MAPPINGS.get(tuya_value) if tuya_value else None
 
     @property
+    @override
     def changed_by(self) -> str | None:
         """Last change triggered by."""
         return self._read_wrapper(self._changed_by_wrapper)
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send Disarm command."""
         await self._async_send_wrapper_updates(
             self._action_wrapper, TuyaAlarmControlPanelAction.DISARM
         )
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send Home command."""
         await self._async_send_wrapper_updates(
             self._action_wrapper, TuyaAlarmControlPanelAction.ARM_HOME
         )
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send Arm command."""
         await self._async_send_wrapper_updates(
             self._action_wrapper, TuyaAlarmControlPanelAction.ARM_AWAY
         )
 
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send SOS command."""
         await self._async_send_wrapper_updates(

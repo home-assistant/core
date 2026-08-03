@@ -20,7 +20,7 @@ async def test_climate_set_temperature_calls_library(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "climate.living_room"
+    entity_id = "climate.living_room_living_room"
 
     await hass.services.async_call(
         "climate",

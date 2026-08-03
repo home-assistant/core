@@ -1,5 +1,7 @@
 """WeatherKit sensors."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -63,6 +65,7 @@ class WeatherKitSensor(
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return native value from coordinator current weather."""
         return self.coordinator.data[ATTR_CURRENT_WEATHER][self.entity_description.key]

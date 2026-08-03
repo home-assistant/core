@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import web
 
+from homeassistant.components.emulated_hue import DOMAIN
 from homeassistant.components.emulated_hue.config import (
     DATA_KEY,
     DATA_VERSION,
@@ -147,7 +148,7 @@ async def test_setup_works(hass: HomeAssistant) -> None:
         mock_create_upnp_datagram_endpoint.return_value = AsyncMock(
             spec=UPNPResponderProtocol
         )
-        assert await async_setup_component(hass, "emulated_hue", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 

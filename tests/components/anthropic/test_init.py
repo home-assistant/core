@@ -9,6 +9,7 @@ from anthropic import (
     AuthenticationError,
     BadRequestError,
 )
+import attr
 import httpx
 from httpx import URL, Request, Response
 import pytest
@@ -43,7 +44,11 @@ MINOR_VERSION = AnthropicConfigFlow.MINOR_VERSION
         (APITimeoutError(request=None), "Request timed out"),
         (
             BadRequestError(
-                message="Your credit balance is too low to access the Claude API. Please go to Plans & Billing to upgrade or purchase credits.",
+                message=(
+                    "Your credit balance is too low to access"
+                    " the Claude API. Please go to Plans &"
+                    " Billing to upgrade or purchase credits."
+                ),
                 response=Response(
                     status_code=400,
                     request=Request(method="POST", url=URL()),
@@ -66,7 +71,7 @@ async def test_init_error(
         "anthropic.resources.models.AsyncModels.list",
         side_effect=side_effect,
     ):
-        assert await async_setup_component(hass, "anthropic", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert error in caplog.text
 
@@ -86,7 +91,7 @@ async def test_init_auth_error(
             message="",
         ),
     ):
-        assert await async_setup_component(hass, "anthropic", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -558,7 +563,10 @@ async def test_migration_from_v1_to_v2_with_same_keys(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 1 to version 2 with same API keys consolidates entries."""
+    """Test migration v1 to v2 with same API keys.
+
+    Consolidates entries.
+    """
     # Create two v1 config entries with the same API key
     options = {
         "recommended": True,
@@ -709,7 +717,7 @@ async def test_migration_from_v2_1_to_v2_2(
     device_1 = device_registry.async_update_device(
         device_1.id, add_config_entry_id="mock_entry_id", add_config_subentry_id=None
     )
-    assert device_1.config_entries_subentries == {"mock_entry_id": {None, "mock_id_1"}}
+    assert device_1.config_entries_subentries == {"mock_entry_id": {"mock_id_1"}}
     entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,
@@ -945,13 +953,19 @@ async def test_migrate_entry_to_v2_3(
     conversation_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=conversation_subentry_id,
-        disabled_by=device_disabled_by,
         identifiers={(DOMAIN, mock_config_entry.entry_id)},
         name=mock_config_entry.title,
         manufacturer="Anthropic",
         model="Claude",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
+    # A stale disabled_by flag can't be set through the registry API, which
+    # validates it against the config entry's disabled state; write it
+    # directly to simulate existing storage.
+    conversation_device = attr.evolve(
+        conversation_device, disabled_by=device_disabled_by
+    )
+    device_registry.devices[conversation_device.id] = conversation_device
     conversation_entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,

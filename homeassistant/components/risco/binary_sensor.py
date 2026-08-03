@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from itertools import chain
-from typing import Any
+from typing import Any, override
 
 from pyrisco.cloud.zone import Zone as CloudZone
 from pyrisco.common import System
@@ -114,6 +114,7 @@ class RiscoCloudBinarySensor(RiscoCloudZoneEntity, BinarySensorEntity):
         super().__init__(coordinator=coordinator, suffix="", zone_id=zone_id, zone=zone)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._zone.triggered
@@ -130,6 +131,7 @@ class RiscoLocalBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
         super().__init__(system_id=system_id, suffix="", zone_id=zone_id, zone=zone)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {
@@ -138,6 +140,7 @@ class RiscoLocalBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
         }
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._zone.triggered
@@ -158,6 +161,7 @@ class RiscoLocalAlarmedBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._zone.alarmed
@@ -178,6 +182,7 @@ class RiscoLocalArmedBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._zone.armed
@@ -206,6 +211,7 @@ class RiscoSystemBinarySensor(BinarySensorEntity):
         )
         self.entity_description = entity_description
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self.async_on_remove(
@@ -215,6 +221,7 @@ class RiscoSystemBinarySensor(BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return getattr(self._system, self._property)

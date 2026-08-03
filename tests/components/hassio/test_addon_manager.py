@@ -45,7 +45,8 @@ async def test_not_installed_raises_exception(addon_manager: AddonManager) -> No
             "Add-on test not supported on this platform, supported architectures: test"
         ),
         AddonNotSupportedHomeAssistantVersionError(
-            "Add-on test not supported on this system, requires Home Assistant version 2026.1.0 or greater"
+            "Add-on test not supported on this system, requires"
+            " Home Assistant version 2026.1.0 or greater"
         ),
         AddonNotSupportedMachineTypeError(
             "Add-on test not supported on this machine, supported machine types: test"

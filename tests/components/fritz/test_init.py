@@ -115,6 +115,8 @@ async def test_setup_fail(hass: HomeAssistant, error) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state.recoverable is True
+    assert entry.error_reason_translation_key == "error_connecting"
 
 
 async def test_setup_fail_parse_error(hass: HomeAssistant, fc_class_mock) -> None:
@@ -138,7 +140,6 @@ async def test_setup_fail_parse_error(hass: HomeAssistant, fc_class_mock) -> Non
 
 async def test_upnp_missing(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
@@ -157,12 +158,9 @@ async def test_upnp_missing(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert entry.state.recoverable is True
-    assert (
-        "Config entry 'Mock Title' for fritz integration could not authenticate: Missing UPnP configuration"
-        in caplog.text
-    )
+    assert entry.error_reason_translation_key == "error_upnp_disabled"
 
 
 async def test_execute_action_while_shutdown(

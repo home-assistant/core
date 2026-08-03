@@ -1,7 +1,7 @@
 """Coordinator for 17Track."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyseventeentrack import Client as SeventeenTrackClient
 from pyseventeentrack.errors import SeventeenTrackError
@@ -56,6 +56,7 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
         self.show_archived = self.config_entry.options[CONF_SHOW_ARCHIVED]
         self.client = client
 
+    @override
     async def _async_update_data(self) -> SeventeenTrackData:
         """Fetch data from 17Track API."""
 

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
@@ -59,6 +59,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         """Return unique ID for the entity."""
         return self.config.get("unique_id")
 
+    @override
     async def async_shutdown(self) -> None:
         """Shut down the coordinator and clean up resources."""
         await super().async_shutdown()
@@ -125,7 +126,6 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             DOMAIN,
             self.name,
             self.logger.log,
-            start_event is not None,
         )
 
     async def _handle_triggered_with_script(
@@ -163,7 +163,8 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         condition_result = self._cond_func.async_check(variables=run_variables)
         if condition_result is False:
             _LOGGER.debug(
-                "Conditions not met, aborting template trigger update. Condition summary: %s",
+                "Conditions not met, aborting template"
+                " trigger update. Condition summary: %s",
                 trace_get(clear=False),
             )
         return condition_result

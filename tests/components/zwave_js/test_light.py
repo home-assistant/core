@@ -41,7 +41,7 @@ from .common import (
 )
 
 ZDB5100_ENTITY = "light.matrix_office"
-HSM200_V1_ENTITY = "light.hsm200"
+HSM200_V1_ENTITY = "light.basement_hsm200"
 
 
 @pytest.fixture
@@ -510,7 +510,7 @@ async def test_light_none_color_value(
     hass: HomeAssistant, light_color_null_values, integration
 ) -> None:
     """Test the light entity can handle None value in current color Value."""
-    entity_id = "light.repeater"
+    entity_id = "light.dining_room_repeater"
     state = hass.states.get(entity_id)
 
     assert state
@@ -1168,8 +1168,9 @@ async def test_light_color_only(
 
     client.async_send_command.reset_mock()
 
-    # Assert that turning on light after off call with unknown off color/brightness state
-    # works and that light turns on to white with specified brightness
+    # Assert that turning on light after off call with unknown off
+    # color/brightness state works and turns on to white with
+    # specified brightness
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,

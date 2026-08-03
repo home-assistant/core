@@ -212,7 +212,7 @@ async def test_turn_on_with_missing_effect(
     mock_twinkly_client: AsyncMock,
     data: dict[str, Any],
 ) -> None:
-    """Test support of the light.turn_on service with rgbw color and missing effect support."""
+    """Test light.turn_on with rgbw color and missing effect support."""
     mock_twinkly_client.is_on.return_value = False
     mock_twinkly_client.get_firmware_version.return_value["version"] = "2.7.0"
 

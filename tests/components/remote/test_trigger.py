@@ -10,10 +10,9 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -27,18 +26,6 @@ async def target_remotes(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, DOMAIN)
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    ["remote.turned_on", "remote.turned_off"],
-)
-async def test_remote_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the remote triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -63,7 +50,6 @@ async def test_remote_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
@@ -83,7 +69,7 @@ async def test_remote_trigger_options_validation(
         ),
     ],
 )
-async def test_remote_state_trigger_behavior_any(
+async def test_remote_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_remotes: dict[str, list[str]],
     trigger_target_config: dict,
@@ -94,7 +80,7 @@ async def test_remote_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the remote triggers when any remote changes to a specific state."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_remotes,
         trigger_target_config=trigger_target_config,
@@ -106,7 +92,6 @@ async def test_remote_state_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
@@ -136,7 +121,7 @@ async def test_remote_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the remote triggers when the first remote changes to a specific state."""
+    """Test remote triggers when first remote changes state."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_remotes,
@@ -149,7 +134,6 @@ async def test_remote_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
@@ -169,7 +153,7 @@ async def test_remote_state_trigger_behavior_first(
         ),
     ],
 )
-async def test_remote_state_trigger_behavior_last(
+async def test_remote_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_remotes: dict[str, list[str]],
     trigger_target_config: dict,
@@ -179,8 +163,8 @@ async def test_remote_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the remote triggers when the last remote changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test remote triggers when last remote changes state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_remotes,
         trigger_target_config=trigger_target_config,

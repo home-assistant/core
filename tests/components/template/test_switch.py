@@ -48,7 +48,6 @@ TEST_SENSOR = "sensor.test_sensor"
 
 TEST_SWITCH = TemplatePlatformSetup(
     switch.DOMAIN,
-    "switches",
     "test_template_switch",
     make_test_trigger(TEST_STATE_ENTITY_ID, TEST_SENSOR),
 )
@@ -147,19 +146,6 @@ async def setup_single_attribute_optimistic_switch(
             {attribute: attribute_template} if attribute and attribute_template else {}
         ),
     )
-
-
-@pytest.mark.parametrize(
-    ("count", "state_template", "style"),
-    [(1, "{{ states('sensor.test_state') }}", ConfigurationStyle.LEGACY)],
-)
-@pytest.mark.usefixtures("setup_state_switch")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("switch")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
 
 
 @pytest.mark.parametrize(("count", "state_template"), [(1, "{{ True }}")])

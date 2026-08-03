@@ -2,7 +2,7 @@
 
 import logging
 from socket import gaierror
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from xiaomi_gateway import MULTICAST_PORT, XiaomiGateway, XiaomiGatewayDiscovery
@@ -80,6 +80,7 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=ERROR_STEP_PLACEHOLDERS,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -167,6 +168,7 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=ERROR_STEP_PLACEHOLDERS,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

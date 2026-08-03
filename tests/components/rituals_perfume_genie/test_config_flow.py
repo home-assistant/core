@@ -53,10 +53,10 @@ async def test_user_flow_success(
         (ClientError, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_rituals_account: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -145,10 +145,10 @@ async def test_reauth_flow_success(
         (ClientError, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_errors(
     hass: HomeAssistant,
     mock_rituals_account: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     error: str,

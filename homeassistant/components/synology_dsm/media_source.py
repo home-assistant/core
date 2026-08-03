@@ -2,7 +2,7 @@
 
 from logging import getLogger
 import mimetypes
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aiohttp import web
 from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
@@ -76,6 +76,7 @@ class SynologyPhotosMediaSource(MediaSource):
         self.hass = hass
         self.entries = entries
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,
@@ -225,6 +226,7 @@ class SynologyPhotosMediaSource(MediaSource):
                 )
         return ret
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         identifier = SynologyPhotosMediaSourceIdentifier(item.identifier)

@@ -2,7 +2,7 @@
 
 import ipaddress
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 import voluptuous as vol
@@ -30,6 +30,7 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -60,6 +61,7 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

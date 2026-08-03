@@ -8,7 +8,7 @@ import math
 import queue
 import threading
 import time
-from typing import Any
+from typing import Any, override
 
 from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
@@ -39,6 +39,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.data_entry_flow import FlowResultType
@@ -252,7 +253,9 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                 if measurement_attr == "entity_id":
                     measurement = state.entity_id
                 elif measurement_attr == "domain__device_class":
-                    device_class = state.attributes.get("device_class")
+                    device_class = state.attributes.get(
+                        EntityStateAttribute.DEVICE_CLASS
+                    )
                     if device_class is None:
                         # This entity doesn't have a device_class set, use only domain
                         measurement = state.domain
@@ -423,7 +426,7 @@ def get_influx_connection(  # noqa: C901
     if CONF_HOST in conf:
         kwargs[CONF_HOST] = conf[CONF_HOST]
 
-    if (path := conf.get(CONF_PATH)) is not None:
+    if (path := conf.get(CONF_PATH)) is not None and path != "/":
         kwargs[CONF_PATH] = path
 
     if (port := conf.get(CONF_PORT)) is not None:
@@ -666,6 +669,7 @@ class InfluxThread(threading.Thread):
                         _LOGGER.error(err)
                     self.write_errors += len(json)
 
+    @override
     def run(self):
         """Process incoming events."""
         while not self._shutdown:

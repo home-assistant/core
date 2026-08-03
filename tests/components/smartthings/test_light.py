@@ -501,7 +501,7 @@ async def test_lamp_with_switch(
         ),
         (
             "da_ks_microwave_0101x",
-            "light.microwave_light",
+            "light.theater_microwave_light",
             "2bad3237-4886-e699-1b90-4a51a3d55c8a",
             "hood",
         ),
@@ -656,7 +656,7 @@ async def test_lamp_switch_not_used_when_off_in_supported_levels(
     service: str,
     argument: str,
 ) -> None:
-    """Test samsungce.lamp on/off uses brightness commands when 'off' is in supported levels, even with switch capability."""
+    """Test samsungce.lamp uses brightness when 'off' in levels."""
     # Modify the device status to include "off" in supported brightness levels
     # This simulates a device where the switch doesn't control the lamp
     set_attribute_value(

@@ -502,7 +502,10 @@ async def test_play_media_unknown_type(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Unsupported media type for Cambridge Audio device: unsupported_content_type",
+        match=(
+            "Unsupported media type for Cambridge Audio"
+            " device: unsupported_content_type"
+        ),
     ):
         await hass.services.async_call(
             MP_DOMAIN,

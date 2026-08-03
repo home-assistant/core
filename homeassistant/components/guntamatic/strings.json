@@ -54,8 +54,8 @@
           "dhw": "Domestic hot water",
           "dhw_boost": "Domestic hot water boost",
           "heat": "Heat",
-          "hibernate": "Hibernate",
-          "hibernate_to": "Hibernate to",
+          "hibernate": "Setback mode",
+          "hibernate_to": "Away mode",
           "off": "[%key:common::state::off%]",
           "timer": "Timer"
         }

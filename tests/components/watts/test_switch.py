@@ -46,7 +46,7 @@ async def test_switch_state(
     """Test switch state."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("switch.living_room_switch")
+    state = hass.states.get("switch.living_room_living_room_switch")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -71,7 +71,7 @@ async def test_turn_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "switch.living_room_switch"},
+        {ATTR_ENTITY_ID: "switch.living_room_living_room_switch"},
         blocking=True,
     )
 
@@ -92,7 +92,7 @@ async def test_fast_polling(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.living_room_switch"},
+        {ATTR_ENTITY_ID: "switch.living_room_living_room_switch"},
         blocking=True,
     )
 
@@ -149,6 +149,6 @@ async def test_api_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "switch.living_room_switch"},
+            {ATTR_ENTITY_ID: "switch.living_room_living_room_switch"},
             blocking=True,
         )

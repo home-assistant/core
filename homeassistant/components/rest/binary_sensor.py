@@ -2,6 +2,7 @@
 
 import logging
 import ssl
+from typing import override
 from xml.parsers.expat import ExpatError
 
 import voluptuous as vol
@@ -134,12 +135,14 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
         self._value_template: ValueTemplate | None = config.get(CONF_VALUE_TEMPLATE)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         available1 = RestEntity.available.fget(self)  # type: ignore[attr-defined]
         available2 = ManualTriggerEntity.available.fget(self)  # type: ignore[attr-defined]
         return bool(available1 and available2)
 
+    @override
     def _update_from_rest_data(self) -> None:
         """Update state from the rest data."""
         if self.rest.data is None:

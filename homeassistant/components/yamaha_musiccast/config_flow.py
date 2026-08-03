@@ -1,7 +1,7 @@
 """Config flow for MusicCast."""
 
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from aiohttp import ClientConnectorError, DummyCookieJar
@@ -32,6 +32,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
     host: str
     upnp_description: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -82,6 +83,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -95,7 +97,8 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         self.serial_number = discovery_info.upnp[ATTR_UPNP_SERIAL]
         self.upnp_description = discovery_info.ssdp_location
 
-        # ssdp_location and hostname have been checked in check_yamaha_ssdp so it is safe to ignore type assignment
+        # ssdp_location and hostname have been checked in
+        # check_yamaha_ssdp so it is safe to ignore type
         self.host = urlparse(discovery_info.ssdp_location).hostname  # type: ignore[assignment]
 
         await self.async_set_unique_id(self.serial_number)

@@ -260,7 +260,7 @@ async def test_storage_collection_update_modifiet_at(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that updating a storage collection will update the modified_at datetime in the entity registry."""
+    """Test updating a storage collection updates modified_at in the entity registry."""
 
     entities: dict[str, TestEntity] = {}
 

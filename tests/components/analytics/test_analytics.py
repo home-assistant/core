@@ -28,6 +28,7 @@ from homeassistant.components.analytics.const import (
     ATTR_USAGE,
     BASIC_ENDPOINT_URL,
     BASIC_ENDPOINT_URL_DEV,
+    DOMAIN,
     SNAPSHOT_DEFAULT_URL,
     SNAPSHOT_URL_PATH,
 )
@@ -1033,7 +1034,7 @@ async def test_devices_payload_no_entities(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test devices payload with no entities."""
-    assert await async_setup_component(hass, "analytics", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert await async_devices_payload(hass) == {
         "version": "home-assistant:1",
         "home_assistant": MOCK_VERSION,
@@ -1176,7 +1177,7 @@ async def test_devices_payload_with_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test devices payload with entities."""
-    assert await async_setup_component(hass, "analytics", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     mock_config_entry = MockConfigEntry(domain="hue")
     mock_config_entry.add_to_hass(hass)
@@ -1370,7 +1371,7 @@ async def test_analytics_platforms(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test analytics platforms."""
-    assert await async_setup_component(hass, "analytics", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     mock_config_entry = MockConfigEntry(domain="test")
     mock_config_entry.add_to_hass(hass)

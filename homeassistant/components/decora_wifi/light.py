@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -106,6 +106,7 @@ class DecoraWifiLight(LightEntity):
         self._attr_unique_id = switch.serial
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._switch.canSetLevel:
@@ -113,11 +114,13 @@ class DecoraWifiLight(LightEntity):
         return ColorMode.ONOFF
 
     @property
+    @override
     def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return {self.color_mode}
 
     @property
+    @override
     def supported_features(self) -> LightEntityFeature:
         """Return supported features."""
         if self._switch.canSetLevel:
@@ -125,25 +128,30 @@ class DecoraWifiLight(LightEntity):
         return LightEntityFeature(0)
 
     @property
+    @override
     def name(self):
         """Return the display name of this switch."""
         return self._switch.name
 
     @property
+    @override
     def unique_id(self):
         """Return the ID of this light."""
         return self._switch.serial
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of the dimmer switch."""
         return int(self._switch.brightness * 255 / 100)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._switch.power == "ON"
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on & adjust brightness."""
         attribs: dict[str, Any] = {"power": "ON"}
@@ -165,6 +173,7 @@ class DecoraWifiLight(LightEntity):
         except ValueError:
             _LOGGER.error("Failed to turn on myLeviton switch")
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
         attribs = {"power": "OFF"}

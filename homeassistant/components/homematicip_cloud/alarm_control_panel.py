@@ -1,6 +1,7 @@
 """Support for HomematicIP Cloud alarm control panel."""
 
 import logging
+from typing import TYPE_CHECKING, override
 
 from homematicip.functionalHomes import SecurityAndAlarmHome
 
@@ -10,6 +11,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -47,17 +49,25 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         self._home: AsyncHome = hap.home
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
+        if TYPE_CHECKING:
+            assert self.platform.config_entry is not None
         return DeviceInfo(
             identifiers={(DOMAIN, f"ACP {self._home.id}")},
             manufacturer="eQ-3",
             model=CONST_ALARM_CONTROL_PANEL_NAME,
             name=self.name,
-            via_device=(DOMAIN, self._home.id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self._home.id),
+                config_entry_id=self.platform.config_entry.entry_id,
+            ),
         )
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the alarm control panel."""
         # check for triggered alarm
@@ -78,18 +88,22 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     def _security_and_alarm(self) -> SecurityAndAlarmHome:
         return self._home.get_functionalHome(SecurityAndAlarmHome)
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._home.set_security_zones_activation_async(False, False)
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self._home.set_security_zones_activation_async(False, True)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._home.set_security_zones_activation_async(True, True)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._home.on_update(self._async_device_changed)
@@ -111,6 +125,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
             )
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the generic entity."""
         name = CONST_ALARM_CONTROL_PANEL_NAME
@@ -119,11 +134,13 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         return name
 
     @property
+    @override
     def available(self) -> bool:
         """Return if alarm control panel is available."""
         return self._home.connected
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._home.id}_{self._feature_id}"

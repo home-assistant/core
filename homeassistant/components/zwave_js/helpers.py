@@ -305,7 +305,7 @@ def async_get_node_from_device_id(
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
-    if entry.state != ConfigEntryState.LOADED:
+    if entry.state is not ConfigEntryState.LOADED:
         raise ValueError(f"Device {device_id} config entry is not loaded")
 
     client = entry.runtime_data.client
@@ -324,6 +324,19 @@ def async_get_node_from_device_id(
         raise ValueError(f"Node for device {device_id} can't be found")
 
     return driver.controller.nodes[node_id]
+
+
+@callback
+def async_get_config_entry_from_node(
+    hass: HomeAssistant, node: ZwaveNode
+) -> ZwaveJSConfigEntry:
+    """Get the config entry from a Z-Wave JS node."""
+    return next(
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state is ConfigEntryState.LOADED
+        and entry.runtime_data.client is node.client
+    )
 
 
 async def async_get_provisioning_entry_from_device_id(
@@ -353,7 +366,7 @@ async def async_get_provisioning_entry_from_device_id(
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
-    if entry.state != ConfigEntryState.LOADED:
+    if entry.state is not ConfigEntryState.LOADED:
         raise ValueError(f"Device {device_id} config entry is not loaded")
 
     client = entry.runtime_data.client

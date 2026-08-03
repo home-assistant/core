@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -11,11 +11,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_MODE,
-    CONF_NAME,
+    EntityStateAttribute,
     UnitOfLength,
     UnitOfTime,
 )
@@ -85,7 +82,7 @@ async def async_setup_entry(
     """Add HERE travel time entities from a config_entry."""
 
     entry_id = config_entry.entry_id
-    name = config_entry.data[CONF_NAME]
+    name = config_entry.title
     coordinator = config_entry.runtime_data
 
     sensors: list[HERETravelTimeSensor] = [
@@ -136,12 +133,14 @@ class HERETravelTimeSensor(
         if restored_data := await self.async_get_last_sensor_data():
             self._attr_native_value = restored_data.native_value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Wait for start so origin and destination entities can be resolved."""
         await self._async_restore_state()
         await super().async_added_to_hass()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.coordinator.data is not None:
@@ -151,10 +150,11 @@ class HERETravelTimeSensor(
             self.async_write_ha_state()
 
     @property
+    @override
     def attribution(self) -> str | None:
         """Return the attribution."""
         if self.coordinator.data is not None:
-            if (attribution := self.coordinator.data.get(ATTR_ATTRIBUTION)) is not None:
+            if (attribution := self.coordinator.data.get("attribution")) is not None:
                 return str(attribution)
         return None
 
@@ -178,12 +178,14 @@ class OriginSensor(HERETravelTimeSensor):
         super().__init__(unique_id_prefix, name, sensor_description, coordinator)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """GPS coordinates."""
         if self.coordinator.data is not None:
+            latitude, longitude = self.coordinator.data[ATTR_ORIGIN].split(",")
             return {
-                ATTR_LATITUDE: self.coordinator.data[ATTR_ORIGIN].split(",")[0],
-                ATTR_LONGITUDE: self.coordinator.data[ATTR_ORIGIN].split(",")[1],
+                EntityStateAttribute.LATITUDE: latitude,
+                EntityStateAttribute.LONGITUDE: longitude,
             }
         return None
 
@@ -207,11 +209,13 @@ class DestinationSensor(HERETravelTimeSensor):
         super().__init__(unique_id_prefix, name, sensor_description, coordinator)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """GPS coordinates."""
         if self.coordinator.data is not None:
+            latitude, longitude = self.coordinator.data[ATTR_DESTINATION].split(",")
             return {
-                ATTR_LATITUDE: self.coordinator.data[ATTR_DESTINATION].split(",")[0],
-                ATTR_LONGITUDE: self.coordinator.data[ATTR_DESTINATION].split(",")[1],
+                EntityStateAttribute.LATITUDE: latitude,
+                EntityStateAttribute.LONGITUDE: longitude,
             }
         return None

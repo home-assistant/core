@@ -81,6 +81,12 @@
     "error_set_volume": {
       "message": "Unable to set volume level on {host}: {error}"
     },
+    "invalid_device": {
+      "message": "Device with ID {device_id} is invalid or not found."
+    },
+    "media_id_invalid": {
+      "message": "Media ID must be a positive integer."
+    },
     "service_unsupported": {
       "message": "Entity {entity} does not support this action."
     },

@@ -94,6 +94,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "Jar*",
     },
     {
+        "connectable": False,
+        "domain": "chef_iq",
+        "manufacturer_id": 1485,
+    },
+    {
         "domain": "dormakaba_dkey",
         "service_uuid": "e7a60000-6639-429f-94fd-86de8ea26897",
     },
@@ -118,6 +123,14 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "domain": "eufylife_ble",
+        "local_name": "eufy T9120",
+    },
+    {
+        "domain": "eufylife_ble",
+        "local_name": "eufy T9130",
+    },
+    {
+        "domain": "eufylife_ble",
         "local_name": "eufy T9140",
     },
     {
@@ -137,6 +150,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "eufy T9149",
     },
     {
+        "domain": "eufylife_ble",
+        "local_name": "eufy T9150",
+    },
+    {
         "connectable": True,
         "domain": "eurotronic_cometblue",
         "service_uuid": "47e9ee00-47e9-11e4-8939-164230d1df67",
@@ -144,15 +161,7 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": False,
         "domain": "fjaraskupan",
-        "manufacturer_data_start": [
-            79,
-            68,
-            70,
-            74,
-            65,
-            82,
-        ],
-        "manufacturer_id": 20296,
+        "service_uuid": "77a2bd49-1e5a-4961-bba1-21f34fa4bc7b",
     },
     {
         "connectable": True,

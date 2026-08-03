@@ -35,6 +35,7 @@
       "backup_manager_state": {
         "name": "Backup Manager state",
         "state": {
+          "blocked": "Blocked",
           "create_backup": "Creating a backup",
           "idle": "[%key:common::state::idle%]",
           "receive_backup": "Receiving a backup",

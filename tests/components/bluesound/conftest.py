@@ -160,6 +160,23 @@ def config_entry_secondary() -> MockConfigEntry:
 
 
 @pytest.fixture
+def config_entry_non_default_port() -> MockConfigEntry:
+    """Return a mocked config entry for a non-default-port player.
+
+    Shares its mac (via player_mocks) with the leader `config_entry` at the
+    default port.
+    """
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.1.1.2",
+            CONF_PORT: 11001,
+        },
+        unique_id="ff:ff:01:01:01:01-11001",
+    )
+
+
+@pytest.fixture
 async def setup_config_entry(
     hass: HomeAssistant, config_entry: MockConfigEntry, player_mocks: PlayerMocks
 ) -> None:
@@ -191,7 +208,10 @@ async def player_mocks() -> AsyncGenerator[PlayerMocks]:
     )
 
     # to simulate a player that is already configured
-    player_mocks.player_data_for_already_configured.sync_status_long_polling_mock.get().mac = player_mocks.player_data.sync_status_long_polling_mock.get().mac
+    already_configured = player_mocks.player_data_for_already_configured
+    already_configured.sync_status_long_polling_mock.get().mac = (
+        player_mocks.player_data.sync_status_long_polling_mock.get().mac
+    )
 
     def select_player(*args: Any, **kwargs: Any) -> AsyncMock:
         match args[0]:

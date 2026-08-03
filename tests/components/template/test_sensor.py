@@ -9,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.components import sensor, template
+from homeassistant.components.template import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
@@ -20,7 +21,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
+from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -30,32 +31,34 @@ from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    RESTORE_STATE_SAVED_ATTRIBUTES,
+    RESTORE_STATE_UPDATED_ATTRIBUTES,
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    async_capture_events,
-    mock_restore_cache_with_extra_data,
-)
+from tests.common import MockConfigEntry, assert_setup_component, async_capture_events
 from tests.conftest import WebSocketGenerator
 
 TEST_STATE_SENSOR = "sensor.test_state"
+TEST_ATTRIBUTE_ENTITY_ID = "sensor.test_attribute"
 TEST_AVAILABILITY_SENSOR = "sensor.availability_sensor"
 
 TEST_SENSOR = TemplatePlatformSetup(
     sensor.DOMAIN,
-    "sensors",
     "test_template_sensor",
-    make_test_trigger(TEST_STATE_SENSOR, TEST_AVAILABILITY_SENSOR),
+    make_test_trigger(
+        TEST_STATE_SENSOR, TEST_AVAILABILITY_SENSOR, TEST_ATTRIBUTE_ENTITY_ID
+    ),
 )
 
 
@@ -123,19 +126,6 @@ async def setup_attributes_state_sensor(
         state_template,
         attributes=attributes,
     )
-
-
-@pytest.mark.parametrize(
-    ("count", "state_template", "style", "config"),
-    [(1, "{{ states('sensor.test_state') }}", ConfigurationStyle.LEGACY, {})],
-)
-@pytest.mark.usefixtures("setup_state_sensor")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("sensor")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
 
 
 @pytest.mark.parametrize(
@@ -261,7 +251,10 @@ async def test_icon_template(
     ("attribute_template", "before_update", "after_update"),
     [
         (
-            "{{ '/local/sensor.png' if is_state('sensor.test_state', 'Works') else '' }}",
+            (
+                "{{ '/local/sensor.png'"
+                " if is_state('sensor.test_state', 'Works') else '' }}"
+            ),
             "",
             "/local/sensor.png",
         ),
@@ -305,7 +298,10 @@ async def test_entity_picture_template(
     ("attribute_template", "after_update"),
     [
         (
-            "{{ 'It Works.' if is_state('sensor.test_state', 'Works') else 'test_template_sensor' }}",
+            (
+                "{{ 'It Works.' if is_state('sensor.test_state',"
+                " 'Works') else 'test_template_sensor' }}"
+            ),
             "It Works.",
         ),
         (
@@ -688,10 +684,31 @@ async def test_this_variable(hass: HomeAssistant, before: str, after: str) -> No
         {
             "template": {
                 "sensor": {
-                    "state": "{{ this.attributes.get('test', 'no-test!') }}: {{ this.entity_id }}",
-                    "icon": "mdi:{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
-                    "name": "{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
-                    "picture": "{% if this.entity_id in states and 'entity_picture' in this.attributes %} {{this.attributes['entity_picture']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "state": (
+                        "{{ this.attributes.get('test', 'no-test!') }}"
+                        ": {{ this.entity_id }}"
+                    ),
+                    "icon": (
+                        "mdi:{% if this.entity_id in states and"
+                        " 'friendly_name' in this.attributes %}"
+                        " {{this.attributes['friendly_name']}} "
+                        "{% else %}{{this.entity_id}}:"
+                        "{{this.entity_id in states}}{% endif %}"
+                    ),
+                    "name": (
+                        "{% if this.entity_id in states and"
+                        " 'friendly_name' in this.attributes %}"
+                        " {{this.attributes['friendly_name']}} "
+                        "{% else %}{{this.entity_id}}:"
+                        "{{this.entity_id in states}}{% endif %}"
+                    ),
+                    "picture": (
+                        "{% if this.entity_id in states and"
+                        " 'entity_picture' in this.attributes %}"
+                        " {{this.attributes['entity_picture']}} "
+                        "{% else %}{{this.entity_id}}:"
+                        "{{this.entity_id in states}}{% endif %}"
+                    ),
                     "attributes": {"test": "{{ this.entity_id }}"},
                 },
             },
@@ -753,10 +770,31 @@ async def test_this_variable_early_hass_not_running(
         {
             "template": {
                 "sensor": {
-                    "state": "{{ this.attributes.get('test', 'no-test!') }}: {{ this.entity_id }}",
-                    "icon": "mdi:{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
-                    "name": "{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
-                    "picture": "{% if this.entity_id in states and 'entity_picture' in this.attributes %} {{this.attributes['entity_picture']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "state": (
+                        "{{ this.attributes.get('test', 'no-test!') }}"
+                        ": {{ this.entity_id }}"
+                    ),
+                    "icon": (
+                        "mdi:{% if this.entity_id in states and"
+                        " 'friendly_name' in this.attributes %}"
+                        " {{this.attributes['friendly_name']}} "
+                        "{% else %}{{this.entity_id}}:"
+                        "{{this.entity_id in states}}{% endif %}"
+                    ),
+                    "name": (
+                        "{% if this.entity_id in states and"
+                        " 'friendly_name' in this.attributes %}"
+                        " {{this.attributes['friendly_name']}} "
+                        "{% else %}{{this.entity_id}}:"
+                        "{{this.entity_id in states}}{% endif %}"
+                    ),
+                    "picture": (
+                        "{% if this.entity_id in states and"
+                        " 'entity_picture' in this.attributes %}"
+                        " {{this.attributes['entity_picture']}} "
+                        "{% else %}{{this.entity_id}}:"
+                        "{{this.entity_id in states}}{% endif %}"
+                    ),
                     "attributes": {"test": "{{ this.entity_id }}"},
                 },
             },
@@ -828,17 +866,33 @@ async def test_self_referencing_sensor_loop(
     [
         (
             {
-                "state": "{{ ((states.sensor.test_template_sensor.state or 0) | int) + 1 }}",
-                "icon": "{% if ((states.sensor.test_template_sensor.state or 0) | int) >= 1 %}mdi:greater{% else %}mdi:less{% endif %}",
+                "state": (
+                    "{{ ((states.sensor.test_template_sensor.state or 0) | int) + 1 }}"
+                ),
+                "icon": (
+                    "{% if ((states.sensor.test_template_sensor"
+                    ".state or 0) | int) >= 1 %}mdi:greater"
+                    "{% else %}mdi:less{% endif %}"
+                ),
             },
             ((ATTR_ICON, "mdi:greater"),),
             3,
         ),
         (
             {
-                "state": "{{ ((states.sensor.test_template_sensor.state or 0) | int) + 1 }}",
-                "icon": "{% if ((states.sensor.test_template_sensor.state or 0) | int) > 3 %}mdi:greater{% else %}mdi:less{% endif %}",
-                "picture": "{% if ((states.sensor.test_template_sensor.state or 0) | int) >= 1 %}bigpic{% else %}smallpic{% endif %}",
+                "state": (
+                    "{{ ((states.sensor.test_template_sensor.state or 0) | int) + 1 }}"
+                ),
+                "icon": (
+                    "{% if ((states.sensor.test_template_sensor"
+                    ".state or 0) | int) > 3 %}mdi:greater"
+                    "{% else %}mdi:less{% endif %}"
+                ),
+                "picture": (
+                    "{% if ((states.sensor.test_template_sensor"
+                    ".state or 0) | int) >= 1 %}bigpic"
+                    "{% else %}smallpic{% endif %}"
+                ),
             },
             (
                 (ATTR_ICON, "mdi:less"),
@@ -850,8 +904,16 @@ async def test_self_referencing_sensor_loop(
             {
                 "default_entity_id": TEST_SENSOR.entity_id,
                 "state": "{{ 1 }}",
-                "picture": "{{ ((states.sensor.test_template_sensor.attributes['entity_picture'] or 0) | int) + 1 }}",
-                "name": "{{ ((states.sensor.test_template_sensor.attributes['friendly_name'] or 0) | int) + 1 }}",
+                "picture": (
+                    "{{ ((states.sensor.test_template_sensor"
+                    ".attributes['entity_picture'] or 0)"
+                    " | int) + 1 }}"
+                ),
+                "name": (
+                    "{{ ((states.sensor.test_template_sensor"
+                    ".attributes['friendly_name'] or 0)"
+                    " | int) + 1 }}"
+                ),
             },
             (
                 (ATTR_ENTITY_PICTURE, "3"),
@@ -893,19 +955,27 @@ async def test_self_referencing_icon_with_no_loop(
     hass.states.async_set("sensor.heartworm_avg_64", 10)
     hass.states.async_set("sensor.heartworm_avg_57", 10)
 
-    value_template_str = """{% if (states.sensor.heartworm_high_80.state|int >= 10) and (states.sensor.heartworm_low_57.state|int >= 10) %}
-            extreme
-          {% elif (states.sensor.heartworm_avg_64.state|int >= 30) %}
-            high
-          {% elif (states.sensor.heartworm_avg_64.state|int >= 14) %}
-            moderate
-          {% elif (states.sensor.heartworm_avg_64.state|int >= 5) %}
-            slight
-          {% elif (states.sensor.heartworm_avg_57.state|int >= 5) %}
-            marginal
-          {% elif (states.sensor.heartworm_avg_57.state|int < 5) %}
-            none
-          {% endif %}"""
+    value_template_str = (
+        "{% if (states.sensor.heartworm_high_80.state|int >= 10)"
+        " and (states.sensor.heartworm_low_57.state|int >= 10) %}\n"
+        "            extreme\n"
+        "          {% elif (states.sensor.heartworm_avg_64.state"
+        "|int >= 30) %}\n"
+        "            high\n"
+        "          {% elif (states.sensor.heartworm_avg_64.state"
+        "|int >= 14) %}\n"
+        "            moderate\n"
+        "          {% elif (states.sensor.heartworm_avg_64.state"
+        "|int >= 5) %}\n"
+        "            slight\n"
+        "          {% elif (states.sensor.heartworm_avg_57.state"
+        "|int >= 5) %}\n"
+        "            marginal\n"
+        "          {% elif (states.sensor.heartworm_avg_57.state"
+        "|int < 5) %}\n"
+        "            none\n"
+        "          {% endif %}"
+    )
 
     icon_template_str = """{% if is_state('sensor.heartworm_risk',"extreme") %}
             mdi:hazard-lights
@@ -1051,7 +1121,9 @@ async def test_trigger_conditional_entity(hass: HomeAssistant) -> None:
                     "condition": [
                         {
                             "condition": "template",
-                            "value_template": "{{ trigger.event.data.beer / 0 == 'narf' }}",
+                            "value_template": (
+                                "{{ trigger.event.data.beer / 0 == 'narf' }}"
+                            ),
                         }
                     ],
                     "sensor": [
@@ -1158,7 +1230,7 @@ async def test_numeric_trigger_entity_set_unknown(
     """Test trigger entity state parsing with numeric sensors."""
     assert await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": [
                 {
@@ -1196,7 +1268,7 @@ async def test_trigger_attribute_order(
     """Test trigger entity attributes order."""
     assert await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": [
                 {
@@ -1204,7 +1276,9 @@ async def test_trigger_attribute_order(
                     "sensor": [
                         {
                             "name": "Test Sensor",
-                            "availability": "{{ trigger and trigger.event.data.beer == 2 }}",
+                            "availability": (
+                                "{{ trigger and trigger.event.data.beer == 2 }}"
+                            ),
                             "state": "{{ trigger.event.data.beer }}",
                             "attributes": {
                                 "beer": "{{ trigger.event.data.beer }}",
@@ -1235,13 +1309,16 @@ async def test_trigger_attribute_order(
     assert state.attributes["beer"] == 2
     assert "no_beer" not in state.attributes
     assert (
-        "Error rendering attributes.no_beer template for sensor.test_sensor: UndefinedError: 'sad' is undefined"
-        in caplog.text
+        "Error rendering attributes.no_beer template for"
+        " sensor.test_sensor: UndefinedError: 'sad' is undefined" in caplog.text
     )
     assert state.attributes["more_beer"] == 3
     assert (
-        "Error rendering attributes.all_the_beer template for sensor.test_sensor: ValueError: Template error: int got invalid input 'unknown' when rendering template '{{ this.state | int + more_beer }}' but no default was specified"
-        in caplog.text
+        "Error rendering attributes.all_the_beer template for"
+        " sensor.test_sensor: ValueError: Template error: int got"
+        " invalid input 'unknown' when rendering template"
+        " '{{ this.state | int + more_beer }}' but no default was"
+        " specified" in caplog.text
     )
 
     hass.bus.async_fire("test_event", {"beer": 2})
@@ -1256,7 +1333,9 @@ async def test_trigger_attribute_order(
 
     assert (
         caplog.text.count(
-            "Error rendering attributes.no_beer template for sensor.test_sensor: UndefinedError: 'sad' is undefined"
+            "Error rendering attributes.no_beer template for"
+            " sensor.test_sensor: UndefinedError:"
+            " 'sad' is undefined"
         )
         == 2
     )
@@ -1272,7 +1351,7 @@ async def test_entity_last_reset_total_increasing(
     with patch("homeassistant.util.dt.now", return_value=now):
         assert await async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": [
                     {
@@ -1429,93 +1508,141 @@ async def test_sensor_date_device_class(
     assert state.state == expected_state
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
+@pytest.mark.parametrize("bad_state", [STATE_UNKNOWN, STATE_UNAVAILABLE])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "template": {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "sensor": {
-                    "name": "test",
-                    "state": "{{ trigger.event.data.beer }}",
-                    "picture": "{{ '/local/dogs.png' }}",
-                    "icon": "{{ 'mdi:pirate' }}",
-                    "attributes": {
-                        "plus_one": "{{ trigger.event.data.beer + 1 }}",
-                        "another": "{{ trigger.event.data.uno_mas or 1 }}",
-                    },
-                },
+            "state": "{{ states('sensor.test_state') }}",
+            "device_class": "humidity",
+            "unit_of_measurement": "%",
+            "attributes": {
+                "plus_one": "{{ states('sensor.test_attribute') | int(0) + 1 }}",
+                "plus_two": "{{ states('sensor.test_attribute') | int(0) + 2 }}",
             },
         },
     ],
 )
-@pytest.mark.parametrize(
-    ("restored_state", "restored_native_value", "initial_state", "initial_attributes"),
-    [
-        # the native value should be used, not the state
-        ("dog", 10, "10", ["entity_picture", "icon", "plus_one"]),
-        (STATE_UNAVAILABLE, 10, STATE_UNKNOWN, []),
-        (STATE_UNKNOWN, 10, STATE_UNKNOWN, []),
-    ],
-)
-async def test_trigger_entity_restore_state(
-    hass: HomeAssistant,
-    count,
-    domain,
-    config,
-    restored_state,
-    restored_native_value,
-    initial_state,
-    initial_attributes,
+async def test_entity_restore_bad_states(
+    hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType, bad_state: str
 ) -> None:
-    """Test restoring trigger template binary sensor."""
+    """Test restoring template sensor with bad states."""
+    # Ensure the initial state is None so that restore data is honored
+    await async_trigger(hass, TEST_STATE_SENSOR, None)
 
     restored_attributes = {
-        "entity_picture": "/local/cats.png",
-        "icon": "mdi:ship",
         "plus_one": 55,
     }
-
-    fake_state = State(
-        "sensor.test",
-        restored_state,
-        restored_attributes,
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_SENSOR,
+        bad_state,
+        saved_extra_data={
+            "native_value": 44,
+            "native_unit_of_measurement": None,
+        },
+        saved_attributes=restored_attributes,
     )
-    fake_extra_data = {
-        "native_value": restored_native_value,
-        "native_unit_of_measurement": None,
+    await setup_restore_template_entity(
+        hass,
+        TEST_SENSOR,
+        style,
+        config,
+        "is_state('sensor.test_attribute', '2')",
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_SENSOR,
+        STATE_UNKNOWN,
+    )
+
+    next_state = "2"
+    await async_trigger(hass, TEST_STATE_SENSOR, next_state)
+    await async_trigger(hass, TEST_ATTRIBUTE_ENTITY_ID, next_state)
+
+    assert_state_and_attributes(
+        hass,
+        TEST_SENSOR,
+        next_state,
+        expected_attributes={
+            "plus_one": 3,
+            "plus_two": 4,
+            **RESTORE_STATE_UPDATED_ATTRIBUTES,
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "state": "{{ states('sensor.test_state') }}",
+            "device_class": "humidity",
+            "unit_of_measurement": "%",
+            "attributes": {
+                "plus_one": "{{ states('sensor.test_attribute') | int(0) + 1 }}",
+                "plus_two": "{{ states('sensor.test_attribute') | int(0) + 2 }}",
+            },
+        },
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
+) -> None:
+    """Test restoring template sensors."""
+    # Ensure the initial state is None so that restore data is honored
+    await async_trigger(hass, TEST_STATE_SENSOR, None)
+
+    restored_attributes = {
+        "plus_one": 55,
     }
-    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
-    with assert_setup_component(count, domain):
-        assert await async_setup_component(
-            hass,
-            domain,
-            config,
-        )
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_SENSOR,
+        "not 44",
+        saved_extra_data={
+            "native_value": 44,
+            "native_unit_of_measurement": None,
+        },
+        saved_attributes=restored_attributes,
+    )
+    await setup_restore_template_entity(
+        hass,
+        TEST_SENSOR,
+        style,
+        config,
+        "is_state('sensor.test_attribute', '2')",
+    )
 
-        await hass.async_block_till_done()
-        await hass.async_start()
-        await hass.async_block_till_done()
+    state = assert_state_and_attributes(
+        hass,
+        TEST_SENSOR,
+        "44",
+        {**restored_attributes, **RESTORE_STATE_SAVED_ATTRIBUTES},
+    )
+    assert "plus_two" not in state.attributes
 
-    state = hass.states.get("sensor.test")
-    assert state.state == initial_state
-    for attr, value in restored_attributes.items():
-        if attr in initial_attributes:
-            assert state.attributes[attr] == value
-        else:
-            assert attr not in state.attributes
-    assert "another" not in state.attributes
+    next_state = "2"
+    await async_trigger(hass, TEST_STATE_SENSOR, next_state)
+    await async_trigger(hass, TEST_ATTRIBUTE_ENTITY_ID, next_state)
 
-    hass.bus.async_fire("test_event", {"beer": 2})
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.test")
-    assert state.state == "2"
-    assert state.attributes["icon"] == "mdi:pirate"
-    assert state.attributes["entity_picture"] == "/local/dogs.png"
-    assert state.attributes["plus_one"] == 3
-    assert state.attributes["another"] == 1
+    assert_state_and_attributes(
+        hass,
+        TEST_SENSOR,
+        next_state,
+        expected_attributes={
+            "plus_one": 3,
+            "plus_two": 4,
+            **RESTORE_STATE_UPDATED_ATTRIBUTES,
+        },
+    )
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])

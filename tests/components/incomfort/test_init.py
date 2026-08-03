@@ -2,14 +2,14 @@
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientResponseError, RequestInfo
 from freezegun.api import FrozenDateTimeFactory
 from incomfortclient import InvalidGateway, InvalidHeaterList
 import pytest
 
-from homeassistant.components.incomfort import DOMAIN
+from homeassistant.components.incomfort.const import DOMAIN
 from homeassistant.components.incomfort.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -32,6 +32,36 @@ async def test_setup_platforms(
     """Test the incomfort integration is set up correctly."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("mock_entry_unique_id", ["00:04:a3:de:ad:ff"])
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_incomfort: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that child devices link to the gateway via via_device_id."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    gateway_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert gateway_device is not None
+
+    boiler_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "c0ffeec0ffee"), mock_config_entry.entry_id
+    )
+    assert boiler_device is not None
+    assert boiler_device.via_device_id == gateway_device.id
+
+    thermostat_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "c0ffeec0ffee_1"), mock_config_entry.entry_id
+    )
+    assert thermostat_device is not None
+    assert thermostat_device.via_device_id == gateway_device.id
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -188,7 +218,7 @@ async def test_coordinator_update_fails(
                 None,
                 status=404,
             ),
-            ConfigEntryState.SETUP_ERROR,
+            ConfigEntryState.SETUP_RETRY,
         ),
         (
             ClientResponseError(
@@ -215,11 +245,8 @@ async def test_entry_setup_fails(
     config_entry_state: ConfigEntryState,
 ) -> None:
     """Test the incomfort coordinator entry setup fails."""
-    with patch(
-        "homeassistant.components.incomfort.async_connect_gateway",
-        AsyncMock(side_effect=exc),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    mock_incomfort().heaters.side_effect = exc
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     state = hass.states.get("sensor.boiler_pressure")
     assert state is None
     assert mock_config_entry.state is config_entry_state

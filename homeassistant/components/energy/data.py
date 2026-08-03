@@ -3,7 +3,7 @@
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict, override
 
 import voluptuous as vol
 
@@ -138,6 +138,9 @@ class GridSourceType(TypedDict):
 
     cost_adjustment_day: float
 
+    # An optional custom name for display in energy graphs
+    name: NotRequired[str]
+
 
 class SolarSourceType(TypedDict):
     """Dictionary holding the source of energy production."""
@@ -147,6 +150,9 @@ class SolarSourceType(TypedDict):
     stat_energy_from: str
     stat_rate: NotRequired[str]
     config_entry_solar_forecast: list[str] | None
+
+    # An optional custom name for display in energy graphs
+    name: NotRequired[str]
 
 
 class BatterySourceType(TypedDict):
@@ -165,6 +171,12 @@ class BatterySourceType(TypedDict):
 
     # statistic_id of a sensor (unit %) reporting the battery state of charge
     stat_soc: NotRequired[str]
+
+    # usable capacity in kWh, used to weight the combined state of charge
+    capacity: NotRequired[float]
+
+    # An optional custom name for display in energy graphs
+    name: NotRequired[str]
 
 
 class GasSourceType(TypedDict):
@@ -187,7 +199,7 @@ class GasSourceType(TypedDict):
     number_energy_price: float | None  # Price for energy ($/m³)
 
     # An optional custom name for display in energy graphs
-    name: str | None
+    name: NotRequired[str]
 
 
 class WaterSourceType(TypedDict):
@@ -210,7 +222,7 @@ class WaterSourceType(TypedDict):
     number_energy_price: float | None  # Price for energy ($/m³)
 
     # An optional custom name for display in energy graphs
-    name: str | None
+    name: NotRequired[str]
 
 
 type SourceType = (
@@ -232,7 +244,7 @@ class DeviceConsumption(TypedDict):
     stat_rate: NotRequired[str]
 
     # An optional custom name for display in energy graphs
-    name: str | None
+    name: NotRequired[str]
 
     # An optional statistic_id identifying a device
     # that includes this device's consumption in its total
@@ -464,6 +476,7 @@ GRID_SOURCE_SCHEMA = vol.All(
             vol.Optional("stat_rate"): str,
             vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
             vol.Required("cost_adjustment_day"): vol.Coerce(float),
+            vol.Optional("name"): str,
         }
     ),
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
@@ -483,6 +496,7 @@ SOLAR_SOURCE_SCHEMA = vol.Schema(
         vol.Required("stat_energy_from"): str,
         vol.Optional("stat_rate"): str,
         vol.Optional("config_entry_solar_forecast"): vol.Any([str], None),
+        vol.Optional("name"): str,
     }
 )
 BATTERY_SOURCE_SCHEMA = vol.Schema(
@@ -495,6 +509,10 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         vol.Optional("stat_rate"): str,
         vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
         vol.Optional("stat_soc"): str,
+        vol.Optional("capacity"): vol.All(
+            vol.Coerce(float), vol.Range(min=0, min_included=False)
+        ),
+        vol.Optional("name"): str,
     }
 )
 
@@ -686,6 +704,7 @@ def _is_legacy_grid_format(source: dict[str, Any]) -> bool:
 class _EnergyPreferencesStore(storage.Store[EnergyPreferences]):
     """Energy preferences store with migration support."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,

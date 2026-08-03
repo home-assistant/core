@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from reolink_aio.exceptions import ReolinkError
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import (
     CameraState,
@@ -14,11 +15,33 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
+from . import setup_integration
 from .conftest import TEST_CAM_NAME, TEST_DUO_MODEL
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 from tests.typing import ClientSessionGenerator
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "reolink_host")
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    with (
+        patch(
+            "homeassistant.components.reolink.PLATFORMS",
+            [Platform.CAMERA],
+        ),
+        # keep the camera access tokens deterministic for the snapshot
+        patch("random.SystemRandom.getrandbits", return_value=123123123123),
+    ):
+        await setup_integration(hass, config_entry)
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_camera(
@@ -28,6 +51,14 @@ async def test_camera(
     reolink_host: MagicMock,
 ) -> None:
     """Test camera entity with fluent."""
+
+    def mock_supported(ch, capability):
+        if capability == "ext_stream":
+            return False
+        return True
+
+    reolink_host.supported = mock_supported
+
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -63,5 +94,5 @@ async def test_camera_no_stream_source(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.CAMERA}.{TEST_CAM_NAME}_snapshots_fluent_lens_0"
+    entity_id = f"{Platform.CAMERA}.{TEST_CAM_NAME}_lens_0_snapshots_fluent"
     assert hass.states.get(entity_id).state == CameraState.IDLE

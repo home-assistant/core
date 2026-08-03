@@ -274,8 +274,9 @@ async def test_zha_logbook_event_device_no_triggers(
     assert events[4]["name"] == "FakeManufacturer FakeModel"
     assert events[4]["domain"] == "zha"
     assert (
-        events[4]["message"]
-        == "Attribute Updated event was fired with arguments: {'attribute_id': 1234, 'attribute_name': 'name', 'attribute_value': 'value'}"
+        events[4]["message"] == "Attribute Updated event was fired with arguments:"
+        " {'attribute_id': 1234, 'attribute_name': 'name',"
+        " 'attribute_value': 'value'}"
     )
 
 

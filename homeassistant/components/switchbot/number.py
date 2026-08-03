@@ -1,7 +1,10 @@
 """Number platform for SwitchBot devices."""
 
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 import switchbot
 from switchbot import SwitchbotOperationError
@@ -40,6 +43,11 @@ async def async_setup_entry(
         async_add_entities(
             [SwitchBotMeterProCO2DisplayTimeOffsetNumber(coordinator)], True
         )
+    elif isinstance(coordinator.device, switchbot.SwitchbotStandingFan):
+        async_add_entities(
+            SwitchBotStandingFanOscillationAngleNumber(coordinator, desc)
+            for desc in OSCILLATION_NUMBER_DESCRIPTIONS
+        )
     elif isinstance(coordinator.device, switchbot.SwitchbotCurtain):
         async_add_entities(
             [SwitchBotCurtainSpeedNumber(coordinator)],
@@ -66,6 +74,7 @@ class SwitchBotMeterProCO2DisplayTimeOffsetNumber(SwitchbotEntity, NumberEntity)
         self._attr_unique_id = f"{coordinator.base_unique_id}_display_time_offset"
 
     @exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the time offset."""
         _LOGGER.debug("Setting time offset to %s minutes for %s", value, self._address)
@@ -75,6 +84,7 @@ class SwitchBotMeterProCO2DisplayTimeOffsetNumber(SwitchbotEntity, NumberEntity)
         self._attr_native_value = offset_minutes
         self.async_write_ha_state()
 
+    @override
     async def async_update(self) -> None:
         """Fetch the latest time offset from the device."""
         try:
@@ -125,4 +135,64 @@ class SwitchBotCurtainSpeedNumber(SwitchbotEntity, RestoreNumber):
         self._attr_native_value = value
         self.coordinator.curtain_speed = value
 
+        self.async_write_ha_state()
+
+
+@dataclass(frozen=True, kw_only=True)
+class SwitchBotOscillationAngleNumberEntityDescription(NumberEntityDescription):
+    """Describes a Standing Fan oscillation angle number entity."""
+
+    setter: Callable[[switchbot.SwitchbotStandingFan, int], Awaitable[None]]
+
+
+OSCILLATION_NUMBER_DESCRIPTIONS: tuple[
+    SwitchBotOscillationAngleNumberEntityDescription, ...
+] = (
+    SwitchBotOscillationAngleNumberEntityDescription(
+        key="horizontal_oscillation_angle",
+        translation_key="horizontal_oscillation_angle",
+        native_min_value=30,
+        native_max_value=90,
+        native_step=30,
+        setter=lambda device, angle: device.set_horizontal_oscillation_angle(angle),
+    ),
+    SwitchBotOscillationAngleNumberEntityDescription(
+        key="vertical_oscillation_angle",
+        translation_key="vertical_oscillation_angle",
+        native_min_value=30,
+        native_max_value=90,
+        native_step=30,
+        setter=lambda device, angle: device.set_vertical_oscillation_angle(angle),
+    ),
+)
+
+
+class SwitchBotStandingFanOscillationAngleNumber(SwitchbotEntity, NumberEntity):
+    """Number entity for oscillation angle on Standing Fan.
+
+    Uses assumed_state=True because the device does not report its current
+    oscillation angle back to HA — state is only known after the user sets it.
+    """
+
+    entity_description: SwitchBotOscillationAngleNumberEntityDescription
+    _device: switchbot.SwitchbotStandingFan
+    _attr_assumed_state = True
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(
+        self,
+        coordinator: SwitchbotDataUpdateCoordinator,
+        description: SwitchBotOscillationAngleNumberEntityDescription,
+    ) -> None:
+        """Initialize the oscillation angle number entity."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.base_unique_id}_{description.key}"
+
+    @exception_handler
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Set oscillation angle."""
+        await self.entity_description.setter(self._device, int(value))
+        self._attr_native_value = value
         self.async_write_ha_state()

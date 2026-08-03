@@ -2,8 +2,10 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from ouman_eh_800_api import (
+    ControllableEndpoint,
     L1BaseEndpoints,
     L2BaseEndpoints,
     OumanClientAuthenticationError,
@@ -17,7 +19,12 @@ from ouman_eh_800_api import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -57,10 +64,10 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
         )
 
         entry_id = config_entry.entry_id
-        main_device_identifier = (DOMAIN, entry_id)
-        self.device_info: dict[OumanDevice, DeviceInfo] = {
+        self._main_device_identifier = (DOMAIN, entry_id)
+        self._device_info: dict[OumanDevice, DeviceInfo] = {
             OumanDevice.MAIN: DeviceInfo(
-                identifiers={main_device_identifier},
+                identifiers={self._main_device_identifier},
                 manufacturer="Ouman",
                 model="EH-800",
                 configuration_url=config_entry.data[CONF_URL],
@@ -69,16 +76,26 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
                 identifiers={(DOMAIN, f"{entry_id}_{OumanDevice.L1}")},
                 translation_key="heating_circuit",
                 translation_placeholders={"circuit_number": "1"},
-                via_device=main_device_identifier,
             ),
             OumanDevice.L2: DeviceInfo(
                 identifiers={(DOMAIN, f"{entry_id}_{OumanDevice.L2}")},
                 translation_key="heating_circuit",
                 translation_placeholders={"circuit_number": "2"},
-                via_device=main_device_identifier,
             ),
         }
 
+    def device_info(self, device: OumanDevice) -> DeviceInfo:
+        """Return the device info for a logical device."""
+        device_info = self._device_info[device]
+        if device is not OumanDevice.MAIN and "via_device_id" not in device_info:
+            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+                self.hass,
+                self._main_device_identifier,
+                config_entry_id=self.config_entry.entry_id,
+            )
+        return device_info
+
+    @override
     async def _async_setup(self) -> None:
         try:
             # Even though not required to fetch values, perform login once
@@ -90,12 +107,28 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
         except OumanClientCommunicationError as err:
             raise ConfigEntryNotReady("Error communicating with API") from err
 
+    @override
     async def _async_update_data(self) -> dict[OumanEndpoint, OumanValues]:
         """Fetch registry values from the device."""
         try:
             return await self.client.get_values(self._registry_set)
         except OumanClientCommunicationError as err:
             raise UpdateFailed("Error communicating with API") from err
+
+    async def async_set_endpoint_value(
+        self, endpoint: ControllableEndpoint, value: OumanValues | int
+    ) -> None:
+        """Set a value on the device and refresh."""
+        try:
+            result = await self.client.set_endpoint_value(endpoint, value)
+        except OumanClientAuthenticationError as err:
+            raise HomeAssistantError("Authentication failed") from err
+        except OumanClientCommunicationError as err:
+            raise HomeAssistantError("Error communicating with API") from err
+
+        self.async_set_updated_data({**self.data, endpoint: result})
+        # Separate refresh on all endpoints to catch cascading changes.
+        await self.async_request_refresh()
 
     def sync_circuit_device_names(self) -> None:
         """Set the device-reported circuit names for the L1/L2 sub-device names.
@@ -109,7 +142,7 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
         ):
             if circuit_name := self.data.get(endpoint):
                 assert isinstance(circuit_name, str)
-                device_info = self.device_info[device]
+                device_info = self._device_info[device]
                 device_info["translation_key"] = "heating_circuit_with_name"
                 device_info["translation_placeholders"] = {
                     "circuit_number": circuit_number,

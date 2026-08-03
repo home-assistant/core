@@ -67,9 +67,12 @@ class MockBleakClientBattery5(MockBleakClient):
         return b"\x05"
 
 
-@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+@pytest.mark.usefixtures("mock_device_tracker_conf")
 async def test_do_not_see_device_if_time_not_updated(hass: HomeAssistant) -> None:
-    """Test device going not_home after consider_home threshold from first scan if the subsequent scans have not incremented last seen time."""
+    """Test device goes not_home after consider_home threshold.
+
+    Subsequent scans have not incremented last seen time.
+    """
 
     address = "DE:AD:BE:EF:13:37"
     name = "Mock device name"
@@ -121,7 +124,8 @@ async def test_do_not_see_device_if_time_not_updated(hass: HomeAssistant) -> Non
             async_fire_time_changed(hass, time_after_consider_home)
             await hass.async_block_till_done()
 
-        # Advance time over the consider home threshold and trigger update after the threshold
+        # Advance time over the consider home threshold
+        # and trigger update after the threshold
         time_after_consider_home = dt_util.utcnow() + config[CONF_CONSIDER_HOME]
         with freeze_time(time_after_consider_home):
             async_fire_time_changed(hass, time_after_consider_home)
@@ -132,9 +136,12 @@ async def test_do_not_see_device_if_time_not_updated(hass: HomeAssistant) -> Non
     assert state.state == "not_home"
 
 
-@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+@pytest.mark.usefixtures("mock_device_tracker_conf")
 async def test_see_device_if_time_updated(hass: HomeAssistant) -> None:
-    """Test device remaining home after consider_home threshold from first scan if the subsequent scans have incremented last seen time."""
+    """Test device stays home after consider_home threshold.
+
+    Subsequent scans have incremented last seen time.
+    """
 
     address = "DE:AD:BE:EF:13:37"
     name = "Mock device name"
@@ -202,7 +209,8 @@ async def test_see_device_if_time_updated(hass: HomeAssistant) -> None:
             async_fire_time_changed(hass, time_after_consider_home)
             await hass.async_block_till_done()
 
-        # Advance time over the consider home threshold and trigger update after the threshold
+        # Advance time over the consider home threshold
+        # and trigger update after the threshold
         time_after_consider_home = dt_util.utcnow() + config[CONF_CONSIDER_HOME]
         with freeze_time(time_after_consider_home):
             async_fire_time_changed(hass, time_after_consider_home)
@@ -213,7 +221,7 @@ async def test_see_device_if_time_updated(hass: HomeAssistant) -> None:
     assert state.state == "home"
 
 
-@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+@pytest.mark.usefixtures("mock_device_tracker_conf")
 async def test_preserve_new_tracked_device_name(hass: HomeAssistant) -> None:
     """Test preserving tracked device name across new seens."""  # codespell:ignore seens
 
@@ -282,7 +290,7 @@ async def test_preserve_new_tracked_device_name(hass: HomeAssistant) -> None:
     assert state.name == name
 
 
-@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+@pytest.mark.usefixtures("mock_device_tracker_conf")
 async def test_tracking_battery_times_out(hass: HomeAssistant) -> None:
     """Test tracking the battery times out."""
 
@@ -350,7 +358,7 @@ async def test_tracking_battery_times_out(hass: HomeAssistant) -> None:
     assert "battery" not in state.attributes
 
 
-@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+@pytest.mark.usefixtures("mock_device_tracker_conf")
 async def test_tracking_battery_fails(hass: HomeAssistant) -> None:
     """Test tracking the battery fails."""
 
@@ -417,7 +425,7 @@ async def test_tracking_battery_fails(hass: HomeAssistant) -> None:
     assert "battery" not in state.attributes
 
 
-@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+@pytest.mark.usefixtures("mock_device_tracker_conf")
 async def test_tracking_battery_successful(hass: HomeAssistant) -> None:
     """Test tracking the battery gets a value."""
 

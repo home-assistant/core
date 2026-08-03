@@ -29,36 +29,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
 
 from tests.common import async_fire_time_changed
-
-
-async def test_setup_platform_yaml(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test setting up the platform with platform yaml."""
-    await setup.async_setup_component(
-        hass,
-        "cover",
-        {
-            "cover": {
-                "platform": "command_line",
-                "command": "echo 1",
-                "payload_on": "1",
-                "payload_off": "0",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-    issue = issue_registry.async_get_issue(DOMAIN, "cover_platform_yaml_not_supported")
-    assert issue is not None
-    assert issue.severity == ir.IssueSeverity.ERROR
-    assert issue.translation_placeholders == {"platform": COVER_DOMAIN}
 
 
 async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> None:
@@ -286,8 +262,8 @@ async def test_updating_to_often(
 
     assert not called
     assert (
-        "Updating Command Line Cover Test took longer than the scheduled update interval"
-        not in caplog.text
+        "Updating Command Line Cover Test took longer"
+        " than the scheduled update interval" not in caplog.text
     )
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=11))
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -295,8 +271,8 @@ async def test_updating_to_often(
     called.clear()
 
     assert (
-        "Updating Command Line Cover Test took longer than the scheduled update interval"
-        not in caplog.text
+        "Updating Command Line Cover Test took longer"
+        " than the scheduled update interval" not in caplog.text
     )
 
     # Simulate update takes too long
@@ -310,8 +286,8 @@ async def test_updating_to_often(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert called
     assert (
-        "Updating Command Line Cover Test took longer than the scheduled update interval"
-        in caplog.text
+        "Updating Command Line Cover Test took longer"
+        " than the scheduled update interval" in caplog.text
     )
 
 
@@ -442,7 +418,12 @@ async def test_icon_template(hass: HomeAssistant) -> None:
                             "command_close": f"echo 0 > {path}",
                             "command_stop": f"echo 0 > {path}",
                             "name": "Test",
-                            "icon": '{% if this.attributes.icon=="mdi:icon2" %} mdi:icon1 {% else %} mdi:icon2 {% endif %}',
+                            "icon": (
+                                "{% if this.attributes.icon=="
+                                '"mdi:icon2" %} mdi:icon1'
+                                " {% else %} mdi:icon2"
+                                " {% endif %}"
+                            ),
                         }
                     }
                 ]

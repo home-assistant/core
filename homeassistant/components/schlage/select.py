@@ -1,5 +1,7 @@
 """Platform for Schlage select integration."""
 
+from typing import override
+
 from pyschlage.lock import AUTO_LOCK_TIMES
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -58,10 +60,12 @@ class SchlageSelect(SchlageEntity, SelectEntity):
         self._attr_unique_id = f"{device_id}_{self.entity_description.key}"
 
     @property
+    @override
     def current_option(self) -> str:
         """Return the current option."""
         return str(self._lock_data.lock.auto_lock_time)
 
+    @override
     def select_option(self, option: str) -> None:
         """Set the current option."""
         self._lock.set_auto_lock_time(int(option))

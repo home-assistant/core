@@ -135,6 +135,34 @@
     }
   },
   "services": {
+    "set_scanner_connected": {
+      "description": "Sets the connected state of a demo scanner entity.",
+      "fields": {
+        "connected": {
+          "description": "Whether the device should be reported as connected.",
+          "name": "Connected"
+        }
+      },
+      "name": "Set scanner connected"
+    },
+    "set_tracker_location": {
+      "description": "Sets the location and accuracy of a demo tracker entity.",
+      "fields": {
+        "accuracy": {
+          "description": "Location accuracy in meters.",
+          "name": "Accuracy"
+        },
+        "latitude": {
+          "description": "Latitude of the new location.",
+          "name": "Latitude"
+        },
+        "longitude": {
+          "description": "Longitude of the new location.",
+          "name": "Longitude"
+        }
+      },
+      "name": "Set tracker location"
+    },
     "test_service_1": {
       "description": "Fake action for testing {meep_2}",
       "fields": {
@@ -159,9 +187,9 @@
       },
       "name": "Test action {meep_1}",
       "sections": {
-        "advanced_fields": {
-          "description": "Some very advanced things",
-          "name": "Advanced options"
+        "additional_fields": {
+          "description": "Some additional things",
+          "name": "Additional options"
         }
       }
     }

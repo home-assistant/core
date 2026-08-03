@@ -408,7 +408,7 @@ async def test_light_onoff_mode_turn_on_off(
 async def test_light_rgb_vs_onoff_modes(
     hass: HomeAssistant,
 ) -> None:
-    """Test that RGB and ONOFF modes are correctly assigned based on device capabilities."""
+    """Test RGB and ONOFF modes are assigned based on device capabilities."""
     assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 2
 
     # Device with LED ring support should have RGB mode

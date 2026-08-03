@@ -41,7 +41,7 @@ async def test_restore_state(
 ) -> None:
     """Test battery sensor restore state."""
     mock_scale.device_state = None
-    entity_id = "sensor.lunar_ddeeff_battery"
+    entity_id = "sensor.kitchen_lunar_ddeeff_battery"
 
     mock_restore_cache_with_extra_data(
         hass,
@@ -73,7 +73,7 @@ async def test_battery_available_within_session_after_disconnect(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test battery stays available on disconnect when no restore data exists."""
-    entity_id = "sensor.lunar_ddeeff_battery"
+    entity_id = "sensor.kitchen_lunar_ddeeff_battery"
 
     await setup_integration(hass, mock_config_entry)
 

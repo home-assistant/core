@@ -1,6 +1,6 @@
 """Config flow to configure Coolmaster."""
 
-from typing import Any
+from typing import Any, override
 
 from pycoolmasternet_async import CoolMasterNet
 import voluptuous as vol
@@ -78,12 +78,15 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+
+        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
         errors = {}
 

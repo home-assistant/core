@@ -165,10 +165,9 @@ async def test_duplicate_updates_existing_entry(
     assert len(mock_fully_kiosk_config_flow.getDeviceInfo.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_updates_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test DHCP discovery updates config entries."""
     mock_config_entry.add_to_hass(hass)
@@ -264,10 +263,10 @@ async def test_mqtt_discovery_flow(
     assert len(mock_fully_kiosk_config_flow.getDeviceInfo.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure(
     hass: HomeAssistant,
     mock_fully_kiosk_config_flow: MagicMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the reconfigure flow."""

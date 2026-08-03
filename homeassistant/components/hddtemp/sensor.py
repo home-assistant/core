@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 import socket
-from typing import Any
+from typing import Any, override
 
 from telnetlib import Telnet  # pylint: disable=deprecated-module
 import voluptuous as vol
@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
+    ATTR_MODEL,
     CONF_DISKS,
     CONF_HOST,
     CONF_NAME,
@@ -28,7 +29,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICE = "device"
-ATTR_MODEL = "model"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 7634
@@ -81,6 +81,7 @@ class HddTempSensor(SensorEntity):
         self._details = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         if self._details is not None:

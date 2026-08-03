@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 import logging
 import math
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohttp import ClientResponseError
 
@@ -106,6 +106,7 @@ class MieleFan(MieleEntity, FanEntity):
         super().__init__(coordinator, device_id, description)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return current on/off state."""
         return (
@@ -114,11 +115,13 @@ class MieleFan(MieleEntity, FanEntity):
         )
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         return ranged_value_to_percentage(
@@ -126,6 +129,7 @@ class MieleFan(MieleEntity, FanEntity):
             (self.device.state_ventilation_step or 0),
         )
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         _LOGGER.debug("Set_percentage: %s", percentage)
@@ -135,6 +139,8 @@ class MieleFan(MieleEntity, FanEntity):
         _LOGGER.debug("Calc ventilation_step: %s", ventilation_step)
         if ventilation_step == 0:
             await self.async_turn_off()
+        elif ventilation_step == self.device.state_ventilation_step:
+            return
         else:
             try:
                 await self.api.send_action(
@@ -152,6 +158,7 @@ class MieleFan(MieleEntity, FanEntity):
             self.device.state_ventilation_step = ventilation_step
             self.async_write_ha_state()
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -170,7 +177,6 @@ class MieleFan(MieleEntity, FanEntity):
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
-                    "err_status": str(ex.status),
                 },
             ) from ex
 
@@ -178,6 +184,7 @@ class MieleFan(MieleEntity, FanEntity):
             await self.async_set_percentage(percentage)
             return
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         try:
@@ -188,7 +195,6 @@ class MieleFan(MieleEntity, FanEntity):
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
-                    "err_status": str(ex.status),
                 },
             ) from ex
 

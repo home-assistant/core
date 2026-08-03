@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientResponseError
 from doorbirdpy import DoorBird
@@ -181,6 +181,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -198,6 +199,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
         data = self.discovery_schema or _schema_with_defaults()
         return self.async_show_form(step_id="user", data_schema=data, errors=errors)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -268,6 +270,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:

@@ -1,7 +1,7 @@
 """Platform allowing several switches to be grouped into one switch."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -127,6 +127,7 @@ class SwitchGroup(GroupEntity, SwitchEntity):
         if mode:
             self.mode = all
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Forward the turn_on command to all switches in the group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
@@ -140,6 +141,7 @@ class SwitchGroup(GroupEntity, SwitchEntity):
             context=self._context,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Forward the turn_off command to all switches in the group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
@@ -152,6 +154,7 @@ class SwitchGroup(GroupEntity, SwitchEntity):
         )
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Query all members and determine the switch group state."""
         self._update_assumed_state_from_members()

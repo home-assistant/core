@@ -40,7 +40,7 @@
   "iot_class": "local_polling",
   "loggers": ["unifi_discovery"],
   "quality_scale": "internal",
-  "requirements": ["unifi-discovery==1.4.0"],
+  "requirements": ["unifi-discovery==1.5.0"],
   "single_config_entry": true,
   "ssdp": [
     {

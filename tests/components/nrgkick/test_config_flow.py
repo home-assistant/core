@@ -129,11 +129,9 @@ async def test_user_flow_with_credentials(
 
 
 @pytest.mark.parametrize("url", ["http://", ""])
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_invalid_host_input(
-    hass: HomeAssistant,
-    mock_nrgkick_api: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    url: str,
+    hass: HomeAssistant, mock_nrgkick_api: AsyncMock, url: str
 ) -> None:
     """Test we handle invalid host input during normalization."""
     result = await hass.config_entries.flow.async_init(

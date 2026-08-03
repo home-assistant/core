@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <EnergyExportMode.NEVER: 'never'>,
         <EnergyExportMode.BATTERY_OK: 'battery_ok'>,
         <EnergyExportMode.PV_ONLY: 'pv_only'>,
@@ -45,8 +45,8 @@
 # name: test_select[select.energy_site_allow_export-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Allow export',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Allow export',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <EnergyExportMode.NEVER: 'never'>,
         <EnergyExportMode.BATTERY_OK: 'battery_ok'>,
         <EnergyExportMode.PV_ONLY: 'pv_only'>,
@@ -67,7 +67,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <EnergyOperationMode.AUTONOMOUS: 'autonomous'>,
         <EnergyOperationMode.BACKUP: 'backup'>,
         <EnergyOperationMode.SELF_CONSUMPTION: 'self_consumption'>,
@@ -106,8 +106,8 @@
 # name: test_select[select.energy_site_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Operation mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Operation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <EnergyOperationMode.AUTONOMOUS: 'autonomous'>,
         <EnergyOperationMode.BACKUP: 'backup'>,
         <EnergyOperationMode.SELF_CONSUMPTION: 'self_consumption'>,
@@ -128,7 +128,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatCoolerOptions.OFF: 'off'>,
         <TessieSeatCoolerOptions.LOW: 'low'>,
         <TessieSeatCoolerOptions.MEDIUM: 'medium'>,
@@ -168,8 +168,8 @@
 # name: test_select[select.test_seat_cooler_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat cooler left',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat cooler left',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatCoolerOptions.OFF: 'off'>,
         <TessieSeatCoolerOptions.LOW: 'low'>,
         <TessieSeatCoolerOptions.MEDIUM: 'medium'>,
@@ -191,7 +191,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatCoolerOptions.OFF: 'off'>,
         <TessieSeatCoolerOptions.LOW: 'low'>,
         <TessieSeatCoolerOptions.MEDIUM: 'medium'>,
@@ -231,8 +231,8 @@
 # name: test_select[select.test_seat_cooler_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat cooler right',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat cooler right',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatCoolerOptions.OFF: 'off'>,
         <TessieSeatCoolerOptions.LOW: 'low'>,
         <TessieSeatCoolerOptions.MEDIUM: 'medium'>,
@@ -254,7 +254,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
         <TessieSeatHeaterOptions.MEDIUM: 'medium'>,
@@ -294,8 +294,8 @@
 # name: test_select[select.test_seat_heater_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater left',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater left',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
         <TessieSeatHeaterOptions.MEDIUM: 'medium'>,
@@ -317,7 +317,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
         <TessieSeatHeaterOptions.MEDIUM: 'medium'>,
@@ -357,8 +357,8 @@
 # name: test_select[select.test_seat_heater_rear_center-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater rear center',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater rear center',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
         <TessieSeatHeaterOptions.MEDIUM: 'medium'>,
@@ -380,7 +380,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
         <TessieSeatHeaterOptions.MEDIUM: 'medium'>,
@@ -420,8 +420,8 @@
 # name: test_select[select.test_seat_heater_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater rear left',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater rear left',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
         <TessieSeatHeaterOptions.MEDIUM: 'medium'>,
@@ -443,7 +443,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
         <TessieSeatHeaterOptions.MEDIUM: 'medium'>,
@@ -483,8 +483,8 @@
 # name: test_select[select.test_seat_heater_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater rear right',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater rear right',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
         <TessieSeatHeaterOptions.MEDIUM: 'medium'>,
@@ -506,7 +506,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
         <TessieSeatHeaterOptions.MEDIUM: 'medium'>,
@@ -546,8 +546,8 @@
 # name: test_select[select.test_seat_heater_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater right',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater right',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
         <TessieSeatHeaterOptions.MEDIUM: 'medium'>,
@@ -565,8 +565,8 @@
 # name: test_select[select_option]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater left',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater left',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <TessieSeatHeaterOptions.OFF: 'off'>,
         <TessieSeatHeaterOptions.LOW: 'low'>,
         <TessieSeatHeaterOptions.MEDIUM: 'medium'>,

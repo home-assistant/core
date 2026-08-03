@@ -1,25 +1,25 @@
 """Support for selects which integrates with other components."""
 
+from dataclasses import asdict, dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self, override
 
 import voluptuous as vol
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
-    ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
     ENTITY_ID_FORMAT,
     SelectEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_STATE
+from homeassistant.const import CONF_NAME, CONF_OPTIONS, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator, validators as template_validators
@@ -40,7 +40,6 @@ from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_OPTIONS = "options"
 CONF_SELECT_OPTION = "select_option"
 
 DEFAULT_NAME = "Template Select"
@@ -49,7 +48,7 @@ SCRIPT_FIELDS = (CONF_SELECT_OPTION,)
 
 SELECT_COMMON_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_OPTIONS): cv.template,
+        vol.Required(CONF_OPTIONS): cv.template,
         vol.Optional(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_STATE): cv.template,
     }
@@ -109,22 +108,51 @@ def async_create_preview_select(
     )
 
 
-class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
+@dataclass(kw_only=True)
+class SelectExtraStoredData(ExtraStoredData):
+    """Holds extra stored data for template select entities."""
+
+    current_option: str | None
+    options: list[str]
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the select data."""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored select state from a dict."""
+        try:
+            return cls(
+                current_option=restored["current_option"],
+                options=restored["options"],
+            )
+        except KeyError:
+            return None
+
+
+class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity, RestoreEntity):
     """Representation of a template select features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _state_option = CONF_STATE
+    _restore_state_extra_data = SelectExtraStoredData
+    _restore_state_properties = ("_attr_current_option",)
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self._attr_options = []
 
         self.setup_state_template(
             "_attr_current_option",
-            cv.string,
+            template_validators.string(self, CONF_STATE),
         )
         self.setup_template(
             CONF_OPTIONS,
@@ -137,6 +165,7 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
         if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
             self.add_script(CONF_SELECT_OPTION, select_option, name, DOMAIN)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         if self._attr_assumed_state:
@@ -145,9 +174,24 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
         if select_option := self._action_scripts.get(CONF_SELECT_OPTION):
             await self.async_run_script(
                 select_option,
-                run_variables={ATTR_OPTION: option},
+                run_variables={"option": option},
                 context=self._context,
             )
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> SelectExtraStoredData:
+        """Return select specific state data to be restored."""
+        return SelectExtraStoredData(
+            current_option=self._attr_current_option,
+            options=self._attr_options or [],
+        )
+
+    @override
+    def restore_extra_data(self, extra_data: SelectExtraStoredData) -> None:
+        """Restore the extra data."""
+        self._attr_current_option = extra_data.current_option
+        self._attr_options = extra_data.options
 
 
 class TemplateSelect(TemplateEntity, AbstractTemplateSelect):
@@ -173,7 +217,7 @@ class TriggerSelectEntity(TriggerEntity, AbstractTemplateSelect):
     """Select entity based on trigger data."""
 
     domain = SELECT_DOMAIN
-    extra_template_keys_complex = (ATTR_OPTIONS,)
+    extra_template_keys_complex = (CONF_OPTIONS,)
 
     def __init__(
         self,

@@ -1,7 +1,7 @@
 """Calendar platform for Teslemetry integration."""
 
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
@@ -119,6 +119,7 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
         super().__init__(data, key_base)
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the current active tariff event."""
         now = dt_util.now()
@@ -158,6 +159,7 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
 
         return None
 
+    @override
     async def async_get_events(
         self,
         hass: HomeAssistant,
@@ -273,6 +275,7 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
         except KeyError, ValueError, TypeError:
             return None
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the Calendar attributes from coordinator data."""
         self.seasons = self.coordinator.data.get(f"{self.key_base}_seasons", {})

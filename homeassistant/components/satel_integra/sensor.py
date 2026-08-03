@@ -1,5 +1,7 @@
 """Support for Satel Integra temperature sensors."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -13,6 +15,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import CONF_ENABLE_TEMPERATURE_SENSOR, CONF_ZONE_NUMBER, SUBENTRY_TYPE_ZONE
 from .coordinator import SatelConfigEntry, SatelIntegraTemperaturesCoordinator
 from .entity import SatelIntegraEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -71,6 +75,7 @@ class SatelIntegraTemperatureSensor(
         self._attr_unique_id = f"{self.unique_id}_temperature"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state."""
         return self.coordinator.data.get(self._device_number)

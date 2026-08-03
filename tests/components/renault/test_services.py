@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from datetime import datetime
+from enum import StrEnum
 from unittest.mock import patch
 
 import pytest
@@ -11,12 +12,7 @@ from renault_api.kamereon.models import ChargeSchedule, HvacSchedule
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.renault.const import DOMAIN
-from homeassistant.components.renault.services import (
-    ATTR_SCHEDULES,
-    ATTR_TEMPERATURE,
-    ATTR_VEHICLE,
-    ATTR_WHEN,
-)
+from homeassistant.components.renault.services import RenaultServiceArgument
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -25,6 +21,16 @@ from homeassistant.helpers import device_registry as dr
 from tests.common import async_load_fixture
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
+
+
+class RenaultService(StrEnum):
+    """Renault service names."""
+
+    AC_CANCEL = "ac_cancel"
+    AC_SET_SCHEDULES = "ac_set_schedules"
+    AC_START = "ac_start"
+    CHARGE_SET_SCHEDULES = "charge_set_schedules"
+    CHARGE_START = "charge_start"
 
 
 @pytest.fixture(autouse=True)
@@ -56,7 +62,7 @@ async def test_service_set_ac_cancel(
     await hass.async_block_till_done()
 
     data = {
-        ATTR_VEHICLE: get_device_id(hass),
+        RenaultServiceArgument.VEHICLE: get_device_id(hass),
     }
 
     with patch(
@@ -68,7 +74,7 @@ async def test_service_set_ac_cancel(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            DOMAIN, "ac_cancel", service_data=data, blocking=True
+            DOMAIN, RenaultService.AC_CANCEL, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ()
@@ -83,8 +89,8 @@ async def test_service_set_ac_start_simple(
 
     temperature = 13.5
     data = {
-        ATTR_VEHICLE: get_device_id(hass),
-        ATTR_TEMPERATURE: temperature,
+        RenaultServiceArgument.VEHICLE: get_device_id(hass),
+        RenaultServiceArgument.TEMPERATURE: temperature,
     }
 
     with patch(
@@ -96,7 +102,7 @@ async def test_service_set_ac_start_simple(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            DOMAIN, "ac_start", service_data=data, blocking=True
+            DOMAIN, RenaultService.AC_START, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (temperature, None)
@@ -112,9 +118,9 @@ async def test_service_set_ac_start_with_date(
     temperature = 13.5
     when = datetime(2025, 8, 23, 17, 12, 45)
     data = {
-        ATTR_VEHICLE: get_device_id(hass),
-        ATTR_TEMPERATURE: temperature,
-        ATTR_WHEN: when,
+        RenaultServiceArgument.VEHICLE: get_device_id(hass),
+        RenaultServiceArgument.TEMPERATURE: temperature,
+        RenaultServiceArgument.WHEN: when,
     }
 
     with patch(
@@ -126,7 +132,7 @@ async def test_service_set_ac_start_with_date(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            DOMAIN, "ac_start", service_data=data, blocking=True
+            DOMAIN, RenaultService.AC_START, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (temperature, when)
@@ -140,7 +146,7 @@ async def test_service_charge_start_simple(
     await hass.async_block_till_done()
 
     data = {
-        ATTR_VEHICLE: get_device_id(hass),
+        RenaultServiceArgument.VEHICLE: get_device_id(hass),
     }
 
     with patch(
@@ -152,7 +158,7 @@ async def test_service_charge_start_simple(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            DOMAIN, "charge_start", service_data=data, blocking=True
+            DOMAIN, RenaultService.CHARGE_START, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (None,)
@@ -167,8 +173,8 @@ async def test_service_charge_start_with_date(
 
     when = datetime(2025, 8, 23, 17, 12, 45)
     data = {
-        ATTR_VEHICLE: get_device_id(hass),
-        ATTR_WHEN: when,
+        RenaultServiceArgument.VEHICLE: get_device_id(hass),
+        RenaultServiceArgument.WHEN: when,
     }
 
     with patch(
@@ -180,7 +186,7 @@ async def test_service_charge_start_with_date(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            DOMAIN, "charge_start", service_data=data, blocking=True
+            DOMAIN, RenaultService.CHARGE_START, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (when,)
@@ -195,8 +201,8 @@ async def test_service_set_charge_schedule(
 
     schedules = {"id": 2}
     data = {
-        ATTR_VEHICLE: get_device_id(hass),
-        ATTR_SCHEDULES: schedules,
+        RenaultServiceArgument.VEHICLE: get_device_id(hass),
+        RenaultServiceArgument.SCHEDULES: schedules,
     }
 
     with (
@@ -219,7 +225,10 @@ async def test_service_set_charge_schedule(
         ) as mock_action,
     ):
         await hass.services.async_call(
-            DOMAIN, "charge_set_schedules", service_data=data, blocking=True
+            DOMAIN,
+            RenaultService.CHARGE_SET_SCHEDULES,
+            service_data=data,
+            blocking=True,
         )
     assert len(mock_action.mock_calls) == 1
     mock_call_data: list[ChargeSchedule] = mock_action.mock_calls[0][1][0]
@@ -247,8 +256,8 @@ async def test_service_set_charge_schedule_multi(
         {"id": 3},
     ]
     data = {
-        ATTR_VEHICLE: get_device_id(hass),
-        ATTR_SCHEDULES: schedules,
+        RenaultServiceArgument.VEHICLE: get_device_id(hass),
+        RenaultServiceArgument.SCHEDULES: schedules,
     }
 
     with (
@@ -271,7 +280,10 @@ async def test_service_set_charge_schedule_multi(
         ) as mock_action,
     ):
         await hass.services.async_call(
-            DOMAIN, "charge_set_schedules", service_data=data, blocking=True
+            DOMAIN,
+            RenaultService.CHARGE_SET_SCHEDULES,
+            service_data=data,
+            blocking=True,
         )
     assert len(mock_action.mock_calls) == 1
     mock_call_data: list[ChargeSchedule] = mock_action.mock_calls[0][1][0]
@@ -296,8 +308,8 @@ async def test_service_set_ac_schedule(
 
     schedules = {"id": 2}
     data = {
-        ATTR_VEHICLE: get_device_id(hass),
-        ATTR_SCHEDULES: schedules,
+        RenaultServiceArgument.VEHICLE: get_device_id(hass),
+        RenaultServiceArgument.SCHEDULES: schedules,
     }
 
     with (
@@ -319,7 +331,7 @@ async def test_service_set_ac_schedule(
         ) as mock_action,
     ):
         await hass.services.async_call(
-            DOMAIN, "ac_set_schedules", service_data=data, blocking=True
+            DOMAIN, RenaultService.AC_SET_SCHEDULES, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     mock_call_data: list[ChargeSchedule] = mock_action.mock_calls[0][1][0]
@@ -347,8 +359,8 @@ async def test_service_set_ac_schedule_multi(
         {"id": 4},
     ]
     data = {
-        ATTR_VEHICLE: get_device_id(hass),
-        ATTR_SCHEDULES: schedules,
+        RenaultServiceArgument.VEHICLE: get_device_id(hass),
+        RenaultServiceArgument.SCHEDULES: schedules,
     }
 
     with (
@@ -370,7 +382,7 @@ async def test_service_set_ac_schedule_multi(
         ) as mock_action,
     ):
         await hass.services.async_call(
-            DOMAIN, "ac_set_schedules", service_data=data, blocking=True
+            DOMAIN, RenaultService.AC_SET_SCHEDULES, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     mock_call_data: list[HvacSchedule] = mock_action.mock_calls[0][1][0]
@@ -393,11 +405,11 @@ async def test_service_invalid_device_id(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    data = {ATTR_VEHICLE: "some_random_id"}
+    data = {RenaultServiceArgument.VEHICLE: "some_random_id"}
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
-            DOMAIN, "ac_cancel", service_data=data, blocking=True
+            DOMAIN, RenaultService.AC_CANCEL, service_data=data, blocking=True
         )
     assert err.value.translation_key == "invalid_device_id"
     assert err.value.translation_placeholders == {"device_id": "some_random_id"}
@@ -421,11 +433,11 @@ async def test_service_invalid_device_id2(
         identifiers={(DOMAIN, "VF1AAAAA111222333")},
     ).id
 
-    data = {ATTR_VEHICLE: device_id}
+    data = {RenaultServiceArgument.VEHICLE: device_id}
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
-            DOMAIN, "ac_cancel", service_data=data, blocking=True
+            DOMAIN, RenaultService.AC_CANCEL, service_data=data, blocking=True
         )
     assert err.value.translation_key == "no_config_entry_for_device"
     assert err.value.translation_placeholders == {"device_id": "REG-NUMBER"}
@@ -439,7 +451,7 @@ async def test_service_exception(
     await hass.async_block_till_done()
 
     data = {
-        ATTR_VEHICLE: get_device_id(hass),
+        RenaultServiceArgument.VEHICLE: get_device_id(hass),
     }
 
     with (
@@ -450,7 +462,7 @@ async def test_service_exception(
         pytest.raises(HomeAssistantError, match="Didn't work"),
     ):
         await hass.services.async_call(
-            DOMAIN, "ac_cancel", service_data=data, blocking=True
+            DOMAIN, RenaultService.AC_CANCEL, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ()
