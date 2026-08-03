@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import outlet_numbers_from_status
 from .const import KEY_STATUS, KEY_STATUS_DISPLAY, STATE_TYPES
 from .coordinator import NutConfigEntry
 from .entity import NUTBaseEntity
