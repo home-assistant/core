@@ -1,10 +1,4 @@
-"""Tests for the Bosch SHC entity base classes.
-
-Exercised through the binary_sensor platform's BatterySensor (a real
-SHCEntity subclass) via a full config-entry setup, rather than constructing
-SHCEntity directly, so these tests fail if entity creation or registration
-through a config entry breaks.
-"""
+"""Tests for the Bosch SHC entity base classes."""
 
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
