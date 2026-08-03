@@ -10,6 +10,8 @@ from homeassistant.components.coolmaster.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 def _flow_data(send_wakeup_prompt: bool = False) -> dict:
     options: dict = {"host": "1.1.1.1"}
@@ -109,3 +111,26 @@ async def test_form_no_units(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "no_units"}
+
+
+async def test_form_duplicate_host(hass: HomeAssistant) -> None:
+    """Test we abort when a bridge on this host is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "port": 10102,
+            "supported_modes": AVAILABLE_MODES,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _flow_data()
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
