@@ -25,8 +25,6 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Google Mail integration."""
-    # Root HA config for legacy notify discovery (domain-level, not per-entry).
-    # Per-entry auth lives on entry.runtime_data.
     hass.data[DATA_HASS_CONFIG] = config
 
     async_setup_services(hass)
