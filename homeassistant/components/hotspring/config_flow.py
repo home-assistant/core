@@ -29,7 +29,9 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
             except HotSpringConnectionError, HotSpringError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(spa.info.mac_address)
+                await self.async_set_unique_id(
+                    spa.info.mac_address or spa.info.root_topic
+                )
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: user_input[CONF_HOST]}
                 )

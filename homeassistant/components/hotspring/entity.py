@@ -16,11 +16,15 @@ class HotSpringEntity(CoordinatorEntity[HotSpringDataUpdateCoordinator]):
         """Initialize a base Hot Spring entity."""
         super().__init__(coordinator)
         info = self.coordinator.data.info
-        self._attr_unique_id = f"{info.mac_address}_{key}"
+        identifier = info.mac_address or info.root_topic
+        self._attr_unique_id = f"{identifier}_{key}"
+        connections = set()
+        if info.mac_address:
+            connections.add((CONNECTION_NETWORK_MAC, info.mac_address))
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, info.mac_address)},
-            identifiers={(DOMAIN, info.mac_address)},
+            connections=connections,
+            identifiers={(DOMAIN, identifier)},
             name=info.hostname or "Hot Spring Spa",
             manufacturer="Hot Spring",
-            model=info.model or "Connected Spa",
+            model="Connected Spa",
         )
