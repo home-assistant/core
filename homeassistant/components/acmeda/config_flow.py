@@ -51,10 +51,10 @@ class AcmedaFlowHandler(ConfigFlow, domain=DOMAIN):
         if not hubs:
             return self.async_abort(reason="no_devices_found")
 
+        self.discovered_hubs = {hub.id: hub for hub in hubs if hub.id is not None}
+
         if len(hubs) == 1:
             return await self.async_create(hubs[0])
-
-        self.discovered_hubs = {hub.id: hub for hub in hubs if hub.id is not None}
 
         return self.async_show_form(
             step_id="user",
