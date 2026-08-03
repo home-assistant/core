@@ -193,7 +193,6 @@ async def test_device_via_device_links(
 
     config_entry_with_subentry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry_with_subentry.entry_id)
-    await hass.async_block_till_done()
 
     assert config_entry_with_subentry.state is ConfigEntryState.LOADED
 
