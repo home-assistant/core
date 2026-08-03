@@ -10,7 +10,6 @@ from telegram.error import InvalidToken, NetworkError, TelegramError
 import voluptuous as vol
 
 from homeassistant.exceptions import ConfigEntryNotReady
-
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -972,7 +971,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
             translation_domain=DOMAIN,
             translation_key="invalid_token",
         ) from err
-    except (NetworkError, TelegramError) as err:
+    except TelegramError as err:
         raise ConfigEntryNotReady from err
     p_type: str = entry.data[CONF_PLATFORM]
 
