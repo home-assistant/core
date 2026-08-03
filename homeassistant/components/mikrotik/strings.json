@@ -50,6 +50,16 @@
         "name": "Shutdown"
       }
     },
+    "select": {
+      "poe_out": {
+        "name": "PoE (out)",
+        "state": {
+          "auto-on": "Automatic (on)",
+          "forced-on": "Forced (on)",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
     "sensor": {
       "cpu_load": {
         "name": "CPU usage"

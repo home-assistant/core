@@ -8,6 +8,16 @@
         "default": "mdi:power"
       }
     },
+    "select": {
+      "poe_out": {
+        "default": "mdi:power-plug",
+        "state": {
+          "auto-on": "mdi:power-plug",
+          "forced-on": "mdi:power-plug-outline",
+          "off": "mdi:power-plug-off"
+        }
+      }
+    },
     "sensor": {
       "cpu_load": {
         "default": "mdi:chip"

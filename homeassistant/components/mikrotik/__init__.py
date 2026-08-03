@@ -19,6 +19,7 @@ from .coordinator import (
 PLATFORMS = [
     Platform.BUTTON,
     Platform.DEVICE_TRACKER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
