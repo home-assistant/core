@@ -19,7 +19,6 @@ from homeassistant.components.here_travel_time.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_CONFIG
 
@@ -33,11 +32,11 @@ from tests.common import MockConfigEntry
         DEFAULT_OPTIONS,
         {
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_DEPARTURE_TIME: dt_util.now(),
+            CONF_DEPARTURE_TIME: "08:00:00",
         },
         {
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_ARRIVAL_TIME: dt_util.now(),
+            CONF_ARRIVAL_TIME: "08:00:00",
         },
         {
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
