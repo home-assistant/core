@@ -76,12 +76,9 @@ async def test_hub_device_registers_mac_connection(
 
     mock_hive = _make_mock_hive({"macAddress": "00:1C:2B:1C:2E:68"})
 
-    with (
-        patch(
-            "homeassistant.components.hive.Hive",
-            return_value=mock_hive,
-        ),
-        patch("homeassistant.components.hive.aiohttp_client.async_get_clientsession"),
+    with patch(
+        "homeassistant.components.hive.Hive",
+        return_value=mock_hive,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -101,12 +98,9 @@ async def test_hub_device_no_mac_connection_when_absent(
 
     mock_hive = _make_mock_hive({})  # no macAddress key
 
-    with (
-        patch(
-            "homeassistant.components.hive.Hive",
-            return_value=mock_hive,
-        ),
-        patch("homeassistant.components.hive.aiohttp_client.async_get_clientsession"),
+    with patch(
+        "homeassistant.components.hive.Hive",
+        return_value=mock_hive,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -133,12 +127,9 @@ async def test_child_device_links_to_hub_via_device_id(
     mock_hive.session.updateData = AsyncMock()
     mock_hive.sensor.getSensor = AsyncMock(side_effect=lambda device: device)
 
-    with (
-        patch(
-            "homeassistant.components.hive.Hive",
-            return_value=mock_hive,
-        ),
-        patch("homeassistant.components.hive.aiohttp_client.async_get_clientsession"),
+    with patch(
+        "homeassistant.components.hive.Hive",
+        return_value=mock_hive,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
