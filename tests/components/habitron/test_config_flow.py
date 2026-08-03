@@ -232,6 +232,52 @@ async def test_user_step_empty_probe_serial_falls_back_to_host_id(
     assert result["result"].unique_id == f"habitron_{MOCK_HOST}"
 
 
+@pytest.mark.parametrize(
+    ("submitted", "expected_unique_id"),
+    [
+        # Resolves to the probed address -> the serial is picked up.
+        (MOCK_HOST_HOSTNAME, MOCK_SERIAL),
+        # Does not resolve at all -> host-based fallback, no probe match.
+        ("nosuchhub", "habitron_nosuchhub"),
+    ],
+)
+async def test_user_step_resolves_hostname_for_the_probe_match(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+    submitted: str,
+    expected_unique_id: str,
+) -> None:
+    """A submitted host name still picks up the probed serial.
+
+    The UDP probe answers with an address, so comparing the raw name against it
+    would never match -- the hub would get a host-based id that breaks as soon
+    as its name or address changes. A name that does not resolve simply keeps
+    the fallback.
+    """
+    with (
+        patch(
+            "homeassistant.components.habitron.config_flow.discover_smarthubs",
+            new=AsyncMock(return_value=[{"ip": MOCK_HOST, "serial": MOCK_SERIAL}]),
+        ),
+        patch(
+            "homeassistant.components.habitron.config_flow.socket.gethostbyname",
+            _fake_gethostbyname,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={KEY_HOST: submitted}
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == expected_unique_id
+
+
 async def test_ssdp_discovery_serial_fallback(
     hass: HomeAssistant,
     setup_homeassistant: None,

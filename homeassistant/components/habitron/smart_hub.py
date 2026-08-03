@@ -225,19 +225,32 @@ class SmartHub:
             return
         if not info:
             return
-        hardware = info["hardware"]
-        software = info["software"]
+        try:
+            hardware = info["hardware"]
+            software = info["software"]
+            readings: tuple[tuple[Diagnostic | Sensor, float], ...] = (
+                (
+                    self.diags[0],
+                    float(hardware["cpu"]["frequency current"].rstrip("MHz")),
+                ),
+                (self.diags[1], float(hardware["cpu"]["load"].rstrip("%"))),
+                (self.diags[2], float(hardware["cpu"]["temperature"].rstrip("°C"))),
+                (self.sensors[0], float(hardware["memory"]["percent"].rstrip("%"))),
+                (self.sensors[1], float(hardware["disk"]["percent"].rstrip("%"))),
+                (self.loglvl[0], int(software["loglevel"]["console"])),
+                (self.loglvl[1], int(software["loglevel"]["file"])),
+            )
+        except (KeyError, TypeError, ValueError, AttributeError) as err:
+            # A truncated or oddly typed payload must not escape: this method
+            # also runs during setup and inside the coordinator tick, so a
+            # raising diagnostics read would abort the entry or mark every bus
+            # entity unavailable -- exactly what the contract above rules out.
+            # ``host_diags_valid`` stays False, so the next good read still
+            # publishes every member.
+            _LOGGER.debug("SmartHub diagnostics payload unusable: %s", err)
+            return
         was_valid = self.host_diags_valid
         self.host_diags_valid = True
-        readings: tuple[tuple[Diagnostic | Sensor, float], ...] = (
-            (self.diags[0], float(hardware["cpu"]["frequency current"].rstrip("MHz"))),
-            (self.diags[1], float(hardware["cpu"]["load"].rstrip("%"))),
-            (self.diags[2], float(hardware["cpu"]["temperature"].rstrip("°C"))),
-            (self.sensors[0], float(hardware["memory"]["percent"].rstrip("%"))),
-            (self.sensors[1], float(hardware["disk"]["percent"].rstrip("%"))),
-            (self.loglvl[0], int(software["loglevel"]["console"])),
-            (self.loglvl[1], int(software["loglevel"]["file"])),
-        )
         unchanged = [
             member for member, value in readings if not self._set(member, value)
         ]

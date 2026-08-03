@@ -348,6 +348,58 @@ async def test_recovery_notifies_every_member_exactly_once(
         assert member.notify.call_count == 1
 
 
+@pytest.mark.parametrize(
+    "payload",
+    [
+        # Whole section missing.
+        {"software": {"loglevel": {"console": "0", "file": "0"}}},
+        # Section present but truncated.
+        {
+            "hardware": {"cpu": {"load": "12%"}},
+            "software": {"loglevel": {"console": "0", "file": "0"}},
+        },
+        # Right shape, unusable value.
+        {
+            "hardware": {
+                "cpu": {
+                    "frequency current": "n/a",
+                    "load": "12%",
+                    "temperature": "55.5°C",
+                },
+                "memory": {"percent": "60%"},
+                "disk": {"percent": "30%"},
+            },
+            "software": {"loglevel": {"console": "0", "file": "0"}},
+        },
+        # Right shape, wrong type.
+        {
+            "hardware": {
+                "cpu": {"frequency current": None, "load": "12%", "temperature": "5°C"},
+                "memory": {"percent": "60%"},
+                "disk": {"percent": "30%"},
+            },
+            "software": {"loglevel": {"console": "0", "file": "0"}},
+        },
+    ],
+)
+async def test_update_swallows_unusable_payload(
+    smart_hub_stub: SmartHub, payload: dict
+) -> None:
+    """A malformed diagnostics payload is skipped, not raised.
+
+    ``update()`` runs during setup and inside the coordinator tick, so a
+    raising host-diagnostics read would abort the entry or mark every bus
+    entity unavailable -- these readings are explicitly non-essential.
+    """
+    smart_hub_stub.diags = [Diagnostic(name="Status", nmbr=0, type=1)]
+    smart_hub_stub.comm.get_smhub_update.return_value = payload
+
+    await smart_hub_stub.update()
+
+    # Still invalid, so the next good read publishes every member.
+    assert smart_hub_stub.host_diags_valid is False
+
+
 async def test_async_close_delegates_to_comm(
     smart_hub_stub: SmartHub,
 ) -> None:

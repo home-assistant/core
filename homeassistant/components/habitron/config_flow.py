@@ -150,6 +150,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return resolved
         return host.casefold()
 
+    async def _async_resolved_host(self, host: str) -> str:
+        """Return ``host`` as an address, or unchanged when it does not resolve.
+
+        Unlike ``_async_canonical_host`` this keeps a local address as-is: the
+        UDP probe reports the address it answered at, so a hub on this machine
+        has to be matched by that address, not by the ``local`` sentinel.
+        """
+        with contextlib.suppress(OSError):
+            return await self.hass.async_add_executor_job(socket.gethostbyname, host)
+        return host
+
     async def _async_matching_entry(
         self,
         entries: list[config_entries.ConfigEntry],
@@ -329,7 +340,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # discard the serial of a hub running on this machine.
             unique_id: str | None = None
             devices = await self._cached_discover()
-            target = next((d for d in devices if d.get("ip") == host_input), None)
+            # The probe answers with an address, so a submitted host name has to
+            # be resolved before comparing -- otherwise its serial is dropped and
+            # the hub gets a host-based id that a later address change breaks.
+            probe_hosts = {host_input, await self._async_resolved_host(host_input)}
+            target = next((d for d in devices if d.get("ip") in probe_hosts), None)
             if target:
                 # An empty serial is no identifier: it would collide with every
                 # other hub that reports a blank one.
