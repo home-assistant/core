@@ -75,7 +75,7 @@ async def test_event_entity(
             assert state.attributes[attribute] == value
 
 
-async def test_event_new_entry(
+async def test_event_new_entry_sorted(
     hass: HomeAssistant, feed_one_event, feed_two_event
 ) -> None:
     """Test feed event entity fires on new event."""
@@ -106,6 +106,33 @@ async def test_event_new_entry(
         assert state.attributes[ATTR_DESCRIPTION] == "Description 2"
 
 
+async def test_event_new_entry_unsorted(
+    hass: HomeAssistant, feed_unsorted, feed_unsorted_update
+) -> None:
+    """Test feed event entity fires on new event."""
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.feedreader.coordinator.feedparser.http.get",
+        side_effect=[feed_unsorted, feed_unsorted_update],
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("event.mock_title")
+        assert state
+        assert state.attributes[ATTR_TITLE] == "Title 3"
+        assert state.attributes[ATTR_CONTENT] == "Content 3"
+
+        future = dt_util.utcnow() + timedelta(hours=1, seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        state = hass.states.get("event.mock_title")
+        assert state
+        assert state.attributes[ATTR_TITLE] == "Title 4"
+        assert state.attributes[ATTR_CONTENT] == "Content 4"
+
+
 @pytest.mark.parametrize(
     ("fixture_name"),
     [
@@ -134,9 +161,7 @@ async def test_event_htmlentities(
         assert state.attributes == snapshot
 
 
-async def test_no_state_change_when_no_new_entry(
-    hass: HomeAssistant, feed_two_event
-) -> None:
+async def test_event_no_new_entry(hass: HomeAssistant, feed_two_event) -> None:
     """Test feed event entity is not firing when there are no new entries."""
     entry = create_mock_entry(VALID_CONFIG_DEFAULT)
     entry.add_to_hass(hass)

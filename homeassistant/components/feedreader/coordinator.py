@@ -145,15 +145,14 @@ class FeedReaderCoordinator(
             assert isinstance(self._feed.entries, list)
 
         self._filter_entries()
-        if self._publish_new_entries() == 0:
-            return None
+        new_entries = self._publish_new_entries()
 
         _LOGGER.debug("Fetch from feed %s completed", self.url)
 
         if self._last_entry_timestamp:
             self._storage.async_put_timestamp(self._feed_id, self._last_entry_timestamp)
 
-        return self._feed.entries
+        return new_entries
 
     @callback
     def _filter_entries(self) -> None:
@@ -186,10 +185,10 @@ class FeedReaderCoordinator(
         _LOGGER.debug("New event fired for entry %s", entry.get("link"))
 
     @callback
-    def _publish_new_entries(self) -> int:
-        """Publish new entries to the event bus and return new entry count."""
+    def _publish_new_entries(self) -> list[feedparser.FeedParserDict]:
+        """Publish new entries to the event bus and return new entries."""
         assert self._feed is not None
-        new_entry_count = 0
+        new_entries: list[feedparser.FeedParserDict] = []
         firstrun = False
         self._last_entry_timestamp = self._storage.get_timestamp(self._feed_id)
         if not self._last_entry_timestamp:
@@ -208,14 +207,14 @@ class FeedReaderCoordinator(
                 and time_stamp > last_entry_timestamp
             ):
                 self._update_and_fire_entry(entry)
-                new_entry_count += 1
+                new_entries.append(entry)
             else:
                 _LOGGER.debug("Already processed entry %s", entry.get("link"))
-        if new_entry_count == 0:
+        if not new_entries:
             self._log_no_entries()
         else:
-            _LOGGER.debug("%d entries published in feed %s", new_entry_count, self.url)
-        return new_entry_count
+            _LOGGER.debug("%d entries published in feed %s", len(new_entries), self.url)
+        return new_entries
 
 
 class StoredData:
