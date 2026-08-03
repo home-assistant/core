@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     ssl = entry.data[CONF_SSL]
-    verify_ssl = entry.data[CONF_VERIFY_SSL]
+    verify_ssl = entry.data.get(CONF_VERIFY_SSL, True)
 
     protocol = "https" if ssl else "http"
     url = f"{protocol}://{host}"
