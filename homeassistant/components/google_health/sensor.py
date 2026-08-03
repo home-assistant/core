@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfMass,
@@ -22,11 +23,17 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceEntryType,
+    DeviceInfo,
+    async_get_device_id_by_identifier,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
 from . import GoogleHealthConfigEntry
 from .const import DOMAIN
@@ -50,6 +57,7 @@ class GoogleHealthSensorEntityDescription[
     """Class describing Google Health sensor entities."""
 
     value_fn: Callable[[Any], _ValueT]
+    suggested_unit_fn: Callable[[UnitSystem], str | None] | None = None
 
 
 ACTIVITY_SENSORS: list[
@@ -69,11 +77,17 @@ ACTIVITY_SENSORS: list[
         value_fn=lambda data: (
             data.distance.millimeters_sum / 1000.0 if data and data.distance else 0.0
         ),
+        suggested_unit_fn=lambda units: (
+            UnitOfLength.MILES
+            if units is US_CUSTOMARY_SYSTEM
+            else UnitOfLength.KILOMETERS
+        ),
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float](
         key="active_calories",
         translation_key="active_calories",
         native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: (
             data.active_energy_burned.kcal_sum
@@ -85,6 +99,7 @@ ACTIVITY_SENSORS: list[
         key="total_calories",
         translation_key="total_calories",
         native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: (
             data.total_calories.kcal_sum if data and data.total_calories else 0.0
@@ -108,6 +123,9 @@ BODY_SENSORS: list[
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (
             data.weight.weight_grams / 1000.0 if data and data.weight else None
+        ),
+        suggested_unit_fn=lambda units: (
+            UnitOfMass.POUNDS if units is US_CUSTOMARY_SYSTEM else None
         ),
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, int | None](
@@ -212,11 +230,15 @@ NUTRITION_SENSORS: list[
             if data and data.hydration and data.hydration.amount_consumed
             else 0.0
         ),
+        suggested_unit_fn=lambda units: (
+            UnitOfVolume.FLUID_OUNCES if units is US_CUSTOMARY_SYSTEM else None
+        ),
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
         key="calories_consumed",
         translation_key="calories_consumed",
         native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: (
             data.nutrition.energy.kcal_sum
@@ -335,6 +357,7 @@ class GoogleHealthSensor[_CoordinatorT: GoogleHealthDataUpdateCoordinator[Any]](
         self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
             manufacturer="Google",
         )
@@ -345,6 +368,15 @@ class GoogleHealthSensor[_CoordinatorT: GoogleHealthDataUpdateCoordinator[Any]](
         """Return the state of the sensor."""
         return cast(StateType, self.entity_description.value_fn(self.coordinator.data))
 
+    @property
+    @override
+    def suggested_unit_of_measurement(self) -> str | None:
+        """Return the suggested unit of measurement."""
+        if (suggested_unit_fn := self.entity_description.suggested_unit_fn) is not None:
+            return suggested_unit_fn(self.hass.config.units)
+
+        return super().suggested_unit_of_measurement
+
 
 class GoogleHealthDeviceSensor(
     CoordinatorEntity[GoogleHealthDeviceCoordinator], SensorEntity
@@ -352,6 +384,7 @@ class GoogleHealthDeviceSensor(
     """Device-specific Google Health sensor entity."""
 
     _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     entity_description: GoogleHealthDeviceSensorEntityDescription
 
     def __init__(
@@ -374,7 +407,11 @@ class GoogleHealthDeviceSensor(
             or (device.device_type.title() if device.device_type else "Device"),
             model=device.device_type.title() if device.device_type else None,
             sw_version=device.device_version,
-            via_device=(DOMAIN, entry_id),
+            via_device_id=async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, entry_id),
+                config_entry_id=entry_id,
+            ),
         )
 
         if device.mac_address:
