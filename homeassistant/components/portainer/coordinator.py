@@ -427,15 +427,13 @@ class PortainerCoordinator(
         when a later refresh discovers new endpoints or stacks.
         """
         device_registry = dr.async_get(self.hass)
-        base_url = self.config_entry.data[CONF_URL]
-        entry_id = self.config_entry.entry_id
 
         for endpoint_id in endpoint_ids:
             endpoint = mapped_endpoints[endpoint_id].endpoint
             device_registry.async_get_or_create(
-                config_entry_id=entry_id,
-                identifiers={(DOMAIN, f"{entry_id}_{endpoint_id}")},
-                configuration_url=URL(f"{base_url}#!/{endpoint_id}/docker/dashboard"),
+                config_entry_id=self.config_entry.entry_id,
+                identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{endpoint_id}")},
+                configuration_url=URL(f"{self.config_entry.data[CONF_URL]}#!/{endpoint_id}/docker/dashboard"),
                 manufacturer=DEFAULT_NAME,
                 model="Endpoint",
                 name=endpoint.name,
@@ -445,18 +443,18 @@ class PortainerCoordinator(
         for endpoint_id, stack_name in stack_keys:
             stack = mapped_endpoints[endpoint_id].stacks[stack_name].stack
             device_registry.async_get_or_create(
-                config_entry_id=entry_id,
-                identifiers={(DOMAIN, f"{entry_id}_{endpoint_id}_stack_{stack.id}")},
+                config_entry_id=self.config_entry.entry_id,
+                identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{endpoint_id}_stack_{stack.id}")},
                 configuration_url=URL(
-                    f"{base_url}#!/{endpoint_id}/docker/stacks/{stack.name}"
+                    f"{self.config_entry.data[CONF_URL]}#!/{endpoint_id}/docker/stacks/{stack.name}"
                 ),
                 manufacturer=DEFAULT_NAME,
                 model="Stack",
                 name=stack.name,
                 via_device_id=dr.async_get_device_id_by_identifier(
                     self.hass,
-                    (DOMAIN, f"{entry_id}_{endpoint_id}"),
-                    config_entry_id=entry_id,
+                    (DOMAIN, f"{self.config_entry.entry_id}_{endpoint_id}"),
+                    config_entry_id=self.config_entry.entry_id,
                 ),
             )
 
