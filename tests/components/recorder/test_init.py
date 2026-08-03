@@ -915,7 +915,7 @@ def test_event_data_filter_config_normalizes_string_subclasses() -> None:
     """Test event data filter config normalizes string subclasses."""
 
     class AnnotatedString(str):
-        pass
+        __slots__ = ()
 
     config = CONFIG_SCHEMA(
         {
