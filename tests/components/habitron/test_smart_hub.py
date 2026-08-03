@@ -73,6 +73,7 @@ def _smhub_info(slug: str = "") -> dict:
 )
 async def test_setup_registers_hub_device(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     slug: str,
     expected_conf_url: str,
 ) -> None:
@@ -126,7 +127,7 @@ async def test_setup_registers_hub_device(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, "AABBCCDDEEFF")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "AABBCCDDEEFF")})
     assert device is not None
     assert device.manufacturer == "Habitron GmbH"
     assert device.sw_version == "9.9.9"
