@@ -11,13 +11,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_NICKNAME, CONF_SITE_ID, CONF_SITEKEY, DOMAIN, METRICS
+from .const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN, METRICS
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NICKNAME): str,
         vol.Required(CONF_SITE_ID): str,
         vol.Required(CONF_SITEKEY): str,
     }
@@ -44,9 +43,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except ConnectionError as error:
         raise CannotConnect from error
     except ClickyAPIError as error:
-        raise ConfigEntryAuthFailed(f"API failed for {data[CONF_NICKNAME]}") from error
+        raise ConfigEntryAuthFailed(f"API failed for {data[CONF_SITE_ID]}") from error
 
-    return {"title": data[CONF_NICKNAME]}
+    return {"title": data[CONF_SITE_ID]}
 
 
 class ClickyConfigFlow(ConfigFlow, domain=DOMAIN):
