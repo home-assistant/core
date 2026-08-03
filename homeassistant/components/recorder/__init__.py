@@ -87,23 +87,28 @@ EVENT_DATA_FILTER_SCHEMA = vol.All(
 )
 
 EVENT_DATA_RULE_SCHEMA = {
-    vol.Required(CONF_EVENT_TYPE): cv.string,
+    vol.Required(CONF_EVENT_TYPE): vol.All(cv.string, vol.NotIn([EVENT_STATE_CHANGED])),
     vol.Required(CONF_MATCH): EVENT_DATA_FILTER_SCHEMA,
 }
 
-EXCLUDE_SCHEMA = INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
+INCLUDE_SCHEMA = INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
     {
-        vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_EVENT_DATA): vol.All(
             cv.ensure_list, [EVENT_DATA_RULE_SCHEMA]
         ),
     }
 )
 
+EXCLUDE_SCHEMA = INCLUDE_SCHEMA.extend(
+    {
+        vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
+
 FILTER_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     {
         vol.Optional(CONF_EXCLUDE, default=EXCLUDE_SCHEMA({})): EXCLUDE_SCHEMA,
-        vol.Optional(CONF_INCLUDE, default=EXCLUDE_SCHEMA({})): EXCLUDE_SCHEMA,
+        vol.Optional(CONF_INCLUDE, default=INCLUDE_SCHEMA({})): INCLUDE_SCHEMA,
     }
 )
 

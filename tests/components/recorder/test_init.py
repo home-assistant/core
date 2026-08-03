@@ -68,6 +68,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_STATE_CHANGED,
     MATCH_ALL,
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
@@ -862,19 +863,44 @@ async def test_event_data_filter_include_exclude_precedence(
 
 
 @pytest.mark.parametrize(
-    "event_data_filter",
+    ("filter_type", "event_data_filter"),
     [
-        {"event_data": [{"match": {"command": "vibration_strength"}}]},
-        {"event_data": [{"event_type": "zha_event"}]},
-        {"event_data": [{"event_type": "zha_event", "match": {}}]},
-        {"event_data": [{"event_type": "zha_event", "match": {"value": []}}]},
-        {"event_data": [{"event_type": "zha_event", "match": "not-a-mapping"}]},
+        ("exclude", {"event_data": [{"match": {"command": "vibration_strength"}}]}),
+        ("exclude", {"event_data": [{"event_type": "zha_event"}]}),
+        ("exclude", {"event_data": [{"event_type": "zha_event", "match": {}}]}),
+        (
+            "exclude",
+            {"event_data": [{"event_type": "zha_event", "match": {"value": []}}]},
+        ),
+        (
+            "exclude",
+            {"event_data": [{"event_type": "zha_event", "match": "not-a-mapping"}]},
+        ),
+        ("include", {"event_types": ["zha_event"]}),
+        (
+            "include",
+            {
+                "event_data": [
+                    {"event_type": EVENT_STATE_CHANGED, "match": {"state": "on"}}
+                ]
+            },
+        ),
+        (
+            "exclude",
+            {
+                "event_data": [
+                    {"event_type": EVENT_STATE_CHANGED, "match": {"state": "on"}}
+                ]
+            },
+        ),
     ],
 )
-def test_invalid_event_data_filter_config(event_data_filter: dict[str, object]) -> None:
+def test_invalid_event_data_filter_config(
+    filter_type: str, event_data_filter: dict[str, object]
+) -> None:
     """Test invalid event data filters are rejected by the configuration schema."""
     with pytest.raises(vol.Invalid):
-        CONFIG_SCHEMA({DOMAIN: {"exclude": event_data_filter}})
+        CONFIG_SCHEMA({DOMAIN: {filter_type: event_data_filter}})
 
 
 async def test_saving_state_exclude_domains(
