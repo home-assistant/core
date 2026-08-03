@@ -1,7 +1,7 @@
 {
   "domain": "midea",
   "name": "Midea",
-  "codeowners": ["@chemelli74", "@rokam", "@wuwentao"],
+  "codeowners": ["@chemelli74", "@rokam", "@wuwentao", "@caibinqing"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/midea",
   "integration_type": "device",
