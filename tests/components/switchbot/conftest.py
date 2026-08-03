@@ -3,7 +3,6 @@
 import pytest
 
 from homeassistant.components.switchbot.const import (
-    CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_RETRY_COUNT,
@@ -28,8 +27,6 @@ def mock_entry_factory():
 
     def _create_entry(sensor_type: str = "curtain") -> MockConfigEntry:
         options: dict[str, int] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}
-        if sensor_type == SupportedModels.CURTAIN:
-            options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
         return MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -52,8 +49,6 @@ def mock_entry_encrypted_factory():
 
     def _create_entry(sensor_type: str = "lock") -> MockConfigEntry:
         options: dict[str, int] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}
-        if sensor_type == SupportedModels.CURTAIN:
-            options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
         return MockConfigEntry(
             domain=DOMAIN,
             data={

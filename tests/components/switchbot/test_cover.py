@@ -16,7 +16,6 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.components.switchbot.const import (
-    CONF_CURTAIN_SPEED,
     CONF_RETRY_COUNT,
     DEFAULT_RETRY_COUNT,
 )
@@ -190,7 +189,6 @@ async def test_curtain3_custom_speed_controlling(
         entry,
         options={
             CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
-            CONF_CURTAIN_SPEED: 50,
         },
     )
 
