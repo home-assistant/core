@@ -106,7 +106,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Required(CONF_SSL, default=False): bool,
-                    vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+                    vol.Optional(CONF_VERIFY_SSL, default=True): bool,
                 }
             )
 
@@ -132,7 +132,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Required(CONF_SSL, default=False): bool,
-                    vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+                    vol.Optional(CONF_VERIFY_SSL, default=True): bool,
                 }
             ),
             errors=errors,
@@ -145,7 +145,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
         username = import_data[CONF_USERNAME]
         password = import_data[CONF_PASSWORD]
         ssl = import_data.get(CONF_SSL, False)
-        verify_ssl = import_data.get(CONF_VERIFY_SSL, False)
+        verify_ssl = import_data.get(CONF_VERIFY_SSL, True)
         name = import_data.get(CONF_NAME)
 
         protocol = "https" if ssl else "http"
