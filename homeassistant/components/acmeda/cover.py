@@ -103,6 +103,8 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
     @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
+        if self.roller.closed_percent is None:
+            return None
         return self.roller.closed_percent == 100
 
     @override
