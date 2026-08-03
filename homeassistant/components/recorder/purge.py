@@ -636,33 +636,46 @@ def _purge_filtered_event_data(
     include_event_data = instance.include_event_data
     exclude_event_data = instance.exclude_event_data
     event_types = set(include_event_data) | set(exclude_event_data)
-    to_purge = []
-    for event_id, data_id, event_type, shared_data in (
-        session.query(
-            Events.event_id,
-            Events.data_id,
-            EventTypes.event_type,
-            SHARED_DATA_OR_LEGACY_EVENT_DATA,
+    last_event_id = 0
+    while True:
+        events = (
+            session.query(
+                Events.event_id,
+                Events.data_id,
+                EventTypes.event_type,
+                SHARED_DATA_OR_LEGACY_EVENT_DATA,
+            )
+            .join(EventTypes)
+            .outerjoin(EventData)
+            .filter(EventTypes.event_type.in_(event_types))
+            .filter(Events.time_fired_ts < purge_before_timestamp)
+            .filter(Events.event_id > last_event_id)
+            .order_by(Events.event_id)
+            .limit(instance.max_bind_vars)
+            .all()
         )
-        .join(EventTypes)
-        .outerjoin(EventData)
-        .filter(EventTypes.event_type.in_(event_types))
-        .filter(Events.time_fired_ts < purge_before_timestamp)
-        .limit(instance.max_bind_vars)
-        .all()
-    ):
-        data = json_loads(shared_data) if shared_data else {}
-        matches_exclude = _event_data_filter_matches(
-            event_type, data, exclude_event_data
-        )
-        matches_include = _event_data_filter_matches(
-            event_type, data, include_event_data
-        )
-        if matches_exclude or (event_type in include_event_data and not matches_include):
-            to_purge.append((event_id, data_id))
+        if not events:
+            return True
 
-    if not to_purge:
-        return True
+        last_event_id = events[-1].event_id
+        to_purge = []
+        for event_id, data_id, event_type, shared_data in events:
+            data = json_loads(shared_data) if shared_data else {}
+            matches_exclude = _event_data_filter_matches(
+                event_type, data, exclude_event_data
+            )
+            matches_include = _event_data_filter_matches(
+                event_type, data, include_event_data
+            )
+            if matches_exclude or (
+                event_type in include_event_data and not matches_include
+            ):
+                to_purge.append((event_id, data_id))
+
+        if to_purge:
+            break
+        if len(events) < instance.max_bind_vars:
+            return True
 
     event_ids, data_ids = zip(*to_purge, strict=False)
     event_ids_set = set(event_ids)

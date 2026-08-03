@@ -1420,11 +1420,12 @@ async def test_purge_filtered_event_data(
             convert_pending_events_to_event_types(recorder_mock, session)
 
     await recorder_mock.async_add_executor_job(_add_db_entries, hass)
-    await hass.services.async_call(
-        DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}
-    )
-    await async_recorder_block_till_done(hass)
-    await async_wait_purge_done(hass)
+    with patch.object(recorder_mock, "max_bind_vars", 1):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}
+        )
+        await async_recorder_block_till_done(hass)
+        await async_wait_purge_done(hass)
 
     with session_scope(hass=hass, read_only=True) as session:
         events = session.query(Events.event_data).filter(
