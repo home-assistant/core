@@ -448,3 +448,52 @@ async def test_form_with_ssl_wand_verify_ssl(
     mock_hikcamera.assert_called_once_with(
         f"https://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, True
     )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfiguration(
+    hass: HomeAssistant, mock_hikcamera: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguration flow."""
+
+    TEST_HOST_1 = "192.168.1.200"
+    TEST_HOST_2 = "1.0.0.100"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: TEST_HOST_1,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
+        },
+        unique_id="DS-2CD2142FWD-I20170101AAAA",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST_2,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_USERNAME] == TEST_USERNAME
+    assert entry.data[CONF_PASSWORD] == TEST_PASSWORD
+    assert entry.data[CONF_HOST] == TEST_HOST_2
+    assert entry.data[CONF_VERIFY_SSL] is False
