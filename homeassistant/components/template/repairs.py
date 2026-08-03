@@ -41,8 +41,9 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
         errors: dict[str, str] = {}
         if user_input is not None:
             device_id = user_input.get(CONF_DEVICE_ID)
-            if device_id is None or not device_registry.async_is_composite_device_id(
-                device_id
+            if (
+                device_id is None
+                or device_registry.async_is_composite_device_id(device_id) is False
             ):
                 options = {**entry.options}
                 if device_id:
@@ -52,7 +53,7 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
                 self.hass.config_entries.async_update_entry(entry, options=options)
                 await self.hass.config_entries.async_reload(entry.entry_id)
                 return self.async_create_entry(data={})
-            # The suggested composite device id was submitted unchanged
+            # A composite or unknown device id was submitted
             errors[CONF_DEVICE_ID] = "invalid_device"
 
         return self.async_show_form(
