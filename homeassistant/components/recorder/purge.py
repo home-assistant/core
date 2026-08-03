@@ -637,7 +637,8 @@ def _purge_filtered_event_data(
     exclude_event_data = instance.exclude_event_data
     event_types = set(include_event_data) | set(exclude_event_data)
     last_event_id = 0
-    while True:
+    to_purge = []
+    while len(to_purge) < instance.max_bind_vars:
         events = (
             session.query(
                 Events.event_id,
@@ -658,7 +659,6 @@ def _purge_filtered_event_data(
             return True
 
         last_event_id = events[-1].event_id
-        to_purge = []
         for event_id, data_id, event_type, shared_data in events:
             data = json_loads(shared_data) if shared_data else {}
             matches_exclude = _event_data_filter_matches(
@@ -671,11 +671,14 @@ def _purge_filtered_event_data(
                 event_type in include_event_data and not matches_include
             ):
                 to_purge.append((event_id, data_id))
+                if len(to_purge) == instance.max_bind_vars:
+                    break
 
-        if to_purge:
-            break
         if len(events) < instance.max_bind_vars:
-            return True
+            break
+
+    if not to_purge:
+        return True
 
     event_ids, data_ids = zip(*to_purge, strict=False)
     event_ids_set = set(event_ids)
@@ -686,7 +689,7 @@ def _purge_filtered_event_data(
         instance, session, set(data_ids), database_engine
     ):
         _purge_batch_data_ids(instance, session, unused_data_ids_set)
-    return False
+    return len(to_purge) < instance.max_bind_vars
 
 
 def _event_data_filter_matches(

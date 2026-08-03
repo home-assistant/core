@@ -15,6 +15,7 @@ from voluptuous.error import MultipleInvalid
 from homeassistant.components.recorder import DOMAIN, Recorder
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.components.recorder.db_schema import (
+    EventData,
     Events,
     EventTypes,
     RecorderRuns,
@@ -1377,7 +1378,7 @@ async def test_purge_filtered_events(
                     ]
                 }
             },
-            [{"command": "drop"}, {"command": "keep"}],
+            [{"command": "keep"}, {"command": "drop"}],
             [{"command": "keep"}],
         ),
         (
@@ -1408,11 +1409,14 @@ async def test_purge_filtered_event_data(
         with session_scope(hass=hass) as session:
             timestamp = dt_util.utcnow() - timedelta(days=1)
             for event_id, data in enumerate(event_data, 1):
+                shared_data = EventData(hash=event_id, shared_data=json.dumps(data))
+                session.add(shared_data)
+                session.flush()
                 session.add(
                     Events(
                         event_id=event_id,
                         event_type="test_event",
-                        event_data=json.dumps(data),
+                        data_id=shared_data.data_id,
                         origin="LOCAL",
                         time_fired_ts=timestamp.timestamp(),
                     )
@@ -1428,7 +1432,7 @@ async def test_purge_filtered_event_data(
         await async_wait_purge_done(hass)
 
     with session_scope(hass=hass, read_only=True) as session:
-        events = session.query(Events.event_data).filter(
+        events = session.query(EventData.shared_data).join(Events).filter(
             Events.event_type_id.in_(select_event_type_ids(("test_event",)))
         )
         assert [
