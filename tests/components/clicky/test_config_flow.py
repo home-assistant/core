@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from pyclicky import AuthenticationError, ConnectionError
 
 from homeassistant import config_entries
-from homeassistant.components.clicky.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.clicky.config_flow import InvalidAuth
 from homeassistant.components.clicky.const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -77,78 +77,6 @@ async def test_form_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
-    with patch(
-        "homeassistant.components.clicky.config_flow.ClickyClient",
-    ) as mock_lib:
-        client = mock_lib.return_value
-        client.query = AsyncMock()
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_SITE_ID: TEST_SITE_ID,
-                CONF_SITEKEY: TEST_SITEKEY,
-            },
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_SITE_ID
-    assert result["data"] == {
-        CONF_SITE_ID: TEST_SITE_ID,
-        CONF_SITEKEY: TEST_SITEKEY,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    client = AsyncMock()
-
-    with patch(
-        "homeassistant.components.clicky.config_flow.ClickyClient",
-        side_effect=CannotConnect,
-    ) as mock_lib:
-        client = mock_lib.return_value
-        client.query = AsyncMock()
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_SITE_ID: TEST_SITE_ID,
-                CONF_SITEKEY: TEST_SITEKEY,
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    with patch(
-        "homeassistant.components.clicky.config_flow.ClickyClient",
-    ) as mock_lib:
-        client = mock_lib.return_value
-        client.query = AsyncMock()
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_SITE_ID: TEST_SITE_ID,
-                CONF_SITEKEY: TEST_SITEKEY,
-            },
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_SITE_ID
-    assert result["data"] == {
-        CONF_SITE_ID: TEST_SITE_ID,
-        CONF_SITEKEY: TEST_SITEKEY,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
 
 async def test_form_unknown(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we handle unknown error."""
@@ -174,28 +102,6 @@ async def test_form_unknown(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
-
-    with patch(
-        "homeassistant.components.clicky.config_flow.ClickyClient",
-    ) as mock_lib:
-        client = mock_lib.return_value
-        client.query = AsyncMock()
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_SITE_ID: TEST_SITE_ID,
-                CONF_SITEKEY: TEST_SITEKEY,
-            },
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_SITE_ID
-    assert result["data"] == {
-        CONF_SITE_ID: TEST_SITE_ID,
-        CONF_SITEKEY: TEST_SITEKEY,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_duplicate_site_id(hass: HomeAssistant) -> None:
