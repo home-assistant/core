@@ -911,6 +911,32 @@ def test_invalid_event_data_filter_config(
         CONFIG_SCHEMA({DOMAIN: {filter_type: event_data_filter}})
 
 
+def test_event_data_filter_config_normalizes_string_subclasses() -> None:
+    """Test event data filter config normalizes string subclasses."""
+
+    class AnnotatedString(str):
+        pass
+
+    config = CONFIG_SCHEMA(
+        {
+            DOMAIN: {
+                "exclude": {
+                    "event_data": [
+                        {
+                            "event_type": "test_event",
+                            "match": {"command": AnnotatedString("include")},
+                        }
+                    ]
+                }
+            }
+        }
+    )
+
+    value = config[DOMAIN]["exclude"]["event_data"][0]["match"]["command"]
+    assert value == "include"
+    assert type(value) is str
+
+
 async def test_saving_state_exclude_domains(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,

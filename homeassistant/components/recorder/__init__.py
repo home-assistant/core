@@ -75,7 +75,9 @@ CONF_COMMIT_INTERVAL = "commit_interval"
 
 def _validate_event_data_value(value: Any) -> str | bool | int | float:
     """Validate an exact-match event data value."""
-    if type(value) in (str, bool, int, float):
+    if isinstance(value, str):
+        return str(value)
+    if type(value) in (bool, int, float):
         return cast(str | bool | int | float, value)
     raise vol.Invalid("expected a string, boolean, integer, or float")
 
