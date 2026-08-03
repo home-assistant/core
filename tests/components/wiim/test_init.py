@@ -8,6 +8,7 @@ from wiim.exceptions import WiimDeviceException, WiimRequestException
 
 from homeassistant.components.wiim.util import async_get_event_callback_host
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -31,6 +32,39 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_shutdown_disconnects_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: AsyncMock,
+) -> None:
+    """Test the device is disconnected when Home Assistant stops."""
+    await setup_integration(hass, mock_config_entry)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_wiim_device.disconnect.assert_awaited_once_with()
+
+
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_unload_entry_fails_when_platform_cannot_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the entry reports a failed unload when its platform cannot unload."""
+    await setup_integration(hass, mock_config_entry)
+
+    with patch.object(
+        hass.config_entries,
+        "async_unload_platforms",
+        return_value=False,
+    ):
+        assert not await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.FAILED_UNLOAD
 
 
 @pytest.mark.parametrize(

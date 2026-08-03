@@ -21,7 +21,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.components.watts.const import (
-    DISCOVERY_INTERVAL_MINUTES,
+    DISCOVERY_INTERVAL_SECONDS,
     DOMAIN,
     FAST_POLLING_INTERVAL_SECONDS,
     OAUTH2_TOKEN,
@@ -230,7 +230,7 @@ async def test_dynamic_device_creation(
     current_devices = list(mock_watts_client.discover_devices.return_value)
     mock_watts_client.discover_devices.return_value = [*current_devices, new_device]
 
-    freezer.tick(timedelta(minutes=DISCOVERY_INTERVAL_MINUTES))
+    freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL_SECONDS))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -270,7 +270,7 @@ async def test_stale_device_removal(
         d for d in current_devices if d.device_id != "thermostat_456"
     ]
 
-    freezer.tick(timedelta(minutes=DISCOVERY_INTERVAL_MINUTES))
+    freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL_SECONDS))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
