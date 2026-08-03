@@ -55,11 +55,7 @@ rules:
   test-coverage: done
   # Gold
   devices: done
-  diagnostics:
-    status: exempt
-    comment: |
-      The integration exposes only local, non-sensitive bus state through its
-      entities; it does not provide a separate diagnostics platform.
+  diagnostics: todo
   discovery: done
   discovery-update-info: done
   docs-data-update: done

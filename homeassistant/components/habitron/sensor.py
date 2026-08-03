@@ -151,7 +151,6 @@ async def async_setup_entry(  # noqa: C901
                 )
             )
 
-    # --- Module Iteration ---
     for hbt_module in hbtn_rt.modules:
         # The library only populates ``analogins`` for modules that have analog
         # inputs, so iterate it directly instead of hard-coding module types --

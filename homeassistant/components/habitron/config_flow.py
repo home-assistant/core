@@ -139,7 +139,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if host == CONF_DEFAULT_HOST or host in own_ips:
             return CONF_DEFAULT_HOST
         with contextlib.suppress(OSError):
-            return await self.hass.async_add_executor_job(socket.gethostbyname, host)
+            resolved = await self.hass.async_add_executor_job(
+                socket.gethostbyname, host
+            )
+            # A name that resolves to one of our own addresses is the same
+            # machine as the sentinel; returning the bare IP here would make
+            # ``smarthub.local`` and an entry stored as ``local`` look different.
+            if resolved in own_ips:
+                return CONF_DEFAULT_HOST
+            return resolved
         return host.casefold()
 
     async def _async_matching_entry(
@@ -201,7 +209,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # host as last resort. A host-based id changes on DHCP-lease
         # renewals and would otherwise look like a new device.
         upnp = discovery_info.upnp or {}
-        unique_id: str | None = upnp.get(ATTR_UPNP_UDN) or upnp.get(ATTR_UPNP_SERIAL)
+        # Serial first: the manual and UDP paths key on the serial, so choosing
+        # the UDN here would leave the same hub unmatched -- and offered as a
+        # duplicate -- once its IP changes.
+        unique_id: str | None = upnp.get(ATTR_UPNP_SERIAL) or upnp.get(ATTR_UPNP_UDN)
         target_device: dict[str, str] | None = None
 
         if unique_id is None:
@@ -220,7 +231,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             unique_id = f"habitron_{host_str}"
 
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(updates={KEY_HOST: host_str})
+        # The entry registers an update listener that reloads on a data change,
+        # so leave the reload to it: having both schedules two reloads and is
+        # reported as breaking in 2026.12.
+        self._abort_if_unique_id_configured(
+            updates={KEY_HOST: host_str}, reload_on_update=False
+        )
 
         # The unique_id did not match an existing entry. The same SmartHub
         # may already be configured under a host-based fallback id — the
@@ -233,7 +249,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # sentinel, which resolves to Home Assistant's own address) against the
         # IP the discovery reports.
         if entry := await self._async_matching_entry(
-            list(self._async_current_entries(include_ignore=False)),
+            # Ignored entries count: a host-fallback entry the user ignored must
+            # not be offered again just because this discovery has a stable UDN.
+            list(self._async_current_entries(include_ignore=True)),
             host_str,
             self._discovered_device.get("ip"),
         ):
@@ -305,19 +323,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Try a discovery probe to obtain a stable serial-based unique_id;
             # fall back to the host string when no probe response arrives.
-            # Canonicalize an own-IP host to the ``local`` sentinel first, so the
-            # fallback unique_id matches the host that ``validate_input`` will
-            # actually store (it rewrites an own IP to ``local`` only later).
             host_input = user_input[KEY_HOST]
-            if host_input == await network.async_get_source_ip(self.hass):
-                host_input = "local"
+            # The probe reports the address it was reached at, so match it
+            # against what the user submitted -- canonicalising first would
+            # discard the serial of a hub running on this machine.
             unique_id: str | None = None
             devices = await self._cached_discover()
             target = next((d for d in devices if d.get("ip") == host_input), None)
             if target:
-                unique_id = target.get("serial")
+                # An empty serial is no identifier: it would collide with every
+                # other hub that reports a blank one.
+                unique_id = target.get("serial") or None
             if unique_id is None:
-                unique_id = f"habitron_{host_input}"
+                # ``validate_input`` stores any of Home Assistant's own
+                # addresses as the ``local`` sentinel, so the fallback id has to
+                # use the same form -- and a multi-homed host has more than the
+                # route-selected one.
+                own_ips = {
+                    str(ip)
+                    for ip in await network.async_get_enabled_source_ips(self.hass)
+                }
+                id_host = CONF_DEFAULT_HOST if host_input in own_ips else host_input
+                unique_id = f"habitron_{id_host}"
 
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
