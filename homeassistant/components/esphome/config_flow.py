@@ -917,6 +917,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         await dashboard.async_request_refresh()
         if not dashboard.last_update_success:
+            _LOGGER.debug(
+                "Dashboard refresh failed; skipping dashboard key for %s",
+                self._device_name,
+            )
             return None
 
         device = dashboard.data.get(self._device_name)
