@@ -162,7 +162,7 @@ async def async_setup_entry(
             model_id=model_id,
             hw_version=str(player.firmware) if player.firmware is not None else None,
             sw_version=sw_version,
-            via_device=(DOMAIN, coordinator.server_uuid),
+            via_device_id=server_device.id if server_device else None,
         )
         _LOGGER.debug("Creating / Updating player device %s", device)
         async_add_entities([SqueezeBoxMediaPlayerEntity(coordinator)])

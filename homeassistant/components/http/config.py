@@ -477,7 +477,10 @@ class HTTPConfigStore:
     async def async_migrate_yaml(self, config: ConfData) -> None:
         """Migrate YAML config to storage as pending if not the same as the config used for recovery."""
         await self.async_load()
-        validated_config = cast(ConfData, HTTP_STORAGE_SCHEMA(config))
+        validated_config = cast(
+            ConfData,
+            HTTP_STORAGE_SCHEMA({CONF_SERVER_PORT: SERVER_PORT, **config}),
+        )
         if self._stable_differs_only_by_lost_proxy_masks(validated_config):
             # Releases up to 2026.7.1 dropped the network mask when storing
             # trusted proxies, and the v1->v2 store migration turned those
