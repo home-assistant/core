@@ -826,7 +826,8 @@ async def test_event_data_filter_include_exclude_precedence(
     config = {
         "include": {
             "event_data": [
-                {"event_type": "test_event", "match": {"command": "include"}}
+                {"event_type": "test_event", "match": {"command": "include"}},
+                {"event_type": "included_event", "match": {"command": "include"}},
             ]
         },
         "exclude": {
@@ -840,6 +841,8 @@ async def test_event_data_filter_include_exclude_precedence(
 
     hass.bus.async_fire("test_event", {"command": "include"})
     hass.bus.async_fire("test_event", {"command": "not_included"})
+    hass.bus.async_fire("included_event", {"command": "include"})
+    hass.bus.async_fire("included_event", {"command": "not_included"})
     hass.bus.async_fire("excluded_event", {"command": "include"})
     hass.bus.async_fire("unfiltered_event", {"command": "include"})
 
@@ -852,14 +855,19 @@ async def test_event_data_filter_include_exclude_precedence(
                 .join(EventTypes)
                 .where(
                     EventTypes.event_type.in_(
-                        ("test_event", "excluded_event", "unfiltered_event")
+                        (
+                            "test_event",
+                            "included_event",
+                            "excluded_event",
+                            "unfiltered_event",
+                        )
                     )
                 )
                 .count()
             )
 
     event_count = await instance.async_add_executor_job(_get_event_count, hass)
-    assert event_count == 1
+    assert event_count == 2
 
 
 @pytest.mark.parametrize(
