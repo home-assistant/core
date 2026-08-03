@@ -117,7 +117,7 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
         self.known_endpoints: set[int] = set()
         self.known_containers: set[tuple[int, str]] = set()
-        self.known_stacks: set[tuple[int, str]] = set()
+        self.known_stacks: set[tuple[int, str, int]] = set()
         self.known_volumes: set[tuple[int, str]] = set()
 
         self.new_endpoints_callbacks: list[
@@ -418,7 +418,7 @@ class PortainerCoordinator(
         self,
         mapped_endpoints: dict[int, PortainerCoordinatorData],
         endpoint_ids: set[int],
-        stack_keys: set[tuple[int, str]],
+        stack_keys: set[tuple[int, str, int]],
     ) -> None:
         """Register endpoint and stack devices.
 
@@ -442,7 +442,7 @@ class PortainerCoordinator(
                 entry_type=DeviceEntryType.SERVICE,
             )
 
-        for endpoint_id, stack_name in stack_keys:
+        for endpoint_id, stack_name, _stack_id in stack_keys:
             stack = mapped_endpoints[endpoint_id].stacks[stack_name].stack
             device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
@@ -473,10 +473,13 @@ class PortainerCoordinator(
         self.known_endpoints &= current_endpoints
         new_endpoints = current_endpoints - self.known_endpoints
 
+        # The stack ID is part of the key because it is part of the stack device
+        # identifier; a stack recreated with the same name but a new ID must be
+        # detected as new so its device is (re)registered before entities resolve it.
         current_stacks = {
-            (endpoint.id, stack_name)
+            (endpoint.id, stack_name, stack_data.stack.id)
             for endpoint in mapped_endpoints.values()
-            for stack_name in endpoint.stacks
+            for stack_name, stack_data in endpoint.stacks.items()
         }
         self.known_stacks &= current_stacks
         new_stacks = current_stacks - self.known_stacks
@@ -551,7 +554,7 @@ class PortainerCoordinator(
                     mapped_endpoints[endpoint_id],
                     mapped_endpoints[endpoint_id].stacks[name],
                 )
-                for endpoint_id, name in new_stacks
+                for endpoint_id, name, _stack_id in new_stacks
             ]
             for stack_callback in self.new_stacks_callbacks:
                 stack_callback(new_stack_data)

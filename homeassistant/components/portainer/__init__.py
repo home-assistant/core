@@ -98,9 +98,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         coordinator.data,
         set(coordinator.data),
         {
-            (endpoint_id, stack_name)
+            (endpoint_id, stack_name, stack_data.stack.id)
             for endpoint_id, endpoint_data in coordinator.data.items()
-            for stack_name in endpoint_data.stacks
+            for stack_name, stack_data in endpoint_data.stacks.items()
         },
     )
 
