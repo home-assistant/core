@@ -94,12 +94,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[LIFXState]):
         return self.data.serial
 
     @property
-    def infrared_brightness(self) -> float:
-        """Return the infrared brightness as a percentage."""
-        assert isinstance(self.data, InfraredLightState)
-        return round(self.data.infrared * 100)
-
-    @property
     def current_infrared_brightness(self) -> str | None:
         """Return the current infrared brightness option, if it is one of them."""
         assert isinstance(self.data, InfraredLightState)
@@ -182,11 +176,11 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[LIFXState]):
         self.device.fetch_wifi_info = True
         return _async_disable_rssi_updates
 
-    async def async_set_infrared_brightness(self, brightness: float) -> None:
-        """Set infrared brightness from a percentage."""
+    async def async_set_infrared_brightness(self, option: str) -> None:
+        """Set infrared brightness from one of the offered levels."""
         assert isinstance(self.device, InfraredLight)
         try:
-            await self.device.set_infrared(brightness / 100)
+            await self.device.set_infrared(INFRARED_LEVELS[option])
         except LifxError as err:
             raise device_error(err) from err
 

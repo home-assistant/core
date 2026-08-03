@@ -213,37 +213,6 @@ async def test_platform_setup_failure_closes_device(hass: HomeAssistant) -> None
     device.close.assert_awaited_once_with()
 
 
-async def test_later_platform_failure_unloads_the_number_platform(
-    hass: HomeAssistant,
-) -> None:
-    """Test the separately forwarded number platform is taken back down."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
-    )
-    entry.add_to_hass(hass)
-    device = create_mock_light()
-
-    with (
-        patch("homeassistant.components.lifx.Device.connect", return_value=device),
-        patch.object(
-            hass.config_entries,
-            "async_forward_entry_setups",
-            AsyncMock(side_effect=[None, RuntimeError("platform failed")]),
-        ),
-        patch.object(
-            hass.config_entries,
-            "async_unload_platforms",
-            AsyncMock(return_value=True),
-        ) as unload_platforms,
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-    unload_platforms.assert_awaited_once_with(entry, lifx.NUMBER_PLATFORM)
-    device.close.assert_awaited_once_with()
-
-
 async def test_unload_survives_an_unreachable_device(
     hass: HomeAssistant, mock_effect_conductor: MagicMock
 ) -> None:

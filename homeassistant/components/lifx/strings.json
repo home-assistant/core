@@ -53,14 +53,9 @@
         "name": "Clean cycle"
       }
     },
-    "number": {
-      "infrared_brightness": {
-        "name": "Infrared brightness"
-      }
-    },
     "select": {
       "infrared_brightness": {
-        "name": "[%key:component::lifx::entity::number::infrared_brightness::name%]"
+        "name": "Infrared brightness"
       },
       "theme": {
         "name": "Theme"
@@ -102,23 +97,6 @@
     },
     "update_failed": {
       "message": "Error fetching the state of the LIFX device: {error}"
-    }
-  },
-  "issues": {
-    "deprecated_infrared_select": {
-      "fix_flow": {
-        "abort": {
-          "already_removed": "The select entity {entity_name} (`{entity_id}`) has already been removed.",
-          "in_use": "The select entity {entity_name} (`{entity_id}`) was not removed because it is still being used by:\n\n{used_by}\n\nSwitch them to use `{replacement_entity_id}` instead, then try again."
-        },
-        "step": {
-          "confirm": {
-            "description": "The select entity {entity_name} (`{entity_id}`) only offers four predefined brightness levels but brightness can be set to any valid percentage, so it has been replaced by `{replacement_entity_id}`.\n\nSelect **Submit** to remove the select.",
-            "title": "[%key:component::lifx::issues::deprecated_infrared_select::title%]"
-          }
-        }
-      },
-      "title": "The infrared brightness select entity is deprecated"
     }
   },
   "services": {

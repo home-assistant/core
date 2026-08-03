@@ -29,10 +29,7 @@ from lifx import (
     WifiInfo,
 )
 
-from homeassistant.components.lifx.const import DOMAIN
 from homeassistant.components.lifx.light import LIFX_MIN_COLOR_RAMP
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.helpers import entity_registry as er
 
 IP_ADDRESS = "127.0.0.1"
 SERIAL = "d073d5ddeecc"
@@ -42,7 +39,6 @@ MAC_ADDRESS = "d0:73:d5:dd:ee:cc"
 LABEL = "My Bulb"
 GROUP = "My Group"
 INFRARED_SELECT_ENTITY_ID = "select.my_group_my_bulb_infrared_brightness"
-INFRARED_NUMBER_ENTITY_ID = "number.my_group_my_bulb_infrared_brightness"
 
 type MockDevice = (
     Light | MultiZoneLight | MatrixLight | CeilingLight | HevLight | InfraredLight
@@ -58,23 +54,6 @@ type MockState = (
 
 _DeviceT = TypeVar("_DeviceT", bound=MockDevice)
 _StateT = TypeVar("_StateT", bound=MockState)
-
-
-def register_legacy_infrared_select(
-    entity_registry: er.EntityRegistry,
-    disabled_by: er.RegistryEntryDisabler | None = None,
-) -> None:
-    """Register the infrared select an upgraded installation already has."""
-    entity_registry.async_get_or_create(
-        SELECT_DOMAIN,
-        DOMAIN,
-        f"{SERIAL}_infrared_brightness",
-        suggested_object_id="my_group_my_bulb_infrared_brightness",
-        disabled_by=disabled_by,
-        # A registry entry written by an earlier run already carries the name
-        original_name="Infrared brightness",
-        has_entity_name=True,
-    )
 
 
 def assert_color_written(
