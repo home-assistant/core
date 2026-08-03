@@ -1,8 +1,4 @@
-"""Test the Tado coordinator update interval calculation.
-
-Add to tests/components/tado/ (new file), or fold the test into an
-existing module if the maintainers prefer.
-"""
+"""Test the Tado coordinator."""
 
 from datetime import timedelta
 from unittest.mock import patch
@@ -18,9 +14,7 @@ from homeassistant.core import HomeAssistant
 async def test_rate_limit_is_stored_in_coordinator_data(hass: HomeAssistant) -> None:
     """Test the rate limit is exposed in the coordinator data.
 
-    _calculate_update_interval() reads self.data["rate_limit"], so it has to
-    actually be filled in, otherwise the adaptive interval silently degrades
-    to the static SCAN_INTERVAL.
+    _calculate_update_interval() derives the interval from this value.
     """
     coordinator = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
 
@@ -39,9 +33,6 @@ async def test_update_interval_uses_remaining_calls(
     so with 100 remaining calls the interval is:
 
         21600 * 15 / (100 * 0.9) = 3600 s
-
-    Before the fix remaining_calls was always 0 (the key was never written),
-    which took the <= 0 branch and pinned the interval to SCAN_INTERVAL.
     """
     freezer.move_to("2026-01-15 05:00:00+00:00")  # 06:00 Europe/Berlin
 
@@ -60,4 +51,3 @@ async def test_update_interval_uses_remaining_calls(
         await hass.async_block_till_done()
 
     assert coordinator.update_interval == timedelta(seconds=3600)
-    assert coordinator.update_interval != timedelta(minutes=5)
