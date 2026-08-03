@@ -6191,6 +6191,60 @@ async def test_entity_trigger_repeat_interval_first_continues_while_any_match(
     unsub()
 
 
+async def test_entity_trigger_repeat_interval_all_stops_when_one_stops_matching(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior all stops repeating as soon as one entity stops matching.
+
+    The repeat is cancelled by an entity that did not fire the trigger,
+    while the entity that fired it still matches.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [entity_a, entity_b],
+        BEHAVIOR_ALL,
+        calls,
+        duration=None,
+        repeat_interval={"seconds": 5},
+    )
+
+    # A alone does not complete the all-match
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # B completes the all-match — fires and starts repeating
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    freezer.tick(datetime.timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert all(trigger_data["entity_id"] == entity_b for trigger_data in calls)
+
+    # A turns off mid-interval: the all-match breaks
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_a, STATE_OFF)
+    await hass.async_block_till_done()
+
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    unsub()
+
+
 @pytest.fixture
 def mock_test_modern_trigger(hass: HomeAssistant) -> None:
     """Register a mock 'test' integration and trigger platform exposing 'test.modern'."""
