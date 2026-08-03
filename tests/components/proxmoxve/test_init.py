@@ -1,8 +1,8 @@
 """Tests for the Proxmox VE integration initialization."""
 
-from typing import Any
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from proxmoxer import AuthenticationError
 from proxmoxer.core import ResourceException
 import pytest
@@ -17,8 +17,7 @@ from homeassistant.components.proxmoxve.const import (
     DOMAIN,
 )
 from homeassistant.components.proxmoxve.coordinator import (
-    ProxmoxCoordinator,
-    ProxmoxNodeData,
+    DEFAULT_UPDATE_INTERVAL,
     ProxmoxNodesNotFoundError,
     ProxmoxPermissionsError,
 )
@@ -37,7 +36,11 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_load_json_array_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+)
 
 
 @pytest.mark.parametrize(
@@ -431,51 +434,75 @@ async def test_child_devices_link_to_node(
     assert child_device.via_device_id == node_device.id
 
 
-async def test_new_node_device_registered_before_resource_callbacks(
+async def test_new_node_registers_device_before_children(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test a newly discovered node's device exists before new VM/container/storage callbacks run.
+    """Test a node discovered after setup registers its device before its children.
 
     Regression test for a race where a newly discovered node's VM/container/
-    storage entities could be built before the node's own device was
-    registered, causing via_device_id resolution to raise ValueError.
+    storage entities were built before the node's own device was registered,
+    causing via_device_id resolution to raise ValueError.
+
+    Without audit permissions the node surfaces no entities of its own, so the
+    node device is only registered by the coordinator: without that explicit
+    registration its child (the configured VM, whose entities are always
+    created) cannot resolve its via_device_id.
     """
-    mock_config_entry.add_to_hass(hass)
-    coordinator = ProxmoxCoordinator(hass, mock_config_entry)
+    mock_proxmox_client.access.permissions.get.return_value = {}
+
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # setup_integration enables disabled-by-default entities, which schedules a
+    # debounced config entry reload; let it settle so it doesn't coincide with
+    # (and mask, via a fresh setup) the refresh that discovers the new node.
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # A second node, bringing its own VM, appears on the next refresh.
+    pve2_vm = {
+        **(await async_load_json_array_fixture(hass, "nodes/qemu.json", DOMAIN))[0],
+        "vmid": 300,
+        "name": "vm-pve2",
+    }
+    pve2_node_mock = MagicMock()
+    pve2_node_mock.qemu.get.return_value = [pve2_vm]
+    pve2_node_mock.lxc.get.return_value = []
+    pve2_node_mock.storage.get.return_value = []
+    pve2_node_mock.tasks.get.return_value = []
+
+    default_node_mock = mock_proxmox_client._node_mock
+    mock_proxmox_client._nodes_mock.side_effect = lambda node: (
+        pve2_node_mock if node == "pve2" else default_node_mock
+    )
+    mock_proxmox_client.nodes.get.return_value = [
+        node
+        for node in mock_proxmox_client._all_nodes
+        if node["node"] in ("pve1", "pve2")
+    ]
+
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.runtime_data.last_update_success
 
     entry_id = mock_config_entry.entry_id
-    resolved_via_device_ids: list[str] = []
-
-    def _resolve_via_device_on_new_vms(
-        vms: list[tuple[ProxmoxNodeData, dict[str, Any]]],
-    ) -> None:
-        """Mimic what ProxmoxVMEntity.__init__ does when a VM is discovered."""
-        for node_data, _vm in vms:
-            resolved_via_device_ids.append(
-                dr.async_get_device_id_by_identifier(
-                    hass,
-                    (DOMAIN, f"{entry_id}_node_{node_data.node['id']}"),
-                    config_entry_id=entry_id,
-                )
-            )
-
-    coordinator.new_vms_callbacks.append(_resolve_via_device_on_new_vms)
-
-    node_data = ProxmoxNodeData(
-        node={"id": "node/pve2", "node": "pve2"},
-        vms={300: {"vmid": 300, "name": "vm-pve2"}},
-    )
-    coordinator._async_add_remove_nodes({"pve2": node_data})
-
-    assert resolved_via_device_ids
-
     node_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{entry_id}_node_node/pve2"), entry_id
     )
     assert node_device is not None
-    assert resolved_via_device_ids == [node_device.id]
+
+    vm_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_vm_300"), entry_id
+    )
+    assert vm_device is not None
+    assert vm_device.via_device_id == node_device.id
 
 
 async def test_stale_devices_removed(
