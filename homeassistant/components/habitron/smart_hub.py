@@ -164,7 +164,10 @@ class SmartHub:
         dev_reg = dr.async_get(self.hass)
         router = self.router
 
-        dev_reg.async_get_or_create(
+        # ``via_device`` is deprecated (removal in 2027.8), so link through the
+        # registry id of the hub device registered in ``async_setup``.
+        hub_dev = dev_reg.async_get_device(identifiers={(DOMAIN, self.uid)})
+        rt_dev = dev_reg.async_get_or_create(
             config_entry_id=self.config.entry_id,
             configuration_url=f"{self.base_url}/router" if self.host else None,
             identifiers={(DOMAIN, router.uid)},
@@ -173,11 +176,9 @@ class SmartHub:
             model="Smart Router",
             sw_version=router.version,
             serial_number=router.serial,
-            via_device=(DOMAIN, self.uid),
+            via_device_id=hub_dev.id if hub_dev else None,
         )
-        rt_dev = dev_reg.async_get_device(identifiers={(DOMAIN, router.uid)})
-        if rt_dev is not None:
-            await self.comm.send_devregid(0, rt_dev.id)
+        await self.comm.send_devregid(0, rt_dev.id)
 
         for module in router.modules:
             raddr = module.addr - router.id
@@ -186,7 +187,7 @@ class SmartHub:
             # user's manually chosen area on every reload, so it is intentionally
             # not done.
             area_name = _area_name(router, module.area)
-            dev_reg.async_get_or_create(
+            dev = dev_reg.async_get_or_create(
                 config_entry_id=self.config.entry_id,
                 configuration_url=(
                     f"{self.base_url}/module-{raddr}" if self.host else None
@@ -198,11 +199,9 @@ class SmartHub:
                 model=module.mod_type,
                 sw_version=module.sw_version,
                 hw_version=module.hw_version,
-                via_device=(DOMAIN, router.uid),
+                via_device_id=rt_dev.id,
             )
-            dev = dev_reg.async_get_device(identifiers={(DOMAIN, module.uid)})
-            if dev is not None:
-                await self.comm.send_devregid(raddr, dev.id)
+            await self.comm.send_devregid(raddr, dev.id)
 
     async def update(self) -> None:
         """Refresh the hub-level diagnostics from the SmartHub info query.
@@ -230,29 +229,38 @@ class SmartHub:
         software = info["software"]
         was_valid = self.host_diags_valid
         self.host_diags_valid = True
-        self._set(
-            self.diags[0], float(hardware["cpu"]["frequency current"].rstrip("MHz"))
+        readings: tuple[tuple[Diagnostic | Sensor, float], ...] = (
+            (self.diags[0], float(hardware["cpu"]["frequency current"].rstrip("MHz"))),
+            (self.diags[1], float(hardware["cpu"]["load"].rstrip("%"))),
+            (self.diags[2], float(hardware["cpu"]["temperature"].rstrip("°C"))),
+            (self.sensors[0], float(hardware["memory"]["percent"].rstrip("%"))),
+            (self.sensors[1], float(hardware["disk"]["percent"].rstrip("%"))),
+            (self.loglvl[0], int(software["loglevel"]["console"])),
+            (self.loglvl[1], int(software["loglevel"]["file"])),
         )
-        self._set(self.diags[1], float(hardware["cpu"]["load"].rstrip("%")))
-        self._set(self.diags[2], float(hardware["cpu"]["temperature"].rstrip("°C")))
-        self._set(self.sensors[0], float(hardware["memory"]["percent"].rstrip("%")))
-        self._set(self.sensors[1], float(hardware["disk"]["percent"].rstrip("%")))
-        self._set(self.loglvl[0], int(software["loglevel"]["console"]))
-        self._set(self.loglvl[1], int(software["loglevel"]["file"]))
+        unchanged = [
+            member for member, value in readings if not self._set(member, value)
+        ]
         if not was_valid:
-            # First successful read after setup-time failures: ``_set`` only
-            # notifies on a change, so members that happen to match their
-            # placeholder (a log level of 0, an unchanged CPU frequency) would
-            # stay ``unknown`` until some *other* value moves.
-            for member in (*self.diags, *self.sensors, *self.loglvl):
+            # First successful read after setup-time failures: ``_set`` notifies
+            # what it changed, so only the members that happen to match their
+            # placeholder (a log level of 0, an unchanged CPU frequency) are left
+            # -- they would stay ``unknown`` until some *other* value moves.
+            for member in unchanged:
                 member.notify()
 
     @staticmethod
-    def _set(member: Diagnostic | Sensor, value: float) -> None:
-        """Set a hub member's value and notify listeners on a change."""
-        if member.value != value:
-            member.value = value
-            member.notify()
+    def _set(member: Diagnostic | Sensor, value: float) -> bool:
+        """Set a hub member's value, notifying listeners on a change.
+
+        Returns whether the value changed, so a caller can tell which members
+        still need a notification.
+        """
+        if member.value == value:
+            return False
+        member.value = value
+        member.notify()
+        return True
 
     async def async_close(self) -> None:
         """Close the hub's bus client when the entry is unloaded."""

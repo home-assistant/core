@@ -75,7 +75,12 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations: done
+  entity-translations:
+    status: todo
+    comment: |
+      Humidity, illuminance and the temperatures still take their display name
+      from the bus; wind and air quality carry a translation_key but keep the
+      bus name because translated_name is false.
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
