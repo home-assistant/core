@@ -75,6 +75,7 @@ async def test_update_devices_renames_device(
 async def test_hub_run_immediately_reports_rollers(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     mock_hub: MagicMock,
     mock_roller: MagicMock,
 ) -> None:
@@ -93,7 +94,6 @@ async def test_hub_run_immediately_reports_rollers(
 
     # Verify entities were registered despite the hub reporting rollers
     # during setup rather than after.
-    entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
@@ -105,6 +105,7 @@ async def test_hub_run_immediately_reports_rollers(
 async def test_hub_callback_from_worker_thread(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     mock_hub: MagicMock,
     mock_roller: MagicMock,
 ) -> None:
@@ -126,7 +127,6 @@ async def test_hub_callback_from_worker_thread(
     thread.join(timeout=5)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
