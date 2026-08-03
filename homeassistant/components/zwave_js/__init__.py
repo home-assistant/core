@@ -401,8 +401,10 @@ class DriverEvents:
             if (
                 (own_node := driver.controller.own_node)
                 and (
-                    controller_device_entry := device_registry.async_get_device(
-                        identifiers={get_device_id(driver, own_node)}
+                    controller_device_entry := (
+                        device_registry.async_get_device_by_identifier(
+                            get_device_id(driver, own_node), self.config_entry.entry_id
+                        )
                     )
                 )
                 and (model := controller_device_entry.model)
@@ -440,7 +442,9 @@ class DriverEvents:
             self.dev_reg, self.config_entry.entry_id
         )
         known_devices = [
-            self.dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
+            self.dev_reg.async_get_device_by_identifier(
+                get_device_id(driver, node), self.config_entry.entry_id
+            )
             for node in controller.nodes.values()
         ]
         provisioned_devices = [
@@ -561,7 +565,9 @@ class ControllerEvents:
         reason: RemoveNodeReason = event["reason"]
         # grab device in device registry attached to this node
         dev_id = get_device_id(self.driver_events.driver, node)
-        device = self.dev_reg.async_get_device(identifiers={dev_id})
+        device = self.dev_reg.async_get_device_by_identifier(
+            dev_id, self.config_entry.entry_id
+        )
         # We assert because we know the device exists
         assert device
         if reason in (RemoveNodeReason.REPLACED, RemoveNodeReason.PROXY_REPLACED):
@@ -610,7 +616,9 @@ class ControllerEvents:
         # Get node device
         node: ZwaveNode = event["node"]
         dev_id = get_device_id(self.driver_events.driver, node)
-        device = self.dev_reg.async_get_device(identifiers={dev_id})
+        device = self.dev_reg.async_get_device_by_identifier(
+            dev_id, self.config_entry.entry_id
+        )
         assert device
         device_name = device.name_by_user or device.name or f"Node {node.node_id}"
         # In case the user has multiple networks, we should give them more information
@@ -658,7 +666,14 @@ class ControllerEvents:
             if device_id_ext:
                 new_identifiers.add(device_id_ext)
 
-            if self.dev_reg.async_get_device(identifiers=new_identifiers):
+            if self.dev_reg.async_get_device_by_identifier(
+                device_id, self.config_entry.entry_id
+            ) or (
+                device_id_ext
+                and self.dev_reg.async_get_device_by_identifier(
+                    device_id_ext, self.config_entry.entry_id
+                )
+            ):
                 # If a device entry is registered with the node ID based identifiers,
                 # just remove the device entry with the DSK identifier.
                 self.dev_reg.async_update_device(
@@ -678,7 +693,9 @@ class ControllerEvents:
         driver = self.driver_events.driver
         device_id = get_device_id(driver, node)
         device_id_ext = get_device_id_ext(driver, node)
-        node_id_device = self.dev_reg.async_get_device(identifiers={device_id})
+        node_id_device = self.dev_reg.async_get_device_by_identifier(
+            device_id, self.config_entry.entry_id
+        )
         via_identifier = None
         controller = driver.controller
         # Get the controller node device ID if this node is not the controller
@@ -709,8 +726,8 @@ class ControllerEvents:
             # based identifier, add the node ID based identifier to the orphaned
             # device.
             if (
-                hardware_device := self.dev_reg.async_get_device(
-                    identifiers={device_id_ext}
+                hardware_device := self.dev_reg.async_get_device_by_identifier(
+                    device_id_ext, self.config_entry.entry_id
                 )
             ) and len(hardware_device.identifiers) == 1:
                 new_identifiers = hardware_device.identifiers.copy()
@@ -914,7 +931,11 @@ class NodeEvents:
         )
         if (
             not value.node.ready
-            or not (device := self.dev_reg.async_get_device(identifiers={device_id}))
+            or not (
+                device := self.dev_reg.async_get_device_by_identifier(
+                    device_id, self.config_entry.entry_id
+                )
+            )
             or value.value_id in self.controller_events.discovered_value_ids[device.id]
         ):
             return
@@ -929,8 +950,8 @@ class NodeEvents:
     def async_on_value_notification(self, notification: ValueNotification) -> None:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
         driver = self.controller_events.driver_events.driver
-        device = self.dev_reg.async_get_device(
-            identifiers={get_device_id(driver, notification.node)}
+        device = self.dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, notification.node), self.config_entry.entry_id
         )
         # We assert because we know the device exists
         assert device
@@ -973,8 +994,8 @@ class NodeEvents:
             | PowerLevelNotification
             | MultilevelSwitchNotification
         ) = event["notification"]
-        device = self.dev_reg.async_get_device(
-            identifiers={get_device_id(driver, notification.node)}
+        device = self.dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, notification.node), self.config_entry.entry_id
         )
         # We assert because we know the device exists
         assert device
@@ -1056,8 +1077,8 @@ class NodeEvents:
         driver = self.controller_events.driver_events.driver
         disc_info = value_updates_disc_info[value.value_id]
 
-        device = self.dev_reg.async_get_device(
-            identifiers={get_device_id(driver, value.node)}
+        device = self.dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, value.node), self.config_entry.entry_id
         )
         # We assert because we know the device exists
         assert device

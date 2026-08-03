@@ -59,6 +59,19 @@
             }
           }
         }
+      },
+      "standing_fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "baby": "mdi:baby-face-outline",
+              "custom_natural": "mdi:leaf-circle-outline",
+              "natural": "mdi:leaf",
+              "normal": "mdi:fan",
+              "sleep": "mdi:power-sleep"
+            }
+          }
+        }
       }
     },
     "humidifier": {

@@ -121,13 +121,15 @@ def async_static_info_updated(
         # Update device assignment in registry
         if info.device_id:
             # Entity now belongs to a sub device
-            new_device = dev_reg.async_get_device(
-                identifiers={(DOMAIN, f"{device_info.mac_address}_{info.device_id}")}
+            new_device = dev_reg.async_get_device_by_identifier(
+                (DOMAIN, f"{device_info.mac_address}_{info.device_id}"),
+                entry_data.entry_id,
             )
         else:
             # Entity now belongs to the main device
-            new_device = dev_reg.async_get_device(
-                connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
+            new_device = dev_reg.async_get_device_by_connection(
+                (dr.CONNECTION_NETWORK_MAC, device_info.mac_address),
+                entry_data.entry_id,
             )
 
         if new_device:

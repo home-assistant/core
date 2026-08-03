@@ -16,15 +16,20 @@ SUPPORTED_LIFESPANS = (
     LifeSpan.AIR_FRESHENER,
     LifeSpan.BLADE,
     LifeSpan.BRUSH,
+    LifeSpan.CLEANING_SOLUTION,
     LifeSpan.DUST_BAG,
     LifeSpan.FILTER,
     LifeSpan.HAND_FILTER,
     LifeSpan.LENS_BRUSH,
     LifeSpan.ROUND_MOP,
+    LifeSpan.SEWAGE_BOX,
     LifeSpan.SIDE_BRUSH,
     LifeSpan.STATION_FILTER,
+    LifeSpan.TRIMMER_BRUSH,
     LifeSpan.UNIT_CARE,
     LifeSpan.UV_SANITIZER,
+    LifeSpan.WATER_SINK,
+    LifeSpan.WEED_ROPE,
 )
 
 SUPPORTED_STATION_ACTIONS = (

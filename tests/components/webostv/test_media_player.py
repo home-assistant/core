@@ -498,6 +498,30 @@ async def test_client_disconnected(
 ) -> None:
     """Test error not raised when client is disconnected."""
     await setup_webostv(hass)
+
+    # Support turn on
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "webostv.turn_on",
+                        "entity_id": ENTITY_ID,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": ENTITY_ID,
+                            "id": "{{ trigger.id }}",
+                        },
+                    },
+                },
+            ],
+        },
+    )
+
     client.is_connected.return_value = False
     client.connect.side_effect = TimeoutError
 
@@ -520,6 +544,14 @@ async def test_client_key_update_on_connect(
     await mock_scan_interval(hass, freezer)
 
     assert config_entry.data[CONF_CLIENT_SECRET] == client.client_key
+
+    # validate that the key is not updated if the client is already connected
+    client.is_connected.return_value = True
+    client.client_key = "old_key"
+
+    await mock_scan_interval(hass, freezer)
+
+    assert config_entry.data[CONF_CLIENT_SECRET] == "new_key"
 
 
 @pytest.mark.parametrize(
@@ -916,7 +948,7 @@ async def test_availability(
     await mock_scan_interval(hass, freezer)
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-    unavailable_log = f"LG webOS TV entity {ENTITY_ID} is unavailable"
+    unavailable_log = f"Device {TV_NAME} is unavailable"
     assert unavailable_log in caplog.text
 
     # Clear logs and update the offline entity again - should NOT log again
@@ -930,7 +962,7 @@ async def test_availability(
     await mock_scan_interval(hass, freezer)
 
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
-    available_log = f"LG webOS TV entity {ENTITY_ID} is back online"
+    available_log = f"Fetching {TV_NAME} data recovered"
     assert available_log in caplog.text
 
     # Clear logs and make update again - should NOT log again
@@ -973,5 +1005,5 @@ async def test_availability(
     await mock_scan_interval(hass, freezer)
 
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
-    available_log = f"LG webOS TV entity {ENTITY_ID} is back online"
+    available_log = f"Fetching {TV_NAME} data recovered"
     assert available_log in caplog.text
