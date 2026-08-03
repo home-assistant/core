@@ -1406,6 +1406,9 @@ async def test_purge_filtered_event_data(
     def _add_db_entries(hass: HomeAssistant) -> None:
         with session_scope(hass=hass) as session:
             timestamp = dt_util.utcnow() - timedelta(days=1)
+            event_type = EventTypes(event_type="test")
+            session.add(event_type)
+            session.flush()
             for event_id, data in enumerate(event_data, 1):
                 shared_data = EventData(hash=event_id, shared_data=json.dumps(data))
                 session.add(shared_data)
@@ -1413,13 +1416,12 @@ async def test_purge_filtered_event_data(
                 session.add(
                     Events(
                         event_id=event_id,
-                        event_type="test",
+                        event_type_id=event_type.event_type_id,
                         data_id=shared_data.data_id,
-                        origin="LOCAL",
+                        origin_idx=0,
                         time_fired_ts=timestamp.timestamp(),
                     )
                 )
-            convert_pending_events_to_event_types(recorder_mock, session)
 
     await recorder_mock.async_add_executor_job(_add_db_entries, hass)
     with patch.object(recorder_mock, "max_bind_vars", 1):
