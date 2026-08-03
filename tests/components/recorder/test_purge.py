@@ -1432,8 +1432,10 @@ async def test_purge_filtered_event_data(
         await async_wait_purge_done(hass)
 
     with session_scope(hass=hass, read_only=True) as session:
-        events = session.query(EventData.shared_data).join(Events).filter(
-            Events.event_type_id.in_(select_event_type_ids(("test_event",)))
+        events = (
+            session.query(EventData.shared_data)
+            .join(Events)
+            .filter(Events.event_type_id.in_(select_event_type_ids(("test_event",))))
         )
         assert [
             json.loads(event_data) for (event_data,) in events
