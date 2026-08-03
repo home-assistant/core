@@ -64,7 +64,6 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
 
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_name = None
-    _commands_allowed_when_off = frozenset({"async_turn_off"})
 
     def __init__(self, entry: WebOsTvConfigEntry) -> None:
         """Initialize the webos device."""
