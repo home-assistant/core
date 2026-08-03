@@ -12,10 +12,10 @@ from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.json import json_loads
 
 from .db_schema import (
+    SHARED_DATA_OR_LEGACY_EVENT_DATA,
     EventData,
     Events,
     EventTypes,
-    SHARED_DATA_OR_LEGACY_EVENT_DATA,
     States,
     StatesMeta,
 )

@@ -1431,7 +1431,9 @@ async def test_purge_filtered_event_data(
         events = session.query(Events.event_data).filter(
             Events.event_type_id.in_(select_event_type_ids(("test_event",)))
         )
-        assert [json.loads(event_data) for (event_data,) in events] == expected_event_data
+        assert [
+            json.loads(event_data) for (event_data,) in events
+        ] == expected_event_data
 
 
 @pytest.mark.parametrize(
