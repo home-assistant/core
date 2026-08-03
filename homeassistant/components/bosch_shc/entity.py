@@ -2,7 +2,7 @@
 
 from typing import override
 
-from boschshcpy import SHCDevice, SHCIntrusionSystem
+from boschshcpy import SHCDevice
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -30,9 +30,7 @@ class SHCBaseEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(
-        self, device: SHCDevice | SHCIntrusionSystem, parent_id: str, entry_id: str
-    ) -> None:
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
         """Initialize the generic SHC device."""
         self._device = device
         self._entry_id = entry_id
@@ -111,37 +109,3 @@ class SHCEntity(SHCBaseEntity):
     def available(self) -> bool:
         """Return false if status is unavailable."""
         return self._device.status == "AVAILABLE"
-
-
-class SHCDomainEntity(SHCBaseEntity):
-    """Representation of a SHC domain service entity."""
-
-    _device: SHCIntrusionSystem
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        domain: SHCIntrusionSystem,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize the generic SHC device."""
-        self._attr_unique_id = domain.id
-        device_info = DeviceInfo(
-            identifiers={(DOMAIN, domain.id)},
-            manufacturer=domain.manufacturer,
-            model=domain.device_model,
-            name=domain.name,
-        )
-        if hub := dr.async_get(hass).async_get_device_by_identifier(
-            (DOMAIN, parent_id), entry_id
-        ):
-            device_info["via_device_id"] = hub.id
-        self._attr_device_info = device_info
-        super().__init__(device=domain, parent_id=parent_id, entry_id=entry_id)
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return false if status is unavailable."""
-        return self._device.system_availability
