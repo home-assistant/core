@@ -1,5 +1,6 @@
 """Test the Tesla Fleet select platform."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -12,7 +13,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.components.tesla_fleet.select import LOW
+from homeassistant.components.tesla_fleet.select import HIGH, LOW
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -47,6 +48,43 @@ async def test_select_offline(
     await setup_platform(hass, normal_config_entry, [Platform.SELECT])
     state = hass.states.get("select.test_seat_heater_front_left")
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("field", "entity_id", "value"),
+    [
+        pytest.param(
+            "steering_wheel_heat_level",
+            "select.test_steering_wheel_heater",
+            3,
+            id="steering_wheel_heater",
+        ),
+        pytest.param(
+            "seat_heater_left",
+            "select.test_seat_heater_front_left",
+            4,
+            id="seat_heater",
+        ),
+    ],
+)
+async def test_select_heat_level_out_of_range(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    normal_config_entry: MockConfigEntry,
+    field: str,
+    entity_id: str,
+    value: int,
+) -> None:
+    """Tests that a heat level beyond the last modeled option clamps to it."""
+
+    data = deepcopy(VEHICLE_DATA_ALT)
+    data["response"]["climate_state"][field] = value
+    mock_vehicle_data.return_value = data
+
+    await setup_platform(hass, normal_config_entry, [Platform.SELECT])
+
+    state = hass.states.get(entity_id)
+    assert state.state == HIGH
 
 
 async def test_select_services(
