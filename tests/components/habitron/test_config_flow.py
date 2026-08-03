@@ -665,6 +665,40 @@ async def test_local_sentinel_matches_any_local_ip_multi_homed(
         assert await flow._is_device_already_configured("10.0.0.9") is True
 
 
+async def test_is_device_already_configured_resolves_hostname_to_local(
+    hass: HomeAssistant,
+) -> None:
+    """A host name resolving to one of HA's own addresses is the ``local`` hub.
+
+    A hub running on the Home Assistant machine is stored under the ``local``
+    sentinel. Entering its host name resolves to a local IP, and returning that
+    bare IP would make the two look like different hubs -- so the resolved
+    address has to collapse to the sentinel as well.
+    """
+    MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="existing-id",
+        data={"habitron_host": "local"},
+    ).add_to_hass(hass)
+
+    flow = ConfigFlow()
+    flow.hass = hass
+    with (
+        patch(
+            "homeassistant.components.habitron.config_flow.socket.gethostbyname",
+            _fake_gethostbyname,
+        ),
+        patch(
+            "homeassistant.components.habitron.config_flow.network."
+            "async_get_enabled_source_ips",
+            # MOCK_HOST_HOSTNAME resolves to MOCK_HOST, which is one of ours.
+            new=AsyncMock(return_value=[IPv4Address(MOCK_HOST)]),
+        ),
+    ):
+        assert await flow._is_device_already_configured(MOCK_HOST_HOSTNAME) is True
+
+
 async def test_is_device_already_configured_ip_match(hass: HomeAssistant) -> None:
     """A pre-existing entry whose host equals the IP reports as configured."""
 
