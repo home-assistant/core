@@ -615,16 +615,13 @@ class ProtectRelayOutputSwitch(SwitchEntity):
         self._attr_translation_placeholders = {
             "output_name": output.name or str(output.id),
         }
-        nvr = data.api.bootstrap.nvr
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, relay.mac)},
             identifiers={(DOMAIN, relay.mac)},
             manufacturer=DEFAULT_BRAND,
             name=relay.name,
             model="Relay",
-            via_device_id=dr.async_get_device_id_by_identifier(
-                data.hass, (DOMAIN, nvr.mac), config_entry_id=data.entry.entry_id
-            ),
+            via_device_id=data.nvr_device_id,
         )
         self._update_from_relay(relay)
 

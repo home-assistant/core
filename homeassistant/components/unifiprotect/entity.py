@@ -416,11 +416,7 @@ class ProtectDeviceEntity(BaseProtectEntity):
             manufacturer=DEFAULT_BRAND,
             model=self.device.market_name or self.device.type,
             model_id=self.device.type,
-            via_device_id=dr.async_get_device_id_by_identifier(
-                self.data.hass,
-                (DOMAIN, self.data.api.bootstrap.nvr.mac),
-                config_entry_id=self.data.entry.entry_id,
-            ),
+            via_device_id=self.data.nvr_device_id,
             sw_version=self.device.firmware_version,
             connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
             configuration_url=self.device.protect_url,

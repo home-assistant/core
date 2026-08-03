@@ -72,6 +72,9 @@ def _async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
 class ProtectData:
     """Coordinate updates."""
 
+    # Resolved once in _async_setup_entry, before any entity is created.
+    nvr_device_id: str
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -80,8 +83,8 @@ class ProtectData:
         entry: UFPConfigEntry,
     ) -> None:
         """Initialize an subscriber."""
-        self.entry = entry
-        self.hass = hass
+        self._entry = entry
+        self._hass = hass
         self._update_interval = update_interval
         self._subscriptions: defaultdict[
             str, set[Callable[[ProtectDeviceType], None]]
@@ -109,12 +112,12 @@ class ProtectData:
     @property
     def disable_stream(self) -> bool:
         """Check if RTSP is disabled."""
-        return self.entry.options.get(CONF_DISABLE_RTSP, False)  # type: ignore[no-any-return]
+        return self._entry.options.get(CONF_DISABLE_RTSP, False)  # type: ignore[no-any-return]
 
     @property
     def max_events(self) -> int:
         """Max number of events to load at once."""
-        return self.entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)  # type: ignore[no-any-return]
+        return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)  # type: ignore[no-any-return]
 
     def get_rtsps_streams(self, camera_id: str) -> RTSPSStreams | None:
         """Return the library-owned public-API RTSPS streams for a camera.
@@ -135,8 +138,8 @@ class ProtectData:
         self, add_callback: Callable[[ProtectAdoptableDeviceModel], None]
     ) -> None:
         """Add an callback for on device adopt."""
-        self.entry.async_on_unload(
-            async_dispatcher_connect(self.hass, self.adopt_signal, add_callback)
+        self._entry.async_on_unload(
+            async_dispatcher_connect(self._hass, self.adopt_signal, add_callback)
         )
 
     def get_by_types(
@@ -220,7 +223,7 @@ class ProtectData:
             api.subscribe_websocket_state(self._async_websocket_state_changed),
             api.subscribe_websocket(self._async_process_ws_message),
             async_track_time_interval(
-                self.hass, self._async_poll, self._update_interval
+                self._hass, self._async_poll, self._update_interval
             ),
             # Subscribe to the public devices websocket unconditionally so that
             # it is active before update_public() primes the cache.
@@ -305,7 +308,7 @@ class ProtectData:
             self.api.is_public_only and message.action is WSAction.ADD
         ):
             return
-        async_dispatcher_send(self.hass, self.channels_signal, new_obj)
+        async_dispatcher_send(self._hass, self.channels_signal, new_obj)
 
     @callback
     def _async_process_public_event(
@@ -350,8 +353,8 @@ class ProtectData:
             # above may see the pre-disconnect cache. Refresh again behind a
             # guaranteed-fresh snapshot (``update_public`` is serialized) so a
             # change from the disconnect gap cannot stay stale.
-            self.entry.async_create_background_task(
-                self.hass,
+            self._entry.async_create_background_task(
+                self._hass,
                 self._async_resignal_after_public_resync(),
                 "unifiprotect public reconnect refresh",
             )
@@ -362,7 +365,7 @@ class ProtectData:
             await self.api.update_public()
         except NotAuthorized:
             # A revoked API key cannot self-recover.
-            self.entry.async_start_reauth(self.hass)
+            self._entry.async_start_reauth(self._hass)
             return
         except (TimeoutError, ClientError, ServerDisconnectedError) as err:
             # Transport errors retry on the next reconnect.
@@ -374,7 +377,7 @@ class ProtectData:
         # entities; the platform adds only the missing ones.
         if self.api.has_public_bootstrap:
             for public in list(self.api.public_bootstrap.cameras.values()):
-                async_dispatcher_send(self.hass, self.channels_signal, public)
+                async_dispatcher_send(self._hass, self.channels_signal, public)
 
     @callback
     def _async_events_ws_state_changed(self, state: WebsocketState) -> None:
@@ -418,14 +421,14 @@ class ProtectData:
 
         if not success:
             level = logging.ERROR if was_success else logging.DEBUG
-            title = self.entry.title
+            title = self._entry.title
             _LOGGER.log(level, "%s: Connection lost", title, exc_info=exception)
             self._async_process_updates()
             return
 
         self._auth_failures = 0
         if not was_success:
-            _LOGGER.warning("%s: Connection restored", self.entry.title)
+            _LOGGER.warning("%s: Connection restored", self._entry.title)
             self._async_process_updates()
         elif force_update:
             self._async_process_updates()
@@ -448,7 +451,7 @@ class ProtectData:
             else:
                 await self.async_stop()
                 _LOGGER.exception("Reauthentication required")
-                self.entry.async_start_reauth(self.hass)
+                self._entry.async_start_reauth(self._hass)
             self._async_update_change(False, exception=ex)
         except ClientError as ex:
             self._async_update_change(False, exception=ex)
@@ -470,26 +473,26 @@ class ProtectData:
         if device.is_adopted_by_us:
             _LOGGER.debug("Device adopted: %s", device.id)
             if isinstance(device, Camera) and device.feature_flags.is_ptz:
-                self.hass.async_create_task(
+                self._hass.async_create_task(
                     self._async_adopt_ptz_camera(device),
                     name="unifiprotect_adopt_ptz_camera",
                 )
             else:
-                async_dispatcher_send(self.hass, self.adopt_signal, device)
+                async_dispatcher_send(self._hass, self.adopt_signal, device)
         else:
             _LOGGER.debug("New device detected: %s", device.id)
-            async_dispatcher_send(self.hass, self.add_signal, device)
+            async_dispatcher_send(self._hass, self.add_signal, device)
 
     async def _async_adopt_ptz_camera(self, camera: Camera) -> None:
         """Load PTZ patrol data and dispatch adopt signal for a PTZ camera."""
         await self.async_load_ptz_patrols_for_camera(camera)
-        async_dispatcher_send(self.hass, self.adopt_signal, camera)
+        async_dispatcher_send(self._hass, self.adopt_signal, camera)
 
     @callback
     def _async_remove_device(self, device: ProtectAdoptableDeviceModel) -> None:
-        registry = dr.async_get(self.hass)
+        registry = dr.async_get(self._hass)
         device_entry = registry.async_get_device_by_connection(
-            (dr.CONNECTION_NETWORK_MAC, device.mac), self.entry.entry_id
+            (dr.CONNECTION_NETWORK_MAC, device.mac), self._entry.entry_id
         )
         if device_entry:
             _LOGGER.debug("Device removed: %s", device.id)
@@ -506,7 +509,7 @@ class ProtectData:
             and "channels" in changed_data
         ):
             self._pending_camera_ids.remove(device.id)
-            async_dispatcher_send(self.hass, self.channels_signal, device)
+            async_dispatcher_send(self._hass, self.channels_signal, device)
 
         # trigger update for all Cameras with LCD screens
         # when NVR Doorbell settings updates
@@ -579,10 +582,10 @@ class ProtectData:
     @callback
     def _async_poll(self, now: datetime) -> None:
         """Poll the Protect API."""
-        self.entry.async_create_background_task(
-            self.hass,
+        self._entry.async_create_background_task(
+            self._hass,
             self.async_refresh(),
-            name=f"{DOMAIN} {self.entry.title} refresh",
+            name=f"{DOMAIN} {self._entry.title} refresh",
             eager_start=True,
         )
 
