@@ -1234,6 +1234,35 @@ async def test_matrix_color_preserves_tile_brightness(
     )
 
 
+@pytest.mark.parametrize(
+    ("factory", "method"),
+    [
+        pytest.param(
+            create_mock_multizone_light, "set_all_color_zones", id="multizone"
+        ),
+        pytest.param(create_mock_matrix_light, "set_matrix_colors", id="matrix"),
+    ],
+)
+async def test_partial_write_is_refused_when_the_state_cannot_be_read(
+    hass: HomeAssistant, factory: Callable[[], MockDevice], method: str
+) -> None:
+    """Test a partial write is not merged over the state of a failed read."""
+    device = factory()
+    device.state.power = 65535
+    await async_setup_lifx_entry(hass, device)
+    device.refresh_state.side_effect = LifxError("device unreachable")
+
+    with pytest.raises(HomeAssistantError, match="could not be read"):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0)},
+            blocking=True,
+        )
+
+    getattr(device, method).assert_not_awaited()
+
+
 async def test_matrix_color_writes_each_tile_in_the_chain(
     hass: HomeAssistant,
 ) -> None:

@@ -219,6 +219,31 @@ async def test_serial_discovery_repairs_configured_entry(
     config_entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
 
 
+@pytest.mark.parametrize(("source", "data"), SERIAL_DISCOVERY_SOURCES)
+async def test_serial_discovery_repairs_entry_that_has_not_been_migrated(
+    hass: HomeAssistant, source: str, data: DiscoveryData
+) -> None:
+    """Test serial discovery matches an entry that holds a colon separated ID."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: OLD_IP_ADDRESS},
+        unique_id=LEGACY_SERIAL,
+        version=1,
+        disabled_by=config_entries.ConfigEntryDisabler.USER,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": source}, data=data
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == IP_ADDRESS
+    assert config_entry.unique_id == SERIAL
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
 @pytest.mark.parametrize(
     "dhcp_mac",
     [
@@ -364,6 +389,30 @@ async def test_ip_discovery_aborts_when_device_is_missing(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.parametrize(("source", "data"), DISCOVERY_SOURCES)
+async def test_discovery_rejects_a_device_that_is_not_a_light(
+    hass: HomeAssistant, source: str, data: DiscoveryData
+) -> None:
+    """Test a discovered relay-only device is turned down rather than added."""
+    with (
+        patch(
+            "homeassistant.components.lifx.config_flow.find_by_ip",
+            side_effect=LifxUnsupportedDeviceError(),
+        ),
+        patch(
+            "homeassistant.components.lifx.config_flow.Device.connect",
+            side_effect=LifxUnsupportedDeviceError(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert not hass.config_entries.async_entries(DOMAIN)
 
 
 def test_flow_matching_uses_host() -> None:
