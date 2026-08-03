@@ -72,6 +72,7 @@ async def test_setup_entry_timeout_marks_retry(
 
 async def test_async_remove_config_entry_device(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     setup_integration: MockConfigEntry,
 ) -> None:
     """Only devices whose Habitron member is gone from the bus may be removed."""
@@ -82,12 +83,11 @@ async def test_async_remove_config_entry_device(
     # are treated as present.
     smhub.router.uid = "router-uid"
     smhub.router.modules = [MagicMock(uid="module-uid")]
-    dev_reg = dr.async_get(hass)
 
     # Hub, router and a still-present module all identify live devices → NOT
     # removable.
     for present_uid in (smhub.uid, "router-uid", "module-uid"):
-        device = dev_reg.async_get_or_create(
+        device = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, present_uid)},
             name=f"Device {present_uid}",
@@ -97,7 +97,7 @@ async def test_async_remove_config_entry_device(
         )
 
     # A uid no longer on the bus (a removed module) → removable.
-    other_device = dev_reg.async_get_or_create(
+    other_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "some-other-uid")},
         name="Sub module",
@@ -214,6 +214,7 @@ async def test_setup_entry_post_refresh_errors_mark_retry(
 async def test_setup_entry_removes_stale_device(
     hass: HomeAssistant,
     setup_homeassistant: None,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     mock_habitron_client: MagicMock,
     mock_smart_hub_setup: None,
@@ -222,8 +223,7 @@ async def test_setup_entry_removes_stale_device(
     """``_async_cleanup_stale_devices`` removes registry entries for gone modules."""
 
     mock_config_entry.add_to_hass(hass)
-    dev_reg = dr.async_get(hass)
-    stale = dev_reg.async_get_or_create(
+    stale = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "stale-uid")},
         name="Gone module",
@@ -232,4 +232,4 @@ async def test_setup_entry_removes_stale_device(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert dev_reg.async_get(stale.id) is None
+    assert device_registry.async_get(stale.id) is None

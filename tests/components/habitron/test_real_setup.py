@@ -94,6 +94,8 @@ class _ReplayClient:
 async def test_real_recording_builds_devices_and_entities(
     hass: HomeAssistant,
     setup_homeassistant: None,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Replaying a real recording sets up the full device + entity model."""
@@ -122,11 +124,13 @@ async def test_real_recording_builds_devices_and_entities(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Hub + router + the 11 recorded modules were registered as devices.
-    dev_reg = dr.async_get(hass)
-    devices = dr.async_entries_for_config_entry(dev_reg, mock_config_entry.entry_id)
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
     assert len(devices) >= recording["module_count"] + 2
 
     # The sensor platform created entities from the real module model.
-    ent_reg = er.async_get(hass)
-    entities = er.async_entries_for_config_entry(ent_reg, mock_config_entry.entry_id)
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
     assert any(entity.domain == "sensor" for entity in entities)
