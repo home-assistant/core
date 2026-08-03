@@ -115,9 +115,15 @@ class ActronAirPeripheralEntity(ActronAirEntity):
         )
 
     @property
-    def _peripheral(self) -> ActronAirPeripheral | None:
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available
+            and self._peripheral_serial in self.coordinator.peripherals
+        )
+
+    @property
+    def _peripheral(self) -> ActronAirPeripheral:
         """Get the current peripheral data from the coordinator."""
-        for peripheral in self.coordinator.data.peripherals:
-            if peripheral.serial_number == self._peripheral_serial:
-                return peripheral
-        return None
+        return self.coordinator.peripherals[self._peripheral_serial]

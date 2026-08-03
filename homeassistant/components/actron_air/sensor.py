@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from actron_neo_api import ActronAirStatus
 from actron_neo_api.models.zone import ActronAirPeripheral
@@ -46,9 +47,11 @@ SENSORS: tuple[ActronAirSensorEntityDescription, ...] = (
     ActronAirSensorEntityDescription(
         key="compressor_mode",
         translation_key="compressor_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=["off", "cool", "heat"],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda status: status.compressor_mode,
+        value_fn=lambda status: status.compressor_mode.lower() or None,
     ),
     ActronAirSensorEntityDescription(
         key="compressor_chasing_temperature",
@@ -84,6 +87,7 @@ SENSORS: tuple[ActronAirSensorEntityDescription, ...] = (
         key="compressor_speed",
         translation_key="compressor_speed",
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda status: status.compressor_speed,
@@ -98,8 +102,8 @@ SENSORS: tuple[ActronAirSensorEntityDescription, ...] = (
         value_fn=lambda status: status.live_aircon.compressor_capacity,
     ),
     ActronAirSensorEntityDescription(
-        key="fan_rpm",
-        translation_key="fan_rpm",
+        key="fan_speed",
+        translation_key="fan_speed",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -119,7 +123,6 @@ SENSORS: tuple[ActronAirSensorEntityDescription, ...] = (
 PERIPHERAL_SENSORS: tuple[ActronAirPeripheralSensorEntityDescription, ...] = (
     ActronAirPeripheralSensorEntityDescription(
         key="temperature",
-        translation_key="peripheral_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -127,7 +130,6 @@ PERIPHERAL_SENSORS: tuple[ActronAirPeripheralSensorEntityDescription, ...] = (
     ),
     ActronAirPeripheralSensorEntityDescription(
         key="humidity",
-        translation_key="peripheral_humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -135,7 +137,6 @@ PERIPHERAL_SENSORS: tuple[ActronAirPeripheralSensorEntityDescription, ...] = (
     ),
     ActronAirPeripheralSensorEntityDescription(
         key="battery",
-        translation_key="peripheral_battery",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -183,6 +184,7 @@ class ActronAirSensor(ActronAirAcEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> str | float | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
@@ -205,8 +207,7 @@ class ActronAirPeripheralSensor(ActronAirPeripheralEntity, SensorEntity):
         self._attr_unique_id = f"{peripheral.serial_number}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if (peripheral := self._peripheral) is None:
-            return None
-        return self.entity_description.value_fn(peripheral)
+        return self.entity_description.value_fn(self._peripheral)

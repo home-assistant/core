@@ -49,7 +49,12 @@
         "name": "Compressor live temperature"
       },
       "compressor_mode": {
-        "name": "Compressor mode"
+        "name": "Compressor mode",
+        "state": {
+          "cool": "Cool",
+          "heat": "Heat",
+          "off": "Off"
+        }
       },
       "compressor_power": {
         "name": "Compressor power"
@@ -57,20 +62,11 @@
       "compressor_speed": {
         "name": "Compressor speed"
       },
-      "fan_rpm": {
-        "name": "Fan RPM"
+      "fan_speed": {
+        "name": "Fan speed"
       },
       "outdoor_temperature": {
         "name": "Outdoor temperature"
-      },
-      "peripheral_battery": {
-        "name": "Battery"
-      },
-      "peripheral_humidity": {
-        "name": "Humidity"
-      },
-      "peripheral_temperature": {
-        "name": "Temperature"
       }
     },
     "switch": {
