@@ -52,7 +52,7 @@ async def test_update_devices_renames_device(
     # The integration subscribes a callback which the hub invokes once it has
     # fetched roller updates; grab it and simulate the hub reporting an update.
     notify_update = mock_hub.callback_subscribe.call_args[0][0]
-    await notify_update(aiopulse.UpdateType.rollers)
+    notify_update(aiopulse.UpdateType.rollers)
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_identifier(
@@ -62,7 +62,7 @@ async def test_update_devices_renames_device(
     assert device.name == "Roller"
 
     mock_roller.name = "Living room blind"
-    await notify_update(aiopulse.UpdateType.rollers)
+    notify_update(aiopulse.UpdateType.rollers)
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_identifier(
