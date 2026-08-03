@@ -360,6 +360,7 @@ async def test_pdu_dynamic_outlets(
     entry = entity_registry.async_get("sensor.ups1_outlet_a25_current")
     assert not entry
 
+
 async def test_outlet_sensors_without_outlet_count(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
