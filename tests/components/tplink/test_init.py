@@ -46,6 +46,7 @@ from homeassistant.util import dt as dt_util
 from . import (
     _mocked_device,
     _mocked_feature,
+    _mocked_strip_children,
     _patch_connect,
     _patch_discovery,
     _patch_single_discovery,
@@ -1245,3 +1246,84 @@ async def test_automatic_device_addition_does_not_remove_disabled_default(
     check_entities("hub")
     for child_id in (1, 2, 3):
         check_entities(f"child_{child_id}")
+
+
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that strip child devices link to the parent via via_device_id."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+    feature = _mocked_feature(
+        "consumption_this_month",
+        value=5.2,
+        type_=Feature.Type.Sensor,
+        category=Feature.Category.Primary,
+    )
+    parent = _mocked_device(
+        alias="my_plug",
+        features=[feature],
+        children=_mocked_strip_children(features=[feature]),
+        device_type=DeviceType.Strip,
+    )
+    with _patch_discovery(device=parent), _patch_connect(device=parent):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, parent.device_id), config_entry.entry_id
+    )
+    assert parent_device is not None
+
+    assert parent.children
+    for child in parent.children:
+        child_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, child.device_id), config_entry.entry_id
+        )
+        assert child_device is not None
+        assert child_device.id != parent_device.id
+        assert child_device.via_device_id == parent_device.id
+
+
+async def test_wall_switch_child_uses_connections(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that WallSwitch child devices merge with the parent via connections."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+    feature = _mocked_feature(
+        "consumption_this_month",
+        value=5.2,
+        type_=Feature.Type.Sensor,
+        category=Feature.Category.Primary,
+    )
+    parent = _mocked_device(
+        alias="my_plug",
+        features=[feature],
+        children=_mocked_strip_children(features=[feature]),
+        device_type=DeviceType.WallSwitch,
+    )
+    with _patch_discovery(device=parent), _patch_connect(device=parent):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, parent.device_id), config_entry.entry_id
+    )
+    assert parent_device is not None
+    assert parent_device.via_device_id is None
+
+    assert parent.children
+    for child in parent.children:
+        # WallSwitch children merge into the parent device via the mac connection
+        child_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, child.device_id), config_entry.entry_id
+        )
+        assert child_device is not None
+        assert child_device.id == parent_device.id
