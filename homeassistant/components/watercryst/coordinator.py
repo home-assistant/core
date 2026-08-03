@@ -58,6 +58,7 @@ class StateUpdateCoordinator(DataUpdateCoordinator[StateResponse]):
             WTCApiTemporaryError,
             HTTPStatusError,
             RequestError,
+            TimeoutError,
         ) as err:
             raise UpdateFailed("Failed to update state", retry_after=60) from err
         except WTCApiUnauthorizedError as err:
@@ -98,6 +99,7 @@ class MeasurementsUpdateCoordinator(DataUpdateCoordinator[MeasurementResponse]):
             WTCApiTemporaryError,
             HTTPStatusError,
             RequestError,
+            TimeoutError,
         ) as err:
             raise UpdateFailed("Failed to update measurements", retry_after=60) from err
         except WTCApiUnauthorizedError as err:

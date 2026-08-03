@@ -29,16 +29,16 @@ async def test_form_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_BSN: "2025001395300149",
+            CONF_BSN: "2026123456789123",
             CONF_API_KEY: "<api-key>",
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Schulungsgerät"
+    assert result["title"] == "HA Device"
     assert result["data"] == {
-        CONF_BSN: "2025001395300149",
+        CONF_BSN: "2026123456789123",
         CONF_API_KEY: "<api-key>",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -50,7 +50,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="2025001395300149",
+        unique_id="2026123456789123",
     )
     entry.add_to_hass(hass)
 
@@ -64,7 +64,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_BSN: "2025001395300149",
+            CONF_BSN: "2026123456789123",
             CONF_API_KEY: "<api-key>",
         },
     )
@@ -122,7 +122,7 @@ async def test_form_raise_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_BSN: "2025001395300149",
+            CONF_BSN: "2026123456789123",
             CONF_API_KEY: "<api-key>",
         },
     )
@@ -135,15 +135,15 @@ async def test_form_raise_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_BSN: "2025001395300149",
+            CONF_BSN: "2026123456789123",
             CONF_API_KEY: "<api-key>",
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Schulungsgerät"
+    assert result["title"] == "HA Device"
     assert result["data"] == {
-        CONF_BSN: "2025001395300149",
+        CONF_BSN: "2026123456789123",
         CONF_API_KEY: "<api-key>",
     }
 
@@ -165,7 +165,7 @@ async def test_form_wrong_device_serial(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_BSN: "<wrong-bsn>",
+            CONF_BSN: "2026123456789124",
             CONF_API_KEY: "<api-key>",
         },
     )

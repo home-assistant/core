@@ -33,10 +33,7 @@ _STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> DeviceResponse:
-    """Validate that the credentials work against the target device.
-
-    Load additional device info and check if the device is online.
-    """
+    """Validate that the credentials work against the target device."""
 
     biocat_serial_number: str = data[CONF_BSN]
     key: str = data[CONF_API_KEY]

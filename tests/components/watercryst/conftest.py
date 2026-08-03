@@ -34,8 +34,8 @@ async def mock_api_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
         client = mock.return_value
 
         info = DeviceResponse(
-            biocat_serial="2025001395300149",
-            electronics_serial="2041730218",
+            biocat_serial="2026123456789123",
+            electronics_serial="0123456789",
             device_type_number="12000273",
             line="BIOCAT",
             series="KLS 3000-C",
@@ -45,12 +45,12 @@ async def mock_api_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
             has_pressure_sensor=True,
             has_temperature_sensor=True,
             has_wireless_sensor_option=True,
-            name="Schulungsgerät",
+            name="HA Device",
             current_firmware_version="V01.05.07",
             current_hardware_version="2",
             latest_firmware_version="V01.08.05",
-            system_mac_address="00:A2:FF:01:EE:DE",
-            ble_mac_address="CC:F9:57:8F:EE:C4",
+            system_mac_address="00:A2:AA:BB:CC:DD",
+            ble_mac_address="CC:F9:AA:BB:CC:DD",
         )
 
         client.get_device_info = AsyncMock(return_value=info)
