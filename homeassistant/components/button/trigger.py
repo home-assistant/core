@@ -30,7 +30,7 @@ from . import DOMAIN
 _EVENT_BUTTON_DOMAIN_SPECS = {
     EVENT_DOMAIN: DomainSpec(device_class=EventDeviceClass.BUTTON)
 }
-_BEING_HELD_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
+_BUTTON_BEING_HELD_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_OPTIONS, default={}): {
             vol.Required(
@@ -124,7 +124,7 @@ class ButtonBeingHeldTrigger(StatelessEntityTriggerBase):
     """Trigger for button event entity being held."""
 
     _domain_specs = _EVENT_BUTTON_DOMAIN_SPECS
-    _schema = _BEING_HELD_TRIGGER_SCHEMA
+    _schema = _BUTTON_BEING_HELD_TRIGGER_SCHEMA
 
     @override
     def is_valid_state(
