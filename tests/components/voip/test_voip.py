@@ -339,32 +339,35 @@ async def test_pipeline(
         satellite._tones = Tones(0)
         satellite.connection_made(Mock())
 
-        assert satellite.state == AssistSatelliteState.IDLE
+        try:
+            assert satellite.state == AssistSatelliteState.IDLE
 
-        # Ensure audio queue is cleared before pipeline starts
-        satellite._audio_queue.put_nowait(bad_chunk)
+            # Ensure audio queue is cleared before pipeline starts
+            satellite._audio_queue.put_nowait(bad_chunk)
 
-        def send_audio(*args, **kwargs):
-            # Don't send audio
-            pass
+            def send_audio(*args, **kwargs):
+                # Don't send audio
+                pass
 
-        satellite.send_audio = Mock(side_effect=send_audio)
+            satellite.send_audio = Mock(side_effect=send_audio)
 
-        # silence
-        satellite.on_chunk(bytes(_ONE_SECOND))
+            # silence
+            satellite.on_chunk(bytes(_ONE_SECOND))
 
-        # "speech"
-        satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
+            # "speech"
+            satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
-        # silence
-        satellite.on_chunk(bytes(_ONE_SECOND))
+            # silence
+            satellite.on_chunk(bytes(_ONE_SECOND))
 
-        # Wait for mock pipeline to exhaust the audio stream
-        async with asyncio.timeout(1):
-            await done.wait()
+            # Wait for mock pipeline to exhaust the audio stream
+            async with asyncio.timeout(1):
+                await done.wait()
 
-        # Finished speaking
-        assert satellite.state == AssistSatelliteState.IDLE
+            # Finished speaking
+            assert satellite.state == AssistSatelliteState.IDLE
+        finally:
+            satellite.disconnect()
 
 
 async def test_stt_stream_timeout(
@@ -475,32 +478,35 @@ async def test_tts_timeout(
             satellite._tone_bytes[tone] = tone_bytes
 
         satellite.connection_made(Mock())
-        satellite.send_audio = Mock()
+        try:
+            satellite.send_audio = Mock()
 
-        original_send_tts = satellite._send_tts
+            original_send_tts = satellite._send_tts
 
-        async def send_tts(*args, **kwargs):
-            # Call original then end test successfully
-            with pytest.raises(TimeoutError):
-                await original_send_tts(*args, **kwargs)
+            async def send_tts(*args, **kwargs):
+                # Call original then end test successfully
+                with pytest.raises(TimeoutError):
+                    await original_send_tts(*args, **kwargs)
 
-            done.set()
+                done.set()
 
-        satellite._async_send_audio = AsyncMock(side_effect=async_send_audio)  # type: ignore[method-assign]
-        satellite._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
+            satellite._async_send_audio = AsyncMock(side_effect=async_send_audio)  # type: ignore[method-assign]
+            satellite._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
 
-        # silence
-        satellite.on_chunk(bytes(_ONE_SECOND))
+            # silence
+            satellite.on_chunk(bytes(_ONE_SECOND))
 
-        # "speech"
-        satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
+            # "speech"
+            satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
-        # silence
-        satellite.on_chunk(bytes(_ONE_SECOND))
+            # silence
+            satellite.on_chunk(bytes(_ONE_SECOND))
 
-        # Wait for mock pipeline to exhaust the audio stream
-        async with asyncio.timeout(1):
-            await done.wait()
+            # Wait for mock pipeline to exhaust the audio stream
+            async with asyncio.timeout(1):
+                await done.wait()
+        finally:
+            satellite.disconnect()
 
 
 async def test_tts_wrong_extension(
@@ -572,28 +578,33 @@ async def test_tts_wrong_extension(
 
         satellite._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
 
+        satellite.send_audio = Mock()
+
         satellite.connection_made(Mock())
 
-        # silence
-        satellite.on_chunk(bytes(_ONE_SECOND))
+        try:
+            # silence
+            satellite.on_chunk(bytes(_ONE_SECOND))
 
-        # "speech"
-        satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
+            # "speech"
+            satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
-        # silence (assumes relaxed VAD sensitivity)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
+            # silence (assumes relaxed VAD sensitivity)
+            satellite.on_chunk(bytes(_ONE_SECOND))
+            await asyncio.sleep(0.2)
+            satellite.on_chunk(bytes(_ONE_SECOND))
+            await asyncio.sleep(0.2)
+            satellite.on_chunk(bytes(_ONE_SECOND))
+            await asyncio.sleep(0.2)
+            satellite.on_chunk(bytes(_ONE_SECOND))
+            await asyncio.sleep(0.2)
+            satellite.on_chunk(bytes(_ONE_SECOND))
 
-        # Wait for mock pipeline to exhaust the audio stream
-        async with asyncio.timeout(3):
-            await done.wait()
+            # Wait for mock pipeline to exhaust the audio stream
+            async with asyncio.timeout(3):
+                await done.wait()
+        finally:
+            satellite.disconnect()
 
 
 async def test_tts_wrong_wav_format(
@@ -665,28 +676,33 @@ async def test_tts_wrong_wav_format(
 
         satellite._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
 
+        satellite.send_audio = Mock()
+
         satellite.connection_made(Mock())
 
-        # silence
-        satellite.on_chunk(bytes(_ONE_SECOND))
+        try:
+            # silence
+            satellite.on_chunk(bytes(_ONE_SECOND))
 
-        # "speech"
-        satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
+            # "speech"
+            satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
-        # silence (assumes relaxed VAD sensitivity)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
+            # silence (assumes relaxed VAD sensitivity)
+            satellite.on_chunk(bytes(_ONE_SECOND))
+            await asyncio.sleep(0.2)
+            satellite.on_chunk(bytes(_ONE_SECOND))
+            await asyncio.sleep(0.2)
+            satellite.on_chunk(bytes(_ONE_SECOND))
+            await asyncio.sleep(0.2)
+            satellite.on_chunk(bytes(_ONE_SECOND))
+            await asyncio.sleep(0.2)
+            satellite.on_chunk(bytes(_ONE_SECOND))
 
-        # Wait for mock pipeline to exhaust the audio stream
-        async with asyncio.timeout(3):
-            await done.wait()
+            # Wait for mock pipeline to exhaust the audio stream
+            async with asyncio.timeout(3):
+                await done.wait()
+        finally:
+            satellite.disconnect()
 
 
 async def test_empty_tts_output(
@@ -700,6 +716,8 @@ async def test_empty_tts_output(
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     satellite.addr = ("192.168.1.1", 12345)
     assert isinstance(satellite, VoipAssistSatellite)
+
+    done = asyncio.Event()
 
     async def async_pipeline_from_audio_stream(*args, **kwargs):
         stt_stream = kwargs["stt_stream"]
@@ -738,6 +756,7 @@ async def test_empty_tts_output(
                 data={"tts_output": {}},
             )
         )
+        done.set()
 
     with (
         patch(
@@ -748,30 +767,35 @@ async def test_empty_tts_output(
             "homeassistant.components.voip.assist_satellite.VoipAssistSatellite._send_tts",
         ) as mock_send_tts,
     ):
+        satellite.send_audio = Mock()
+
         satellite.connection_made(Mock())
 
-        # silence
-        satellite.on_chunk(bytes(_ONE_SECOND))
+        try:
+            # silence
+            satellite.on_chunk(bytes(_ONE_SECOND))
 
-        # "speech"
-        satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
+            # "speech"
+            satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
-        # silence (assumes relaxed VAD sensitivity)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
+            # silence (assumes relaxed VAD sensitivity)
+            satellite.on_chunk(bytes(_ONE_SECOND))
+            await asyncio.sleep(0.2)
+            satellite.on_chunk(bytes(_ONE_SECOND))
+            await asyncio.sleep(0.2)
+            satellite.on_chunk(bytes(_ONE_SECOND))
+            await asyncio.sleep(0.2)
+            satellite.on_chunk(bytes(_ONE_SECOND))
+            await asyncio.sleep(0.2)
+            satellite.on_chunk(bytes(_ONE_SECOND))
 
-        # Wait for mock pipeline to finish
-        async with asyncio.timeout(2):
-            await satellite._tts_done.wait()
+            # Wait for mock pipeline to finish
+            async with asyncio.timeout(2):
+                await done.wait()
 
-        mock_send_tts.assert_not_called()
+            mock_send_tts.assert_not_called()
+        finally:
+            satellite.disconnect()
 
 
 async def test_pipeline_error(
@@ -814,16 +838,19 @@ async def test_pipeline_error(
     ):
         satellite._tones = Tones.ERROR
         satellite.connection_made(Mock())
-        satellite._async_send_audio = AsyncMock(side_effect=async_send_audio)  # type: ignore[method-assign]
+        try:
+            satellite._async_send_audio = AsyncMock(side_effect=async_send_audio)  # type: ignore[method-assign]
 
-        satellite.on_chunk(bytes(_ONE_SECOND))
+            satellite.on_chunk(bytes(_ONE_SECOND))
 
-        # Wait for error tone to be played
-        async with asyncio.timeout(1):
-            await done.wait()
+            # Wait for error tone to be played
+            async with asyncio.timeout(1):
+                await done.wait()
 
-        assert sum(played_audio_bytes) > 0
-        assert played_audio_bytes == snapshot
+            assert sum(played_audio_bytes) > 0
+            assert played_audio_bytes == snapshot
+        finally:
+            satellite.disconnect()
 
 
 @pytest.mark.usefixtures("socket_enabled")
@@ -995,8 +1022,11 @@ async def test_announce_timeout(
         ),
     ):
         satellite.connection_made(Mock())
-        with pytest.raises(TimeoutError):
-            await satellite.async_announce(announcement)
+        try:
+            with pytest.raises(TimeoutError):
+                await satellite.async_announce(announcement)
+        finally:
+            satellite.disconnect()
 
 
 @pytest.mark.usefixtures("socket_enabled")
@@ -1149,5 +1179,8 @@ async def test_start_conversation_user_doesnt_pick_up(
     ):
         satellite.connection_made(Mock())
 
-        with pytest.raises(TimeoutError):
-            await satellite.async_start_conversation(announcement)
+        try:
+            with pytest.raises(TimeoutError):
+                await satellite.async_start_conversation(announcement)
+        finally:
+            satellite.disconnect()
