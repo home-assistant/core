@@ -475,6 +475,39 @@ async def test_remove_config_entry_device(
     assert response["success"]
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_metered_batt_relay",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("mock_envoy")
+async def test_dry_contact_relay_via_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the via_device chain relay -> Enpower -> Envoy is set up correctly."""
+    await setup_integration(hass, config_entry)
+
+    envoy_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234"), config_entry.entry_id
+    )
+    assert envoy_device is not None
+    enpower_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "654321"), config_entry.entry_id
+    )
+    assert enpower_device is not None
+    relay_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "NC1"), config_entry.entry_id
+    )
+    assert relay_device is not None
+
+    assert enpower_device.via_device_id == envoy_device.id
+    assert relay_device.via_device_id == enpower_device.id
+
+
 @pytest.mark.parametrize("mock_envoy", ["envoy_acb_batt"], indirect=["mock_envoy"])
 async def test_remove_config_entry_device_acb(
     hass: HomeAssistant,

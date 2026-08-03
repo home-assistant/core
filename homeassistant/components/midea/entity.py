@@ -6,7 +6,7 @@ from midealocal.device import MideaDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN, LOGGER
 from .device_catalog import MIDEA_DEVICE_NAMES
@@ -20,11 +20,14 @@ class MideaEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, device: MideaDevice, entity_key: str) -> None:
+    def __init__(
+        self, device: MideaDevice, entity_description: EntityDescription
+    ) -> None:
         """Initialize Midea base entity."""
         self._device = device
-        self._unique_id = f"{self._device.device_id}_{entity_key}"
+        self._unique_id = f"{self._device.device_id}_{entity_description.key}"
         self._device_name = self._device.name
+        self.entity_description = entity_description
 
     @override
     async def async_added_to_hass(self) -> None:

@@ -61,6 +61,14 @@
         "name": "Memory usage"
       }
     },
+    "switch": {
+      "ether": {
+        "name": "Ethernet"
+      },
+      "wlan": {
+        "name": "WLAN"
+      }
+    },
     "update": {
       "firmware_update": {
         "name": "RouterOS"
