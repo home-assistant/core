@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HotSpringConfigEntry, HotSpringDataUpdateCoordinator
-from .entity import HotSpringEntity, exception_handler
+from .entity import HotSpringEntity
+from .helpers import hotspring_exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -59,7 +60,7 @@ class HotSpringWaterHeaterEntity(HotSpringEntity, WaterHeaterEntity):
             return STATE_ON
         return STATE_OFF
 
-    @exception_handler
+    @hotspring_exception_handler
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
