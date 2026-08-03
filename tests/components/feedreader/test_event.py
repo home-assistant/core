@@ -21,47 +21,58 @@ from .const import VALID_CONFIG_DEFAULT
 from tests.common import async_fire_time_changed
 
 
+@pytest.mark.parametrize(
+    ("fixture_name", "expected_attributes"),
+    [
+        (
+            "feed_one_event",
+            {
+                ATTR_TITLE: "Title 1",
+                ATTR_LINK: "http://www.example.com/link/1",
+                ATTR_CONTENT: "Content 1",
+                ATTR_DESCRIPTION: "Description 1",
+            },
+        ),
+        (
+            "feed_two_event",
+            {
+                ATTR_TITLE: "Title 2",
+                ATTR_LINK: "http://www.example.com/link/2",
+                ATTR_CONTENT: "Content 2",
+                ATTR_DESCRIPTION: "Description 2",
+            },
+        ),
+        (
+            "feed_only_summary",
+            {
+                ATTR_TITLE: "Title 1",
+                ATTR_LINK: "http://www.example.com/link/1",
+                ATTR_CONTENT: "This is a summary",
+                ATTR_DESCRIPTION: "Description 1",
+            },
+        ),
+    ],
+)
 async def test_event_entity(
-    hass: HomeAssistant, feed_one_event, feed_two_event, feed_only_summary
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    fixture_name,
+    expected_attributes: dict,
 ) -> None:
     """Test feed event entity."""
     entry = create_mock_entry(VALID_CONFIG_DEFAULT)
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.feedreader.coordinator.feedparser.http.get",
-        side_effect=[feed_one_event, feed_two_event, feed_only_summary],
+        side_effect=[request.getfixturevalue(fixture_name)],
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
         state = hass.states.get("event.mock_title")
         assert state
-        assert state.attributes[ATTR_TITLE] == "Title 1"
-        assert state.attributes[ATTR_LINK] == "http://www.example.com/link/1"
-        assert state.attributes[ATTR_CONTENT] == "Content 1"
-        assert state.attributes[ATTR_DESCRIPTION] == "Description 1"
-
-        future = dt_util.utcnow() + timedelta(hours=1, seconds=1)
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-        state = hass.states.get("event.mock_title")
-        assert state
-        assert state.attributes[ATTR_TITLE] == "Title 2"
-        assert state.attributes[ATTR_LINK] == "http://www.example.com/link/2"
-        assert state.attributes[ATTR_CONTENT] == "Content 2"
-        assert state.attributes[ATTR_DESCRIPTION] == "Description 2"
-
-        future = dt_util.utcnow() + timedelta(hours=2, seconds=2)
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-        state = hass.states.get("event.mock_title")
-        assert state
-        assert state.attributes[ATTR_TITLE] == "Title 1"
-        assert state.attributes[ATTR_LINK] == "http://www.example.com/link/1"
-        assert state.attributes[ATTR_CONTENT] == "This is a summary"
-        assert state.attributes[ATTR_DESCRIPTION] == "Description 1"
+        for attribute, value in expected_attributes.items():
+            assert state.attributes[attribute] == value
 
 
 @pytest.mark.parametrize(
@@ -90,3 +101,27 @@ async def test_event_htmlentities(
         state = hass.states.get("event.mock_title")
         assert state
         assert state.attributes == snapshot
+
+
+async def test_no_state_change_when_no_new_entry(
+    hass: HomeAssistant, feed_two_event
+) -> None:
+    """Test feed event entity is not firing when there are no new entries."""
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.feedreader.coordinator.feedparser.http.get",
+        side_effect=[feed_two_event, feed_two_event],
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("event.mock_title")
+        assert state
+        old_state = state
+
+        future = dt_util.utcnow() + timedelta(hours=1, seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        state = hass.states.get("event.mock_title")
+        assert state == old_state
