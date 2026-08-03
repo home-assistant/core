@@ -559,7 +559,6 @@ class EntityTriggerBase(Trigger):
         # matches.
         return included > 0 and matches == included
 
-    # TODO: remove the noqa and sort it out
     @override
     async def async_attach_runner(  # noqa: C901
         self,
