@@ -676,10 +676,7 @@ class ControllerEvents:
             ):
                 # If a device entry is registered with the node ID based identifiers,
                 # just remove the device entry with the DSK identifier.
-                self.dev_reg.async_update_device(
-                    pre_provisioned_device.id,
-                    remove_config_entry_id=self.config_entry.entry_id,
-                )
+                self.dev_reg.async_remove_device(pre_provisioned_device.id)
             else:
                 # Add the node ID based identifiers to the device entry
                 # with the DSK identifier and remove the DSK identifier.
