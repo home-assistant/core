@@ -637,7 +637,7 @@ def _purge_filtered_event_data(
     exclude_event_data = instance.exclude_event_data
     event_types = set(include_event_data) | set(exclude_event_data)
     last_event_id = 0
-    to_purge = []
+    to_purge: list[tuple[int, int | None]] = []
     while len(to_purge) < instance.max_bind_vars:
         events = (
             session.query(
