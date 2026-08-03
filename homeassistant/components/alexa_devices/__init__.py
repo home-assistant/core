@@ -1,12 +1,12 @@
 """Alexa Devices integration."""
 
-from homeassistant.const import CONF_COUNTRY, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_COUNTRY, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_validation as cv, httpx_client
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 
-from .const import _LOGGER, CONF_LOGIN_DATA, CONF_SITE, COUNTRY_DOMAINS, DOMAIN
+from .const import CONF_LOGIN_DATA, CONF_SITE, COUNTRY_DOMAINS, DOMAIN, LOGGER
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .services import async_setup_services
 
@@ -56,7 +56,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
         on_reauth_required=_on_http2_reauth_required,
     )
 
-    entry.async_on_unload(coordinator.api.stop_http2_processing)
+    async def _async_stop_http2(_event: Event | None = None) -> None:
+        """Stop HTTP/2 processing on entry unload or HA shutdown."""
+        await coordinator.api.stop_http2_processing()
+
+    entry.async_on_unload(_async_stop_http2)
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_http2)
+    )
 
     entry.runtime_data = coordinator
 
@@ -84,9 +92,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
             hass.config_entries.async_update_entry(entry, version=1, minor_version=3)
             return True
 
-        _LOGGER.debug(
-            "Migrating from version %s.%s", entry.version, entry.minor_version
-        )
+        LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
         # Convert country in domain
         country = entry.data[CONF_COUNTRY].lower()
@@ -100,7 +106,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
             entry, data=new_data, version=1, minor_version=3
         )
 
-        _LOGGER.info(
+        LOGGER.info(
             "Migration to version %s.%s successful", entry.version, entry.minor_version
         )
 

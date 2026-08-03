@@ -11,10 +11,10 @@ from screenlogicpy.device_const.heat import HEAT_MODE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.components.climate import (
-    ATTR_PRESET_MODE,
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
 )
@@ -212,9 +212,12 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         prev_state = await self.async_get_last_state()
         if (
             prev_state is not None
-            and prev_state.attributes.get(ATTR_PRESET_MODE) is not None
+            and prev_state.attributes.get(ClimateEntityStateAttribute.PRESET_MODE)
+            is not None
         ):
-            mode = HEAT_MODE.parse(prev_state.attributes.get(ATTR_PRESET_MODE))
+            mode = HEAT_MODE.parse(
+                prev_state.attributes.get(ClimateEntityStateAttribute.PRESET_MODE)
+            )
             _LOGGER.debug(
                 "Startup setting last_preset to %s from prev_state",
                 mode.name,

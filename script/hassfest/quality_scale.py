@@ -546,7 +546,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "london_underground",
     "lookin",
     "loqed",
-    "luci",
     "luftdaten",
     "lupusec",
     "lutron",
@@ -621,7 +620,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "nasweb",
     "neato",
     "nederlandse_spoorwegen",
-    "netatmo",
     "netdata",
     "netgear",
     "netgear_lte",
@@ -684,7 +682,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "otbr",
     "otp",
     "ourgroceries",
-    "overkiz",
     "ovo_energy",
     "owntracks",
     "p1_monitor",
@@ -862,7 +859,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "statsd",
     "steam_online",
     "steamist",
-    "stiebel_eltron",
     "stream",
     "streamlabswater",
     "subaru",
@@ -968,7 +964,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "vilfo",
     "vivotek",
     "vizio",
-    "vlc",
     "vlc_telnet",
     "voicerss",
     "voip",
@@ -1498,7 +1493,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "london_underground",
     "lookin",
     "loqed",
-    "luci",
     "luftdaten",
     "lupusec",
     "lutron",
@@ -1576,7 +1570,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "nederlandse_spoorwegen",
     "nest",
     "ness_alarm",
-    "netatmo",
     "netdata",
     "netgear",
     "netgear_lte",
@@ -1651,7 +1644,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "panel_iframe",
     "peco",
     "pencom",
-    "permobil",
     "persistent_notification",
     "person",
     "philips_js",
@@ -1827,7 +1819,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "statsd",
     "steam_online",
     "steamist",
-    "stiebel_eltron",
     "stream",
     "streamlabswater",
     "stookwijzer",
@@ -1940,7 +1931,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "vilfo",
     "vivotek",
     "vizio",
-    "vlc",
     "vlc_telnet",
     "voicerss",
     "voip",
@@ -2084,6 +2074,7 @@ NO_QUALITY_SCALE = [
     "timer",
     "trace",
     "usage_prediction",
+    "vibration",
     "web_rtc",
     "webhook",
     "websocket_api",
@@ -2095,7 +2086,7 @@ SCHEMA = vol.Schema(
     {
         vol.Required("rules"): vol.Schema(
             {
-                vol.Optional(rule.name): vol.Any(
+                vol.Required(rule.name): vol.Any(
                     vol.In(["todo", "done"]),
                     vol.Schema(
                         {

@@ -2,13 +2,12 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable, Mapping, Sequence
-import dataclasses
 from enum import Enum
 from functools import cache, partial
 import inspect
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, TypedDict, cast, override
+from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 import voluptuous as vol
 
@@ -60,7 +59,7 @@ from . import (
     target as target_helpers,
     template,
 )
-from .deprecation import deprecated_class, deprecated_function, deprecated_hass_argument
+from .deprecation import deprecated_hass_argument
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
@@ -221,33 +220,6 @@ class ServiceParams(TypedDict):
     service: str
     service_data: dict[str, Any]
     target: dict | None
-
-
-@deprecated_class(
-    "homeassistant.helpers.target.TargetSelection",
-    breaks_in_ha_version="2026.8",
-)
-class ServiceTargetSelector(target_helpers.TargetSelection):
-    """Class to hold a target selector for a service."""
-
-    def __init__(self, service_call: ServiceCall) -> None:
-        """Extract ids from service call data."""
-        super().__init__(service_call.data)
-
-
-@deprecated_class(
-    "homeassistant.helpers.target.SelectedEntities",
-    breaks_in_ha_version="2026.8",
-)
-class SelectedEntities(target_helpers.SelectedEntities):
-    """Class to hold the selected entities."""
-
-    @override
-    def log_missing(
-        self, missing_entities: set[str], logger: logging.Logger | None = None
-    ) -> None:
-        """Log about missing items."""
-        super().log_missing(missing_entities, logger or _LOGGER)
 
 
 def call_from_config(
@@ -441,21 +413,6 @@ async def async_extract_entity_ids(
         service_call.hass, target_selection, expand_group
     )
     return referenced.referenced | referenced.indirectly_referenced
-
-
-@deprecated_function(
-    "homeassistant.helpers.target.async_extract_referenced_entity_ids",
-    breaks_in_ha_version="2026.8",
-)
-def async_extract_referenced_entity_ids(
-    hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
-) -> SelectedEntities:
-    """Extract referenced entity IDs from a service call."""
-    target_selection = target_helpers.TargetSelection(service_call.data)
-    selected = target_helpers.async_extract_referenced_entity_ids(
-        hass, target_selection, expand_group
-    )
-    return SelectedEntities(**dataclasses.asdict(selected))
 
 
 @deprecated_hass_argument(breaks_in_ha_version="2026.10")

@@ -3,7 +3,6 @@
 import asyncio
 import base64
 from contextlib import suppress
-from datetime import datetime
 import logging
 from pathlib import Path
 from typing import Any, override
@@ -40,6 +39,7 @@ from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.util import dt as dt_util
 
 from .addon import get_addon_manager
 from .const import (
@@ -456,13 +456,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         self.ws_address = f"ws://{discovery_info.host}:{discovery_info.port}"
         home_id_display = format_home_id_for_display(int(home_id))
-        # Show home ID and network location in discovery notification
         self.context.update(
             {
                 "title_placeholders": {
-                    "host": discovery_info.host,
-                    "port": str(discovery_info.port),
-                    "home_id": home_id_display,
+                    CONF_NAME: (
+                        f"Network {home_id_display} at "
+                        f"{discovery_info.host}:{discovery_info.port}"
+                    )
                 }
             }
         )
@@ -1574,8 +1574,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         self.socket_path = discovery_info.socket_path
+        home_id_display = format_home_id_for_display(discovery_info.zwave_home_id)
         self.context["title_placeholders"] = {
-            CONF_NAME: f"{discovery_info.name} via ESPHome"
+            CONF_NAME: f"Network {home_id_display} via {discovery_info.name} (ESPHome)"
         }
         self._adapter_discovered = True
 
@@ -1628,7 +1629,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # save the backup to a file just in case
         self.backup_filepath = Path(
             self.hass.config.path(
-                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"  # pylint: disable=home-assistant-enforce-naive-now
+                f"zwavejs_nvm_backup_{dt_util.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
             )
         )
         try:

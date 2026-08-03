@@ -154,3 +154,103 @@ async def test_user_flow_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_ouman_client")
+@pytest.mark.parametrize(
+    "new_input",
+    [
+        pytest.param(
+            {
+                CONF_URL: "http://192.168.1.200",
+                CONF_USERNAME: "new-user",
+                CONF_PASSWORD: "new-pass",
+            },
+            id="new_url_and_credentials",
+        ),
+        pytest.param(
+            {**USER_INPUT, CONF_PASSWORD: "new-pass"},
+            id="same_url_new_password",
+        ),
+    ],
+)
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    new_input: dict[str, str],
+) -> None:
+    """Test a successful reconfiguration updates the entry data."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], new_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == new_input
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_error"),
+    [
+        (OumanClientCommunicationError("Connection failed"), "cannot_connect"),
+        (OumanClientAuthenticationError("Invalid credentials"), "invalid_auth"),
+        (RuntimeError("Unexpected"), "unknown"),
+    ],
+)
+async def test_reconfigure_flow_errors_recover(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ouman_client: AsyncMock,
+    error: Exception,
+    expected_error: str,
+) -> None:
+    """Test that reconfigure errors are surfaced and the flow can recover."""
+    mock_config_entry.add_to_hass(hass)
+    mock_ouman_client.login.side_effect = error
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    mock_ouman_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures("mock_ouman_client")
+async def test_reconfigure_flow_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test aborting when reconfiguring to the URL of another entry."""
+    mock_config_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Ouman EH-800",
+        data={**USER_INPUT, CONF_URL: "http://192.168.1.200"},
+    )
+    other_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {**USER_INPUT, CONF_URL: "http://192.168.1.200"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
