@@ -221,8 +221,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                     # can't help, and the dashboard needn't be asked.
                     break
             self._noise_psk = None
-
-        if user_input is not None:
+        else:
             self._noise_psk = user_input[CONF_NOISE_PSK]
             error = await self.fetch_device_info()
             if error is None:
@@ -294,6 +293,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                     await self._async_repair_stored_key(candidate)
                     break
                 if response != ERROR_INVALID_ENCRYPTION_KEY:
+                    # Not a key problem — don't leave an unproven
+                    # candidate behind for a later retry.
+                    self._noise_psk = None
                     break
 
             # If no fetched key worked, unset again for the manual step.

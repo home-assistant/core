@@ -1634,6 +1634,48 @@ async def test_user_flow_offline_device_stops_candidate_probing(
     mock_get_encryption_key.assert_not_called()
 
 
+@pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
+async def test_user_flow_manual_key_repairs_stale_storage(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a manual key in the encryption_key step repairs a stale stored key."""
+    hass_storage[ENCRYPTION_KEY_STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": ENCRYPTION_KEY_STORAGE_KEY,
+        "data": {"keys": {"11:22:33:44:55:aa": WRONG_NOISE_PSK}},
+    }
+
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test", "11:22:33:44:55:AA"),
+        InvalidEncryptionKeyAPIError("Wrong key", "test", "11:22:33:44:55:AA"),
+        DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:AA"),
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_NOISE_PSK] == VALID_NOISE_PSK
+    # The stale stored key was repaired with the manually proven one.
+    storage = await async_get_encryption_key_storage(hass)
+    assert await storage.async_get_key("11:22:33:44:55:aa") == VALID_NOISE_PSK
+
+
 async def test_repair_stored_key_without_mac_is_a_no_op(hass: HomeAssistant) -> None:
     """Test the repair helper does nothing when no MAC is known."""
     flow = config_flow.EsphomeFlowHandler()
