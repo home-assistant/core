@@ -44,7 +44,7 @@ async def test_switch_turn_on(hass: HomeAssistant, mock_api: MagicMock) -> None:
     with patch("homeassistant.components.mikrotik.PLATFORMS", [Platform.SWITCH]):
         await setup_mikrotik_entry(hass, interface_data=[dict(WLAN1_INTERFACE)])
 
-    entity_id = "switch.wlan1_wlan1"
+    entity_id = "switch.wlan1_wlan"
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
@@ -66,7 +66,7 @@ async def test_switch_turn_off(hass: HomeAssistant, mock_api: MagicMock) -> None
     with patch("homeassistant.components.mikrotik.PLATFORMS", [Platform.SWITCH]):
         await setup_mikrotik_entry(hass, interface_data=[dict(ETHER1_INTERFACE)])
 
-    entity_id = "switch.ether1_ether1"
+    entity_id = "switch.ether1_ethernet"
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 

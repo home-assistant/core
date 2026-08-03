@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_entities_created[switch.ether1_ether1-entry]
+# name: test_switch_entities_created[switch.ether1_ethernet-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.ether1_ether1',
+    'entity_id': 'switch.ether1_ethernet',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'ether1',
+    'object_id_base': 'Ethernet',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'ether1',
+    'original_name': 'Ethernet',
     'platform': 'mikrotik',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,21 +36,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities_created[switch.ether1_ether1-state]
+# name: test_switch_entities_created[switch.ether1_ethernet-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ether1 ether1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ether1 Ethernet',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.ether1_ether1',
+    'entity_id': 'switch.ether1_ethernet',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_entities_created[switch.wlan1_wlan1-entry]
+# name: test_switch_entities_created[switch.wlan1_wlan-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.wlan1_wlan1',
+    'entity_id': 'switch.wlan1_wlan',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,12 +72,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'wlan1',
+    'object_id_base': 'WLAN',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'wlan1',
+    'original_name': 'WLAN',
     'platform': 'mikrotik',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -87,14 +87,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities_created[switch.wlan1_wlan1-state]
+# name: test_switch_entities_created[switch.wlan1_wlan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'wlan1 wlan1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'wlan1 WLAN',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.wlan1_wlan1',
+    'entity_id': 'switch.wlan1_wlan',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

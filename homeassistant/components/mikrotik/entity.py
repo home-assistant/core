@@ -82,5 +82,4 @@ class MikrotikDeviceEntity(MikrotikBaseEntity):
             via_device=(DOMAIN, coordinator.api.serial_number),
         )
         self._attr_unique_id = ident
-        self._attr_name = name
         self._interface = interface

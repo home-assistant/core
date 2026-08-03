@@ -108,12 +108,6 @@ class MikrotikData:
             "disabled",
         }
 
-        self.interfaces = [
-            {key: interf.get(key) for key in fields}
-            for interf in all_interfs
-            if interf.get("type") != "loopback"
-        ]
-
         poe_interfs = self.command(MIKROTIK_SERVICES[POE], suppress_errors=True) or []
 
         poe_by_id = {
@@ -121,9 +115,22 @@ class MikrotikData:
             for poe_interf in poe_interfs
         }
 
-        for interf in self.interfaces:
-            if (poe_out := poe_by_id.get(interf[".id"])) is not None:
-                interf["poe-out"] = poe_out
+        existing_by_id = {interf[".id"]: interf for interf in self.interfaces}
+
+        interfaces = []
+        for interf in all_interfs:
+            if interf.get("type") == "loopback":
+                continue
+            data = {key: interf.get(key) for key in fields}
+            if (poe_out := poe_by_id.get(data[".id"])) is not None:
+                data["poe-out"] = poe_out
+            if existing := existing_by_id.get(data[".id"]):
+                existing.update(data)
+                interfaces.append(existing)
+            else:
+                interfaces.append(data)
+
+        self.interfaces = interfaces
 
     @staticmethod
     def load_mac(devices: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
