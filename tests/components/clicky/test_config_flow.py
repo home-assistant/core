@@ -10,6 +10,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import TEST_SITE_ID, TEST_SITEKEY
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test that we get the form."""
@@ -192,3 +194,38 @@ async def test_form_unknown(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
         CONF_SITEKEY: TEST_SITEKEY,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_duplicate_site_id(hass: HomeAssistant) -> None:
+    """Test that duplicate site IDs abort the config flow."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SITE_ID: TEST_SITE_ID,
+            CONF_SITEKEY: "different_sitekey",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    with patch(
+        "homeassistant.components.clicky.config_flow.ClickyClient",
+    ) as mock_lib:
+        client = mock_lib.return_value
+        client.query = AsyncMock()
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SITE_ID: TEST_SITE_ID,
+                CONF_SITEKEY: TEST_SITEKEY,
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
