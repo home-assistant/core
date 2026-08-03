@@ -50,7 +50,11 @@ async def test_update_interval_uses_remaining_calls(
     with patch.object(
         coordinator,
         "get_rate_limit",
-        return_value={"per-day": "20000", "window-seconds": "86400", "remaining": "100"},
+        return_value={
+            "per-day": "20000",
+            "window-seconds": "86400",
+            "remaining": "100",
+        },
     ):
         await coordinator.async_refresh()
         await hass.async_block_till_done()
