@@ -297,6 +297,57 @@ async def test_update_notifies_all_members_on_first_success(
         member.notify.assert_not_called()
 
 
+async def test_recovery_notifies_every_member_exactly_once(
+    smart_hub_stub: SmartHub,
+) -> None:
+    """On recovery a changed member is not written twice.
+
+    ``_set`` already notifies what it changed, so the catch-up loop must cover
+    only the members that still match their placeholder -- otherwise every
+    normal reading produces a duplicate entity state write.
+    """
+    smart_hub_stub.comm.get_smhub_update.return_value = {
+        "hardware": {
+            "cpu": {
+                "frequency current": "1500MHz",
+                "load": "12%",
+                "temperature": "55.5°C",
+            },
+            "memory": {"percent": "60%"},
+            "disk": {"percent": "30%"},
+        },
+        "software": {"loglevel": {"console": "0", "file": "0"}},
+    }
+    # Mixed on purpose: the CPU members change, the rest already match what the
+    # read returns.
+    smart_hub_stub.diags = [
+        Diagnostic(name="CPU Frequency", nmbr=0, type=10, value=0.0),
+        Diagnostic(name="CPU load", nmbr=1, type=10, value=0.0),
+        Diagnostic(name="CPU Temperature", nmbr=2, type=10, value=0.0),
+    ]
+    smart_hub_stub.sensors = [
+        Sensor(name="Memory usage", nmbr=0, type=2, value=60.0),
+        Sensor(name="Disk usage", nmbr=1, type=2, value=30.0),
+    ]
+    smart_hub_stub.loglvl = [
+        Sensor(name="Logging level console", nmbr=0, type=2, value=0),
+        Sensor(name="Logging level file", nmbr=1, type=2, value=0),
+    ]
+    members = [
+        *smart_hub_stub.diags,
+        *smart_hub_stub.sensors,
+        *smart_hub_stub.loglvl,
+    ]
+    for member in members:
+        member.notify = Mock()
+    smart_hub_stub.host_diags_valid = False
+
+    await smart_hub_stub.update()
+
+    for member in members:
+        assert member.notify.call_count == 1
+
+
 async def test_async_close_delegates_to_comm(
     smart_hub_stub: SmartHub,
 ) -> None:
