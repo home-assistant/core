@@ -1,7 +1,7 @@
 """Support for HomematicIP Cloud alarm control panel."""
 
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from homematicip.functionalHomes import SecurityAndAlarmHome
 
@@ -11,6 +11,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -51,12 +52,18 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     @override
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
+        if TYPE_CHECKING:
+            assert self.platform.config_entry is not None
         return DeviceInfo(
             identifiers={(DOMAIN, f"ACP {self._home.id}")},
             manufacturer="eQ-3",
             model=CONST_ALARM_CONTROL_PANEL_NAME,
             name=self.name,
-            via_device=(DOMAIN, self._home.id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self._home.id),
+                config_entry_id=self.platform.config_entry.entry_id,
+            ),
         )
 
     @property
