@@ -50,7 +50,6 @@ async def test_zone_device_via_device(
         patch_async_register_callback(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     parent_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, FAKE_ADDRESS_1), entry.entry_id

@@ -74,7 +74,7 @@ class MelnorZoneEntity(MelnorBluetoothEntity):
         self._valve = valve
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self._device.mac}-zone{valve.id}")},
+            identifiers={(DOMAIN, f"{self._device.mac}-zone{self._valve.id}")},
             manufacturer="Melnor",
             name=f"Zone {valve.id + 1}",
             via_device_id=dr.async_get_device_id_by_identifier(
