@@ -146,7 +146,7 @@ async def test_ssdp_discovery_with_udn(
     mock_smart_hub_setup: None,
     mock_coordinator_refresh: AsyncMock,
 ) -> None:
-    """SSDP discovery prefers the UDN as unique id."""
+    """Without a UPnP serial, SSDP discovery falls back to the UDN."""
     discovery = SsdpServiceInfo(
         ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
         ssdp_st="urn:habitron-com:device:SmartHub:1",
@@ -170,6 +170,66 @@ async def test_ssdp_discovery_with_udn(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     entry = result["result"]
     assert entry.unique_id == MOCK_UDN
+
+
+async def test_ssdp_prefers_serial_over_udn(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+) -> None:
+    """With both advertised, the serial wins over the UDN.
+
+    The manual and UDP paths key on the serial, so preferring the UDN here
+    would leave the same hub unmatched once its IP changes -- and offered as a
+    duplicate.
+    """
+    discovery = SsdpServiceInfo(
+        ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
+        ssdp_st="urn:habitron-com:device:SmartHub:1",
+        ssdp_location=f"http://{MOCK_HOST}:80/desc.xml",
+        upnp={ATTR_UPNP_UDN: MOCK_UDN, ATTR_UPNP_SERIAL: MOCK_SERIAL},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    await hass.async_block_till_done()
+    assert result["result"].unique_id == MOCK_SERIAL
+
+
+async def test_user_step_empty_probe_serial_falls_back_to_host_id(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+) -> None:
+    """A blank serial is no identifier and must not become the unique id.
+
+    Every hub answering with ``"serial": ""`` would otherwise share one empty
+    unique id and collide with each other.
+    """
+    with patch(
+        "homeassistant.components.habitron.config_flow.discover_smarthubs",
+        new=AsyncMock(return_value=[{"ip": MOCK_HOST, "serial": ""}]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={KEY_HOST: MOCK_HOST}
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == f"habitron_{MOCK_HOST}"
 
 
 async def test_ssdp_discovery_serial_fallback(

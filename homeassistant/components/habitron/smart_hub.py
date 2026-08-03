@@ -93,7 +93,10 @@ class SmartHub:
         await self.comm.get_smhub_info()
 
         self._mac = self.comm.com_mac
-        self.uid = self._mac.replace(":", "")
+        # The hub reports its MAC with either separator and in either case, and
+        # the uid becomes the device identifier plus every entity's unique id
+        # prefix -- so normalise it, or the same hub can end up with two sets.
+        self.uid = self._mac.replace(":", "").replace("-", "").upper()
         self._version = self.comm.com_version
         self._type = self.comm.com_hwtype
         self.host = self.comm.com_ip

@@ -44,7 +44,7 @@ def smart_hub_stub() -> SmartHub:
     return SmartHub(hass, config, comm)
 
 
-def _smhub_info(slug: str = "") -> dict:
+def _smhub_info(slug: str = "", mac: str = "AA:BB:CC:DD:EE:FF") -> dict:
     """A realistic SmartHub info payload as the client returns it."""
     return {
         "software": {"version": "9.9.9", "slug": slug},
@@ -53,7 +53,7 @@ def _smhub_info(slug: str = "") -> dict:
             "network": {
                 "ip": MOCK_HOST,
                 "host": "smarthub",
-                "lan mac": "AA:BB:CC:DD:EE:FF",
+                "lan mac": mac,
             },
         },
     }
@@ -71,11 +71,20 @@ def _smhub_info(slug: str = "") -> dict:
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "reported_mac",
+    # The uid derived from this becomes the device identifier and prefixes
+    # every entity unique id, so all three spellings have to land on one uid --
+    # a hub switching notation after a firmware update must not produce a
+    # second set of devices and entities.
+    ["AA:BB:CC:DD:EE:FF", "aa-bb-cc-dd-ee-ff", "aabbccddeeff"],
+)
 async def test_setup_registers_hub_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     slug: str,
     expected_conf_url: str,
+    reported_mac: str,
 ) -> None:
     """Full config-entry setup registers the hub device in the registry.
 
@@ -96,7 +105,7 @@ async def test_setup_registers_hub_device(
 
     client = AsyncMock(spec=HabitronClient)
     client.host = MOCK_HOST
-    client.get_smhub_info = AsyncMock(return_value=_smhub_info(slug))
+    client.get_smhub_info = AsyncMock(return_value=_smhub_info(slug, reported_mac))
     router = Router(uid="rt_1")
     router.modules = []
     router.areas = []

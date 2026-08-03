@@ -111,7 +111,7 @@
   },
   "issues": {
     "router_system_error": {
-      "description": "The router on {name} reported a system error. Please check the router and its communication lines; the issue clears automatically once the router responds again.",
+      "description": "The router on {name} reported a system error, so its modules cannot be reached. Check that the router is powered and its status LED is not signalling a fault, that the bus cabling to the modules is connected and undamaged, and that the bus terminator is in place. The issue disappears on its own within a few minutes of the router reporting a healthy state again; if it does not, restart the router.",
       "title": "Router system error on {name}"
     }
   }
