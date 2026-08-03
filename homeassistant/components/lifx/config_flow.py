@@ -57,6 +57,14 @@ class LIFXConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> None:
         """Set the device identity and repair a configured host."""
         raw_serial = normalize_serial(raw_serial)
+        for entry in self._async_current_entries():
+            if (
+                entry.unique_id != raw_serial
+                and async_entry_serial(entry) == raw_serial
+            ):
+                # A version 1 entry holds a colon separated unique ID until it
+                # is set up, which a disabled entry never is
+                self.hass.config_entries.async_update_entry(entry, unique_id=raw_serial)
         await self.async_set_unique_id(raw_serial, raise_on_progress=raise_on_progress)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 

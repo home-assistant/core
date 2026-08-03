@@ -33,7 +33,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
@@ -412,6 +412,16 @@ class LIFXColor(LIFXLight):
         sat = color.saturation_pct
         return (color.hue, sat) if sat else None
 
+    async def async_refresh_before_merge(self) -> None:
+        """Read what a partial write is merged over, or refuse to write it."""
+        await self.coordinator.async_refresh()
+        if not self.coordinator.last_update_success:
+            # The coordinator keeps the state it last read, which is what the
+            # write would be merged over and would then be written back
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="cannot_read_state"
+            )
+
 
 class LIFXHevLight(LIFXColor):
     """Representation of a LIFX Clean bulb, which has HEV LEDs."""
@@ -456,7 +466,7 @@ class LIFXMultiZone(LIFXColor):
         if not overwrites_every_zone:
             # Every zone is written back, so a zone changed outside Home
             # Assistant has to be read before it is merged over
-            await self.coordinator.async_refresh()
+            await self.async_refresh_before_merge()
 
         state = cast(MultiZoneLightState, self.coordinator.data)
         if overwrites_every_zone:
@@ -514,7 +524,7 @@ class LIFXMatrix(LIFXColor):
         if not overwrites_existing_color(changes):
             # Every tile is written back, so a tile changed outside Home
             # Assistant has to be read before it is merged over
-            await self.coordinator.async_refresh()
+            await self.async_refresh_before_merge()
         state = cast(MatrixLightState, self.coordinator.data)
         colors = [replace_hsbk(color, changes) for color in state.tile_colors]
         # tile_colors spans the whole chain, but each tile is written on its own

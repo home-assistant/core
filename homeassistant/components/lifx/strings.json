@@ -71,6 +71,9 @@
     "cannot_connect": {
       "message": "Unable to connect to the LIFX device at {host}"
     },
+    "cannot_read_state": {
+      "message": "The current state of the LIFX device could not be read, so the requested change was not written to it"
+    },
     "device_error": {
       "message": "Error communicating with the LIFX device: {error}"
     },
