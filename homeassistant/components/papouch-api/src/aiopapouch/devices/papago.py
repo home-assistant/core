@@ -1,5 +1,6 @@
-"""This file contains definition of the TH2E device."""
+"""This file contains definition of the Papago device family."""
 
+from dataclasses import dataclass
 import logging
 from typing import Any, cast, override
 
@@ -10,6 +11,19 @@ from ..exceptions import DeviceLogicError, DeviceParseError, DeviceResponseError
 from .base import PapouchDevice, find_tag
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class InputSettings:
+    """Contains information about 1 input of Papago."""
+
+    name: str
+    unit: str
+    decimal_count: str
+    trigger_impulse_count: str  # how much impulses are needed to increase counter
+    value_to_add: str  # and by how many
+    type_cnt: str
+    box_num: int
 
 
 class PapagoETH(PapouchDevice):
@@ -34,8 +48,35 @@ class PapagoETH(PapouchDevice):
         "Temperature (TMP)",
     ]
 
+    COUNTER_MODES = [
+        "Counter off",
+        "Count falling edges",
+        "Count rising edges",
+        "Count all edges",
+    ]
+
     BOX_SENSOR_BASE = 30
+
     SAVE_ENDPOINT = "savesettings.xml"
+
+    SENSOR_SETTINGS_KEYS = [
+        ("num01", "type"),
+        ("num02", "watch"),
+        ("num03", "watch2"),
+        ("num04", "watch3"),
+        ("str00", "name"),
+        ("str01", "min"),
+        ("str02", "max"),
+        ("str03", "hyst"),
+        ("str04", "min2"),
+        ("str05", "max2"),
+        ("str06", "hyst2"),
+        ("str07", "min3"),
+        ("str08", "max3"),
+        ("str09", "hyst3"),
+    ]
+
+    INPUT_ID_INCREMENT = 1000
 
     @override
     @property
@@ -61,24 +102,32 @@ class PapagoETH(PapouchDevice):
         """Return device's MAC address."""
         return self._mac_address
 
-    def __init__(self, api_client: PapouchTransport, settings: str, info: str) -> None:
-        """Constructor for Papago device.
-
-        Note that every Papago has a different settings XML
-        so unlike other devices we don't need it here.
-        """
+    def __init__(
+        self,
+        api_client: PapouchTransport,
+        settings: str,
+        device_name: str,
+        location: str,
+    ) -> None:
+        """Constructor for Papago device."""
 
         self.api_client = cast(PapouchHTTPClient, api_client)
 
-        self.info_root = defused_ET.fromstring(info)
         self.settings_root = defused_ET.fromstring(settings)
 
-        self._name = self.get_name()
-        self._location = self.get_location()
+        self._name = device_name
+        self._location = location
         self._mac_address = self.get_mac_address()
+
+        # Base class contains nested sensor and their types
+        # although not every Papago device even has more than 1 sensor
 
         self.units_sensors: dict[str, dict[str, Any]] = {}
         self.type_sensors: dict[str, str] = {}
+
+        self.number_outputs = 0
+
+        self.inputs: dict[str, InputSettings] = {}
 
         self._parse_initial_settings()
 
@@ -133,19 +182,11 @@ class PapagoETH(PapouchDevice):
 
     @override
     def get_location(self) -> str:
-        """Return the location of the device."""
-        heartbeat = find_tag(self.info_root, "heartbeat")
-        if heartbeat is not None:
-            return heartbeat.attrib.get("location", "")
-        return ""
+        raise DeviceLogicError("Papago shouldn't use this method!")
 
     @override
     def get_name(self) -> str:
-        """Return the name of the device."""
-        heartbeat = find_tag(self.info_root, "heartbeat")
-        if heartbeat is not None:
-            return heartbeat.attrib.get("device", "")
-        return ""
+        raise DeviceLogicError("Papago shouldn't use this method!")
 
     @override
     def get_mac_address(self) -> str:
@@ -176,12 +217,12 @@ class PapagoETH(PapouchDevice):
 
     @override
     def get_supported_binary_sensors(self) -> list[dict[str, Any]]:
-        """Unused in TH2E."""
+        """Unused in Papago."""
         return []
 
     @override
     def get_supported_numbers(self) -> list[dict[str, Any]]:
-        """Unused in TH2E."""
+        """Unused in Papago."""
         return []
 
     @override
@@ -231,25 +272,47 @@ class PapagoETH(PapouchDevice):
 
     @override
     def get_supported_switches(self) -> list[dict[str, Any]]:
-        """Unused in TH2E."""
+        """Unused in Papago."""
         return []
 
     @override
     def get_supported_selects(self) -> list[dict[str, Any]]:
         selects = []
 
-        for base_id, sensor_data in self.units_sensors.items():
-            sensor_name = sensor_data.get("name", f"Sensor {base_id}")
+        for item_id, sensor_data in self.units_sensors.items():
+            sensor_name = sensor_data.get("name", f"Sensor {item_id}")
             selects.append(
                 {
-                    "item_id": base_id,
+                    "item_id": item_id,
                     "category": "sensor_type",
                     "name": f"{sensor_name} type",
                     "options": self.SENSOR_TYPES,
                 }
             )
 
+        for item_id, input_data in self.inputs.items():
+            selects.append(
+                {
+                    "item_id": str(int(item_id) + self.INPUT_ID_INCREMENT),
+                    "category": "input_type",
+                    "name": f"{input_data.name} counter mode",
+                    "options": self.COUNTER_MODES,
+                }
+            )
+
         return selects
+
+    async def _update_settings(self) -> None:
+        settings = await self.api_client.fetch_settings()
+
+        try:
+            self.settings_root = defused_ET.fromstring(settings)
+        except defused_ET.ParseError as exception:
+            raise DeviceParseError(
+                f"Invalid settings XML: {exception}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            ) from exception
+
+        self._parse_initial_settings()
 
     @override
     async def execute_button_command(self, cmd_type: str) -> None:
@@ -273,6 +336,9 @@ class PapagoETH(PapouchDevice):
         if not response:
             return
 
+        await self._check_auto_detect_sensor_response(response)
+
+    async def _check_auto_detect_sensor_response(self, response: str) -> None:
         root = defused_ET.fromstring(response)
 
         result_tag = find_tag(root, "result")
@@ -292,14 +358,7 @@ class PapagoETH(PapouchDevice):
                     self.type_sensors[s_id] = sns_type
 
     async def _set_sensor_type(self, item_id: str, type_idx: str) -> None:
-        settings = await self.api_client.fetch_settings()
-
-        try:
-            settings_root = defused_ET.fromstring(settings)
-        except defused_ET.ParseError as exception:
-            raise DeviceParseError(
-                f"Invalid settings XML: {exception}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
-            ) from exception
+        await self._update_settings()
 
         def format_val(val: str) -> str:
             return val.removesuffix(".0")
@@ -307,7 +366,7 @@ class PapagoETH(PapouchDevice):
         box_num = int(item_id) - 1 + self.BOX_SENSOR_BASE
         target_box = None
 
-        for element in settings_root.iter("set"):
+        for element in self.settings_root.iter("set"):
             if element.attrib.get("box") == str(box_num):
                 target_box = element
                 break
@@ -317,25 +376,9 @@ class PapagoETH(PapouchDevice):
                 f"Box {box_num} not found in settings, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
             )
 
-        ordered_keys = [
-            ("num01", "type"),
-            ("num02", "watch"),
-            ("num03", "watch2"),
-            ("num04", "watch3"),
-            ("str00", "name"),
-            ("str01", "min"),
-            ("str02", "max"),
-            ("str03", "hyst"),
-            ("str04", "min2"),
-            ("str05", "max2"),
-            ("str06", "hyst2"),
-            ("str07", "min3"),
-            ("str08", "max3"),
-            ("str09", "hyst3"),
-        ]
-
         safe_defaults = {
             "name": f"Sensor {item_id}",
+            "tunit": "0",
             "watch": "0",
             "watch2": "0",
             "watch3": "0",
@@ -352,7 +395,7 @@ class PapagoETH(PapouchDevice):
 
         payload_parts = [f'<set box="{box_num}"']
 
-        for post_key, read_key in ordered_keys:
+        for post_key, read_key in self.SENSOR_SETTINGS_KEYS:
             if read_key == "type":
                 val = str(type_idx)
             else:
@@ -367,35 +410,7 @@ class PapagoETH(PapouchDevice):
 
         xml_payload = f'<?xml version="1.0" encoding="iso-8859-2"?>\n<root>{" ".join(payload_parts)}</root>'
 
-        resp_start = await self.api_client.write_command(
-            '<root><set box="0" /></root>',
-            f"{self.name} ({self.location})",
-            self.SAVE_ENDPOINT,
-        )
-
-        self._check_sensor_response(
-            resp_start,
-            expected_status="1",
-            action_msg="opening configuration transaction",
-        )
-
-        resp_data = await self.api_client.write_command(
-            xml_payload, f"{self.name} ({self.location})", self.SAVE_ENDPOINT
-        )
-        self._check_sensor_response(
-            resp_data, expected_status="1", action_msg="setting the type of the sensor"
-        )
-
-        resp_save = await self.api_client.write_command(
-            '<root><set box="99" /></root>',
-            f"{self.name} ({self.location})",
-            self.SAVE_ENDPOINT,
-        )
-        self._check_sensor_response(
-            resp_save,
-            expected_status="2",
-            action_msg="saving and restarting the device",
-        )
+        self._save_setting(xml_payload)
 
         self.type_sensors[item_id] = str(type_idx)
 
@@ -421,6 +436,81 @@ class PapagoETH(PapouchDevice):
                 f"Invalid XML response from device: {exception}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
             ) from exception
 
+    async def _save_setting(self, xml_payload: str) -> None:
+        resp_start = await self.api_client.write_command(
+            '<root><set box="0" /></root>',
+            f"{self.name} ({self.location})",
+            self.SAVE_ENDPOINT,
+        )
+
+        self._check_sensor_response(
+            resp_start,
+            expected_status="1",
+            action_msg="opening configuration transaction",
+        )
+
+        resp_data = await self.api_client.write_command(
+            xml_payload, f"{self.name} ({self.location})", self.SAVE_ENDPOINT
+        )
+
+        self._check_sensor_response(
+            resp_data, expected_status="1", action_msg="setting the type of the sensor"
+        )
+
+        resp_save = await self.api_client.write_command(
+            '<root><set box="99" /></root>',
+            f"{self.name} ({self.location})",
+            self.SAVE_ENDPOINT,
+        )
+        self._check_sensor_response(
+            resp_save,
+            expected_status="2",
+            action_msg="saving and restarting the device",
+        )
+
+    async def _set_input_type(self, item_id: str, type_idx: str) -> None:
+        """Set the counter mode for a specific input."""
+
+        await self._update_settings()
+
+        try:
+            real_input_id = str(int(item_id) - self.INPUT_ID_INCREMENT)
+        except ValueError as err:
+            raise DeviceLogicError(
+                f"Invalid item_id format for input: {item_id}"
+                f"device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            ) from err
+
+        input_item = self.inputs.get(real_input_id)
+        if not input_item:
+            raise DeviceLogicError(
+                f"Input with ID {real_input_id} not found in parsed data, "
+                f"device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            )
+
+        box_num = input_item.box_num
+
+        if type_idx == "0":
+            payload_content = (
+                f'<set box="{box_num}" num01="0" str01="{input_item.name}" />'
+            )
+        else:
+            payload_content = (
+                f'<set box="{box_num}" '
+                f'num01="{type_idx}" '
+                f'num02="{input_item.decimal_count}" '
+                f'str01="{input_item.name}" '
+                f'str02="{input_item.trigger_impulse_count}" '
+                f'str03="{input_item.value_to_add}" '
+                f'str04="{input_item.unit}" />'
+            )
+
+        xml_payload = f'<?xml version="1.0" encoding="iso-8859-2"?>\n<root>{payload_content}</root>'
+
+        await self._save_setting(xml_payload)
+
+        input_item.type_cnt = type_idx
+
     @override
     async def turn_on_switch(self, item_id: str) -> None:
         """Unused in Papago."""
@@ -445,6 +535,14 @@ class PapagoETH(PapouchDevice):
                 if 0 <= type_idx < len(self.SENSOR_TYPES):
                     return self.SENSOR_TYPES[type_idx]
 
+        if category == "input_type":
+            real_input_id = str(int(item_id) - self.INPUT_ID_INCREMENT)
+            input_item = self.inputs.get(real_input_id)
+            if input_item and str(input_item.type_cnt).isdigit():
+                mode_idx = int(input_item.type_cnt)
+                if 0 <= mode_idx < len(self.COUNTER_MODES):
+                    return self.COUNTER_MODES[mode_idx]
+
         return None
 
     @override
@@ -457,13 +555,30 @@ class PapagoETH(PapouchDevice):
 
             await self._set_sensor_type(item_id, type_idx)
 
+        if category == "input_type":
+            try:
+                type_idx = str(self.COUNTER_MODES.index(option))
+            except ValueError:
+                return
+
+            await self._set_input_type(item_id, type_idx)
+
     @override
     async def switch_to_web_mode(self) -> None:
         """Unused in Papago."""
+        raise DeviceLogicError("Calling not implemented method.")
 
     @override
     def _parse_initial_settings(self) -> None:
-        """For now it sets types of the sensors."""
+        """Base method for other devices to parse their settings."""
+        raise DeviceLogicError("Calling not implemented method.")
+
+
+class PapagoETH_2TH(PapagoETH):
+    """Represents Papago 2TH ETH."""
+
+    @override
+    def _parse_initial_settings(self) -> None:
         for element in self.settings_root.iter():
             if element.tag != "set":
                 continue
@@ -482,14 +597,111 @@ class PapagoETH(PapouchDevice):
                     self.type_sensors[sensor_id] = str(sns_type)
 
 
+class PapagoETH_1TH_2DI_1DO(PapagoETH):
+    """Represents Papago 1TH 2DI 1DO ETH."""
+
+    BOX_SENSOR_BASE = 40
+
+    # note that there will be always 1 output
+    BOX_OUTPUT_BASE = 30
+
+    BOX_INPUT_BASE = 31
+
+    SENSOR_SETTINGS_KEYS = [
+        ("num00", "tunit"),
+        ("num01", "type"),
+        ("num02", "watch"),
+        ("num03", "watch2"),
+        ("num04", "watch3"),
+        ("str01", "min"),
+        ("str02", "max"),
+        ("str03", "hyst"),
+        ("str04", "min2"),
+        ("str05", "max2"),
+        ("str06", "hyst2"),
+        ("str07", "min3"),
+        ("str08", "max3"),
+        ("str09", "hyst3"),
+    ]
+
+    @override
+    def _parse_initial_settings(self) -> None:
+        """Note that this Papago has only 1 sensor, but we still use the list from parent class."""
+
+        for element in self.settings_root.iter():
+            if element.tag != "set":
+                continue
+
+            box_id = element.attrib.get("box")
+            if not box_id or not box_id.isdigit():
+                continue
+
+            box_num = int(box_id)
+
+            match box_num:
+                case self.BOX_SENSOR_BASE:
+                    sns_type = element.attrib.get("type")
+
+                    if sns_type is None:
+                        raise DeviceParseError(
+                            f"The is no sensor type during parsing initial settings, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+                        )
+
+                    self.type_sensors["1"] = str(sns_type)
+
+                    self.units_sensors["1"] = {
+                        "name": "Sensor",
+                        "sub_sensors": {
+                            "1": {
+                                "type": str(sns_type),
+                                "unit": "0",
+                            }
+                        },
+                    }
+
+                case self.BOX_OUTPUT_BASE:
+                    # TODO
+                    continue
+
+                case x if self.BOX_INPUT_BASE <= x < self.BOX_SENSOR_BASE:
+                    counter_id = str(box_num - self.BOX_INPUT_BASE + 1)
+
+                    name = element.attrib.get("name", f"Input {counter_id}")
+                    unit = element.attrib.get("unit", "")
+                    dec = element.attrib.get("dec", "0")
+                    trigger_impulse_count = element.attrib.get("src", "1")
+                    value_to_add = element.attrib.get("dst", "1")
+                    type_cnt = element.attrib.get("enb", "0")
+
+                    self.inputs[counter_id] = InputSettings(
+                        name,
+                        unit,
+                        dec,
+                        trigger_impulse_count,
+                        value_to_add,
+                        type_cnt,
+                        box_num,
+                    )
+
+                case _:
+                    continue
+
+
 async def async_setup_papago(transport: PapouchTransport) -> PapagoETH:
     """Async factory for Papago devices."""
     settings = await transport.fetch_settings()
     info = await transport.fetch_info()
 
-    return PapagoETH(transport, settings, info)
-
     # if transport.protocol == "http":
-    #     return PapagoETH(transport, settings, info)
 
-    # return PapagoRS485(transport, settings, info)
+    root_info = defused_ET.fromstring(info)
+    heartbeat_tag = find_tag(root_info, "heartbeat")
+    device_name = heartbeat_tag.attrib.get("device")
+    location = heartbeat_tag.attrib.get("location")
+
+    if device_name == "Papago 2TH ETH":
+        return PapagoETH_2TH(transport, settings, device_name, location)
+    if device_name == "Papago 1TH 2DI 1DO ETH":
+        return PapagoETH_1TH_2DI_1DO(transport, settings, device_name, location)
+
+    raise DeviceLogicError(f"Unsupported Papago: {device_name}, location: {location}")

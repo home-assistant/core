@@ -268,6 +268,8 @@ class QuidoETH(QuidoBase):
 
             if element.tag == "temp":
                 val_str = element.attrib.get("val", "0")
+                if val_str == "":
+                    val_str = 0
                 parsed_data["temperature"][item_id] = float(val_str)
 
             elif element.tag == "dout":  # codespell:ignore dout
