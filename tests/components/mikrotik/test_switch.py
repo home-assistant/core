@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_mikrotik_entry
-from .conftest import MockCommandSideEffectFactory
 from .const import BRIDGE1_INTERFACE, ETHER1_INTERFACE, INTERFACE_DATA, WLAN1_INTERFACE
 
 from tests.common import snapshot_platform
@@ -75,7 +74,6 @@ async def test_switch_no_matching_interfaces(hass: HomeAssistant) -> None:
 async def test_switch_turn_on_off(
     hass: HomeAssistant,
     mock_api: MagicMock,
-    mock_command_side_effect: MockCommandSideEffectFactory,
     interface: dict[str, Any],
     entity_id: str,
     initial_state: str,
@@ -91,11 +89,7 @@ async def test_switch_turn_on_off(
     assert (state := hass.states.get(entity_id))
     assert state.state == initial_state
 
-    mock_api.side_effect = mock_command_side_effect(
-        interface,
-        {command: {"disabled": final_state == STATE_OFF}},
-        "/interface/print",
-    )
+    mock_api.return_value = [{**interface, "disabled": final_state == STATE_OFF}]
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
