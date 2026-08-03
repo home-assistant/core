@@ -24,7 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ClickyConfigEntry) -> bo
         session=session,
     )
 
-    # Store an API object for platforms to access
     coordinator = ClickyCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
