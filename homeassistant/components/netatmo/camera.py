@@ -269,12 +269,10 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         if self._webhook_connection is not None:
             return self._webhook_connection
 
-        # Fallback by parent class
-        if not super().available:
-            return False
-
         # Fallback to pyatmo property
-        return bool(getattr(self.device, "reachable", False))
+        return bool(
+            getattr(self.device, "alim_status", None) == NETATMO_ALIM_STATUS_ONLINE
+        )
 
     @property
     @override
@@ -291,7 +289,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         """Return entity specific state attributes."""
         return {
             "id": self.device.entity_id,
-            "monitoring": self._monitoring,
+            "monitoring": self.is_on,
             "sd_status": self.device.sd_status,
             "alim_status": self.device.alim_status,
             "is_local": self.device.is_local,
@@ -308,6 +306,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             return
         try:
             await self.device.async_monitoring_off()
+            # Clear transient monitoring webhook flag to reflect the actual state from the device.
+            self._webhook_on = None
         except (
             aiohttp.ClientPayloadError,
             aiohttp.ContentTypeError,
@@ -325,6 +325,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             return
         try:
             await self.device.async_monitoring_on()
+            # Clear transient monitoring webhook flag to reflect the actual state from the device.
+            self._webhook_on = None
         except (
             aiohttp.ClientPayloadError,
             aiohttp.ContentTypeError,
@@ -338,7 +340,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     async def stream_source(self) -> str | None:
         """Return the stream source."""
         # Return None when the camera cannot provide a live stream.
-        if not self.is_on:
+        if not self.is_on or not self.available:
             return None
 
         if self.device.is_local:
@@ -358,15 +360,11 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         self._webhook_connection = None
         self._webhook_on = None
 
-        if self.device.reachable:
-            # NDB cameras do not have motion detection, so we set to False.
-            if self.device_type == "NDB":
-                self._attr_motion_detection_enabled = False
-            # Other cameras have motion detection when monitoring.
-            else:
-                self._attr_motion_detection_enabled = self.is_on
-        else:
+        if self.device_type == "NDB":
             self._attr_motion_detection_enabled = False
+        # Other cameras have motion detection when monitoring.
+        else:
+            self._attr_motion_detection_enabled = self.is_on
 
         self.data_handler.events[self.device.entity_id] = self.process_events(
             self.device.events
