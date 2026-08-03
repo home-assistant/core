@@ -98,7 +98,7 @@ async def test_point_via_device_id(
     assert point_device
 
     panel_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, mock_config_entry.unique_id or mock_config_entry.entry_id),
+        (DOMAIN, mock_config_entry.unique_id),
         mock_config_entry.entry_id,
     )
     assert panel_device
