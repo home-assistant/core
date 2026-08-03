@@ -6,8 +6,10 @@ from typing import Protocol, cast
 import telegram
 from telegram import Bot
 from telegram.constants import InputMediaType
-from telegram.error import InvalidToken, TelegramError
+from telegram.error import InvalidToken, NetworkError, TelegramError
 import voluptuous as vol
+
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
