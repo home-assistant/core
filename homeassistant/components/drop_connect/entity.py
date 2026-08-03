@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -42,11 +43,10 @@ class DROPEntity(CoordinatorEntity[DROPDeviceDataUpdateCoordinator]):
             identifiers={(DOMAIN, unique_id)},
         )
         if entry_data[CONF_DEVICE_TYPE] != DEV_HUB:
-            self._attr_device_info.update(
-                {
-                    "via_device": (
-                        DOMAIN,
-                        entry_data[CONF_DEVICE_OWNER_ID],
-                    )
-                }
+            # The owner hub lives in a separate config entry created independently by
+            # MQTT discovery, so it may not exist yet. Link best-effort when present.
+            via_device = dr.async_get(coordinator.hass).async_get_device(
+                identifiers={(DOMAIN, entry_data[CONF_DEVICE_OWNER_ID])}
             )
+            if via_device is not None:
+                self._attr_device_info["via_device_id"] = via_device.id
