@@ -15,7 +15,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import device_info
-from .const import CONF_NICKNAME
+from .const import CONF_SITE_ID
 from .coordinator import ClickyConfigEntry, ClickyCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -41,13 +41,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Clicky Web Analytics platform."""
     coordinator = entry.runtime_data
-    nickname = entry.data[CONF_NICKNAME]
+    site_id = entry.data[CONF_SITE_ID]
 
     async_add_entities(
         ClickySensor(
             coordinator=coordinator,
             description=description,
-            nickname=nickname,
+            site_id=site_id,
         )
         for description in SENSOR_TYPES
     )
@@ -63,13 +63,13 @@ class ClickySensor(CoordinatorEntity[ClickyCoordinator], SensorEntity):
         self,
         coordinator: ClickyCoordinator,
         description: SensorEntityDescription,
-        nickname: str,
+        site_id: str,
     ) -> None:
         """Initialise the platform with a data instance."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{nickname}_{description.key}"
-        self._attr_device_info = device_info(nickname)
+        self._attr_unique_id = f"{site_id}_{description.key}"
+        self._attr_device_info = device_info(site_id)
 
     @property
     @override

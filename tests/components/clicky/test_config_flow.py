@@ -4,16 +4,11 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.clicky.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.clicky.const import (
-    CONF_NICKNAME,
-    CONF_SITE_ID,
-    CONF_SITEKEY,
-    DOMAIN,
-)
+from homeassistant.components.clicky.const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import TEST_NICKNAME, TEST_SITE_ID, TEST_SITEKEY
+from .const import TEST_SITE_ID, TEST_SITEKEY
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -37,16 +32,14 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NICKNAME: TEST_NICKNAME,
                 CONF_SITE_ID: TEST_SITE_ID,
                 CONF_SITEKEY: TEST_SITEKEY,
             },
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NICKNAME
+    assert result["title"] == TEST_SITE_ID
     assert result["data"] == {
-        CONF_NICKNAME: TEST_NICKNAME,
         CONF_SITE_ID: TEST_SITE_ID,
         CONF_SITEKEY: TEST_SITEKEY,
     }
@@ -72,7 +65,6 @@ async def test_form_invalid_auth(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NICKNAME: TEST_NICKNAME,
                 CONF_SITE_ID: TEST_SITE_ID,
                 CONF_SITEKEY: TEST_SITEKEY,
             },
@@ -93,16 +85,14 @@ async def test_form_invalid_auth(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NICKNAME: TEST_NICKNAME,
                 CONF_SITE_ID: TEST_SITE_ID,
                 CONF_SITEKEY: TEST_SITEKEY,
             },
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NICKNAME
+    assert result["title"] == TEST_SITE_ID
     assert result["data"] == {
-        CONF_NICKNAME: TEST_NICKNAME,
         CONF_SITE_ID: TEST_SITE_ID,
         CONF_SITEKEY: TEST_SITEKEY,
     }
@@ -128,7 +118,6 @@ async def test_form_cannot_connect(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NICKNAME: TEST_NICKNAME,
                 CONF_SITE_ID: TEST_SITE_ID,
                 CONF_SITEKEY: TEST_SITEKEY,
             },
@@ -150,16 +139,14 @@ async def test_form_cannot_connect(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NICKNAME: TEST_NICKNAME,
                 CONF_SITE_ID: TEST_SITE_ID,
                 CONF_SITEKEY: TEST_SITEKEY,
             },
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NICKNAME
+    assert result["title"] == TEST_SITE_ID
     assert result["data"] == {
-        CONF_NICKNAME: TEST_NICKNAME,
         CONF_SITE_ID: TEST_SITE_ID,
         CONF_SITEKEY: TEST_SITEKEY,
     }
@@ -183,7 +170,6 @@ async def test_form_unknown(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NICKNAME: TEST_NICKNAME,
                 CONF_SITE_ID: TEST_SITE_ID,
                 CONF_SITEKEY: TEST_SITEKEY,
             },
@@ -205,16 +191,14 @@ async def test_form_unknown(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NICKNAME: TEST_NICKNAME,
                 CONF_SITE_ID: TEST_SITE_ID,
                 CONF_SITEKEY: TEST_SITEKEY,
             },
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NICKNAME
+    assert result["title"] == TEST_SITE_ID
     assert result["data"] == {
-        CONF_NICKNAME: TEST_NICKNAME,
         CONF_SITE_ID: TEST_SITE_ID,
         CONF_SITEKEY: TEST_SITEKEY,
     }

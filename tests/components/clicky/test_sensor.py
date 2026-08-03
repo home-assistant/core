@@ -4,12 +4,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.clicky.const import (
-    CONF_NICKNAME,
-    CONF_SITE_ID,
-    CONF_SITEKEY,
-    DOMAIN,
-)
+from homeassistant.components.clicky.const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN
 from homeassistant.components.clicky.sensor import SENSOR_TYPES, ClickySensor
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -32,7 +27,6 @@ async def test_async_setup_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_NICKNAME: "Test",
             CONF_SITE_ID: "12345",
             CONF_SITEKEY: "abcdef",
         },
@@ -55,8 +49,8 @@ async def test_async_setup_entry(
 
         assert len(entities) == len(SENSOR_TYPES)
 
-        assert entities[0].unique_id == "Test_visitorsOnline"
-        assert entities[1].unique_id == "Test_timeTotal"
+        assert entities[0].unique_id == "12345_visitorsOnline"
+        assert entities[1].unique_id == "12345_timeTotal"
 
 
 def test_sensor_native_value() -> None:
@@ -71,13 +65,13 @@ def test_sensor_native_value() -> None:
     visitors = ClickySensor(
         coordinator=coordinator,
         description=SENSOR_TYPES[0],
-        nickname="Test",
+        site_id=12345,
     )
 
     total_time = ClickySensor(
         coordinator=coordinator,
         description=SENSOR_TYPES[1],
-        nickname="Test",
+        site_id=12345,
     )
 
     assert visitors.native_value == 42
@@ -93,7 +87,7 @@ def test_sensor_missing_data() -> None:
     sensor = ClickySensor(
         coordinator=coordinator,
         description=SENSOR_TYPES[0],
-        nickname="Test",
+        site_id=12345,
     )
 
     assert sensor.native_value is None
@@ -108,7 +102,7 @@ def test_sensor_missing_key() -> None:
     sensor = ClickySensor(
         coordinator=coordinator,
         description=SENSOR_TYPES[0],
-        nickname="Test",
+        site_id=12345,
     )
 
     assert sensor.native_value is None
@@ -123,8 +117,8 @@ def test_sensor_attributes() -> None:
     sensor = ClickySensor(
         coordinator=coordinator,
         description=SENSOR_TYPES[0],
-        nickname="Test",
+        site_id=12345,
     )
 
-    assert sensor.unique_id == "Test_visitorsOnline"
+    assert sensor.unique_id == "12345_visitorsOnline"
     assert sensor.entity_description.name == "Visitors Online"
