@@ -147,7 +147,7 @@ async def test_no_retry_after_failed_fetch(hass: HomeAssistant) -> None:
 
     # Pretend the one-time fetch happened and raised.
     coordinator.heating_circuits = {}
-    coordinator._heating_circuits_loaded = False  # noqa: SLF001
+    coordinator._heating_circuits_loaded = False
 
     with patch(
         "PyTado.interface.api.my_tado.Tado.get_heating_circuits",
