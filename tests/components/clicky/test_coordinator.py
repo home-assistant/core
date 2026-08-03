@@ -3,12 +3,13 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
-from pyclicky import ClickyAPIError
+from pyclicky import AuthenticationError, ClickyAPIError
 import pytest
 
 from homeassistant.components.clicky.const import DOMAIN
 from homeassistant.components.clicky.coordinator import ClickyCoordinator
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
@@ -27,6 +28,26 @@ def test_coordinator_init(hass: HomeAssistant) -> None:
     assert coordinator.client is client
     assert coordinator.name == DOMAIN
     assert coordinator.update_interval == timedelta(minutes=1)
+
+
+@pytest.mark.asyncio
+async def test_async_update_data_auth_failure(hass: HomeAssistant) -> None:
+    """Test that authentication errors become ConfigEntryAuthFailed."""
+
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.__aexit__.return_value = None
+
+    client.query.side_effect = AuthenticationError("Invalid credentials")
+
+    coordinator = ClickyCoordinator(
+        hass=hass,
+        config_entry=Mock(),
+        client=client,
+    )
+
+    with pytest.raises(ConfigEntryAuthFailed, match="API authentication failed"):
+        await coordinator._async_update_data()
 
 
 @pytest.mark.asyncio
