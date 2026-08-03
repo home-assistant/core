@@ -44,7 +44,6 @@ class WebControlProScene(Scene):
         self._scene = scene
         self._attr_name = scene.name
         self._attr_unique_id = str(scene.id)
-        
         # Room information
         room = scene.room
         room_name = room.name
