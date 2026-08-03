@@ -179,8 +179,5 @@ async def test_discovery_preserves_hubs_before_timeout(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # With the atomic comprehension bug, timeout causes the entire list
-    # to be lost, so this returns ABORT instead of FORM/CREATE_ENTRY.
-    # With the fix (for loop), the first hub is preserved.
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
