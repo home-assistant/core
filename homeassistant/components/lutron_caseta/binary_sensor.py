@@ -70,7 +70,7 @@ class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer=MANUFACTURER,
             model="Lutron Occupancy",
-            name=name,
+            name=self.name,
             via_device_id=dr.async_get_device_id_by_identifier(
                 hass,
                 (DOMAIN, self._bridge_device["serial"]),
