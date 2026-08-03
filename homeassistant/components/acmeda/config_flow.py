@@ -45,13 +45,11 @@ class AcmedaFlowHandler(ConfigFlow, domain=DOMAIN):
                 hubs = [
                     hub
                     async for hub in aiopulse.Hub.discover()
-                    if hub.id not in already_configured
+                    if hub.id is not None and hub.id not in already_configured
                 ]
 
         if not hubs:
             return self.async_abort(reason="no_devices_found")
-
-        self.discovered_hubs = {hub.id: hub for hub in hubs if hub.id is not None}
 
         if len(hubs) == 1:
             return await self.async_create(hubs[0])
