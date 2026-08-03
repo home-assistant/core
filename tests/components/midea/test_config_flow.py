@@ -1692,11 +1692,10 @@ async def test_manually_flow_builds_concrete_device_subclass(
             "homeassistant.components.midea.config_flow.discover",
             return_value=DISCOVERY_RESULT,
         ),
-        patch(
-            "homeassistant.components.midea.config_flow._connect_and_close",
-        ) as mock_connect_and_close,
+        patch.object(MideaDevice, "connect", autospec=True) as mock_connect,
+        patch.object(MideaDevice, "close_socket", autospec=True),
     ):
-        mock_connect_and_close.return_value = True
+        mock_connect.return_value = True
         result = await hass.config_entries.flow.async_configure(
             flow_id,
             user_input={
@@ -1713,7 +1712,7 @@ async def test_manually_flow_builds_concrete_device_subclass(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    dm = mock_connect_and_close.call_args.args[0]
+    dm = mock_connect.call_args.args[0]
     assert type(dm) is not MideaDevice
     assert isinstance(dm.build_query(), list)
 
@@ -1744,10 +1743,8 @@ async def test_manually_flow_runs_device_selector_in_executor(
             "homeassistant.components.midea.config_flow.discover",
             return_value=DISCOVERY_RESULT,
         ),
-        patch(
-            "homeassistant.components.midea.config_flow._connect_and_close",
-            return_value=True,
-        ),
+        patch.object(MideaDevice, "connect", autospec=True, return_value=True),
+        patch.object(MideaDevice, "close_socket", autospec=True),
         patch.object(
             hass,
             "async_add_executor_job",
