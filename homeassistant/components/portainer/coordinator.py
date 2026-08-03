@@ -433,7 +433,9 @@ class PortainerCoordinator(
             device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
                 identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{endpoint_id}")},
-                configuration_url=URL(f"{self.config_entry.data[CONF_URL]}#!/{endpoint_id}/docker/dashboard"),
+                configuration_url=URL(
+                    f"{self.config_entry.data[CONF_URL]}#!/{endpoint_id}/docker/dashboard"
+                ),
                 manufacturer=DEFAULT_NAME,
                 model="Endpoint",
                 name=endpoint.name,
@@ -444,7 +446,12 @@ class PortainerCoordinator(
             stack = mapped_endpoints[endpoint_id].stacks[stack_name].stack
             device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
-                identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{endpoint_id}_stack_{stack.id}")},
+                identifiers={
+                    (
+                        DOMAIN,
+                        f"{self.config_entry.entry_id}_{endpoint_id}_stack_{stack.id}",
+                    )
+                },
                 configuration_url=URL(
                     f"{self.config_entry.data[CONF_URL]}#!/{endpoint_id}/docker/stacks/{stack.name}"
                 ),
