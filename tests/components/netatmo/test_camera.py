@@ -125,6 +125,8 @@ async def test_monitoring_component(
                 ]
             }
         )
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
     # Test turn_off services while camera was off (early return, no call to pyatmo)
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
@@ -133,6 +135,8 @@ async def test_monitoring_component(
         )
         await hass.async_block_till_done()
         mock_set_state.assert_not_called()
+    assert hass.states.get(camera_entity).state == "idle"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
     # Test turn_on services while camera was off
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
@@ -150,6 +154,8 @@ async def test_monitoring_component(
                 ]
             }
         )
+    assert hass.states.get(camera_entity).state == "idle"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
     # Test turn_on services while camera was on (early return, no call to pyatmo)
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
@@ -158,6 +164,8 @@ async def test_monitoring_component(
         )
         await hass.async_block_till_done()
         mock_set_state.assert_not_called()
+    assert hass.states.get(camera_entity).state == "idle"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
 
 IMAGE_BYTES_FROM_STREAM = b"test stream image bytes"
@@ -975,10 +983,10 @@ async def test_camera_image_with_attribute_change(
             async_fire_time_changed(hass)
             await hass.async_block_till_done(wait_background_tasks=True)
 
-        # Check that the camera become idle with monitoring off
+        # Check that the camera become unavailable with monitoring None
         # (as alim_status 1 means that the camera is on but with low power, so it can't monitor)
-        assert hass.states.get(camera_entity).state == "idle"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+        assert hass.states.get(camera_entity).state == "unavailable"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is None
         assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
         # Check that getting image raises the exception
@@ -1002,8 +1010,8 @@ async def test_camera_image_with_attribute_change(
             await hass.async_block_till_done(wait_background_tasks=True)
 
         # Check that the camera become idle with monitoring off
-        assert hass.states.get(camera_entity).state == "idle"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+        assert hass.states.get(camera_entity).state == "unavailable"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is None
         assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
         # Check that getting image raises the exception
@@ -1026,7 +1034,7 @@ async def test_camera_image_with_attribute_change(
             async_fire_time_changed(hass)
             await hass.async_block_till_done(wait_background_tasks=True)
 
-        # Check that the camera become unavailable with monitoring off
+        # Check that the camera become unavailable with monitoring None
         assert hass.states.get(camera_entity).state == "unavailable"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is None
         assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
@@ -1076,9 +1084,9 @@ async def test_camera_image_with_attribute_change(
             async_fire_time_changed(hass)
             await hass.async_block_till_done(wait_background_tasks=True)
 
-        # Check that the camera become idle with monitoring None
-        assert hass.states.get(camera_entity).state == "idle"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+        # Check that the camera become unavailable with monitoring None
+        assert hass.states.get(camera_entity).state == "unavailable"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is None
         assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
         # Check that getting image raises the exception
