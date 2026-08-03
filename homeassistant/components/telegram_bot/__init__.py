@@ -970,6 +970,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
             translation_domain=DOMAIN,
             translation_key="invalid_token",
         ) from err
+    except (NetworkError, TelegramError) as err:
+        raise ConfigEntryNotReady from err
     p_type: str = entry.data[CONF_PLATFORM]
 
     _LOGGER.debug("Setting up %s.%s", DOMAIN, p_type)
