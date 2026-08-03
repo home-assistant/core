@@ -1409,13 +1409,12 @@ async def test_purge_filtered_event_data(
             event_type = EventTypes(event_type="test")
             session.add(event_type)
             session.flush()
-            for event_id, data in enumerate(event_data, 1):
-                shared_data = EventData(hash=event_id, shared_data=json.dumps(data))
+            for data in event_data:
+                shared_data = EventData(shared_data=json.dumps(data))
                 session.add(shared_data)
                 session.flush()
                 session.add(
                     Events(
-                        event_id=event_id,
                         event_type_id=event_type.event_type_id,
                         data_id=shared_data.data_id,
                         origin_idx=0,
