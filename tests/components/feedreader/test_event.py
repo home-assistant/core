@@ -75,6 +75,37 @@ async def test_event_entity(
             assert state.attributes[attribute] == value
 
 
+async def test_event_new_entry(
+    hass: HomeAssistant, feed_one_event, feed_two_event
+) -> None:
+    """Test feed event entity fires on new event."""
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.feedreader.coordinator.feedparser.http.get",
+        side_effect=[feed_one_event, feed_two_event],
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("event.mock_title")
+        assert state
+        assert state.attributes[ATTR_TITLE] == "Title 1"
+        assert state.attributes[ATTR_LINK] == "http://www.example.com/link/1"
+        assert state.attributes[ATTR_CONTENT] == "Content 1"
+        assert state.attributes[ATTR_DESCRIPTION] == "Description 1"
+
+        future = dt_util.utcnow() + timedelta(hours=1, seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        state = hass.states.get("event.mock_title")
+        assert state
+        assert state.attributes[ATTR_TITLE] == "Title 2"
+        assert state.attributes[ATTR_LINK] == "http://www.example.com/link/2"
+        assert state.attributes[ATTR_CONTENT] == "Content 2"
+        assert state.attributes[ATTR_DESCRIPTION] == "Description 2"
+
+
 @pytest.mark.parametrize(
     ("fixture_name"),
     [
