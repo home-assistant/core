@@ -1,6 +1,6 @@
 """A entity class for Tractive integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -48,6 +48,7 @@ class TractiveEntity(Entity):
         self._client = client
         self._dispatcher_signal = dispatcher_signal
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         if not self._client.subscribed:

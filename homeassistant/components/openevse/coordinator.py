@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from openevsehttp.__main__ import OpenEVSE
 from openevsehttp.exceptions import AuthenticationError
@@ -57,6 +58,7 @@ class OpenEVSEDataUpdateCoordinator(DataUpdateCoordinator[None]):
         if self.charger.websocket:
             await self.charger.ws_disconnect()
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from OpenEVSE charger."""
         try:

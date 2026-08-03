@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import chain
+from typing import override
 
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
 
@@ -131,6 +132,7 @@ class TeslaFleetSeatHeaterSelectEntity(TeslaFleetVehicleEntity, SelectEntity):
         self.scoped = Scope.VEHICLE_CMDS in scopes
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_available = self.entity_description.available_fn(self)
@@ -140,6 +142,7 @@ class TeslaFleetSeatHeaterSelectEntity(TeslaFleetVehicleEntity, SelectEntity):
         else:
             self._attr_current_option = self._attr_options[value]
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self.raise_for_read_only(Scope.VEHICLE_CMDS)
@@ -176,6 +179,7 @@ class TeslaFleetWheelHeaterSelectEntity(TeslaFleetVehicleEntity, SelectEntity):
             "climate_state_steering_wheel_heat_level",
         )
 
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updated data from the coordinator."""
 
@@ -185,6 +189,7 @@ class TeslaFleetWheelHeaterSelectEntity(TeslaFleetVehicleEntity, SelectEntity):
         else:
             self._attr_current_option = self._attr_options[value]
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self.raise_for_read_only(Scope.VEHICLE_CMDS)
@@ -218,10 +223,12 @@ class TeslaFleetOperationSelectEntity(TeslaFleetEnergyInfoEntity, SelectEntity):
         self.scoped = Scope.ENERGY_CMDS in scopes
         super().__init__(data, "default_real_mode")
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_current_option = self._value
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self.raise_for_read_only(Scope.ENERGY_CMDS)
@@ -248,10 +255,12 @@ class TeslaFleetExportRuleSelectEntity(TeslaFleetEnergyInfoEntity, SelectEntity)
         self.scoped = Scope.ENERGY_CMDS in scopes
         super().__init__(data, "components_customer_preferred_export_rule")
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_current_option = self.get(self.key, EnergyExportMode.NEVER.value)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self.raise_for_read_only(Scope.ENERGY_CMDS)

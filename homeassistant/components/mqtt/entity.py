@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any, Protocol, cast, final
+from typing import TYPE_CHECKING, Any, Protocol, cast, final, override
 
 import voluptuous as vol
 
@@ -489,6 +489,7 @@ class MqttAttributesMixin(Entity):
             self.group = IntegrationSpecificGroup(self, config[CONF_GROUP])
         self._attributes_config = config
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
@@ -550,11 +551,13 @@ class MqttAttributesMixin(Entity):
         """(Re)Subscribe to topics."""
         async_subscribe_topics_internal(self.hass, self._attributes_sub_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
         self._attributes_sub_state = async_unsubscribe_topics(
             self.hass, self._attributes_sub_state
         )
+        await super().async_will_remove_from_hass()
 
     @callback
     def _attributes_message_received(self, msg: ReceiveMessage) -> None:
@@ -597,6 +600,7 @@ class MqttAvailabilityMixin(Entity):
         self._available_latest: bool = False
         self._availability_setup_from_config(config)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
@@ -699,13 +703,16 @@ class MqttAvailabilityMixin(Entity):
         if not self.hass.is_stopping:
             self.async_write_ha_state()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
         self._availability_sub_state = async_unsubscribe_topics(
             self.hass, self._availability_sub_state
         )
+        await super().async_will_remove_from_hass()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         mqtt_data = self.hass.data[DATA_MQTT]
@@ -952,9 +959,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         self, event: Event[EventDeviceRegistryUpdatedData]
     ) -> None:
         """Handle the manual removal of a device."""
-        if self._skip_device_removal or not async_removed_from_device(
-            self.hass, event, cast(str, self._device_id), self._config_entry_id
-        ):
+        if self._skip_device_removal or not async_removed_from_device(event):
             return
         # Prevent a second cleanup round after the device is removed
         self._remove_device_updated()
@@ -1012,6 +1017,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         if discovery_hash in self._registry_hooks:
             self._registry_hooks.pop(discovery_hash)()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to discovery updates."""
         await super().async_added_to_hass()
@@ -1199,6 +1205,7 @@ class MqttDiscoveryUpdateMixin(Entity):
                 _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
                 send_discovery_done(self.hass, self._discovery_data)
 
+    @override
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
         if not self._removed_from_hass and self._discovery_data is not None:
@@ -1211,6 +1218,7 @@ class MqttDiscoveryUpdateMixin(Entity):
             await async_remove_discovery_payload(self.hass, self._discovery_data)
 
     @final
+    @override
     async def add_to_platform_finish(self) -> None:
         """Finish adding entity to platform."""
         await super().add_to_platform_finish()
@@ -1220,6 +1228,7 @@ class MqttDiscoveryUpdateMixin(Entity):
             send_discovery_done(self.hass, self._discovery_data)
 
     @callback
+    @override
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
         if self._discovery_data is not None:
@@ -1240,9 +1249,11 @@ class MqttDiscoveryUpdateMixin(Entity):
             send_discovery_done(self.hass, self._discovery_data)
         super().add_to_platform_abort()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop listening to signal and cleanup discovery data."""
         self._cleanup_discovery_on_remove()
+        await super().async_will_remove_from_hass()
 
     def _cleanup_discovery_on_remove(self) -> None:
         """Stop listening to signal and cleanup discovery data."""
@@ -1308,8 +1319,8 @@ def ensure_via_device_exists(
     if (
         device_info is None
         or CONF_VIA_DEVICE not in device_info
-        or (device_registry := dr.async_get(hass)).async_get_device(
-            identifiers={device_info["via_device"]}
+        or (device_registry := dr.async_get(hass)).async_get_device_by_identifier(
+            device_info["via_device"], config_entry.entry_id
         )
     ):
         return
@@ -1351,6 +1362,7 @@ class MqttEntityDeviceInfo(Entity):
             )
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         return device_info_from_specifications(self._device_specifications)
@@ -1492,6 +1504,7 @@ class MqttEntity(
             ] = (entity_platform, DOMAIN, self.unique_id)
 
     @final
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
         if self._update_registry_entity_id is not None:
@@ -1557,14 +1570,13 @@ class MqttEntity(
         await self._subscribe_topics()
         self.async_write_ha_state()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
         self._sub_state = subscription.async_unsubscribe_topics(
             self.hass, self._sub_state
         )
-        await MqttAttributesMixin.async_will_remove_from_hass(self)
-        await MqttAvailabilityMixin.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdateMixin.async_will_remove_from_hass(self)
+        await super().async_will_remove_from_hass()
         debug_info.remove_entity_data(self.hass, self.entity_id)
 
     async def async_publish_with_config(
@@ -1589,7 +1601,7 @@ class MqttEntity(
 
     def _set_entity_name(self, config: ConfigType) -> None:
         """Help setting the entity name if needed."""
-        entity_name: str | None | UndefinedType = config.get(CONF_NAME, UNDEFINED)
+        entity_name: str | UndefinedType | None = config.get(CONF_NAME, UNDEFINED)
         # Only set _attr_name if it is needed
         if entity_name is not UNDEFINED:
             self._attr_name = entity_name
@@ -1648,6 +1660,7 @@ class MqttEntity(
         return False
 
     @callback
+    @override
     def _message_callback(
         self,
         msg_callback: MessageCallbackType,
@@ -1732,20 +1745,11 @@ def update_device(
 
 @callback
 def async_removed_from_device(
-    hass: HomeAssistant,
     event: Event[EventDeviceRegistryUpdatedData],
-    mqtt_device_id: str,
-    config_entry_id: str,
 ) -> bool:
-    """Check if the passed event indicates MQTT was removed from a device."""
-    if event.data["action"] == "update":
-        if "config_entries" not in event.data["changes"]:
-            return False
-        device_registry = dr.async_get(hass)
-        if (
-            device_entry := device_registry.async_get(mqtt_device_id)
-        ) and config_entry_id in device_entry.config_entries:
-            # Not removed from device
-            return False
+    """Check if the passed event indicates MQTT was removed from a device.
 
-    return True
+    A device is associated with a single config entry, so MQTT is removed from a
+    device only when the device itself is removed.
+    """
+    return event.data["action"] == "remove"

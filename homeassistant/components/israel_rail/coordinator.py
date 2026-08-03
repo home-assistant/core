@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from israelrailapi import TrainSchedule
 from israelrailapi.api import TrainRoute
@@ -65,6 +66,7 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
         self._start = start
         self._destination = destination
 
+    @override
     async def _async_update_data(self) -> list[DataConnection]:
         try:
             train_routes = await self.hass.async_add_executor_job(

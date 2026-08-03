@@ -1,7 +1,7 @@
 """Support turning on/off motion detection on Hikvision cameras."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import hikvision.api
 from hikvision.error import HikvisionError, MissingParamError
@@ -79,11 +79,13 @@ class HikvisionMotionSwitch(SwitchEntity):
         self._hikvision_cam = hikvision_cam
         self._attr_is_on = False
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         _LOGGING.info("Turning on Motion Detection ")
         self._hikvision_cam.enable_motion_detection()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         _LOGGING.info("Turning off Motion Detection ")

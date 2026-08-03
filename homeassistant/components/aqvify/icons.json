@@ -1,11 +1,23 @@
 {
   "entity": {
     "sensor": {
-      "meter_value": {
+      "available_volume": {
+        "default": "mdi:car-coolant-level"
+      },
+      "ground_water_level": {
+        "default": "mdi:arrow-collapse-down"
+      },
+      "in_flow": {
+        "default": "mdi:water-plus-outline"
+      },
+      "level_from_sensor": {
         "default": "mdi:waves-arrow-up"
       },
-      "water_level": {
+      "level_from_top": {
         "default": "mdi:waves"
+      },
+      "out_volume": {
+        "default": "mdi:water-pump"
       }
     }
   }

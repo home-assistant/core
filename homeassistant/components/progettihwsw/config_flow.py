@@ -1,7 +1,7 @@
 """Config flow for ProgettiHWSW Automation integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from ProgettiHWSW.ProgettiHWSWAPI import ProgettiHWSWAPI
 import voluptuous as vol
@@ -75,6 +75,7 @@ class ProgettiHWSWConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

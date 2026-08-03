@@ -1,6 +1,6 @@
 """Support for Atlantic Pass APC Zone Control."""
 
-from typing import cast
+from typing import cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -55,6 +55,7 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
         )
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
 
@@ -77,6 +78,7 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
             )
         ]
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 

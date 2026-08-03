@@ -2,7 +2,7 @@
 
 import dataclasses
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -44,6 +44,7 @@ class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, Discovery] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
@@ -83,6 +84,7 @@ class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

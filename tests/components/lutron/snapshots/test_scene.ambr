@@ -39,7 +39,7 @@
 # name: test_scene_setup[scene.test_keypad_test_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Keypad Test Button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Keypad Test Button',
     }),
     'context': <ANY>,
     'entity_id': 'scene.test_keypad_test_button',

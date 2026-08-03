@@ -30,10 +30,10 @@ BATTERY_PERCENTAGE_DOMAIN_SPECS: dict[str, DomainSpec] = {
 }
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "low": make_entity_target_state_trigger(
+    "became_low": make_entity_target_state_trigger(
         BATTERY_LOW_DOMAIN_SPECS, STATE_ON, primary_entities_only=False
     ),
-    "not_low": make_entity_target_state_trigger(
+    "no_longer_low": make_entity_target_state_trigger(
         BATTERY_LOW_DOMAIN_SPECS, STATE_OFF, primary_entities_only=False
     ),
     "started_charging": make_entity_target_state_trigger(

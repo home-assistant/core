@@ -50,7 +50,7 @@ class BeoWebsocket(BeoBase):
         BeoBase.__init__(self, entry, client)
 
         self.hass = hass
-        self._device = get_device(hass, self._unique_id)
+        self._device = get_device(hass, self._unique_id, self.entry.entry_id)
 
         # WebSocket callbacks
         self._client.get_notification_notifications(self.on_notification_notification)

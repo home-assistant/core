@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
 from aiotedee import (
     TedeeClientException,
@@ -61,6 +61,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         self.new_lock_callbacks: list[Callable[[list[TedeeLock]], None]] = []
         self.tedee_webhook_id: int | None = None
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
 
@@ -70,6 +71,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         _LOGGER.debug("Update coordinator: Getting bridge from API")
         await self._async_update(_async_get_bridge)
 
+    @override
     async def _async_update_data(self) -> dict[int, TedeeLock]:
         """Fetch data from API endpoint."""
 
@@ -146,8 +148,8 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             _LOGGER.debug("Removed locks: %s", ", ".join(map(str, removed_locks)))
             device_registry = dr.async_get(self.hass)
             for lock_id in removed_locks:
-                if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, str(lock_id))}
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, str(lock_id)), self.config_entry.entry_id
                 ):
                     device_registry.async_update_device(
                         device_id=device.id,

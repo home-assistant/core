@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from actron_neo_api import (
     ActronAirAPI,
@@ -17,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 
 SCAN_INTERVAL = timedelta(seconds=30)
 STALE_DEVICE_TIMEOUT = timedelta(minutes=5)
@@ -39,6 +40,8 @@ type ActronAirConfigEntry = ConfigEntry[ActronAirRuntimeData]
 class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirStatus]):
     """System coordinator for Actron Air integration."""
 
+    config_entry: ActronAirConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -49,7 +52,7 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirStatus]):
         """Initialize the coordinator."""
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name="Actron Air Status",
             update_interval=SCAN_INTERVAL,
             config_entry=entry,
@@ -60,6 +63,7 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirStatus]):
         self.status = self.api.state_manager.get_status(self.serial_number)
         self.last_seen = dt_util.utcnow()
 
+    @override
     async def _async_update_data(self) -> ActronAirStatus:
         """Fetch updates and merge incremental changes into the full state."""
         try:

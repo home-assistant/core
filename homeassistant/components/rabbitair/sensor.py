@@ -1,5 +1,7 @@
 """Support for Rabbit Air sensors."""
 
+from typing import override
+
 from rabbitair import Quality
 
 from homeassistant.components.sensor import (
@@ -55,6 +57,7 @@ class RabbitAirAirQualitySensor(RabbitAirBaseEntity, SensorEntity):
         self._attr_unique_id = f"{entry.unique_id}_{self.entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the air quality state."""
         return _quality_value(self.coordinator.data.quality)

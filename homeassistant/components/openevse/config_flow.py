@@ -1,7 +1,7 @@
 """Config flow for OpenEVSE integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from openevsehttp.__main__ import OpenEVSE
 from openevsehttp.exceptions import AuthenticationError, MissingSerial
@@ -15,16 +15,44 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info import zeroconf
 
 from .const import CONF_SERIAL, DOMAIN
 
-USER_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
+USER_SCHEMA = vol.Schema({vol.Required(CONF_HOST): TextSelector()})
 
 AUTH_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+    {
+        vol.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(autocomplete="username")
+        ),
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
+    }
+)
+
+RECONFIGURE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): TextSelector(),
+        vol.Optional(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(autocomplete="username")
+        ),
+        vol.Optional(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
+    }
 )
 
 
@@ -57,6 +85,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             return {}, None
         return {}, result.get(CONF_SERIAL)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -103,6 +132,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             data=data,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -211,4 +241,47 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(AUTH_SCHEMA, user_input),
             description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
             errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            username = user_input.get(CONF_USERNAME) or None
+            password = user_input.get(CONF_PASSWORD) or None
+
+            self._async_abort_entries_match({CONF_HOST: host})
+
+            errors, serial = await self.check_status(host, username, password)
+            if errors:
+                return self.async_show_form(
+                    step_id="reconfigure",
+                    data_schema=self.add_suggested_values_to_schema(
+                        RECONFIGURE_SCHEMA, user_input
+                    ),
+                    errors=errors,
+                )
+
+            if serial is not None:
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_mismatch()
+
+            return self.async_update_reload_and_abort(
+                reconfigure_entry,
+                data_updates={
+                    CONF_HOST: host,
+                    CONF_USERNAME: username,
+                    CONF_PASSWORD: password,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA, reconfigure_entry.data
+            ),
         )

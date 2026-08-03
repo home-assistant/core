@@ -7,7 +7,7 @@ import json
 import logging
 import mimetypes
 import os
-from typing import Any
+from typing import Any, override
 
 from TwitterAPI import TwitterAPI
 import voluptuous as vol
@@ -78,6 +78,7 @@ class TwitterNotificationService(BaseNotificationService):
             consumer_key, consumer_secret, access_token_key, access_token_secret
         )
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Tweet a message, optionally with media."""
         data = kwargs.get(ATTR_DATA)

@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from pylast import LastFMNetwork, PyLastError, Track
 
@@ -50,6 +51,7 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
         )
         self._client = LastFMNetwork(api_key=config_entry.options[CONF_API_KEY])
 
+    @override
     async def _async_update_data(self) -> dict[str, LastFMUserData]:
         res = {}
         for username in self.config_entry.options[CONF_USERS]:

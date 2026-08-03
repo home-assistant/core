@@ -3,7 +3,7 @@
 from datetime import datetime
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from awesomeversion import AwesomeVersion
@@ -102,15 +102,18 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
         self.service = service
 
     @property
+    @override
     def name(self) -> str:
         """Name of the implementation."""
         return "Home Assistant Cloud"
 
     @property
+    @override
     def domain(self) -> str:
         """Domain that is providing the implementation."""
         return DOMAIN
 
+    @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
         helper = account_link.AuthorizeAccountHelper(
@@ -144,12 +147,14 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
 
         return authorize_url
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve external data to tokens."""
         # We already passed in tokens
         dict_data: dict = external_data
         return dict_data
 
+    @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""
         try:

@@ -30,7 +30,6 @@ from tests.components.common import (
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
@@ -72,20 +71,6 @@ async def target_weathers(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "weather")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "temperature.changed",
-        "temperature.crossed_threshold",
-    ],
-)
-async def test_temperature_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the temperature triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
 _CELSIUS_CROSSED_THRESHOLD = {
     "threshold": {
         "type": "above",
@@ -96,7 +81,6 @@ _CELSIUS_CROSSED_THRESHOLD = {
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -124,7 +108,6 @@ async def test_temperature_trigger_options_validation(
 # --- Sensor domain tests (value in state.state) ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -169,7 +152,6 @@ async def test_temperature_trigger_sensor_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -208,7 +190,6 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -250,7 +231,6 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_all(
 # --- Climate domain tests (value in current_temperature attribute) ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -297,7 +277,6 @@ async def test_temperature_trigger_climate_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -337,7 +316,6 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -380,7 +358,6 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_all(
 # --- Water heater domain tests (value in current_temperature attribute) ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -427,7 +404,6 @@ async def test_temperature_trigger_water_heater_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -467,7 +443,6 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_first
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -510,7 +485,6 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_all(
 # --- Weather domain tests (value in temperature attribute) ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("weather"),
@@ -559,7 +533,6 @@ async def test_temperature_trigger_weather_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("weather"),
@@ -600,7 +573,6 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("weather"),
@@ -644,7 +616,6 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_all(
 # --- Unit conversion tests ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_temperature_trigger_unit_conversion_sensor_celsius_to_fahrenheit(
     hass: HomeAssistant,
 ) -> None:
@@ -702,7 +673,6 @@ async def test_temperature_trigger_unit_conversion_sensor_celsius_to_fahrenheit(
     calls.clear()
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_temperature_trigger_unit_conversion_sensor_fahrenheit_to_celsius(
     hass: HomeAssistant,
 ) -> None:
@@ -760,7 +730,6 @@ async def test_temperature_trigger_unit_conversion_sensor_fahrenheit_to_celsius(
     calls.clear()
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_temperature_trigger_unit_conversion_changed(
     hass: HomeAssistant,
 ) -> None:
@@ -832,7 +801,6 @@ async def test_temperature_trigger_unit_conversion_changed(
     assert len(calls) == 0
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_temperature_trigger_unit_conversion_weather(
     hass: HomeAssistant,
 ) -> None:

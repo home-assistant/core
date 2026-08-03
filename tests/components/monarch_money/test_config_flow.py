@@ -134,7 +134,9 @@ async def test_form_mfa(
     assert result["step_id"] == "user"
 
     # Add a bad MFA Code response
-    mock_config_api.return_value.multi_factor_authenticate.side_effect = KeyError
+    mock_config_api.return_value.multi_factor_authenticate.side_effect = (
+        LoginFailedException("Bad MFA code")
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {

@@ -1,4 +1,4 @@
-"""Google Cast support for the Plex component."""
+"""Google Cast support for the Plex integration."""
 
 from pychromecast import Chromecast
 from pychromecast.controllers.plex import PlexController

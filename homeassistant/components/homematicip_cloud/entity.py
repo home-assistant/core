@@ -1,8 +1,8 @@
-"""Generic entity for the HomematicIP Cloud component."""
+"""Generic entity for the HomematicIP Cloud integration."""
 
 import contextlib
 import logging
-from typing import Any
+from typing import Any, override
 
 from homematicip.base.functionalChannels import FunctionalChannel
 from homematicip.device import Device
@@ -129,6 +129,7 @@ class HomematicipGenericEntity(Entity):
             self._setup_entity_name()
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         # Only physical devices should be HA devices.
@@ -158,6 +159,7 @@ class HomematicipGenericEntity(Entity):
             )
         return None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._hap.hmip_device_by_entity_id[self.entity_id] = self._device
@@ -178,6 +180,7 @@ class HomematicipGenericEntity(Entity):
                 self._device.modelType,
             )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
 
@@ -312,11 +315,13 @@ class HomematicipGenericEntity(Entity):
         # device_class or translation_key.
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return not self._device.unreach
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         if not isinstance(self._device, Device):
@@ -325,6 +330,7 @@ class HomematicipGenericEntity(Entity):
         return f"{self._device.id}_{channel_index}_{self._feature_id}"
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon."""
         for attr, icon in DEVICE_ATTRIBUTE_ICONS.items():
@@ -334,6 +340,7 @@ class HomematicipGenericEntity(Entity):
         return None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         state_attr = {}

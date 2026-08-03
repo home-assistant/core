@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pysabnzbd import SabnzbdApiException
 
@@ -55,6 +55,7 @@ class SabnzbdButton(SabnzbdEntity, ButtonEntity):
 
     entity_description: SabnzbdButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         try:

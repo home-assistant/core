@@ -1,5 +1,7 @@
 """Support for Lutron selects."""
 
+from typing import override
+
 from pylutron import Button, Keypad, Led, Lutron
 
 from homeassistant.components.select import SelectEntity
@@ -58,14 +60,17 @@ class LutronLedSelect(LutronKeypad, SelectEntity):
         self._attr_name = f"{scene_device.name} LED"
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return _LED_STATE_TO_OPTION.get(self._lutron_device.last_state)
 
+    @override
     def select_option(self, option: str) -> None:
         """Change the selected option."""
         self._lutron_device.state = _LED_OPTION_TO_STATE[option]
 
+    @override
     def _request_state(self) -> None:
         """Request the state from the device."""
         _ = self._lutron_device.state

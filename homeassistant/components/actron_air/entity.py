@@ -2,11 +2,12 @@
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from actron_neo_api import ActronAirAPIError, ActronAirZone
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -50,6 +51,7 @@ class ActronAirEntity(CoordinatorEntity[ActronAirSystemCoordinator]):
         self._serial_number = coordinator.serial_number
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return not self.coordinator.is_device_stale()
@@ -89,5 +91,9 @@ class ActronAirZoneEntity(ActronAirEntity):
             manufacturer="Actron Air",
             model="Zone",
             suggested_area=zone.title,
-            via_device=(DOMAIN, self._serial_number),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, self._serial_number),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )

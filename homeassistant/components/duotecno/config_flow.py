@@ -1,7 +1,7 @@
 """Config flow for duotecno integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from duotecno.controller import PyDuotecno
 from duotecno.exceptions import InvalidPassword
@@ -28,6 +28,7 @@ class DuoTecnoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

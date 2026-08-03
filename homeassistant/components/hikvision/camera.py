@@ -1,5 +1,7 @@
 """Support for Hikvision cameras."""
 
+from typing import override
+
 from pyhik.hikvision import VideoChannel
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -59,6 +61,7 @@ class HikvisionCamera(HikvisionEntity, Camera):
         # Build unique ID (unique per platform per integration)
         self._attr_unique_id = f"{self._data.device_id}_{channel.id}"
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -72,6 +75,7 @@ class HikvisionCamera(HikvisionEntity, Camera):
                 f"Error getting image from {self._video_channel.name}: {err}"
             ) from err
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the stream source URL."""
         return self._camera.get_stream_url(self._channel)

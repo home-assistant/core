@@ -5,7 +5,7 @@ import logging
 import pathlib
 import secrets
 import shutil
-from typing import Any
+from typing import Any, override
 
 from aiohttp import hdrs, web
 from aiohttp.web_request import FileField
@@ -73,6 +73,7 @@ class ImageStorageCollection(collection.DictStorageCollection):
         self.async_add_listener(self._change_listener)
         self.image_dir = image_dir
 
+    @override
     async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(dict(data))
@@ -125,10 +126,12 @@ class ImageStorageCollection(collection.DictStorageCollection):
         return media_file.stat().st_size
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict[str, Any]) -> str:
         """Suggest an ID based on the config."""
         return str(info[CONF_ID])
 
+    @override
     async def _update_data(
         self,
         item: dict[str, Any],
@@ -153,6 +156,7 @@ class ImageStorageCollection(collection.DictStorageCollection):
 class ImageUploadStorageCollectionWebsocket(collection.DictStorageCollectionWebsocket):
     """Class to expose storage collection management over websocket."""
 
+    @override
     async def ws_create_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:

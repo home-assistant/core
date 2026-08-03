@@ -11,7 +11,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "cloud_user": "Ubiquiti Cloud users are not supported. Please use a local user instead.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "protect_version": "Minimum required version is v6.0.0. Please upgrade UniFi Protect and then retry."
+      "protect_version": "Minimum required version is v7.1.0. Please upgrade UniFi Protect and then retry."
     },
     "flow_title": "{name} ({ip_address})",
     "step": {
@@ -216,9 +216,6 @@
       "overlay_show_nerd_mode": {
         "name": "Overlay: show nerd mode"
       },
-      "package_detected": {
-        "name": "Package detected"
-      },
       "person_detected": {
         "name": "Person detected"
       },
@@ -292,12 +289,67 @@
           }
         }
       },
+      "motion_detection": {
+        "name": "Motion detection",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Motion"
+            }
+          }
+        }
+      },
       "nfc": {
         "name": "NFC",
         "state_attributes": {
           "event_type": {
             "state": {
               "scanned": "Scanned"
+            }
+          }
+        }
+      },
+      "package": {
+        "name": "Package",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "detected": "Detected"
+            }
+          }
+        }
+      },
+      "smart_detection": {
+        "name": "Smart detection",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "animal": "Animal",
+              "car": "Car",
+              "face": "Face",
+              "license_plate": "License plate",
+              "package": "Package",
+              "person": "Person",
+              "pet": "Pet",
+              "vehicle": "Vehicle"
+            }
+          }
+        }
+      },
+      "sound_detection": {
+        "name": "Sound detection",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "baby_cry": "Baby cry",
+              "bark": "Barking",
+              "car_alarm": "Car alarm",
+              "car_horn": "Car horn",
+              "co": "CO alarm",
+              "glass_break": "Glass break",
+              "siren": "Siren",
+              "smoke": "Smoke alarm",
+              "speaking": "Speaking"
             }
           }
         }
@@ -685,6 +737,9 @@
     "global_alarm_manager": {
       "message": "The alarm manager on this UniFi Protect NVR is set to Global mode and cannot be controlled locally."
     },
+    "motion_detection_public_only": {
+      "message": "Motion detection cannot be changed over the public API; configure it in the UniFi Protect app"
+    },
     "no_users_found": {
       "message": "No users found, please check Protect permissions"
     },
@@ -750,6 +805,10 @@
     "insecure_camera_removed": {
       "description": "The camera entity `{entity_id}` used plain RTSP, which is no longer available now that streams come from the UniFi Protect public API (RTSPS only). It has been removed; use `{replacement}` instead.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Insecure camera entity removed"
+    },
+    "package_binary_sensor_removed": {
+      "description": "The binary sensor `{entity_id}` for package detection has been removed. Package detection is a momentary smart-detect event, so it is now provided by the package event entity instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Package binary sensor removed"
     },
     "rtsp_disabled": {
       "fix_flow": {

@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from aioqsw.localapi import QnapQswApi
 
@@ -67,6 +67,7 @@ class QswButton(QswDataEntity, ButtonEntity):
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Triggers the QNAP QSW button action."""
         await self.entity_description.press_action(self.coordinator.qsw)

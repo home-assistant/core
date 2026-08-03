@@ -9,6 +9,7 @@ import struct
 from typing import TYPE_CHECKING, Any, Final, NamedTuple
 
 from aioesphomeapi import (
+    ZERO_NOISE_PSK,
     APIClient,
     APIConnectionError,
     APIVersion,
@@ -34,7 +35,10 @@ import voluptuous as vol
 from homeassistant.components import bluetooth, tag, zeroconf
 from homeassistant.const import (
     ATTR_DEVICE_ID,
+    CONF_HOST,
     CONF_MODE,
+    CONF_PASSWORD,
+    CONF_PORT,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_LOGGING_CHANGED,
     Platform,
@@ -77,6 +81,7 @@ from homeassistant.util.json import json_loads_object
 
 from .bluetooth import async_connect_scanner
 from .const import (
+    CLIENT_INFO,
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_MAC_ADDRESS,
     CONF_DEVICE_NAME,
@@ -99,6 +104,26 @@ from .enum_mapper import EsphomeEnumMapper
 
 DEVICE_CONFLICT_ISSUE_FORMAT = "device_conflict-{}"
 UNPACK_UINT32_BE = struct.Struct(">I").unpack_from
+
+
+@callback
+def async_create_api_client(
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    zeroconf_instance: zeroconf.HaZeroconf,
+    *,
+    noise_psk: str | None,
+) -> APIClient:
+    """Create an APIClient for a config entry."""
+    return APIClient(
+        entry.data[CONF_HOST],
+        entry.data[CONF_PORT],
+        entry.data[CONF_PASSWORD],
+        client_info=CLIENT_INFO,
+        zeroconf_instance=zeroconf_instance,
+        noise_psk=noise_psk,
+        timezone=hass.config.time_zone,
+    )
 
 
 if TYPE_CHECKING:
@@ -812,6 +837,51 @@ class ESPHomeManager:
         if self.reconnect_logic:
             await self.reconnect_logic.stop()
 
+    async def _async_provision_key_over_noise(self, new_key: bytes) -> bool:
+        """Send the encryption key over a short lived zero PSK Noise connection.
+
+        The well known all zeros PSK still runs a fresh ephemeral X25519
+        exchange, so the key cannot be read by a passive listener on the
+        network. This protects against sniffing only; it does not
+        authenticate either side against an active man in the middle.
+
+        Returns True if the device accepted the key. On failure the caller
+        simply returns; provisioning runs again on the next connect cycle.
+        """
+        unique_id = self.entry.unique_id
+        cli = async_create_api_client(
+            self.hass, self.entry, self.zeroconf_instance, noise_psk=ZERO_NOISE_PSK
+        )
+        device_name = self.entry.data.get(CONF_DEVICE_NAME, self.host)
+        try:
+            await cli.connect()
+            if await cli.noise_encryption_set_key(new_key):
+                return True
+            _LOGGER.error(
+                "Device %s (%s) rejected the encryption key",
+                device_name,
+                unique_id,
+            )
+        except InvalidEncryptionKeyAPIError:
+            _LOGGER.error(
+                "Device %s (%s) rejected the zero PSK handshake; it appears "
+                "to already have an encryption key set",
+                device_name,
+                unique_id,
+            )
+        except APIConnectionError as ex:
+            # Whatever went wrong, we never downgrade to a plaintext push;
+            # provisioning simply runs again on the next connect cycle
+            _LOGGER.error(
+                "Error provisioning encryption key for device %s (%s): %s",
+                device_name,
+                unique_id,
+                ex,
+            )
+        finally:
+            await cli.disconnect(force=True)
+        return False
+
     async def _handle_dynamic_encryption_key(
         self, device_info: EsphomeDeviceInfo
     ) -> None:
@@ -853,18 +923,24 @@ class ESPHomeManager:
             new_key = base64.b64encode(secrets.token_bytes(32))
             new_key_str = new_key.decode()
 
-        try:
-            # Store the key on the device using the existing connection
-            result = await self.cli.noise_encryption_set_key(new_key)
-        except APIConnectionError as ex:
-            _LOGGER.error(
-                "Connection error while storing encryption key for device %s (%s): %s",
-                self.entry.data.get(CONF_DEVICE_NAME, self.host),
-                self.entry.unique_id,
-                ex,
-            )
-            return
+        if device_info.api_encryption_provisionable:
+            # New firmware: send the key over an encrypted zero PSK Noise
+            # connection so it cannot be sniffed off the network
+            if not await self._async_provision_key_over_noise(new_key):
+                return
         else:
+            # Old firmware only accepts the key over the existing plaintext
+            # connection. Deprecated; will be removed after the usual window.
+            try:
+                result = await self.cli.noise_encryption_set_key(new_key)
+            except APIConnectionError as ex:
+                _LOGGER.error(
+                    "Connection error while storing encryption key for device %s (%s): %s",
+                    self.entry.data.get(CONF_DEVICE_NAME, self.host),
+                    self.entry.unique_id,
+                    ex,
+                )
+                return
             if not result:
                 _LOGGER.error(
                     "Failed to set dynamic encryption key on device %s (%s)",
@@ -917,8 +993,8 @@ class ESPHomeManager:
         # Remove this after 2026.4
         if not (
             stale_entry_entity_id := ent_reg.async_get_entity_id(
-                DOMAIN,
                 Platform.BINARY_SENSOR,
+                DOMAIN,
                 f"{self.entry_data.device_info.mac_address}-assist_in_progress",
             )
         ):
@@ -977,6 +1053,10 @@ class ESPHomeManager:
             self._async_cleanup()
             if device_info.name:
                 reconnect_logic.name = device_info.name
+            # Seed the backoff cap from the restored device_info so the first
+            # reconnect after a restart already caps for a deep-sleep device,
+            # before the first live connect refreshes it.
+            reconnect_logic.deep_sleep = device_info.has_deep_sleep
             if (
                 bluetooth_mac_address := device_info.bluetooth_mac_address
             ) and entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS) != bluetooth_mac_address:
@@ -1417,13 +1497,14 @@ async def async_replace_device(
     upper_mac = new_mac.upper()
     old_upper_mac = old_mac.upper()
     for entity in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
-        # <upper_mac>-<entity type>-<object_id>
-        old_unique_id = entity.unique_id.split("-")
-        new_unique_id = "-".join([upper_mac, *old_unique_id[1:]])
-        if entity.unique_id != new_unique_id and entity.unique_id.startswith(
-            old_upper_mac
-        ):
-            ent_reg.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
+        # The mac is the leading segment of the unique id in every format,
+        # so swap the prefix without parsing the rest.
+        if entity.unique_id.startswith(old_upper_mac):
+            new_unique_id = upper_mac + entity.unique_id[len(old_upper_mac) :]
+            if new_unique_id != entity.unique_id:
+                ent_reg.async_update_entity(
+                    entity.entity_id, new_unique_id=new_unique_id
+                )
 
     domain_data = DomainData.get(hass)
     store = domain_data.get_or_create_store(hass, entry)

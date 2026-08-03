@@ -3,6 +3,7 @@
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -93,6 +94,7 @@ class ViCareButton(ViCareEntity, ButtonEntity):
         super().__init__(description.key, device_serial, device_config, device)
         self.entity_description = description
 
+    @override
     def press(self) -> None:
         """Handle the button press."""
         with self.vicare_api_handler(), suppress(PyViCareNotSupportedFeatureError):

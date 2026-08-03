@@ -1,7 +1,7 @@
 """Support for Lutron switches."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pylutron import Button, Keypad, Led, Lutron, Output
 
@@ -43,23 +43,28 @@ class LutronSwitch(LutronDevice, SwitchEntity):
     _lutron_device: Output
     _attr_name = None
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._lutron_device.level = 100
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._lutron_device.level = 0
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}
 
+    @override
     def _request_state(self) -> None:
         """Request the state from the device."""
         _ = self._lutron_device.level
 
+    @override
     def _update_attrs(self) -> None:
         """Update the state attributes."""
         self._attr_is_on = self._lutron_device.last_level() > 0
@@ -83,15 +88,18 @@ class LutronLed(LutronKeypad, SwitchEntity):
         self._keypad_name = keypad.name
         self._attr_name = scene_device.name
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the LED on."""
         self._lutron_device.state = Led.LED_ON
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the LED off."""
         self._lutron_device.state = Led.LED_OFF
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {
@@ -100,10 +108,12 @@ class LutronLed(LutronKeypad, SwitchEntity):
             "led": self._lutron_device.name,
         }
 
+    @override
     def _request_state(self) -> None:
         """Request the state from the device."""
         _ = self._lutron_device.state
 
+    @override
     def _update_attrs(self) -> None:
         """Update the state attributes."""
         self._attr_is_on = self._lutron_device.last_state != Led.LED_OFF

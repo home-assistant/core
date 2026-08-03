@@ -1,5 +1,7 @@
 """Support for the NextDNS service."""
 
+from typing import override
+
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import ApiError, InvalidApiKeyError
@@ -29,15 +31,19 @@ async def async_setup_entry(
     entry: NextDnsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add aNextDNS entities from a config_entry."""
-    coordinator = entry.runtime_data.status
-
-    async_add_entities([NextDnsButton(coordinator, CLEAR_LOGS_BUTTON)])
+    """Add NextDNS entities from a config_entry."""
+    for subentry_id, profile_data in entry.runtime_data.profiles.items():
+        coordinator = profile_data.status
+        async_add_entities(
+            [NextDnsButton(coordinator, CLEAR_LOGS_BUTTON)],
+            config_subentry_id=subentry_id,
+        )
 
 
 class NextDnsButton(NextDnsEntity, ButtonEntity):
     """Define an NextDNS button."""
 
+    @override
     async def async_press(self) -> None:
         """Trigger cleaning logs."""
         try:

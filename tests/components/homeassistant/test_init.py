@@ -291,7 +291,7 @@ async def test_setting_location(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_LOCATION,
-        {"latitude": 30, "longitude": 40, "elevation": 0},
+        {"latitude": 30, "longitude": 40, "elevation": 0.6},
         blocking=True,
     )
     assert hass.config.latitude == 30

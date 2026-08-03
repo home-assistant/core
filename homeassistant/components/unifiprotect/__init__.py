@@ -181,6 +181,10 @@ async def _async_setup_entry(
             translation_key="public_bootstrap_failed",
         ) from err
 
+    # The bootstrap is primed above (a failed prime aborts setup and HA retries),
+    # so the public events websocket can be subscribed here.
+    data_service.async_subscribe_public_events()
+
     # Load PTZ patrol data before loading platforms
     await data_service.async_load_ptz_patrols()
 

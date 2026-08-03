@@ -3,7 +3,7 @@
 
 from contextlib import suppress
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from homeassistant.auth import EVENT_USER_REMOVED
 from homeassistant.components import cloud, intent, notify as hass_notify
@@ -265,6 +265,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 class _MobileAppStore(Store[dict[str, Any]]):
     """Store persisted mobile_app integration data."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,

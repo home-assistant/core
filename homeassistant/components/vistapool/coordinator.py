@@ -1,7 +1,7 @@
 """Data coordinator for the Vistapool integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aioaquarite import (
     AquariteAuth,
@@ -50,6 +50,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest pool data (fallback for manual refresh)."""
         try:
@@ -71,6 +72,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.pool_id, _on_data
         )
 
+    @override
     async def async_shutdown(self) -> None:
         """Cleanly close the resilient subscription."""
         if self.subscription is not None:

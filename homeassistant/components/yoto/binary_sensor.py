@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from yoto_api import YotoPlayer
 
@@ -11,7 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import YotoConfigEntry, YotoDataUpdateCoordinator
@@ -58,11 +59,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Yoto binary sensor platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        YotoBinarySensor(coordinator, player, description)
-        for player in coordinator.client.players.values()
-        for description in BINARY_SENSORS
-    )
+    known_players: set[str] = set()
+
+    @callback
+    def _add_players() -> None:
+        current = set(coordinator.data)
+        new_players = current - known_players
+        known_players.clear()
+        known_players.update(current)
+        if new_players:
+            async_add_entities(
+                YotoBinarySensor(coordinator, coordinator.data[player_id], description)
+                for player_id in new_players
+                for description in BINARY_SENSORS
+            )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_players))
+    _add_players()
 
 
 class YotoBinarySensor(YotoPlayerEntity, BinarySensorEntity):
@@ -82,6 +95,7 @@ class YotoBinarySensor(YotoPlayerEntity, BinarySensorEntity):
         self._attr_unique_id = f"{player.id}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the binary sensor state."""
         return self.entity_description.is_on_fn(self.player)

@@ -1,5 +1,7 @@
 """Support for the Rainforest Eagle energy monitor."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -88,11 +90,13 @@ class EagleSensor(CoordinatorEntity[EagleDataCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.is_connected
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return native value of the sensor."""
         return self.coordinator.data.get(self.entity_description.key)

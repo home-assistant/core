@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, override
 
 from paho.mqtt.client import MQTTMessage
 
@@ -231,6 +231,7 @@ class MqttCommandTemplateException(ServiceValidationError):
             f" and payload: {value_log}"
         )
 
+    @override
     def __str__(self) -> str:
         """Return exception message string."""
         return self._message
@@ -321,6 +322,7 @@ class MqttValueTemplateException(TemplateError):
             f" and payload: {payload_log}"
         )
 
+    @override
     def __str__(self) -> str:
         """Return exception message string."""
         return self._message

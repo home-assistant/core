@@ -1,5 +1,7 @@
 """Config flow for the Amber Electric integration."""
 
+from typing import override
+
 import amberelectric
 from amberelectric.models.site import Site
 from amberelectric.models.site_status import SiteStatus
@@ -80,6 +82,7 @@ class AmberElectricConfigFlow(ConfigFlow, domain=DOMAIN):
             return None
         return sites
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

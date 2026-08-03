@@ -5,7 +5,7 @@ import asyncio
 from functools import partial
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError, ClientSession
 
@@ -89,6 +89,7 @@ class MobileAppNotifyEntity(NotifyEntity):
         self._config_entry = entry
         self._session = session
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message via notify.send_message action."""
 
@@ -125,6 +126,7 @@ class MobileAppNotifyEntity(NotifyEntity):
         if webhook_id == self._config_entry.data[ATTR_WEBHOOK_ID]:
             self._async_record_notification()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback."""
 
@@ -186,10 +188,12 @@ class MobileAppNotificationService(BaseNotificationService):
     """Implement the notification service for mobile_app."""
 
     @property
+    @override
     def targets(self) -> dict[str, str]:
         """Return a dictionary of registered targets."""
         return push_registrations(self.hass)
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the Lambda APNS gateway."""
         data = {ATTR_MESSAGE: message}

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiomealie import Statistics
 
@@ -10,6 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -72,6 +74,7 @@ async def async_setup_entry(
 class MealieStatisticSensors(MealieEntity, SensorEntity):
     """Defines a Mealie sensor."""
 
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     entity_description: MealieStatisticsSensorEntityDescription
     coordinator: MealieStatisticsCoordinator
 
@@ -86,6 +89,7 @@ class MealieStatisticSensors(MealieEntity, SensorEntity):
         self._attr_translation_key = description.key
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

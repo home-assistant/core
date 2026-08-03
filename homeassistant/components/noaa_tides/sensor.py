@@ -2,7 +2,7 @@
 
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
 
 import noaa_coops as coops
 import requests
@@ -108,11 +108,13 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
         self._attr_unique_id = f"{get_station_unique_id(station_id)}_summary"
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this device."""
         attr: dict[str, Any] = {}
@@ -139,6 +141,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
         return attr
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state."""
         if self.data is None:
