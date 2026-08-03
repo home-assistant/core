@@ -1063,7 +1063,9 @@ async def async_setup_entry(
         for outlet_num in sorted(outlet_numbers):
             outlet_num_str: str = str(outlet_num)
             outlet_name: str = (
-                status.get(f"outlet.{outlet_num_str}.name") or outlet_num_str
+                status.get(f"outlet.{outlet_num_str}.name")
+                or status.get(f"outlet.{outlet_num_str}.desc")
+                or outlet_num_str
             )
             additional_sensor_types |= {
                 f"outlet.{outlet_num_str}.current": SensorEntityDescription(
