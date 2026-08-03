@@ -57,7 +57,7 @@ async def test_setup_entry_with_ssl_and_verify_ssl(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # Verify HikCamera was called with verify_ssl=False
+    # Verify HikCamera was called with verify_ssl=True
     mock_hikcamera.assert_called_once_with(
         f"https://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, True
     )
