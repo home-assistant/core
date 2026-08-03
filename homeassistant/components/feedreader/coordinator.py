@@ -145,7 +145,8 @@ class FeedReaderCoordinator(
             assert isinstance(self._feed.entries, list)
 
         self._filter_entries()
-        self._publish_new_entries()
+        if self._publish_new_entries() == 0:
+            return None
 
         _LOGGER.debug("Fetch from feed %s completed", self.url)
 
@@ -185,8 +186,8 @@ class FeedReaderCoordinator(
         _LOGGER.debug("New event fired for entry %s", entry.get("link"))
 
     @callback
-    def _publish_new_entries(self) -> None:
-        """Publish new entries to the event bus."""
+    def _publish_new_entries(self) -> int:
+        """Publish new entries to the event bus and return new entry count."""
         assert self._feed is not None
         new_entry_count = 0
         firstrun = False
@@ -214,6 +215,7 @@ class FeedReaderCoordinator(
             self._log_no_entries()
         else:
             _LOGGER.debug("%d entries published in feed %s", new_entry_count, self.url)
+        return new_entry_count
 
 
 class StoredData:
