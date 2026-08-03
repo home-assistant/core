@@ -10,6 +10,7 @@ from typing import Any, override
 
 import voluptuous as vol
 
+from homeassistant import data_entry_flow
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import (
     SOURCE_USER,
@@ -59,11 +60,28 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
     ENCRYPTION_OPTIONS,
+    SECTION_OPTIONS,
     SUBENTRY_TYPE_RECIPIENT,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
+            NumberSelector(
+                NumberSelectorConfig(
+                    min=1,
+                    max=1800,
+                    step=1,
+                    unit_of_measurement=UnitOfTime.SECONDS,
+                    mode=NumberSelectorMode.BOX,
+                )
+            ),
+            vol.Coerce(int),
+        )
+    }
+)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -115,23 +133,6 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
-            NumberSelector(
-                NumberSelectorConfig(
-                    min=1,
-                    max=1800,
-                    step=1,
-                    unit_of_measurement=UnitOfTime.SECONDS,
-                    mode=NumberSelectorMode.BOX,
-                )
-            ),
-            vol.Coerce(int),
-        )
-    }
-)
-
 
 class MailConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMTP."""
@@ -166,16 +167,29 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: user_input.get(CONF_USERNAME),
                 }
             )
-            errors = await self.hass.async_add_executor_job(validate_input, user_input)
+            entry_data = user_input.copy()
+            options = entry_data.pop(SECTION_OPTIONS)
+            errors = await self.hass.async_add_executor_job(
+                validate_input, entry_data, options
+            )
             if not errors:
                 return self.async_create_entry(
-                    title=user_input.get(CONF_SENDER_NAME, user_input[CONF_SENDER]),
-                    data=user_input,
+                    title=entry_data.get(CONF_SENDER_NAME, entry_data[CONF_SENDER]),
+                    data=entry_data,
+                    options=options,
                 )
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=STEP_USER_DATA_SCHEMA, suggested_values=user_input
+                data_schema=STEP_USER_DATA_SCHEMA.extend(
+                    {
+                        vol.Required(SECTION_OPTIONS): data_entry_flow.section(
+                            OPTIONS_SCHEMA,
+                            {"collapsed": True},
+                        ),
+                    }
+                ),
+                suggested_values=user_input,
             ),
             errors=errors,
         )
@@ -209,7 +223,9 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: user_input.get(CONF_USERNAME),
                 }
             )
-            errors = await self.hass.async_add_executor_job(validate_input, user_input)
+            errors = await self.hass.async_add_executor_job(
+                validate_input, user_input, dict(entry.options)
+            )
             if not errors:
                 return self.async_update_and_abort(
                     entry,
@@ -240,7 +256,7 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             errors = await self.hass.async_add_executor_job(
-                validate_input, {**entry.data, **user_input}
+                validate_input, {**entry.data, **user_input}, dict(entry.options)
             )
             if not errors:
                 return self.async_update_and_abort(
@@ -263,7 +279,9 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
         options = {CONF_TIMEOUT: import_info.pop(CONF_TIMEOUT, DEFAULT_TIMEOUT)}
         self._async_abort_entries_match(import_info)
 
-        errors = await self.hass.async_add_executor_job(validate_input, import_info)
+        errors = await self.hass.async_add_executor_job(
+            validate_input, import_info, options
+        )
         if not errors:
             title = (
                 import_info.get(CONF_NAME)
@@ -288,7 +306,9 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason=errors["base"])
 
 
-def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
+def validate_input(
+    user_input: dict[str, Any], options: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect."""
     errors: dict[str, str] = {}
     ssl_context = create_client_context() if user_input[CONF_VERIFY_SSL] else None
@@ -298,12 +318,14 @@ def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
             mail = SMTP_SSL(
                 user_input[CONF_SERVER],
                 user_input[CONF_PORT],
-                timeout=DEFAULT_TIMEOUT,
+                timeout=options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
                 context=ssl_context,
             )
         else:
             mail = SMTP(
-                user_input[CONF_SERVER], user_input[CONF_PORT], timeout=DEFAULT_TIMEOUT
+                user_input[CONF_SERVER],
+                user_input[CONF_PORT],
+                timeout=options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
             )
         mail.ehlo_or_helo_if_needed()
         if user_input[CONF_ENCRYPTION] == "starttls":

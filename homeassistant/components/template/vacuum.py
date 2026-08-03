@@ -1,8 +1,9 @@
 """Support for Template vacuums."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, Self, override
 
 import voluptuous as vol
 
@@ -28,6 +29,7 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator, validators as template_validators
@@ -214,12 +216,45 @@ def validate_segments(
     return parse
 
 
-class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
+@dataclass(kw_only=True)
+class VacuumExtraStoredData(ExtraStoredData):
+    """Holds extra stored data for template vacuum entities."""
+
+    activity: VacuumActivity | None
+    fan_speed: str | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the vacuum data."""
+        return {
+            "activity": self.activity.value if self.activity else None,
+            "fan_speed": self.fan_speed,
+        }
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored vacuum state from a dict."""
+        try:
+            activity: VacuumActivity | None = None
+            if _activity := restored["activity"]:
+                activity = VacuumActivity(_activity)
+
+            return cls(
+                activity=activity,
+                fan_speed=restored["fan_speed"],
+            )
+        except KeyError, ValueError:
+            return None
+
+
+class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreEntity):
     """Representation of a template vacuum features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _state_option = CONF_STATE
+    _restore_state_extra_data = VacuumExtraStoredData
+    _restore_state_properties = ("_attr_activity",)
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -368,6 +403,21 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
             await self.async_run_script(
                 script, run_variables={"fan_speed": fan_speed}, context=self._context
             )
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> VacuumExtraStoredData:
+        """Return vacuum specific state data to be restored."""
+        return VacuumExtraStoredData(
+            activity=self._attr_activity,
+            fan_speed=self._attr_fan_speed,
+        )
+
+    @override
+    def restore_extra_data(self, extra_data: VacuumExtraStoredData) -> None:
+        """Restore the extra data."""
+        self._attr_activity = extra_data.activity
+        self._attr_fan_speed = extra_data.fan_speed
 
 
 class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):

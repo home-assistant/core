@@ -1,12 +1,16 @@
 """Constants for Mikrotik tests."""
 
 from homeassistant.components.mikrotik.const import (
+    ATTR_ROUTERBOARD_FIRMWARE,
+    ATTR_SERIAL_NUMBER,
+    ATTR_SYSTEM_FIRMWARE,
     CONF_ARP_PING,
     CONF_DETECTION_TIME,
     CONF_FORCE_DHCP,
     DEFAULT_DETECTION_TIME,
 )
 from homeassistant.const import (
+    ATTR_MODEL,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -18,6 +22,8 @@ from homeassistant.const import (
 TEST_MODEL = "RB5009"
 TEST_FIRMWARE = "7.18.2"
 TEST_SERIAL_NUMBER = "ABC123"
+TEST_INSTALLED_VERSION = "7.18.2"
+TEST_LATEST_VERSION = "7.19.1"
 
 MOCK_DATA = {
     CONF_NAME: "Mikrotik",
@@ -180,5 +186,23 @@ SYSTEM_DATA = [
         "total-hdd-space": 100,
         "free-hdd-space": 25,
         "uptime": "1w2d3h4m5s",
+    }
+]
+
+ROUTERBOARD_DATA = [
+    {
+        ATTR_MODEL: TEST_MODEL,
+        ATTR_ROUTERBOARD_FIRMWARE: TEST_FIRMWARE,
+        "upgrade-firmware": TEST_LATEST_VERSION,
+        ATTR_SERIAL_NUMBER: TEST_SERIAL_NUMBER,
+    }
+]
+
+UPDATE_DATA = [
+    {
+        "channel": "stable",
+        ATTR_SYSTEM_FIRMWARE: TEST_INSTALLED_VERSION,
+        "latest-version": TEST_LATEST_VERSION,
+        "status": "System is already up to date",
     }
 ]

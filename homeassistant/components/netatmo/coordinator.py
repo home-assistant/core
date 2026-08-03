@@ -135,6 +135,7 @@ class NetatmoPublisher:
     subscriptions: set[CALLBACK_TYPE | None]
     method: str
     kwargs: dict
+    available: bool = True
 
 
 class NetatmoDataHandler:
@@ -254,19 +255,29 @@ class NetatmoDataHandler:
                 **self.publisher[signal_name].kwargs
             )
 
-        except (pyatmo.NoDeviceError, pyatmo.ApiError) as err:
+        except (
+            pyatmo.NoDeviceError,
+            pyatmo.ApiError,
+            TimeoutError,
+            aiohttp.ClientConnectorError,
+        ) as err:
             _LOGGER.debug(err)
             has_error = True
 
-        except (TimeoutError, aiohttp.ClientConnectorError) as err:
-            _LOGGER.debug(err)
-            return True
+        self.publisher[signal_name].available = not has_error
+        self._notify_subscribers(signal_name)
+        return has_error
 
+    def _notify_subscribers(self, signal_name: str) -> None:
+        """Notify all subscribers of a publisher to update their state."""
         for update_callback in self.publisher[signal_name].subscriptions:
             if update_callback:
                 update_callback()
 
-        return has_error
+    def is_signal_available(self, signal_name: str) -> bool:
+        """Return whether the last fetch for a publisher succeeded."""
+        publisher = self.publisher.get(signal_name)
+        return publisher is None or publisher.available
 
     async def subscribe(
         self,

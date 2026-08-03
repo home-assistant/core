@@ -4,10 +4,11 @@ from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import configure_integration
 from .mocks import (
@@ -181,3 +182,32 @@ async def test_remove_from_hass(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all()) == 0
     assert test_gateway.publisher.unregister.call_count == 1
+
+
+async def test_deleted_device_removed_once(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test a device with several entities is removed once when it is deleted.
+
+    A "del" message is dispatched to every entity of the device, so removing the
+    device must be idempotent; the entities whose turn comes after the device is
+    already gone must not act on a stale reference.
+    """
+    entry = configure_integration(hass)
+    test_gateway = HomeControlMockConsumption()
+    with patch(
+        "homeassistant.components.devolo_home_control.HomeControl",
+        side_effect=[test_gateway, HomeControlMock()],
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # The consumption device has several entities (power, energy), all subscribed
+    # to the same device uid
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "Test")}) is not None
+
+    # Emulate websocket message: device was deleted
+    test_gateway.publisher.dispatch("Test", ("Test", "del"))
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "Test")}) is None

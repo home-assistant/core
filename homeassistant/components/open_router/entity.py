@@ -234,11 +234,55 @@ class OpenRouterEntity(Entity):
         """Generate an answer for the chat log."""
 
         model = self.model
-        if self.subentry.data.get(CONF_WEB_SEARCH):
-            model = f"{model}:online"
 
         extra_body: dict[str, Any] = {"require_parameters": True}
 
+        match self.subentry.data.get(CONF_WEB_SEARCH):
+            case "plugin":
+                model += ":online"
+                LOGGER.debug("Using plugin web search mode: %s", model)
+            case "tool":
+                extra_body["tools"] = [
+                    {"type": "openrouter:web_search", "parameters": {"engine": "auto"}}
+                ]
+                LOGGER.debug("Using auto tool web search mode: %s", model)
+            case "tool_native":
+                extra_body["tools"] = [
+                    {
+                        "type": "openrouter:web_search",
+                        "parameters": {"engine": "native"},
+                    }
+                ]
+                LOGGER.debug("Using native tool web search mode: %s", model)
+            case "tool_exa":
+                extra_body["tools"] = [
+                    {"type": "openrouter:web_search", "parameters": {"engine": "exa"}}
+                ]
+                LOGGER.debug("Using Exa tool web search mode: %s", model)
+            case "tool_firecrawl":
+                extra_body["tools"] = [
+                    {
+                        "type": "openrouter:web_search",
+                        "parameters": {"engine": "firecrawl"},
+                    }
+                ]
+                LOGGER.debug("Using Firecrawl tool web search mode: %s", model)
+            case "tool_parallel":
+                extra_body["tools"] = [
+                    {
+                        "type": "openrouter:web_search",
+                        "parameters": {"engine": "parallel"},
+                    }
+                ]
+                LOGGER.debug("Using Parallel tool web search mode: %s", model)
+            case "tool_perplexity":
+                extra_body["tools"] = [
+                    {
+                        "type": "openrouter:web_search",
+                        "parameters": {"engine": "perplexity"},
+                    }
+                ]
+                LOGGER.debug("Using Perplexity tool web search mode: %s", model)
         model_args = {
             "model": model,
             "user": chat_log.conversation_id,
