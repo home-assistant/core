@@ -21,7 +21,7 @@ from tesla_fleet_api.exceptions import (
     VehicleOffline,
 )
 
-from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
+from homeassistant.components.tesla_fleet.const import DOMAIN, MODELS, SCOPES
 from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     ENERGY_INTERVAL,
@@ -231,6 +231,23 @@ async def test_devices(
 
     for device in devices:
         assert device == snapshot(name=f"{device.identifiers}")
+
+
+@pytest.mark.parametrize(
+    ("vin", "model"),
+    [
+        ("LRWS_______________", "Model S"),
+        ("LRW3_______________", "Model 3"),
+        ("LRWX_______________", "Model X"),
+        ("LRWY_______________", "Model Y"),
+        ("LRWC_______________", "Cybertruck"),
+        ("LRWA_______________", "Cybercab"),
+        ("LRWT_______________", "Tesla Semi"),
+    ],
+)
+def test_model_from_vin(vin: str, model: str) -> None:
+    """Test the model is derived from the fourth VIN character."""
+    assert MODELS.get(vin[3]) == model
 
 
 # Vehicle Coordinator

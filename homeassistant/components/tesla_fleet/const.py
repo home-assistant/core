@@ -31,6 +31,7 @@ MODELS = {
     "X": "Model X",
     "Y": "Model Y",
     "C": "Cybertruck",
+    "A": "Cybercab",
     "T": "Tesla Semi",
 }
 
