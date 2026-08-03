@@ -44,6 +44,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import (
     SOURCE_BLUETOOTH,
     SOURCE_ZEROCONF,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -77,6 +78,7 @@ from .ble_provisioning import (
 )
 from .const import (
     CONF_BLE_SCANNER_MODE,
+    CONF_DEVICE_NAME,
     CONF_GEN,
     CONF_SLEEP_PERIOD,
     CONF_SSID,
@@ -87,6 +89,8 @@ from .const import (
 )
 from .coordinator import ShellyConfigEntry, async_reconnect_soon
 from .utils import (
+    async_can_replace_device,
+    async_replace_device,
     get_block_device_sleep_period,
     get_coap_context,
     get_device_entry_gen,
@@ -215,7 +219,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Shelly."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     host: str = ""
     port: int = DEFAULT_HTTP_PORT
@@ -232,6 +236,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     disable_ble_rpc_after_provision: bool = True
     _discovered_devices: dict[str, DiscoveredDeviceZeroconf | DiscoveredDeviceBluetooth]
     _ble_rpc_device: RpcDevice | None = None
+    _entry_with_name_conflict: ShellyConfigEntry | None = None
+    _name_conflict_data: dict[str, Any] | None = None
 
     @staticmethod
     def _get_ssl_entry_data(port: int, verify_ssl: bool) -> dict[str, bool]:
@@ -460,18 +466,154 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if device_info[CONF_MODEL]:
-            return self.async_create_entry(
-                title=device_info["title"],
-                data={
-                    CONF_HOST: self.host,
-                    CONF_PORT: self.port,
-                    CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                    CONF_MODEL: device_info[CONF_MODEL],
-                    CONF_GEN: device_info[CONF_GEN],
-                    **self._get_ssl_entry_data(self.port, self.verify_ssl),
-                },
-            )
+            return await self._async_create_or_migrate_entry(device_info)
         return self.async_abort(reason="firmware_not_fully_provisioned")
+
+    async def _async_create_or_migrate_entry(
+        self, device_info: dict[str, Any], credentials: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create the entry, or offer to migrate an entry with the same name."""
+        entry_data: dict[str, Any] = {
+            CONF_HOST: self.host,
+            CONF_PORT: self.port,
+            CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
+            CONF_MODEL: device_info[CONF_MODEL],
+            CONF_GEN: device_info[CONF_GEN],
+            CONF_DEVICE_NAME: device_info["title"],
+            **self._get_ssl_entry_data(self.port, self.verify_ssl),
+        }
+        if credentials is not None:
+            entry_data |= credentials
+
+        if entry := self._async_find_entry_with_name_conflict(device_info):
+            self._entry_with_name_conflict = entry
+            self._name_conflict_data = entry_data
+            return await self.async_step_name_conflict()
+
+        return self.async_create_entry(title=device_info["title"], data=entry_data)
+
+    @callback
+    def _async_find_entry_with_name_conflict(
+        self, device_info: dict[str, Any]
+    ) -> ShellyConfigEntry | None:
+        """Return a non-working entry of the same name, model and generation."""
+        name = device_info["title"]
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.disabled_by is not None or self._async_entry_is_working(entry):
+                continue
+            if (
+                entry.data.get(CONF_DEVICE_NAME) == name
+                # CONF_GEN is absent on entries created before it was added,
+                # and those are always gen1.
+                and entry.data.get(CONF_GEN, 1) == device_info[CONF_GEN]
+                and entry.data.get(CONF_MODEL) == device_info[CONF_MODEL]
+            ):
+                return entry
+        return None
+
+    @callback
+    def _async_entry_is_working(self, entry: ShellyConfigEntry) -> bool:
+        """Return True if the entry is loaded and its device is answering."""
+        if entry.state is not ConfigEntryState.LOADED:
+            return False
+        coordinator = entry.runtime_data.rpc or entry.runtime_data.block
+        # `initialized` only tells us the device answered at some point, it is
+        # never cleared again, so the current state comes from the coordinator.
+        return (
+            coordinator is not None
+            and coordinator.device.initialized
+            and coordinator.last_update_success
+        )
+
+    async def async_step_name_conflict(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Offer to migrate the conflicting entry onto the new device."""
+        return self.async_show_menu(
+            step_id="name_conflict",
+            menu_options=["name_conflict_add_new", "name_conflict_migrate"],
+            description_placeholders=self._name_conflict_placeholders(),
+        )
+
+    async def async_step_name_conflict_add_new(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Add the device as a new entry, keeping the existing one."""
+        if TYPE_CHECKING:
+            assert self._name_conflict_data is not None
+
+        # Another entry can have claimed this MAC while the menu was open. Creating
+        # an entry for a unique ID that is taken removes the other one along with
+        # its devices and entities, which is the opposite of what this step offers.
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=self._name_conflict_data[CONF_DEVICE_NAME],
+            data=self._name_conflict_data,
+        )
+
+    async def async_step_name_conflict_migrate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Migrate the existing entry onto the new device."""
+        conflict_entry = self._entry_with_name_conflict
+        if TYPE_CHECKING:
+            assert conflict_entry is not None
+            assert conflict_entry.unique_id is not None
+            assert self._name_conflict_data is not None
+            assert self.unique_id is not None
+
+        entry_id = conflict_entry.entry_id
+        old_mac = conflict_entry.unique_id
+        new_mac = self.unique_id
+        placeholders = self._name_conflict_placeholders()
+
+        if (entry := self.hass.config_entries.async_get_entry(entry_id)) is None:
+            return self.async_abort(
+                reason="name_conflict_entry_removed",
+                description_placeholders=placeholders,
+            )
+        # The menu can stay open for a while, and the old device may come back in
+        # the meantime, so the conditions are checked again before writing.
+        if entry.disabled_by is not None or self._async_entry_is_working(
+            cast(ShellyConfigEntry, entry)
+        ):
+            return self.async_abort(
+                reason="name_conflict_entry_working",
+                description_placeholders=placeholders,
+            )
+        if not async_can_replace_device(self.hass, entry_id, old_mac, new_mac):
+            return self.async_abort(
+                reason="name_conflict_device_in_use",
+                description_placeholders=placeholders,
+            )
+
+        await async_replace_device(self.hass, entry_id, old_mac, new_mac)
+        self.hass.config_entries.async_update_entry(
+            entry, data=self._name_conflict_data, unique_id=new_mac
+        )
+        self.hass.config_entries.async_schedule_reload(entry_id)
+        return self.async_abort(
+            reason="name_conflict_migrated", description_placeholders=placeholders
+        )
+
+    @callback
+    def _name_conflict_placeholders(self) -> dict[str, str]:
+        """Return the placeholders describing the name conflict."""
+        entry = self._entry_with_name_conflict
+        if TYPE_CHECKING:
+            assert entry is not None
+            assert entry.unique_id is not None
+            assert self._name_conflict_data is not None
+            assert self.unique_id is not None
+
+        return {
+            "name": self._name_conflict_data[CONF_DEVICE_NAME],
+            "host": self.host,
+            "existing_title": entry.title,
+            "existing_mac": format_mac(entry.unique_id).upper(),
+            "mac": format_mac(self.unique_id).upper(),
+        }
 
     @override
     async def async_step_user(
@@ -633,17 +775,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if device_info[CONF_MODEL]:
-                    return self.async_create_entry(
-                        title=device_info["title"],
-                        data={
-                            **user_input,
-                            CONF_HOST: self.host,
-                            CONF_PORT: self.port,
-                            CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                            CONF_MODEL: device_info[CONF_MODEL],
-                            CONF_GEN: device_info[CONF_GEN],
-                            **self._get_ssl_entry_data(self.port, self.verify_ssl),
-                        },
+                    return await self._async_create_or_migrate_entry(
+                        device_info, user_input
                     )
                 return self.async_abort(reason="firmware_not_fully_provisioned")
         else:
@@ -1077,18 +1210,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self.ble_device is not None
         async_clear_address_from_match_history(self.hass, self.ble_device.address)
 
-        # User just provisioned this device - create entry directly without confirmation
-        return self.async_create_entry(
-            title=device_info["title"],
-            data={
-                CONF_HOST: self.host,
-                CONF_PORT: self.port,
-                CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                CONF_MODEL: device_info[CONF_MODEL],
-                CONF_GEN: device_info[CONF_GEN],
-                **self._get_ssl_entry_data(self.port, self.verify_ssl),
-            },
-        )
+        # User just provisioned this device, no confirmation step needed
+        return await self._async_create_or_migrate_entry(device_info)
 
     async def _do_provision(self, password: str) -> None:
         """Provision WiFi credentials to device via BLE."""
@@ -1229,17 +1352,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="firmware_not_fully_provisioned")
         model = get_model_name(self.info)
         if user_input is not None:
-            return self.async_create_entry(
-                title=self.device_info["title"],
-                data={
-                    CONF_HOST: self.host,
-                    CONF_PORT: self.port,
-                    CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
-                    CONF_MODEL: self.device_info[CONF_MODEL],
-                    CONF_GEN: self.device_info[CONF_GEN],
-                    **self._get_ssl_entry_data(self.port, self.verify_ssl),
-                },
-            )
+            return await self._async_create_or_migrate_entry(self.device_info)
         self._set_confirm_only()
 
         return self.async_show_form(

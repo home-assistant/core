@@ -3,7 +3,7 @@
 import asyncio
 from ipaddress import IPv4Address
 from typing import Any
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, call, patch
 
 from aioshelly.block_device import COAP
 from aioshelly.common import ConnectionOptions
@@ -23,6 +23,7 @@ from homeassistant.components.shelly.const import (
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_BLE_SCANNER_MODE,
+    CONF_DEVICE_NAME,
     CONF_GEN,
     CONF_SLEEP_PERIOD,
     DOMAIN,
@@ -698,7 +699,7 @@ async def test_migrate_ble_scanner_mode(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert entry.minor_version == 3
+    assert entry.minor_version == 4
     assert entry.options.get(CONF_BLE_SCANNER_MODE) == expected_mode
 
 
@@ -748,7 +749,7 @@ async def test_migrate_ble_scanner_mode_future_minor_version(
         options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE},
         title="Test name",
         version=1,
-        minor_version=4,
+        minor_version=5,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -756,7 +757,7 @@ async def test_migrate_ble_scanner_mode_future_minor_version(
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.version == 1
-    assert entry.minor_version == 4
+    assert entry.minor_version == 5
     assert entry.options[CONF_BLE_SCANNER_MODE] == BLEScannerMode.ACTIVE
 
 
@@ -936,3 +937,140 @@ async def test_rpc_disabled_ble_scanner_does_not_wait_at_startup(
     assert entry.state is ConfigEntryState.LOADED
     block_event.set()
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("gen", [1, 2])
+async def test_device_name_stored_and_refreshed(
+    hass: HomeAssistant,
+    gen: int,
+    mock_block_device: Mock,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test the device name is stored on setup and follows a device rename."""
+    entry = await init_integration(hass, gen)
+
+    assert entry.data[CONF_DEVICE_NAME] == "Test name"
+
+    # Both device types are renamed, only the one of the generation under test
+    # is actually set up.
+    with (
+        patch.object(
+            type(mock_block_device), "name", PropertyMock(return_value="Renamed device")
+        ),
+        patch.object(
+            type(mock_rpc_device), "name", PropertyMock(return_value="Renamed device")
+        ),
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.data[CONF_DEVICE_NAME] == "Renamed device"
+
+
+async def test_sleeping_device_name_stored_when_online(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a sleeping device stores its name once it checks in.
+
+    A sleeping device is not initialized while the entry is set up, so the name
+    is stored by the coordinator when the device connects.
+    """
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    entry = await init_integration(hass, 2, sleep_period=1000)
+
+    assert CONF_DEVICE_NAME not in entry.data
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.data[CONF_DEVICE_NAME] == "Test name"
+
+
+@pytest.mark.parametrize(
+    ("data", "expected_name"),
+    [({}, "Old name"), ({CONF_DEVICE_NAME: "Stored name"}, "Stored name")],
+    ids=["seeded_from_title", "existing_value_kept"],
+)
+async def test_migrate_device_name(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    data: dict[str, Any],
+    expected_name: str,
+) -> None:
+    """Test the device name is seeded from the entry title for older entries.
+
+    The device is not reachable, which is the situation the seed exists for:
+    an entry that will never be set up again cannot learn the name from its
+    device.
+    """
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.37",
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_PLUS_2PM,
+            CONF_GEN: 2,
+            **data,
+        },
+        unique_id=MOCK_MAC,
+        title="Old name",
+        minor_version=3,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.minor_version == 4
+    assert entry.data[CONF_DEVICE_NAME] == expected_name
+
+
+async def test_migrate_device_name_from_device_registry(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the seeded device name is taken from the device registry.
+
+    The entry title can have been renamed by the user, and an entry whose device
+    is gone never gets to correct it, so the name the integration gave the device
+    is preferred. It is kept separately from the user's own rename.
+    """
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.37",
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_PLUS_2PM,
+            CONF_GEN: 2,
+        },
+        unique_id=MOCK_MAC,
+        title="Renamed by the user",
+        minor_version=3,
+    )
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_MAC)},
+        name="Reported by the device",
+    )
+    device_registry.async_update_device(device.id, name_by_user="Renamed by the user")
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.minor_version == 4
+    assert entry.data[CONF_DEVICE_NAME] == "Reported by the device"

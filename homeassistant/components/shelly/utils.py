@@ -1,6 +1,6 @@
 """Shelly helpers functions."""
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import TYPE_CHECKING, Any, cast
 
@@ -55,6 +55,7 @@ from .const import (
     COIOT_UNCONFIGURED_ISSUE_ID,
     COMPONENT_ID_PATTERN,
     CONF_COAP_PORT,
+    CONF_DEVICE_NAME,
     CONF_GEN,
     DEVICE_UNIT_MAP,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
@@ -533,6 +534,116 @@ def update_device_fw_info(
         LOGGER.debug("Updating device registry info for %s", entry.title)
 
         dev_reg.async_update_device(device.id, sw_version=shellydevice.firmware_version)
+
+
+@callback
+def async_update_entry_device_name(
+    hass: HomeAssistant, entry: ConfigEntry, device: BlockDevice | RpcDevice
+) -> None:
+    """Store the current device name on the config entry."""
+    if not device.initialized or entry.data.get(CONF_DEVICE_NAME) == device.name:
+        return
+
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, CONF_DEVICE_NAME: device.name}
+    )
+
+
+def _device_replacement_updates(
+    dev_reg: dr.DeviceRegistry, entry_id: str, old_mac: str, new_mac: str
+) -> Iterator[tuple[dr.DeviceEntry, set[tuple[str, str]], set[tuple[str, str]]]]:
+    """Yield the devices of a config entry with their migrated registry keys."""
+    old_connection = (CONNECTION_NETWORK_MAC, dr.format_mac(old_mac))
+    new_connection = (CONNECTION_NETWORK_MAC, dr.format_mac(new_mac))
+
+    for device in dr.async_entries_for_config_entry(dev_reg, entry_id):
+        identifiers = {
+            (domain, new_mac + identifier.removeprefix(old_mac))
+            if domain == DOMAIN and identifier.startswith(old_mac)
+            else (domain, identifier)
+            for domain, identifier in device.identifiers
+        }
+        connections = device.connections
+        if old_connection in connections:
+            connections = (connections - {old_connection}) | {new_connection}
+
+        if identifiers != device.identifiers or connections != device.connections:
+            yield device, identifiers, connections
+
+
+@callback
+def async_can_replace_device(
+    hass: HomeAssistant,
+    entry_id: str,
+    old_mac: str,  # bare upper case, as reported by the device
+    new_mac: str,  # bare upper case, as reported by the device
+) -> bool:
+    """Return True if no registry entry the migration needs is already taken."""
+    # Another entry can have claimed the new MAC after this one was offered for
+    # migration. Updating the unique ID would not fail, it is only logged, so the
+    # two entries would silently share one.
+    other_entry = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, new_mac)
+    if other_entry is not None and other_entry.entry_id != entry_id:
+        return False
+
+    dev_reg = dr.async_get(hass)
+    for device, identifiers, connections in _device_replacement_updates(
+        dev_reg, entry_id, old_mac, new_mac
+    ):
+        # Identifiers and connections are unique per config entry, so the lookups
+        # are scoped the same way the device registry scopes its collision checks.
+        for identifier in identifiers - device.identifiers:
+            other = dev_reg.async_get_device_by_identifier(identifier, entry_id)
+            if other is not None and other.id != device.id:
+                return False
+        for connection in connections - device.connections:
+            other = dev_reg.async_get_device_by_connection(connection, entry_id)
+            if other is not None and other.id != device.id:
+                return False
+
+    ent_reg = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(ent_reg, entry_id):
+        if not entity.unique_id.startswith(old_mac):
+            continue
+        new_unique_id = new_mac + entity.unique_id.removeprefix(old_mac)
+        if ent_reg.async_get_entity_id(entity.domain, entity.platform, new_unique_id):
+            return False
+
+    return True
+
+
+async def async_replace_device(
+    hass: HomeAssistant,
+    entry_id: str,
+    old_mac: str,  # bare upper case, as reported by the device
+    new_mac: str,  # bare upper case, as reported by the device
+) -> None:
+    """Move the devices and entities of a config entry to a new MAC address."""
+    dev_reg = dr.async_get(hass)
+    for device, identifiers, connections in _device_replacement_updates(
+        dev_reg, entry_id, old_mac, new_mac
+    ):
+        dev_reg.async_update_device(
+            device.id, new_connections=connections, new_identifiers=identifiers
+        )
+
+    @callback
+    def _migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+        """Rewrite the old MAC prefix of an entity unique_id to the new MAC."""
+        if not entity_entry.unique_id.startswith(old_mac):
+            return None
+        return {"new_unique_id": new_mac + entity_entry.unique_id.removeprefix(old_mac)}
+
+    await er.async_migrate_entries(hass, entry_id, _migrate_unique_id)
+
+    # Every issue this integration raises is keyed by the MAC of the device it is
+    # about. The ones raised for the old device are persistent and would never be
+    # deleted again once the entry stops using its MAC, so they go now.
+    issue_reg = ir.async_get(hass)
+    old_suffix = f"_{old_mac}"
+    for domain, issue_id in list(issue_reg.issues):
+        if domain == DOMAIN and issue_id.endswith(old_suffix):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 def brightness_to_percentage(brightness: int) -> int:
