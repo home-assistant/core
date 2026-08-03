@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfMass,
@@ -22,7 +23,12 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceEntryType,
+    DeviceInfo,
+    async_get_device_id_by_identifier,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -81,6 +87,7 @@ ACTIVITY_SENSORS: list[
         key="active_calories",
         translation_key="active_calories",
         native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: (
             data.active_energy_burned.kcal_sum
@@ -92,6 +99,7 @@ ACTIVITY_SENSORS: list[
         key="total_calories",
         translation_key="total_calories",
         native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: (
             data.total_calories.kcal_sum if data and data.total_calories else 0.0
@@ -230,6 +238,7 @@ NUTRITION_SENSORS: list[
         key="calories_consumed",
         translation_key="calories_consumed",
         native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: (
             data.nutrition.energy.kcal_sum
@@ -348,6 +357,7 @@ class GoogleHealthSensor[_CoordinatorT: GoogleHealthDataUpdateCoordinator[Any]](
         self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
             manufacturer="Google",
         )
@@ -374,6 +384,7 @@ class GoogleHealthDeviceSensor(
     """Device-specific Google Health sensor entity."""
 
     _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     entity_description: GoogleHealthDeviceSensorEntityDescription
 
     def __init__(
@@ -396,7 +407,11 @@ class GoogleHealthDeviceSensor(
             or (device.device_type.title() if device.device_type else "Device"),
             model=device.device_type.title() if device.device_type else None,
             sw_version=device.device_version,
-            via_device=(DOMAIN, entry_id),
+            via_device_id=async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, entry_id),
+                config_entry_id=entry_id,
+            ),
         )
 
         if device.mac_address:
