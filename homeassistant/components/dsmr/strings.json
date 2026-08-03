@@ -8,9 +8,19 @@
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_communicate": "Failed to communicate",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_key": "Failed to decrypt the telegram, check the encryption key"
     },
     "step": {
+      "encryption_key": {
+        "data": {
+          "encryption_key": "Encryption key"
+        },
+        "data_description": {
+          "encryption_key": "The encryption key of your meter, provided by your grid operator (32 hexadecimal characters)"
+        },
+        "title": "Encryption key"
+      },
       "user": {
         "data": {
           "dsmr_version": "Select DSMR version",

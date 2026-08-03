@@ -169,9 +169,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         connect=False, device_resolver=DEVICE_REGISTRY.resolve
     ) as app:
         for dev in app.devices.values():
-            dev_entry = device_registry.async_get_device(
-                identifiers={(DOMAIN, str(dev.ieee))},
-                connections={(dr.CONNECTION_ZIGBEE, str(dev.ieee))},
+            dev_entry = device_registry.async_get_device_by_identifier(
+                (DOMAIN, str(dev.ieee)), config_entry.entry_id
             )
 
             if dev_entry is None:
@@ -227,6 +226,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.config_entries.async_update_entry(config_entry, unique_id=unique_id)
 
     ha_zha_data.gateway_proxy = ZHAGatewayProxy(hass, config_entry, zha_gateway)
+
+    # Ensure the gateway is torn down if setup fails after this point
+    config_entry.async_on_unload(ha_zha_data.gateway_proxy.shutdown)
 
     manufacturer = zha_gateway.state.node_info.manufacturer
     model = zha_gateway.state.node_info.model
@@ -286,11 +288,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     ha_zha_data = get_zha_data(hass)
     ha_zha_data.config_entry = None
-
-    if ha_zha_data.gateway_proxy is not None:
-        await ha_zha_data.gateway_proxy.shutdown()
-        ha_zha_data.gateway_proxy = None
-
+    ha_zha_data.gateway_proxy = None
     ha_zha_data.update_coordinator = None
 
     # clean up any remaining entity metadata

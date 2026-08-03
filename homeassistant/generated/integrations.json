@@ -971,12 +971,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "ccm15": {
-      "name": "Midea ccm15 AC Controller",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "centriconnect": {
       "name": "CentriConnect/MyPropane",
       "integration_type": "device",
@@ -1554,6 +1548,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "dyson_infrared": {
+      "name": "Dyson Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
     },
     "eafm": {
       "name": "Environment Agency Flood Gauges",
@@ -2463,6 +2463,23 @@
         }
       }
     },
+    "geosphere_austria": {
+      "name": "GeoSphere Austria",
+      "integrations": {
+        "zamg": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "GeoSphere Austria"
+        },
+        "geosphere_austria_warnings": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "GeoSphere Austria Warnings"
+        }
+      }
+    },
     "ghost": {
       "name": "Ghost",
       "integration_type": "service",
@@ -3333,7 +3350,7 @@
       "name": "IOmeter",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "ios": {
       "name": "Home Assistant iOS",
@@ -4341,11 +4358,22 @@
         }
       }
     },
-    "midea_lan": {
-      "name": "Midea LAN",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_polling"
+    "midea": {
+      "name": "Midea",
+      "integrations": {
+        "ccm15": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Midea ccm15 AC Controller"
+        },
+        "midea": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Midea"
+        }
+      }
     },
     "miele": {
       "name": "Miele",
@@ -7826,22 +7854,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "vlc": {
-      "name": "VideoLAN",
-      "integrations": {
-        "vlc": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_polling",
-          "name": "VLC media player"
-        },
-        "vlc_telnet": {
-          "integration_type": "service",
-          "config_flow": true,
-          "iot_class": "local_polling",
-          "name": "VLC media player via Telnet"
-        }
-      }
+    "vlc_telnet": {
+      "name": "VLC media player via Telnet",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "vodafone_station": {
       "name": "Vodafone Station",
@@ -7876,12 +7893,6 @@
     "volvo": {
       "name": "Volvo",
       "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
-    "volvooncall": {
-      "name": "Volvo On Call",
-      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -8288,12 +8299,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "zamg": {
-      "name": "GeoSphere Austria",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "zbox_hub": {
       "name": "Z-Box Hub",

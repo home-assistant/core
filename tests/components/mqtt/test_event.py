@@ -53,7 +53,7 @@ from .common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import MockConfigEntry, async_fire_mqtt_message
+from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
@@ -547,10 +547,9 @@ async def test_entity_device_info_with_hub(
 ) -> None:
     """Test MQTT event device registry integration."""
     await mqtt_mock_entry()
-    other_config_entry = MockConfigEntry()
-    other_config_entry.add_to_hass(hass)
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     hub = device_registry.async_get_or_create(
-        config_entry_id=other_config_entry.entry_id,
+        config_entry_id=mqtt_config_entry.entry_id,
         connections=set(),
         identifiers={("mqtt", "hub-id")},
         manufacturer="manufacturer",

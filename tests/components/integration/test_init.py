@@ -151,8 +151,8 @@ async def test_setup_and_remove_config_entry(
 async def test_entry_changed(hass: HomeAssistant, platform) -> None:
     """Test reconfiguring."""
 
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     def _create_mock_entity(domain: str, name: str) -> er.RegistryEntry:
         config_entry = MockConfigEntry(

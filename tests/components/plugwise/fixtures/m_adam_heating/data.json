@@ -7,14 +7,18 @@
       "heating_state": true
     },
     "dev_class": "heater_central",
+    "dhw_mode": "eco",
+    "dhw_modes": ["comfort", "eco"],
     "location": "bc93488efab249e5bc54fd7e175a6f91",
     "max_dhw_temperature": {
+      "current": 37.0,
       "lower_bound": 40.0,
       "resolution": 0.01,
       "setpoint": 60.0,
       "upper_bound": 60.0
     },
     "maximum_boiler_temperature": {
+      "current": 37.0,
       "lower_bound": 25.0,
       "resolution": 0.01,
       "setpoint": 50.0,
@@ -36,6 +40,7 @@
       "low_battery": false
     },
     "dev_class": "zone_thermostat",
+    "firmware": "2025-11-10T01:00:00+01:00",
     "hardware": "1",
     "location": "f2bf9048bef64cc5b6d5110154e33c81",
     "model": "Emma Pro",

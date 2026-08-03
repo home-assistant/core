@@ -679,7 +679,7 @@ async def test_async_remove_helper_devices_sweep(
 
     A helper that forked a device for each source it linked to, without removing the
     old forks, accumulates stale devices that don't match the current source (so the
-    targeted match never sees them). sweep_helper_devices removes them and relinks the
+    targeted match never sees them). remove_all_devices removes them and relinks the
     helper's entities - including a stranded, device-less one - to the source, while
     keep_device_ids and the source device are preserved.
     """
@@ -737,7 +737,7 @@ async def test_async_remove_helper_devices_sweep(
         hass,
         helper_config_entry_id=helper_config_entry.entry_id,
         source_device_id=source_device.id,
-        sweep_helper_devices=True,
+        remove_all_devices=True,
         keep_device_ids={kept_device.id},
     )
 
@@ -796,7 +796,7 @@ async def test_async_remove_helper_devices_sweep_no_source(
         hass,
         helper_config_entry_id=helper_config_entry.entry_id,
         source_device_id=source_device_id,
-        sweep_helper_devices=True,
+        remove_all_devices=True,
     )
 
     # The helper's device is removed and its entity left without a device
@@ -811,7 +811,7 @@ async def test_async_remove_helper_devices_none_source_targeted_noop(
 ) -> None:
     """Targeted mode is a no-op when no source device is selected.
 
-    Without sweep_helper_devices there is no duplicate to match against a missing source, so
+    Without remove_all_devices there is no duplicate to match against a missing source, so
     the helper's device and its entity's device link are left untouched.
     """
     helper_config_entry = MockConfigEntry(domain=HELPER_DOMAIN)

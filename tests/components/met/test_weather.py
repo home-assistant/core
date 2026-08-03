@@ -1,7 +1,7 @@
 """Test Met weather entity."""
 
 from homeassistant import config_entries
-from homeassistant.components.met import DOMAIN
+from homeassistant.components.met.const import DOMAIN
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
     ATTR_WEATHER_DEW_POINT,
