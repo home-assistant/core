@@ -1,7 +1,6 @@
 """Support for RESTful API."""
 
 import logging
-import ssl
 from typing import Any
 
 import aiohttp
@@ -189,12 +188,6 @@ class RestData:
             self.last_exception = ex
             self.data = None
             self.headers = None
-        except ssl.SSLError as ex:
-            if log_errors:
-                _LOGGER.error("SSL error connecting to: %s, %s", self._resource, ex)
-                self.last_exception = ex
-                self.data = None
-                self.headers = None
 
         # Log response details outside the try block so we always get logging
         if response is None:

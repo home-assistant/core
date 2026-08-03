@@ -16,7 +16,7 @@ RestConfigEntry = ConfigEntry["RestCoordinator"]
 
 
 class RestCoordinator(DataUpdateCoordinator[None]):
-    """Rest Coordintor."""
+    """Rest coordinator."""
 
     def __init__(
         self,
