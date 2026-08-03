@@ -24,7 +24,12 @@ from homeassistant.components.device_tracker import (
     TrackingType,
 )
 from homeassistant.components.zone import ATTR_PASSIVE, ATTR_RADIUS
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigSubentryData,
+)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_FRIENDLY_NAME,
@@ -117,6 +122,7 @@ async def create_mock_platform(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entities: list[Entity],
+    config_subentry_id: str | None = None,
 ) -> MockConfigEntry:
     """Create a device tracker platform with the specified entities."""
 
@@ -126,7 +132,7 @@ async def create_mock_platform(
         async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test event platform via config entry."""
-        async_add_entities(entities)
+        async_add_entities(entities, config_subentry_id=config_subentry_id)
 
     mock_platform(
         hass,
@@ -1734,11 +1740,20 @@ async def test_scanner_entity_attaches_to_own_device(
     assert entity_entry.device_id == own_device.id
 
 
+@pytest.mark.parametrize(
+    ("hostname", "expected_device_name"),
+    [
+        pytest.param("tracked-host", "tracked-host", id="hostname"),
+        pytest.param(None, TEST_MAC_ADDRESS, id="no-hostname-falls-back-to-mac"),
+    ],
+)
 async def test_scanner_entity_registers_own_device(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    hostname: str | None,
+    expected_device_name: str,
 ) -> None:
     """Test the scanner registers its own device when the MAC is known elsewhere."""
     mac = TEST_MAC_ADDRESS
@@ -1754,7 +1769,9 @@ async def test_scanner_entity_registers_own_device(
             ).id
         )
 
-    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity = MockScannerEntity(
+        mac_address=mac, hostname=hostname, unique_id=f"{mac}_scanner"
+    )
     scanner_entity.entity_id = "device_tracker.shared_mac_scanner"
     await create_mock_platform(hass, config_entry, [scanner_entity])
 
@@ -1766,6 +1783,52 @@ async def test_scanner_entity_registers_own_device(
     assert own_device is not None
     assert own_device.config_entry_id == config_entry.entry_id
     assert own_device.connections == {(dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))}
+    assert own_device.name == expected_device_name
+
+
+async def test_scanner_entity_own_device_in_subentry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the scanner's own device is created in the entity's config subentry."""
+    mac = TEST_MAC_ADDRESS
+    subentry_id = "mock-subentry-id"
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        subentries_data=(
+            ConfigSubentryData(
+                data={},
+                subentry_id=subentry_id,
+                subentry_type="test",
+                title="Mock subentry",
+                unique_id=None,
+            ),
+        ),
+    )
+    config_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={("other", "x")},
+    )
+
+    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity.entity_id = "device_tracker.subentry_scanner"
+    await create_mock_platform(
+        hass, config_entry, [scanner_entity], config_subentry_id=subentry_id
+    )
+
+    entity_entry = entity_registry.async_get("device_tracker.subentry_scanner")
+    assert entity_entry is not None
+    assert entity_entry.config_subentry_id == subentry_id
+    assert entity_entry.device_id is not None
+    own_device = device_registry.async_get(entity_entry.device_id)
+    assert own_device is not None
+    assert own_device.config_entry_id == config_entry.entry_id
+    assert own_device.config_subentry_id == subentry_id
 
 
 async def test_scanner_entity_prunes_composite_identifiers(

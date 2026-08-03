@@ -41,7 +41,7 @@
 # name: test_entity_and_device_data[site_payload0-device_payload0-client_payload0][device_tracker.switch_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '00:00:00:00:01:01 Switch 1',
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
       ]),

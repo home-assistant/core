@@ -714,8 +714,9 @@ class ScannerEntity(
         # the identifiers and connections copied from the composite.
         device_entry = dr.async_get(self.hass).async_get_or_create(
             config_entry_id=self.platform.config_entry.entry_id,
+            config_subentry_id=self.registry_entry.config_subentry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            default_name=self.hostname,
+            default_name=self.hostname or self.mac_address,
         )
 
         # Link the entity's registry entry to the device
