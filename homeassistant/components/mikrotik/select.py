@@ -51,6 +51,12 @@ class MikrotikSelectEntity(MikrotikDeviceEntity, SelectEntity):
         self._attr_current_option = self._interface.get("poe-out", "off")
 
     @override
+    def _handle_coordinator_update(self) -> None:
+        """Sync the selected option from the latest coordinator data."""
+        self._attr_current_option = self._interface.get("poe-out", "off")
+        super()._handle_coordinator_update()
+
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
 
@@ -61,5 +67,4 @@ class MikrotikSelectEntity(MikrotikDeviceEntity, SelectEntity):
                 {".id": self._interface[".id"], "poe-out": option},
             )
 
-        self._attr_current_option = option
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()

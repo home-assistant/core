@@ -1,9 +1,11 @@
 """Tests for the Mikrotik select platform."""
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.mikrotik.const import INTERFACE, MIKROTIK_SERVICES, POE
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
@@ -54,6 +56,16 @@ async def test_select_option(hass: HomeAssistant, mock_api: MagicMock) -> None:
     assert (state := hass.states.get(entity_id))
     assert state.state == "auto-on"
 
+    def command_side_effect(cmd: str, **params: Any) -> list[dict[str, Any]]:
+        """Reflect the PoE change the coordinator refresh will pick up."""
+        if cmd == MIKROTIK_SERVICES[INTERFACE]:
+            return [ETHER1_INTERFACE]
+        if cmd == MIKROTIK_SERVICES[POE]:
+            return [{**ETHER1_POE, "poe-out": "forced-on"}]
+        return []
+
+    mock_api.side_effect = command_side_effect
+
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
@@ -61,7 +73,7 @@ async def test_select_option(hass: HomeAssistant, mock_api: MagicMock) -> None:
         blocking=True,
     )
 
-    mock_api.assert_called_with(
+    mock_api.assert_any_call(
         "/interface/ethernet/poe/set", **{".id": "*1", "poe-out": "forced-on"}
     )
 
