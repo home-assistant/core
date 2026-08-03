@@ -162,7 +162,9 @@ async def async_setup_entry(  # noqa: C901
                 # differs is a real deviation, and only stamp it on first
                 # creation (unique_id not yet registered) so a later user area
                 # choice survives reloads.
-                analog_uid = f"Mod_{hbt_module.uid}_snsr{ain.nmbr}_{ANALOG_DESCRIPTION.key}"
+                analog_uid = (
+                    f"Mod_{hbt_module.uid}_snsr{ain.nmbr}_{ANALOG_DESCRIPTION.key}"
+                )
                 deviating_area = (
                     area_ids.get(ain.area)
                     if ain.area not in (0, hbt_module.area)
