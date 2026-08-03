@@ -25,3 +25,10 @@ def mock_api() -> Generator[MagicMock]:
 
     with patch("librouteros.connect", return_value=api_instance):
         yield api_instance
+
+
+@pytest.fixture
+def mock_api_error(request: pytest.FixtureRequest) -> Generator[None]:
+    """Mock librouteros.connect raising the parametrized error."""
+    with patch("librouteros.connect", side_effect=request.param):
+        yield
