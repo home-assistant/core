@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate, override
+from typing import TYPE_CHECKING, Any, Concatenate, override
 
 from velbusaio.channels import Channel as VelbusChannel
 from velbusaio.properties import Property as VelbusProperty
@@ -57,7 +57,8 @@ class VelbusEntity(Entity):
         )
         if channel.is_sub_device():
             config_entry = self.platform.config_entry
-            assert config_entry
+            if TYPE_CHECKING:
+                assert config_entry
             device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
                 self.hass,
                 (DOMAIN, self._module_address),
