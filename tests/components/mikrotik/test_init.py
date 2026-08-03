@@ -9,18 +9,9 @@ from librouteros.exceptions import ConnectionClosed, LibRouterosError
 import pytest
 
 from homeassistant.components.mikrotik.const import (
-    ARP,
-    DHCP,
-    HEALTH,
     IDENTITY,
-    IS_CAPSMAN,
-    IS_WIFI,
-    IS_WIFIWAVE2,
-    IS_WIRELESS,
     MIKROTIK_SERVICES,
-    RESOURCE,
     ROUTERBOARD,
-    UPDATE,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -33,17 +24,7 @@ from .conftest import MockConfigEntryFactory
 from tests.common import async_fire_time_changed
 
 _BASE_COMMAND_RESPONSES: dict[str, list[dict[str, Any]]] = {
-    MIKROTIK_SERVICES[IDENTITY]: [{"name": "Mikrotik"}],
-    MIKROTIK_SERVICES[ROUTERBOARD]: [],
-    MIKROTIK_SERVICES[IS_CAPSMAN]: [],
-    MIKROTIK_SERVICES[IS_WIRELESS]: [],
-    MIKROTIK_SERVICES[IS_WIFIWAVE2]: [],
-    MIKROTIK_SERVICES[IS_WIFI]: [],
-    MIKROTIK_SERVICES[DHCP]: [],
-    MIKROTIK_SERVICES[ARP]: [],
-    MIKROTIK_SERVICES[HEALTH]: [],
-    MIKROTIK_SERVICES[RESOURCE]: [],
-    MIKROTIK_SERVICES[UPDATE]: [],
+    MIKROTIK_SERVICES[IDENTITY]: [{"name": "Mikrotik"}]
 }
 
 
