@@ -81,13 +81,13 @@ async def async_setup_entry(
 class MikrotikUpdateEntity(MikrotikEntity, UpdateEntity):
     """Mixin for update entity specific attributes."""
 
-    update_description: MikrotikUpdateEntityDescription
+    entity_description: MikrotikUpdateEntityDescription
 
     @property
     @override
     def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
-        return cast(UpdateEntityFeature, self.entity_description.supported_features)
+        return self.entity_description.supported_features
 
     @property
     def _device_path_info(self) -> dict[str, Any]:

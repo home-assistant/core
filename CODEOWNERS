@@ -215,8 +215,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/azure_service_bus/ @hfurubotten
 /homeassistant/components/azure_storage/ @zweckj
 /tests/components/azure_storage/ @zweckj
-/homeassistant/components/backblaze_b2/ @hugo-vrijswijk @ElCruncharino
-/tests/components/backblaze_b2/ @hugo-vrijswijk @ElCruncharino
+/homeassistant/components/backblaze_b2/ @ElCruncharino
+/tests/components/backblaze_b2/ @ElCruncharino
 /homeassistant/components/backup/ @home-assistant/core
 /tests/components/backup/ @home-assistant/core
 /homeassistant/components/baf/ @bdraco @jfroy
@@ -1139,8 +1139,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/microbees/ @microBeesTech
 /tests/components/microbees/ @microBeesTech
-/homeassistant/components/midea/ @chemelli74 @rokam @wuwentao
-/tests/components/midea/ @chemelli74 @rokam @wuwentao
+/homeassistant/components/midea/ @chemelli74 @rokam @wuwentao @caibinqing
+/tests/components/midea/ @chemelli74 @rokam @wuwentao @caibinqing
 /homeassistant/components/miele/ @astrandb
 /tests/components/miele/ @astrandb
 /homeassistant/components/mikrotik/ @engrbm87 @chemelli74
