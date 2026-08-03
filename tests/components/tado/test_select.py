@@ -13,7 +13,7 @@ from homeassistant.components.select import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-ENTITY_ID = "select.baseboard_heater_heating_circuit"
+ENTITY_ID = "select.baseboard_heater_baseboard_heater_heating_circuit"
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -33,7 +33,7 @@ async def test_heating_circuit_select(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("init_integration")
 async def test_select_heating_circuit(hass: HomeAssistant) -> None:
     """Test selecting another heating circuit sends its number to Tado."""
-    with patch("PyTado.interface.Tado.set_zone_heating_circuit") as mock_set:
+    with patch("PyTado.interface.api.my_tado.Tado.set_zone_heating_circuit") as mock_set:
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -48,7 +48,7 @@ async def test_select_heating_circuit(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("init_integration")
 async def test_clear_heating_circuit(hass: HomeAssistant) -> None:
     """Test the no-circuit option clears the assignment."""
-    with patch("PyTado.interface.Tado.set_zone_heating_circuit") as mock_set:
+    with patch("PyTado.interface.api.my_tado.Tado.set_zone_heating_circuit") as mock_set:
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -63,8 +63,13 @@ async def test_clear_heating_circuit(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("init_integration")
 async def test_no_select_for_non_heating_zones(hass: HomeAssistant) -> None:
     """Test water heater and AC zones do not get a heating circuit select."""
-    assert hass.states.get("select.water_heater_heating_circuit") is None
-    assert hass.states.get("select.air_conditioning_heating_circuit") is None
+    assert (
+        hass.states.get("select.water_heater_water_heater_heating_circuit") is None
+    )
+    assert (
+        hass.states.get("select.air_conditioning_air_conditioning_heating_circuit")
+        is None
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -77,8 +82,8 @@ async def test_heating_circuits_are_only_fetched_once(hass: HomeAssistant) -> No
     coordinator = hass.config_entries.async_entries("tado")[0].runtime_data
 
     with (
-        patch("PyTado.interface.Tado.get_heating_circuits") as mock_circuits,
-        patch("PyTado.interface.Tado.get_zone_control") as mock_control,
+        patch("PyTado.interface.api.my_tado.Tado.get_heating_circuits") as mock_circuits,
+        patch("PyTado.interface.api.my_tado.Tado.get_zone_control") as mock_control,
     ):
         await coordinator.async_refresh()
         await hass.async_block_till_done()
