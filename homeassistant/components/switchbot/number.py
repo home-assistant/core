@@ -120,6 +120,7 @@ class SwitchBotCurtainSpeedNumber(SwitchbotEntity, RestoreNumber):
         if self.coordinator.curtain_speed is None:
             self.coordinator.curtain_speed = self.native_value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
@@ -130,6 +131,7 @@ class SwitchBotCurtainSpeedNumber(SwitchbotEntity, RestoreNumber):
             await self.async_set_native_value(float(last_number_data.native_value))
 
     @exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the curtain speed."""
         self._attr_native_value = value

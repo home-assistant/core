@@ -6,10 +6,8 @@ from homeassistant.components.switchbot.const import (
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_RETRY_COUNT,
-    DEFAULT_CURTAIN_SPEED,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
-    SupportedModels,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_SENSOR_TYPE
 
