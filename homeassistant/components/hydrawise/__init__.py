@@ -3,10 +3,11 @@
 from pydrawise import auth, hybrid
 
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 
-from .const import APP_ID
+from .const import APP_ID, DOMAIN, MANUFACTURER
 from .coordinator import (
     HydrawiseConfigEntry,
     HydrawiseMainDataUpdateCoordinator,
@@ -46,6 +47,31 @@ async def async_setup_entry(
     water_use_coordinator = HydrawiseWaterUseDataUpdateCoordinator(
         hass, config_entry, hydrawise, main_coordinator
     )
+
+    device_registry = dr.async_get(hass)
+
+    @callback
+    def _async_register_controller_devices() -> None:
+        """Register controller devices so children can resolve via_device_id.
+
+        Controllers can appear on later coordinator updates, so this runs on
+        every update before the zone-tracking listener, keeping the via_device
+        parents registered before their child entities are constructed.
+        """
+        for controller in main_coordinator.data.controllers.values():
+            device_registry.async_get_or_create(
+                config_entry_id=config_entry.entry_id,
+                identifiers={(DOMAIN, str(controller.id))},
+                manufacturer=MANUFACTURER,
+                model=controller.hardware.model.description,
+                name=controller.name,
+            )
+
+    _async_register_controller_devices()
+    config_entry.async_on_unload(
+        main_coordinator.async_add_listener(_async_register_controller_devices)
+    )
+
     # async_track_zones is registered first on water_use_coordinator,
     # so the water-use coordinator's data is in sync before
     # callbacks below construct entities for newly added zones.

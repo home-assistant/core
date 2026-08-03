@@ -5,6 +5,7 @@ from typing import override
 from pydrawise.schema import Controller, Sensor, Zone
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -47,7 +48,13 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
             manufacturer=MANUFACTURER,
         )
         if zone_id is not None or sensor_id is not None:
-            self._attr_device_info["via_device"] = (DOMAIN, str(controller.id))
+            self._attr_device_info["via_device_id"] = (
+                dr.async_get_device_id_by_identifier(
+                    self.coordinator.hass,
+                    (DOMAIN, str(controller.id)),
+                    config_entry_id=self.coordinator.config_entry.entry_id,
+                )
+            )
         self._update_attrs()
 
     @property
