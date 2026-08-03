@@ -1,5 +1,6 @@
 """Define tests for the Acmeda config flow."""
 
+import asyncio
 from unittest.mock import patch
 
 import aiopulse
@@ -154,3 +155,32 @@ async def test_already_configured(hass: HomeAssistant, mock_hub_discover) -> Non
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+
+
+async def test_discovery_preserves_hubs_before_timeout(
+    hass: HomeAssistant, mock_hub_discover
+) -> None:
+    """Test that hubs discovered before timeout are preserved."""
+
+    dummy_hub_1 = aiopulse.Hub(DUMMY_HOST1)
+    dummy_hub_1.id = "ABC123"
+
+    dummy_hub_2 = aiopulse.Hub(DUMMY_HOST2)
+    dummy_hub_2.id = "DEF456"
+
+    async def slow_discover():
+        yield dummy_hub_1
+        await asyncio.sleep(10)
+        yield dummy_hub_2
+
+    mock_hub_discover.return_value = slow_discover()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    # With the atomic comprehension bug, timeout causes the entire list
+    # to be lost, so this returns ABORT instead of FORM/CREATE_ENTRY.
+    # With the fix (for loop), the first hub is preserved.
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
