@@ -40,9 +40,12 @@ class WebControlProScene(Scene):
         """Initialize the entity with the configured scene."""
         super().__init__()
 
+        # Scene information
         self._scene = scene
         self._attr_name = scene.name
         self._attr_unique_id = str(scene.id)
+        
+        # Room information
         room = scene.room
         room_name = room.name
         room_id_str = str(room.id)
