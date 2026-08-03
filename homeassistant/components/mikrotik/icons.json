@@ -18,6 +18,14 @@
       "memory_usage": {
         "default": "mdi:memory"
       }
+    },
+    "switch": {
+      "ether": {
+        "default": "mdi:lan"
+      },
+      "wlan": {
+        "default": "mdi:wifi"
+      }
     }
   }
 }
