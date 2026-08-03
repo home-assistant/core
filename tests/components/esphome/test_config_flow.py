@@ -1590,6 +1590,7 @@ async def test_reauth_offline_device_stops_candidate_probing(
 
     assert result["type"] is FlowResultType.FORM, result
     assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "connection_error"}
     mock_get_encryption_key.assert_not_called()
 
 

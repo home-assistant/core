@@ -219,6 +219,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 if error != ERROR_INVALID_ENCRYPTION_KEY:
                     # Not a key problem (device offline) — more keys
                     # can't help, and the dashboard needn't be asked.
+                    errors["base"] = error
                     break
             self._noise_psk = None
         else:
