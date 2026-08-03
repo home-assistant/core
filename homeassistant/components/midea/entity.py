@@ -46,7 +46,7 @@ class MideaEntity(Entity):
         device_info = DeviceInfo(
             manufacturer="Midea",
             # Map the device type (numeric ID) to a human-readable model name.
-            model=MIDEA_DEVICE_NAMES.get(self._device.device_type, "Unknown"),
+            model=MIDEA_DEVICE_NAMES.get(self._device.device_type),
             identifiers={(DOMAIN, str(self._device.device_id))},
             name=self._device_name,
             model_id=self._device.device_type.name,
