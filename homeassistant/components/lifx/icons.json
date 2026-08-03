@@ -1,10 +1,5 @@
 {
   "entity": {
-    "number": {
-      "infrared_brightness": {
-        "default": "mdi:lightbulb-night"
-      }
-    },
     "select": {
       "infrared_brightness": {
         "default": "mdi:lightbulb-night"

@@ -43,10 +43,6 @@ CONFIG_SCHEMA = vol.All(
 )
 
 
-# The select platform names the number entity that supersedes it, so the number
-# entity has to be registered before the platforms that look it up are set up
-NUMBER_PLATFORM = [Platform.NUMBER]
-
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
@@ -124,14 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool
     await coordinator.async_config_entry_first_refresh()
     async_repair_device_registry(hass, entry, coordinator.data)
     entry.runtime_data = coordinator
-    await hass.config_entries.async_forward_entry_setups(entry, NUMBER_PLATFORM)
-    try:
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    except Exception:
-        # A failed setup only runs the unload callbacks, so the platform that
-        # was forwarded on its own has to be taken back down here
-        await hass.config_entries.async_unload_platforms(entry, NUMBER_PLATFORM)
-        raise
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -145,6 +134,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> boo
         # Restoring the pre-effect state is best effort: an unreachable device
         # is the usual reason an entry is being unloaded in the first place
         LOGGER.debug("Could not stop the effects running on %s: %s", entry.title, err)
-    return await hass.config_entries.async_unload_platforms(
-        entry, [*NUMBER_PLATFORM, *PLATFORMS]
-    )
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
