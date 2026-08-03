@@ -24,6 +24,7 @@ from .const import (
     INSIDE_TEMPERATURE_MEASUREMENT,
     PRESET_AUTO,
     TEMP_OFFSET,
+    TYPE_HEATING,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,11 +69,13 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.home_name: str
         self.zones: list[dict[Any, Any]] = []
         self.devices: list[dict[Any, Any]] = []
+        self.heating_circuits: dict[str, dict[str, Any]] = {}
         self.data: dict[str, Any] = {
             "device": {},
             "weather": {},
             "geofence": {},
             "zone": {},
+            "zone_control": {},
         }
 
         self._current_interval: float = 0
@@ -113,6 +116,12 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         tado_home = tado_home_call["homes"][0]
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
+
+        # Heating circuits and their per-zone assignment are configuration, not
+        # state: they only change when the user rewires the home or changes the
+        # assignment. Fetching them once keeps the recurring call count at zero.
+        if not self.heating_circuits:
+            await self._async_update_heating_circuits()
 
         devices = await self._async_update_devices()
         zones = await self._async_update_zones()
@@ -469,6 +478,53 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         except RequestException as exc:
             raise HomeAssistantError(f"Error setting Tado child lock: {exc}") from exc
+
+    async def _async_update_heating_circuits(self) -> None:
+        """Fetch the heating circuits and their current per-zone assignment.
+
+        Only called once per config entry setup. A failure is not fatal: the
+        select entities simply stay unavailable, every other platform is
+        unaffected.
+        """
+
+        def _load() -> tuple[list[dict[str, Any]], dict[int, dict[str, Any]]]:
+            circuits = self._tado.get_heating_circuits()
+            controls = {
+                zone["id"]: self._tado.get_zone_control(zone["id"])
+                for zone in self.zones
+                if zone["type"] == TYPE_HEATING
+            }
+            return circuits, controls
+
+        try:
+            circuits, controls = await self.hass.async_add_executor_job(_load)
+        except RequestException as err:
+            _LOGGER.warning("Error updating Tado heating circuits: %s", err)
+            return
+
+        self.heating_circuits = {
+            circuit["driverShortSerialNo"]: circuit for circuit in circuits
+        }
+        self.data["zone_control"] = controls
+
+    async def set_heating_circuit(
+        self, zone_id: int, circuit_number: int | None
+    ) -> None:
+        """Assign a heating circuit to a zone, or clear it when None."""
+        try:
+            await self.hass.async_add_executor_job(
+                self._tado.set_zone_heating_circuit, zone_id, circuit_number
+            )
+        except RequestException as err:
+            raise HomeAssistantError(
+                f"Error setting Tado heating circuit for zone {zone_id}: {err}"
+            ) from err
+
+        # Track it locally instead of re-reading it: the write already tells us
+        # the new value, and a read back would cost another API call.
+        self.data["zone_control"].setdefault(zone_id, {})["heatingCircuit"] = (
+            circuit_number
+        )
 
     def get_rate_limit(self) -> dict[str, str]:
         """Get the current rate limit status from Tado."""

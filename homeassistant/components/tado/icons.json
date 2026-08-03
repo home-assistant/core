@@ -1,5 +1,10 @@
 {
   "entity": {
+    "select": {
+      "heating_circuit": {
+        "default": "mdi:water-boiler"
+      }
+    },
     "switch": {
       "child_lock": {
         "default": "mdi:lock-open-variant",
