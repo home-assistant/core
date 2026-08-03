@@ -10,7 +10,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 ENTITY_ID = "select.baseboard_heater_baseboard_heater_heating_circuit"
@@ -94,3 +94,27 @@ async def test_heating_circuits_are_only_fetched_once(hass: HomeAssistant) -> No
 
     mock_circuits.assert_not_called()
     mock_control.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_unknown_when_zone_has_no_control(hass: HomeAssistant) -> None:
+    """Test the state is unknown when the zone reports no control data."""
+    coordinator = hass.config_entries.async_entries("tado")[0].runtime_data
+
+    coordinator.data["zone_control"] = {}
+    coordinator.async_set_updated_data(coordinator.data)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_unknown_for_unlisted_circuit(hass: HomeAssistant) -> None:
+    """Test the state is unknown when the assigned circuit is not in the list."""
+    coordinator = hass.config_entries.async_entries("tado")[0].runtime_data
+
+    coordinator.data["zone_control"][1]["heatingCircuit"] = 99
+    coordinator.async_set_updated_data(coordinator.data)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
