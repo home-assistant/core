@@ -67,6 +67,7 @@ from homeassistant.helpers.trigger import (
     BEHAVIOR_ALL,
     BEHAVIOR_EACH,
     BEHAVIOR_FIRST,
+    CONF_REPEAT_INTERVAL,
     DATA_PLUGGABLE_ACTIONS,
     ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
     TRIGGERS,
@@ -4212,6 +4213,13 @@ class _OffToOnTrigger(EntityTriggerBase):
     """Test trigger that fires when state becomes 'on'."""
 
     _domain_specs = {"test": DomainSpec()}
+    _schema = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
+        {
+            vol.Required(CONF_OPTIONS, default={}): {
+                vol.Optional(CONF_REPEAT_INTERVAL): cv.positive_time_period,
+            },
+        }
+    )
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Valid if transitioning from a non-'on' state."""
@@ -4235,6 +4243,7 @@ async def _arm_off_to_on_trigger(
     calls: list[dict[str, Any]],
     duration: dict[str, int] | None,
     target: dict[str, Any] | None = None,
+    repeat_interval: dict[str, int] | None = None,
 ) -> CALLBACK_TYPE:
     """Set up _OffToOnTrigger via async_initialize_triggers.
 
@@ -4253,6 +4262,8 @@ async def _arm_off_to_on_trigger(
     options: dict[str, Any] = {ATTR_BEHAVIOR: behavior}
     if duration is not None:
         options[CONF_FOR] = duration
+    if repeat_interval is not None:
+        options[CONF_REPEAT_INTERVAL] = repeat_interval
 
     trigger_config = {
         CONF_PLATFORM: "test.off_to_on",
@@ -5076,16 +5087,30 @@ async def test_entity_trigger_duration_not_cancelled_by_attribute_change(
     unsub()
 
 
-async def test_entity_trigger_duration_each_cancelled_when_entity_leaves_target(
+@pytest.mark.parametrize(
+    ("duration", "repeat_interval", "expected_calls"),
+    [
+        pytest.param({"seconds": 5}, None, 0, id="duration"),
+        pytest.param(None, {"seconds": 5}, 1, id="repeat_interval"),
+        pytest.param({"seconds": 5}, {"seconds": 5}, 0, id="both"),
+    ],
+)
+async def test_entity_trigger_each_timer_cancelled_when_entity_leaves_target(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
+    duration: dict[str, int] | None,
+    repeat_interval: dict[str, int] | None,
+    expected_calls: int,
 ) -> None:
-    """Test an each duration timer is cancelled when its entity is untargeted.
+    """Test an each pending timer is cancelled when its entity is untargeted.
 
-    A pending `for:` wait does not outlive the entity's membership of the
-    target: when a registry change removes the entity from the target, the
-    timer is cancelled and the trigger does not fire.
+    A pending `for:` wait or repeat schedule does not outlive the entity's
+    membership of the target: when a registry change removes the entity
+    from the target, the timer is cancelled and the trigger does not fire
+    (again). The repeat case also covers that target membership changes
+    are tracked when only a repeat interval (and no `for:` duration) is
+    configured.
     """
     label_registry = lr.async_get(hass)
     label = label_registry.async_create("Test Each Removal")
@@ -5100,25 +5125,26 @@ async def test_entity_trigger_duration_each_cancelled_when_entity_leaves_target(
         [],
         BEHAVIOR_EACH,
         calls,
-        duration={"seconds": 5},
+        duration=duration,
         target={ATTR_LABEL_ID: label.label_id},
+        repeat_interval=repeat_interval,
     )
 
     hass.states.async_set(entry.entity_id, STATE_ON)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(calls) == expected_calls
 
-    # Removing the label removes the entity from the target mid-wait
+    # Removing the label removes the entity from the target mid-timer
     freezer.tick(datetime.timedelta(seconds=2))
     async_fire_time_changed(hass)
     entity_registry.async_update_entity(entry.entity_id, labels=set())
     await hass.async_block_till_done()
 
-    # Advance past the original duration — should NOT fire
+    # Advance past the original timer — should NOT fire (again)
     freezer.tick(datetime.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(calls) == expected_calls
 
     unsub()
 
@@ -5846,6 +5872,321 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == expected_calls
+
+    unsub()
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
+@pytest.mark.parametrize(
+    ("duration", "expected_for", "checkpoints"),
+    [
+        pytest.param(None, None, [(0, 1), (3, 2), (3, 3)], id="without_duration"),
+        pytest.param(
+            {"seconds": 5},
+            datetime.timedelta(seconds=5),
+            [(0, 0), (3, 0), (2, 1), (3, 2)],
+            id="with_duration",
+        ),
+    ],
+)
+async def test_entity_trigger_repeat_interval_fires_repeatedly(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    behavior: str,
+    duration: dict[str, int] | None,
+    expected_for: datetime.timedelta | None,
+    checkpoints: list[tuple[int, int]],
+) -> None:
+    """Test the action repeats at the interval while the state stays valid.
+
+    A `for:` duration only delays the first fire; repeats always use the
+    interval. Each checkpoint advances time by its first value and expects
+    the cumulative call count in its second.
+    """
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [entity_id],
+        behavior,
+        calls,
+        duration=duration,
+        repeat_interval={"seconds": 3},
+    )
+
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    for tick_seconds, expected_calls in checkpoints:
+        freezer.tick(datetime.timedelta(seconds=tick_seconds))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert len(calls) == expected_calls
+
+    # Repeats carry the variables of the original state change
+    for trigger_data in calls:
+        assert trigger_data["entity_id"] == entity_id
+        assert trigger_data["from_state"].state == STATE_OFF
+        assert trigger_data["to_state"].state == STATE_ON
+        assert trigger_data["for"] == expected_for
+
+    unsub()
+
+
+@pytest.mark.parametrize(
+    "invalid_state",
+    [STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN, None],
+    ids=["off", "unavailable", "unknown", "removed"],
+)
+async def test_entity_trigger_repeat_interval_stops_on_invalid_state(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    invalid_state: str | None,
+) -> None:
+    """Test the repeat timer is cancelled when the state stops matching."""
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [entity_id],
+        BEHAVIOR_EACH,
+        calls,
+        duration=None,
+        repeat_interval={"seconds": 5},
+    )
+
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    freezer.tick(datetime.timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    # State stops matching mid-interval — the pending repeat is cancelled
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    _set_or_remove_state(hass, entity_id, invalid_state)
+    await hass.async_block_till_done()
+
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    unsub()
+
+
+async def test_entity_trigger_repeat_interval_retrigger_restarts_timer(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a new transition fires immediately and restarts the repeat timer."""
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [entity_id],
+        BEHAVIOR_EACH,
+        calls,
+        duration=None,
+        repeat_interval={"seconds": 5},
+    )
+
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Off and on again after 3 seconds: fires immediately for the new
+    # transition and restarts the repeat schedule
+    freezer.tick(datetime.timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    # 2 more seconds (5 from the first transition, 2 from the second) —
+    # the original schedule must not fire
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    # 3 more seconds (5 from the second transition) — repeats
+    freezer.tick(datetime.timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+
+    unsub()
+
+
+async def test_entity_trigger_repeat_interval_cancelled_on_removal(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test detaching the trigger cancels a pending repeat timer."""
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [entity_id],
+        BEHAVIOR_EACH,
+        calls,
+        duration=None,
+        repeat_interval={"seconds": 5},
+    )
+
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_entity_trigger_repeat_interval_each_independent(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior each repeats per entity on independent schedules."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [entity_a, entity_b],
+        BEHAVIOR_EACH,
+        calls,
+        duration=None,
+        repeat_interval={"seconds": 5},
+    )
+
+    # A fires at t=0, B at t=2
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+    assert [trigger_data["entity_id"] for trigger_data in calls] == [
+        entity_a,
+        entity_b,
+    ]
+
+    # t=5: A repeats
+    freezer.tick(datetime.timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert [trigger_data["entity_id"] for trigger_data in calls] == [
+        entity_a,
+        entity_b,
+        entity_a,
+    ]
+
+    # A turns off: only A's repeat is cancelled
+    hass.states.async_set(entity_a, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # t=7: B repeats
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert [trigger_data["entity_id"] for trigger_data in calls] == [
+        entity_a,
+        entity_b,
+        entity_a,
+        entity_b,
+    ]
+
+    # t=10 would have been A's next repeat — nothing more fires
+    freezer.tick(datetime.timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 4
+
+    unsub()
+
+
+async def test_entity_trigger_repeat_interval_first_continues_while_any_match(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior first keeps repeating while at least one entity matches.
+
+    The repeats keep reporting the entity that fired the trigger, even
+    after it stopped matching itself.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [entity_a, entity_b],
+        BEHAVIOR_FIRST,
+        calls,
+        duration=None,
+        repeat_interval={"seconds": 5},
+    )
+
+    # A is the first match — fires and starts repeating
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # B turning on as a second match does not fire or affect the repeat
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    freezer.tick(datetime.timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    # A turns off while B still matches — the repeat continues
+    hass.states.async_set(entity_a, STATE_OFF)
+    await hass.async_block_till_done()
+
+    freezer.tick(datetime.timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+    assert all(trigger_data["entity_id"] == entity_a for trigger_data in calls)
+
+    # B turns off — no match left, the repeat stops
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 3
 
     unsub()
 
