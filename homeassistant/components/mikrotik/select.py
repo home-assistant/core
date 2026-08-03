@@ -44,17 +44,11 @@ async def async_setup_entry(
 class MikrotikSelectEntity(MikrotikDeviceEntity, SelectEntity):
     """Representation of a select entity."""
 
+    @property
     @override
-    async def async_added_to_hass(self) -> None:
-        """Restore last known option."""
-        await super().async_added_to_hass()
-        self._attr_current_option = self._interface.get("poe-out", "off")
-
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Sync the selected option from the latest coordinator data."""
-        self._attr_current_option = self._interface.get("poe-out", "off")
-        super()._handle_coordinator_update()
+    def current_option(self) -> str | None:
+        """Return the state of the select."""
+        return self._interface.get(self.entity_description.key)
 
     @override
     async def async_select_option(self, option: str) -> None:
@@ -64,7 +58,7 @@ class MikrotikSelectEntity(MikrotikDeviceEntity, SelectEntity):
             await self.hass.async_add_executor_job(
                 self.coordinator.api.command,
                 "/interface/ethernet/poe/set",
-                {".id": self._interface[".id"], "poe-out": option},
+                {".id": self._interface[".id"], self.entity_description.key: option},
             )
 
         await self.coordinator.async_request_refresh()
