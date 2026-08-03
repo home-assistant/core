@@ -1,9 +1,12 @@
 """Tests for the light intents."""
 
+import pytest
+
 from homeassistant.components import light
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode, intent
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import intent as intent_helper
 from homeassistant.helpers.intent import async_handle
 
 from tests.common import async_mock_service
@@ -89,3 +92,19 @@ async def test_intent_set_temperature(hass: HomeAssistant) -> None:
     assert call.service == SERVICE_TURN_ON
     assert call.data.get(ATTR_ENTITY_ID) == "light.test"
     assert call.data.get(light.ATTR_COLOR_TEMP_KELVIN) == 2000
+
+
+async def test_intent_set_does_not_match_other_domains(hass: HomeAssistant) -> None:
+    """Test the set intent does not match an entity of another domain."""
+    hass.states.async_set("cover.curtain_left", "open")
+    await intent.async_setup_intents(hass)
+
+    with pytest.raises(intent_helper.MatchFailedError) as err:
+        await async_handle(
+            hass,
+            "test",
+            intent.INTENT_SET,
+            {"name": {"value": "curtain_left"}, "brightness": {"value": 50}},
+        )
+
+    assert err.value.result.no_match_reason == intent_helper.MatchFailedReason.DOMAIN

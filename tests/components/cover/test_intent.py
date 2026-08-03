@@ -116,3 +116,19 @@ async def test_set_cover_position(hass: HomeAssistant, slots: dict[str, Any]) ->
     assert call.domain == DOMAIN
     assert call.service == SERVICE_SET_COVER_POSITION
     assert call.data == {"entity_id": entity_id, "position": 50}
+
+
+async def test_open_cover_intent_does_not_match_other_domains(
+    hass: HomeAssistant,
+) -> None:
+    """Test HassOpenCover does not match an entity of another domain."""
+    await cover_intent.async_setup_intents(hass)
+
+    hass.states.async_set("light.living_square", "off")
+
+    with pytest.raises(intent.MatchFailedError) as err:
+        await intent.async_handle(
+            hass, "test", "HassOpenCover", {"name": {"value": "living_square"}}
+        )
+
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.DOMAIN
