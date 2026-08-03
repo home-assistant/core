@@ -61,7 +61,7 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
         None is unknown, 0 is closed, 100 is fully open.
         """
         position = None
-        if self.roller.type != 7 and self.roller.closed_percent is not None:
+        if self.roller.closed_percent is not None:
             position = 100 - self.roller.closed_percent
         return position
 
@@ -73,7 +73,7 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
         None is unknown, 0 is closed, 100 is fully open.
         """
         position = None
-        if self.roller.type in (7, 10) and self.roller.closed_percent is not None:
+        if self.roller.closed_percent is not None:
             position = 100 - self.roller.closed_percent
         return position
 
@@ -82,14 +82,14 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         supported_features = CoverEntityFeature(0)
-        if self.current_cover_position is not None:
+        if self.roller.type != 7:
             supported_features |= (
                 CoverEntityFeature.OPEN
                 | CoverEntityFeature.CLOSE
                 | CoverEntityFeature.STOP
                 | CoverEntityFeature.SET_POSITION
             )
-        if self.current_cover_tilt_position is not None:
+        if self.roller.type in (7, 10):
             supported_features |= (
                 CoverEntityFeature.OPEN_TILT
                 | CoverEntityFeature.CLOSE_TILT
