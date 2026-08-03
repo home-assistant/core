@@ -33,12 +33,14 @@ class LgWebOSScreenSwitchEntity(WebOsTvEntity, SwitchEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
-        """Return true if screen is on.
+    def available(self) -> bool:
+        """Return true if the entity is available."""
+        return super().available and self._client.tv_state.is_on
 
-        The library reports the screen as off whenever the TV is off, so this
-        stays accurate while the TV is unreachable but the entity is available.
-        """
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return true if screen is on."""
         return self._client.tv_state.is_screen_on
 
     @cmd

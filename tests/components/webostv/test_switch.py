@@ -13,6 +13,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -67,34 +68,7 @@ async def test_screen_switch_state_updates(
 
     state = hass.states.get(SWITCH_ENTITY_ID)
     assert state is not None
-    assert state.state == STATE_OFF
-
-
-@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
-async def test_screen_switch_command_device_off(
-    hass: HomeAssistant,
-    client: AsyncMock,
-    service: str,
-) -> None:
-    """Test commands raise a translated error while the TV is off."""
-    await setup_webostv(hass)
-
-    client.tv_state.is_on = False
-    client.tv_state.is_screen_on = False
-    await client.mock_state_update()
-    await hass.async_block_till_done()
-
-    with pytest.raises(HomeAssistantError) as err:
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
-            blocking=True,
-        )
-
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "device_off"
-    client.set_screen_state.assert_not_called()
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

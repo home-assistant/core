@@ -16,17 +16,11 @@ class WebOsTvEntity(CoordinatorEntity[WebOsTvDataUpdateCoordinator]):
     """Base entity for the LG webOS TV integration."""
 
     _attr_has_entity_name = True
-
-    # Always set in __init__, so platforms can enrich it without a None check.
     _attr_device_info: DeviceInfo
-
-    # Commands that remain callable while the TV is off, e.g. turning it off again.
-    _commands_allowed_when_off: frozenset[str] = frozenset()
 
     def __init__(self, entry: WebOsTvConfigEntry) -> None:
         """Initialize the entity."""
         super().__init__(entry.runtime_data)
-        self._entry = entry
         self._client = entry.runtime_data.client
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, cast(str, entry.unique_id))},
@@ -43,15 +37,12 @@ def cmd[_EntityT: WebOsTvEntity, _R, **_P](
     @wraps(func)
     async def cmd_wrapper(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         """Wrap all command methods."""
-        if (
-            not self._client.tv_state.is_on
-            and func.__name__ not in self._commands_allowed_when_off
-        ):
+        if not self._client.tv_state.is_on and func.__name__ != "async_turn_off":
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_off",
                 translation_placeholders={
-                    "name": str(self._entry.title),
+                    "name": self.coordinator.name,
                     "func": func.__name__,
                 },
             )
@@ -62,7 +53,7 @@ def cmd[_EntityT: WebOsTvEntity, _R, **_P](
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
                 translation_placeholders={
-                    "name": str(self._entry.title),
+                    "name": self.coordinator.name,
                     "func": func.__name__,
                     "error": str(error),
                 },
