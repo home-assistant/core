@@ -20,7 +20,7 @@ import aiohttp
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.esphome import dashboard
+from homeassistant.components.esphome import config_flow, dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_SCANNING_MODE,
@@ -1591,6 +1591,60 @@ async def test_reauth_offline_device_stops_candidate_probing(
     assert result["type"] is FlowResultType.FORM, result
     assert result["step_id"] == "reauth_confirm"
     mock_get_encryption_key.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
+async def test_user_flow_offline_device_stops_candidate_probing(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_dashboard: dict[str, Any],
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a non-key connection error stops the discovery-path probing."""
+    hass_storage[ENCRYPTION_KEY_STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": ENCRYPTION_KEY_STORAGE_KEY,
+        "data": {"keys": {"11:22:33:44:55:aa": WRONG_NOISE_PSK}},
+    }
+
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test", "11:22:33:44:55:AA"),
+        APIConnectionError("timeout"),  # storage candidate: device went offline
+    ]
+
+    mock_dashboard["configured"].append({"name": "test", "configuration": "test.yaml"})
+    await dashboard.async_get_dashboard(hass).async_refresh()
+
+    with patch(
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
+        return_value=VALID_NOISE_PSK,
+    ) as mock_get_encryption_key:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "connection_error"}
+    mock_get_encryption_key.assert_not_called()
+
+
+async def test_repair_stored_key_without_mac_is_a_no_op(hass: HomeAssistant) -> None:
+    """Test the repair helper does nothing when no MAC is known."""
+    flow = config_flow.EsphomeFlowHandler()
+    flow.hass = hass
+
+    with patch(
+        "homeassistant.components.esphome.config_flow.async_get_encryption_key_storage"
+    ) as mock_storage:
+        await flow._async_repair_stored_key(VALID_NOISE_PSK)
+
+    mock_storage.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
