@@ -69,6 +69,23 @@ async def test_unload_entry(
     assert init_integration.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_zone_b_via_device_id(
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that Zone B's via_device_id points at the main device."""
+    assert init_integration.unique_id
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, init_integration.unique_id), init_integration.entry_id
+    )
+    zone_b_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{init_integration.unique_id}_zone_b"), init_integration.entry_id
+    )
+    assert main_device is not None
+    assert zone_b_device is not None
+    assert zone_b_device.via_device_id == main_device.id
+
+
 @pytest.mark.parametrize(
     ("serial", "expected_mac_connections"),
     [
