@@ -25,7 +25,7 @@
           "port": "The port number for the device (default is 80)",
           "ssl": "Enable if your device uses HTTPS",
           "username": "The username for your Hikvision device",
-          "verify_ssl": "Enable if your device uses SSL trusted certificates. Disable if it uses sef-signed certificates"
+          "verify_ssl": "Disable if you use SSL with self-signed certificates"
         },
         "description": "Enter your Hikvision device connection details.",
         "title": "Set up Hikvision device"
