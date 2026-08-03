@@ -1,5 +1,6 @@
 """The tests for Netatmo component."""
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 from functools import partial
 from time import time
@@ -14,9 +15,15 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cloud, webhook
 from homeassistant.components.netatmo import DOMAIN
+from homeassistant.components.netatmo.coordinator import (
+    MAX_ERROR_BACKOFF,
+    UNAVAILABLE_AFTER_ERRORS,
+    NetatmoDataHandler,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
+    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
@@ -72,6 +79,9 @@ FAKE_WEBHOOK = {
     "event_type": "set_point",
     "push_type": "display_change",
 }
+
+SWITCH_ENTITY_ID = "switch.prise"
+SIGNAL_HOME = "home-91763b24c43d3e344f424e8b"
 
 
 async def test_setup_component(
@@ -749,3 +759,122 @@ async def test_entity_unavailable_when_device_unreachable(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def _setup_switch_platform(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fake_post: Callable[..., Coroutine[Any, Any, Any]],
+) -> NetatmoDataHandler:
+    """Set up the switch platform with a custom API request side effect."""
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch(
+            "homeassistant.components.netatmo.coordinator.PLATFORMS", [Platform.SWITCH]
+        ),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+            return_value=AsyncMock(),
+        ),
+        patch("homeassistant.components.netatmo.webhook.webhook_generate_url"),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return config_entry.runtime_data
+
+
+@pytest.mark.parametrize(
+    ("fetch_errors", "expected_state"),
+    [
+        pytest.param((TimeoutError,), STATE_ON, id="single_error"),
+        pytest.param(
+            (TimeoutError,) * (UNAVAILABLE_AFTER_ERRORS - 1),
+            STATE_ON,
+            id="errors_within_tolerance",
+        ),
+        pytest.param(
+            (TimeoutError,) * UNAVAILABLE_AFTER_ERRORS,
+            STATE_UNAVAILABLE,
+            id="errors_exceeding_tolerance",
+        ),
+        pytest.param(
+            (TimeoutError, TimeoutError, None, TimeoutError, TimeoutError),
+            STATE_ON,
+            id="error_count_reset_by_success",
+        ),
+    ],
+)
+async def test_entity_available_until_error_tolerance_exceeded(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fetch_errors: tuple[type[Exception] | None, ...],
+    expected_state: str,
+) -> None:
+    """Test that entities stay available while transient fetch errors are tolerated."""
+    fetch_error: type[Exception] | None = None
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        if fetch_error:
+            raise fetch_error
+        return await fake_post_request(hass, *args, **kwargs)
+
+    data_handler = await _setup_switch_platform(hass, config_entry, fake_post)
+
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON
+
+    for error in fetch_errors:
+        fetch_error = error
+        await data_handler.async_fetch_data(SIGNAL_HOME)
+
+    assert hass.states.get(SWITCH_ENTITY_ID).state == expected_state
+
+
+@pytest.mark.usefixtures("freezer")
+async def test_fetch_error_backoff_escalates_and_is_capped(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that the retry delay grows with consecutive errors up to the cap."""
+    fetch_error: type[Exception] | None = None
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        if fetch_error:
+            raise fetch_error
+        return await fake_post_request(hass, *args, **kwargs)
+
+    data_handler = await _setup_switch_platform(hass, config_entry, fake_post)
+    publisher = data_handler.publisher[SIGNAL_HOME]
+    interval = publisher.interval
+    # Pretend the polls so far are spread over an hour, so that the rate limit
+    # guard does not add its own delay on top of the error backoff
+    data_handler.poll_start = time() - 3600
+
+    fetch_error = TimeoutError
+    backoffs: list[float] = []
+    for _ in range(7):
+        data_handler.async_force_update(SIGNAL_HOME)
+        await data_handler.async_update(dt_util.utcnow())
+        backoffs.append(publisher.next_scan - time())
+
+    assert backoffs == [
+        interval,
+        interval * 2,
+        interval * 4,
+        interval * 8,
+        interval * 16,
+        MAX_ERROR_BACKOFF,
+        MAX_ERROR_BACKOFF,
+    ]
+
+    fetch_error = None
+    data_handler.async_force_update(SIGNAL_HOME)
+    await data_handler.async_update(dt_util.utcnow())
+
+    assert publisher.error_count == 0
+    assert publisher.next_scan - time() == interval

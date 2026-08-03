@@ -136,7 +136,9 @@ async def test_switch_unavailable_on_fetch_error(
     assert hass.states.get(switch_entity).state == "on"
 
     raise_error = True
-    for _ in range(11):
+    # Keep failing long enough for the retries to exceed the tolerated
+    # consecutive errors, including their escalating backoff
+    for _ in range(30):
         freezer.tick(timedelta(seconds=30))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
