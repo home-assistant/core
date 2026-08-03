@@ -7,10 +7,12 @@ from opendisplay import (
     BinaryInputs,
     BoardManufacturer,
     ColorScheme,
+    DataExtended,
     DisplayConfig,
     GlobalConfig,
     ManufacturerData,
     PowerOption,
+    SecurityConfig,
     SystemConfig,
 )
 
@@ -90,6 +92,25 @@ DEVICE_CONFIG = GlobalConfig(
             reserved=b"\x00" * 33,
         )
     ],
+    security_config=SecurityConfig(
+        encryption_enabled=1,
+        encryption_key=bytes.fromhex(ENCRYPTION_KEY),
+        session_timeout_seconds=0,
+        flags=0,
+        reset_pin=0xFF,
+        reserved=b"\x00" * 43,
+    ),
+    data_extended=DataExtended.from_strings(
+        manufacturer_name="Seeed Studio",
+        model_name="XIAO EN04(NRF52840)",
+        serial_number="SN-0123456789",
+        friendly_name="Living Room Tag",
+        device_location="Living Room",
+        device_id="device-1234",
+        custom_string_1="custom one",
+        custom_string_2="custom two",
+        custom_string_3="custom three",
+    ),
 )
 
 

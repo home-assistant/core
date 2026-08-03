@@ -8,7 +8,17 @@
       ]),
       'data_buses': list([
       ]),
-      'data_extended': None,
+      'data_extended': dict({
+        'custom_string_1': '**REDACTED**',
+        'custom_string_2': '**REDACTED**',
+        'custom_string_3': '**REDACTED**',
+        'device_id': '**REDACTED**',
+        'device_location': '**REDACTED**',
+        'friendly_name': '**REDACTED**',
+        'manufacturer_name': '53656565642053747564696f0000000000000000000000000000000000000000',
+        'model_name': '5849414f20454e3034284e524635323834302900000000000000000000000000',
+        'serial_number': '**REDACTED**',
+      }),
       'displays': list([
         dict({
           'active_height_mm': 29,
@@ -72,7 +82,14 @@
         'tx_power': 0,
         'voltage_scaling_factor': 0,
       }),
-      'security_config': None,
+      'security_config': dict({
+        'encryption_enabled': 1,
+        'encryption_key': '**REDACTED**',
+        'flags': 0,
+        'reserved': '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+        'reset_pin': 255,
+        'session_timeout_seconds': 0,
+      }),
       'sensors': list([
       ]),
       'system': dict({
