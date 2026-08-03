@@ -56,7 +56,7 @@ async def test_user_device_exists_abort(
     "exception",
     [HotSpringConnectionError, HotSpringError],
 )
-@pytest.mark.usefixtures("mock_setup_entry", "mock_hotspring")
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_cannot_connect(
     hass: HomeAssistant, mock_hotspring: MagicMock, exception: type[Exception]
 ) -> None:
