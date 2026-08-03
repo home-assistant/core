@@ -212,16 +212,21 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             async for candidate in self._async_encryption_key_candidates():
                 self._noise_psk = candidate
-                if await self.fetch_device_info() is None:
-                    await self._async_store_working_key(candidate)
+                error = await self.fetch_device_info()
+                if error is None:
+                    await self._async_repair_stored_key(candidate)
                     return await self._async_authenticate_or_add()
+                if error != ERROR_INVALID_ENCRYPTION_KEY:
+                    # Not a key problem (device offline) — more keys
+                    # can't help, and the dashboard needn't be asked.
+                    break
             self._noise_psk = None
 
         if user_input is not None:
             self._noise_psk = user_input[CONF_NOISE_PSK]
             error = await self.fetch_device_info()
             if error is None:
-                await self._async_store_working_key(self._noise_psk)
+                await self._async_repair_stored_key(self._noise_psk)
                 return await self._async_authenticate_or_add()
             errors["base"] = error
 
@@ -286,7 +291,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._noise_psk = candidate
                 response = await self.fetch_device_info()
                 if response is None:
-                    await self._async_store_working_key(candidate)
+                    await self._async_repair_stored_key(candidate)
                     break
                 if response != ERROR_INVALID_ENCRYPTION_KEY:
                     break
@@ -757,6 +762,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             self._noise_psk = user_input[CONF_NOISE_PSK]
             error = await self.fetch_device_info()
             if error is None:
+                await self._async_repair_stored_key(self._noise_psk)
                 return await self._async_authenticate_or_add()
             errors["base"] = error
 
@@ -923,6 +929,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Error parsing response from dashboard")
         return None
 
+    @callback
     def _async_get_storage_mac(self) -> str | None:
         """MAC for encryption-key storage, from flow state or the reauth entry."""
         if self._device_mac is not None:
@@ -955,12 +962,17 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 seen.add(key)
                 yield key
 
-    async def _async_store_working_key(self, key: str) -> None:
-        """Replace a stale stored key with the one proven to work on the device."""
+    async def _async_repair_stored_key(self, key: str) -> None:
+        """Repair an existing stored key with the one proven to work on the device.
+
+        Repair-in-place only, never create: presence in the store means
+        "HA generated this key" and gates the device-side key wipe on
+        entry removal, so dashboard/user keys must not be enrolled.
+        """
         if (mac_address := self._async_get_storage_mac()) is None:
             return
         storage = await async_get_encryption_key_storage(self.hass)
-        if await storage.async_get_key(mac_address) != key:
+        if (stored := await storage.async_get_key(mac_address)) and stored != key:
             await storage.async_store_key(mac_address, key)
 
     @staticmethod

@@ -1504,22 +1504,23 @@ async def test_reauth_both_keys_wrong_falls_back_to_manual(
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
-async def test_user_flow_stale_dashboard_key_falls_back_to_storage(
+async def test_user_flow_stale_storage_key_falls_back_to_dashboard(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_dashboard: dict[str, Any],
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test a stale dashboard key does not shadow the working stored key."""
+    """Test a stale stored key does not shadow the dashboard key in the user flow."""
     hass_storage[ENCRYPTION_KEY_STORAGE_KEY] = {
         "version": 1,
         "minor_version": 1,
         "key": ENCRYPTION_KEY_STORAGE_KEY,
-        "data": {"keys": {"11:22:33:44:55:aa": VALID_NOISE_PSK}},
+        "data": {"keys": {"11:22:33:44:55:aa": WRONG_NOISE_PSK}},
     }
 
     mock_client.device_info.side_effect = [
         RequiresEncryptionAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test", "11:22:33:44:55:AA"),
         InvalidEncryptionKeyAPIError("Wrong key", "test", "11:22:33:44:55:AA"),
         DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:AA"),
     ]
@@ -1529,7 +1530,7 @@ async def test_user_flow_stale_dashboard_key_falls_back_to_storage(
 
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
-        return_value=WRONG_NOISE_PSK,
+        return_value=VALID_NOISE_PSK,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -1541,6 +1542,98 @@ async def test_user_flow_stale_dashboard_key_falls_back_to_storage(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_NOISE_PSK] == VALID_NOISE_PSK
     assert mock_client.noise_psk == VALID_NOISE_PSK
+    # The stale stored key was repaired in place with the working one.
+    storage = await async_get_encryption_key_storage(hass)
+    assert await storage.async_get_key("11:22:33:44:55:aa") == VALID_NOISE_PSK
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
+async def test_reauth_offline_device_stops_candidate_probing(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_dashboard: dict[str, Any],
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a non-key connection error stops the loop without asking the dashboard."""
+    hass_storage[ENCRYPTION_KEY_STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": ENCRYPTION_KEY_STORAGE_KEY,
+        "data": {"keys": {"11:22:33:44:55:aa": WRONG_NOISE_PSK}},
+    }
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,  # initial reauth probe
+        APIConnectionError("timeout"),  # storage candidate: device went offline
+    ]
+
+    mock_dashboard["configured"].append({"name": "test", "configuration": "test.yaml"})
+    await dashboard.async_get_dashboard(hass).async_refresh()
+
+    with patch(
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
+        return_value=VALID_NOISE_PSK,
+    ) as mock_get_encryption_key:
+        result = await entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM, result
+    assert result["step_id"] == "reauth_confirm"
+    mock_get_encryption_key.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
+async def test_reauth_manual_key_is_not_enrolled_in_storage(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a manually entered key never creates a storage entry.
+
+    Presence in storage means "HA generated this key" and gates the
+    device-side key wipe on entry removal, so user keys stay out.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,  # initial reauth probe
+        DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:aa"),
+    ]
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM, result
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
+    )
+
+    assert result["type"] is FlowResultType.ABORT, result
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+    storage = await async_get_encryption_key_storage(hass)
+    assert await storage.async_get_key("11:22:33:44:55:aa") is None
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
