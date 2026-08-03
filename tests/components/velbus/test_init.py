@@ -226,6 +226,26 @@ async def test_device_registry(
     assert device_no_sub.via_device_id is None
 
 
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a sub-device channel links to its module via via_device_id."""
+    await init_integration(hass, config_entry)
+
+    module_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "88"), config_entry.entry_id
+    )
+    assert module_device is not None
+
+    sub_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "88-9"), config_entry.entry_id
+    )
+    assert sub_device is not None
+    assert sub_device.via_device_id == module_device.id
+
+
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
