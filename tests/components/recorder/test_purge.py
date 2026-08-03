@@ -1373,9 +1373,7 @@ async def test_purge_filtered_events(
         (
             {
                 "exclude": {
-                    "event_data": [
-                        {"event_type": "test_event", "match": {"command": "drop"}}
-                    ]
+                    "event_data": [{"event_type": "test", "match": {"command": "drop"}}]
                 }
             },
             [{"command": "keep"}, {"command": "drop"}],
@@ -1386,7 +1384,7 @@ async def test_purge_filtered_events(
                 "include": {
                     "event_data": [
                         {
-                            "event_type": "test_event",
+                            "event_type": "test",
                             "match": {"command": "keep"},
                         }
                     ]
@@ -1415,7 +1413,7 @@ async def test_purge_filtered_event_data(
                 session.add(
                     Events(
                         event_id=event_id,
-                        event_type="test_event",
+                        event_type="test",
                         data_id=shared_data.data_id,
                         origin="LOCAL",
                         time_fired_ts=timestamp.timestamp(),
@@ -1435,7 +1433,7 @@ async def test_purge_filtered_event_data(
         events = (
             session.query(EventData.shared_data)
             .join(Events)
-            .filter(Events.event_type_id.in_(select_event_type_ids(("test_event",))))
+            .filter(Events.event_type_id.in_(select_event_type_ids(("test",))))
         )
         assert [
             json.loads(event_data) for (event_data,) in events
