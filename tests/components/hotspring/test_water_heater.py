@@ -60,47 +60,28 @@ async def test_set_temperature(
     mock_hotspring.set_temperature.assert_called_once_with(100.4)
 
 
-async def test_set_temperature_connection_error(
+@pytest.mark.parametrize(
+    ("exception", "match"),
+    [
+        (HotSpringConnectionError, "Error communicating with Hot Spring API"),
+        (HotSpringError, "Invalid response from Hot Spring API"),
+    ],
+)
+async def test_set_temperature_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hotspring: MagicMock,
+    exception: type[Exception],
+    match: str,
 ) -> None:
-    """Test connection error when setting target temperature."""
+    """Test exception handling when setting target temperature."""
     await setup_with_selected_platforms(
         hass, mock_config_entry, [Platform.WATER_HEATER]
     )
 
-    mock_hotspring.set_temperature.side_effect = HotSpringConnectionError
+    mock_hotspring.set_temperature.side_effect = exception
 
-    with pytest.raises(
-        HomeAssistantError, match="Error communicating with Hot Spring API"
-    ):
-        await hass.services.async_call(
-            WATER_HEATER_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_TEMPERATURE: 38,
-            },
-            blocking=True,
-        )
-
-
-async def test_set_temperature_api_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_hotspring: MagicMock,
-) -> None:
-    """Test API error when setting target temperature."""
-    await setup_with_selected_platforms(
-        hass, mock_config_entry, [Platform.WATER_HEATER]
-    )
-
-    mock_hotspring.set_temperature.side_effect = HotSpringError
-
-    with pytest.raises(
-        HomeAssistantError, match="Invalid response from Hot Spring API"
-    ):
+    with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
             SERVICE_SET_TEMPERATURE,
