@@ -1,6 +1,7 @@
 """Tests for the Acmeda integration."""
 
 from collections.abc import Generator
+import threading
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiopulse
@@ -92,6 +93,39 @@ async def test_hub_run_immediately_reports_rollers(
 
     # Verify entities were registered despite the hub reporting rollers
     # during setup rather than after.
+    entity_registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entities) == 2
+    assert any(e.domain == "cover" for e in entities)
+    assert any(e.domain == "sensor" for e in entities)
+
+
+async def test_hub_callback_from_worker_thread(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub: MagicMock,
+    mock_roller: MagicMock,
+) -> None:
+    """Test entities are registered when callback is invoked from a worker thread."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    notify_update = mock_hub.callback_subscribe.call_args[0][0]
+
+    # Invoke the callback from a worker thread, simulating how aiopulse
+    # reports updates from its own thread. This exercises the
+    # call_soon_threadsafe handoff in _schedule_update.
+    event = threading.Event()
+    thread = threading.Thread(
+        target=lambda: (notify_update(aiopulse.UpdateType.rollers), event.set())
+    )
+    thread.start()
+    event.wait(timeout=5)
+    thread.join(timeout=5)
+    await hass.async_block_till_done()
+
     entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
