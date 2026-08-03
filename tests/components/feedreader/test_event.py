@@ -56,7 +56,7 @@ from tests.common import async_fire_time_changed
 async def test_event_entity(
     hass: HomeAssistant,
     request: pytest.FixtureRequest,
-    fixture_name,
+    fixture_name: str,
     expected_attributes: dict,
 ) -> None:
     """Test feed event entity."""
