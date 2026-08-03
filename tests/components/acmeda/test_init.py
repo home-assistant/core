@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.acmeda.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -69,3 +69,33 @@ async def test_update_devices_renames_device(
         (DOMAIN, str(mock_roller.id)), mock_config_entry.entry_id
     )
     assert device.name == "Living room blind"
+
+
+async def test_hub_run_immediately_reports_rollers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub: MagicMock,
+    mock_roller: MagicMock,
+) -> None:
+    """Test entities are registered when Hub.run() immediately reports rollers."""
+    # Make hub.run() immediately fire the callback with UpdateType.rollers,
+    # simulating the race condition where the hub discovers rollers before
+    # platforms have finished setting up.
+    async def run_immediately() -> None:
+        notify_update = mock_hub.callback_subscribe.call_args[0][0]
+        notify_update(aiopulse.UpdateType.rollers)
+
+    mock_hub.run = AsyncMock(side_effect=run_immediately)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify entities were registered despite the hub reporting rollers
+    # during setup rather than after.
+    entity_registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entities) == 2
+    assert any(e.domain == "cover" for e in entities)
+    assert any(e.domain == "sensor" for e in entities)
