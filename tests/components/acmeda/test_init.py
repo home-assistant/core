@@ -80,6 +80,7 @@ async def test_hub_run_immediately_reports_rollers(
     mock_roller: MagicMock,
 ) -> None:
     """Test entities are registered when Hub.run() immediately reports rollers."""
+
     # Make hub.run() immediately fire the callback with UpdateType.rollers,
     # simulating the race condition where the hub discovers rollers before
     # platforms have finished setting up.
