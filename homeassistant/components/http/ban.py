@@ -69,9 +69,17 @@ LEGACY_IP_BANS_FILE: Final = "ip_bans.yaml"
 
 
 @callback
-def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> None:
+def setup_bans(
+    hass: HomeAssistant,
+    app: Application,
+    login_threshold: int,
+    is_ban_enabled: bool = True,
+) -> None:
     """Create IP Ban middleware for the app."""
-    app.middlewares.append(ban_middleware)
+
+    if is_ban_enabled:
+        app.middlewares.append(ban_middleware)
+
     app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict[IPv4Address | IPv6Address, int](int)
     app[KEY_LOGIN_THRESHOLD] = login_threshold
     app[KEY_BAN_MANAGER] = IpBanManager(hass)
