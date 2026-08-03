@@ -1,6 +1,6 @@
 """Basic checks for HomeKit sensor."""
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from unittest.mock import patch
 
 from aiohomekit.model import Accessory
@@ -11,6 +11,7 @@ from homeassistant.components.number import NumberDeviceClass
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import PlatformData
 
 from .common import Helper, setup_test_component
 
@@ -81,26 +82,23 @@ async def test_translated_name_uses_english_object_id(
     """Test translated names use English for non-native entity IDs."""
     hass.config.language = "ja"
 
-    async def async_get_translations(
-        hass: HomeAssistant,
-        language: str,
-        category: str,
-        integrations: Iterable[str] | None = None,
-        config_flow: bool | None = None,
-    ) -> dict[str, str]:
-        """Return translations for the spray quantity entity."""
-        if (
-            category != "entity"
-            or integrations is None
-            or "homekit_controller" not in integrations
-        ):
-            return {}
-        name = "噴霧量" if language == "ja" else "Spray quantity"
-        return {"component.homekit_controller.entity.number.spray_quantity.name": name}
+    async def async_load_translations(platform_data: PlatformData) -> None:
+        """Load translations for the spray quantity entity."""
+        translation_key = (
+            "component.homekit_controller.entity.number.spray_quantity.name"
+        )
+        platform_data.platform_translations = {translation_key: "噴霧量"}
+        platform_data.object_id_platform_translations = {
+            translation_key: "Spray quantity"
+        }
+        platform_data.default_language_platform_translations = {
+            translation_key: "Spray quantity"
+        }
 
-    with patch(
-        "homeassistant.helpers.entity_platform.translation.async_get_translations",
-        side_effect=async_get_translations,
+    with patch.object(
+        PlatformData,
+        "async_load_translations",
+        async_load_translations,
     ):
         await setup_test_component(hass, get_next_aid(), create_switch_with_spray_level)
 
