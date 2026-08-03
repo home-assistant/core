@@ -94,31 +94,23 @@ async def test_screen_switch_command_device_off(
 
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "device_off"
-    client.request.assert_not_called()
+    client.set_screen_state.assert_not_called()
 
 
 @pytest.mark.parametrize(
-    ("service", "expected_request"),
+    ("service", "screen_state"),
     [
-        pytest.param(
-            SERVICE_TURN_ON,
-            "com.webos.service.tvpower/power/turnOnScreen",
-            id="turn_on",
-        ),
-        pytest.param(
-            SERVICE_TURN_OFF,
-            "com.webos.service.tvpower/power/turnOffScreen",
-            id="turn_off",
-        ),
+        (SERVICE_TURN_ON, True),
+        (SERVICE_TURN_OFF, False),
     ],
 )
 async def test_screen_switch_commands(
     hass: HomeAssistant,
     client: AsyncMock,
     service: str,
-    expected_request: str,
+    screen_state: bool,
 ) -> None:
-    """Test the screen switch sends the matching webOS request."""
+    """Test the screen switch sets the screen state."""
     await setup_webostv(hass)
 
     await hass.services.async_call(
@@ -128,7 +120,7 @@ async def test_screen_switch_commands(
         blocking=True,
     )
 
-    client.request.assert_called_once_with(expected_request)
+    client.set_screen_state.assert_called_once_with(screen_state)
 
 
 @pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
@@ -139,7 +131,7 @@ async def test_screen_switch_command_error(
 ) -> None:
     """Test a failing screen command raises a translated error."""
     await setup_webostv(hass)
-    client.request.side_effect = WebOsTvCommandError("Communication error")
+    client.set_screen_state.side_effect = WebOsTvCommandError("Communication error")
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
