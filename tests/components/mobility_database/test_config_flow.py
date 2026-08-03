@@ -1,7 +1,7 @@
 """Test the Mobility Database config flow."""
 
 import asyncio
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from aiomobilitydatabase import (
     DataType,
@@ -33,7 +33,7 @@ from homeassistant.components.mobility_database.const import (
     DOMAIN,
     SUBENTRY_TYPE_STOP,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_LOCATION, CONF_STOP, CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -904,7 +904,7 @@ async def test_reauth_token_updates_sibling_entries(
     mock_feeds_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a rotated token propagates to entries sharing the old one."""
+    """Test a rotated token propagates to and reloads entries sharing it."""
     mock_config_entry.add_to_hass(hass)
     sibling = MockConfigEntry(
         domain=DOMAIN,
@@ -920,16 +920,29 @@ async def test_reauth_token_updates_sibling_entries(
         data={CONF_REFRESH_TOKEN: "different-token", CONF_FEED_ID: "mdb-99"},
     )
     other_account.add_to_hass(hass)
+    # The sibling hit the same expired token and has its own reauth pending
     mock_feeds_client.catalog.get_metadata.side_effect = [
+        MobilityDatabaseAuthenticationError("expired"),
         MobilityDatabaseAuthenticationError("expired"),
         Metadata(version="1.0.0"),
     ]
+    sibling_result = await sibling.start_reauth_flow(hass)
+    assert sibling_result["step_id"] == "reauth_token"
+
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_token"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_REFRESH_TOKEN: "new-token"}
-    )
-    assert result["reason"] == "reauth_successful"
+    with patch(
+        "homeassistant.components.mobility_database.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_REFRESH_TOKEN: "new-token"}
+        )
+        assert result["reason"] == "reauth_successful"
+        await hass.async_block_till_done()
     assert mock_config_entry.data[CONF_REFRESH_TOKEN] == "new-token"
     assert sibling.data[CONF_REFRESH_TOKEN] == "new-token"
     assert other_account.data[CONF_REFRESH_TOKEN] == "different-token"
+    # The sibling was reloaded with the new token, aborting its reauth flow
+    assert sibling.state is ConfigEntryState.LOADED
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)

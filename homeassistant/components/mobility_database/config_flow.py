@@ -425,6 +425,8 @@ class MobilityDatabaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 new_token: str = user_input[CONF_REFRESH_TOKEN]
                 # The token is account-wide: fix every other feed entry that
                 # held the same expired token instead of prompting per entry.
+                # Reloading them retries setup with the new token and aborts
+                # their pending reauth flows.
                 old_token: str = entry.data[CONF_REFRESH_TOKEN]
                 for other in self.hass.config_entries.async_entries(DOMAIN):
                     if (
@@ -435,6 +437,7 @@ class MobilityDatabaseConfigFlow(ConfigFlow, domain=DOMAIN):
                             other,
                             data={**other.data, CONF_REFRESH_TOKEN: new_token},
                         )
+                        self.hass.config_entries.async_schedule_reload(other.entry_id)
                 return self.async_update_reload_and_abort(
                     entry, data_updates={CONF_REFRESH_TOKEN: new_token}
                 )
