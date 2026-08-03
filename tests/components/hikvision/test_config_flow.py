@@ -420,7 +420,7 @@ async def test_form_with_ssl_without_verify_ssl(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_form_with_ssl_wand_verify_ssl(
+async def test_form_with_ssl_and_verify_ssl(
     hass: HomeAssistant, mock_hikcamera: MagicMock
 ) -> None:
     """Test user flow with ssl enabled passes ssl parameter to HikCamera."""
