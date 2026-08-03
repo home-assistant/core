@@ -8,9 +8,6 @@
     },
     "turn_on_failed": {
       "message": "Failed to turn on {resource}"
-    },
-    "update_error": {
-      "message": "Error communicating with {resource} due to {error_message}"
     }
   },
   "services": {
