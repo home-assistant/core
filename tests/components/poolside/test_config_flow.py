@@ -4,17 +4,25 @@ from collections.abc import Generator
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
 import pytest
 
+from homeassistant.components.poolside.client import (
+    PoolsideAuthError,
+    PoolsideConnectionError,
+)
 from homeassistant.components.poolside.const import (
     CONF_CLIENT_PRIVATE_KEY,
     CONF_CONTROLLER_PUBLIC_KEY,
     CONF_CONTROLLER_UUID,
+    CONF_EXPOSE_POOL_DEVICES,
     DOMAIN,
 )
 from homeassistant.components.poolside.pairing import (
     PairingApproved,
     PairingBusy,
+    PairingError,
+    PairingInvalid,
     PairingPending,
     PairingRejected,
     PairingTimedOut,
@@ -139,9 +147,11 @@ async def test_user_flow_pending_then_approved(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("exception", "reason"),
     [
-        (PairingRejected(), "pair_rejected"),
-        (PairingTimedOut(), "pair_timeout"),
-        (PairingBusy(), "pair_busy"),
+        pytest.param(PairingRejected(), "pair_rejected", id="rejected"),
+        pytest.param(PairingTimedOut(), "pair_timeout", id="timeout"),
+        pytest.param(PairingBusy(), "pair_busy", id="busy"),
+        pytest.param(PairingInvalid(), "pair_failed", id="invalid"),
+        pytest.param(PairingError(), "pair_failed", id="generic-error"),
     ],
 )
 async def test_user_flow_pending_then_denied(
@@ -174,9 +184,10 @@ async def test_user_flow_pending_then_denied(
 @pytest.mark.parametrize(
     ("exception", "reason"),
     [
-        (PairingRejected(), "pair_rejected"),
-        (PairingTimedOut(), "pair_timeout"),
-        (PairingBusy(), "pair_busy"),
+        pytest.param(PairingRejected(), "pair_rejected", id="rejected"),
+        pytest.param(PairingTimedOut(), "pair_timeout", id="timeout"),
+        pytest.param(PairingBusy(), "pair_busy", id="busy"),
+        pytest.param(PairingInvalid(), "pair_failed", id="invalid"),
     ],
 )
 async def test_user_flow_immediate_denied(
@@ -196,6 +207,78 @@ async def test_user_flow_immediate_denied(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(aiohttp.ClientError(), id="client-error"),
+        pytest.param(PairingError(), id="pairing-error"),
+    ],
+)
+async def test_user_flow_request_error_then_recover(
+    hass: HomeAssistant, exception: Exception
+) -> None:
+    """A failed pairing request shows an error and the flow can be retried."""
+    with patch(
+        "homeassistant.components.poolside.config_flow.async_request_pairing",
+        side_effect=exception,
+    ) as mock_request:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        mock_request.side_effect = None
+        mock_request.return_value = (MagicMock(), APPROVED)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CONTROLLER_UUID] == TEST_CONTROLLER_UUID
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(PoolsideAuthError(), id="auth-error"),
+        pytest.param(PoolsideConnectionError(), id="connection-error"),
+    ],
+)
+async def test_finish_connect_error_then_recover(
+    hass: HomeAssistant, mock_finish_client: MagicMock, exception: Exception
+) -> None:
+    """A failed session handshake shows an error and the flow can be retried."""
+    mock_finish_client.return_value.async_connect.side_effect = exception
+
+    with patch(
+        "homeassistant.components.poolside.config_flow.async_request_pairing",
+        return_value=(MagicMock(), APPROVED),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        mock_finish_client.return_value.async_connect.side_effect = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_SITE_NAME
 
 
 async def test_user_flow_already_configured(
@@ -290,3 +373,21 @@ async def test_zeroconf_discovery_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """The options flow updates the pool device exposure setting."""
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_EXPOSE_POOL_DEVICES: False}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options[CONF_EXPOSE_POOL_DEVICES] is False
