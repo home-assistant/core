@@ -44,7 +44,7 @@ async def _async_initial_sync(sync_call: Callable[[], Awaitable[None]]) -> None:
         await sync_call()
     except ConfigEntryNotReady as err:
         LOGGER.warning(
-            "Initial sync failed for %s: %s. Feature disabled",
+            "Initial sync failed for %s: %s. Data may be missing or incomplete until updates are pushed by Amazon",
             sync_call.__name__,
             err,
         )

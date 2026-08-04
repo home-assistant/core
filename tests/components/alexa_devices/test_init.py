@@ -284,7 +284,10 @@ async def test_initial_sync_amazon_api_failure_does_not_block_setup(
 
     assert f"Initial sync failed for {invoked_method}:" in caplog.text
     assert str(error) in caplog.text
-    assert "Feature disabled" in caplog.text
+    assert (
+        "Data may be missing or incomplete until updates are pushed by Amazon"
+        in caplog.text
+    )
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
