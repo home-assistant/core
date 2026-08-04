@@ -1,5 +1,7 @@
 """Event-count sensor platform for Agent DVR."""
 
+from typing import override
+
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -65,6 +67,7 @@ class AgentDVREventCountSensor(
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, camera_unique_id)})
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the current event count."""
         return self.coordinator.data.get(self._oid_ot)

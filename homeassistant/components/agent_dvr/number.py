@@ -6,6 +6,8 @@ this exposes that pulse duration as a number entity so it can be tuned
 from the UI instead of hardcoded, without needing a code change.
 """
 
+from typing import override
+
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -49,10 +51,12 @@ class AgentDVRPTZPulseNumber(NumberEntity):
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, data.unique_id)})
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the configured pulse duration."""
         return self._data.ptz_pulse_seconds
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the pulse duration."""
         self._data.ptz_pulse_seconds = value

@@ -12,7 +12,6 @@ SERVER_URL = "server_url"
 DEFAULT_PORT = 8090
 DEFAULT_SCAN_INTERVAL = 15
 
-ATTR_LOCATION = "location"
 ATTR_GROUPS = "groups"
 ATTR_PTZ_TYPE = "ptz_type"
 

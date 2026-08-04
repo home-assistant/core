@@ -27,6 +27,7 @@ import uuid
 import aiohttp
 from aiortc import (
     RTCConfiguration,
+    RTCDataChannel,
     RTCIceCandidate,
     RTCIceServer,
     RTCPeerConnection,
@@ -84,7 +85,7 @@ class AgentDVRWebRTCSession:
         self._base_url = f"{scheme}://{host}:{port}"
         self._auth = aiohttp.BasicAuth(username, password or "") if username else None
         self._pc: RTCPeerConnection | None = None
-        self._channel = None
+        self._channel: RTCDataChannel | None = None
         self._local_id = str(random.random())
         self._session_id = str(uuid.uuid4())
         self._login: dict[str, Any] = {}
@@ -129,7 +130,7 @@ class AgentDVRWebRTCSession:
         self._channel = self._pc.createDataChannel("serverdata", ordered=True)
         self._channel.on("message", self._on_channel_message)
         channel_open = asyncio.Event()
-        self._channel.on("open", lambda: channel_open.set())
+        self._channel.on("open", channel_open.set)
 
         offer = await self._pc.createOffer()
         await self._pc.setLocalDescription(offer)
@@ -227,6 +228,7 @@ class AgentDVRWebRTCSession:
             await asyncio.sleep(POLL_INTERVAL)
 
     async def _handle_relay_message(self, e: dict) -> None:
+        assert self._pc is not None
         cmd = e.get("command")
         if cmd == "OnSuccessAnswer":
             await self._pc.setRemoteDescription(
@@ -275,6 +277,7 @@ class AgentDVRWebRTCSession:
         operate across devices (e.g. getevents, which takes its own `objects=`
         list) work fine with the default -1/-1.
         """
+        assert self._channel is not None
         ident = str(uuid.uuid4())
         fut: asyncio.Future = asyncio.get_event_loop().create_future()
         self._pending[ident] = fut
@@ -343,6 +346,7 @@ class AgentDVRWebRTCSession:
         self, oid: int, ot_id: int, filename: str, timeout: float = DOWNLOAD_TIMEOUT
     ) -> bytes:
         """Download a recording/grab file, fully reassembled, over its own data channel."""
+        assert self._pc is not None
         label = f"download_{int(time.time() * 1000)}"
         dl_channel = self._pc.createDataChannel(label, ordered=True)
         done: asyncio.Future = asyncio.get_event_loop().create_future()

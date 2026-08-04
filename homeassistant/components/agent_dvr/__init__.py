@@ -32,11 +32,11 @@ DEFAULT_BRAND = "Agent DVR by ispyconnect.com"
 
 PLATFORMS: list[Platform] = [
     Platform.ALARM_CONTROL_PANEL,
+    Platform.BUTTON,
     Platform.CAMERA,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
-    Platform.BUTTON,
-    Platform.NUMBER,
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)

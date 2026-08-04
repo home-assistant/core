@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -35,6 +35,7 @@ class AgentDVRDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         try:
             status = await self.client.get_status()
@@ -85,6 +86,7 @@ class AgentDVREventCountCoordinator(DataUpdateCoordinator[dict[str, int]]):
         self.client = client
         self._camera_keys = camera_keys
 
+    @override
     async def _async_update_data(self) -> dict[str, int]:
         counts: dict[str, int] = {}
         for key in self._camera_keys:

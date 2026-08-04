@@ -1,5 +1,7 @@
 """Support for Agent DVR Alarm Control Panels."""
 
+from typing import override
+
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
@@ -61,6 +63,7 @@ class AgentBaseStation(
         self._active_profile: str | None = None
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the current alarm state."""
         status = self.coordinator.data.get("status", {})
@@ -77,11 +80,13 @@ class AgentBaseStation(
             return AlarmControlPanelState.ARMED_NIGHT
         return AlarmControlPanelState.ARMED_AWAY
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Fetch the initial active profile once added."""
         await super().async_added_to_hass()
         await self._refresh_active_profile()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         # Keep the active-profile mirror fresh whenever the main coordinator
         # polls getStatus, so external arm/profile changes (e.g. via the
@@ -100,11 +105,13 @@ class AgentBaseStation(
                 return
         self._active_profile = None
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._client.disarm()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command. Uses custom mode."""
         await self._client.arm()
@@ -112,6 +119,7 @@ class AgentBaseStation(
         self._active_profile = CONF_AWAY_MODE_NAME
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command. Uses custom mode."""
         await self._client.arm()
@@ -119,6 +127,7 @@ class AgentBaseStation(
         self._active_profile = CONF_HOME_MODE_NAME
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command. Uses custom mode."""
         await self._client.arm()

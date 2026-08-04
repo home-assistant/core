@@ -187,6 +187,7 @@ EXCEPTIONS = {
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
     "crownstone-sse",  # https://github.com/crownstone/crownstone-lib-python-sse/pull/2
     "crownstone-uart",  # https://github.com/crownstone/crownstone-lib-python-uart/pull/12
+    "google-crc32c",  # Apache 2.0, missing PyPI license classifier
     "imutils",  # https://github.com/PyImageSearch/imutils/pull/292
     "iso4217",  # Public domain
     "kiwiki-client",  # https://github.com/c7h/kiwiki_client/pull/6

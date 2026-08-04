@@ -18,6 +18,7 @@ configured Agent DVR server.
 import logging
 import mimetypes
 import os
+from typing import override
 
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source import (
@@ -60,6 +61,7 @@ class AgentDVRMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Browse Agent DVR servers, then their cameras, then recordings."""
         entry_id, _, rest = item.identifier.partition("|")
@@ -169,6 +171,7 @@ class AgentDVRMediaSource(MediaSource):
             children_media_class=MediaClass.VIDEO,
         )
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Download (if not already cached) and resolve a recording."""
         entry_id, _, rest = item.identifier.partition("|")

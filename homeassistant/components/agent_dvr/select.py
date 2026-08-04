@@ -9,6 +9,7 @@ WebRTC channel (see webrtc.py).
 """
 
 import logging
+from typing import override
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
@@ -83,6 +84,7 @@ class AgentDVRPTZPresetSelect(
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, camera_unique_id)})
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the coordinator has data and the camera is online."""
         device = self.coordinator.data["devices"].get(self._oid_ot)
@@ -92,6 +94,7 @@ class AgentDVRPTZPresetSelect(
             and bool(device.get("data", {}).get("online"))
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Move the camera to the selected preset."""
         await self._client.goto_ptz_preset(self._oid, self._ot, option)

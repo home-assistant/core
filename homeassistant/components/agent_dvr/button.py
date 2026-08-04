@@ -18,6 +18,7 @@ reason raw PTZ control feels sluggish without pooling.
 """
 
 import asyncio
+from typing import override
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
@@ -95,6 +96,7 @@ class AgentDVRPTZButton(ButtonEntity):
         self._attr_unique_id = f"{camera_unique_id}_{translation_key}"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, camera_unique_id)})
 
+    @override
     async def async_press(self) -> None:
         """Pulse the camera in this direction, then stop it."""
 

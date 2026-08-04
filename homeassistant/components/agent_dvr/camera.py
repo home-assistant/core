@@ -1,23 +1,19 @@
 """Support for Agent DVR camera streaming."""
 
+from collections.abc import Mapping
 import logging
+from typing import Any, override
 
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
+from homeassistant.const import ATTR_LOCATION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AgentDVRConfigEntry
-from .const import (
-    ATTR_GROUPS,
-    ATTR_LOCATION,
-    ATTR_PTZ_TYPE,
-    ATTRIBUTION,
-    DEVICE_TYPE_CAMERA,
-    DOMAIN,
-)
+from .const import ATTR_GROUPS, ATTR_PTZ_TYPE, ATTRIBUTION, DEVICE_TYPE_CAMERA, DOMAIN
 from .coordinator import AgentDVRDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,32 +101,38 @@ class AgentDVRCamera(CoordinatorEntity[AgentDVRDataUpdateCoordinator], MjpegCame
         return self._device.get("data", {})
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the camera is still present in the last poll."""
         return super().available and bool(self._device)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the camera is enabled."""
         return bool(self._data.get("online"))
 
     @property
+    @override
     def is_recording(self) -> bool:
         """Return whether the monitor is recording."""
         return bool(self._data.get("recording"))
 
     @property
+    @override
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return bool(self._data.get("detectorActive"))
 
     @property
+    @override
     def icon(self) -> str:
         """Return an icon reflecting the on/off state."""
         return "mdi:camcorder" if self.is_on else "mdi:camcorder-off"
 
     @property
-    def extra_state_attributes(self) -> dict:
+    @override
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional camera state attributes."""
         device = self._device
         data = self._data
@@ -154,21 +156,25 @@ class AgentDVRCamera(CoordinatorEntity[AgentDVRDataUpdateCoordinator], MjpegCame
             ATTR_GROUPS: device.get("groups"),
         }
 
+    @override
     async def async_turn_on(self) -> None:
         """Enable the camera."""
         await self._client.switch_on(self._oid, self._ot)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self) -> None:
         """Disable the camera."""
         await self._client.switch_off(self._oid, self._ot)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection."""
         await self._client.detector_on(self._oid, self._ot)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection."""
         await self._client.detector_off(self._oid, self._ot)
