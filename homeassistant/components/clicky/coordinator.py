@@ -19,7 +19,7 @@ type ClickyConfigEntry = ConfigEntry[ClickyCoordinator]
 
 
 class ClickyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Handle fetching Clicky data, updating sensors and inserting statistics."""
+    """Handle fetching Clicky data and updating sensors."""
 
     config_entry: ClickyConfigEntry
 
