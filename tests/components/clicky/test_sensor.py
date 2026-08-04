@@ -19,10 +19,33 @@ async def test_async_setup_entry(
 ) -> None:
     """Test that async_setup_entry creates the expected sensors."""
 
-    mock_data = {
-        "visitorsOnline": 42,
-        "timeTotal": 3600,
-    }
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.__aexit__.return_value = None
+    client.query.side_effect = [
+        [
+            {
+                "dates": [
+                    {
+                        "items": [
+                            {"value": 12},
+                        ]
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "dates": [
+                    {
+                        "items": [
+                            {"value": 345},
+                        ]
+                    }
+                ]
+            }
+        ],
+    ]
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -35,8 +58,8 @@ async def test_async_setup_entry(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.clicky.coordinator.ClickyCoordinator._async_update_data",
-        AsyncMock(return_value=mock_data),
+        "homeassistant.components.clicky.ClickyClient",
+        return_value=client,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
