@@ -39,8 +39,8 @@ POLL_INTERVAL = 1
 REARM_INTERVAL = timedelta(seconds=20)
 ERROR_BACKOFF = 5
 TRANSMIT_COOLDOWN = 0.3
-CAPTURE_WINDOW = timedelta(seconds=30)
-CAPTURE_LIMIT = timedelta(minutes=5)
+CAPTURE_WINDOW = timedelta(seconds=15)
+CAPTURE_LIMIT = timedelta(seconds=60)
 
 
 def _timings_to_broadlink_packet(timings: list[int]) -> bytes:

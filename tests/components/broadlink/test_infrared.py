@@ -288,7 +288,11 @@ async def test_infrared_receiver_rearms_before_learning_times_out(
 
     mock_setup.api.check_data.side_effect = ReadError
 
-    with patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0):
+    # A window long enough to outlive the learning session it has to renew.
+    with (
+        patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0),
+        patch(f"{INFRARED_MODULE}.CAPTURE_WINDOW", REARM_INTERVAL * 3),
+    ):
         await _request_capture(hass, entity_registry)
         await _wait_until(lambda: mock_setup.api.enter_learning.call_count == 1)
 
@@ -372,23 +376,23 @@ async def test_infrared_receiver_window_has_a_hard_limit(
         pending.pop() if pending else _raise(ReadError())
     )
     signals: list[InfraredReceivedSignal] = []
-    limit = CAPTURE_WINDOW + timedelta(seconds=15)
 
     with (
         patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0),
-        patch(f"{INFRARED_MODULE}.CAPTURE_LIMIT", limit),
+        patch(f"{INFRARED_MODULE}.CAPTURE_WINDOW", timedelta(seconds=10)),
+        patch(f"{INFRARED_MODULE}.CAPTURE_LIMIT", timedelta(seconds=15)),
     ):
         unsubscribe = async_subscribe_receiver(hass, entity_id, signals.append)
         await _request_capture(hass, entity_registry)
         await _wait_until(lambda: mock_setup.api.check_data.call_count >= 1)
 
-        freezer.tick(CAPTURE_WINDOW - timedelta(seconds=5))
+        freezer.tick(timedelta(seconds=8))
         pending.append(_nec_packet(NECCommand(address=0x20, command=0x10)))
         await _wait_until(lambda: len(signals) == 1)
 
-        # Without the limit this code would have held the window open for
-        # another full CAPTURE_WINDOW, so it would still be capturing here.
-        freezer.tick(timedelta(seconds=21))
+        # The code lands 8s in, so without the limit it would hold the window
+        # open until 18s and the receiver would still be capturing below.
+        freezer.tick(timedelta(seconds=8))
         await _wait_until(lambda: not _is_capturing(hass, entity_id))
         unsubscribe()
 
@@ -462,6 +466,30 @@ async def test_infrared_receiver_recovers_from_errors(
         await _wait_until(lambda: mock_setup.api.check_data.call_count >= 1)
 
     assert mock_setup.api.enter_learning.call_count >= 2
+
+
+async def test_infrared_receiver_restarts_an_open_window(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test pressing again while capturing starts the window over."""
+    mock_setup = await get_device(DEVICE_NAME).setup_entry(hass)
+    entity_id = _infrared_entity_id(entity_registry, "receiver")
+
+    mock_setup.api.check_data.side_effect = ReadError
+
+    with patch(f"{INFRARED_MODULE}.POLL_INTERVAL", 0):
+        await _request_capture(hass, entity_registry)
+        await _wait_until(lambda: mock_setup.api.check_data.call_count >= 1)
+
+        freezer.tick(CAPTURE_WINDOW - timedelta(seconds=5))
+        await _request_capture(hass, entity_registry)
+
+        # Past the end of the first window, kept open by the second request.
+        freezer.tick(timedelta(seconds=10))
+        await _settle()
+        assert _is_capturing(hass, entity_id)
 
 
 async def test_infrared_receiver_reopens_window_on_request(
