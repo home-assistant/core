@@ -2,7 +2,12 @@
 
 from typing import Any, override
 
-from infrared_protocols.commands.samsung_ac import SamsungAC0292Command
+from infrared_protocols.commands.samsung_ac import (
+    SamsungAC0292Command,
+    SamsungAC0292HvacMode,
+    SamsungACFanMode,
+    SamsungACSwingMode,
+)
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -27,20 +32,20 @@ PARALLEL_UPDATES = 1
 
 
 HA_TO_LIB_HVAC = {
-    HVACMode.OFF: "off",
-    HVACMode.COOL: "cool",
-    HVACMode.HEAT: "heat",
-    HVACMode.DRY: "dry",
-    HVACMode.FAN_ONLY: "fan_only",
-    HVACMode.AUTO: "auto",
+    HVACMode.OFF: SamsungAC0292HvacMode.OFF,
+    HVACMode.COOL: SamsungAC0292HvacMode.COOL,
+    HVACMode.HEAT: SamsungAC0292HvacMode.HEAT,
+    HVACMode.DRY: SamsungAC0292HvacMode.DRY,
+    HVACMode.FAN_ONLY: SamsungAC0292HvacMode.FAN_ONLY,
+    HVACMode.AUTO: SamsungAC0292HvacMode.AUTO,
 }
 
 
 HA_TO_LIB_FAN = {
-    FAN_AUTO: "auto",
-    FAN_LOW: "low",
-    FAN_MEDIUM: "medium",
-    FAN_HIGH: "high",
+    FAN_AUTO: SamsungACFanMode.AUTO,
+    FAN_LOW: SamsungACFanMode.LOW,
+    FAN_MEDIUM: SamsungACFanMode.MEDIUM,
+    FAN_HIGH: SamsungACFanMode.HIGH,
 }
 
 
@@ -99,18 +104,18 @@ class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, ClimateEn
 
     async def _async_send_command(self) -> None:
         """Generate the logical state and delegate transmission to the infrared platform."""
-        hvac_str = HA_TO_LIB_HVAC.get(self._attr_hvac_mode, "off")
-        if hvac_str == "auto":
-            self._attr_fan_mode = FAN_AUTO
-        fan_str = HA_TO_LIB_FAN.get(self._attr_fan_mode, "auto")
-        temp_int = int(self._attr_target_temperature)
+        hvac_mode = HA_TO_LIB_HVAC.get(self._attr_hvac_mode, SamsungAC0292HvacMode.OFF)
 
-        command = SamsungAC0292Command(
-            hvac_mode=hvac_str,
-            target_temperature=None if hvac_str == "off" else temp_int,
-            fan_mode=fan_str,
-            swing_mode="off",
-        )
+        if hvac_mode is SamsungAC0292HvacMode.OFF:
+            command = SamsungAC0292Command(hvac_mode=hvac_mode)
+        else:
+            fan_mode = HA_TO_LIB_FAN.get(self._attr_fan_mode, SamsungACFanMode.AUTO)
+            command = SamsungAC0292Command(
+                hvac_mode=hvac_mode,
+                target_temperature=int(self._attr_target_temperature),
+                fan_mode=fan_mode,
+                swing_mode=SamsungACSwingMode.OFF,
+            )
 
         await self._send_command(command)
 
