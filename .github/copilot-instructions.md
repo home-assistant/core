@@ -8,7 +8,7 @@
 - Do not comment on code style, formatting or linting issues.
 - Flag comments that over-explain straightforward code, narrate the obvious, or read like AI commentary (multi-sentence justifications for a single line).
 - A Pull Request with a dependency version bump should only contain changes required for the version bump. If the PR includes other changes, request that they are removed from the PR.
-- Check that the PR description is complete and filled in according to the PR template included below. Every section and checklist item from the template must be present, except the `## Breaking change` section which is optional. No content from the template should be missing, except for HTML comments. Even unchecked checkboxes or empty sections must be present. This is a hard requirement.
+- Check that the PR description is complete and filled in according to the PR template included below. Every section and checklist item from the template must be present, except the `## Breaking change` section which is optional. No content from the template should be missing, except for HTML comments and Markdown link reference definitions (lines of the form `[name]: url`), which do not render and cannot be verified from the description. Even unchecked checkboxes or empty sections must be present. This is a hard requirement.
 
 ## Pull Request template
 
@@ -182,6 +182,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 - Do not add comments that just restate the code on the following line(s) (e.g. `# Check if initialized` above `if self.initialized:`). Comments should only explain why (non-obvious constraints, surprising behavior, or workarounds), never what. Never add comments that justify a change by referencing what the code looked like before. Comments in tests that explain why a function call or assertion is made are ok.
 - Do not add section or divider comments (e.g. `# --- XYZ Triggers ---`) inside or outside of functions, since those can easily become stale and be misleading.
 - When catching exceptions, try-clauses should be as small as possible, i.e. avoid wrapping large blocks of code in a try-clause, and avoid catching exceptions from functions that are not expected to raise them.
+- Sensitive service actions, i.e. those that can change configuration or have security implications, should require an admin user. Register them with the `async_register_admin_service` service helper, which checks this for you.
 
 ## AI policy
 

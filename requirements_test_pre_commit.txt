@@ -3,4 +3,4 @@
 codespell==2.4.3
 ruff==0.16.0
 yamllint==1.38.0
-zizmor==1.25.2
+zizmor==1.28.0

@@ -74,7 +74,7 @@ dependencies = [
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.11.31",
+  "uv==0.11.32",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.4.1",
@@ -594,8 +594,6 @@ filterwarnings = [
   "ignore:websockets.legacy is deprecated:DeprecationWarning:websockets.legacy",
 
   # -- unmaintained projects, last release about 2+ years
-  # https://pypi.org/project/aiomodernforms/ - v0.1.8 - 2021-06-27
-  "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:aiomodernforms.modernforms",
   # https://pypi.org/project/colorthief/ - v0.2.1 - 2017-02-09
   "ignore:Image.Image.getdata is deprecated and will be removed in Pillow 14.* Use get_flattened_data instead:DeprecationWarning:colorthief",
   # https://pypi.org/project/directv/ - v0.4.0 - 2020-09-12
