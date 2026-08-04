@@ -4,6 +4,8 @@ import ast
 import json
 from pathlib import Path
 
+import pytest
+
 from script.hassfest.api_contracts import ASYNCAPI_PATH, OPENAPI_PATH, _documents
 from script.hassfest.api_contracts.common import SourceIndex
 from script.hassfest.api_contracts.schema import (
@@ -27,6 +29,7 @@ def _generated() -> dict[Path, str]:
     return _documents(integrations, config)
 
 
+@pytest.mark.timeout(30)  # A full source scan can exceed the global 9-second limit.
 def test_generated_contracts_are_current() -> None:
     """Test committed API contracts match route metadata."""
     documents = _generated()
