@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.habitron.config_flow import (
-    KEY_HOST,
+    CONF_HOST,
     CannotConnect,
     ConfigFlow,
     HostNotFound,
@@ -225,7 +225,7 @@ async def test_user_step_empty_probe_serial_falls_back_to_host_id(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={KEY_HOST: MOCK_HOST}
+            result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
         )
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -271,7 +271,7 @@ async def test_user_step_resolves_hostname_for_the_probe_match(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={KEY_HOST: submitted}
+            result["flow_id"], user_input={CONF_HOST: submitted}
         )
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -323,7 +323,7 @@ async def test_ssdp_keeps_stable_id_when_discovery_yields_only_host_fallback(
         domain=DOMAIN,
         title=MOCK_NAME,
         unique_id=MOCK_SERIAL,
-        data={**MOCK_CONFIG_DATA, KEY_HOST: MOCK_HOST},
+        data={**MOCK_CONFIG_DATA, CONF_HOST: MOCK_HOST},
     )
     stable_entry.add_to_hass(hass)
 
@@ -397,7 +397,7 @@ async def test_ssdp_matches_entry_stored_under_host_name(
         domain=DOMAIN,
         title=MOCK_NAME,
         unique_id=f"habitron_{MOCK_HOST_HOSTNAME}",
-        data={**MOCK_CONFIG_DATA, KEY_HOST: MOCK_HOST_HOSTNAME},
+        data={**MOCK_CONFIG_DATA, CONF_HOST: MOCK_HOST_HOSTNAME},
     )
     named_entry.add_to_hass(hass)
 
@@ -440,7 +440,7 @@ async def test_ssdp_update_keeps_the_local_sentinel(
         domain=DOMAIN,
         title=MOCK_NAME,
         unique_id=MOCK_UDN,
-        data={KEY_HOST: "local", "websock_token": ""},
+        data={CONF_HOST: "local"},
     )
     entry.add_to_hass(hass)
 
@@ -463,7 +463,7 @@ async def test_ssdp_update_keeps_the_local_sentinel(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
-    assert entry.data[KEY_HOST] == "local"
+    assert entry.data[CONF_HOST] == "local"
 
 
 async def test_ssdp_keeps_a_serial_id_when_only_a_udn_is_advertised(
@@ -480,7 +480,7 @@ async def test_ssdp_keeps_a_serial_id_when_only_a_udn_is_advertised(
         domain=DOMAIN,
         title=MOCK_NAME,
         unique_id=MOCK_SERIAL,
-        data={KEY_HOST: MOCK_HOST, "websock_token": ""},
+        data={CONF_HOST: MOCK_HOST},
     )
     entry.add_to_hass(hass)
 
@@ -515,7 +515,7 @@ async def test_user_step_updates_the_stored_host_of_a_known_hub(
         domain=DOMAIN,
         title=MOCK_NAME,
         unique_id=MOCK_SERIAL,
-        data={KEY_HOST: "192.168.1.99", "websock_token": ""},
+        data={CONF_HOST: "192.168.1.99"},
     )
     entry.add_to_hass(hass)
 
@@ -527,12 +527,12 @@ async def test_user_step_updates_the_stored_host_of_a_known_hub(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={KEY_HOST: MOCK_HOST}
+            result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
-    assert entry.data[KEY_HOST] == MOCK_HOST
+    assert entry.data[CONF_HOST] == MOCK_HOST
 
 
 async def test_ssdp_no_host(
@@ -589,9 +589,9 @@ async def test_validate_input_local_loopback_rewrites_host(
 ) -> None:
     """A host equal to one of our own IPs is rewritten to ``local``."""
 
-    data = {KEY_HOST: "192.168.1.10", "websock_token": ""}
+    data = {CONF_HOST: "192.168.1.10"}
     info = await validate_input(hass, data)
-    assert data[KEY_HOST] == "local"
+    assert data[CONF_HOST] == "local"
     assert info == {"title": MOCK_NAME}
 
 
@@ -614,9 +614,7 @@ async def test_validate_input_falls_back_to_host_when_hub_unnamed(
             new=AsyncMock(return_value=(True, "")),
         ),
     ):
-        info = await validate_input(
-            hass, {KEY_HOST: "192.168.1.77", "websock_token": ""}
-        )
+        info = await validate_input(hass, {CONF_HOST: "192.168.1.77"})
 
     assert info == {"title": "192.168.1.77"}
 
@@ -635,7 +633,7 @@ async def test_validate_input_accepts_short_hostname(
         "homeassistant.components.habitron.config_flow.network.async_get_source_ip",
         new=AsyncMock(return_value="10.0.0.5"),
     ):
-        info = await validate_input(hass, {KEY_HOST: "pi", "websock_token": ""})
+        info = await validate_input(hass, {CONF_HOST: "pi"})
 
     assert info == {"title": MOCK_NAME}
 
@@ -663,7 +661,7 @@ async def test_validate_input_host_not_found_for_dns_failure(
     ):
         await validate_input(
             hass,
-            {KEY_HOST: MOCK_HOST, "websock_token": ""},
+            {CONF_HOST: MOCK_HOST},
         )
 
 
@@ -693,7 +691,7 @@ async def test_validate_input_connection_failure_is_cannot_connect(
     ):
         await validate_input(
             hass,
-            {KEY_HOST: MOCK_HOST, "websock_token": ""},
+            {CONF_HOST: MOCK_HOST},
         )
 
 
@@ -711,7 +709,7 @@ async def test_is_device_already_configured_host_match(hass: HomeAssistant) -> N
         domain=DOMAIN,
         title=MOCK_NAME,
         unique_id="existing-id",
-        data={"habitron_host": MOCK_HOST},
+        data={CONF_HOST: MOCK_HOST},
     ).add_to_hass(hass)
 
     flow = ConfigFlow()
@@ -737,7 +735,7 @@ async def test_is_device_already_configured_resolves_hostname(
         domain=DOMAIN,
         title=MOCK_NAME,
         unique_id="existing-id",
-        data={"habitron_host": MOCK_HOST},
+        data={CONF_HOST: MOCK_HOST},
     ).add_to_hass(hass)
 
     flow = ConfigFlow()
@@ -779,7 +777,7 @@ async def test_is_device_already_configured_matches_local_sentinel(
         domain=DOMAIN,
         title=MOCK_NAME,
         unique_id="existing-id",
-        data={"habitron_host": "local"},
+        data={CONF_HOST: "local"},
     ).add_to_hass(hass)
 
     flow = ConfigFlow()
@@ -805,7 +803,7 @@ async def test_local_sentinel_matches_any_local_ip_multi_homed(
         domain=DOMAIN,
         title=MOCK_NAME,
         unique_id="existing-id",
-        data={"habitron_host": "local"},
+        data={CONF_HOST: "local"},
     ).add_to_hass(hass)
 
     flow = ConfigFlow()
@@ -835,7 +833,7 @@ async def test_is_device_already_configured_resolves_hostname_to_local(
         domain=DOMAIN,
         title=MOCK_NAME,
         unique_id="existing-id",
-        data={"habitron_host": "local"},
+        data={CONF_HOST: "local"},
     ).add_to_hass(hass)
 
     flow = ConfigFlow()
@@ -862,7 +860,7 @@ async def test_is_device_already_configured_ip_match(hass: HomeAssistant) -> Non
         domain=DOMAIN,
         title=MOCK_NAME,
         unique_id="existing-id",
-        data={"habitron_host": "10.0.0.1"},
+        data={CONF_HOST: "10.0.0.1"},
     ).add_to_hass(hass)
 
     flow = ConfigFlow()
@@ -1110,10 +1108,10 @@ async def test_user_step_prefills_host_from_discovery(
     assert result["step_id"] == "user"
     # The form's data-schema default should now reflect the discovered ip.
     schema = result["data_schema"].schema
-    # Find the KEY_HOST default by walking the schema vol.Required keys.
+    # Find the CONF_HOST default by walking the schema vol.Required keys.
     default = None
     for key in schema:
-        if getattr(key, "schema", None) == "habitron_host":
+        if getattr(key, "schema", None) == CONF_HOST:
             default = key.default()
             break
     assert default == "10.0.0.99"
@@ -1163,11 +1161,11 @@ async def test_user_flow_own_ip_canonicalizes_unique_id(
     # 192.168.1.10 is the (mocked) own source IP.
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"habitron_host": "192.168.1.10", "websock_token": ""},
+        user_input={CONF_HOST: "192.168.1.10"},
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"]["habitron_host"] == "local"
+    assert result["data"][CONF_HOST] == "local"
     assert result["result"].unique_id == "habitron_local"
 
 

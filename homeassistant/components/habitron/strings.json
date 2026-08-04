@@ -17,12 +17,10 @@
       },
       "user": {
         "data": {
-          "habitron_host": "Host name or IP of SmartHub",
-          "websock_token": "Token for websocket authentication"
+          "host": "Host name or IP of SmartHub"
         },
         "data_description": {
-          "habitron_host": "DNS name or IPv4 address of the SmartHub. Use \"local\" if Home Assistant runs on the SmartCenter itself.",
-          "websock_token": "Optional long-lived access token, only required when SC Touch and Assist run on a remote Home Assistant instance."
+          "host": "DNS name or IPv4 address of the SmartHub. Use \"local\" if Home Assistant runs on the SmartCenter itself."
         },
         "title": "Setup communication"
       }
