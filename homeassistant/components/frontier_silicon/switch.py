@@ -9,6 +9,7 @@ from typing import Any, override
 from afsapi import AFSAPI, FSConnectionError, FSNotImplementedError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -31,6 +32,7 @@ class AFSAPISwitchEntityDescription(SwitchEntityDescription):
 SWITCHES: tuple[AFSAPISwitchEntityDescription, ...] = (
     AFSAPISwitchEntityDescription(
         key="dst",
+        entity_category=EntityCategory.CONFIG,
         translation_key="dst",
         is_on_fn=lambda afsapi: afsapi.get_dst,
         turn_on_fn=lambda afsapi: partial(afsapi.set_dst, True),
