@@ -1,0 +1,89 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This NexBlue account is already configured."
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to NexBlue.",
+      "invalid_auth": "NexBlue authentication failed.",
+      "unknown": "NexBlue could not complete sign-in. Please try again later."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Username"
+        },
+        "data_description": {
+          "password": "The password for your NexBlue account.",
+          "username": "The email address or username used to sign in to NexBlue."
+        },
+        "description": "Sign in with your NexBlue end-user account."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "access_level": {
+        "name": "Access level"
+      },
+      "brightness": {
+        "name": "LED brightness"
+      },
+      "cable_current_limit": {
+        "name": "Cable rating"
+      },
+      "cable_lock_mode": {
+        "name": "Cable lock mode"
+      },
+      "charging_state": {
+        "name": "Charging state"
+      },
+      "circuit_fuse": {
+        "name": "Circuit fuse"
+      },
+      "current_1": {
+        "name": "Current L1"
+      },
+      "current_2": {
+        "name": "Current L2"
+      },
+      "current_3": {
+        "name": "Current L3"
+      },
+      "current_limit": {
+        "name": "Current limit"
+      },
+      "energy": {
+        "name": "Session energy"
+      },
+      "is_disable": {
+        "name": "Availability"
+      },
+      "is_lock": {
+        "name": "Cable lock state"
+      },
+      "lifetime_energy": {
+        "name": "Lifetime energy"
+      },
+      "network_status": {
+        "name": "Network status"
+      },
+      "phase_charging": {
+        "name": "Phase charging"
+      },
+      "power": {
+        "name": "Charging power"
+      },
+      "voltage_1": {
+        "name": "Voltage L1"
+      },
+      "voltage_2": {
+        "name": "Voltage L2"
+      },
+      "voltage_3": {
+        "name": "Voltage L3"
+      }
+    }
+  }
+}

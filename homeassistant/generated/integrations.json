@@ -4847,6 +4847,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "nexblue": {
+      "name": "NexBlue",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "nexen": {
       "name": "Nexen",
       "integration_type": "virtual",
