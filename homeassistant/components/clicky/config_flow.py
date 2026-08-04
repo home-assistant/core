@@ -3,12 +3,11 @@
 import logging
 from typing import Any, override
 
-from pyclicky import AuthenticationError, ClickyAPIError, ClickyClient, ConnectionError
+from pyclicky import AuthenticationError, ClickyClient, ConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -49,8 +48,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise InvalidAuth from error
     except ConnectionError as error:
         raise CannotConnect from error
-    except ClickyAPIError as error:
-        raise ConfigEntryAuthFailed(f"API failed for {data[CONF_SITE_ID]}") from error
 
     return {"title": data[CONF_SITE_ID]}
 
