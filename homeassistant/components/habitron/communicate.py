@@ -57,7 +57,6 @@ class HbtnComm:
         self._hass: HomeAssistant = hass
         self._config: ConfigEntry = config
         self._hostname: str = ""
-        self._hostip: str = self._host
         self._mac: str = ""
         self._hwtype: str = ""
         self._version: str = ""
@@ -103,8 +102,17 @@ class HbtnComm:
 
     @property
     def com_ip(self) -> str:
-        """IP of SmartHub."""
-        return self._hostip
+        """Address the hub was reached at.
+
+        Deliberately not the address the hub reports for itself: hubs answer
+        with ``0.0.0.0`` when their interface is unnumbered from their own point
+        of view, and even a valid answer describes the hub's network, not the
+        one Home Assistant reached it from. This value ends up in every device's
+        ``configuration_url``, so it has to be the address that actually works
+        here -- resolved from the host name or the ``local`` sentinel in
+        ``async_setup``.
+        """
+        return self._host
 
     @property
     def com_port(self) -> int:
@@ -200,7 +208,6 @@ class HbtnComm:
             self.info = cast("dict[str, Any]", info)
             self._version = info["software"]["version"]
             self._hwtype = info["hardware"]["platform"]["type"]
-            self._hostip = info["hardware"]["network"]["ip"]
             self._hostname = info["hardware"]["network"]["host"]
             self._mac = info["hardware"]["network"]["lan mac"]
             software = cast("dict[str, Any]", info["software"])
