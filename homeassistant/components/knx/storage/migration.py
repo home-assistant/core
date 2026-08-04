@@ -60,3 +60,8 @@ def migrate_2_2_to_2_3(data: dict[str, Any]) -> None:
 def migrate_2_3_to_2_4(data: dict[str, Any]) -> None:
     """Migrate from schema 2.3 to schema 2.4."""
     data.setdefault("expose", {})
+
+
+def migrate_2_4_to_2_5(data: dict[str, Any]) -> None:
+    """Migrate from schema 2.4 to schema 2.5."""
+    data.setdefault("entity_links", {})
