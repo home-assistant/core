@@ -159,16 +159,12 @@ async def test_device_via_device_links(
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test a child device links to its registered parent via via_device_id."""
+    """Test a child device links to its missing parent via via_device_id."""
     victron_hub, mock_config_entry = init_integration
 
-    # Inject a system metric first so system_0 is registered as the gateway device.
-    await inject_message(
-        victron_hub,
-        f"N/{MOCK_INSTALLATION_ID}/system/0/SystemState/State",
-        '{"value": 9}',
-    )
-    # Inject a battery metric; its parent_device resolves to system_0.
+    # Inject only a battery metric. Its parent (system_0) has no metric of its
+    # own here, so it is not registered on its own; the child must trigger
+    # registration of the missing parent to be able to link to it.
     await inject_message(
         victron_hub,
         f"N/{MOCK_INSTALLATION_ID}/battery/0/Dc/0/Current",
