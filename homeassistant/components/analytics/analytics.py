@@ -746,9 +746,7 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:
 
     # Get device list
     for device_entry in dev_reg.devices.values():
-        config_entry = hass.config_entries.async_get_entry(
-            device_entry.config_entry_id
-        )
+        config_entry = hass.config_entries.async_get_entry(device_entry.config_entry_id)
 
         if config_entry is None:
             continue
