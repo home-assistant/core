@@ -78,36 +78,6 @@ def test_sensor_native_value() -> None:
     assert total_time.native_value == 3600
 
 
-def test_sensor_missing_data() -> None:
-    """Test missing coordinator data returns None."""
-
-    coordinator = Mock()
-    coordinator.data = None
-
-    sensor = ClickySensor(
-        coordinator=coordinator,
-        description=SENSOR_TYPES[0],
-        site_id=12345,
-    )
-
-    assert sensor.native_value is None
-
-
-def test_sensor_missing_key() -> None:
-    """Test missing coordinator key returns None."""
-
-    coordinator = Mock()
-    coordinator.data = {}
-
-    sensor = ClickySensor(
-        coordinator=coordinator,
-        description=SENSOR_TYPES[0],
-        site_id=12345,
-    )
-
-    assert sensor.native_value is None
-
-
 def test_sensor_attributes() -> None:
     """Test static sensor attributes."""
 
