@@ -44,6 +44,7 @@ CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 FAKE_ACCESS_TOKEN = "some-access-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
+HEALTH_USER_ID = "mock-health-user-id"
 
 
 def _rollup_fixture(
@@ -101,7 +102,7 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Google Health",
-        unique_id="mock-health-user-id",
+        unique_id=HEALTH_USER_ID,
         entry_id="01J0BC4QM2YBRP6H5G933CETT7",
         data={
             "auth_implementation": DOMAIN,
