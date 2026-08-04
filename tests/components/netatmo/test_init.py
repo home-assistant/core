@@ -1,28 +1,26 @@
 """The tests for Netatmo component."""
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Iterator
 from datetime import timedelta
 from functools import partial
+from itertools import pairwise
 from time import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
+import pyatmo
 from pyatmo.const import ALL_SCOPES
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cloud, webhook
-from homeassistant.components.netatmo import DOMAIN
-from homeassistant.components.netatmo.coordinator import (
-    MAX_ERROR_BACKOFF,
-    UNAVAILABLE_AFTER_ERRORS,
-    NetatmoDataHandler,
-)
+from homeassistant.components.netatmo import DOMAIN, coordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
+    EVENT_STATE_CHANGED,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -46,12 +44,13 @@ from homeassistant.util import dt as dt_util
 
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
+    HOME_ID,
     fake_post_request,
     selected_platforms,
     simulate_webhook,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 from tests.components.cloud import mock_cloud
 from tests.typing import WebSocketGenerator
 
@@ -59,7 +58,7 @@ from tests.typing import WebSocketGenerator
 FAKE_WEBHOOK = {
     "room_id": "2746182631",
     "home": {
-        "id": "91763b24c43d3e344f424e8b",
+        "id": HOME_ID,
         "name": "MYHOME",
         "country": "DE",
         "rooms": [
@@ -81,7 +80,12 @@ FAKE_WEBHOOK = {
 }
 
 SWITCH_ENTITY_ID = "switch.prise"
-SIGNAL_HOME = "home-91763b24c43d3e344f424e8b"
+# The switch's home is polled every 150s with the cloud credentials the test
+# config entry uses
+HOME_POLL_INTERVAL = 150
+# Scheduled updates to drive, enough for the longest failure script to run
+# through the escalating retry backoff
+SCHEDULED_UPDATES = 80
 
 
 async def test_setup_component(
@@ -765,7 +769,7 @@ async def _setup_switch_platform(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     fake_post: Callable[..., Coroutine[Any, Any, Any]],
-) -> NetatmoDataHandler:
+) -> None:
     """Set up the switch platform with a custom API request side effect."""
     with (
         patch(
@@ -786,95 +790,131 @@ async def _setup_switch_platform(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    return config_entry.runtime_data
-
 
 @pytest.mark.parametrize(
-    ("fetch_errors", "expected_state"),
+    "failure_script",
     [
-        pytest.param((TimeoutError,), STATE_ON, id="single_error"),
+        pytest.param((True,), id="single_error"),
+        pytest.param((True, True), id="errors_within_tolerance"),
         pytest.param(
-            (TimeoutError,) * (UNAVAILABLE_AFTER_ERRORS - 1),
-            STATE_ON,
-            id="errors_within_tolerance",
-        ),
-        pytest.param(
-            (TimeoutError,) * UNAVAILABLE_AFTER_ERRORS,
-            STATE_UNAVAILABLE,
-            id="errors_exceeding_tolerance",
-        ),
-        pytest.param(
-            (TimeoutError, TimeoutError, None, TimeoutError, TimeoutError),
-            STATE_ON,
-            id="error_count_reset_by_success",
+            (True, True, False, True, True), id="error_count_reset_by_success"
         ),
     ],
 )
-async def test_entity_available_until_error_tolerance_exceeded(
+async def test_entity_stays_available_through_tolerated_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    fetch_errors: tuple[type[Exception] | None, ...],
-    expected_state: str,
+    freezer: FrozenDateTimeFactory,
+    failure_script: tuple[bool, ...],
 ) -> None:
-    """Test that entities stay available while transient fetch errors are tolerated."""
-    fetch_error: type[Exception] | None = None
+    """Test that entities do not flicker when up to two updates in a row fail."""
+    # Scripted per home status request of the switch's home, so that the number
+    # of consecutive errors does not depend on when the updates happen to run
+    script: Iterator[bool] = iter(())
+    failures = 0
 
     async def fake_post(*args: Any, **kwargs: Any):
-        if fetch_error:
-            raise fetch_error
+        nonlocal failures
+        if (
+            kwargs.get("endpoint", "").endswith("homestatus")
+            and kwargs.get("params", {}).get("home_id") == HOME_ID
+            and next(script, False)
+        ):
+            failures += 1
+            raise TimeoutError
         return await fake_post_request(hass, *args, **kwargs)
 
-    data_handler = await _setup_switch_platform(hass, config_entry, fake_post)
+    await _setup_switch_platform(hass, config_entry, fake_post)
 
     assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON
 
-    for error in fetch_errors:
-        fetch_error = error
-        await data_handler.async_fetch_data(SIGNAL_HOME)
+    # Collect every state the entity takes on from here, so that a tolerated
+    # error cannot go unnoticed by recovering before the final assertion
+    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
 
-    assert hass.states.get(SWITCH_ENTITY_ID).state == expected_state
+    script = iter(failure_script)
+    for _ in range(SCHEDULED_UPDATES):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-
-@pytest.mark.usefixtures("freezer")
-async def test_fetch_error_backoff_escalates_and_is_capped(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test that the retry delay grows with consecutive errors up to the cap."""
-    fetch_error: type[Exception] | None = None
-
-    async def fake_post(*args: Any, **kwargs: Any):
-        if fetch_error:
-            raise fetch_error
-        return await fake_post_request(hass, *args, **kwargs)
-
-    data_handler = await _setup_switch_platform(hass, config_entry, fake_post)
-    publisher = data_handler.publisher[SIGNAL_HOME]
-    interval = publisher.interval
-    # Pretend the polls so far are spread over an hour, so that the rate limit
-    # guard does not add its own delay on top of the error backoff
-    data_handler.poll_start = time() - 3600
-
-    fetch_error = TimeoutError
-    backoffs: list[float] = []
-    for _ in range(7):
-        data_handler.async_force_update(SIGNAL_HOME)
-        await data_handler.async_update(dt_util.utcnow())
-        backoffs.append(publisher.next_scan - time())
-
-    assert backoffs == [
-        interval,
-        interval * 2,
-        interval * 4,
-        interval * 8,
-        interval * 16,
-        MAX_ERROR_BACKOFF,
-        MAX_ERROR_BACKOFF,
+    assert failures == sum(failure_script)
+    assert not [
+        event for event in state_changes if event.data["entity_id"] == SWITCH_ENTITY_ID
     ]
 
-    fetch_error = None
-    data_handler.async_force_update(SIGNAL_HOME)
-    await data_handler.async_update(dt_util.utcnow())
 
-    assert publisher.error_count == 0
-    assert publisher.next_scan - time() == interval
+@pytest.mark.parametrize(
+    "error",
+    [TimeoutError, pyatmo.ApiError],
+    ids=["timeout", "api_error"],
+)
+async def test_entity_unavailable_after_three_failed_updates(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    error: type[Exception],
+) -> None:
+    """Test that entities go unavailable once three updates in a row fail."""
+    failing = False
+    failures = 0
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        nonlocal failures
+        if (
+            failing
+            and kwargs.get("endpoint", "").endswith("homestatus")
+            and kwargs.get("params", {}).get("home_id") == HOME_ID
+        ):
+            failures += 1
+            raise error
+        return await fake_post_request(hass, *args, **kwargs)
+
+    await _setup_switch_platform(hass, config_entry, fake_post)
+
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON
+
+    failing = True
+    for _ in range(SCHEDULED_UPDATES):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert failures >= 3
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_failed_updates_are_retried_with_escalating_backoff(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a failing home is retried promptly at first, then less often."""
+    failing = False
+    request_times: list[float] = []
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        if (
+            failing
+            and kwargs.get("endpoint", "").endswith("homestatus")
+            and kwargs.get("params", {}).get("home_id") == HOME_ID
+        ):
+            request_times.append(time())
+            raise TimeoutError
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with patch.object(coordinator, "MAX_ERROR_BACKOFF", 4 * HOME_POLL_INTERVAL):
+        await _setup_switch_platform(hass, config_entry, fake_post)
+
+        failing = True
+        for _ in range(SCHEDULED_UPDATES):
+            freezer.tick(timedelta(seconds=30))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+    gaps = [round(later - earlier) for earlier, later in pairwise(request_times)]
+
+    # The first retry comes at the regular poll interval (rounded up to the next
+    # scheduled update), the delay then doubles per consecutive error until the
+    # patched cap of 600s is reached
+    assert gaps == [180, 300, 600, 600]
