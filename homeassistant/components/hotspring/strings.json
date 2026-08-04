@@ -21,10 +21,10 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "Error communicating with Hot Spring API: {error}"
+      "message": "An error occurred while communicating with the Hot Spring API."
     },
     "invalid_response": {
-      "message": "Invalid response from Hot Spring API: {error}"
+      "message": "Invalid response received from the Hot Spring API."
     }
   }
 }

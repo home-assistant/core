@@ -64,8 +64,11 @@ async def test_set_temperature(
 @pytest.mark.parametrize(
     ("exception", "match"),
     [
-        (HotSpringConnectionError, "Error communicating with Hot Spring API"),
-        (HotSpringError, "Invalid response from Hot Spring API"),
+        (
+            HotSpringConnectionError,
+            "An error occurred while communicating with the Hot Spring API",
+        ),
+        (HotSpringError, "Invalid response received from the Hot Spring API"),
     ],
 )
 async def test_set_temperature_error(

@@ -43,11 +43,9 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[Spa]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": str(error)},
             ) from error
         except HotSpringError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_response",
-                translation_placeholders={"error": str(error)},
             ) from error
