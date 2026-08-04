@@ -121,6 +121,7 @@ class AFSAPIDevice(FrontierSiliconEntity, MediaPlayerEntity):
 
         return features
 
+    @override
     async def async_update(self) -> None:
         """Get the latest date and update device state."""
         afsapi = self.fs_device
