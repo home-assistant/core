@@ -79,9 +79,13 @@ def setup_bans(
 
     if is_ban_enabled:
         app.middlewares.append(ban_middleware)
+        app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict[IPv4Address | IPv6Address, int](
+            int
+        )
+        app[KEY_LOGIN_THRESHOLD] = login_threshold
+    else:
+        app[KEY_LOGIN_THRESHOLD] = 0
 
-    app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict[IPv4Address | IPv6Address, int](int)
-    app[KEY_LOGIN_THRESHOLD] = login_threshold
     app[KEY_BAN_MANAGER] = IpBanManager(hass)
 
     async def ban_startup(app: Application) -> None:
