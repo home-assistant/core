@@ -319,6 +319,8 @@ BEHAVIOR_FIRST: Final = "first"
 BEHAVIOR_ALL: Final = "all"
 BEHAVIOR_EACH: Final = "each"
 
+CONF_REPEAT_INTERVAL: Final = "repeat_interval"
+
 
 def _create_deprecated_behavior_issue(deprecated: str, replacement: str) -> None:
     """Inform the user a renamed trigger behavior value is still in use."""
@@ -411,6 +413,9 @@ class EntityTriggerBase(Trigger):
             assert config.target is not None
         self._options = config.options or {}
         self._duration: timedelta | None = self._options.get(CONF_FOR)
+        self._repeat_interval: timedelta | None = self._options.get(
+            CONF_REPEAT_INTERVAL
+        )
         self._target = config.target
 
     def entity_filter(self, entities: set[str]) -> set[str]:
@@ -507,7 +512,7 @@ class EntityTriggerBase(Trigger):
         pending_timers: dict[str, CALLBACK_TYPE],
         target_state_change_data: TargetStateChangedData,
     ) -> None:
-        """Cancel pending duration timers invalidated by a state change.
+        """Cancel pending timers invalidated by a state change.
 
         Runs on every delivered state change, before the trigger's own
         validity checks: an event which cannot fire the trigger, e.g. an
@@ -543,7 +548,7 @@ class EntityTriggerBase(Trigger):
         entity_ids: Iterable[str],
         states: Mapping[str, State | None],
     ) -> bool:
-        """Check the combined first/all state for a pending duration timer."""
+        """Check the combined first/all state for a pending timer."""
         matches, included = self.count_matches(entity_ids, states)
         if behavior == BEHAVIOR_FIRST:
             return matches >= 1
@@ -555,7 +560,7 @@ class EntityTriggerBase(Trigger):
         return included > 0 and matches == included
 
     @override
-    async def async_attach_runner(
+    async def async_attach_runner(  # noqa: C901
         self,
         run_action: TriggerActionRunner,
         did_not_trigger: TriggerNotTriggeredReporter | None = None,
@@ -563,8 +568,8 @@ class EntityTriggerBase(Trigger):
         """Attach the trigger to an action runner."""
 
         behavior: str = self._options.get(ATTR_BEHAVIOR, BEHAVIOR_EACH)
-        # Pending `for:` duration timers, keyed by entity_id for behavior
-        # each and by the behavior for first/all.
+        # Pending `for:` duration and repeat interval timers, keyed by
+        # entity_id for behavior each and by the behavior for first/all.
         pending_timers: dict[str, CALLBACK_TYPE] = {}
 
         @callback
@@ -573,7 +578,7 @@ class EntityTriggerBase(Trigger):
             removed: set[str],
             entity_states: Mapping[str, State | None],
         ) -> None:
-            """Re-validate pending duration timers on target changes.
+            """Re-validate pending timers on target changes.
 
             Timers of entities no longer targeted are cancelled, and the
             combined first/all condition is recounted over the updated
@@ -653,6 +658,24 @@ class EntityTriggerBase(Trigger):
                     return
 
             @callback
+            def start_timer(delay: timedelta) -> None:
+                subscription_key = entity_id if behavior == BEHAVIOR_EACH else behavior
+                if (
+                    previous_timer := pending_timers.pop(subscription_key, None)
+                ) is not None:
+                    previous_timer()
+
+                @callback
+                def fire_after_duration(_now: datetime) -> None:
+                    """Fire the action when the timer expires."""
+                    del pending_timers[subscription_key]
+                    call_action()
+
+                pending_timers[subscription_key] = async_call_later(
+                    self._hass, delay, fire_after_duration
+                )
+
+            @callback
             def call_action() -> None:
                 """Call action with right context."""
                 run_action(
@@ -665,33 +688,21 @@ class EntityTriggerBase(Trigger):
                     f"state of {entity_id}",
                     event.context,
                 )
+                if self._repeat_interval:
+                    start_timer(self._repeat_interval)
 
             if not self._duration:
                 call_action()
                 return
 
-            subscription_key = entity_id if behavior == BEHAVIOR_EACH else behavior
-            if (
-                previous_timer := pending_timers.pop(subscription_key, None)
-            ) is not None:
-                previous_timer()
-
-            @callback
-            def fire_after_duration(_now: datetime) -> None:
-                """Fire the action once the state has held for the duration."""
-                del pending_timers[subscription_key]
-                call_action()
-
-            pending_timers[subscription_key] = async_call_later(
-                self._hass, self._duration, fire_after_duration
-            )
+            start_timer(self._duration)
 
         unsub = await async_track_target_selector_state_change_event(
             self._hass,
             self._target,
             state_change_listener,
             self.entity_filter,
-            handle_entities_update if self._duration else None,
+            handle_entities_update if self._duration or self._repeat_interval else None,
             primary_entities_only=self._primary_entities_only,
         )
 

@@ -29,6 +29,16 @@
   },
   "title": "Button",
   "triggers": {
+    "being_held": {
+      "description": "Triggers repeatedly, at a set interval, while one or more buttons are being held.",
+      "fields": {
+        "repeat_interval": {
+          "description": "How often the trigger repeats while the button is held down.",
+          "name": "Repeat interval"
+        }
+      },
+      "name": "Button being held"
+    },
     "double_pressed": {
       "description": "Triggers when one or more buttons are pressed twice in quick succession.",
       "name": "Button double pressed"

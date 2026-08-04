@@ -1,6 +1,9 @@
 """Provides triggers for buttons."""
 
+import datetime
 from typing import override
+
+import voluptuous as vol
 
 from homeassistant.components.event import (
     ATTR_MULTI_PRESS_COUNT,
@@ -10,9 +13,13 @@ from homeassistant.components.event import (
     EventEntityStateAttribute,
 )
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
+from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
+    CONF_REPEAT_INTERVAL,
+    ENTITY_STATE_TRIGGER_SCHEMA,
     NotTriggeredReasonReporter,
     StatelessEntityTriggerBase,
     Trigger,
@@ -23,6 +30,15 @@ from . import DOMAIN
 _EVENT_BUTTON_DOMAIN_SPECS = {
     EVENT_DOMAIN: DomainSpec(device_class=EventDeviceClass.BUTTON)
 }
+_BUTTON_BEING_HELD_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
+    {
+        vol.Required(CONF_OPTIONS, default={}): {
+            vol.Required(
+                CONF_REPEAT_INTERVAL, default=datetime.timedelta(seconds=1)
+            ): cv.positive_time_period
+        }
+    }
+)
 
 
 class ButtonPressedTrigger(StatelessEntityTriggerBase):
@@ -104,11 +120,31 @@ class ButtonHoldEndedTrigger(StatelessEntityTriggerBase):
         )
 
 
+class ButtonBeingHeldTrigger(StatelessEntityTriggerBase):
+    """Trigger for button event entity being held."""
+
+    _domain_specs = _EVENT_BUTTON_DOMAIN_SPECS
+    _schema = _BUTTON_BEING_HELD_TRIGGER_SCHEMA
+
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
+        """Check if the event is a hold start."""
+        return (
+            state.attributes.get(EventEntityStateAttribute.EVENT_TYPE)
+            == ButtonEventType.LONG_PRESS_START
+        )
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
     "pressed": ButtonPressedTrigger,
     "double_pressed": ButtonDoublePressedTrigger,
     "hold_started": ButtonHoldStartedTrigger,
     "hold_ended": ButtonHoldEndedTrigger,
+    "being_held": ButtonBeingHeldTrigger,
 }
 
 
