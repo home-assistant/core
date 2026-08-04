@@ -51,6 +51,12 @@ IMAGE_REFRESH_INTERVAL = (
     1800  # fallback: seconds between background proactive refreshes
 )
 CLOUD_SNAP_CACHE_TTL = 30  # minimum seconds between cloud fetches (de-bounce)
+# Retry interval for re-verifying an unknown privacy state (e.g. a
+# cloud-degraded restart with an empty shc_state_cache) — deliberately
+# shorter than CLOUD_SNAP_CACHE_TTL so a stale-but-unverified frame isn't
+# served indefinitely, but still throttled so an outage doesn't re-run the
+# full REMOTE+LOCAL fetch chain on every single camera-proxy request.
+PRIVACY_UNKNOWN_RETRY_SEC = 5
 DEFAULT_SNAPSHOT_INTERVAL = (
     1800  # default proactive background refresh interval (30 min)
 )
@@ -699,7 +705,25 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         #    this via trigger_snapshot service which sets _force_image_refresh, so
         #    HA's frame_interval cache is bypassed and the fresh image is served.
         now = time.monotonic()
-        cache_stale = (now - self.last_image_fetch) >= CLOUD_SNAP_CACHE_TTL
+        cache_age = now - self.last_image_fetch
+        # An unknown privacy state (e.g. a cloud-degraded restart, where
+        # shc_state_cache starts empty) must force a live-fetch attempt even
+        # when the cache timestamp looks fresh — otherwise the `else: return
+        # self.cached_image` fast path below could serve a pre-privacy frame
+        # with zero verification (Copilot review, PR #176545, 2026-07-31).
+        # Throttled to PRIVACY_UNKNOWN_RETRY_SEC (not forced on every call):
+        # every fetch attempt below re-stamps last_image_fetch regardless of
+        # outcome, so an unresolved-unknown state (e.g. a camera whose cloud
+        # payload never carries privacyMode, or a sustained cloud outage)
+        # would otherwise defeat CLOUD_SNAP_CACHE_TTL's backoff entirely and
+        # re-run the full REMOTE+LOCAL chain on every camera-proxy request.
+        privacy_unknown = (
+            self.coordinator.shc_state_cache.get(self._cam_id, {}).get("privacy_mode")
+            is None
+        )
+        cache_stale = cache_age >= CLOUD_SNAP_CACHE_TTL or (
+            privacy_unknown and cache_age >= PRIVACY_UNKNOWN_RETRY_SEC
+        )
         if (
             not self.cached_image or self.cached_image is self._PLACEHOLDER_JPEG
         ) and cache_stale:

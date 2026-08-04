@@ -502,11 +502,18 @@ async def test_camera_image_stale_cache_fresh_fetch_updates_shared_cache(
 async def test_camera_image_fresh_cache_returns_immediately_without_fetching(
     hass: HomeAssistant,
 ) -> None:
-    """A recently-fetched cache is served directly — no fetch calls are made at all."""
+    """A recently-fetched cache with a KNOWN-safe privacy state is served directly.
+
+    Privacy state must be explicitly False here — an unknown privacy state
+    forces a verification fetch regardless of cache freshness (see
+    test_unknown_privacy_state_forces_live_verification_fetch in
+    test_camera.py, Copilot review finding on PR #176545).
+    """
     entity = await _setup_camera_entity(hass)
     fresh_frame = b"recently-fetched-frame"
     entity.cached_image = fresh_frame
     entity.last_image_fetch = time.monotonic()  # fresh — not stale
+    entity.coordinator.shc_state_cache[CAM_ID] = {"privacy_mode": False}
 
     with patch.object(
         entity.coordinator, "async_fetch_live_snapshot", AsyncMock()

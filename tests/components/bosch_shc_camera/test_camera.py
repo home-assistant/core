@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.bosch_shc_camera.camera import (
+    PRIVACY_UNKNOWN_RETRY_SEC,
     BoschCamera,
     _rotate_jpeg_180,
 )
@@ -147,6 +148,85 @@ async def test_privacy_mode_returns_placeholder_instead_of_stale_cached_frame(
 
     image = await entity.async_camera_image()
 
+    assert image == entity._PLACEHOLDER_JPEG
+
+
+async def test_unknown_privacy_state_forces_live_verification_fetch(
+    hass: HomeAssistant,
+) -> None:
+    """Once the throttle window has elapsed, an unknown privacy state must not shortcut to a stale cached frame.
+
+    On a cloud-degraded restart, shc_state_cache starts empty (privacy state
+    unknown) while a cached real JPEG exists. Regression test for a Copilot
+    review finding on PR #176545 (2026-07-31): the old code's `else: return
+    self.cached_image` fast path served that pre-privacy frame with zero
+    verification whenever the cache looked fresh. The fix forces a live-fetch
+    attempt (proven here by asserting the fresh bytes it returns are served)
+    once PRIVACY_UNKNOWN_RETRY_SEC has elapsed since the last attempt —
+    throttled rather than on every single request (see the throttle-window
+    test below), so an ongoing outage can't defeat CLOUD_SNAP_CACHE_TTL's
+    backoff entirely.
+    """
+    entity = await _setup_camera_entity(hass)
+    entity.cached_image = b"a-real-cached-frame-from-before-privacy-was-enabled"
+    entity.last_image_fetch = time.monotonic() - PRIVACY_UNKNOWN_RETRY_SEC
+    assert CAM_ID not in entity.coordinator.shc_state_cache
+
+    with patch.object(
+        entity.coordinator,
+        "async_fetch_live_snapshot",
+        return_value=b"freshly-verified-frame",
+    ) as mock_fetch:
+        image = await entity.async_camera_image()
+
+    mock_fetch.assert_awaited_once()
+    assert image == b"freshly-verified-frame"
+
+
+async def test_unknown_privacy_state_throttled_within_retry_window(
+    hass: HomeAssistant,
+) -> None:
+    """Within the retry window, an unknown privacy state must not force a re-fetch.
+
+    Otherwise a sustained outage (or a camera whose cloud payload never
+    carries privacyMode) would re-run the full REMOTE+LOCAL fetch chain on
+    every single camera-proxy request, defeating CLOUD_SNAP_CACHE_TTL's
+    backoff entirely.
+    """
+    entity = await _setup_camera_entity(hass)
+    entity.cached_image = b"a-real-cached-frame-from-before-privacy-was-enabled"
+    entity.last_image_fetch = time.monotonic()
+    assert CAM_ID not in entity.coordinator.shc_state_cache
+
+    with patch.object(
+        entity.coordinator, "async_fetch_live_snapshot", AsyncMock()
+    ) as mock_fetch:
+        image = await entity.async_camera_image()
+
+    mock_fetch.assert_not_called()
+    assert image == b"a-real-cached-frame-from-before-privacy-was-enabled"
+
+
+async def test_unknown_privacy_state_falls_back_to_placeholder_when_no_cache(
+    hass: HomeAssistant,
+) -> None:
+    """Unknown privacy state + no real cached frame + failed fetch → placeholder, not None."""
+    entity = await _setup_camera_entity(hass)
+    entity.cached_image = entity._PLACEHOLDER_JPEG
+    entity.last_image_fetch = time.monotonic() - PRIVACY_UNKNOWN_RETRY_SEC
+    assert CAM_ID not in entity.coordinator.shc_state_cache
+
+    with (
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot", return_value=None
+        ) as mock_fetch,
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot_local", return_value=None
+        ),
+    ):
+        image = await entity.async_camera_image()
+
+    mock_fetch.assert_awaited_once()
     assert image == entity._PLACEHOLDER_JPEG
 
 
