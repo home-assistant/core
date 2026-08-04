@@ -6,8 +6,11 @@ from typing import Any
 from homeassistant.const import CONF_URL
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
     EventDeviceRegistryUpdatedData,
@@ -113,9 +116,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) ->
 
 async def async_remove_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> None:
     """Remove a config entry and clean up stored data."""
-    store: Store[dict[str, Any]] = Store(
-        hass, 1, f"jellyfin_{entry.entry_id}_devices"
-    )
+    store: Store[dict[str, Any]] = Store(hass, 1, f"jellyfin_{entry.entry_id}_devices")
     await store.async_remove()
 
 
