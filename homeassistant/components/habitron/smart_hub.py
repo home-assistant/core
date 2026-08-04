@@ -216,7 +216,10 @@ class SmartHub:
             return
         try:
             info = await self.comm.get_smhub_update()
-        except HabitronError as err:
+        except (HabitronError, OSError, TimeoutError) as err:
+            # The coordinator calls this outside its guarded bus refresh, so a
+            # socket error or timeout on these non-essential readings would
+            # otherwise fail the whole tick and mark every entity unavailable.
             _LOGGER.debug("SmartHub diagnostics update skipped: %s", err)
             return
         if not info:

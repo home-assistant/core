@@ -32,6 +32,22 @@ def auto_enable_custom_integrations(
     return
 
 
+@pytest.fixture(autouse=True)
+def mock_hub_mac() -> Generator[AsyncMock]:
+    """Report no MAC unless a test says otherwise.
+
+    The config flow probes the hub for its MAC as the stable fallback id, so
+    without this every flow test would open a real socket. Returning ``None``
+    keeps the host-based fallback tests exercise by default; the tests that care
+    about the MAC patch this target themselves.
+    """
+    with patch(
+        "homeassistant.components.habitron.config_flow._async_hub_mac",
+        new=AsyncMock(return_value=None),
+    ) as mock:
+        yield mock
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Build a ready-to-add Habitron config entry."""
