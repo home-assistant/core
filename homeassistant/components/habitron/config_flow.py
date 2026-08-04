@@ -7,6 +7,7 @@ from typing import Any, override
 from urllib.parse import urlparse
 
 from habitron_client import (
+    HabitronClient,
     HabitronConnectionError,
     HabitronError,
     discover_smarthubs,
@@ -28,6 +29,28 @@ from homeassistant.helpers.service_info.ssdp import (
 from .const import CONF_DEFAULT_HOST, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _normalised_mac(value: str) -> str:
+    """Return a MAC comparable across separators and casing."""
+    return value.replace(":", "").replace("-", "").casefold()
+
+
+async def _async_hub_mac(host: str) -> str | None:
+    """Return the hub's MAC, or ``None`` when it cannot be read.
+
+    Only used to recognise an entry that was created by the custom (HACS)
+    integration, which keys its entries by the hub's colon-stripped MAC -- an
+    id this flow never produces itself.
+    """
+    try:
+        async with HabitronClient(host) as client:
+            info = await client.get_smhub_info()
+        mac = str(info["hardware"]["network"]["lan mac"])
+    except (HabitronError, OSError, KeyError, TypeError) as err:
+        _LOGGER.debug("Could not read the MAC from the hub at %s: %s", host, err)
+        return None
+    return _normalised_mac(mac) or None
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -166,6 +189,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.hass.async_add_executor_job(socket.gethostbyname, host)
         return host
 
+    async def _async_mac_matching_entry(
+        self, host: str
+    ) -> config_entries.ConfigEntry | None:
+        """Return an entry keyed by this hub's MAC, if there is one.
+
+        Entries created by the custom (HACS) integration use the hub's MAC as
+        their unique id, which this flow never derives -- it keys on the UPnP
+        serial, the UDN or the host. Without this the same hub is offered as a
+        new device once its address changes, because neither the unique id nor
+        the stored host matches any more. Probing costs one request, so it runs
+        only after the cheaper checks came up empty.
+        """
+        macs = {
+            _normalised_mac(entry.unique_id): entry
+            for entry in self._async_current_entries(include_ignore=True)
+            if entry.unique_id
+        }
+        if not macs:
+            return None
+        hub_mac = await _async_hub_mac(host)
+        return macs.get(hub_mac) if hub_mac else None
+
     async def _async_matching_entry(
         self,
         entries: list[config_entries.ConfigEntry],
@@ -287,6 +332,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(entry, unique_id=unique_id)
             return self.async_abort(reason="already_configured")
 
+        # Last resort: an entry the custom integration created keys on the hub's
+        # MAC, so neither the id nor -- after an address change -- the host
+        # matches. Adopt the discovered id, which this flow can derive again.
+        if entry := await self._async_mac_matching_entry(host_str):
+            self.hass.config_entries.async_update_entry(
+                entry,
+                unique_id=unique_id,
+                data={**entry.data, CONF_HOST: await self._async_stored_host(host_str)},
+            )
+            return self.async_abort(reason="already_configured")
+
         self.context["title_placeholders"] = {"name": host_str}
         return await self.async_step_discovery_confirm()
 
@@ -379,6 +435,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # so an SSDP entry that was likewise canonicalized is only matched
             # when we compare against ``host_input`` rather than the raw input.
             if await self._is_device_already_configured(host_input, probed_ip):
+                return self.async_abort(reason="already_configured")
+
+            # An entry from the custom integration is keyed by the hub's MAC;
+            # re-adding the same hub at a new address would otherwise duplicate
+            # it, since neither its id nor its stored host still matches.
+            if entry := await self._async_mac_matching_entry(host_input):
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    unique_id=unique_id,
+                    data={**entry.data, CONF_HOST: stored_host},
+                )
                 return self.async_abort(reason="already_configured")
 
             try:

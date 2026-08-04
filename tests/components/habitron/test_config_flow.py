@@ -9,13 +9,14 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.habitron.config_flow import (
-    CONF_HOST,
     CannotConnect,
     ConfigFlow,
     HostNotFound,
+    _async_hub_mac,
     validate_input,
 )
 from homeassistant.components.habitron.const import DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import (
@@ -533,6 +534,135 @@ async def test_user_step_updates_the_stored_host_of_a_known_hub(
 
     assert result["type"] is FlowResultType.ABORT
     assert entry.data[CONF_HOST] == MOCK_HOST
+
+
+async def test_ssdp_adopts_an_entry_keyed_by_the_hub_mac(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """A hub added by the custom integration is not offered a second time.
+
+    Those entries use the hub's colon-stripped MAC as their unique id, which
+    this flow never derives. Once the hub's address changes, neither the id nor
+    the stored host matches -- without the MAC probe the same hub would be
+    offered as a new device.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="d83addbae72e",
+        data={CONF_HOST: "192.168.1.99"},
+    )
+    entry.add_to_hass(hass)
+
+    discovery = SsdpServiceInfo(
+        ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
+        ssdp_st="urn:habitron-com:device:SmartHub:1",
+        ssdp_location=f"http://{MOCK_HOST}:80/desc.xml",
+        upnp={ATTR_UPNP_UDN: MOCK_UDN},
+    )
+    with patch(
+        "homeassistant.components.habitron.config_flow._async_hub_mac",
+        new=AsyncMock(return_value="d83addbae72e"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=discovery,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # The entry moves to the id and address this flow can derive again.
+    assert entry.unique_id == MOCK_UDN
+    assert entry.data[CONF_HOST] == MOCK_HOST
+
+
+@pytest.mark.parametrize(
+    ("reported", "expected"),
+    [
+        ("D8:3A:DD:BA:E7:2E", "d83addbae72e"),
+        ("d8-3a-dd-ba-e7-2e", "d83addbae72e"),
+        ("", None),
+    ],
+)
+async def test_hub_mac_is_normalised(reported: str, expected: str | None) -> None:
+    """The probed MAC is comparable regardless of separators and casing.
+
+    Entries from the custom integration store it colon-stripped and lower case;
+    the hub itself reports whichever notation its firmware happens to use.
+    """
+    client = AsyncMock()
+    client.get_smhub_info = AsyncMock(
+        return_value={"hardware": {"network": {"lan mac": reported}}}
+    )
+    client.__aenter__ = AsyncMock(return_value=client)
+    client.__aexit__ = AsyncMock(return_value=False)
+    with patch(
+        "homeassistant.components.habitron.config_flow.HabitronClient",
+        return_value=client,
+    ):
+        assert await _async_hub_mac(MOCK_HOST) == expected
+
+
+async def test_hub_mac_unreachable_returns_none() -> None:
+    """A hub that cannot be read yields no MAC instead of raising."""
+    with patch(
+        "homeassistant.components.habitron.config_flow.HabitronClient",
+        side_effect=OSError("no route"),
+    ):
+        assert await _async_hub_mac(MOCK_HOST) is None
+
+
+@pytest.mark.parametrize(
+    ("reported_mac", "expected_type"),
+    [
+        # The same hub, however it was reached before.
+        ("d83addbae72e", FlowResultType.ABORT),
+        # A different hub is a genuinely new device.
+        ("001122334455", FlowResultType.CREATE_ENTRY),
+        # Unreachable hub: fall through instead of guessing.
+        (None, FlowResultType.CREATE_ENTRY),
+    ],
+)
+async def test_user_step_mac_match_normalises_and_falls_through(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+    reported_mac: str | None,
+    expected_type: FlowResultType,
+) -> None:
+    """The MAC comparison ignores notation and only matches the same hub."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="d83addbae72e",
+        data={CONF_HOST: "192.168.1.99"},
+    ).add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.habitron.config_flow.discover_smarthubs",
+            new=AsyncMock(return_value=[]),
+        ),
+        patch(
+            "homeassistant.components.habitron.config_flow._async_hub_mac",
+            new=AsyncMock(return_value=reported_mac),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is expected_type
 
 
 async def test_ssdp_no_host(
