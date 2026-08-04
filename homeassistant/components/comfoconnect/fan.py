@@ -16,17 +16,19 @@ from pycomfoconnect import (
 )
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
+from . import ComfoConnectBridge
+from .const import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,16 +45,13 @@ PRESET_MODE_AUTO = "auto"
 PRESET_MODES = [PRESET_MODE_AUTO]
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry[ComfoConnectBridge],
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the ComfoConnect fan platform."""
-    ccb = hass.data[DOMAIN]
-
-    add_entities([ComfoConnectFan(ccb)], True)
+    """Set up ComfoConnect fan from a config entry."""
+    async_add_entities([ComfoConnectFan(config_entry.runtime_data)], True)
 
 
 class ComfoConnectFan(FanEntity):
@@ -66,6 +65,7 @@ class ComfoConnectFan(FanEntity):
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
+    _attr_has_entity_name = True
 
     _attr_preset_modes = PRESET_MODES
     current_speed: float | None = None
@@ -73,9 +73,14 @@ class ComfoConnectFan(FanEntity):
     def __init__(self, ccb: ComfoConnectBridge) -> None:
         """Initialize the ComfoConnect fan."""
         self._ccb = ccb
-        self._attr_name = ccb.name
         self._attr_unique_id = ccb.unique_id
         self._attr_preset_mode = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, ccb.unique_id)},
+            name=ccb.name,
+            manufacturer="Zehnder",
+            model=ccb.name,
+        )
 
     @override
     async def async_added_to_hass(self) -> None:

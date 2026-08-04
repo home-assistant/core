@@ -27,17 +27,15 @@ from pycomfoconnect import (
     SENSOR_TEMPERATURE_OUTDOOR,
     SENSOR_TEMPERATURE_SUPPLY,
 )
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_RESOURCES,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     UnitOfEnergy,
@@ -47,12 +45,12 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
+from . import ComfoConnectBridge
+from .const import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED
 
 ATTR_AIR_FLOW_EXHAUST = "air_flow_exhaust"
 ATTR_AIR_FLOW_SUPPLY = "air_flow_supply"
@@ -262,37 +260,28 @@ SENSOR_TYPES = (
     ),
 )
 
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_RESOURCES, default=[]): vol.All(
-            cv.ensure_list, [vol.In([desc.key for desc in SENSOR_TYPES])]
-        )
-    }
-)
 
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry[ComfoConnectBridge],
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the ComfoConnect sensor platform."""
-    ccb = hass.data[DOMAIN]
-
-    sensors = [
-        ComfoConnectSensor(ccb=ccb, description=description)
-        for description in SENSOR_TYPES
-        if description.key in config[CONF_RESOURCES]
-    ]
-
-    add_entities(sensors, True)
+    """Set up ComfoConnect sensors from a config entry."""
+    ccb = config_entry.runtime_data
+    async_add_entities(
+        [
+            ComfoConnectSensor(ccb=ccb, description=description)
+            for description in SENSOR_TYPES
+        ],
+        True,
+    )
 
 
 class ComfoConnectSensor(SensorEntity):
     """Representation of a ComfoConnect sensor."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
     entity_description: ComfoconnectSensorEntityDescription
 
     def __init__(
@@ -303,8 +292,13 @@ class ComfoConnectSensor(SensorEntity):
         """Initialize the ComfoConnect sensor."""
         self._ccb = ccb
         self.entity_description = description
-        self._attr_name = f"{ccb.name} {description.name}"
         self._attr_unique_id = f"{ccb.unique_id}-{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, ccb.unique_id)},
+            name=ccb.name,
+            manufacturer="Zehnder",
+            model=ccb.name,
+        )
 
     @override
     async def async_added_to_hass(self) -> None:
