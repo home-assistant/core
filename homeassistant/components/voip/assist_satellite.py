@@ -340,12 +340,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 ):
                     # Caller hung up
                     _LOGGER.debug("Hang up")
-                    self._announcement = None
-                    if self._run_pipeline_task is not None:
-                        _LOGGER.debug("Cancelling running pipeline")
-                        self._run_pipeline_task.cancel()
-                    if not self._call_end_future.done():
-                        self._call_end_future.set_result(None)
                     self.disconnect()
                     break
 
@@ -377,6 +371,11 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         # hangup task
         self.voip_device.set_is_active(False)
         self._announcement = None
+        if self._run_pipeline_task is not None:
+            _LOGGER.debug("Cancelling running pipeline")
+            self._run_pipeline_task.cancel()
+        if not self._call_end_future.done():
+            self._call_end_future.set_result(None)
         self._last_chunk_time = None
         self._rtp_port = None
         _LOGGER.debug("VOIP disconnected")
