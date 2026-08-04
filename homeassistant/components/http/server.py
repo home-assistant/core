@@ -297,8 +297,7 @@ class HomeAssistantHTTP:
 
         setup_request_context(self.app, current_request)
 
-        if is_ban_enabled:
-            setup_bans(self.hass, self.app, login_threshold)
+        setup_bans(self.hass, self.app, login_threshold, is_ban_enabled)
 
         await async_setup_auth(self.hass, self.app)
 
