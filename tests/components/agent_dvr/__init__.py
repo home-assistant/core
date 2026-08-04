@@ -46,7 +46,7 @@ def mock_agent_dvr_requests(aioclient_mock: AiohttpClientMocker, fixtures_hass) 
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
-        "http://example.local:8090/command.cgi?cmd=ptzpresets&oid=1&ot=2",
+        "http://example.local:8090/command.cgi?cmd=ptzpresets&oid=1&ot=2",  # codespell:ignore ot
         text=fixtures_hass["ptzpresets"],
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )

@@ -25,7 +25,7 @@ async def test_ptz_preset_select(
     await init_integration(hass, aioclient_mock)
 
     aioclient_mock.get(
-        "http://example.local:8090/command.cgi?cmd=ptzpreset&oid=1&ot=2&preset=Away",
+        "http://example.local:8090/command.cgi?cmd=ptzpreset&oid=1&ot=2&preset=Away",  # codespell:ignore ot
         text="{}",
     )
 

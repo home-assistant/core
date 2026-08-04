@@ -139,46 +139,47 @@ class AgentDVRClient:
 
     # -- per-device -------------------------------------------------------
 
-    async def switch_on(self, oid: int, ot: int) -> None:
+    async def switch_on(self, oid: int, ot_id: int) -> None:
         """Enable a device."""
-        await self._command("switchOn", oid=oid, ot=ot)
+        await self._command("switchOn", oid=oid, ot=ot_id)  # codespell:ignore ot
 
-    async def switch_off(self, oid: int, ot: int) -> None:
+    async def switch_off(self, oid: int, ot_id: int) -> None:
         """Disable a device."""
-        await self._command("switchOff", oid=oid, ot=ot)
+        await self._command("switchOff", oid=oid, ot=ot_id)  # codespell:ignore ot
 
-    async def record_start(self, oid: int, ot: int) -> None:
+    async def record_start(self, oid: int, ot_id: int) -> None:
         """Start recording on a device."""
-        await self._command("record", oid=oid, ot=ot)
+        await self._command("record", oid=oid, ot=ot_id)  # codespell:ignore ot
 
-    async def record_stop(self, oid: int, ot: int) -> None:
+    async def record_stop(self, oid: int, ot_id: int) -> None:
         """Stop recording on a device."""
-        await self._command("recordStop", oid=oid, ot=ot)
+        await self._command("recordStop", oid=oid, ot=ot_id)  # codespell:ignore ot
 
-    async def alerts_on(self, oid: int, ot: int) -> None:
+    async def alerts_on(self, oid: int, ot_id: int) -> None:
         """Enable alerts on a device."""
-        await self._command("alertOn", oid=oid, ot=ot)
+        await self._command("alertOn", oid=oid, ot=ot_id)  # codespell:ignore ot
 
-    async def alerts_off(self, oid: int, ot: int) -> None:
+    async def alerts_off(self, oid: int, ot_id: int) -> None:
         """Disable alerts on a device."""
-        await self._command("alertOff", oid=oid, ot=ot)
+        await self._command("alertOff", oid=oid, ot=ot_id)  # codespell:ignore ot
 
-    async def detector_on(self, oid: int, ot: int) -> None:
+    async def detector_on(self, oid: int, ot_id: int) -> None:
         """Enable motion detection on a device."""
-        await self._command("detectorOn", oid=oid, ot=ot)
+        await self._command("detectorOn", oid=oid, ot=ot_id)  # codespell:ignore ot
 
-    async def detector_off(self, oid: int, ot: int) -> None:
+    async def detector_off(self, oid: int, ot_id: int) -> None:
         """Disable motion detection on a device."""
-        await self._command("detectorOff", oid=oid, ot=ot)
+        await self._command("detectorOff", oid=oid, ot=ot_id)  # codespell:ignore ot
 
-    async def snapshot(self, oid: int, ot: int) -> None:
+    async def snapshot(self, oid: int, ot_id: int) -> None:
         """Trigger a snapshot on a device."""
-        await self._command("snapshot", oid=oid, ot=ot)
+        await self._command("snapshot", oid=oid, ot=ot_id)  # codespell:ignore ot
 
-    async def get_event_count(self, oid: int, ot: int, seconds: int) -> int:
+    async def get_event_count(self, oid: int, ot_id: int, seconds: int) -> int:
         """Return the number of events for a device in the last `seconds`."""
         data = await self._get(
-            "eventcounts.json", {"oid": oid, "ot": ot, "secs": seconds}
+            "eventcounts.json",
+            {"oid": oid, "ot": ot_id, "secs": seconds},  # codespell:ignore ot
         )
         return int(data.get("count", 0))
 
@@ -188,10 +189,14 @@ class AgentDVRClient:
     # There is no documented raw directional (continuous move) command
     # over REST — see webrtc.py for that.
 
-    async def get_ptz_presets(self, oid: int, ot: int) -> list[dict] | None:
+    async def get_ptz_presets(self, oid: int, ot_id: int) -> list[dict] | None:
         """Return [{"name": ..., "token": ...}, ...] or None if unsupported."""
         try:
-            data = await self._command("ptzpresets", oid=oid, ot=ot)
+            data = await self._command(
+                "ptzpresets",
+                oid=oid,
+                ot=ot_id,  # codespell:ignore ot
+            )
         except AgentDVRCommandError:
             return None
         presets = data.get("presets")
@@ -199,6 +204,11 @@ class AgentDVRClient:
             return None
         return presets
 
-    async def goto_ptz_preset(self, oid: int, ot: int, preset: str) -> None:
+    async def goto_ptz_preset(self, oid: int, ot_id: int, preset: str) -> None:
         """Move a PTZ camera to one of its configured presets."""
-        await self._command("ptzpreset", oid=oid, ot=ot, preset=preset)
+        await self._command(
+            "ptzpreset",
+            oid=oid,
+            ot=ot_id,  # codespell:ignore ot
+            preset=preset,
+        )

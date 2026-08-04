@@ -21,7 +21,7 @@ from . import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 RECORDING = {
-    "ot": 2,
+    "ot": 2,  # codespell:ignore ot
     "oid": 1,
     "fn": "1_2024-01-01_12-00-00_000.mkv",
     "sb": 1234,

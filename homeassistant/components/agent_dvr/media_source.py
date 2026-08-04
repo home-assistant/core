@@ -136,10 +136,10 @@ class AgentDVRMediaSource(MediaSource):
         if device is None:
             raise HomeAssistantError(f"Unknown camera: {camera_key}")
 
-        oid, ot = int(device["id"]), int(device["typeID"])
+        oid, ot_id = int(device["id"]), int(device["typeID"])
         try:
             recordings = await entry.runtime_data.webrtc_pool.run(
-                lambda s: s.get_recordings(oid, ot, limit=RECORDINGS_LIMIT)
+                lambda s: s.get_recordings(oid, ot_id, limit=RECORDINGS_LIMIT)
             )
         except AgentDVRWebRTCError as err:
             raise HomeAssistantError(f"Could not load recordings: {err}") from err
@@ -181,7 +181,7 @@ class AgentDVRMediaSource(MediaSource):
         device = coordinator.data["devices"].get(camera_key)
         if device is None:
             raise HomeAssistantError(f"Unknown camera: {camera_key}")
-        oid, ot = int(device["id"]), int(device["typeID"])
+        oid, ot_id = int(device["id"]), int(device["typeID"])
 
         cache_dir = self.hass.config.path("www", DOMAIN, entry.entry_id)
         cache_path = os.path.join(cache_dir, filename)
@@ -190,7 +190,7 @@ class AgentDVRMediaSource(MediaSource):
         if not await self.hass.async_add_executor_job(os.path.isfile, cache_path):
             try:
                 data = await entry.runtime_data.webrtc_pool.run(
-                    lambda s: s.download_file(oid, ot, filename)
+                    lambda s: s.download_file(oid, ot_id, filename)
                 )
             except AgentDVRWebRTCError as err:
                 raise HomeAssistantError(f"Download failed: {err}") from err

@@ -37,8 +37,8 @@ async def async_setup_entry(
     for oid_ot, device in coordinator.data["devices"].items():
         if device["typeID"] != DEVICE_TYPE_CAMERA:
             continue
-        oid, ot = int(device["id"]), int(device["typeID"])
-        presets = await client.get_ptz_presets(oid, ot)
+        oid, ot_id = int(device["id"]), int(device["typeID"])
+        presets = await client.get_ptz_presets(oid, ot_id)
         if not presets:
             continue
         entities.append(

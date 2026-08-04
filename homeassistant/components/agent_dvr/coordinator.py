@@ -14,9 +14,9 @@ from .const import DEFAULT_SCAN_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-def device_key(oid: int, ot: int) -> str:
+def device_key(oid: int, ot_id: int) -> str:
     """Build the dict key used to look up a device in coordinator.data."""
-    return f"{oid}_{ot}"
+    return f"{oid}_{ot_id}"
 
 
 class AgentDVRDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):

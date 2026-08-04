@@ -54,15 +54,15 @@ async def async_setup_entry(
     for device in coordinator.data["devices"].values():
         if device["typeID"] != DEVICE_TYPE_CAMERA:
             continue
-        oid, ot = int(device["id"]), int(device["typeID"])
-        presets = await client.get_ptz_presets(oid, ot)
+        oid, ot_id = int(device["id"]), int(device["typeID"])
+        presets = await client.get_ptz_presets(oid, ot_id)
         if not presets:
             continue
-        camera_unique_id = f"{data.unique_id}_{ot}_{oid}"
+        camera_unique_id = f"{data.unique_id}_{ot_id}_{oid}"
         for translation_key, icon, direction in DIRECTIONS:
             entities.append(
                 AgentDVRPTZButton(
-                    data, oid, ot, camera_unique_id, translation_key, icon, direction
+                    data, oid, ot_id, camera_unique_id, translation_key, icon, direction
                 )
             )
 
@@ -79,7 +79,7 @@ class AgentDVRPTZButton(ButtonEntity):
         self,
         data: AgentDVRData,
         oid: int,
-        ot: int,
+        ot_id: int,
         camera_unique_id: str,
         translation_key: str,
         icon: str,
@@ -88,7 +88,7 @@ class AgentDVRPTZButton(ButtonEntity):
         """Initialize the button."""
         self._data = data
         self._oid = oid
-        self._ot = ot
+        self._ot = ot_id
         self._direction = direction
         self._attr_translation_key = translation_key
         self._attr_icon = icon

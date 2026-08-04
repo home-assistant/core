@@ -265,12 +265,12 @@ class AgentDVRWebRTCSession:
                 fut.set_result(full)
 
     async def command(
-        self, cmd: str, oid: int = -1, ot: int = -1, timeout: float = 15
+        self, cmd: str, oid: int = -1, ot_id: int = -1, timeout: float = 15
     ) -> Any:
         """Run a loadjson command over the serverdata channel, return its parsed response.
 
         Device-scoped commands (e.g. ptzcommand, getptzcommands) need the real
-        oid/ot here — the server resolves the target device from these envelope
+        oid/ot_id here — the server resolves the target device from these envelope
         fields, not just from query-string parameters in `cmd`. Commands that
         operate across devices (e.g. getevents, which takes its own `objects=`
         list) work fine with the default -1/-1.
@@ -282,7 +282,7 @@ class AgentDVRWebRTCSession:
             "type": "loadjson",
             "ident": ident,
             "oid": oid,
-            "ot": ot,
+            "ot": ot_id,  # codespell:ignore ot
             "handler": "json",
             "cmd": cmd,
             "lc": "en",
@@ -314,19 +314,19 @@ class AgentDVRWebRTCSession:
     PTZ_STOP = "11"
 
     async def ptz_move(
-        self, oid: int, ot: int, direction: str, speed: float = 1.0
+        self, oid: int, ot_id: int, direction: str, speed: float = 1.0
     ) -> None:
         """Start a continuous PTZ move in one of the PTZ_* directions."""
         cmd = f"ptzcommand&field=ptz&speed={speed}&value=ispydir_{direction}"
-        await self.command(cmd, oid=oid, ot=ot)
+        await self.command(cmd, oid=oid, ot_id=ot_id)
 
-    async def ptz_stop(self, oid: int, ot: int) -> None:
+    async def ptz_stop(self, oid: int, ot_id: int) -> None:
         """Stop a continuous PTZ move started by ptz_move()."""
         await self.command(
-            f"ptzcommand&field=ptz&value=ispydir_{self.PTZ_STOP}", oid=oid, ot=ot
+            f"ptzcommand&field=ptz&value=ispydir_{self.PTZ_STOP}", oid=oid, ot_id=ot_id
         )
 
-    async def get_recordings(self, oid: int, ot: int, limit: int = 50) -> list[dict]:
+    async def get_recordings(self, oid: int, ot_id: int, limit: int = 50) -> list[dict]:
         """List recent recordings/photo-grab events for one device.
 
         Each event dict has (at least): fn (filename), sb (size bytes),
@@ -335,12 +335,12 @@ class AgentDVRWebRTCSession:
         everything up to now" — Agent DVR interprets that as "before Unix
         epoch zero" and returns nothing; the default (omitted) is correct.
         """
-        cmd = f"getevents&limit={limit}&objects=|{oid},{ot}|"
+        cmd = f"getevents&limit={limit}&objects=|{oid},{ot_id}|"
         data = await self.command(cmd)
         return data.get("events", [])
 
     async def download_file(
-        self, oid: int, ot: int, filename: str, timeout: float = DOWNLOAD_TIMEOUT
+        self, oid: int, ot_id: int, filename: str, timeout: float = DOWNLOAD_TIMEOUT
     ) -> bytes:
         """Download a recording/grab file, fully reassembled, over its own data channel."""
         label = f"download_{int(time.time() * 1000)}"
@@ -349,7 +349,12 @@ class AgentDVRWebRTCSession:
         state: dict[str, Any] = {"size": None, "received": 0, "chunks": []}
 
         def on_open() -> None:
-            req = {"type": "download", "filename": filename, "ot": ot, "oid": oid}
+            req = {
+                "type": "download",
+                "filename": filename,
+                "ot": ot_id,  # codespell:ignore ot
+                "oid": oid,
+            }
             dl_channel.send(json.dumps(req))
 
         def on_message(msg: Any) -> None:
@@ -385,30 +390,34 @@ class AgentDVRWebRTCSession:
     # creating arbitrary new ones. "store" (overwrite) was not tested live
     # since it would irreversibly move a real, in-use preset's position.
 
-    async def _ptz_action(self, oid: int, ot: int, cmd: str) -> dict:
-        result = await self.command(cmd, oid=oid, ot=ot)
+    async def _ptz_action(self, oid: int, ot_id: int, cmd: str) -> dict:
+        result = await self.command(cmd, oid=oid, ot_id=ot_id)
         if isinstance(result, dict) and result.get("actionResult") == "error":
             raise AgentDVRWebRTCError(result.get("message") or "PTZ action failed")
         return result if isinstance(result, dict) else {}
 
-    async def ptz_preset_create(self, oid: int, ot: int, name: str) -> dict:
+    async def ptz_preset_create(self, oid: int, ot_id: int, name: str) -> dict:
         """Create a brand-new preset at the camera's current position.
 
         Many ONVIF PTZ cameras (confirmed for Dom1) don't support this and
         raise AgentDVRWebRTCError("Not Supported") — use ptz_preset_store
         against an existing preset's token instead on those cameras.
         """
-        return await self._ptz_action(oid, ot, f"ptzpresetcreate&name={quote(name)}")
+        return await self._ptz_action(oid, ot_id, f"ptzpresetcreate&name={quote(name)}")
 
-    async def ptz_preset_store(self, oid: int, ot: int, token: str, name: str) -> dict:
+    async def ptz_preset_store(
+        self, oid: int, ot_id: int, token: str, name: str
+    ) -> dict:
         """Overwrite an existing preset (by token) with the current position."""
         return await self._ptz_action(
-            oid, ot, f"ptzpresetcreate&name={quote(name)}&token={quote(token)}"
+            oid, ot_id, f"ptzpresetcreate&name={quote(name)}&token={quote(token)}"
         )
 
-    async def ptz_preset_delete(self, oid: int, ot: int, token: str) -> dict:
+    async def ptz_preset_delete(self, oid: int, ot_id: int, token: str) -> dict:
         """Delete an existing preset by token."""
-        return await self._ptz_action(oid, ot, f"ptzpresetdelete&value={quote(token)}")
+        return await self._ptz_action(
+            oid, ot_id, f"ptzpresetdelete&value={quote(token)}"
+        )
 
 
 T = TypeVar("T")
