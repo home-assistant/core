@@ -282,10 +282,19 @@ class IpBanManager:
                 )
                 self.ip_bans_lookup = self._data_from_load(list_) if list_ else {}
                 await self.store.async_save(self._data_to_save())
-                await self.hass.async_add_executor_job(os.remove, path)
-                _LOGGER.info(
-                    "Migrated %d IP bans from %s", len(self.ip_bans_lookup), path
-                )
+                stored_list_ = await self.store.async_load()
+                if list_ == stored_list_:
+                    await self.hass.async_add_executor_job(os.remove, path)
+                    _LOGGER.info(
+                        "Migrated %d IP bans from %s",
+                        len(self.ip_bans_lookup),
+                        path,
+                    )
+                else:
+                    _LOGGER.error(
+                        "Failed to migrate IP bans from %s: data mismatch after saving to store",
+                        path,
+                    )
             except FileNotFoundError:
                 pass
             except HomeAssistantError as err:
