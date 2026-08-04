@@ -115,6 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     @callback
     def _stop_watcher(_event: Event) -> None:
         """Stop the image watcher in the event loop."""
+        watcher.unregister_callback(_handle_watcher_result)
         watcher.stop()
 
     async def _handle_watcher_result(_result: PortainerImageWatcherResult) -> None:
