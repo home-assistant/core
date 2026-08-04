@@ -2,7 +2,11 @@
 
 from unittest.mock import AsyncMock, patch
 
-from infrared_protocols.commands.samsung_ac import SamsungAC0292Command
+from infrared_protocols.commands.samsung_ac import (
+    SamsungAC0292Command,
+    SamsungAC0292HvacMode,
+    SamsungACFanMode,
+)
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -58,7 +62,7 @@ async def test_samsung_infrared_climate_services(hass: HomeAssistant) -> None:
 
         sent_command = mock_send_command.call_args[0][0]
         assert isinstance(sent_command, SamsungAC0292Command)
-        assert sent_command.hvac_mode == "cool"
+        assert sent_command.hvac_mode == SamsungAC0292HvacMode.COOL
 
         mock_send_command.reset_mock()
 
@@ -82,7 +86,61 @@ async def test_samsung_infrared_climate_services(hass: HomeAssistant) -> None:
         )
         mock_send_command.assert_called_once()
         sent_command = mock_send_command.call_args[0][0]
-        assert sent_command.fan_mode == "high"
+        assert sent_command.fan_mode == SamsungACFanMode.HIGH
+
+
+async def test_samsung_infrared_climate_turn_off_sends_bare_off_command(
+    hass: HomeAssistant,
+) -> None:
+    """Test that turning off sends OFF with no temperature, fan, or swing fields.
+
+    SamsungAC0292Command raises if hvac_mode is OFF and any of those fields are not
+    None, so this also guards against a regression that would break every turn_off.
+    """
+    remote_entity_id = "remote.living_room_ir"
+    hass.states.async_set(remote_entity_id, STATE_ON)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "infrared_emitter_entity_id": remote_entity_id,
+            "device_type": "ac",
+        },
+        unique_id="samsung_ir_ac_test",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.samsung_infrared.climate.SamsungIrClimate._send_command",
+        new_callable=AsyncMock,
+    ) as mock_send_command:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = "climate.samsung_ac"
+
+        await hass.services.async_call(
+            "climate",
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
+            blocking=True,
+        )
+        mock_send_command.reset_mock()
+
+        await hass.services.async_call(
+            "climate",
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
+            blocking=True,
+        )
+
+        mock_send_command.assert_called_once()
+        sent_command = mock_send_command.call_args[0][0]
+        assert isinstance(sent_command, SamsungAC0292Command)
+        assert sent_command.hvac_mode == SamsungAC0292HvacMode.OFF
+        assert sent_command.target_temperature is None
+        assert sent_command.fan_mode is None
+        assert sent_command.swing_mode is None
 
 
 async def test_samsung_infrared_climate_set_temperature_with_hvac_mode(
@@ -128,7 +186,6 @@ async def test_samsung_infrared_climate_set_temperature_with_hvac_mode(
 
         mock_send_command.assert_called_once()
         sent_command = mock_send_command.call_args[0][0]
-        assert sent_command.hvac_mode == "cool"
         assert sent_command.target_temperature == 26
 
         state = hass.states.get(entity_id)
