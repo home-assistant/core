@@ -11,8 +11,6 @@ from aiohttp.web_exceptions import HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
 import pytest
 
-from homeassistant.components import http
-from homeassistant.components.http import DOMAIN
 from homeassistant.components.http.ban import (
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
