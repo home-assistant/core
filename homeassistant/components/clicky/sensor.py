@@ -57,7 +57,6 @@ class ClickySensor(CoordinatorEntity[ClickyCoordinator], SensorEntity):
     """A Clicky sensor entity."""
 
     _attr_has_entity_name = True
-    _attr_entity_registry_enabled_default = True
 
     def __init__(
         self,
