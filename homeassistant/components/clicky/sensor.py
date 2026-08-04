@@ -74,6 +74,4 @@ class ClickySensor(CoordinatorEntity[ClickyCoordinator], SensorEntity):
     @override
     def native_value(self) -> StateType | None:
         """Return the state."""
-        if self.coordinator.data is not None:
-            return self.coordinator.data.get(self.entity_description.key)
-        return None
+        return self.coordinator.data[self.entity_description.key]
