@@ -10,6 +10,7 @@ from homeassistant.components.update import (
     ATTR_BACKUP,
     ATTR_VERSION,
     DOMAIN,
+    RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
     SERVICE_INSTALL,
     SERVICE_SKIP,
     UpdateDeviceClass,
@@ -742,6 +743,47 @@ async def test_release_notes(
     )
     result = await client.receive_json()
     assert result["result"] == "Release notes"
+
+
+async def test_release_notes_with_messages(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test rendering release notes messages before release notes."""
+    entity = MockUpdateEntity(
+        name="Update with release notes message",
+        unique_id="with_release_notes_message",
+        installed_version="1.0.0",
+        latest_version="1.0.1",
+        supported_features=UpdateEntityFeature.RELEASE_NOTES,
+    )
+    entity.entity_description = UpdateEntityDescription(
+        key="with_release_notes_message",
+        release_notes_messages=(RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,),
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity])
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.update_with_release_notes_message",
+        }
+    )
+    result = await client.receive_json()
+    assert result["result"] == (
+        '<ha-alert alert-type="warning">'
+        "Do not restart, remove power from, or otherwise interrupt the device "
+        "while the update is in progress."
+        "</ha-alert>\n\n"
+        "Release notes"
+    )
 
 
 async def test_release_notes_entity_not_found(
