@@ -20,7 +20,7 @@ from duco_connectivity import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.duco.const import SCAN_INTERVAL
+from homeassistant.components.duco.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -135,6 +135,23 @@ async def test_setup_entry_success(
 ) -> None:
     """Test successful setup of the Duco integration."""
     assert init_integration.state is ConfigEntryState.LOADED
+
+
+async def test_device_via_device_links(
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that sub-node devices link to the box parent via via_device_id."""
+    box_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_MAC}_1"), init_integration.entry_id
+    )
+    assert box_device is not None
+
+    node_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_MAC}_2"), init_integration.entry_id
+    )
+    assert node_device is not None
+    assert node_device.via_device_id == box_device.id
 
 
 @pytest.mark.parametrize(
