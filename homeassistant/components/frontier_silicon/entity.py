@@ -77,22 +77,8 @@ class FrontierSiliconEntity(Entity):
         try:
             await self._fs_update()
             self._attr_available = True
-        except FSConnectionError as err:
-            if self._attr_available:
-                self._attr_available = False
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="connection_error",
-                    translation_placeholders={"command": "update"},
-                ) from err
-        except FSApiError as err:
-            if self._attr_available:
-                self._attr_available = False
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="api_error",
-                    translation_placeholders={"command": "update", "message": str(err)},
-                ) from err
+        except FSApiError, FSConnectionError:
+            self._attr_available = False
 
     async def _fs_update(self) -> None:
         """Update Frontier Silicon entity."""
