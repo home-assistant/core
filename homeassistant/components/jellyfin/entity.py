@@ -66,7 +66,11 @@ class JellyfinClientEntity(JellyfinEntity):
                 identifiers={
                     (
                         DOMAIN,
-                        f"{coordinator.server_id}-{coordinator.user_id}-{self.device_id}",
+                        (
+                            f"{coordinator.server_id}"
+                            f"-{coordinator.user_id}"
+                            f"-{self.device_id}"
+                        ),
                     )
                 },
                 manufacturer="Jellyfin",
