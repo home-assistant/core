@@ -91,42 +91,38 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Log in and scan for devices, showing progress to the user."""
-        task_created = self._login_task is None
+        if (login_task := self._login_task) and login_task.done():
+            self._login_errors = {}
+            try:
+                self._login_result = login_task.result()
+            except CannotConnect:
+                self._login_errors = {"base": "cannot_connect"}
+            except CannotAuthenticate:
+                self._login_errors = {"base": "invalid_auth"}
+            except CannotRetrieveData:
+                self._login_errors = {"base": "cannot_retrieve_data"}
+            finally:
+                self._login_task = None
+
+            return self.async_show_progress_done(
+                next_step_id="user" if self._login_errors else "login_done"
+            )
+
         if self._login_task is None:
             self._login_task = self.hass.async_create_task(
                 validate_input(self.hass, self._login_data)
             )
-        login_task = self._login_task
 
-        # Always show progress at least once, even if the task already
-        # finished, so the flow only moves on once user_input is None again.
-        if task_created or not login_task.done():
-            return self.async_show_progress(
-                step_id="login",
-                progress_action="login",
-                description_placeholders={
-                    "seconds": str(
-                        CUSTOMER_ACCOUNT_MAX_RETRIES
-                        * CUSTOMER_ACCOUNT_DELAY_BETWEEN_RETRIES
-                    )
-                },
-                progress_task=login_task,
-            )
-
-        self._login_errors = {}
-        try:
-            self._login_result = login_task.result()
-        except CannotConnect:
-            self._login_errors = {"base": "cannot_connect"}
-        except CannotAuthenticate:
-            self._login_errors = {"base": "invalid_auth"}
-        except CannotRetrieveData:
-            self._login_errors = {"base": "cannot_retrieve_data"}
-        finally:
-            self._login_task = None
-
-        return self.async_show_progress_done(
-            next_step_id="user" if self._login_errors else "login_done"
+        return self.async_show_progress(
+            step_id="login",
+            progress_action="login",
+            description_placeholders={
+                "seconds": str(
+                    CUSTOMER_ACCOUNT_MAX_RETRIES
+                    * CUSTOMER_ACCOUNT_DELAY_BETWEEN_RETRIES
+                )
+            },
+            progress_task=self._login_task,
         )
 
     async def async_step_login_done(
