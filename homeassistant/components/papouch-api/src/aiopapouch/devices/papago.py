@@ -1,5 +1,6 @@
 """This file contains definition of the Papago device family."""
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import logging
 from typing import Any, cast, override
@@ -33,7 +34,7 @@ class OutputSettings:
     name: str
 
 
-class PapagoETH(PapouchDevice, HTTPMixin):
+class PapagoETH(PapouchDevice, HTTPMixin, ABC):
     """Represents Papago device family.
 
     Note that it uses unified code that
@@ -57,26 +58,11 @@ class PapagoETH(PapouchDevice, HTTPMixin):
         "Count all edges",
     ]
 
-    BOX_SENSOR_BASE = 30
+    BOX_SENSOR_BASE: int | None = None
 
     SAVE_ENDPOINT = "savesettings.xml"
 
-    SENSOR_SETTINGS_KEYS = [
-        ("num01", "type"),
-        ("num02", "watch"),
-        ("num03", "watch2"),
-        ("num04", "watch3"),
-        ("str00", "name"),
-        ("str01", "min"),
-        ("str02", "max"),
-        ("str03", "hyst"),
-        ("str04", "min2"),
-        ("str05", "max2"),
-        ("str06", "hyst2"),
-        ("str07", "min3"),
-        ("str08", "max3"),
-        ("str09", "hyst3"),
-    ]
+    SENSOR_SETTINGS_KEYS: list[tuple[str, str]]
 
     INPUT_ID_INCREMENT = 1000
 
@@ -493,8 +479,11 @@ class PapagoETH(PapouchDevice, HTTPMixin):
 
             if box_id and box_id.isdigit() and sns_type is not None:
                 box_num = int(box_id)
-                if self.BOX_SENSOR_BASE <= box_num <= self.BOX_SENSOR_BASE + 1:
-                    s_id = str(box_num - self.BOX_SENSOR_BASE + 1)
+
+                base = self.BOX_SENSOR_BASE
+
+                if base is not None and base <= box_num <= base + 1:
+                    s_id = str(box_num - base + 1)
                     self.type_sensors[s_id] = sns_type
 
     async def _set_sensor_type(self, item_id: str, type_idx: str) -> None:
@@ -502,6 +491,9 @@ class PapagoETH(PapouchDevice, HTTPMixin):
 
         def format_val(val: str) -> str:
             return val.removesuffix(".0")
+
+        if self.BOX_SENSOR_BASE is None:
+            return
 
         box_num = int(item_id) - 1 + self.BOX_SENSOR_BASE
         target_box = None
@@ -713,14 +705,6 @@ class PapagoETH(PapouchDevice, HTTPMixin):
     @override
     def _parse_initial_settings(self) -> None:
         """Base method for other devices to parse their settings."""
-        raise DeviceLogicError("Calling not implemented method.")
-
-
-class PapagoETH_2TH(PapagoETH):
-    """Represents Papago 2TH ETH."""
-
-    @override
-    def _parse_initial_settings(self) -> None:
         for element in self.settings_root.iter():
             if element.tag != "set":
                 continue
@@ -729,25 +713,73 @@ class PapagoETH_2TH(PapagoETH):
             if not box_id or not box_id.isdigit():
                 continue
 
-            box_num = int(box_id)
+            self._process_box(int(box_id), element)
 
-            if self.BOX_SENSOR_BASE <= box_num <= self.BOX_SENSOR_BASE + 1:
-                sns_type = element.attrib.get("type")
+    @abstractmethod
+    def _process_box(self, box_num: int, element: defused_ET.Element) -> None:
+        """Should be overridden in children to process specific boxes."""
 
-                if sns_type is not None:
-                    sensor_id = str(box_num - self.BOX_SENSOR_BASE + 1)
-                    self.type_sensors[sensor_id] = str(sns_type)
+    def _parse_standard_input(
+        self, box_num: int, element: defused_ET.Element, input_base: int
+    ) -> None:
+        """Helper for parsing standard digital inputs and counters."""
+
+        counter_id = str(box_num - input_base + 1)
+        name = element.attrib.get("name", f"Input {counter_id}")
+        unit = element.attrib.get("unit", "")
+        dec = element.attrib.get("dec", "0")
+        trigger_impulse_count = element.attrib.get("src", "1")
+        value_to_add = element.attrib.get("dst", "1")
+        type_cnt = element.attrib.get("enb", "0")
+
+        self.inputs[counter_id] = InputSettings(
+            name,
+            unit,
+            dec,
+            trigger_impulse_count,
+            value_to_add,
+            type_cnt,
+            box_num,
+        )
+
+
+class PapagoETH_2TH(PapagoETH):
+    """Represents Papago 2TH ETH."""
+
+    BOX_SENSOR_BASE = 30
+
+    SENSOR_SETTINGS_KEYS = [
+        ("num01", "type"),
+        ("num02", "watch"),
+        ("num03", "watch2"),
+        ("num04", "watch3"),
+        ("str00", "name"),
+        ("str01", "min"),
+        ("str02", "max"),
+        ("str03", "hyst"),
+        ("str04", "min2"),
+        ("str05", "max2"),
+        ("str06", "hyst2"),
+        ("str07", "min3"),
+        ("str08", "max3"),
+        ("str09", "hyst3"),
+    ]
+
+    @override
+    def _process_box(self, box_num: int, element: defused_ET.Element) -> None:
+        if self.BOX_SENSOR_BASE <= box_num <= self.BOX_SENSOR_BASE + 1:
+            sns_type = element.attrib.get("type")
+            if sns_type is not None:
+                sensor_id = str(box_num - self.BOX_SENSOR_BASE + 1)
+                self.type_sensors[sensor_id] = str(sns_type)
 
 
 class PapagoETH_1TH_2DI_1DO(PapagoETH):
     """Represents Papago 1TH 2DI 1DO ETH."""
 
-    BOX_SENSOR_BASE = 40
-
-    # note that there will be always 1 output
     BOX_OUTPUT_BASE = 30
-
     BOX_INPUT_BASE = 31
+    BOX_SENSOR_BASE = 40
 
     SENSOR_SETTINGS_KEYS = [
         ("num00", "tunit"),
@@ -767,68 +799,40 @@ class PapagoETH_1TH_2DI_1DO(PapagoETH):
     ]
 
     @override
-    def _parse_initial_settings(self) -> None:
-        """Note that this Papago has only 1 sensor, but we still use the list from parent class."""
+    def _process_box(self, box_num: int, element: defused_ET.Element) -> None:
+        match box_num:
+            case self.BOX_SENSOR_BASE:
+                sns_type = element.attrib.get("type")
+                if sns_type is None:
+                    raise DeviceParseError(f"No sensor type in device: {self.name}")
 
-        for element in self.settings_root.iter():
-            if element.tag != "set":
-                continue
+                self.type_sensors["1"] = str(sns_type)
+                self.units_sensors["1"] = {
+                    "name": "Sensor",
+                    "sub_sensors": {"1": {"type": str(sns_type), "unit": "0"}},
+                }
 
-            box_id = element.attrib.get("box")
-            if not box_id or not box_id.isdigit():
-                continue
+            case self.BOX_OUTPUT_BASE:
+                self.outputs["1"] = OutputSettings("")
 
-            box_num = int(box_id)
+            case x if self.BOX_INPUT_BASE <= x < self.BOX_SENSOR_BASE:
+                self._parse_standard_input(box_num, element, self.BOX_INPUT_BASE)
 
-            match box_num:
-                case self.BOX_SENSOR_BASE:
-                    sns_type = element.attrib.get("type")
 
-                    if sns_type is None:
-                        raise DeviceParseError(
-                            f"The is no sensor type during parsing initial settings, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
-                        )
+class PapagoETH_5HDI_1DO(PapagoETH):
+    """Represents Papago 5HDI 1DO ETH."""
 
-                    self.type_sensors["1"] = str(sns_type)
+    BOX_OUTPUT_BASE = 30
+    BOX_INPUT_BASE = 31
 
-                    self.units_sensors["1"] = {
-                        "name": "Sensor",
-                        "sub_sensors": {
-                            "1": {
-                                "type": str(sns_type),
-                                "unit": "0",
-                            }
-                        },
-                    }
+    @override
+    def _process_box(self, box_num: int, element: defused_ET.Element) -> None:
+        match box_num:
+            case self.BOX_OUTPUT_BASE:
+                self.outputs["1"] = OutputSettings("")
 
-                case self.BOX_OUTPUT_BASE:
-                    # We don't need anything from settings in case of outputs.
-                    # The name can be (and will be) set from fresh.xml
-                    self.outputs["1"] = OutputSettings("")
-                    continue
-
-                case x if self.BOX_INPUT_BASE <= x < self.BOX_SENSOR_BASE:
-                    counter_id = str(box_num - self.BOX_INPUT_BASE + 1)
-
-                    name = element.attrib.get("name", f"Input {counter_id}")
-                    unit = element.attrib.get("unit", "")
-                    dec = element.attrib.get("dec", "0")
-                    trigger_impulse_count = element.attrib.get("src", "1")
-                    value_to_add = element.attrib.get("dst", "1")
-                    type_cnt = element.attrib.get("enb", "0")
-
-                    self.inputs[counter_id] = InputSettings(
-                        name,
-                        unit,
-                        dec,
-                        trigger_impulse_count,
-                        value_to_add,
-                        type_cnt,
-                        box_num,
-                    )
-
-                case _:
-                    continue
+            case x if self.BOX_INPUT_BASE <= x < self.BOX_INPUT_BASE + 1000:
+                self._parse_standard_input(box_num, element, self.BOX_INPUT_BASE)
 
 
 async def async_setup_papago(transport: PapouchTransport) -> PapagoETH | None:
@@ -851,6 +855,8 @@ async def async_setup_papago(transport: PapouchTransport) -> PapagoETH | None:
         return PapagoETH_2TH(transport, settings, device_name, location)
     if device_name == "Papago 1TH 2DI 1DO ETH":
         return PapagoETH_1TH_2DI_1DO(transport, settings, device_name, location)
+    if device_name == "Papago 5HDI 1DO ETH":
+        return PapagoETH_5HDI_1DO(transport, settings, device_name, location)
 
     _LOGGER.warning("Unsupported Papago: %s, location: %s", device_name, location)
     return None
