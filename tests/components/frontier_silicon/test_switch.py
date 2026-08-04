@@ -28,7 +28,7 @@ class FakeAFSAPISwitches:
 
 async def test_async_switch_toggle() -> None:
     """Test toggling switch calls the underlying (mocked) AFSAPI functions."""
-    fs_device = await AFSAPI.create("http://192.168.1.1:80/device", 1234, 1)
+    fs_device = AFSAPI("http://192.168.1.1:80/device", 1234)
     mock_config_entry = MockConfigEntry()
     fake_device = FakeAFSAPISwitches()
     with (
