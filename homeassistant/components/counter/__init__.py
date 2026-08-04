@@ -125,7 +125,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_RESET, None, "async_reset")
     component.async_register_entity_service(
         SERVICE_SET_VALUE,
-        {vol.Required(VALUE): cv.positive_int},
+        {vol.Required(VALUE): vol.Coerce(int)},
         "async_set_value",
     )
 
