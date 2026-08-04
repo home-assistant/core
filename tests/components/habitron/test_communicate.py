@@ -84,14 +84,28 @@ async def test_async_system_update_refreshes_and_returns_new_crc() -> None:
         assert comm.crc == 99
 
 
-async def test_get_smhub_info_populates_fields() -> None:
-    """get_smhub_info fills mac/version/host fields from the validated info."""
-    comm = _make_comm()
+@pytest.mark.parametrize(
+    "reported_ip",
+    [
+        # An unnumbered interface from the hub's own point of view -- what the
+        # recorded hub in the fixtures answers with.
+        "0.0.0.0",
+        # Even a plausible answer describes the hub's network, not ours.
+        "10.9.9.9",
+    ],
+)
+async def test_get_smhub_info_populates_fields(reported_ip: str) -> None:
+    """get_smhub_info fills the cached fields but never the connection address.
+
+    ``com_ip`` reaches every device's ``configuration_url``; taking the address
+    the hub reports for itself would point them all at something unreachable.
+    """
+    comm = _make_comm("192.168.1.50")
     info = {
         "software": {"version": "1.0", "slug": "habitron"},
         "hardware": {
             "platform": {"type": "Raspberry Pi 4"},
-            "network": {"ip": "10.0.0.5", "host": "smarthub", "lan mac": "AA:BB"},
+            "network": {"ip": reported_ip, "host": "smarthub", "lan mac": "AA:BB"},
         },
     }
     comm._client.get_smhub_info = AsyncMock(return_value=info)
@@ -99,7 +113,7 @@ async def test_get_smhub_info_populates_fields() -> None:
     assert out["software"]["version"] == "1.0"
     assert comm.com_version == "1.0"
     assert comm.com_mac == "AA:BB"
-    assert comm.com_ip == "10.0.0.5"
+    assert comm.com_ip == "192.168.1.50"
     assert comm.slugname == "habitron"
     assert comm.is_addon is True
 

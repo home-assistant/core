@@ -129,6 +129,13 @@ async def test_real_recording_builds_devices_and_entities(
     )
     assert len(devices) >= recording["module_count"] + 2
 
+    # The recorded hub answers with "ip": "0.0.0.0" for itself, so every device
+    # link would point at an unreachable address if that value were used instead
+    # of the address the connection was actually made to.
+    linked = [device for device in devices if device.configuration_url]
+    assert linked
+    assert all("0.0.0.0" not in device.configuration_url for device in linked)
+
     # The sensor platform created entities from the real module model.
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
