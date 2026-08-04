@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import config as hass_config
@@ -46,7 +47,12 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, assert_setup_component, get_fixture_path
+from tests.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    async_fire_time_changed,
+    get_fixture_path,
+)
 
 
 @pytest.fixture(name="values")
@@ -545,6 +551,67 @@ def test_time_sma(values: list[State]) -> None:
     for state in values:
         filtered = filt.filter_state(state)
     assert filtered.state == 21.5
+
+
+async def test_time_sma_expiring_sample(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a sample leaving the time window updates the filtered value.
+
+    The source only reports changes, so a short spike followed by silence must
+    still fall out of the window on its own.
+    """
+    config = {
+        "sensor": {
+            "platform": "filter",
+            "name": "test",
+            "entity_id": "sensor.test_monitored",
+            "filters": [
+                {
+                    "filter": "time_simple_moving_average",
+                    "window_size": "01:00:00",
+                    "precision": 2,
+                }
+            ],
+        }
+    }
+
+    async def advance(delta: timedelta) -> None:
+        """Advance time in steps so scheduled updates can chain."""
+        remaining = delta
+        while remaining > timedelta(0):
+            tick = min(timedelta(minutes=5), remaining)
+            freezer.tick(tick)
+            async_fire_time_changed(hass, dt_util.utcnow())
+            await hass.async_block_till_done()
+            remaining -= tick
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_monitored", "0")
+    await hass.async_block_till_done()
+
+    await advance(timedelta(minutes=30))
+    hass.states.async_set("sensor.test_monitored", "100")
+    await hass.async_block_till_done()
+
+    await advance(timedelta(minutes=1))
+    hass.states.async_set("sensor.test_monitored", "0")
+    await hass.async_block_till_done()
+
+    # One minute at 100 within a 60 minute window
+    assert hass.states.get("sensor.test").state == "1.67"
+
+    # While the spike is still inside the window the value does not change
+    await advance(timedelta(minutes=49))
+    assert hass.states.get("sensor.test").state == "1.67"
+
+    # Once the spike has left the window the average returns to the source value
+    await advance(timedelta(hours=1))
+    assert hass.states.get("sensor.test").state == "0.0"
 
 
 async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
