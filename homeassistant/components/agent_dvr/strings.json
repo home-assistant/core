@@ -13,10 +13,10 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "host": "The IP address of the Agent DVR server.",
@@ -27,6 +27,17 @@
     }
   },
   "entity": {
+    "button": {
+      "ptz_down": { "name": "PTZ down" },
+      "ptz_left": { "name": "PTZ left" },
+      "ptz_right": { "name": "PTZ right" },
+      "ptz_up": { "name": "PTZ up" },
+      "ptz_zoom_in": { "name": "PTZ zoom in" },
+      "ptz_zoom_out": { "name": "PTZ zoom out" }
+    },
+    "number": {
+      "ptz_pulse_duration": { "name": "PTZ pulse duration" }
+    },
     "select": {
       "ptz_preset": {
         "name": "PTZ preset"
@@ -36,17 +47,6 @@
       "events_24h": {
         "name": "Events (24h)"
       }
-    },
-    "button": {
-      "ptz_left": { "name": "PTZ left" },
-      "ptz_right": { "name": "PTZ right" },
-      "ptz_up": { "name": "PTZ up" },
-      "ptz_down": { "name": "PTZ down" },
-      "ptz_zoom_in": { "name": "PTZ zoom in" },
-      "ptz_zoom_out": { "name": "PTZ zoom out" }
-    },
-    "number": {
-      "ptz_pulse_duration": { "name": "PTZ pulse duration" }
     }
   },
   "services": {
