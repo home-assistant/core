@@ -77,6 +77,8 @@ class DummyDevice:
 
     def set_attribute(self, attr: str, value: Any) -> None:
         """Record set attribute call."""
+        self.attributes[attr] = value
+        self.notify_update({attr: value})
         self.calls.append(("set_attribute", attr, value))
 
     def set_target_temperature(self, **kwargs: Any) -> None:
@@ -168,17 +170,3 @@ def mock_config_entry() -> Callable[[DummyDevice], MockConfigEntry]:
         )
 
     return _create
-
-
-@pytest.fixture
-def set_device_attribute(hass: HomeAssistant):
-    """Return a function that sets an attribute on a device and notifies the integration."""
-
-    async def _set_device_attribute(
-        device: DummyDevice, attribute: str, value: Any
-    ) -> None:
-        device.attributes[attribute] = value
-        device.notify_update({attribute: value})
-        await hass.async_block_till_done()
-
-    return _set_device_attribute

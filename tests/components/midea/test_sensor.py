@@ -1,7 +1,6 @@
 """Tests for Midea sensor.py."""
 
-from collections.abc import Callable, Coroutine
-from typing import Any
+from collections.abc import Callable
 from unittest.mock import patch
 
 from midealocal.const import DeviceType
@@ -98,9 +97,6 @@ async def test_all_entities(
 async def test_sensor_state_update(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
-    set_device_attribute: Callable[
-        [DummyDevice, str, object], Coroutine[Any, Any, None]
-    ],
 ) -> None:
     """Test sensor state follows push updates from the device."""
     device = DummyDevice(
@@ -127,7 +123,8 @@ async def test_sensor_state_update(
     assert state is not None
     assert state.state == "21.0"
 
-    await set_device_attribute(device, ACAttributes.indoor_temperature, 19.5)
+    device.set_attribute(ACAttributes.indoor_temperature, 19.5)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
