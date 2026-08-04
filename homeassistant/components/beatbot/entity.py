@@ -56,7 +56,10 @@ class BeatbotEntity(CoordinatorEntity[BeatbotCoordinator]):
             await command()
         except BeatbotAuthenticationError as err:
             self.coordinator.config_entry.async_start_reauth(self.hass)
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+            ) from err
         except BeatbotConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

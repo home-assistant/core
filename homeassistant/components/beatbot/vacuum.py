@@ -120,8 +120,8 @@ class BeatbotVacuum(BeatbotEntity, StateVacuumEntity):
         super().__init__(coordinator, device_id)
         self._attr_unique_id = device_id
         features = vacuum_features_from_capabilities(self.data.capabilities)
-        self._attr_supported_features = (
-            VacuumEntityFeature.STATE if features is None else features
+        self._attr_supported_features = VacuumEntityFeature.STATE | (
+            features or VacuumEntityFeature(0)
         )
 
     @property

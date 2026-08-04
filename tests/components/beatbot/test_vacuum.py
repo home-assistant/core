@@ -220,10 +220,10 @@ def test_vacuum_features_skip_readonly_action(
     assert VacuumEntityFeature.START not in vacuum.supported_features
 
 
-def test_vacuum_preserves_empty_feature_set(
+def test_vacuum_always_advertises_state(
     coordinator_factory: CoordinatorFactory,
 ) -> None:
-    """Do not infer state support from unusable advertised capabilities."""
+    """StateVacuumEntity always advertises its required state feature."""
     capabilities = {
         INTERFACE_VACUUM_STATE: BeatbotCapability(
             interface_info=INTERFACE_VACUUM_STATE,
@@ -240,7 +240,7 @@ def test_vacuum_preserves_empty_feature_set(
         DEVICE_ID,
     )
 
-    assert vacuum.supported_features == VacuumEntityFeature(0)
+    assert vacuum.supported_features == VacuumEntityFeature.STATE
 
 
 def test_unknown_status_is_idle() -> None:
@@ -379,9 +379,11 @@ async def test_vacuum_action_triggers_reauth(
     vacuum = BeatbotVacuum(coordinator, DEVICE_ID)
     vacuum.hass = hass
 
-    with pytest.raises(ConfigEntryAuthFailed):
+    with pytest.raises(ConfigEntryAuthFailed) as exc_info:
         await vacuum.async_start()
 
+    assert exc_info.value.translation_domain == "beatbot"
+    assert exc_info.value.translation_key == "auth_error"
     coordinator.config_entry.async_start_reauth.assert_called_once_with(hass)
     coordinator.async_schedule_device_state_refresh.assert_not_called()
 
