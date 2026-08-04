@@ -64,7 +64,7 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
 )
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 3
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 
 CLEANUP_DELAY = 10
 
@@ -1003,6 +1003,14 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         device["config_entry_id"], splits
                     )
                 else:
+                    device["via_device_id"] = None
+
+        if old_major_version < 3 or (old_major_version == 3 and old_minor_version < 3):
+            # Version 3.3, introduced in 2026.8, clears via_device_id self-references,
+            # which are no longer allowed. The version 3.2 remapping above can also turn
+            # a link to a split composite parent into a self-reference, so this runs last.
+            for device in old_data["devices"]:
+                if device["via_device_id"] == device["id"]:
                     device["via_device_id"] = None
 
         if old_major_version > 3:
@@ -1989,7 +1997,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     core_behavior=ReportBehavior.LOG,
                     breaks_in_ha_version="2025.12.0",
                 )
-            via_device_id = via.id if via else UNDEFINED
+                via_device_id = UNDEFINED
+            elif via.id == device.id:
+                # A device can not be its own via device. Ignore the self-reference;
+                # this will raise in HA Core 2027.8.
+                report_usage(
+                    "calls `device_registry.async_get_or_create` with a `via_device` "
+                    "referencing the device itself; the via device is ignored",
+                    core_behavior=ReportBehavior.LOG,
+                    breaks_in_ha_version="2027.8.0",
+                )
+                via_device_id = UNDEFINED
+            else:
+                via_device_id = via.id
         elif via_device is None:
             # An explicit `via_device=None` means "no via device" (a via_device_id
             # alongside it is rejected above).
@@ -2298,6 +2318,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             via_device_id = self._resolve_via_device_id(
                 via_device_id, effective_config_entry_id
             )
+            if via_device_id == device_id:
+                raise HomeAssistantError("A device can not be its own via device")
 
         added_connections: set[tuple[str, str]] | None = None
         added_identifiers: set[tuple[str, str]] | None = None
