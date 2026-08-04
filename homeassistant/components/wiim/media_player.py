@@ -742,6 +742,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             source
         )
 
+    @media_player_exception_wrap
     @override
     async def async_browse_media(
         self,
