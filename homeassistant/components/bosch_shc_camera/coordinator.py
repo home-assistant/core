@@ -184,10 +184,12 @@ def _is_safe_local_camera_host(host_and_port: str) -> bool:
     redirect the snapshot request — made with TLS verification disabled —
     to an arbitrary host, and that same host is cached for later outage
     fallback, extending the exposure window (Copilot review round 7).
-    Link-local addresses are explicitly excluded even though Python's
-    `is_private` counts them as private — 169.254.169.254 is the
-    well-known cloud-metadata SSRF target, and a physical camera's LOCAL
-    address is never link-local in practice.
+    Link-local, loopback, and unspecified addresses are explicitly excluded
+    even though Python's `is_private` counts all three as private —
+    169.254.169.254 is the well-known cloud-metadata SSRF target,
+    127.0.0.1/0.0.0.0 would make Home Assistant connect back to itself, and
+    a physical camera's LOCAL address is never any of these in practice
+    (Copilot review round 19).
     """
     host, _, port_str = host_and_port.partition(":")
     if not port_str.isdigit() or not 1 <= int(port_str) <= 65535:
@@ -196,7 +198,12 @@ def _is_safe_local_camera_host(host_and_port: str) -> bool:
         addr = ipaddress.ip_address(host)
     except ValueError:
         return False
-    return addr.is_private and not addr.is_link_local
+    return (
+        addr.is_private
+        and not addr.is_link_local
+        and not addr.is_loopback
+        and not addr.is_unspecified
+    )
 
 
 # These four keys are fixed per Bronze's appropriate-polling rule — their

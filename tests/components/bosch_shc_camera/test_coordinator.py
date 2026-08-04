@@ -229,6 +229,17 @@ def test_is_safe_local_camera_host_rejects_link_local_metadata_address() -> None
     assert _is_safe_local_camera_host("169.254.169.254:443") is False
 
 
+def test_is_safe_local_camera_host_rejects_loopback_and_unspecified() -> None:
+    """A poisoned cache/cloud response must not connect HA back to itself.
+
+    Python's `ipaddress.is_private` is also true for loopback and
+    unspecified addresses — both must be excluded explicitly (Copilot
+    review round 19, PR #176545).
+    """
+    assert _is_safe_local_camera_host("127.0.0.1:443") is False
+    assert _is_safe_local_camera_host("0.0.0.0:443") is False
+
+
 async def test_camera_status_preserves_last_known_on_double_probe_failure() -> None:
     """Both status probes failing must not reset a cached OFFLINE to UNKNOWN.
 
