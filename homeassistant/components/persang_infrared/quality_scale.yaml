@@ -100,7 +100,10 @@ rules:
     status: exempt
     comment: |
       This integration does not raise exceptions.
-  icon-translations: done
+  icon-translations:
+    status: exempt
+    comment: |
+      This integration does not use custom icons.
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
@@ -115,7 +118,8 @@ rules:
   async-dependency:
     status: exempt
     comment: |
-      This integration has no external dependencies.
+      This integration depends on infrared_protocols, which provides only code
+      definitions with no I/O, so async dependency does not apply.
   inject-websession:
     status: exempt
     comment: |
