@@ -42,6 +42,12 @@ def get_fixture_name(appliance_id: str) -> str:
     raise KeyError(f"Fixture name for appliance ID {appliance_id} does not exist")
 
 
+@cache
+def get_appliance_id(fixture_name: str) -> str:
+    """Get the appliance ID for the given fixture name."""
+    return load_appliance(fixture_name).applianceId
+
+
 def load_appliance(appliance_name: str) -> Appliance:
     """Load an Appliance object from a fixture for the given appliance name."""
     json_string = load_fixture(f"appliances/{appliance_name}.json", DOMAIN)
