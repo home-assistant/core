@@ -12,8 +12,8 @@
       "poe_out": {
         "default": "mdi:power-plug",
         "state": {
-          "auto-on": "mdi:power-plug",
-          "forced-on": "mdi:power-plug-outline",
+          "auto_on": "mdi:power-plug",
+          "forced_on": "mdi:power-plug-outline",
           "off": "mdi:power-plug-off"
         }
       }
