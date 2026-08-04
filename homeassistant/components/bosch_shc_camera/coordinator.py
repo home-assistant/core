@@ -107,8 +107,17 @@ _SAFE_DOMAINS = frozenset({".boschsecurity.com", ".bosch.com"})
 
 
 def _is_safe_bosch_url(url: str) -> bool:
-    """Validate that a URL points to a known Bosch domain (HTTPS only)."""
-    parsed = urlparse(url)
+    """Validate that a URL points to a known Bosch domain (HTTPS only).
+
+    ``urlparse`` can raise ``ValueError`` on malformed input (unmatched IPv6
+    brackets, invalid NFKC-normalized netloc) — fail closed rather than let
+    it propagate to callers that don't expect it (same class of gap fixed
+    in ``_is_safe_bosch_host``, Copilot review round 18).
+    """
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return False
     return (
         parsed.scheme == "https"
         and parsed.hostname is not None
@@ -123,10 +132,27 @@ def _is_safe_bosch_host(host_and_port: str) -> bool:
     response hands back (e.g. "proxy-01.live.cbs.boschsecurity.com:42090")
     before it is used to build a request URL for the RCP client library —
     an unvalidated value here is an SSRF path (bug-hunt 2026-07-27, Copilot
-    review round 5).
+    review round 5). Parsed via ``urlparse`` (not a naive ``rsplit(":", 1)``)
+    so this extracts the same authority a real HTTP client would connect to
+    — a value like "proxy.boschsecurity.com:443@attacker.example" splits to
+    an allowlisted-looking "proxy.boschsecurity.com" on the last colon, but
+    an HTTP client parses it as userinfo and connects to attacker.example
+    (Copilot review round 18). A legitimate Bosch value never contains "@",
+    so it's rejected outright rather than relying on userinfo-vs-host
+    semantics alone — aiohttp turns userinfo into a Basic-Auth header, which
+    would otherwise reach Bosch's real proxy with attacker-controlled
+    credentials. ``urlparse`` itself can raise ``ValueError`` on malformed
+    input (unmatched IPv6 brackets, invalid NFKC-normalized netloc) — fail
+    closed rather than let it propagate past the caller's narrower
+    ``except (TimeoutError, aiohttp.ClientError)``.
     """
-    hostname = host_and_port.rsplit(":", 1)[0]
-    return any(hostname.endswith(d) for d in _SAFE_DOMAINS)
+    if "@" in host_and_port:
+        return False
+    try:
+        hostname = urlparse(f"https://{host_and_port}").hostname
+    except ValueError:
+        return False
+    return hostname is not None and any(hostname.endswith(d) for d in _SAFE_DOMAINS)
 
 
 def _parse_safe_rcp_proxy_url(url_entry: str, cam_id: str) -> tuple[str, str] | None:

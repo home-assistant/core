@@ -145,6 +145,31 @@ def test_is_safe_bosch_host_rejects_arbitrary_host() -> None:
     assert _is_safe_bosch_host("internal-service.local:8080") is False
 
 
+def test_is_safe_bosch_host_rejects_userinfo_smuggled_host() -> None:
+    """Reject any "@" outright — a legitimate Bosch value never contains one.
+
+    A naive rsplit(":", 1) on this value yields the allowlisted-looking
+    "proxy.boschsecurity.com", but an HTTP client parses "user:pass@host"
+    authority syntax and actually connects to attacker.example. Even where
+    the real connection target IS the safe host (userinfo before "@"),
+    aiohttp turns that userinfo into a Basic-Auth header sent to Bosch's
+    real proxy — reject unconditionally instead of relying on
+    userinfo-vs-host semantics (Copilot review round 18, PR #176545).
+    """
+    assert _is_safe_bosch_host("proxy.boschsecurity.com:443@attacker.example") is False
+    assert _is_safe_bosch_host("attacker.example@proxy.boschsecurity.com") is False
+
+
+def test_is_safe_bosch_host_rejects_malformed_ipv6_bracket() -> None:
+    """urlparse() can raise ValueError on malformed input — fail closed.
+
+    The old rsplit(":", 1) implementation could never raise; a value like
+    "[::1" now must not propagate a ValueError past the caller's narrower
+    except (TimeoutError, aiohttp.ClientError) (Copilot review round 18).
+    """
+    assert _is_safe_bosch_host("[::1") is False
+
+
 def test_parse_safe_rcp_proxy_url_rejects_unsafe_host() -> None:
     """A malformed-but-unsafe entry is rejected before use."""
     assert _parse_safe_rcp_proxy_url("evil.example.com:443/hash", "cam1") is None
