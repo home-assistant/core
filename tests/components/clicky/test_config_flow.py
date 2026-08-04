@@ -167,7 +167,7 @@ async def test_form_connection_error(
 
 
 async def test_form_api_error(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test that ConfigEntryAuthFailed is mapped to unknown."""
+    """Test that ClickyAPIError is mapped to unknown."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
