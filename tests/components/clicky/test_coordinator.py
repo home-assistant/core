@@ -12,6 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
+from .common import _make_report
+
 
 def test_coordinator_init(hass: HomeAssistant) -> None:
     """Test coordinator initialization."""
@@ -59,28 +61,8 @@ async def test_async_update_data_success(hass: HomeAssistant) -> None:
     client.__aexit__.return_value = None
 
     client.query.side_effect = [
-        [
-            {
-                "dates": [
-                    {
-                        "items": [
-                            {"value": 12},
-                        ]
-                    }
-                ]
-            }
-        ],
-        [
-            {
-                "dates": [
-                    {
-                        "items": [
-                            {"value": 345},
-                        ]
-                    }
-                ]
-            }
-        ],
+        _make_report(12),
+        _make_report(345),
     ]
 
     coordinator = ClickyCoordinator(

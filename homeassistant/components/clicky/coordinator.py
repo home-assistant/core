@@ -47,7 +47,7 @@ class ClickyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         async with self.client as service:
             for key, val in METRICS.items():
                 try:
-                    response = await service.query(val)
+                    report = await service.query(val)
                 except AuthenticationError as error:
                     raise ConfigEntryAuthFailed("API authentication failed") from error
                 except ClickyAPIError as error:
@@ -55,6 +55,6 @@ class ClickyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         f"Error fetching data from API: {error}"
                     ) from error
 
-                ret[key] = response[0]["dates"][0]["items"][0]["value"]  # int?
+                ret[key] = report.value if report.value is not None else 0
 
             return ret

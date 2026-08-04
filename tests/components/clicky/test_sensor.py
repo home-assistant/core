@@ -9,6 +9,8 @@ from homeassistant.components.clicky.sensor import SENSOR_TYPES, ClickySensor
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .common import _make_report
+
 from tests.common import MockConfigEntry
 
 
@@ -23,28 +25,8 @@ async def test_async_setup_entry(
     client.__aenter__.return_value = client
     client.__aexit__.return_value = None
     client.query.side_effect = [
-        [
-            {
-                "dates": [
-                    {
-                        "items": [
-                            {"value": 12},
-                        ]
-                    }
-                ]
-            }
-        ],
-        [
-            {
-                "dates": [
-                    {
-                        "items": [
-                            {"value": 345},
-                        ]
-                    }
-                ]
-            }
-        ],
+        _make_report(12),
+        _make_report(345),
     ]
 
     entry = MockConfigEntry(
