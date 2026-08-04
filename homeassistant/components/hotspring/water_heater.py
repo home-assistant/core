@@ -54,7 +54,7 @@ class HotSpringWaterHeaterEntity(HotSpringEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_operation(self) -> str | None:
+    def current_operation(self) -> str:
         """Return the current operation mode."""
         if self.coordinator.data.heater.is_on:
             return STATE_ON

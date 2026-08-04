@@ -7,9 +7,16 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+
+
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Spa:
+    """Validate the user input allows us to connect."""
+    api = HotSpring(data[CONF_HOST], session=async_get_clientsession(hass))
+    return await api.update()
 
 
 class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -25,16 +32,14 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                spa = await self._async_get_spa(user_input[CONF_HOST])
+                spa = await validate_input(self.hass, user_input)
             except HotSpringConnectionError, HotSpringError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(
                     spa.info.mac_address or spa.info.root_topic
                 )
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: user_input[CONF_HOST]}
-                )
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=spa.info.hostname or "Hot Spring Spa",
                     data={
@@ -47,8 +52,3 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
         )
-
-    async def _async_get_spa(self, host: str) -> Spa:
-        """Get information from a Hot Spring spa."""
-        api = HotSpring(host, session=async_get_clientsession(self.hass))
-        return await api.update()
