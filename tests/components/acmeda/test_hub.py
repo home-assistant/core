@@ -121,5 +121,5 @@ async def test_async_notify_update_does_nothing_for_non_rollers_update(
     pulse_hub.api = mock_api
 
     with patch("homeassistant.components.acmeda.hub.update_devices") as mock_update:
-        await pulse_hub.async_notify_update(aiopulse.UpdateType.automation)
+        await pulse_hub.async_notify_update(aiopulse.UpdateType.info)
         mock_update.assert_not_called()
