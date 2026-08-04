@@ -47,6 +47,8 @@ async def test_device_registry_via_device(
         (DOMAIN, str(gateway.state.node_info.ieee)), config_entry.entry_id
     )
     assert coordinator_device is not None
+    # The coordinator itself is not linked to a via device
+    assert coordinator_device.via_device_id is None
 
     reg_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, str(zha_device.ieee)), config_entry.entry_id
