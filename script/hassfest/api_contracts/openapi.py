@@ -31,8 +31,10 @@ class Endpoint(Interface):
     method: str
     class_name: str
     requires_auth: bool | None
+    requires_admin: bool
     documentation: str
     request: dict[str, Any] | None
+    request_required: bool
     response: dict[str, Any] | None
 
     def render(self, operation_id: str) -> dict[str, Any]:
@@ -73,12 +75,15 @@ class Endpoint(Interface):
             }
 
         operation["x-home-assistant-integration"] = self.integration
+        if self.requires_admin:
+            operation["x-home-assistant-requires-admin"] = True
         if self.raw_path != self.path:
             operation["x-home-assistant-aiohttp-path"] = self.raw_path
 
         if self.request:
             operation["requestBody"] = {
-                "content": {"application/json": {"schema": self.request}}
+                "required": self.request_required,
+                "content": {"application/json": {"schema": self.request}},
             }
 
         if self.response:
@@ -218,6 +223,7 @@ def _endpoints(
                     index, module, handler, class_node
                 )
                 request: dict[str, Any] | None = None
+                request_required = False
                 response: dict[str, Any] | None = None
 
                 for decorator in handler.decorator_list:
@@ -230,6 +236,19 @@ def _endpoints(
                         mapping := schema_mapping(index, module, decorator.args[0])
                     ):
                         request = mapping_schema(index, *mapping)
+                        allow_empty = (
+                            index.value(module, decorator.args[1])
+                            if len(decorator.args) > 1
+                            else next(
+                                (
+                                    index.value(module, keyword.value)
+                                    for keyword in decorator.keywords
+                                    if keyword.arg == "allow_empty"
+                                ),
+                                False,
+                            )
+                        )
+                        request_required = allow_empty is not True
                     response = next(
                         (
                             annotation_schema(index, module, keyword.value)
@@ -250,8 +269,13 @@ def _endpoints(
                         method=method,
                         class_name=class_name,
                         requires_auth=requires_auth,
+                        requires_admin=any(
+                            decorator_name(item) == "require_admin"
+                            for item in handler.decorator_list
+                        ),
                         documentation=_documentation(integration, metadata),
                         request=request,
+                        request_required=request_required,
                         response=response,
                     )
                 )

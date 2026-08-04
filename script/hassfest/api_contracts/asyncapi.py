@@ -84,10 +84,11 @@ def _command_payload(
         "type": {"type": "string", "const": command},
     }
     required = ["id", "type"]
+    additional_properties: bool | dict[str, Any] = False
 
     if mapping := schema_mapping(index, module, schema):
-        schema_module, node = mapping
-        declared = mapping_schema(index, schema_module, node)
+        declared = mapping_schema(index, *mapping)
+        additional_properties = declared["additionalProperties"]
         properties.update(
             (name, value)
             for name, value in declared["properties"].items()
@@ -95,14 +96,19 @@ def _command_payload(
         )
         required.extend(name for name in declared.get("required", []) if name != "type")
 
-    return {"type": "object", "required": required, "properties": properties}
+    return {
+        "type": "object",
+        "required": required,
+        "properties": properties,
+        "additionalProperties": additional_properties,
+    }
 
 
 def _command_type(index: SourceIndex, module: str, schema: ast.expr) -> str | None:
     """Read the type discriminator from a command schema."""
     if not (mapping := schema_mapping(index, module, schema)):
         return None
-    schema_module, node = mapping
+    schema_module, node, _ = mapping
 
     # Only literal discriminators are safe to publish without executing validators.
     for raw_key, value in zip(node.keys, node.values, strict=True):
@@ -194,6 +200,27 @@ def _protocol_messages(
             },
         }
 
+    error_schema = {
+        "type": "object",
+        "description": source_description(
+            index,
+            "homeassistant.exceptions",
+            index.classes[("homeassistant.exceptions", "ServiceValidationError")],
+            "Errors may include localized details from Home Assistant exceptions.",
+        ),
+        "required": ["code", "message"],
+        "properties": {
+            "code": {"type": "string"},
+            "message": {"type": "string"},
+            "translation_domain": {"type": "string"},
+            "translation_key": {"type": "string"},
+            "translation_placeholders": {
+                "type": "object",
+                "additionalProperties": {"type": "string"},
+            },
+        },
+    }
+
     # These frames belong to the protocol itself, so no command decorator exposes them.
     messages: dict[str, dict[str, Any]] = {
         "auth": {
@@ -224,28 +251,22 @@ def _protocol_messages(
                     "type": {"type": "string", "const": "result"},
                     "success": {"type": "boolean"},
                     "result": {},
-                    "error": {
-                        "type": "object",
-                        "description": source_description(
-                            index,
-                            "homeassistant.exceptions",
-                            index.classes[
-                                ("homeassistant.exceptions", "ServiceValidationError")
-                            ],
-                            "Errors may include localized details from Home Assistant exceptions.",
-                        ),
-                        "required": ["code", "message"],
-                        "properties": {
-                            "code": {"type": "string"},
-                            "message": {"type": "string"},
-                            "translation_domain": {"type": "string"},
-                            "translation_key": {"type": "string"},
-                            "translation_placeholders": {
-                                "type": "object",
-                                "additionalProperties": {"type": "string"},
-                            },
-                        },
-                    },
+                    "error": error_schema,
+                },
+            },
+        },
+        "result_error": {
+            "name": "result error",
+            "title": "Command error",
+            "externalDocs": documentation,
+            "payload": {
+                "type": "object",
+                "required": ["id", "type", "success", "error"],
+                "properties": {
+                    "id": {"type": "integer"},
+                    "type": {"type": "string", "const": "result"},
+                    "success": {"type": "boolean", "const": False},
+                    "error": error_schema,
                 },
             },
         },
@@ -294,15 +315,14 @@ def generate_websocket_asyncapi(
     """Generate an AsyncAPI contract from websocket_command decorators."""
     commands = _commands(index, integrations)
     websocket_docs = {"url": "https://developers.home-assistant.io/docs/api/websocket/"}
-    messages = {
-        **{slug(command.name): command.render() for command in commands},
-        **{
-            f"{slug(command.name)}_result": command.render_result()
-            for command in commands
-            if command.result is not None
-        },
-        **_protocol_messages(index, websocket_docs),
+    command_messages = {slug(command.name): command.render() for command in commands}
+    result_messages = {
+        f"{slug(command.name)}_result": command.render_result()
+        for command in commands
+        if command.result is not None
     }
+    protocol_messages = _protocol_messages(index, websocket_docs)
+    messages = {**command_messages, **result_messages, **protocol_messages}
     return {
         "asyncapi": "3.1.0",
         "defaultContentType": "application/json",
@@ -330,8 +350,8 @@ def generate_websocket_asyncapi(
                 "servers": [{"$ref": "#/servers/websocket"}],
                 "messages": {
                     key: {"$ref": f"#/components/messages/{key}"}
-                    for key in messages
-                    if key != "sse_event"
+                    for key in command_messages.keys()
+                    | (protocol_messages.keys() - {"sse_event", "result_error"})
                 },
             },
             "event_stream": {
@@ -386,13 +406,17 @@ def generate_websocket_asyncapi(
                         "channel": {"$ref": "#/channels/websocket"},
                         "messages": [
                             {
-                                "$ref": "#/channels/websocket/messages/"
-                                + (
-                                    f"{slug(command.name)}_result"
+                                "$ref": (
+                                    f"#/components/messages/{slug(command.name)}_result"
                                     if command.result is not None
-                                    else "result"
+                                    else "#/channels/websocket/messages/result"
                                 )
-                            }
+                            },
+                            *(
+                                [{"$ref": "#/components/messages/result_error"}]
+                                if command.result is not None
+                                else []
+                            ),
                         ],
                     },
                 }

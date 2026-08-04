@@ -23,6 +23,7 @@
         "description": "Handle a call service webhook.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L269)",
         "properties": {
           "data": {
+            "additionalProperties": false,
             "properties": {
               "domain": {
                 "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L264)",
@@ -58,6 +59,7 @@
         "description": "Handle a conversation process webhook.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L324)",
         "properties": {
           "data": {
+            "additionalProperties": false,
             "properties": {
               "conversation_id": {
                 "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L321)",
@@ -105,6 +107,7 @@
         "description": "Handle a fire event webhook.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L302)",
         "properties": {
           "data": {
+            "additionalProperties": false,
             "properties": {
               "event_data": {
                 "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L299)",
@@ -161,30 +164,42 @@
         "description": "Handle a register sensor webhook.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L530)",
         "properties": {
           "data": {
+            "additionalProperties": false,
             "properties": {
               "attributes": {
                 "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L503)",
                 "type": "object"
               },
+              "device_class": {
+                "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L504)"
+              },
               "disabled": {
                 "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L525)",
                 "type": "boolean"
               },
+              "entity_category": {
+                "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L516)"
+              },
               "icon": {
-                "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L519)",
-                "oneOf": [
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
                   {
                     "type": "string"
                   }
-                ]
+                ],
+                "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L519)"
               },
               "name": {
                 "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L509)",
                 "type": "string"
               },
               "state": {
-                "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L513)",
-                "oneOf": [
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
                   {
                     "type": "boolean"
                   },
@@ -197,7 +212,11 @@
                   {
                     "type": "string"
                   }
-                ]
+                ],
+                "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L513)"
+              },
+              "state_class": {
+                "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L522)"
               },
               "type": {
                 "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L510)",
@@ -211,12 +230,15 @@
                 "type": "string"
               },
               "unit_of_measurement": {
-                "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L512)",
-                "oneOf": [
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
                   {
                     "type": "string"
                   }
-                ]
+                ],
+                "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L512)"
               }
             },
             "required": [
@@ -242,6 +264,7 @@
         "properties": {
           "data": {
             "additionalProperties": {
+              "additionalProperties": false,
               "properties": {
                 "template": {
                   "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L381)",
@@ -275,6 +298,7 @@
         "description": "Handle a fire event webhook.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L767)",
         "properties": {
           "data": {
+            "additionalProperties": false,
             "properties": {
               "tag_id": {
                 "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L766)",
@@ -301,6 +325,7 @@
         "description": "Handle a request to HLS-stream a camera.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L340)",
         "properties": {
           "data": {
+            "additionalProperties": false,
             "properties": {
               "camera_entity_id": {
                 "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L339)",
@@ -327,6 +352,7 @@
         "description": "Handle an update location webhook.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L403)",
         "properties": {
           "data": {
+            "additionalProperties": false,
             "properties": {
               "altitude": {
                 "description": "Device altitude in meters.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/device_tracker.py#L75)",
@@ -365,6 +391,9 @@
                 "minimum": 0,
                 "type": "number"
               },
+              "in_zones": {
+                "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/device_tracker.py#L86)"
+              },
               "location_name": {
                 "description": "Name of the zone containing the device.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/device_tracker.py#L56)",
                 "type": "string"
@@ -397,8 +426,10 @@
         "description": "Handle an update registration webhook.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L424)",
         "properties": {
           "data": {
+            "additionalProperties": false,
             "properties": {
               "app_data": {
+                "additionalProperties": true,
                 "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/webhook.py#L416)",
                 "properties": {
                   "push_websocket_channel": {
@@ -741,7 +772,8 @@
         "tags": [
           "analytics"
         ],
-        "x-home-assistant-integration": "analytics"
+        "x-home-assistant-integration": "analytics",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/assist_satellite/connection_test/{connection_id}": {
@@ -844,7 +876,8 @@
         "tags": [
           "backup"
         ],
-        "x-home-assistant-integration": "backup"
+        "x-home-assistant-integration": "backup",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/brands/hardware/{category}/{image}": {
@@ -1093,7 +1126,8 @@
         "tags": [
           "cloud"
         ],
-        "x-home-assistant-integration": "cloud"
+        "x-home-assistant-integration": "cloud",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/cloud/google_actions/sync": {
@@ -1123,7 +1157,8 @@
         "tags": [
           "cloud"
         ],
-        "x-home-assistant-integration": "cloud"
+        "x-home-assistant-integration": "cloud",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/cloud/login": {
@@ -1153,7 +1188,8 @@
         "tags": [
           "cloud"
         ],
-        "x-home-assistant-integration": "cloud"
+        "x-home-assistant-integration": "cloud",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/cloud/logout": {
@@ -1183,7 +1219,8 @@
         "tags": [
           "cloud"
         ],
-        "x-home-assistant-integration": "cloud"
+        "x-home-assistant-integration": "cloud",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/cloud/register": {
@@ -1197,6 +1234,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": false,
                 "properties": {
                   "email": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/cloud/http_api.py#L361)",
@@ -1214,7 +1252,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1236,7 +1275,8 @@
         "tags": [
           "cloud"
         ],
-        "x-home-assistant-integration": "cloud"
+        "x-home-assistant-integration": "cloud",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/cloud/resend_confirm": {
@@ -1250,6 +1290,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": false,
                 "properties": {
                   "email": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/cloud/http_api.py#L402)",
@@ -1262,7 +1303,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1284,7 +1326,8 @@
         "tags": [
           "cloud"
         ],
-        "x-home-assistant-integration": "cloud"
+        "x-home-assistant-integration": "cloud",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/cloud/support_package": {
@@ -1314,7 +1357,8 @@
         "tags": [
           "cloud"
         ],
-        "x-home-assistant-integration": "cloud"
+        "x-home-assistant-integration": "cloud",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/components": {
@@ -1526,21 +1570,22 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": true,
                 "properties": {
                   "entry_id": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/config_entries.py#L178)",
                     "type": "string"
                   },
                   "handler": {
-                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/config_entries.py#L177)",
-                    "oneOf": [
+                    "anyOf": [
                       {
                         "type": "string"
                       },
                       {
                         "type": "array"
                       }
-                    ]
+                    ],
+                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/config_entries.py#L177)"
                   }
                 },
                 "required": [
@@ -1549,7 +1594,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1571,7 +1617,8 @@
         "tags": [
           "config"
         ],
-        "x-home-assistant-integration": "config"
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/config/config_entries/flow/{flow_id}": {
@@ -1649,7 +1696,8 @@
         "tags": [
           "config"
         ],
-        "x-home-assistant-integration": "config"
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
       },
       "post": {
         "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/config_entries.py#L235)",
@@ -1687,7 +1735,8 @@
         "tags": [
           "config"
         ],
-        "x-home-assistant-integration": "config"
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/config/config_entries/flow_handlers": {
@@ -1747,7 +1796,8 @@
         "tags": [
           "config"
         ],
-        "x-home-assistant-integration": "config"
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/config/config_entries/options/flow/{flow_id}": {
@@ -1825,7 +1875,8 @@
         "tags": [
           "config"
         ],
-        "x-home-assistant-integration": "config"
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
       },
       "post": {
         "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/config_entries.py#L296)",
@@ -1863,7 +1914,8 @@
         "tags": [
           "config"
         ],
-        "x-home-assistant-integration": "config"
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/config/config_entries/subentries/flow": {
@@ -1877,6 +1929,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": true,
                 "properties": {
                   "handler": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/config_entries.py#L313)",
@@ -1892,7 +1945,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1914,7 +1968,8 @@
         "tags": [
           "config"
         ],
-        "x-home-assistant-integration": "config"
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/config/config_entries/subentries/flow/{flow_id}": {
@@ -1992,7 +2047,8 @@
         "tags": [
           "config"
         ],
-        "x-home-assistant-integration": "config"
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
       },
       "post": {
         "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/config_entries.py#L353)",
@@ -2030,7 +2086,8 @@
         "tags": [
           "config"
         ],
-        "x-home-assistant-integration": "config"
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/config/core/check_config": {
@@ -2060,7 +2117,8 @@
         "tags": [
           "config"
         ],
-        "x-home-assistant-integration": "config"
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/conversation/process": {
@@ -2074,6 +2132,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": false,
                 "properties": {
                   "agent_id": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/conversation/http.py#L253)",
@@ -2084,24 +2143,30 @@
                     "type": "string"
                   },
                   "device_id": {
-                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/conversation/http.py#L254)",
-                    "oneOf": [
+                    "anyOf": [
                       {
                         "type": "string"
+                      },
+                      {
+                        "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/conversation/http.py#L254)"
                   },
                   "language": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/conversation/http.py#L252)",
                     "type": "string"
                   },
                   "satellite_id": {
-                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/conversation/http.py#L255)",
-                    "oneOf": [
+                    "anyOf": [
                       {
                         "type": "string"
+                      },
+                      {
+                        "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/conversation/http.py#L255)"
                   },
                   "text": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/conversation/http.py#L250)",
@@ -2114,7 +2179,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -2128,15 +2194,15 @@
                       "type": "boolean"
                     },
                     "conversation_id": {
-                      "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/conversation/models.py#L78)",
-                      "oneOf": [
+                      "anyOf": [
                         {
                           "type": "string"
                         },
                         {
                           "type": "null"
                         }
-                      ]
+                      ],
+                      "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/conversation/models.py#L78)"
                     },
                     "response": {
                       "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/conversation/models.py#L77)",
@@ -2164,8 +2230,7 @@
                           "type": "object"
                         },
                         "data": {
-                          "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1396)",
-                          "oneOf": [
+                          "anyOf": [
                             {
                               "description": "Targets affected by a successful intent.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1376)",
                               "properties": {
@@ -2175,15 +2240,15 @@
                                     "description": "Target of the intent response.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1347)",
                                     "properties": {
                                       "id": {
-                                        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1352)",
-                                        "oneOf": [
+                                        "anyOf": [
                                           {
                                             "type": "string"
                                           },
                                           {
                                             "type": "null"
                                           }
-                                        ]
+                                        ],
+                                        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1352)"
                                       },
                                       "name": {
                                         "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1350)",
@@ -2217,15 +2282,15 @@
                                     "description": "Target of the intent response.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1347)",
                                     "properties": {
                                       "id": {
-                                        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1352)",
-                                        "oneOf": [
+                                        "anyOf": [
                                           {
                                             "type": "string"
                                           },
                                           {
                                             "type": "null"
                                           }
-                                        ]
+                                        ],
+                                        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1352)"
                                       },
                                       "name": {
                                         "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1350)",
@@ -2279,7 +2344,8 @@
                               ],
                               "type": "object"
                             }
-                          ]
+                          ],
+                          "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1398)"
                         },
                         "language": {
                           "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1394)",
@@ -2303,7 +2369,7 @@
                             ],
                             "type": "object"
                           },
-                          "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1397)",
+                          "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1399)",
                           "type": "object"
                         },
                         "response_type": {
@@ -2313,8 +2379,7 @@
                             "partial_action_done",
                             "query_answer",
                             "error"
-                          ],
-                          "type": "string"
+                          ]
                         },
                         "speech": {
                           "additionalProperties": {
@@ -2339,7 +2404,7 @@
                         },
                         "speech_slots": {
                           "additionalProperties": {},
-                          "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1398)",
+                          "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1400)",
                           "type": "object"
                         }
                       },
@@ -2488,7 +2553,8 @@
         "tags": [
           "diagnostics"
         ],
-        "x-home-assistant-integration": "diagnostics"
+        "x-home-assistant-integration": "diagnostics",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/diagnostics/{d_type}/{d_id}/{sub_type}/{sub_id}": {
@@ -2552,7 +2618,8 @@
         "tags": [
           "diagnostics"
         ],
-        "x-home-assistant-integration": "diagnostics"
+        "x-home-assistant-integration": "diagnostics",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/doorbird": {
@@ -2638,7 +2705,8 @@
         "tags": [
           "api"
         ],
-        "x-home-assistant-integration": "api"
+        "x-home-assistant-integration": "api",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/esphome/ffmpeg_proxy/{device_id}/{filename}": {
@@ -2749,7 +2817,8 @@
         "tags": [
           "api"
         ],
-        "x-home-assistant-integration": "api"
+        "x-home-assistant-integration": "api",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/file_upload": {
@@ -2763,6 +2832,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": false,
                 "properties": {
                   "file_id": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/file_upload/__init__.py#L205)",
@@ -2775,7 +2845,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -3031,6 +3102,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": true,
                 "properties": {
                   "addon": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/hassio/auth.py#L78)",
@@ -3053,7 +3125,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -3089,6 +3162,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": true,
                 "properties": {
                   "password": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/hassio/auth.py#L108)",
@@ -3106,7 +3180,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -3450,7 +3525,8 @@
         "tags": [
           "hassio"
         ],
-        "x-home-assistant-integration": "hassio"
+        "x-home-assistant-integration": "hassio",
+        "x-home-assistant-requires-admin": true
       },
       "post": {
         "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/hassio/discovery.py#L84)",
@@ -3488,7 +3564,8 @@
         "tags": [
           "hassio"
         ],
-        "x-home-assistant-integration": "hassio"
+        "x-home-assistant-integration": "hassio",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/hassio_push/panel/{addon}": {
@@ -3528,7 +3605,8 @@
         "tags": [
           "hassio"
         ],
-        "x-home-assistant-integration": "hassio"
+        "x-home-assistant-integration": "hassio",
+        "x-home-assistant-requires-admin": true
       },
       "post": {
         "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/hassio/addon_panel.py#L53)",
@@ -3566,7 +3644,8 @@
         "tags": [
           "hassio"
         ],
-        "x-home-assistant-integration": "hassio"
+        "x-home-assistant-integration": "hassio",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/history/period": {
@@ -4114,27 +4193,35 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": false,
                 "properties": {
                   "assistant": {
-                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/intent/__init__.py#L648)",
-                    "oneOf": [
+                    "anyOf": [
                       {
                         "type": "string"
+                      },
+                      {
+                        "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/intent/__init__.py#L648)"
                   },
                   "data": {
+                    "additionalProperties": {},
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/intent/__init__.py#L646)",
                     "properties": {},
                     "type": "object"
                   },
                   "device_id": {
-                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/intent/__init__.py#L649)",
-                    "oneOf": [
+                    "anyOf": [
                       {
                         "type": "string"
+                      },
+                      {
+                        "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/intent/__init__.py#L649)"
                   },
                   "language": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/intent/__init__.py#L647)",
@@ -4145,12 +4232,15 @@
                     "type": "string"
                   },
                   "satellite_id": {
-                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/intent/__init__.py#L650)",
-                    "oneOf": [
+                    "anyOf": [
                       {
                         "type": "string"
+                      },
+                      {
+                        "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/intent/__init__.py#L650)"
                   }
                 },
                 "required": [
@@ -4159,7 +4249,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -4191,8 +4282,7 @@
                       "type": "object"
                     },
                     "data": {
-                      "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1396)",
-                      "oneOf": [
+                      "anyOf": [
                         {
                           "description": "Targets affected by a successful intent.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1376)",
                           "properties": {
@@ -4202,15 +4292,15 @@
                                 "description": "Target of the intent response.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1347)",
                                 "properties": {
                                   "id": {
-                                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1352)",
-                                    "oneOf": [
+                                    "anyOf": [
                                       {
                                         "type": "string"
                                       },
                                       {
                                         "type": "null"
                                       }
-                                    ]
+                                    ],
+                                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1352)"
                                   },
                                   "name": {
                                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1350)",
@@ -4244,15 +4334,15 @@
                                 "description": "Target of the intent response.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1347)",
                                 "properties": {
                                   "id": {
-                                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1352)",
-                                    "oneOf": [
+                                    "anyOf": [
                                       {
                                         "type": "string"
                                       },
                                       {
                                         "type": "null"
                                       }
-                                    ]
+                                    ],
+                                    "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1352)"
                                   },
                                   "name": {
                                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1350)",
@@ -4306,7 +4396,8 @@
                           ],
                           "type": "object"
                         }
-                      ]
+                      ],
+                      "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1398)"
                     },
                     "language": {
                       "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1394)",
@@ -4330,7 +4421,7 @@
                         ],
                         "type": "object"
                       },
-                      "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1397)",
+                      "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1399)",
                       "type": "object"
                     },
                     "response_type": {
@@ -4340,8 +4431,7 @@
                         "partial_action_done",
                         "query_answer",
                         "error"
-                      ],
-                      "type": "string"
+                      ]
                     },
                     "speech": {
                       "additionalProperties": {
@@ -4366,7 +4456,7 @@
                     },
                     "speech_slots": {
                       "additionalProperties": {},
-                      "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1398)",
+                      "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/intent.py#L1400)",
                       "type": "object"
                     }
                   },
@@ -4692,7 +4782,8 @@
         "tags": [
           "media_source"
         ],
-        "x-home-assistant-integration": "media_source"
+        "x-home-assistant-integration": "media_source",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/meraki": {
@@ -4750,8 +4841,10 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": true,
                 "properties": {
                   "app_data": {
+                    "additionalProperties": true,
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/mobile_app/http_api.py#L51)",
                     "properties": {
                       "push_websocket_channel": {
@@ -4819,7 +4912,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -5178,6 +5272,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": false,
                 "properties": {
                   "agent_id": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/backup/onboarding.py#L95)",
@@ -5214,7 +5309,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -5411,6 +5507,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": false,
                 "properties": {
                   "client_id": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/onboarding/views.py#L279)",
@@ -5428,7 +5525,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -5464,6 +5562,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": false,
                 "properties": {
                   "domain": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/onboarding/views.py#L329)",
@@ -5476,7 +5575,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -5505,6 +5605,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": false,
                 "properties": {
                   "client_id": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/onboarding/views.py#L174)",
@@ -5537,7 +5638,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -5716,6 +5818,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": true,
                 "properties": {
                   "handler": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/repairs/websocket_api.py#L118)",
@@ -5733,7 +5836,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -5755,7 +5859,8 @@
         "tags": [
           "repairs"
         ],
-        "x-home-assistant-integration": "repairs"
+        "x-home-assistant-integration": "repairs",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/repairs/issues/fix/{flow_id}": {
@@ -5833,7 +5938,8 @@
         "tags": [
           "repairs"
         ],
-        "x-home-assistant-integration": "repairs"
+        "x-home-assistant-integration": "repairs",
+        "x-home-assistant-requires-admin": true
       },
       "post": {
         "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/repairs/websocket_api.py#L158)",
@@ -5871,7 +5977,8 @@
         "tags": [
           "repairs"
         ],
-        "x-home-assistant-integration": "repairs"
+        "x-home-assistant-integration": "repairs",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/services": {
@@ -6046,6 +6153,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": false,
                 "properties": {
                   "name": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/shopping_list/__init__.py#L128)",
@@ -6058,7 +6166,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -6326,7 +6435,8 @@
         "tags": [
           "api"
         ],
-        "x-home-assistant-integration": "api"
+        "x-home-assistant-integration": "api",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/stt/{provider}": {
@@ -6434,7 +6544,8 @@
         "tags": [
           "api"
         ],
-        "x-home-assistant-integration": "api"
+        "x-home-assistant-integration": "api",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/torque": {
@@ -6940,7 +7051,8 @@
         "tags": [
           "zwave_js"
         ],
-        "x-home-assistant-integration": "zwave_js"
+        "x-home-assistant-integration": "zwave_js",
+        "x-home-assistant-requires-admin": true
       }
     },
     "/api/{username}": {
@@ -7201,6 +7313,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": false,
                 "properties": {
                   "client_id": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/auth/__init__.py#L418)",
@@ -7214,7 +7327,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -7271,6 +7385,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": false,
                 "properties": {
                   "client_id": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/auth/login_flow.py#L345)",
@@ -7279,9 +7394,12 @@
                   "handler": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/auth/login_flow.py#L346)",
                     "items": {
-                      "oneOf": [
+                      "anyOf": [
                         {
                           "type": "string"
+                        },
+                        {
+                          "type": "null"
                         }
                       ]
                     },
@@ -7304,7 +7422,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -7405,6 +7524,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": true,
                 "properties": {
                   "client_id": {
                     "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/auth/login_flow.py#L397)",
@@ -7417,7 +7537,8 @@
                 "type": "object"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {

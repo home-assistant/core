@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
 from itertools import groupby
 import logging
-from typing import Any, NotRequired, TypedDict, cast, override
+from typing import Any, Literal, NotRequired, TypedDict, cast, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -1392,7 +1392,9 @@ class IntentResponseDict(TypedDict):
     speech: dict[str, IntentSpeechValue]
     card: dict[str, IntentCardValue]
     language: str
-    response_type: IntentResponseType
+    response_type: Literal[
+        "action_done", "partial_action_done", "query_answer", "error"
+    ]
     data: IntentResponseSuccessData | IntentResponseErrorData
     reprompt: NotRequired[dict[str, IntentRepromptValue]]
     speech_slots: NotRequired[dict[str, Any]]

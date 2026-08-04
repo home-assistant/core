@@ -6,7 +6,11 @@ from pathlib import Path
 
 from script.hassfest.api_contracts import ASYNCAPI_PATH, OPENAPI_PATH, _documents
 from script.hassfest.api_contracts.common import SourceIndex
-from script.hassfest.api_contracts.schema import annotation_schema
+from script.hassfest.api_contracts.schema import (
+    annotation_schema,
+    mapping_schema,
+    schema_mapping,
+)
 from script.hassfest.model import Config, Integration
 
 ROOT = Path(__file__).parents[2]
@@ -85,13 +89,55 @@ def test_contracts_cover_core_interfaces() -> None:
         "messages"
     ] == [
         {
-            "$ref": "#/channels/websocket/messages/extract_from_target_result",
-        }
+            "$ref": "#/components/messages/extract_from_target_result",
+        },
+        {"$ref": "#/components/messages/result_error"},
     ]
+    assert (
+        "extract_from_target_result"
+        not in asyncapi["channels"]["websocket"]["messages"]
+    )
+    assert (
+        asyncapi["components"]["messages"]["result_error"]["payload"]["properties"][
+            "success"
+        ]["const"]
+        is False
+    )
+    recorder = asyncapi["components"]["messages"]["recorder_import_statistics"][
+        "payload"
+    ]
+    assert recorder["additionalProperties"] is False
+    stats = recorder["properties"]["stats"]["items"]
+    assert "start" in stats["properties"]
+    assert "start" in stats["required"]
+    assert "oneOf" not in json.dumps(recorder)
+    assert {
+        schema["type"]
+        for schema in recorder["properties"]["stats"]["items"]["properties"]["mean"][
+            "anyOf"
+        ]
+    } == {"integer", "number"}
     intent_response = openapi["paths"]["/api/intent/handle"]["post"]["responses"][
         "200"
     ]["content"]["application/json"]["schema"]
-    assert intent_response["properties"]["response_type"]["enum"]
+    assert intent_response["properties"]["response_type"]["enum"] == [
+        "action_done",
+        "partial_action_done",
+        "query_answer",
+        "error",
+    ]
+    assert openapi["paths"]["/api/conversation/process"]["post"]["requestBody"][
+        "required"
+    ]
+    assert (
+        openapi["paths"]["/api/config/config_entries/flow"]["post"]["requestBody"][
+            "content"
+        ]["application/json"]["schema"]["additionalProperties"]
+        is True
+    )
+    assert openapi["paths"]["/api/diagnostics/{d_type}/{d_id}"]["get"][
+        "x-home-assistant-requires-admin"
+    ]
     assert "github.com/home-assistant/core/blob/dev/" in intent_response["description"]
     update_location = openapi["components"]["schemas"]["mobile_app_update_location"][
         "properties"
@@ -167,3 +213,47 @@ class Constants:
     assert payload["required"] == ["required"]
     assert annotation_schema(index, module, ast.Name(id="str")) == {"type": "string"}
     assert annotation_schema(index, module, ast.Name(id="Constants")) == {}
+
+
+def test_voluptuous_schema_preserves_validation_semantics(tmp_path: Path) -> None:
+    """Test literals, alternatives, unknown fields, and extra-key policy."""
+    package = tmp_path / "homeassistant"
+    package.mkdir()
+    (package / "demo.py").write_text(
+        """\
+SCHEMA = vol.Schema(
+    {
+        vol.Required("fixed"): "value",
+        vol.Required("number"): vol.Any(float, int),
+        vol.Required("nullable"): vol.Any(None, str),
+        vol.Required("unknown"): cv.datetime,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+PLAIN = {vol.Required("value"): str}
+"""
+    )
+    index = SourceIndex(tmp_path)
+    module = "homeassistant.demo"
+
+    schema = schema_mapping(index, module, index.assignments[(module, "SCHEMA")])
+    assert schema is not None
+    rendered = mapping_schema(index, *schema)
+
+    assert rendered["additionalProperties"] is True
+    assert rendered["properties"]["fixed"]["const"] == "value"
+    assert {item["type"] for item in rendered["properties"]["number"]["anyOf"]} == {
+        "integer",
+        "number",
+    }
+    assert {item["type"] for item in rendered["properties"]["nullable"]["anyOf"]} == {
+        "null",
+        "string",
+    }
+    assert "unknown" in rendered["properties"]
+    assert "unknown" in rendered["required"]
+
+    plain_schema = schema_mapping(index, module, index.assignments[(module, "PLAIN")])
+    assert plain_schema is not None
+    plain_module, plain, _ = plain_schema
+    assert mapping_schema(index, plain_module, plain)["additionalProperties"] is False

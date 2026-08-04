@@ -31,16 +31,24 @@ def _resolved_expression(
 
 def schema_mapping(
     index: SourceIndex, module: str, node: ast.expr
-) -> tuple[str, ast.Dict] | None:
+) -> tuple[str, ast.Dict, bool] | None:
     """Find the explicit top-level mapping wrapped by a validator call."""
     module, node = _resolved_expression(index, module, node)
     match node:
         case ast.Dict():
-            return module, node
+            return module, node, False
         case ast.Call(args=arguments):
             for argument in arguments:
                 if mapping := schema_mapping(index, module, argument):
-                    return mapping
+                    mapping_module, mapping_node, allow_extra = mapping
+                    if decorator_name(node) == "Schema":
+                        allow_extra = any(
+                            keyword.arg == "extra"
+                            and decorator_name(keyword.value)
+                            in {"ALLOW_EXTRA", "REMOVE_EXTRA"}
+                            for keyword in node.keywords
+                        )
+                    return mapping_module, mapping_node, allow_extra
     return None
 
 
@@ -49,8 +57,12 @@ def _scalar_schema(node: ast.expr) -> dict[str, Any] | None:
     match node:
         case ast.Name(id=name):
             type_name = name
+        case ast.Constant(value=None):
+            return {"type": "null"}
         case ast.Constant(value=value):
-            type_name = type(value).__name__
+            if json_type := SCALAR_TYPES.get(type(value).__name__):
+                return {"type": json_type, "const": value}
+            return None
         case _:
             return None
     return (
@@ -103,7 +115,11 @@ def _validator_call_schema(
     """Render explicit constraints from supported Voluptuous validators."""
     arguments = node.args
     match decorator_name(node):
-        case "Schema" | "Coerce" if arguments:
+        case "Schema" if arguments:
+            if mapping := schema_mapping(index, module, node):
+                return mapping_schema(index, *mapping)
+            return _primitive_schema(index, module, arguments[0])
+        case "Coerce" if arguments:
             return _primitive_schema(index, module, arguments[0])
         case "All" if arguments:
             return {
@@ -136,11 +152,9 @@ def _validator_call_schema(
                 return {"enum": values if isinstance(values, list) else [values]}
         case "Any" if arguments:
             schemas = [
-                schema
-                for argument in arguments
-                if (schema := _primitive_schema(index, module, argument))
+                _primitive_schema(index, module, argument) for argument in arguments
             ]
-            return {"oneOf": schemas} if schemas else {}
+            return {} if any(not schema for schema in schemas) else {"anyOf": schemas}
     return {}
 
 
@@ -163,7 +177,9 @@ def mapping_key(
     return (value, marker == "Required") if isinstance(value, str) else None
 
 
-def mapping_schema(index: SourceIndex, module: str, node: ast.Dict) -> dict[str, Any]:
+def mapping_schema(
+    index: SourceIndex, module: str, node: ast.Dict, allow_extra: bool = False
+) -> dict[str, Any]:
     """Render an explicitly declared Voluptuous mapping."""
     properties: dict[str, Any] = {}
     required: list[str] = []
@@ -177,34 +193,32 @@ def mapping_schema(index: SourceIndex, module: str, node: ast.Dict) -> dict[str,
                 additional_properties = _primitive_schema(index, module, value)
             continue
         name, is_required = key
-        if field_schema := _primitive_schema(index, module, value):
-            description = next(
-                (
-                    index.value(module, keyword.value)
-                    for keyword in (
-                        raw_key.keywords if isinstance(raw_key, ast.Call) else []
-                    )
-                    if keyword.arg == "description"
-                ),
-                None,
-            )
-            field_schema["description"] = source_description(
-                index,
-                module,
-                raw_key,
-                description if isinstance(description, str) else "",
-            )
-            properties[name] = field_schema
-            if is_required:
-                required.append(name)
+        field_schema = _primitive_schema(index, module, value)
+        description = next(
+            (
+                index.value(module, keyword.value)
+                for keyword in (
+                    raw_key.keywords if isinstance(raw_key, ast.Call) else []
+                )
+                if keyword.arg == "description"
+            ),
+            None,
+        )
+        field_schema["description"] = source_description(
+            index,
+            module,
+            raw_key,
+            description if isinstance(description, str) else "",
+        )
+        properties[name] = field_schema
+        if is_required:
+            required.append(name)
     return {
         "type": "object",
         **({"required": required} if required else {}),
         "properties": properties,
-        **(
-            {"additionalProperties": additional_properties}
-            if additional_properties
-            else {}
+        "additionalProperties": (
+            additional_properties if additional_properties is not None else allow_extra
         ),
     }
 
@@ -225,7 +239,7 @@ def annotation_schema(
             return {}
         case ast.BinOp(left=left, op=ast.BitOr(), right=right):
             return {
-                "oneOf": [
+                "anyOf": [
                     annotation_schema(index, module, left, seen),
                     annotation_schema(index, module, right, seen),
                 ]
