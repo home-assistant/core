@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import mock_state_update, setup_integration
-from .const import MOCK_SERIAL_CONFIG, MOCK_TCP_CONFIG, MODEL
+from .const import HARDWARE_MAC, MOCK_SERIAL_CONFIG, MOCK_TCP_CONFIG, MODEL
 
 from tests.common import MockConfigEntry
 
@@ -48,6 +48,33 @@ async def test_device_info(
     )
     assert device_entry is not None
     assert device_entry == snapshot
+
+
+@pytest.mark.usefixtures("mock_russound_client")
+async def test_via_device_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test secondary controllers and zones link to their parent via via_device_id."""
+    await setup_integration(hass, mock_config_entry)
+
+    primary_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, HARDWARE_MAC), mock_config_entry.entry_id
+    )
+    assert primary_device is not None
+
+    secondary_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{HARDWARE_MAC}-2"), mock_config_entry.entry_id
+    )
+    assert secondary_device is not None
+    assert secondary_device.via_device_id == primary_device.id
+
+    zone_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{HARDWARE_MAC}-1"), mock_config_entry.entry_id
+    )
+    assert zone_device is not None
+    assert zone_device.via_device_id == primary_device.id
 
 
 async def test_disconnect_reconnect_log(
