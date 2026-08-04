@@ -148,6 +148,7 @@ class SourceIndex:
         module: str,
         node: ast.expr | None,
         seen: set[tuple[str, str]] | None = None,
+        local_assignments: dict[tuple[str, str], ast.expr] | None = None,
     ) -> Any:
         """Evaluate literal route metadata without executing integration code."""
         match node:
@@ -159,11 +160,13 @@ class SourceIndex:
                 except ValueError, TypeError:
                     return None
             case ast.List(elts=items) | ast.Tuple(elts=items) | ast.Set(elts=items):
-                values = [self.value(module, item, seen) for item in items]
+                values = [
+                    self.value(module, item, seen, local_assignments) for item in items
+                ]
                 return values if all(value is not None for value in values) else None
             case ast.BinOp(left=left_node, op=ast.Add(), right=right_node):
-                left = self.value(module, left_node, seen)
-                right = self.value(module, right_node, seen)
+                left = self.value(module, left_node, seen, local_assignments)
+                right = self.value(module, right_node, seen, local_assignments)
                 return left + right if isinstance(left, type(right)) else None
             case ast.JoinedStr(values=parts):
                 # Resolve only literal/imported substitutions; never evaluate expressions.
@@ -173,7 +176,9 @@ class SourceIndex:
                         case ast.Constant(value=value):
                             result += str(value)
                         case ast.FormattedValue(value=value):
-                            resolved = self.value(module, value, seen)
+                            resolved = self.value(
+                                module, value, seen, local_assignments
+                            )
                             if resolved is None and isinstance(value, ast.Name):
                                 resolved = "{" + value.id.lower() + "}"
                             if resolved is None:
@@ -188,19 +193,31 @@ class SourceIndex:
                 # Keep cycle detection local to this branch. Reusing the same constant in
                 # a sibling expression is valid and must not look like recursion.
                 seen = seen | {key}
+                if value := (local_assignments or {}).get(key):
+                    return self.value(module, value, seen, local_assignments)
                 if value := self.assignments.get(key):
-                    return self.value(module, value, seen)
+                    return self.value(module, value, seen, local_assignments)
                 if imported := self.imported(module, name):
                     imported_module, imported_name = imported
-                    return self.value(imported_module, ast.Name(id=imported_name), seen)
+                    return self.value(
+                        imported_module,
+                        ast.Name(id=imported_name),
+                        seen,
+                        local_assignments,
+                    )
 
             case ast.Call(
                 func=ast.Attribute(value=subject, attr="format"), keywords=keywords
             ):
                 # Route templates use named fields; preserve unresolved path parameters.
-                if isinstance(template := self.value(module, subject, seen), str):
+                if isinstance(
+                    template := self.value(module, subject, seen, local_assignments),
+                    str,
+                ):
                     values = {
-                        keyword.arg: self.value(module, keyword.value, seen)
+                        keyword.arg: self.value(
+                            module, keyword.value, seen, local_assignments
+                        )
                         for keyword in keywords
                         if keyword.arg
                     }

@@ -322,6 +322,7 @@ class ImageView(HomeAssistantView):
 
     name = "api:image:image"
     requires_auth = False
+    openapi_security = ["bearerAuth", "queryToken"]
     url = "/api/image_proxy/{entity_id}"
 
     def __init__(self, component: EntityComponent[ImageEntity]) -> None:

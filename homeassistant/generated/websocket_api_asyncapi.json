@@ -4150,7 +4150,7 @@
         "summary": "Handle call service command."
       },
       "camera_capabilities": {
-        "description": "Handle get camera capabilities websocket command.\n\nAsync friendly.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L942)",
+        "description": "Handle get camera capabilities websocket command.\n\nAsync friendly.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L943)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/camera"
         },
@@ -4159,7 +4159,7 @@
           "additionalProperties": false,
           "properties": {
             "entity_id": {
-              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L938)",
+              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L939)",
               "type": "string"
             },
             "id": {
@@ -4183,7 +4183,7 @@
         "x-home-assistant-requires-integration": "camera"
       },
       "camera_get_prefs": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L987)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L988)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/camera"
         },
@@ -4192,7 +4192,7 @@
           "additionalProperties": false,
           "properties": {
             "entity_id": {
-              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L984)",
+              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L985)",
               "type": "string"
             },
             "id": {
@@ -4216,7 +4216,7 @@
         "x-home-assistant-requires-integration": "camera"
       },
       "camera_stream": {
-        "description": "Handle get camera stream websocket command.\n\nAsync friendly.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L961)",
+        "description": "Handle get camera stream websocket command.\n\nAsync friendly.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L962)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/camera"
         },
@@ -4225,11 +4225,11 @@
           "additionalProperties": false,
           "properties": {
             "entity_id": {
-              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L956)",
+              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L957)",
               "type": "string"
             },
             "format": {
-              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L957)",
+              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L958)",
               "enum": [
                 "hls"
               ]
@@ -4255,7 +4255,7 @@
         "x-home-assistant-requires-integration": "camera"
       },
       "camera_update_prefs": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L1005)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L1006)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/camera"
         },
@@ -4264,7 +4264,7 @@
           "additionalProperties": false,
           "properties": {
             "entity_id": {
-              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L998)",
+              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L999)",
               "type": "string"
             },
             "id": {
@@ -4273,10 +4273,10 @@
               "type": "integer"
             },
             "orientation": {
-              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L1000)"
+              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L1001)"
             },
             "preload_stream": {
-              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L999)",
+              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L1000)",
               "type": "boolean"
             },
             "type": {
@@ -15798,7 +15798,7 @@
         "x-home-assistant-requires-integration": "matter"
       },
       "media_player_browse_media": {
-        "description": "Browse media available to the media_player entity.\n\nTo use, media_player integrations can implement\nMediaPlayerEntity.async_browse_media()\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py#L1342)",
+        "description": "Browse media available to the media_player entity.\n\nTo use, media_player integrations can implement\nMediaPlayerEntity.async_browse_media()\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py#L1343)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/media_player"
         },
@@ -15807,7 +15807,7 @@
           "additionalProperties": false,
           "properties": {
             "entity_id": {
-              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py#L1328)",
+              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py#L1329)",
               "type": "string"
             },
             "id": {
@@ -15831,7 +15831,7 @@
         "x-home-assistant-requires-integration": "media_player"
       },
       "media_player_search_media": {
-        "description": "Search media available to the media_player entity.\n\nTo use, media_player integrations can implement\nMediaPlayerEntity.async_search_media()\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py#L1425)",
+        "description": "Search media available to the media_player entity.\n\nTo use, media_player integrations can implement\nMediaPlayerEntity.async_search_media()\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py#L1426)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/media_player"
         },
@@ -15840,7 +15840,7 @@
           "additionalProperties": false,
           "properties": {
             "entity_id": {
-              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py#L1405)",
+              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py#L1406)",
               "type": "string"
             },
             "id": {
@@ -15859,11 +15859,11 @@
                   "type": "array"
                 }
               ],
-              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py#L1417)",
+              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py#L1418)",
               "type": "array"
             },
             "search_query": {
-              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py#L1416)",
+              "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py#L1417)",
               "type": "string"
             },
             "type": {
@@ -23970,6 +23970,12 @@
         "summary": "Validate DSK and enter PIN as part of S2 inclusion process.",
         "x-home-assistant-requires-admin": true,
         "x-home-assistant-requires-integration": "zwave_js"
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "scheme": "bearer",
+        "type": "http"
       }
     }
   },
@@ -38888,6 +38894,11 @@
     "http": {
       "host": "{host}",
       "protocol": "http",
+      "security": [
+        {
+          "$ref": "#/components/securitySchemes/bearerAuth"
+        }
+      ],
       "variables": {
         "host": {
           "default": "homeassistant.local:8123"
@@ -38897,6 +38908,11 @@
     "https": {
       "host": "{host}",
       "protocol": "https",
+      "security": [
+        {
+          "$ref": "#/components/securitySchemes/bearerAuth"
+        }
+      ],
       "variables": {
         "host": {
           "default": "homeassistant.local:8123"

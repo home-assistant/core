@@ -501,6 +501,11 @@
       "bearerAuth": {
         "scheme": "bearer",
         "type": "http"
+      },
+      "queryToken": {
+        "in": "query",
+        "name": "token",
+        "type": "apiKey"
       }
     }
   },
@@ -1035,7 +1040,7 @@
     },
     "/api/camera_proxy/{entity_id}": {
       "get": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L847)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L848)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/camera"
         },
@@ -1056,9 +1061,19 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         },
-        "security": [],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "queryToken": []
+          }
+        ],
         "summary": "Start a GET request.",
         "tags": [
           "camera"
@@ -1068,7 +1083,7 @@
     },
     "/api/camera_proxy_stream/{entity_id}": {
       "get": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L847)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/camera/__init__.py#L848)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/camera"
         },
@@ -1089,9 +1104,19 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         },
-        "security": [],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "queryToken": []
+          }
+        ],
         "summary": "Start a GET request.",
         "tags": [
           "camera"
@@ -4056,7 +4081,7 @@
     },
     "/api/image_proxy/{entity_id}": {
       "get": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/image/__init__.py#L379)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/image/__init__.py#L380)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/image"
         },
@@ -4077,9 +4102,19 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         },
-        "security": [],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "queryToken": []
+          }
+        ],
         "summary": "Start a GET request.",
         "tags": [
           "image"
@@ -4087,7 +4122,7 @@
         "x-home-assistant-integration": "image"
       },
       "head": {
-        "description": "Start a HEAD request.\n\nThis is sent by some DLNA renderers, like Samsung ones, prior to sending\nthe GET request.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/image/__init__.py#L359)",
+        "description": "Start a HEAD request.\n\nThis is sent by some DLNA renderers, like Samsung ones, prior to sending\nthe GET request.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/image/__init__.py#L360)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/image"
         },
@@ -4108,9 +4143,19 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         },
-        "security": [],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "queryToken": []
+          }
+        ],
         "summary": "Start a HEAD request.",
         "tags": [
           "image"
@@ -4120,7 +4165,7 @@
     },
     "/api/image_proxy_stream/{entity_id}": {
       "get": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/image/__init__.py#L379)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/image/__init__.py#L380)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/image"
         },
@@ -4141,9 +4186,19 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         },
-        "security": [],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "queryToken": []
+          }
+        ],
         "summary": "Start a GET request.",
         "tags": [
           "image"
@@ -4151,7 +4206,7 @@
         "x-home-assistant-integration": "image"
       },
       "head": {
-        "description": "Start a HEAD request.\n\nThis is sent by some DLNA renderers, like Samsung ones, prior to sending\nthe GET request.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/image/__init__.py#L359)",
+        "description": "Start a HEAD request.\n\nThis is sent by some DLNA renderers, like Samsung ones, prior to sending\nthe GET request.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/image/__init__.py#L360)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/image"
         },
@@ -4172,9 +4227,19 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         },
-        "security": [],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "queryToken": []
+          }
+        ],
         "summary": "Start a HEAD request.",
         "tags": [
           "image"
@@ -4724,7 +4789,7 @@
     },
     "/api/media_player_proxy/{entity_id}": {
       "get": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py#L1279)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py#L1280)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/media_player"
         },
@@ -4745,13 +4810,83 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         },
-        "security": [],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "queryToken": []
+          }
+        ],
         "summary": "Start a get request.",
         "tags": [
           "media_player"
         ],
+        "x-home-assistant-integration": "media_player"
+      }
+    },
+    "/api/media_player_proxy/{entity_id}/browse_media/{media_content_type}/{media_content_id}": {
+      "get": {
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py#L1280)",
+        "externalDocs": {
+          "url": "https://www.home-assistant.io/integrations/media_player"
+        },
+        "operationId": "media_player_mediaplayerimageview_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "media_content_type",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "media_content_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "queryToken": []
+          }
+        ],
+        "summary": "Start a get request.",
+        "tags": [
+          "media_player"
+        ],
+        "x-home-assistant-aiohttp-path": "/api/media_player_proxy/{entity_id}/browse_media/{media_content_type}/{media_content_id:.+}",
         "x-home-assistant-integration": "media_player"
       }
     },

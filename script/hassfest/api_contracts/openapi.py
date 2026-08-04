@@ -31,6 +31,7 @@ class Endpoint(Interface):
     method: str
     class_name: str
     requires_auth: bool | None
+    security: list[str] | None
     requires_admin: bool
     documentation: str
     request: dict[str, Any] | None
@@ -66,7 +67,12 @@ class Endpoint(Interface):
         ]:
             operation["parameters"] = parameters
 
-        if self.requires_auth is False:
+        if self.security:
+            operation["security"] = [{name: []} for name in self.security]
+            operation["responses"]["401"] = {
+                "$ref": "#/components/responses/Unauthorized"
+            }
+        elif self.requires_auth is False:
             operation["security"] = []
         else:
             operation["security"] = [{"bearerAuth": []}]
@@ -132,8 +138,15 @@ class View:
 
     def value(self, name: str) -> Any:
         """Resolve an inherited class value."""
-        if expression := assignments(self.node.body).get(name):
-            return self.index.value(self.module, expression)
+        local = assignments(self.node.body)
+        if expression := local.get(name):
+            return self.index.value(
+                self.module,
+                expression,
+                local_assignments={
+                    (self.module, key): value for key, value in local.items()
+                },
+            )
         for base in self.bases():
             if (value := base.value(name)) is not None:
                 return value
@@ -206,6 +219,12 @@ def _endpoints(
             name = class_name
         auth = view.value("requires_auth")
         requires_auth = auth if isinstance(auth, bool) else None
+        security = view.value("openapi_security")
+        if not (
+            isinstance(security, list)
+            and all(isinstance(item, str) for item in security)
+        ):
+            security = None
         extra_urls = view.value("extra_urls") or []
         metadata = integrations[integration]
 
@@ -269,6 +288,7 @@ def _endpoints(
                         method=method,
                         class_name=class_name,
                         requires_auth=requires_auth,
+                        security=security,
                         requires_admin=any(
                             decorator_name(item) == "require_admin"
                             for item in handler.decorator_list
@@ -386,7 +406,10 @@ def generate_rest_openapi(
             for name in groups
         ],
         "components": {
-            "securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer"}},
+            "securitySchemes": {
+                "bearerAuth": {"type": "http", "scheme": "bearer"},
+                "queryToken": {"type": "apiKey", "in": "query", "name": "token"},
+            },
             "schemas": _mobile_app_schemas(index),
             "responses": {
                 "Success": {

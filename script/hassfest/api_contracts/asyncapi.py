@@ -363,11 +363,13 @@ def generate_websocket_asyncapi(
             "http": {
                 "host": "{host}",
                 "protocol": "http",
+                "security": [{"$ref": "#/components/securitySchemes/bearerAuth"}],
                 "variables": {"host": {"default": "homeassistant.local:8123"}},
             },
             "https": {
                 "host": "{host}",
                 "protocol": "https",
+                "security": [{"$ref": "#/components/securitySchemes/bearerAuth"}],
                 "variables": {"host": {"default": "homeassistant.local:8123"}},
             },
         },
@@ -485,5 +487,8 @@ def generate_websocket_asyncapi(
                 "messages": [{"$ref": "#/channels/event_stream/messages/event"}],
             },
         },
-        "components": {"messages": messages},
+        "components": {
+            "messages": messages,
+            "securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer"}},
+        },
     }

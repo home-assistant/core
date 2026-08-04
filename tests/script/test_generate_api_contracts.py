@@ -46,6 +46,14 @@ def test_contracts_cover_core_interfaces() -> None:
     assert openapi["paths"]["/api/"]["get"]["tags"] == ["api"]
     assert "/openapi.json" not in openapi["paths"]
     assert "/api/camera_proxy/{entity_id}" in openapi["paths"]
+    assert openapi["paths"]["/api/camera_proxy/{entity_id}"]["get"]["security"] == [
+        {"bearerAuth": []},
+        {"queryToken": []},
+    ]
+    assert (
+        "/api/media_player_proxy/{entity_id}/browse_media/{media_content_type}/{media_content_id}"
+        in openapi["paths"]
+    )
     assert set(openapi["paths"]["/api/webhook/{webhook_id}"]) == {
         "get",
         "head",
@@ -59,6 +67,12 @@ def test_contracts_cover_core_interfaces() -> None:
     assert asyncapi["asyncapi"] == "3.1.0"
     assert asyncapi["servers"]["secure_websocket"]["protocol"] == "wss"
     assert asyncapi["servers"]["https"]["protocol"] == "https"
+    assert asyncapi["servers"]["http"]["security"] == [
+        {"$ref": "#/components/securitySchemes/bearerAuth"}
+    ]
+    assert asyncapi["servers"]["https"]["security"] == [
+        {"$ref": "#/components/securitySchemes/bearerAuth"}
+    ]
     assert {"$ref": "#/servers/secure_websocket"} in asyncapi["channels"]["websocket"][
         "servers"
     ]

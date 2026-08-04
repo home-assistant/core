@@ -303,7 +303,6 @@ def annotation_schema(
                 # Skip non-annotated or non-name fields, which are not valid TypedDict members.
                 continue
 
-            # Use the field's docstring if available, otherwise fall back to the class-level docstring.
             properties[field.target.id] = annotation_schema(
                 index, target_module, field.annotation, seen
             )
