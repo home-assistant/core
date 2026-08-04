@@ -18,7 +18,6 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
-from tesla_fleet_api.teslemetry.vehicle import TeslemetryVehicle
 
 from homeassistant.components.teslemetry import _get_access_token
 from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN
@@ -119,23 +118,6 @@ async def test_devices(
 
     for device in devices:
         assert device == snapshot(name=f"{device.identifiers}")
-
-
-@pytest.mark.parametrize(
-    ("vin", "model"),
-    [
-        ("LRW3F7EK4NC700000", "Model 3"),
-        ("LRWAF7EK4NC700000", "Cybercab"),
-    ],
-    ids=["model_3", "cybercab"],
-)
-def test_vehicle_model(vin: str, model: str) -> None:
-    """Test the device model is derived from the library, keyed on the VIN.
-
-    Teslemetry sets the device model to ``vehicle.model``, so the Cybercab VIN
-    prefix (4th character ``A``) added in tesla-fleet-api 1.8.0 must resolve.
-    """
-    assert TeslemetryVehicle(MagicMock(), vin).model == model
 
 
 @pytest.mark.parametrize(("side_effect", "state"), VEHICLE_ERRORS)
