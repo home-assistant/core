@@ -138,6 +138,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     knx_module.ui_expose_controller.start(
         hass, knx_module.xknx, knx_module.config_store.get_exposes()
     )
+    knx_module.ui_entity_link_controller.start(
+        hass, knx_module.xknx, knx_module.config_store.get_entity_links()
+    )
     if CONF_KNX_EXPOSE in config:
         knx_module.yaml_exposures.extend(
             create_combined_knx_exposure(hass, knx_module.xknx, config[CONF_KNX_EXPOSE])
@@ -224,6 +227,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         exposure.async_remove()
     knx_module.ui_time_server_controller.stop()
     knx_module.ui_expose_controller.stop()
+    knx_module.ui_entity_link_controller.stop()
 
     configured_platforms_yaml = {
         platform
