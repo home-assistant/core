@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant.components.acmeda.const import DOMAIN
 from homeassistant.components.acmeda.hub import PulseHub
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
@@ -111,9 +110,7 @@ async def test_async_notify_update_updates_devices_when_api_is_set(
 
     with patch("homeassistant.components.acmeda.hub.update_devices") as mock_update:
         await pulse_hub.async_notify_update(aiopulse.UpdateType.rollers)
-        mock_update.assert_called_once_with(
-            hass, mock_config_entry, mock_api.rollers
-        )
+        mock_update.assert_called_once_with(hass, mock_config_entry, mock_api.rollers)
 
 
 async def test_async_notify_update_does_nothing_for_non_rollers_update(
