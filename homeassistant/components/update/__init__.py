@@ -280,7 +280,7 @@ class UpdateEntity(
     _attr_supported_features: UpdateEntityFeature = UpdateEntityFeature(0)
     _attr_title: str | None = None
     _attr_update_percentage: int | float | None = None
-    _attr_release_notes_messages: tuple[UpdateReleaseNotesMessage, ...] = ()
+    _attr_release_notes_messages: tuple[UpdateReleaseNotesMessage, ...]
     __skipped_version: str | None = None
     __in_progress: bool = False
 
@@ -634,6 +634,9 @@ async def _async_render_release_notes_messages(
     hass: HomeAssistant, messages: tuple[UpdateReleaseNotesMessage, ...]
 ) -> str | None:
     """Render release notes messages as alert elements."""
+    if not messages:
+        return None
+
     entity_component_translations = await async_get_translations(
         hass, hass.config.language, "entity_component", {DOMAIN}
     )
