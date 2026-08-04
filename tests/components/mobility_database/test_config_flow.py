@@ -19,6 +19,7 @@ from aiomobilitydatabase.feeds import (
     StaticDataUnavailableError,
     StationGroup,
     Stop,
+    StopLocationType,
 )
 import pytest
 
@@ -784,7 +785,14 @@ async def test_add_stop_without_coverage_center(
             latitude=None,
             longitude=None,
             parent_station=None,
-            location_type=0,
+            location_type=StopLocationType.STOP,
+            stop_code=None,
+            platform_code=None,
+            wheelchair_boarding=None,
+            description=None,
+            url=None,
+            zone_id=None,
+            timezone=None,
         )
     ]
     await setup_integration(hass, mock_config_entry)

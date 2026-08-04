@@ -17,7 +17,13 @@ from aiomobilitydatabase import (
     SearchResults,
     SourceInfo,
 )
-from aiomobilitydatabase.feeds import Route, StationGroup, Stop, StopArrival
+from aiomobilitydatabase.feeds import (
+    Route,
+    StationGroup,
+    Stop,
+    StopArrival,
+    StopLocationType,
+)
 import pytest
 
 from homeassistant.components.mobility_database.const import (
@@ -45,7 +51,14 @@ STOP_1 = Stop(
     latitude=34.05,
     longitude=-118.25,
     parent_station=None,
-    location_type=0,
+    location_type=StopLocationType.STOP,
+    stop_code=None,
+    platform_code=None,
+    wheelchair_boarding=None,
+    description=None,
+    url=None,
+    zone_id=None,
+    timezone=None,
 )
 STOP_2 = Stop(
     id="S2",
@@ -53,10 +66,39 @@ STOP_2 = Stop(
     latitude=34.06,
     longitude=-118.24,
     parent_station=None,
-    location_type=0,
+    location_type=StopLocationType.STOP,
+    stop_code=None,
+    platform_code=None,
+    wheelchair_boarding=None,
+    description=None,
+    url=None,
+    zone_id=None,
+    timezone=None,
 )
-ROUTE_A = Route(id="R1", short_name="A", long_name="Downtown Loop", type=3)
-ROUTE_B = Route(id="R2", short_name="B", long_name="Crosstown", type=3)
+ROUTE_A = Route(
+    id="R1",
+    short_name="A",
+    long_name="Downtown Loop",
+    type=3,
+    agency_id=None,
+    color=None,
+    text_color=None,
+    url=None,
+    description=None,
+    sort_order=None,
+)
+ROUTE_B = Route(
+    id="R2",
+    short_name="B",
+    long_name="Crosstown",
+    type=3,
+    agency_id=None,
+    color=None,
+    text_color=None,
+    url=None,
+    description=None,
+    sort_order=None,
+)
 
 
 def make_arrival(
@@ -85,6 +127,14 @@ def make_arrival(
         delay_seconds=30 if realtime else None,
         realtime=realtime,
         vehicle_id=None,
+        wheelchair_accessible=None,
+        bikes_allowed=None,
+        pickup_type=None,
+        drop_off_type=None,
+        timepoint_exact=True,
+        stop_headsign=None,
+        trip_short_name=None,
+        block_id=None,
     )
 
 
