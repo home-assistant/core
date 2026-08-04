@@ -1140,7 +1140,7 @@ google-cloud-texttospeech==2.25.1
 google-genai==2.16.0
 
 # homeassistant.components.google_health
-google-health-api==0.6.0
+google-health-api==0.8.0
 
 # homeassistant.components.google_travel_time
 google-maps-routing==0.6.15
