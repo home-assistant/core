@@ -39,9 +39,7 @@ class HiveEntity(Entity):
             name=self.device["device_name"],
             sw_version=self.device["deviceData"]["version"],
         )
-        # The Hive Hub reports itself as its own parent; only link to the parent
-        # when they differ so the hub is not linked to itself. A stale self-link
-        # on the hub is cleared in async_setup_entry.
+        # Hive reports the hub itself as its parent.
         if self.device["parentDevice"] != device_id:
             device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
                 hass,
