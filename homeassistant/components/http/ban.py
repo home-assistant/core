@@ -297,6 +297,12 @@ class IpBanManager:
                     )
             except FileNotFoundError:
                 pass
+            except OSError as exc:
+                _LOGGER.error(
+                    "Failed to migrate IP bans from %s: %s",
+                    path,
+                    str(exc),
+                )
             except HomeAssistantError as err:
                 _LOGGER.error("Unable to load %s: %s ", path, str(err))
 
