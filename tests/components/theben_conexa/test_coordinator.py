@@ -1,49 +1,46 @@
 """Tests for the Theben Conexa coordinator."""
 
-from typing import Any
+from types import SimpleNamespace
 
-import pytest
-
-from homeassistant.components.theben_conexa.const import DOMAIN
-from homeassistant.components.theben_conexa.coordinator import SmgwSensorCoordinator
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
-TEST_CONFIG_DATA = {
-    CONF_HOST: "1.1.1.1",
-    CONF_USERNAME: "test-username",
-    CONF_PASSWORD: "test-password",
-}
 
-
-async def test_coordinator_async_init_success(
+async def test_setup_entry_initializes_coordinator(
     hass: HomeAssistant,
-    mock_conexa_smgw: Any,
+    mock_conexa_smgw: SimpleNamespace,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test coordinator initialization creates the API client and schedules updates."""
-    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG_DATA)
-    entry.add_to_hass(hass)
-    coordinator = SmgwSensorCoordinator(hass, entry)
+    """Test setup initializes runtime coordinator data and schedules updates."""
+    mock_config_entry.add_to_hass(hass)
 
-    await coordinator.async_init()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
+    coordinator = mock_config_entry.runtime_data
     assert coordinator._api is mock_conexa_smgw.client
     assert coordinator.gateway_info is mock_conexa_smgw.client.gatewayInfo
     assert coordinator._scheduled_updates is not None
 
 
-async def test_coordinator_async_init_not_ready(
+async def test_setup_entry_not_ready_when_gateway_unreachable(
     hass: HomeAssistant,
-    mock_conexa_smgw: Any,
+    entity_registry: er.EntityRegistry,
+    mock_conexa_smgw: SimpleNamespace,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test coordinator initialization raises ConfigEntryNotReady when the gateway is unreachable."""
-    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG_DATA)
-    entry.add_to_hass(hass)
-    coordinator = SmgwSensorCoordinator(hass, entry)
+    """Test setup retries when gateway is unreachable and no entities are created."""
+    mock_config_entry.add_to_hass(hass)
 
     mock_conexa_smgw.network.side_effect = TimeoutError
-    with pytest.raises(ConfigEntryNotReady, match="Device is not reachable"):
-        await coordinator.async_init()
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+        == []
+    )

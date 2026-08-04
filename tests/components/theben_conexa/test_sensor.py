@@ -4,25 +4,22 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.theben_conexa.const import DOMAIN, OBIS_IN, OBIS_OUT
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.theben_conexa.const import OBIS_IN, OBIS_OUT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
-
-TEST_CONFIG_DATA = {
-    CONF_HOST: "1.1.1.1",
-    CONF_USERNAME: "test-username",
-    CONF_PASSWORD: "test-password",
-}
+from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_async_setup_entry_logs_unsupported_keys(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
     mock_conexa_smgw: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Supported keys are added while unsupported ones are skipped."""
@@ -34,16 +31,11 @@ async def test_async_setup_entry_logs_unsupported_keys(
         }
     )
 
-    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG_DATA)
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    assert {entry.unique_id for entry in entity_entries} == {
-        f"{mock_conexa_smgw.client.gatewayInfo.smgwID}-{TEST_CONFIG_DATA[CONF_USERNAME]}-{OBIS_IN}",
-        f"{mock_conexa_smgw.client.gatewayInfo.smgwID}-{TEST_CONFIG_DATA[CONF_USERNAME]}-{OBIS_OUT}",
-    }
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
     assert len(hass.states.async_entity_ids("sensor")) == 2
     assert "Skipping unsupported Conexa SMGW key" in caplog.text
