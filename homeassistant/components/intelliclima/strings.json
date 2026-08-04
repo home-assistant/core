@@ -26,7 +26,7 @@
   "entity": {
     "binary_sensor": {
       "filter_cleaning": {
-        "name": "Filter Cleaning Required"
+        "name": "Filter cleaning required"
       }
     },
     "select": {

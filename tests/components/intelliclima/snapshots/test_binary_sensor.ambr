@@ -51,12 +51,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Filter Cleaning Required',
+    'object_id_base': 'Filter cleaning required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Filter Cleaning Required',
+    'original_name': 'Filter cleaning required',
     'platform': 'intelliclima',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -70,7 +70,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Filter Cleaning Required',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Filter cleaning required',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.filter_cleaning_required',
