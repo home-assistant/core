@@ -11,7 +11,16 @@ stay single-sourced in the libraries.
 from collections.abc import Awaitable, Callable
 from dataclasses import MISSING, asdict, dataclass, fields, is_dataclass
 import types
-from typing import TYPE_CHECKING, Any, Union, get_args, get_origin, get_type_hints
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Union,
+    cast,
+    get_args,
+    get_origin,
+    get_type_hints,
+    override,
+)
 
 from knx_telegram_store import KnxTelegramStoreException, mcp as kts_mcp
 import voluptuous as vol
@@ -106,7 +115,7 @@ def _serialize(result: Any) -> JsonObjectType:
                 for item in result
             ]
         }
-    return result
+    return cast(JsonObjectType, result)
 
 
 class KNXTool(llm.Tool):
@@ -127,6 +136,7 @@ class KNXTool(llm.Tool):
         self._knx = knx
         self._func = func
 
+    @override
     async def async_call(
         self,
         hass: HomeAssistant,
@@ -405,6 +415,7 @@ class KNXLLMAPI(llm.API):
 
     knx: KNXModule
 
+    @override
     async def async_get_api_instance(
         self, llm_context: llm.LLMContext
     ) -> llm.APIInstance:
