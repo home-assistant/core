@@ -63,7 +63,11 @@ class IntelliClimaFilterCleaningBinarySensor(
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self._device_sn in self.coordinator.data
+        return (
+            super().available
+            and self._device_sn in self.coordinator.data
+            and self.coordinator.data[self._device_sn].is_active
+        )
 
     @property
     @override
