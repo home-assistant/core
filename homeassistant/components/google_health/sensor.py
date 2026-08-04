@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -313,7 +314,12 @@ async def async_setup_entry(
 
         @callback
         def async_add_device_entities() -> None:
-            """Add entities for new devices."""
+            """Add entities for new devices and remove stale devices."""
+            current_device_ids = set(device_coordinator.data)
+            # Drop any devices no longer present in the API. They will be removed below
+            added_device_ids.intersection_update(current_device_ids)
+
+            # Add any newly discovered devices
             new_entities: list[SensorEntity] = []
             for device in device_coordinator.data.values():
                 if device.device_id in added_device_ids:
@@ -330,6 +336,21 @@ async def async_setup_entry(
                 )
             if new_entities:
                 async_add_entities(new_entities)
+
+            # Remove any stale devices
+            device_registry = dr.async_get(hass)
+            for device_entry in dr.async_entries_for_config_entry(
+                device_registry, entry.entry_id
+            ):
+                for identifier in device_entry.identifiers:
+                    if identifier[0] == DOMAIN:
+                        device_id = identifier[1]
+                        if (
+                            device_id != entry.entry_id
+                            and device_id not in current_device_ids
+                        ):
+                            device_registry.async_remove_device(device_entry.id)
+                        break
 
         async_add_device_entities()
         entry.async_on_unload(
