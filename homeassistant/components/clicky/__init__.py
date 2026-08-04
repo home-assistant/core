@@ -16,7 +16,6 @@ _PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ClickyConfigEntry) -> bool:
     """Set up Clicky Web Analytics from a config entry."""
 
-    # Create API instance
     session = async_get_clientsession(hass)
     client = ClickyClient(
         site_id=entry.data[CONF_SITE_ID],
