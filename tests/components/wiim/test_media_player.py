@@ -994,6 +994,28 @@ async def test_browse_media_service_returns_wiim_library(
     assert [child.title for child in queue_browse.children] == ["Song A", "Song B"]
 
 
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_browse_media_does_not_refresh_entity_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test browsing media does not refresh entity state after success."""
+    await setup_integration(hass, mock_config_entry)
+
+    with patch(
+        "homeassistant.components.wiim.media_player.WiimMediaPlayerEntity._update_ha_state_from_sdk_cache"
+    ) as mock_update:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_BROWSE_MEDIA,
+            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+
+    mock_update.assert_not_called()
+
+
 async def test_browse_media_service_includes_media_sources_when_supported(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
