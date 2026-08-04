@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, patch
 
+from google_health_api.model import ListDataPointResult, _ListDataPointsModel
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -61,3 +62,20 @@ async def test_sensor_empty_rollup(
     floors_state = hass.states.get("sensor.google_health_floors")
     assert floors_state is not None
     assert floors_state.state == "0"
+
+
+async def test_sensor_empty_sleep(
+    hass: HomeAssistant,
+    mock_google_health_client: AsyncMock,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test sleep sensors when the sleep endpoint returns no data."""
+    mock_google_health_client.sleep.list.return_value = ListDataPointResult(
+        _ListDataPointsModel(data_points=[])
+    )
+
+    assert await integration_setup()
+
+    time_asleep_state = hass.states.get("sensor.google_health_time_asleep")
+    assert time_asleep_state is not None
+    assert time_asleep_state.state == "unknown"

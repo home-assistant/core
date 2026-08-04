@@ -10,8 +10,15 @@ from duco_connectivity.exceptions import (
     DucoConnectionError,
     DucoError,
     DucoResponseError,
+    DucoUnsupportedCapabilityError,
 )
-from duco_connectivity.models import BoardInfo, Node, NodeListActionItemList, NodeName
+from duco_connectivity.models import (
+    BoardInfo,
+    Node,
+    NodeListActionItemList,
+    NodeName,
+    VentilationTemperatureInfo,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 type DucoConfigEntry = ConfigEntry[DucoCoordinator]
 
 
-@dataclass
+@dataclass(slots=True, kw_only=True)
 class DucoData:
     """Data returned by the Duco coordinator."""
 
@@ -34,6 +41,7 @@ class DucoData:
     node_actions: NodeListActionItemList
     rssi_wifi: int | None
     time_filter_remain: int | None
+    ventilation_temperatures: VentilationTemperatureInfo | None
 
 
 class DucoCoordinator(DataUpdateCoordinator[DucoData]):
@@ -42,6 +50,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     config_entry: DucoConfigEntry
     board_info: BoardInfo
     _supports_time_filter_remain: bool
+    _supports_ventilation_temperatures: bool
     _configured_node_names: dict[int, str]
 
     def __init__(
@@ -61,6 +70,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         self.client = client
         self._configured_node_names = {}
         self._supports_time_filter_remain = True
+        self._supports_ventilation_temperatures = True
 
     async def _async_load_node_names(self) -> None:
         """Load configured Duco node names during setup."""
@@ -175,9 +185,26 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 time_filter_remain = await self.client.async_get_time_filter_remaining()
                 self._supports_time_filter_remain = time_filter_remain is not None
 
+        ventilation_temperatures = (
+            self.data.ventilation_temperatures if self.data else None
+        )
+        if self._supports_ventilation_temperatures:
+            try:
+                ventilation_temperatures = (
+                    await self.client.async_get_ventilation_temperature_info()
+                )
+            except DucoUnsupportedCapabilityError:
+                ventilation_temperatures = None
+                self._supports_ventilation_temperatures = False
+            except DucoError as err:
+                _LOGGER.debug(
+                    "Could not fetch Duco ventilation temperatures", exc_info=err
+                )
+
         return DucoData(
             nodes={node.node_id: node for node in nodes},
             node_actions=node_actions,
             rssi_wifi=rssi_wifi,
             time_filter_remain=time_filter_remain,
+            ventilation_temperatures=ventilation_temperatures,
         )

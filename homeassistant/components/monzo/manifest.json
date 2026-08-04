@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/monzo",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["monzopy==1.5.1"]
+  "requirements": ["monzopy==1.6.0"]
 }

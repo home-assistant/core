@@ -1,0 +1,123 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "device_auth_failed": "Could not connect with the provided configuration",
+      "invalid_device_id_for_ip": "The device ID does not match the selected IP address",
+      "invalid_device_ip": "Could not find a supported device at this IP address",
+      "invalid_token": "Token and key must be valid hexadecimal strings",
+      "ip_address_mismatch": "The IP address does not match the discovered device",
+      "login_failed": "Could not log in to the selected cloud server",
+      "no_devices": "No devices found",
+      "preset_login_failed": "Could not log in with the preset account",
+      "protocol_mismatch": "The protocol does not match the discovered device",
+      "token_unavailable": "Could not get a valid token and key from the cloud",
+      "type_mismatch": "The type does not match the discovered device"
+    },
+    "step": {
+      "auth_method": {
+        "data": {
+          "login_mode": "Login mode"
+        },
+        "data_description": {
+          "login_mode": "How to authenticate with the Midea cloud"
+        },
+        "description": "Choose how you want to authenticate.",
+        "title": "Authentication"
+      },
+      "auto": {
+        "data": {
+          "device": "Device"
+        },
+        "data_description": {
+          "device": "Select the discovered device to configure"
+        },
+        "title": "Select a discovered device"
+      },
+      "list": {
+        "description": "{table}",
+        "title": "Discovered appliances"
+      },
+      "login_credentials": {
+        "data": {
+          "account": "Account",
+          "password": "[%key:common::config_flow::data::password%]",
+          "server": "Server"
+        },
+        "data_description": {
+          "account": "Your Midea cloud account username or email address",
+          "password": "Your Midea cloud account password",
+          "server": "The Midea cloud server for your region"
+        },
+        "title": "Cloud login"
+      },
+      "manually": {
+        "data": {
+          "device_id": "Device ID",
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "key": "Key",
+          "model": "Model",
+          "port": "[%key:common::config_flow::data::port%]",
+          "protocol": "Protocol",
+          "subtype": "Subtype",
+          "token": "Token",
+          "type": "Type"
+        },
+        "data_description": {
+          "device_id": "The device ID of your Midea appliance",
+          "ip_address": "The local IP address of your Midea appliance",
+          "key": "The key of your Midea appliance (hexadecimal string)",
+          "model": "The model of your Midea appliance",
+          "port": "The local port used by your Midea appliance",
+          "protocol": "The protocol used by your Midea appliance",
+          "subtype": "The subtype of your Midea appliance",
+          "token": "The token of your Midea appliance (hexadecimal string)",
+          "type": "The type of your Midea appliance"
+        },
+        "title": "Configure manually"
+      },
+      "search": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "Enter 'auto' to scan your network, or enter a specific IP address"
+        },
+        "title": "Search devices"
+      },
+      "user": {
+        "menu_options": {
+          "list": "List all appliances only",
+          "manually": "Configure manually",
+          "search": "Search automatically"
+        },
+        "title": "Set up Midea LAN"
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "climate_zone1": {
+        "name": "Zone 1 thermostat"
+      },
+      "climate_zone2": {
+        "name": "Zone 2 thermostat"
+      }
+    }
+  },
+  "exceptions": {
+    "unsupported_hvac_mode": {
+      "message": "HVAC mode {hvac_mode} is not supported by this device."
+    }
+  },
+  "selector": {
+    "login_mode": {
+      "options": {
+        "account": "Your account credentials",
+        "preset": "Preset cloud credentials"
+      }
+    }
+  }
+}

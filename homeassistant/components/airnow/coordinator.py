@@ -77,7 +77,6 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             obs = await self.airnow.observations.latLong(
                 self.latitude,
                 self.longitude,
-                distance=self.distance,
             )
 
         except (AirNowError, ClientConnectorError, InvalidJsonError) as error:

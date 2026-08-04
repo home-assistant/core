@@ -4,7 +4,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EXCLUDE, Platform
+from homeassistant.const import CONF_EXCLUDE, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -108,6 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             unique_id=controller.device_uid,
             title=new_title,
+            data={CONF_HOST: controller.device_ip},
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

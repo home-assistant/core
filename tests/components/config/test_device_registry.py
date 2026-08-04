@@ -61,6 +61,8 @@ async def test_list_devices(
             "area_id": None,
             "config_entries": [entry.entry_id],
             "config_entries_subentries": {entry.entry_id: [None]},
+            "config_entry_id": entry.entry_id,
+            "config_subentry_id": None,
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
             "created_at": utcnow().timestamp(),
@@ -84,6 +86,8 @@ async def test_list_devices(
             "area_id": None,
             "config_entries": [entry.entry_id],
             "config_entries_subentries": {entry.entry_id: [None]},
+            "config_entry_id": entry.entry_id,
+            "config_subentry_id": None,
             "configuration_url": None,
             "connections": [],
             "created_at": utcnow().timestamp(),
@@ -119,6 +123,8 @@ async def test_list_devices(
             "area_id": None,
             "config_entries": [entry.entry_id],
             "config_entries_subentries": {entry.entry_id: [None]},
+            "config_entry_id": entry.entry_id,
+            "config_subentry_id": None,
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
             "created_at": utcnow().timestamp(),
@@ -307,7 +313,7 @@ async def test_remove_config_entry_from_device(
     entry_2.supports_remove_device = True
     entry_2.add_to_hass(hass)
 
-    device_registry.async_get_or_create(
+    device_entry_1 = device_registry.async_get_or_create(
         config_entry_id=entry_1.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
@@ -315,11 +321,14 @@ async def test_remove_config_entry_from_device(
         config_entry_id=entry_2.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    assert device_entry.config_entries == {entry_1.entry_id, entry_2.entry_id}
+    # Identifiers and connections are unique per config entry, so the two config
+    # entries get separate devices even though they share a connection
+    assert device_entry_1.id != device_entry.id
+    assert device_entry.config_entries == {entry_2.entry_id}
 
-    # Try removing a config entry from the device, it should fail because
+    # Try removing the config entry from the device, it should fail because
     # async_remove_config_entry_device returns False
-    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
+    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -327,25 +336,20 @@ async def test_remove_config_entry_from_device(
     # Make async_remove_config_entry_device return True
     can_remove = True
 
-    # Remove the 1st config entry
-    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
-
-    assert response["success"]
-    assert response["result"]["config_entries"] == [entry_2.entry_id]
-
-    # Check that the config entry was removed from the device
-    assert device_registry.async_get(device_entry.id).config_entries == {
-        entry_2.entry_id
-    }
-
-    # Remove the 2nd config entry
+    # Remove the config entry, this was the device's only config entry so the
+    # device is removed
     response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
 
     assert response["success"]
     assert response["result"] is None
 
-    # This was the last config entry, the device is removed
+    # This was the only config entry, the device is removed
     assert not device_registry.async_get(device_entry.id)
+
+    # The device belonging to the other config entry is untouched
+    assert device_registry.async_get(device_entry_1.id).config_entries == {
+        entry_1.entry_id
+    }
 
 
 async def test_remove_config_entry_from_device_fails(
@@ -396,38 +400,38 @@ async def test_remove_config_entry_from_device_fails(
     entry_3.supports_remove_device = True
     entry_3.add_to_hass(hass)
 
-    device_registry.async_get_or_create(
+    device_entry_1 = device_registry.async_get_or_create(
         config_entry_id=entry_1.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    device_registry.async_get_or_create(
+    device_entry_2 = device_registry.async_get_or_create(
         config_entry_id=entry_2.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    device_entry = device_registry.async_get_or_create(
+    device_entry_3 = device_registry.async_get_or_create(
         config_entry_id=entry_3.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    assert device_entry.config_entries == {
-        entry_1.entry_id,
-        entry_2.entry_id,
-        entry_3.entry_id,
-    }
+    # Identifiers and connections are unique per config entry, so each config entry
+    # gets its own device even though they share a connection
+    assert device_entry_1.config_entries == {entry_1.entry_id}
+    assert device_entry_2.config_entries == {entry_2.entry_id}
+    assert device_entry_3.config_entries == {entry_3.entry_id}
 
     fake_entry_id = "abc123"
     assert entry_1.entry_id != fake_entry_id
     fake_device_id = "abc123"
-    assert device_entry.id != fake_device_id
+    assert device_entry_3.id != fake_device_id
 
     # Try removing a non existing config entry from the device
-    response = await ws_client.remove_device(device_entry.id, fake_entry_id)
+    response = await ws_client.remove_device(device_entry_3.id, fake_entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Unknown config entry"
 
     # Try removing a config entry which does not support removal from the device
-    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
+    response = await ws_client.remove_device(device_entry_1.id, entry_1.entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -443,22 +447,22 @@ async def test_remove_config_entry_from_device_fails(
     assert response["error"]["message"] == "Unknown device"
 
     # Try removing a config entry from a device which it's not connected to
-    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
-
-    assert response["success"]
-    assert set(response["result"]["config_entries"]) == {
-        entry_1.entry_id,
-        entry_3.entry_id,
-    }
-
-    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
+    response = await ws_client.remove_device(device_entry_3.id, entry_2.entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Config entry not in device"
 
+    # Removing a config entry which supports removal removes the device, since it is
+    # the device's only config entry
+    response = await ws_client.remove_device(device_entry_2.id, entry_2.entry_id)
+
+    assert response["success"]
+    assert response["result"] is None
+    assert not device_registry.async_get(device_entry_2.id)
+
     # Try removing a config entry which can't be loaded from a device - allowed
-    response = await ws_client.remove_device(device_entry.id, entry_3.entry_id)
+    response = await ws_client.remove_device(device_entry_3.id, entry_3.entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -517,7 +521,7 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     entry_2.supports_remove_device = True
     entry_2.add_to_hass(hass)
 
-    device_registry.async_get_or_create(
+    device_entry_1 = device_registry.async_get_or_create(
         config_entry_id=entry_1.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
@@ -525,11 +529,14 @@ async def test_remove_config_entry_from_device_if_integration_remove(
         config_entry_id=entry_2.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    assert device_entry.config_entries == {entry_1.entry_id, entry_2.entry_id}
+    # Identifiers and connections are unique per config entry, so the two config
+    # entries get separate devices even though they share a connection
+    assert device_entry_1.id != device_entry.id
+    assert device_entry.config_entries == {entry_2.entry_id}
 
-    # Try removing a config entry from the device, it should fail because
+    # Try removing the config entry from the device, it should fail because
     # async_remove_config_entry_device returns False
-    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
+    response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
 
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -537,22 +544,17 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     # Make async_remove_config_entry_device return True
     can_remove = True
 
-    # Remove the 1st config entry
-    response = await ws_client.remove_device(device_entry.id, entry_1.entry_id)
-
-    assert response["success"]
-    assert response["result"]["config_entries"] == [entry_2.entry_id]
-
-    # Check that the config entry was removed from the device
-    assert device_registry.async_get(device_entry.id).config_entries == {
-        entry_2.entry_id
-    }
-
-    # Remove the 2nd config entry
+    # Remove the config entry, this was the device's only config entry so the
+    # device is removed
     response = await ws_client.remove_device(device_entry.id, entry_2.entry_id)
 
     assert response["success"]
     assert response["result"] is None
 
-    # This was the last config entry, the device is removed
+    # This was the only config entry, the device is removed
     assert not device_registry.async_get(device_entry.id)
+
+    # The device belonging to the other config entry is untouched
+    assert device_registry.async_get(device_entry_1.id).config_entries == {
+        entry_1.entry_id
+    }

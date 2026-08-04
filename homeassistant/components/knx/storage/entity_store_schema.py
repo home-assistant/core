@@ -826,12 +826,15 @@ ENTITY_STORE_DATA_SCHEMA: VolSchemaType = vol.All(
         {
             platform: vol.Schema(
                 {
-                    vol.Required(CONF_DATA): {
-                        vol.Required(CONF_ENTITY): BASE_ENTITY_SCHEMA,
-                        vol.Required(DOMAIN): knx_schema,
-                    },
+                    vol.Required(CONF_DATA): vol.Schema(
+                        {
+                            vol.Required(CONF_ENTITY): BASE_ENTITY_SCHEMA,
+                            vol.Required(DOMAIN): knx_schema,
+                        },
+                        extra=vol.PREVENT_EXTRA,  # restrict in data key for yaml edit
+                    ),
                 },
-                extra=vol.ALLOW_EXTRA,
+                extra=vol.ALLOW_EXTRA,  # eg. "type" from WS-endpoint when validating directly
             )
             for platform, knx_schema in KNX_SCHEMA_FOR_PLATFORM.items()
         },

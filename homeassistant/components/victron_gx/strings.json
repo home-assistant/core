@@ -403,6 +403,13 @@
           "passthrough": "[%key:component::victron_gx::common::passthrough%]"
         }
       },
+      "battery_bms_mode": {
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "standby": "[%key:common::state::standby%]"
+        }
+      },
       "evcharger_mode": {
         "name": "[%key:common::config_flow::data::mode%]",
         "state": {
@@ -1898,6 +1905,16 @@
       },
       "system_heartbeat": {
         "name": "GX system heartbeat"
+      },
+      "system_pv_on_grid_current_phase": {
+        "name": "PV on grid current {phase}"
+      },
+      "system_pv_on_grid_phases": {
+        "name": "PV on grid phases",
+        "unit_of_measurement": "phases"
+      },
+      "system_pv_on_grid_power_phase": {
+        "name": "PV on grid power {phase}"
       },
       "system_pv_on_output_current_phase": {
         "name": "PV on output current {phase}"

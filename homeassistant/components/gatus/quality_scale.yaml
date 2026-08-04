@@ -49,7 +49,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Integration does not support discovery.
@@ -76,7 +76,7 @@ rules:
   icon-translations:
     status: exempt
     comment: Entities use the connectivity device class for their icon and define no custom icons.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: Integration does not require user intervention repairs.

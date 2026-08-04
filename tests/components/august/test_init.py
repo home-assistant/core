@@ -261,7 +261,7 @@ async def test_brand_migration_issue(hass: HomeAssistant) -> None:
     """Test removing the brand migration issue."""
     august_operative_lock = await _mock_operative_august_lock_detail(hass)
     config_entry, _ = await _create_august_with_devices(
-        hass, [august_operative_lock], brand=Brand.YALE_HOME
+        hass, [august_operative_lock], brand=Brand.YALE_AUGUST
     )
 
     assert config_entry.state is ConfigEntryState.LOADED

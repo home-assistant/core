@@ -46,38 +46,70 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input[CONF_URL] = str(
+                URL(user_input[CONF_URL])
+                .with_query(None)
+                .with_fragment(None)
+                .with_user(None)
+                .with_password(None)
+            ).rstrip("/")
+
+            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+
             try:
-                url = URL(user_input[CONF_URL])
-            except ValueError:
-                errors["base"] = "invalid_url"
+                await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception during Gatus setup")
+                errors["base"] = "unknown"
             else:
-                if url.scheme not in {"http", "https"} or not url.host:
-                    errors["base"] = "invalid_url"
-                else:
-                    normalized_url = str(
-                        url.with_query(None)
-                        .with_fragment(None)
-                        .with_user(None)
-                        .with_password(None)
-                    ).rstrip("/")
-                    user_input[CONF_URL] = normalized_url
-
-                    self._async_abort_entries_match({CONF_URL: normalized_url})
-
-                    try:
-                        await validate_input(self.hass, user_input)
-                    except CannotConnect:
-                        errors["base"] = "cannot_connect"
-                    except Exception:
-                        _LOGGER.exception("Unexpected exception during Gatus setup")
-                        errors["base"] = "unknown"
-                    else:
-                        return self.async_create_entry(title="Gatus", data=user_input)
+                return self.async_create_entry(title="Gatus", data=user_input)
 
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            url = URL(user_input[CONF_URL])
+            user_input[CONF_URL] = str(
+                url.with_query(None)
+                .with_fragment(None)
+                .with_user(None)
+                .with_password(None)
+            ).rstrip("/")
+
+            if user_input[CONF_URL] != reconfigure_entry.data[CONF_URL]:
+                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+
+            try:
+                await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception during Gatus reconfigure")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or reconfigure_entry.data
             ),
             errors=errors,
         )

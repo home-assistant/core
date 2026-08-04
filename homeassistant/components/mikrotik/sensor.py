@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import HEALTH, SYSTEM
+from .const import HEALTH, RESOURCE
 from .coordinator import _LOGGER, MikrotikConfigEntry
 from .entity import MikrotikEntity
 
@@ -100,7 +100,7 @@ SENSORS: Final = (
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=2,
         value=lambda _data: _data["cpu-load"],
-        type=SYSTEM,
+        type=RESOURCE,
         index=0,
     ),
     MikrotikSensorEntityDescription(
@@ -115,7 +115,7 @@ SENSORS: Final = (
             if (total := _data.get("total-memory", 0)) == 0
             else (total - _data.get("free-memory", 0)) / total * 100
         ),
-        type=SYSTEM,
+        type=RESOURCE,
         index=0,
     ),
     MikrotikSensorEntityDescription(
@@ -130,14 +130,14 @@ SENSORS: Final = (
             if (total := _data.get("total-hdd-space", 0)) == 0
             else (total - _data.get("free-hdd-space", 0)) / total * 100
         ),
-        type=SYSTEM,
+        type=RESOURCE,
         index=0,
     ),
     MikrotikSensorEntityDescription(
         key="uptime",
         device_class=SensorDeviceClass.UPTIME,
         value=_calculate_uptime,
-        type=SYSTEM,
+        type=RESOURCE,
         index=0,
     ),
 )

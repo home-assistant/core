@@ -4,8 +4,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -26,7 +26,6 @@
         'model_id': None,
         'name': 'Airversa AP2 1808',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '1234',
         'sw_version': '0.8.16',
         'via_device_id': None,
@@ -653,8 +652,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -675,7 +674,6 @@
         'model_id': None,
         'name': 'eufy HomeBase2-0AAA',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'A0000A000000000A',
         'sw_version': '2.1.6',
         'via_device_id': None,
@@ -731,8 +729,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -753,7 +751,6 @@
         'model_id': None,
         'name': 'eufyCam2-0000',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'A0000A000000000D',
         'sw_version': '1.6.7',
         'via_device_id': <ANY>,
@@ -993,8 +990,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -1015,7 +1012,6 @@
         'model_id': None,
         'name': 'eufyCam2-000A',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'A0000A000000000B',
         'sw_version': '1.6.7',
         'via_device_id': <ANY>,
@@ -1255,8 +1251,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -1277,7 +1273,6 @@
         'model_id': None,
         'name': 'eufyCam2-000A',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'A0000A000000000C',
         'sw_version': '1.6.7',
         'via_device_id': <ANY>,
@@ -1521,8 +1516,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -1543,7 +1538,6 @@
         'model_id': None,
         'name': 'Aqara-Hub-E1-00A0',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '00aa00000a0',
         'sw_version': '3.3.0',
         'via_device_id': None,
@@ -1744,8 +1738,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -1766,7 +1760,6 @@
         'model_id': None,
         'name': 'Contact Sensor',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '158d0007c59c6a',
         'sw_version': '0',
         'via_device_id': <ANY>,
@@ -1921,8 +1914,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -1943,7 +1936,6 @@
         'model_id': None,
         'name': 'Aqara Hub-1563',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '0000000123456789',
         'sw_version': '1.4.7',
         'via_device_id': None,
@@ -2212,8 +2204,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -2234,7 +2226,6 @@
         'model_id': None,
         'name': 'Programmable Switch',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '111a1111a1a111',
         'sw_version': '9',
         'via_device_id': None,
@@ -2344,8 +2335,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -2366,7 +2357,6 @@
         'model_id': None,
         'name': 'ArloBabyA0',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '00A0000000000',
         'sw_version': '1.10.931',
         'via_device_id': None,
@@ -2867,8 +2857,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -2889,7 +2879,6 @@
         'model_id': None,
         'name': 'InWall Outlet-0394DE',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '1020301376',
         'sw_version': '1.0.0',
         'via_device_id': None,
@@ -3351,8 +3340,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -3373,7 +3362,6 @@
         'model_id': None,
         'name': 'Basement',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'AB3C',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -3526,8 +3514,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -3548,7 +3536,6 @@
         'model_id': None,
         'name': 'HomeW',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '123456789012',
         'sw_version': '4.2.394',
         'via_device_id': None,
@@ -4020,8 +4007,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -4042,7 +4029,6 @@
         'model_id': None,
         'name': 'Kitchen',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'AB1C',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -4195,8 +4181,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -4217,7 +4203,6 @@
         'model_id': None,
         'name': 'Porch',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'AB2C',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -4374,8 +4359,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -4396,7 +4381,6 @@
         'model_id': None,
         'name': 'Basement',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -4644,8 +4628,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -4666,7 +4650,6 @@
         'model_id': None,
         'name': 'Basement Window 1',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -4907,8 +4890,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -4929,7 +4912,6 @@
         'model_id': None,
         'name': 'Deck Door',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -5170,8 +5152,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -5192,7 +5174,6 @@
         'model_id': None,
         'name': 'Front Door',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -5433,8 +5414,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -5455,7 +5436,6 @@
         'model_id': None,
         'name': 'Garage Door',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -5696,8 +5676,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -5718,7 +5698,6 @@
         'model_id': None,
         'name': 'Living Room',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -5966,8 +5945,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -5988,7 +5967,6 @@
         'model_id': None,
         'name': 'Living Room Window 1',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -6229,8 +6207,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -6251,7 +6229,6 @@
         'model_id': None,
         'name': 'Loft window',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -6492,8 +6469,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -6514,7 +6491,6 @@
         'model_id': None,
         'name': 'Master BR',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -6762,8 +6738,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -6784,7 +6760,6 @@
         'model_id': None,
         'name': 'Master BR Window',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -7025,8 +7000,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -7047,7 +7022,6 @@
         'model_id': None,
         'name': 'Thermostat',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '4.8.70226',
         'via_device_id': None,
@@ -7433,8 +7407,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -7455,7 +7429,6 @@
         'model_id': None,
         'name': 'Upstairs BR',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -7703,8 +7676,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -7725,7 +7698,6 @@
         'model_id': None,
         'name': 'Upstairs BR Window',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -7970,8 +7942,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -7992,7 +7964,6 @@
         'model_id': None,
         'name': 'HomeW',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '123456789012',
         'sw_version': '4.2.394',
         'via_device_id': None,
@@ -8468,8 +8439,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -8490,7 +8461,6 @@
         'model_id': None,
         'name': 'Basement',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'AB3C',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -8591,8 +8561,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -8613,7 +8583,6 @@
         'model_id': None,
         'name': 'HomeW',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '123456789012',
         'sw_version': '4.2.394',
         'via_device_id': None,
@@ -8896,8 +8865,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -8918,7 +8887,6 @@
         'model_id': None,
         'name': 'Kitchen',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'AB1C',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -9071,8 +9039,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -9093,7 +9061,6 @@
         'model_id': None,
         'name': 'Porch',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'AB2C',
         'sw_version': '1.0.0',
         'via_device_id': <ANY>,
@@ -9250,8 +9217,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -9272,7 +9239,6 @@
         'model_id': None,
         'name': 'My ecobee',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '123456789016',
         'sw_version': '4.7.340214',
         'via_device_id': None,
@@ -9757,8 +9723,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -9779,7 +9745,6 @@
         'model_id': None,
         'name': 'Master Fan',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '111111111111',
         'sw_version': '4.5.130201',
         'via_device_id': None,
@@ -10074,8 +10039,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -10096,7 +10061,6 @@
         'model_id': None,
         'name': 'Eve Degree AA11',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'AA00A0A00000',
         'sw_version': '1.2.8',
         'via_device_id': None,
@@ -10465,8 +10429,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -10487,7 +10451,6 @@
         'model_id': None,
         'name': 'Eve Energy 50FF',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'AA00A0A00000',
         'sw_version': '1.2.9',
         'via_device_id': None,
@@ -10844,8 +10807,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -10866,7 +10829,6 @@
         'model_id': None,
         'name': 'HAA-C718B3',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'C718B3-1',
         'sw_version': '5.0.18',
         'via_device_id': None,
@@ -11068,8 +11030,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -11090,7 +11052,6 @@
         'model_id': None,
         'name': 'HAA-C718B3',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'C718B3-2',
         'sw_version': '5.0.18',
         'via_device_id': None,
@@ -11194,8 +11155,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -11216,7 +11177,6 @@
         'model_id': None,
         'name': 'Family Room North',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'cover.family_door_north',
         'sw_version': '3.6.2',
         'via_device_id': <ANY>,
@@ -11369,8 +11329,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -11391,7 +11351,6 @@
         'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'homekit.bridge',
         'sw_version': '2024.2.0',
         'via_device_id': None,
@@ -11447,8 +11406,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -11469,7 +11428,6 @@
         'model_id': None,
         'name': 'Kitchen Window',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'cover.kitchen_window',
         'sw_version': '3.6.2',
         'via_device_id': <ANY>,
@@ -11626,8 +11584,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -11648,7 +11606,6 @@
         'model_id': None,
         'name': 'Ceiling Fan',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'fan.ceiling_fan',
         'sw_version': '0.104.0.dev0',
         'via_device_id': <ANY>,
@@ -11757,8 +11714,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -11779,7 +11736,6 @@
         'model_id': None,
         'name': 'Home Assistant Bridge',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'homekit.bridge',
         'sw_version': '0.104.0.dev0',
         'via_device_id': None,
@@ -11835,8 +11791,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -11857,7 +11813,6 @@
         'model_id': None,
         'name': 'Living Room Fan',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'fan.living_room_fan',
         'sw_version': '0.104.0.dev0',
         'via_device_id': <ANY>,
@@ -11971,8 +11926,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -11993,7 +11948,6 @@
         'model_id': None,
         'name': '89 Living Room',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'climate.89_living_room',
         'sw_version': '2024.2.0',
         'via_device_id': <ANY>,
@@ -12325,8 +12279,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -12347,7 +12301,6 @@
         'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'homekit.bridge',
         'sw_version': '2024.2.0',
         'via_device_id': None,
@@ -12407,8 +12360,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -12429,7 +12382,6 @@
         'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'homekit.bridge',
         'sw_version': '2024.2.0',
         'via_device_id': None,
@@ -12485,8 +12437,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -12507,7 +12459,6 @@
         'model_id': None,
         'name': 'Laundry Smoke ED78',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'light.laundry_smoke_ed78',
         'sw_version': '1.4.84',
         'via_device_id': <ANY>,
@@ -12671,8 +12622,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -12693,7 +12644,6 @@
         'model_id': None,
         'name': 'Family Room North',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'cover.family_door_north',
         'sw_version': '3.6.2',
         'via_device_id': <ANY>,
@@ -12846,8 +12796,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -12868,7 +12818,6 @@
         'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'homekit.bridge',
         'sw_version': '2024.2.0',
         'via_device_id': None,
@@ -12924,8 +12873,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -12946,7 +12895,6 @@
         'model_id': None,
         'name': 'Kitchen Window',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'cover.kitchen_window',
         'sw_version': '3.6.2',
         'via_device_id': <ANY>,
@@ -13103,8 +13051,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -13125,7 +13073,6 @@
         'model_id': None,
         'name': 'Ceiling Fan',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'fan.ceiling_fan',
         'sw_version': '0.104.0.dev0',
         'via_device_id': <ANY>,
@@ -13234,8 +13181,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -13256,7 +13203,6 @@
         'model_id': None,
         'name': 'Home Assistant Bridge',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'homekit.bridge',
         'sw_version': '0.104.0.dev0',
         'via_device_id': None,
@@ -13312,8 +13258,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -13334,7 +13280,6 @@
         'model_id': None,
         'name': 'Living Room Fan',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'fan.living_room_fan',
         'sw_version': '0.104.0.dev0',
         'via_device_id': <ANY>,
@@ -13449,8 +13394,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -13471,7 +13416,6 @@
         'model_id': None,
         'name': 'Home Assistant Bridge',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'homekit.bridge',
         'sw_version': '0.104.0.dev0',
         'via_device_id': None,
@@ -13527,8 +13471,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -13549,7 +13493,6 @@
         'model_id': None,
         'name': 'Living Room Fan',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'fan.living_room_fan',
         'sw_version': '0.104.0.dev0',
         'via_device_id': <ANY>,
@@ -13664,8 +13607,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -13686,7 +13629,6 @@
         'model_id': None,
         'name': '89 Living Room',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'climate.89_living_room',
         'sw_version': '2024.2.0',
         'via_device_id': <ANY>,
@@ -14027,8 +13969,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -14049,7 +13991,6 @@
         'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'homekit.bridge',
         'sw_version': '2024.2.0',
         'via_device_id': None,
@@ -14109,8 +14050,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -14131,7 +14072,6 @@
         'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'homekit.bridge',
         'sw_version': '2024.2.0',
         'via_device_id': None,
@@ -14187,8 +14127,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -14209,7 +14149,6 @@
         'model_id': None,
         'name': 'Humidifier 182A',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'humidifier.humidifier_182a',
         'sw_version': '2024.2.0',
         'via_device_id': <ANY>,
@@ -14380,8 +14319,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -14402,7 +14341,6 @@
         'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'homekit.bridge',
         'sw_version': '2024.2.0',
         'via_device_id': None,
@@ -14458,8 +14396,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -14480,7 +14418,6 @@
         'model_id': None,
         'name': 'Humidifier 182A',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'humidifier.humidifier_182a',
         'sw_version': '2024.2.0',
         'via_device_id': <ANY>,
@@ -14651,8 +14588,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -14673,7 +14610,6 @@
         'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'homekit.bridge',
         'sw_version': '2024.2.0',
         'via_device_id': None,
@@ -14729,8 +14665,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -14751,7 +14687,6 @@
         'model_id': None,
         'name': 'Laundry Smoke ED78',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'light.laundry_smoke_ed78',
         'sw_version': '1.4.84',
         'via_device_id': <ANY>,
@@ -14925,8 +14860,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -14947,7 +14882,6 @@
         'model_id': None,
         'name': 'Air Conditioner',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '00000001',
         'sw_version': '1.0.0',
         'via_device_id': None,
@@ -15139,8 +15073,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -15161,7 +15095,6 @@
         'model_id': None,
         'name': 'Hue ambiance candle',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '6623462395276914',
         'sw_version': '1.46.13',
         'via_device_id': <ANY>,
@@ -15279,8 +15212,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -15301,7 +15234,6 @@
         'model_id': None,
         'name': 'Hue ambiance candle',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '6623462395276939',
         'sw_version': '1.46.13',
         'via_device_id': <ANY>,
@@ -15419,8 +15351,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -15441,7 +15373,6 @@
         'model_id': None,
         'name': 'Hue ambiance candle',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '6623462403113447',
         'sw_version': '1.46.13',
         'via_device_id': <ANY>,
@@ -15559,8 +15490,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -15581,7 +15512,6 @@
         'model_id': None,
         'name': 'Hue ambiance candle',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '6623462403233419',
         'sw_version': '1.46.13',
         'via_device_id': <ANY>,
@@ -15699,8 +15629,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -15721,7 +15651,6 @@
         'model_id': None,
         'name': 'Hue ambiance spot',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '6623462412411853',
         'sw_version': '1.46.13',
         'via_device_id': <ANY>,
@@ -15849,8 +15778,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -15871,7 +15800,6 @@
         'model_id': None,
         'name': 'Hue ambiance spot',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '6623462412413293',
         'sw_version': '1.46.13',
         'via_device_id': <ANY>,
@@ -15999,8 +15927,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -16021,7 +15949,6 @@
         'model_id': None,
         'name': 'Hue dimmer switch',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '6623462389072572',
         'sw_version': '45.1.17846',
         'via_device_id': <ANY>,
@@ -16339,8 +16266,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -16361,7 +16288,6 @@
         'model_id': None,
         'name': 'Hue white lamp',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '6623462378982941',
         'sw_version': '1.46.13',
         'via_device_id': <ANY>,
@@ -16471,8 +16397,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -16493,7 +16419,6 @@
         'model_id': None,
         'name': 'Hue white lamp',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '6623462378983942',
         'sw_version': '1.46.13',
         'via_device_id': <ANY>,
@@ -16603,8 +16528,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -16625,7 +16550,6 @@
         'model_id': None,
         'name': 'Hue white lamp',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '6623462379122122',
         'sw_version': '1.46.13',
         'via_device_id': <ANY>,
@@ -16735,8 +16659,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -16757,7 +16681,6 @@
         'model_id': None,
         'name': 'Hue white lamp',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '6623462379123707',
         'sw_version': '1.46.13',
         'via_device_id': <ANY>,
@@ -16867,8 +16790,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -16889,7 +16812,6 @@
         'model_id': None,
         'name': 'Hue white lamp',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '6623462383114163',
         'sw_version': '1.46.13',
         'via_device_id': <ANY>,
@@ -16999,8 +16921,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -17021,7 +16943,6 @@
         'model_id': None,
         'name': 'Hue white lamp',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '6623462383114193',
         'sw_version': '1.46.13',
         'via_device_id': <ANY>,
@@ -17131,8 +17052,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -17153,7 +17074,6 @@
         'model_id': None,
         'name': 'Hue white lamp',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '6623462385996792',
         'sw_version': '1.46.13',
         'via_device_id': <ANY>,
@@ -17263,8 +17183,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -17285,7 +17205,6 @@
         'model_id': None,
         'name': 'Philips hue - 482544',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '123456',
         'sw_version': '1.32.1932126170',
         'via_device_id': None,
@@ -17345,8 +17264,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -17367,7 +17286,6 @@
         'model_id': None,
         'name': 'Koogeek-LS1-20833F',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'AAAA011111111111',
         'sw_version': '2.2.15',
         'via_device_id': None,
@@ -17491,8 +17409,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -17513,7 +17431,6 @@
         'model_id': None,
         'name': 'Koogeek-P1-A00AA0',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'EUCP03190xxxxx48',
         'sw_version': '2.3.7',
         'via_device_id': None,
@@ -17670,8 +17587,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -17692,7 +17609,6 @@
         'model_id': None,
         'name': 'Koogeek-SW2-187A91',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'CNNT061751001372',
         'sw_version': '1.0.3',
         'via_device_id': None,
@@ -17892,8 +17808,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -17914,7 +17830,6 @@
         'model_id': None,
         'name': 'Lennox',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'XXXXXXXX',
         'sw_version': '3.40.XX',
         'via_device_id': None,
@@ -18196,8 +18111,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -18218,7 +18133,6 @@
         'model_id': None,
         'name': 'LG webOS TV AF80',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '999AAAAAA999',
         'sw_version': '04.71.04',
         'via_device_id': None,
@@ -18388,8 +18302,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -18410,7 +18324,6 @@
         'model_id': None,
         'name': 'Caséta® Wireless Fan Speed Control',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '39024290',
         'sw_version': '001.005',
         'via_device_id': <ANY>,
@@ -18519,8 +18432,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -18541,7 +18454,6 @@
         'model_id': None,
         'name': 'Smart Bridge 2',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '12344331',
         'sw_version': '08.08',
         'via_device_id': None,
@@ -18601,8 +18513,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -18623,7 +18535,6 @@
         'model_id': None,
         'name': 'MSS425F-15cc',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'HH41234',
         'sw_version': '4.2.3',
         'via_device_id': None,
@@ -18903,8 +18814,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -18925,7 +18836,6 @@
         'model_id': None,
         'name': 'MSS565-28da',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'BB1121',
         'sw_version': '4.1.9',
         'via_device_id': None,
@@ -19039,8 +18949,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -19061,7 +18971,6 @@
         'model_id': None,
         'name': 'Mysa-85dda9',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'AAAAAAA000',
         'sw_version': '2.8.1',
         'via_device_id': None,
@@ -19395,8 +19304,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -19417,7 +19326,6 @@
         'model_id': None,
         'name': 'Nanoleaf Strip 3B32',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'AAAA011111111111',
         'sw_version': '1.4.40',
         'via_device_id': None,
@@ -19677,8 +19585,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -19699,7 +19607,6 @@
         'model_id': None,
         'name': 'Netatmo-Doorbell-g738658',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'g738658',
         'sw_version': '80.0.0',
         'via_device_id': None,
@@ -19994,8 +19901,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -20016,7 +19923,6 @@
         'model_id': None,
         'name': 'Smart CO Alarm',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '1234',
         'sw_version': '1.0.3',
         'via_device_id': None,
@@ -20166,8 +20072,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -20188,7 +20094,6 @@
         'model_id': None,
         'name': 'Healthy Home Coach',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'AAAAAAAAAAAAA',
         'sw_version': '59',
         'via_device_id': None,
@@ -20498,8 +20403,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -20520,7 +20425,6 @@
         'model_id': None,
         'name': 'RainMachine-00ce4a',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '00aa0000aa0a',
         'sw_version': '1.0.4',
         'via_device_id': None,
@@ -20956,8 +20860,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -20978,7 +20882,6 @@
         'model_id': None,
         'name': 'Master Bath South',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '1.0.0',
         'sw_version': '3.0.8',
         'via_device_id': <ANY>,
@@ -21131,8 +21034,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -21153,7 +21056,6 @@
         'model_id': None,
         'name': 'RYSE SmartBridge',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '0101.3521.0436',
         'sw_version': '1.3.0',
         'via_device_id': None,
@@ -21209,8 +21111,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -21231,7 +21133,6 @@
         'model_id': None,
         'name': 'RYSE SmartShade',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '',
         'sw_version': '',
         'via_device_id': <ANY>,
@@ -21388,8 +21289,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -21410,7 +21311,6 @@
         'model_id': None,
         'name': 'BR Left',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '1.0.0',
         'sw_version': '3.0.8',
         'via_device_id': <ANY>,
@@ -21563,8 +21463,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -21585,7 +21485,6 @@
         'model_id': None,
         'name': 'LR Left',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '1.0.0',
         'sw_version': '3.0.8',
         'via_device_id': <ANY>,
@@ -21738,8 +21637,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -21760,7 +21659,6 @@
         'model_id': None,
         'name': 'LR Right',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '1.0.0',
         'sw_version': '3.0.8',
         'via_device_id': <ANY>,
@@ -21913,8 +21811,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -21935,7 +21833,6 @@
         'model_id': None,
         'name': 'RYSE SmartBridge',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '0401.3521.0679',
         'sw_version': '1.3.0',
         'via_device_id': None,
@@ -21991,8 +21888,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -22013,7 +21910,6 @@
         'model_id': None,
         'name': 'RZSS',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '1.0.0',
         'sw_version': '3.0.8',
         'via_device_id': <ANY>,
@@ -22170,8 +22066,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -22192,7 +22088,6 @@
         'model_id': None,
         'name': 'SENSE  ',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'AAAAAAA000',
         'sw_version': '004.027.000',
         'via_device_id': None,
@@ -22297,8 +22192,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -22319,7 +22214,6 @@
         'model_id': None,
         'name': 'SIMPLEconnect Fan-06F674',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '1234567890abcd',
         'sw_version': '',
         'via_device_id': None,
@@ -22487,8 +22381,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -22509,7 +22403,6 @@
         'model_id': None,
         'name': 'VELUX Internal Cover',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '0.0.0',
         'via_device_id': None,
@@ -22617,8 +22510,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -22639,7 +22532,6 @@
         'model_id': None,
         'name': 'U by Moen-015F44',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '3.3.0',
         'via_device_id': None,
@@ -23042,8 +22934,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -23064,7 +22956,6 @@
         'model_id': None,
         'name': 'VELUX Sensor',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '16.0.0',
         'via_device_id': None,
@@ -23274,8 +23165,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -23296,7 +23187,6 @@
         'model_id': None,
         'name': 'VELUX Gateway',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'a1a11a1',
         'sw_version': '70',
         'via_device_id': None,
@@ -23352,8 +23242,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -23374,7 +23264,6 @@
         'model_id': None,
         'name': 'VELUX Sensor',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'a11b111',
         'sw_version': '16',
         'via_device_id': <ANY>,
@@ -23580,8 +23469,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -23602,7 +23491,6 @@
         'model_id': None,
         'name': 'VELUX Window',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '1111111a114a111a',
         'sw_version': '48',
         'via_device_id': <ANY>,
@@ -23710,8 +23598,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -23732,7 +23620,6 @@
         'model_id': None,
         'name': 'VELUX Window',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '0.0.0',
         'via_device_id': None,
@@ -23840,8 +23727,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -23862,7 +23749,6 @@
         'model_id': None,
         'name': 'VELUX External Cover',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': '**REDACTED**',
         'sw_version': '15.0.0',
         'via_device_id': None,
@@ -23969,8 +23855,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -23991,7 +23877,6 @@
         'model_id': None,
         'name': 'VOCOlinc-Flowerbud-0d324b',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'AM01121849000327',
         'sw_version': '3.121.2',
         'via_device_id': None,
@@ -24289,8 +24174,8 @@
     dict({
       'device': DeviceRegistryEntrySnapshot({
         'area_id': None,
-        'config_entries': <ANY>,
-        'config_entries_subentries': <ANY>,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
         'configuration_url': None,
         'connections': set({
         }),
@@ -24311,7 +24196,6 @@
         'model_id': None,
         'name': 'VOCOlinc-VP3-123456',
         'name_by_user': None,
-        'primary_config_entry': <ANY>,
         'serial_number': 'EU0121203xxxxx07',
         'sw_version': '1.101.2',
         'via_device_id': None,
