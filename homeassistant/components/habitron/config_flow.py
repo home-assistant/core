@@ -150,6 +150,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return resolved
         return host.casefold()
 
+    async def _async_stored_host(self, host: str) -> str:
+        """Return ``host`` in the form an entry stores it.
+
+        ``validate_input`` writes any of Home Assistant's own addresses as the
+        ``local`` sentinel, so anything that derives an id from -- or writes --
+        the stored host has to use the same form.
+        """
+        own_ips = {
+            str(ip) for ip in await network.async_get_enabled_source_ips(self.hass)
+        }
+        return CONF_DEFAULT_HOST if host in own_ips else host
+
     async def _async_resolved_host(self, host: str) -> str:
         """Return ``host`` as an address, or unchanged when it does not resolve.
 
@@ -244,9 +256,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         # The entry registers an update listener that reloads on a data change,
         # so leave the reload to it: having both schedules two reloads and is
-        # reported as breaking in 2026.12.
+        # reported as breaking in 2026.12. The host is written in stored form --
+        # overwriting a ``local`` entry with the discovered IP would leave setup
+        # pointing at a stale address once that IP changes.
         self._abort_if_unique_id_configured(
-            updates={KEY_HOST: host_str}, reload_on_update=False
+            updates={KEY_HOST: await self._async_stored_host(host_str)},
+            reload_on_update=False,
         )
 
         # The unique_id did not match an existing entry. The same SmartHub
@@ -266,12 +281,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host_str,
             self._discovered_device.get("ip"),
         ):
-            # Adopt the discovered id only when it is a stable one (UDN/serial).
-            # With no stable id this run, ``unique_id`` is the host-based
-            # fallback; overwriting an existing stable id with it would leave the
-            # entry unmatched after a DHCP change, letting the same hub be
-            # offered as a duplicate.
-            if unique_id not in {entry.unique_id, f"habitron_{host_str}"}:
+            # Adopt the discovered id only over a host-based fallback, and only
+            # when this run produced a stable one. Rewriting an existing stable
+            # id would flip a serial-keyed entry to a UDN whenever a discovery
+            # omits the serial -- and back again when it returns; keeping the
+            # fallback would leave the entry unmatched after a DHCP change,
+            # letting the same hub be offered as a duplicate.
+            fallback_id = f"habitron_{host_str}"
+            if unique_id != fallback_id and str(entry.unique_id).startswith(
+                "habitron_"
+            ):
                 self.hass.config_entries.async_update_entry(entry, unique_id=unique_id)
             return self.async_abort(reason="already_configured")
 
@@ -349,20 +368,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # An empty serial is no identifier: it would collide with every
                 # other hub that reports a blank one.
                 unique_id = target.get("serial") or None
+            stored_host = await self._async_stored_host(host_input)
             if unique_id is None:
-                # ``validate_input`` stores any of Home Assistant's own
-                # addresses as the ``local`` sentinel, so the fallback id has to
-                # use the same form -- and a multi-homed host has more than the
-                # route-selected one.
-                own_ips = {
-                    str(ip)
-                    for ip in await network.async_get_enabled_source_ips(self.hass)
-                }
-                id_host = CONF_DEFAULT_HOST if host_input in own_ips else host_input
-                unique_id = f"habitron_{id_host}"
+                unique_id = f"habitron_{stored_host}"
 
             await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+            # Re-entering a known hub at a new address updates the stored host,
+            # so a DHCP change does not leave the entry on the old one. The
+            # entry's update listener handles the reload.
+            self._abort_if_unique_id_configured(
+                updates={KEY_HOST: stored_host}, reload_on_update=False
+            )
 
             # A hub already added via SSDP is keyed by its UDN, so the serial-
             # or host-based unique_id derived here does not match it. Guard
