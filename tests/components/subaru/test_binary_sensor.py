@@ -1,5 +1,6 @@
 """Test Subaru binary sensors."""
 
+import copy
 from unittest.mock import patch
 
 import pytest
@@ -13,16 +14,16 @@ from homeassistant.components.subaru.binary_sensor import (
     LOCK_STATUS_KEYS,
     MIL_TRANSLATION_KEYS,
     OVERALL_HEALTH_BINARY_SENSOR,
-    _is_charging,
-    _is_open,
-    _is_plugged_in,
-    _is_unlocked,
-    _mil_is_on,
-    _vehicle_status_is_on,
 )
-from homeassistant.components.subaru.const import DOMAIN, VEHICLE_HEALTH, VEHICLE_STATUS
+from homeassistant.components.subaru.const import DOMAIN, VEHICLE_STATUS
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -32,15 +33,12 @@ from .api_responses import (
     TEST_VIN_3_G3,
     TEST_VIN_4_G4,
     VEHICLE_DATA,
+    VEHICLE_STATUS_EV,
     VEHICLE_STATUS_G3,
 )
 from .conftest import setup_subaru_config_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
-
-
-def _unique_id(vin: str, key: str) -> str:
-    return f"{vin}_{key}"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -69,7 +67,7 @@ async def test_mil_entities_disabled_by_default(
 ) -> None:
     """MIL entities are created for reported MIL features and disabled by default."""
     entity_id = entity_registry.async_get_entity_id(
-        BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_2_EV, feature)
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_2_EV}_{feature}"
     )
     assert entity_id is not None
     entry = entity_registry.async_get(entity_id)
@@ -98,7 +96,7 @@ async def test_no_binary_sensors_for_g1(
     )
     assert (
         entity_registry.async_get_entity_id(
-            BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_1_G1, key)
+            BINARY_SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_1_G1}_{key}"
         )
         is None
     )
@@ -121,7 +119,7 @@ async def test_no_ev_plug_binary_sensor_for_g3(
         entity_registry.async_get_entity_id(
             BINARY_SENSOR_DOMAIN,
             DOMAIN,
-            _unique_id(TEST_VIN_3_G3, EV_PLUG_BINARY_SENSOR.key),
+            f"{TEST_VIN_3_G3}_{EV_PLUG_BINARY_SENSOR.key}",
         )
         is None
     )
@@ -149,9 +147,74 @@ async def test_no_lock_sensors_when_unsupported(
     )
     assert (
         entity_registry.async_get_entity_id(
-            BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_3_G3, key)
+            BINARY_SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_3_G3}_{key}"
         )
         is None
+    )
+
+
+@pytest.mark.parametrize("not_equipped", ["NOT_EQUIPPED", "not_equipped"])
+async def test_door_not_equipped_gets_no_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    subaru_config_entry: MockConfigEntry,
+    not_equipped: str,
+) -> None:
+    """A door reported as NOT_EQUIPPED gets no entity, unlike a failed fetch.
+
+    Unlike windows/locks, doors are always present in vehicle_status, so
+    a per-door NOT_EQUIPPED value (not the key's absence) is what signals
+    the trim genuinely lacks that sensor. Checked case-insensitively.
+    """
+    vehicle_status = copy.deepcopy(VEHICLE_STATUS_EV)
+    vehicle_status[VEHICLE_STATUS]["DOOR_ENGINE_HOOD_POSITION"] = not_equipped
+    await setup_subaru_config_entry(
+        hass, subaru_config_entry, vehicle_status=vehicle_status
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN,
+            DOMAIN,
+            f"{TEST_VIN_2_EV}_DOOR_ENGINE_HOOD_POSITION",
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN,
+            DOMAIN,
+            f"{TEST_VIN_2_EV}_DOOR_FRONT_LEFT_POSITION",
+        )
+        is not None
+    )
+
+
+async def test_no_ev_charging_sensor_when_unsupported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    subaru_config_entry: MockConfigEntry,
+) -> None:
+    """EV charging isn't created for an EV that doesn't report it, unlike EV plug."""
+    vehicle_status = copy.deepcopy(VEHICLE_STATUS_EV)
+    del vehicle_status[VEHICLE_STATUS]["EV_CHARGER_STATE_TYPE"]
+    await setup_subaru_config_entry(
+        hass, subaru_config_entry, vehicle_status=vehicle_status
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN,
+            DOMAIN,
+            f"{TEST_VIN_2_EV}_{EV_CHARGING_BINARY_SENSOR.key}",
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN,
+            DOMAIN,
+            f"{TEST_VIN_2_EV}_{EV_PLUG_BINARY_SENSOR.key}",
+        )
+        is not None
     )
 
 
@@ -169,7 +232,7 @@ async def test_overall_health_unknown_without_vehicle_health(
         vehicle_status=VEHICLE_STATUS_G3,
     )
     overall = entity_registry.async_get_entity_id(
-        BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_3_G3, "health_istrouble")
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_3_G3}_health_istrouble"
     )
     assert overall is not None
     state = hass.states.get(overall)
@@ -192,7 +255,7 @@ async def test_binary_sensors_created_for_g4(
     )
     assert (
         entity_registry.async_get_entity_id(
-            BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_4_G4, "health_istrouble")
+            BINARY_SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_4_G4}_health_istrouble"
         )
         is not None
     )
@@ -206,7 +269,7 @@ async def test_ev_charging_disabled_by_default(
     entity_id = entity_registry.async_get_entity_id(
         BINARY_SENSOR_DOMAIN,
         DOMAIN,
-        _unique_id(TEST_VIN_2_EV, EV_CHARGING_BINARY_SENSOR.key),
+        f"{TEST_VIN_2_EV}_{EV_CHARGING_BINARY_SENSOR.key}",
     )
     assert entity_id is not None
     entry = entity_registry.async_get(entity_id)
@@ -231,7 +294,7 @@ async def test_entities_unavailable_when_vehicle_data_fetch_fails(
     assert subaru_config_entry.state is ConfigEntryState.LOADED
 
     entity_id = entity_registry.async_get_entity_id(
-        BINARY_SENSOR_DOMAIN, DOMAIN, _unique_id(TEST_VIN_2_EV, key)
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_2_EV}_{key}"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
@@ -239,101 +302,163 @@ async def test_entities_unavailable_when_vehicle_data_fetch_fails(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize(
-    ("status", "expected"),
-    [
-        ("CLOSED", False),
-        ("CLOSE", False),
-        ("OPEN", True),
-        ("VENTED", True),
-    ],
-)
-def test_is_open(status: str, expected: bool) -> None:
-    """Anything not in the closed set counts as open."""
-    assert _is_open(status) is expected
+async def test_no_window_or_lock_entities_when_vehicle_data_fetch_fails(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    subaru_config_entry: MockConfigEntry,
+) -> None:
+    """Unlike doors, windows/locks aren't created when the initial fetch fails."""
+    await setup_subaru_config_entry(hass, subaru_config_entry, vehicle_status={})
+    assert (
+        entity_registry.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_2_EV}_WINDOW_FRONT_LEFT_STATUS"
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(
-    ("status", "expected"),
+    ("status", "expected_state"),
     [
-        ("LOCKED", False),
-        ("UNLOCKED", True),
+        ("CLOSED", STATE_OFF),
+        ("CLOSE", STATE_OFF),
+        ("closed", STATE_OFF),
+        ("OPEN", STATE_ON),
+        ("VENTED", STATE_ON),
+        ("UNKNOWN", STATE_UNKNOWN),
+        ("UNAVAILABLE", STATE_UNKNOWN),
     ],
 )
-def test_is_unlocked(status: str, expected: bool) -> None:
-    """Anything other than LOCKED counts as unlocked."""
-    assert _is_unlocked(status) is expected
+async def test_door_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    subaru_config_entry: MockConfigEntry,
+    status: str,
+    expected_state: str,
+) -> None:
+    """Door state reflects the raw status, case-insensitively; sentinels are unknown."""
+    vehicle_status = copy.deepcopy(VEHICLE_STATUS_EV)
+    vehicle_status[VEHICLE_STATUS]["DOOR_FRONT_LEFT_POSITION"] = status
+    await setup_subaru_config_entry(
+        hass, subaru_config_entry, vehicle_status=vehicle_status
+    )
+    entity_id = entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_2_EV}_DOOR_FRONT_LEFT_POSITION"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state
 
 
 @pytest.mark.parametrize(
-    ("status", "expected"),
+    ("status", "expected_state"),
     [
-        ("CHARGING", True),
-        ("LOCKED_CONNECTED", True),
-        ("UNLOCKED_CONNECTED", True),
-        ("UNPLUGGED", False),
+        ("LOCKED", STATE_OFF),
+        ("UNLOCKED", STATE_ON),
     ],
 )
-def test_is_plugged_in(status: str, expected: bool) -> None:
-    """Only documented connected states count as plugged in."""
-    assert _is_plugged_in(status) is expected
+async def test_lock_sensor_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    subaru_config_entry: MockConfigEntry,
+    status: str,
+    expected_state: str,
+) -> None:
+    """Lock-status sensor is on when unlocked."""
+    vehicle_status = copy.deepcopy(VEHICLE_STATUS_EV)
+    vehicle_status[VEHICLE_STATUS]["LOCK_FRONT_LEFT_STATUS"] = status
+    await setup_subaru_config_entry(
+        hass, subaru_config_entry, vehicle_status=vehicle_status
+    )
+    entity_id = entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_2_EV}_LOCK_FRONT_LEFT_STATUS"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state
 
 
 @pytest.mark.parametrize(
-    ("status", "expected"),
+    ("status", "expected_state"),
     [
-        ("CHARGING", True),
-        ("NOT_CHARGING", False),
-        ("UNPLUGGED", False),
+        ("CHARGING", STATE_ON),
+        ("LOCKED_CONNECTED", STATE_ON),
+        ("UNLOCKED_CONNECTED", STATE_ON),
+        ("UNPLUGGED", STATE_OFF),
     ],
 )
-def test_is_charging(status: str, expected: bool) -> None:
-    """Only CHARGING counts as actively charging."""
-    assert _is_charging(status) is expected
+async def test_ev_plug_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    subaru_config_entry: MockConfigEntry,
+    status: str,
+    expected_state: str,
+) -> None:
+    """EV plug sensor is on for any documented connected state."""
+    vehicle_status = copy.deepcopy(VEHICLE_STATUS_EV)
+    vehicle_status[VEHICLE_STATUS]["EV_IS_PLUGGED_IN"] = status
+    await setup_subaru_config_entry(
+        hass, subaru_config_entry, vehicle_status=vehicle_status
+    )
+    entity_id = entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_2_EV}_EV_IS_PLUGGED_IN"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("raw_status", "expected"),
+    ("status", "expected_state"),
     [
-        ("CLOSED", False),
-        ("closed", False),
-        ("OPEN", True),
-        ("UNKNOWN", None),
-        ("UNAVAILABLE", None),
-        ("NOT_EQUIPPED", None),
+        ("CHARGING", STATE_ON),
+        ("NOT_CHARGING", STATE_OFF),
+        ("UNPLUGGED", STATE_OFF),
     ],
 )
-def test_vehicle_status_is_on_getter(raw_status: str, expected: bool | None) -> None:
-    """The getter normalizes case and short-circuits on sentinel values."""
-    getter = _vehicle_status_is_on("DOOR_FRONT_LEFT_POSITION", _is_open)
-    vehicle_data = {VEHICLE_STATUS: {"DOOR_FRONT_LEFT_POSITION": raw_status}}
-    assert getter(vehicle_data) is expected
+async def test_ev_charging_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    subaru_config_entry: MockConfigEntry,
+    status: str,
+    expected_state: str,
+) -> None:
+    """EV charging sensor is on only while actively CHARGING."""
+    vehicle_status = copy.deepcopy(VEHICLE_STATUS_EV)
+    vehicle_status[VEHICLE_STATUS]["EV_CHARGER_STATE_TYPE"] = status
+    await setup_subaru_config_entry(
+        hass, subaru_config_entry, vehicle_status=vehicle_status
+    )
+    entity_id = entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_2_EV}_EV_CHARGER_STATE_TYPE"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state
 
 
-def test_vehicle_status_is_on_getter_missing_key() -> None:
-    """The getter returns None when the field is absent entirely."""
-    getter = _vehicle_status_is_on("DOOR_FRONT_LEFT_POSITION", _is_open)
-    assert getter({VEHICLE_STATUS: {}}) is None
-    assert getter({}) is None
-
-
-@pytest.mark.parametrize(
-    ("feature_health", "expected"),
-    [
-        ({"ISTROUBLE": True, "ONDATE": None}, True),
-        ({"ISTROUBLE": False, "ONDATE": None}, False),
-        ({}, None),
-    ],
-)
-def test_mil_is_on(feature_health: dict, expected: bool | None) -> None:
-    """The MIL getter reads ISTROUBLE for the requested feature only."""
-    getter = _mil_is_on("CEL_MIL")
-    vehicle_data = {VEHICLE_HEALTH: {"FEATURES": {"CEL_MIL": feature_health}}}
-    assert getter(vehicle_data) is expected
-
-
-def test_mil_is_on_missing_feature() -> None:
-    """The MIL getter returns None when the vehicle never reported that MIL."""
-    getter = _mil_is_on("CEL_MIL")
-    assert getter({VEHICLE_HEALTH: {"FEATURES": {}}}) is None
-    assert getter({}) is None
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "ev_entry")
+async def test_mil_sensor_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """MIL sensor reflects the per-feature ISTROUBLE flag."""
+    on_entity = entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_2_EV}_CEL_MIL"
+    )
+    off_entity = entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_2_EV}_TPMS_MIL"
+    )
+    assert on_entity is not None
+    assert off_entity is not None
+    on_state = hass.states.get(on_entity)
+    off_state = hass.states.get(off_entity)
+    assert on_state is not None
+    assert off_state is not None
+    assert on_state.state == STATE_ON
+    assert off_state.state == STATE_OFF
