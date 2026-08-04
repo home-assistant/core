@@ -45,7 +45,7 @@ async def async_setup_entry(
         for device in devices_coordinator.data.ecocomfort2_devices.values()
     ]
     filter_coordinator = IntelliClimaFilterCoordinator(hass, entry, api, device_serials)
-    await filter_coordinator.async_config_entry_first_refresh()
+    await filter_coordinator.async_refresh()
 
     # Store coordinators
     entry.runtime_data = IntelliClimaData(devices_coordinator, filter_coordinator)
