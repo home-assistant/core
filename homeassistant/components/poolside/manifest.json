@@ -1,7 +1,7 @@
 {
   "domain": "poolside",
   "name": "Poolside",
-  "codeowners": ["@stanreznik"],
+  "codeowners": ["@PoolsideStan"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/poolside",
   "integration_type": "hub",
