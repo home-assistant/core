@@ -21,6 +21,8 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
+from .conftest import _paired_devices_fixture
+
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
@@ -235,3 +237,45 @@ async def test_stale_device_removed_on_setup(
     assert await integration_setup()
 
     assert device_registry.async_get(stale_device.id) is None
+
+
+async def test_auto_add_new_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_google_health_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test new paired devices returned on coordinator update are automatically added."""
+    mock_google_health_client.paired_devices.list.return_value = (
+        ListPairedDevicesResult(_ListPairedDevicesModel([]))
+    )
+
+    assert await integration_setup()
+
+    assert hass.states.get("sensor.fitbit_charge_6_battery") is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "watch_123"), config_entry.entry_id
+        )
+        is None
+    )
+
+    mock_google_health_client.paired_devices.list.return_value = (
+        _paired_devices_fixture("paired_devices.json")
+    )
+
+    freezer.tick(DEVICE_POLLING_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    battery_state = hass.states.get("sensor.fitbit_charge_6_battery")
+    assert battery_state is not None
+    assert battery_state.state == "85"
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "watch_123"), config_entry.entry_id
+    )
+    assert device is not None
+
