@@ -1,0 +1,114 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not register custom actions.
+  appropriate-polling:
+    status: exempt
+    comment: Feeds are fetched during setup and user-initiated browsing.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register custom actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide triggers.
+  entity-event-setup:
+    status: exempt
+    comment: The integration does not create entities.
+  entity-unique-id:
+    status: exempt
+    comment: The integration does not create entities.
+  has-entity-name:
+    status: exempt
+    comment: The integration does not create entities.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration does not provide configuration options.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: The integration does not create entities.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: The integration does not create entities.
+  parallel-updates:
+    status: exempt
+    comment: The integration does not create entities.
+  reauthentication-flow:
+    status: exempt
+    comment: Podcast feeds do not require account authentication.
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: The integration does not create devices.
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: Podcast feeds are configured by URL and are not discoverable.
+  discovery:
+    status: exempt
+    comment: Podcast feeds are configured by URL and are not discoverable.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: The integration does not support physical devices.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: The integration does not create devices.
+  entity-category:
+    status: exempt
+    comment: The integration does not create entities.
+  entity-device-class:
+    status: exempt
+    comment: The integration does not create entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The integration does not create entities.
+  entity-translations:
+    status: exempt
+    comment: The integration does not create entities.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: The integration does not create entities.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: The integration has no cases requiring a repair issue.
+  stale-devices:
+    status: exempt
+    comment: The integration does not create devices.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

@@ -1,0 +1,12 @@
+{
+  "domain": "podcast_player",
+  "name": "Podcast Player",
+  "codeowners": ["@armilancode"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/podcast_player",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["aiopodcast"],
+  "quality_scale": "bronze",
+  "requirements": ["aio-podcast==0.1.0"]
+}
