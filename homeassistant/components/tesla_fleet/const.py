@@ -25,15 +25,6 @@ SCOPES = [
     Scope.ENERGY_CMDS,
 ]
 
-MODELS = {
-    "S": "Model S",
-    "3": "Model 3",
-    "X": "Model X",
-    "Y": "Model Y",
-    "C": "Cybertruck",
-    "T": "Tesla Semi",
-}
-
 ENERGY_HISTORY_FIELDS = [
     "solar_energy_exported",
     "generator_energy_exported",

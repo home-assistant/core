@@ -31,10 +31,7 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   # Silver
-  action-exceptions:
-    status: todo
-    comment: |
-      - The calls to the api can be changed to return bool, and services can then raise HomeAssistantError
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
