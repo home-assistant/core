@@ -670,13 +670,12 @@ class HKDevice:
         devices = {}
         bridge_device_id: str | None = None
 
-        # Accessories are registered in aid order so the bridge (accessory 1) is
-        # registered before the accessories that link to it via via_device_id.
+        # Accessories are sorted by their HomeKit accessory id (aid). The bridge is
+        # always aid 1, so it is registered before the accessories that link back to
+        # it via via_device_id.
         for accessory in sorted(self.entity_map.accessories, key=attrgetter("aid")):
             device_info = self.device_info_for_accessory(accessory)
 
-            # Accessory 1 is the device we connect to and has no via_device; every
-            # other accessory links to it as its via device.
             if accessory.aid != 1 and bridge_device_id is not None:
                 device_info["via_device_id"] = bridge_device_id
 
