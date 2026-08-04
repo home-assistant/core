@@ -65,7 +65,7 @@ def _list_fixture(filename: str, data_type: DataType) -> ListDataPointResult:
     return ListDataPointResult(_ListDataPointsModel(data_points=data_points))
 
 
-def _paired_devices_fixture(filename: str) -> ListPairedDevicesResult:
+def paired_devices_fixture(filename: str) -> ListPairedDevicesResult:
     """Build a list of paired devices result from a fixture."""
     raw_json = load_json_object_fixture(filename, DOMAIN)
     return ListPairedDevicesResult(_ListPairedDevicesModel.from_dict(raw_json))
@@ -181,7 +181,7 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         client.body_fat = AsyncMock()
         client.body_fat.list.return_value = _list_fixture("body_fat.json", BODY_FAT)
         client.paired_devices = AsyncMock()
-        client.paired_devices.list.return_value = _paired_devices_fixture(
+        client.paired_devices.list.return_value = paired_devices_fixture(
             "paired_devices.json"
         )
         client.paired_devices.required_read_scopes = [

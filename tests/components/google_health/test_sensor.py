@@ -21,7 +21,7 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from .conftest import _paired_devices_fixture
+from .conftest import paired_devices_fixture
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -263,7 +263,7 @@ async def test_auto_add_new_device(
     )
 
     mock_google_health_client.paired_devices.list.return_value = (
-        _paired_devices_fixture("paired_devices.json")
+        paired_devices_fixture("paired_devices.json")
     )
 
     freezer.tick(DEVICE_POLLING_INTERVAL)
