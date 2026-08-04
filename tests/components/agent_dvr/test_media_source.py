@@ -8,6 +8,7 @@ media_source.py drives that session with the right calls and builds the
 right browse tree / cache path from its response.
 """
 
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.agent_dvr.const import DOMAIN
@@ -69,7 +70,7 @@ async def test_browse_servers_cameras_recordings(
 
 
 async def test_resolve_media_downloads_and_caches(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, tmp_path
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, tmp_path: Path
 ) -> None:
     """Test resolving a recording downloads it once and caches it locally."""
     entry = await init_integration(hass, aioclient_mock)
