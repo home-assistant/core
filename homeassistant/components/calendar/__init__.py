@@ -637,6 +637,17 @@ class CalendarEntity(Entity):
             _LOGGER.debug("Running %s update", self.entity_id)
             self.async_write_ha_state()
 
+        @callback
+        def refresh(_: datetime.datetime) -> None:
+            """Refresh the upcoming event now that the current one ended.
+
+            Writing the state is not enough here: the entity still holds the
+            event that just ended, so the next one has to be fetched before
+            the state can be correct.
+            """
+            _LOGGER.debug("Running %s refresh", self.entity_id)
+            self.async_schedule_update_ha_state(force_refresh=True)
+
         if now < event.start_datetime_local:
             self._alarm_unsubs.append(
                 async_track_point_in_time(
@@ -646,7 +657,7 @@ class CalendarEntity(Entity):
                 )
             )
         self._alarm_unsubs.append(
-            async_track_point_in_time(self.hass, update, event.end_datetime_local)
+            async_track_point_in_time(self.hass, refresh, event.end_datetime_local)
         )
         _LOGGER.debug(
             "Scheduled %d updates for %s (%s, %s)",

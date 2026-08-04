@@ -3,11 +3,14 @@
 import datetime
 import textwrap
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.local_calendar.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.template import DATE_STR_FORMAT
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
@@ -18,7 +21,7 @@ from .conftest import (
     event_fields,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_empty_calendar(
@@ -1158,3 +1161,64 @@ async def test_invalid_event_duration(
             "end": {"dateTime": "1997-07-14T11:30:00-06:00"},
         }
     ]
+
+
+BACK_TO_BACK_EVENTS = textwrap.dedent(
+    """\
+    BEGIN:VCALENDAR
+    VERSION:2.0
+    PRODID:-//test//test//EN
+    BEGIN:VEVENT
+    UID:first-event
+    DTSTAMP:20251231T000000Z
+    SUMMARY:First
+    DTSTART:20260101T014500Z
+    DTEND:20260101T020000Z
+    END:VEVENT
+    BEGIN:VEVENT
+    UID:second-event
+    DTSTAMP:20251231T000000Z
+    SUMMARY:Second
+    DTSTART:20260101T020000Z
+    DTEND:20260101T021500Z
+    END:VEVENT
+    END:VCALENDAR
+"""
+)
+
+
+@pytest.mark.parametrize("ics_content", [BACK_TO_BACK_EVENTS])
+async def test_back_to_back_events(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the state stays on when one event ends as the next one starts.
+
+    The entity is set up on the half minute so that its poll interval does not
+    line up with the event boundary, which is what happens in practice.
+    """
+    freezer.move_to("2026-01-01T01:50:30+00:00")
+
+    config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "First"
+
+    freezer.move_to("2026-01-01T01:59:59+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(TEST_ENTITY).state == STATE_ON
+
+    # On the boundary only the end alarm of the first event is due, the next
+    # poll does not happen until 02:00:30.
+    freezer.move_to("2026-01-01T02:00:00+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Second"
