@@ -35,7 +35,6 @@ class GridxSensorEntityDescription(SensorEntityDescription):
     """Extends SensorEntityDescription with a value extractor function."""
 
     value_fn: Callable[[Mapping[str, Any]], StateType | None]
-    translation_placeholders: dict[str, str] | None = None
 
 
 BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
@@ -424,8 +423,6 @@ class GridxSensorEntity(CoordinatorEntity[GridxLiveCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.entity_description: GridxSensorEntityDescription = description
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
-        if description.translation_placeholders:
-            self._attr_translation_placeholders = description.translation_placeholders
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(entry.unique_id))},
             name="GridX GridBox",
