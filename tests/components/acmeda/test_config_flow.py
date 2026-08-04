@@ -1,6 +1,5 @@
 """Define tests for the Acmeda config flow."""
 
-import asyncio
 from unittest.mock import patch
 
 import aiopulse
