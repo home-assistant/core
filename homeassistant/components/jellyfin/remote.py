@@ -31,6 +31,14 @@ async def async_setup_entry(
     @callback
     def handle_coordinator_update() -> None:
         """Add remote per device that supports remote control."""
+        # Prune ephemeral device IDs whose session has ended so new entities
+        # can be created if the device reconnects with a fresh device ID.
+        coordinator.device_remote_ids -= {
+            did
+            for did in coordinator.device_remote_ids
+            if did not in coordinator.known_devices
+            and did not in coordinator.ephemeral_devices
+        }
         entities: list[RemoteEntity] = []
         for device_id, device_info in coordinator.known_devices.items():
             if device_id not in coordinator.device_remote_ids and device_info.get(

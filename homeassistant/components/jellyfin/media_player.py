@@ -16,7 +16,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
@@ -37,19 +36,17 @@ async def async_setup_entry(
     """Set up Jellyfin media_player from a config entry."""
     coordinator = entry.runtime_data
 
-    # Run migration once at setup for online devices, and once more after the
-    # first coordinator update (when the store is loaded) for offline devices
-    # whose session_device_map entries were only just restored from disk.
-    _migrate_unique_ids(hass, coordinator)
-    _migration_done = False
-
     @callback
     def handle_coordinator_update() -> None:
         """Add a media player for each known and ephemeral device."""
-        nonlocal _migration_done
-        if not _migration_done:
-            _migrate_unique_ids(hass, coordinator)
-            _migration_done = True
+        # Prune ephemeral device IDs whose session has ended so new entities
+        # can be created if the device reconnects with a fresh device ID.
+        coordinator.device_player_ids -= {
+            did
+            for did in coordinator.device_player_ids
+            if did not in coordinator.known_devices
+            and did not in coordinator.ephemeral_devices
+        }
         entities: list[MediaPlayerEntity] = []
         for device_id in coordinator.known_devices:
             if device_id not in coordinator.device_player_ids:
@@ -70,46 +67,6 @@ async def async_setup_entry(
     handle_coordinator_update()
 
     entry.async_on_unload(coordinator.async_add_listener(handle_coordinator_update))
-
-
-def _migrate_unique_ids(
-    hass: HomeAssistant, coordinator: JellyfinDataUpdateCoordinator
-) -> None:
-    """Migrate entity unique IDs from the session-based to device-based format.
-
-    The original integration used {server_id}-{session_id} as the unique ID.
-    Session IDs are transient, so these are migrated to the stable format
-    {server_id}-{user_id}-{device_id} using session_device_map to resolve
-    the device_id for any offline devices.
-    """
-    registry = er.async_get(hass)
-    session_to_device = {
-        **coordinator.session_device_map,
-        **{session["Id"]: device_id for device_id, session in coordinator.data.items()},
-    }
-    prefix = f"{coordinator.server_id}-"
-    full_prefix = f"{coordinator.server_id}-{coordinator.user_id}-"
-    for entity_entry in er.async_entries_for_config_entry(
-        registry, coordinator.config_entry.entry_id
-    ):
-        uid = entity_entry.unique_id
-        if not uid.startswith(prefix) or uid.startswith(full_prefix):
-            continue
-        suffix = uid[len(prefix) :]
-        # suffix is a session_id from the original format
-        if suffix not in session_to_device:
-            continue
-        device_id = session_to_device[suffix]
-        new_unique_id = f"{coordinator.server_id}-{coordinator.user_id}-{device_id}"
-        LOGGER.debug(
-            "Migrating entity %s unique_id from %s to %s",
-            entity_entry.entity_id,
-            uid,
-            new_unique_id,
-        )
-        registry.async_update_entity(
-            entity_entry.entity_id, new_unique_id=new_unique_id
-        )
 
 
 class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):

@@ -2,7 +2,6 @@
 
 from typing import Any, override
 
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -58,20 +57,25 @@ class JellyfinClientEntity(JellyfinEntity):
         self.app_version: str = device_info["ApplicationVersion"]
         self.capabilities: dict[str, Any] = device_info.get("Capabilities", {})
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (
-                    DOMAIN,
-                    f"{coordinator.server_id}-{coordinator.user_id}-{self.device_id}",
-                )
-            },
-            manufacturer="Jellyfin",
-            model=self.client_name,
-            name=self.device_name,
-            sw_version=self.app_version,
-            via_device=(DOMAIN, coordinator.server_id),
-        )
-        self._attr_name = None
+        if self._is_ephemeral:
+            self._attr_device_info = None
+            self._attr_has_entity_name = False
+            self._attr_name = self.device_name
+        else:
+            self._attr_device_info = DeviceInfo(
+                identifiers={
+                    (
+                        DOMAIN,
+                        f"{coordinator.server_id}-{coordinator.user_id}-{self.device_id}",
+                    )
+                },
+                manufacturer="Jellyfin",
+                model=self.client_name,
+                name=self.device_name,
+                sw_version=self.app_version,
+                via_device=(DOMAIN, coordinator.server_id),
+            )
+            self._attr_name = None
 
     @property
     def session_data(self) -> dict[str, Any] | None:

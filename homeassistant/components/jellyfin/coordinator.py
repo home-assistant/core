@@ -135,9 +135,15 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, An
                 if self.known_devices.get(device_id) != new_device_info:
                     self.known_devices[device_id] = new_device_info
                     _store_dirty = True
-                new_session_map = session["Id"]
-                if self.session_device_map.get(new_session_map) != device_id:
-                    self.session_device_map[new_session_map] = device_id
+                new_session_id = session["Id"]
+                if self.session_device_map.get(new_session_id) != device_id:
+                    # Prune stale entries for this device before adding the new one.
+                    self.session_device_map = {
+                        sid: did
+                        for sid, did in self.session_device_map.items()
+                        if did != device_id
+                    }
+                    self.session_device_map[new_session_id] = device_id
                     _store_dirty = True
             else:
                 self.ephemeral_devices[device_id] = _device_info_from_session(session)
