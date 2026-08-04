@@ -58,3 +58,20 @@ def test_zone_via_device_links_to_controller(
     )
     assert zone is not None
     assert zone.via_device_id == controller.id
+
+
+@pytest.mark.usefixtures("mock_pydrawise")
+def test_controller_has_no_self_via_device(
+    device_registry: dr.DeviceRegistry,
+    mock_added_config_entry: ConfigEntry,
+) -> None:
+    """Test the controller device does not link to itself via via_device_id.
+
+    Sensor entities share the controller device, so they must not set
+    via_device_id, which would point the controller device at itself.
+    """
+    controller = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "52496"), mock_added_config_entry.entry_id
+    )
+    assert controller is not None
+    assert controller.via_device_id is None

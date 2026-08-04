@@ -1,6 +1,8 @@
 """Support for Hydrawise cloud."""
 
-from pydrawise import auth, hybrid
+from collections.abc import Iterable
+
+from pydrawise import Controller, auth, hybrid
 
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -51,25 +53,33 @@ async def async_setup_entry(
     device_registry = dr.async_get(hass)
 
     @callback
-    def _async_register_controller_devices() -> None:
+    def _async_register_controller_devices(controllers: Iterable[Controller]) -> None:
         """Register controller devices so children can resolve via_device_id.
 
-        Controllers can appear on later coordinator updates, so this runs on
-        every update before the zone-tracking listener, keeping the via_device
-        parents registered before their child entities are constructed.
+        Runs as the first new-controller callback so via_device parents are
+        registered before the new-zone callbacks construct zone entities that
+        resolve their via_device_id. Registration must not run before
+        _add_remove_zones computes the previous controllers, or newly discovered
+        controllers would be treated as already-known and their controller-level
+        entities would never be added.
         """
-        for controller in main_coordinator.data.controllers.values():
+        for controller in controllers:
             device_registry.async_get_or_create(
                 config_entry_id=config_entry.entry_id,
                 identifiers={(DOMAIN, str(controller.id))},
                 manufacturer=MANUFACTURER,
                 model=controller.hardware.model.description,
                 name=controller.name,
+                # Explicitly clear any via_device_id: older versions linked the
+                # controller device to itself via its rain sensor entity.
+                via_device_id=None,
             )
 
-    _async_register_controller_devices()
-    config_entry.async_on_unload(
-        main_coordinator.async_add_listener(_async_register_controller_devices)
+    # Register the controllers known at setup before the platforms construct
+    # their entities.
+    _async_register_controller_devices(main_coordinator.data.controllers.values())
+    main_coordinator.new_controllers_callbacks.append(
+        _async_register_controller_devices
     )
 
     # async_track_zones is registered first on water_use_coordinator,
