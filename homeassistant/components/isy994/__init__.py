@@ -138,12 +138,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
         ) from err
 
     isy_data = entry.runtime_data = IsyData()
-    _categorize_nodes(isy_data, isy.nodes, ignore_identifier, sensor_identifier)
+    isy_data.root = isy
+    _async_get_or_create_isy_device_in_registry(hass, entry, isy)
+    via_device_id = dr.async_get_device_id_by_identifier(
+        hass, (DOMAIN, isy.uuid), config_entry_id=entry.entry_id
+    )
+    _categorize_nodes(
+        isy_data, isy.nodes, ignore_identifier, sensor_identifier, via_device_id
+    )
     _categorize_programs(isy_data, isy.programs)
     # Gather ISY Variables to be added.
     if isy.variables.children:
         isy_data.devices[CONF_VARIABLES] = _create_service_device_info(
-            isy, name=CONF_VARIABLES.title(), unique_id=CONF_VARIABLES
+            isy,
+            name=CONF_VARIABLES.title(),
+            unique_id=CONF_VARIABLES,
+            via_device_id=via_device_id,
         )
         numbers = isy_data.variables[Platform.NUMBER]
         for vtype, _, vid in isy.variables.children:
@@ -152,16 +162,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
         isy.conf[CONFIG_NETWORKING] or isy.conf.get(CONFIG_PORTAL)
     ) and isy.networking.nobjs:
         isy_data.devices[CONF_NETWORK] = _create_service_device_info(
-            isy, name=CONFIG_NETWORKING, unique_id=CONF_NETWORK
+            isy,
+            name=CONFIG_NETWORKING,
+            unique_id=CONF_NETWORK,
+            via_device_id=via_device_id,
         )
         for resource in isy.networking.nobjs:
             isy_data.net_resources.append(resource)
 
     # Dump ISY Clock Information. Future: Add ISY as sensor to Hass with attrs
     LOGGER.debug(repr(isy.clock))
-
-    isy_data.root = isy
-    _async_get_or_create_isy_device_in_registry(hass, entry, isy)
 
     # Load platforms for the devices in the ISY controller that we support.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -202,9 +212,11 @@ def _async_get_or_create_isy_device_in_registry(
     )
 
 
-def _create_service_device_info(isy: ISY, name: str, unique_id: str) -> DeviceInfo:
+def _create_service_device_info(
+    isy: ISY, name: str, unique_id: str, via_device_id: str | None
+) -> DeviceInfo:
     """Create device info for ISY service devices."""
-    return DeviceInfo(
+    device_info = DeviceInfo(
         identifiers={
             (
                 DOMAIN,
@@ -216,9 +228,11 @@ def _create_service_device_info(isy: ISY, name: str, unique_id: str) -> DeviceIn
         model=isy.conf[ISY_CONF_MODEL],
         sw_version=isy.conf[ISY_CONF_FIRMWARE],
         configuration_url=isy.conn.url,
-        via_device=(DOMAIN, isy.uuid),
         entry_type=DeviceEntryType.SERVICE,
     )
+    if via_device_id is not None:
+        device_info["via_device_id"] = via_device_id
+    return device_info
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
