@@ -630,7 +630,24 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
                 self._display_name,
                 err,
             )
-            jpeg = self.cached_image or self._PLACEHOLDER_JPEG
+            # Same fail-closed reasoning as every blind-cache-serve point in
+            # _async_camera_image_impl: an unhandled exception here must not
+            # bypass the privacy gate. Checked as `is not False` rather than
+            # `is None` — privacy could have flipped ON *during* this same
+            # call, and only a confirmed-False read is safe to serve stale
+            # data for (3-agent bug-hunt on the HACS backport of this same
+            # fix, 2026-08-04).
+            privacy_confirmed_safe = (
+                self.coordinator.shc_state_cache.get(self._cam_id, {}).get(
+                    "privacy_mode"
+                )
+                is False
+            )
+            jpeg = (
+                self.cached_image or self._PLACEHOLDER_JPEG
+                if privacy_confirmed_safe
+                else self._PLACEHOLDER_JPEG
+            )
         # Apply 180° rotation if the user enabled it via the Bild 180° drehen
         # switch (ceiling-mounted indoor cameras). Skip the placeholder JPEG.
         # [S5] Use None default instead of {} to avoid allocating a throwaway dict
@@ -930,7 +947,16 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
                                 len(self.cached_image),
                                 _fmt_event_ts(ev.get("timestamp")),
                             )
-                            return self.cached_image
+                            # Unlike the other tiers, this fetches a STORED
+                            # HISTORICAL motion-event JPEG — independent of
+                            # the camera's current privacy state, so it does
+                            # not naturally short-circuit to empty/error the
+                            # way a live camera fetch does while privacy is
+                            # engaged. The event could predate privacy being
+                            # enabled just as easily as a stale cached_image
+                            # can (3-agent bug-hunt on the HACS backport of
+                            # this fix, 2026-08-04).
+                            return None if privacy_unknown else self.cached_image
                         if resp.status == 401:
                             _LOGGER.warning(
                                 "%s: token expired — update via integration options",

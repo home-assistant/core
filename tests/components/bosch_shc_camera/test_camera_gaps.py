@@ -393,6 +393,29 @@ async def test_async_camera_image_serves_placeholder_on_unexpected_exception(
     assert image == entity._PLACEHOLDER_JPEG
 
 
+async def test_async_camera_image_unexpected_exception_fails_closed_when_privacy_unknown(
+    hass: HomeAssistant,
+) -> None:
+    """A blind cached-image serve on exception must also fail closed.
+
+    Regression test for a 3-agent bug-hunt finding on the HACS backport of
+    this fix (2026-08-04): the wrapper's `except Exception` branch served
+    `cached_image` unconditionally, bypassing the privacy_unknown gate
+    every other blind-cache-serve point in _async_camera_image_impl
+    respects.
+    """
+    entity = await _setup_camera_entity(hass)
+    entity.cached_image = b"a-real-cached-frame-from-before-privacy-was-enabled"
+    assert CAM_ID not in entity.coordinator.shc_state_cache
+
+    with patch.object(
+        entity, "_async_camera_image_impl", AsyncMock(side_effect=RuntimeError("boom"))
+    ):
+        image = await entity.async_camera_image()
+
+    assert image == entity._PLACEHOLDER_JPEG
+
+
 # ── async_camera_image — 180° rotation applied (line 635) ──────────────────
 
 
@@ -575,6 +598,10 @@ def _entity_with_events(entity: BoschCamera, events: list[dict[str, object]]) ->
 async def test_camera_image_tier4_event_snapshot_success(hass: HomeAssistant) -> None:
     """A successful event-snapshot fetch is cached and returned (also exercises `_fmt_event_ts`)."""
     entity = await _setup_camera_entity(hass)
+    # Known-safe privacy state — an unknown state would (correctly, per the
+    # round-20 fail-closed fix) withhold this event snapshot too, since it's
+    # independent of the camera's current live privacy state.
+    entity.coordinator.shc_state_cache[CAM_ID] = {"privacy_mode": False}
     _entity_with_events(
         entity,
         [
@@ -604,6 +631,52 @@ async def test_camera_image_tier4_event_snapshot_success(hass: HomeAssistant) ->
         image = await entity.async_camera_image()
 
     assert image == b"\xff\xd8event-jpeg"
+
+
+async def test_camera_image_tier4_event_snapshot_withheld_when_privacy_unknown(
+    hass: HomeAssistant,
+) -> None:
+    """Even the event-snapshot last resort must fail closed.
+
+    Regression test for a 3-agent bug-hunt finding on the HACS backport of
+    this fix (2026-08-04): unlike every other tier, this one fetches a
+    STORED HISTORICAL motion-event JPEG — independent of the camera's
+    current live privacy state, so it doesn't naturally short-circuit to
+    empty/error while privacy is engaged the way a live camera fetch does.
+    The event could predate privacy being enabled just as easily as a stale
+    cached_image can.
+    """
+    entity = await _setup_camera_entity(hass)
+    assert CAM_ID not in entity.coordinator.shc_state_cache
+    _entity_with_events(
+        entity,
+        [
+            {
+                "imageUrl": "https://cam.boschsecurity.com/e.jpg",
+                "timestamp": "2026-07-28T10:00:00+02:00",
+            }
+        ],
+    )
+
+    with (
+        patch.object(
+            entity.coordinator,
+            "async_fetch_live_snapshot",
+            AsyncMock(return_value=None),
+        ),
+        patch.object(
+            entity.coordinator,
+            "async_fetch_live_snapshot_local",
+            AsyncMock(return_value=None),
+        ),
+        patch(f"{_CAMERA_MOD}.async_get_bosch_cloud_session") as mock_session_factory,
+    ):
+        session = MagicMock()
+        session.get = MagicMock(return_value=_http_cm(200))
+        mock_session_factory.return_value = session
+        image = await entity.async_camera_image()
+
+    assert image == entity._PLACEHOLDER_JPEG
 
 
 async def test_camera_image_tier4_event_snapshot_401_returns_cached(
@@ -648,6 +721,7 @@ async def test_camera_image_tier4_event_snapshot_403_tries_next_event(
     """An expired-URL status (403/404/410) on one event tries the next event in the list."""
     entity = await _setup_camera_entity(hass)
     entity.last_image_fetch = 0.0
+    entity.coordinator.shc_state_cache[CAM_ID] = {"privacy_mode": False}
     _entity_with_events(
         entity,
         [
