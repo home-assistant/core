@@ -10,8 +10,8 @@ from homeassistant.components.habitron import (
     async_remove_config_entry_device,
 )
 from homeassistant.components.habitron.const import DOMAIN
-from homeassistant.const import CONF_HOST
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
