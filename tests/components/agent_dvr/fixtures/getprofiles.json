@@ -1,0 +1,7 @@
+{
+  "profiles": [
+    { "name": "Home", "active": true, "id": 0 },
+    { "name": "Away", "active": false, "id": 1 },
+    { "name": "Night", "active": false, "id": 2 }
+  ]
+}

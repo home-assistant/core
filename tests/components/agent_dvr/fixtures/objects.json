@@ -11,8 +11,35 @@
       "dir": "D:\\Projects\\agent-service\\AgentService\\Media\\WebServerRoot\\Media\\"
     }
   ],
-  "locations": [],
-  "objectList": [],
+  "locations": [{ "name": "Front Yard", "color": "#000000", "latlng": "" }],
+  "objectList": [
+    {
+      "name": "Front Door",
+      "groups": "outside",
+      "id": 1,
+      "typeID": 2,
+      "locationIndex": 0,
+      "directory": "Front Door",
+      "function": "Monitor",
+      "directoryID": 0,
+      "data": {
+        "online": true,
+        "recording": false,
+        "width": 1920,
+        "height": 1080,
+        "ptzid": -5,
+        "sourcetype": "ONVIF",
+        "ptztype": "ONVIF",
+        "alertsActive": true,
+        "alerted": false,
+        "connected": true,
+        "detected": false,
+        "detectorActive": true,
+        "mjpegStreamWidth": 1920,
+        "mjpegStreamHeight": 1080
+      }
+    }
+  ],
   "profiles": [
     { "name": "Home", "active": true, "id": 0 },
     { "name": "Away", "active": false, "id": 1 },

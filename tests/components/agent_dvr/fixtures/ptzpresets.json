@@ -1,0 +1,6 @@
+{
+  "presets": [
+    { "name": "Home", "token": "Home" },
+    { "name": "Away", "token": "Away" }
+  ]
+}

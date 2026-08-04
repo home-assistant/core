@@ -1,74 +1,76 @@
-"""Config flow to configure Agent devices."""
+"""Config flow to configure Agent DVR devices."""
 
-from contextlib import suppress
 from typing import Any, override
 
-from agent import AgentConnectionError, AgentError
-from agent.a import Agent
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, SERVER_URL
-from .helpers import generate_url
+from .api import (
+    AgentDVRAuthError,
+    AgentDVRClient,
+    AgentDVRConnectionError,
+    AgentDVRError,
+)
+from .const import DEFAULT_PORT, DOMAIN
 
-DEFAULT_PORT = 8090
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Optional(CONF_USERNAME): str,
+        vol.Optional(CONF_PASSWORD): str,
+        vol.Optional(CONF_SSL, default=False): bool,
+    }
+)
 
 
-class AgentFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle an Agent config flow."""
+class AgentDVRConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle an Agent DVR config flow."""
+
+    VERSION = 2
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle an Agent config flow."""
-        errors = {}
+        """Handle the initial step."""
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            port = user_input[CONF_PORT]
-
-            server_origin = generate_url(host, port)
-            agent_client = Agent(server_origin, async_get_clientsession(self.hass))
-
-            with suppress(AgentConnectionError, AgentError):
-                await agent_client.update()
-
-            await agent_client.close()
-
-            if agent_client.is_available:
-                await self.async_set_unique_id(agent_client.unique)
-
-                self._abort_if_unique_id_configured(
-                    updates={
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_PORT: user_input[CONF_PORT],
-                        SERVER_URL: server_origin,
-                    }
-                )
-
-                device_config = {
-                    CONF_HOST: host,
-                    CONF_PORT: port,
-                    SERVER_URL: server_origin,
-                }
-
-                return self.async_create_entry(
-                    title=agent_client.name, data=device_config
-                )
-
-            errors["base"] = "cannot_connect"
-
-        data = {
-            vol.Required(CONF_HOST): str,
-            vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        }
+            session = async_get_clientsession(self.hass)
+            client = AgentDVRClient(
+                session,
+                user_input[CONF_HOST],
+                user_input[CONF_PORT],
+                user_input.get(CONF_USERNAME),
+                user_input.get(CONF_PASSWORD),
+                user_input.get(CONF_SSL, False),
+            )
+            try:
+                status = await client.get_status()
+            except AgentDVRAuthError:
+                errors["base"] = "invalid_auth"
+            except AgentDVRConnectionError:
+                errors["base"] = "cannot_connect"
+            except AgentDVRError:
+                errors["base"] = "unknown"
+            else:
+                unique_id = status.get("unique")
+                if unique_id:
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured()
+                title = status.get("name") or user_input[CONF_HOST]
+                return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(data),
-            errors=errors,
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )

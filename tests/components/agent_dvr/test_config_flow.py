@@ -1,14 +1,15 @@
 """Tests for the Agent DVR config flow."""
 
+import aiohttp
 import pytest
 
-from homeassistant.components.agent_dvr.const import DOMAIN, SERVER_URL
+from homeassistant.components.agent_dvr.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import init_integration
+from . import UNIQUE_ID, init_integration
 
 from tests.common import async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -30,8 +31,14 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
 async def test_user_device_exists_abort(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test we abort flow if Agent device already configured."""
+    """Test we abort flow if Agent DVR device already configured."""
     await init_integration(hass, aioclient_mock)
+
+    aioclient_mock.get(
+        "http://example.local:8090/command.cgi?cmd=getStatus",
+        text=await async_load_fixture(hass, "status.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -40,14 +47,17 @@ async def test_user_device_exists_abort(
     )
 
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test we show user form on Agent connection error."""
-
-    aioclient_mock.get("http://example.local:8090/command.cgi?cmd=getStatus", text="")
+    """Test we show the user form again on a connection error."""
+    aioclient_mock.get(
+        "http://example.local:8090/command.cgi?cmd=getStatus",
+        exc=aiohttp.ClientConnectionError,
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -60,6 +70,25 @@ async def test_connection_error(
     assert result["type"] is FlowResultType.FORM
 
 
+async def test_auth_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we show invalid_auth when Protect API rejects the credentials."""
+    aioclient_mock.get(
+        "http://example.local:8090/command.cgi?cmd=getStatus", status=401
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: "example.local", CONF_PORT: 8090},
+    )
+
+    assert result["errors"]["base"] == "invalid_auth"
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+
+
 async def test_full_user_flow_implementation(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -67,12 +96,6 @@ async def test_full_user_flow_implementation(
     aioclient_mock.get(
         "http://example.local:8090/command.cgi?cmd=getStatus",
         text=await async_load_fixture(hass, "status.json", DOMAIN),
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
-
-    aioclient_mock.get(
-        "http://example.local:8090/command.cgi?cmd=getObjects",
-        text=await async_load_fixture(hass, "objects.json", DOMAIN),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
@@ -90,9 +113,8 @@ async def test_full_user_flow_implementation(
 
     assert result["data"][CONF_HOST] == "example.local"
     assert result["data"][CONF_PORT] == 8090
-    assert result["data"][SERVER_URL] == "http://example.local:8090/"
     assert result["title"] == "DESKTOP"
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     entries = hass.config_entries.async_entries(DOMAIN)
-    assert entries[0].unique_id == "c0715bba-c2d0-48ef-9e3e-bc81c9ea4447"
+    assert entries[0].unique_id == UNIQUE_ID
