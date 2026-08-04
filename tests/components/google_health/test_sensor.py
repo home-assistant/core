@@ -262,8 +262,8 @@ async def test_auto_add_new_device(
         is None
     )
 
-    mock_google_health_client.paired_devices.list.return_value = (
-        paired_devices_fixture("paired_devices.json")
+    mock_google_health_client.paired_devices.list.return_value = paired_devices_fixture(
+        "paired_devices.json"
     )
 
     freezer.tick(DEVICE_POLLING_INTERVAL)
@@ -278,4 +278,3 @@ async def test_auto_add_new_device(
         (DOMAIN, "watch_123"), config_entry.entry_id
     )
     assert device is not None
-
