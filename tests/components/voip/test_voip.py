@@ -1000,6 +1000,86 @@ async def test_announce_timeout(
 
 
 @pytest.mark.usefixtures("socket_enabled")
+async def test_announce_disconnect(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    voip_devices: VoIPDevices,
+    voip_device: VoIPDevice,
+) -> None:
+    """Test announcement."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
+    assert isinstance(satellite, VoipAssistSatellite)
+    assert (
+        satellite.supported_features
+        & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
+    )
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            "assist_satellite",
+            "announce",
+            service_data={"media_id": "http://example.com"},
+            blocking=True,
+            target={
+                "entity_id": satellite.entity_id,
+            },
+        )
+    assert err.value.translation_domain == "voip"
+    assert err.value.translation_key == "non_tts_announcement"
+
+    mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
+    announcement = assist_satellite.AssistSatelliteAnnouncement(
+        message="test announcement",
+        media_id=_MEDIA_ID,
+        tts_token=mock_tts_result_stream.token,
+        original_media_id=_MEDIA_ID,
+        media_id_source="tts",
+    )
+
+    # Protocol has already been mocked, but "outgoing_call" is not async
+    mock_protocol: AsyncMock = config_entry.runtime_data.domain_data.protocol
+    mock_protocol.outgoing_call = Mock()
+
+    with (
+        patch(
+            "homeassistant.components.voip.assist_satellite.VoipAssistSatellite._send_tts",
+        ) as mock_send_tts,
+    ):
+        announce_task = hass.async_create_background_task(
+            satellite.async_announce(announcement), "voip_announce"
+        )
+        await asyncio.sleep(0)
+        satellite.connection_made(Mock())
+        mock_protocol.outgoing_call.assert_called_once()
+
+        # Trigger announcement
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+
+        assert satellite._announcement is announcement
+        assert voip_device.is_active
+
+        # Disconnect before the hangup checker gets a chance to disconnect.
+        satellite.disconnect()
+
+        assert satellite._announcement is None
+        assert not voip_device.is_active
+
+        async with asyncio.timeout(2):
+            await announce_task
+
+        mock_send_tts.assert_called_once_with(
+            mock_tts_result_stream, wait_for_tone=False
+        )
+
+
+@pytest.mark.usefixtures("socket_enabled")
 async def test_start_conversation(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
