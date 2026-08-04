@@ -364,6 +364,7 @@ async def test_new_endpoint_callback(
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test new endpoint creates entities after refresh."""
     mock_portainer_client.get_endpoints.return_value = []
@@ -390,6 +391,21 @@ async def test_new_endpoint_callback(
         entity_registry, mock_config_entry.entry_id
     )
     assert len(entities) > 0
+
+    # The endpoint and its stacks are discovered together on this refresh, so
+    # the stack device must resolve the freshly-created endpoint device as its
+    # via device instead of racing its creation.
+    endpoint_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1"), mock_config_entry.entry_id
+    )
+    assert endpoint_device is not None
+
+    stack_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_stack_2"),
+        mock_config_entry.entry_id,
+    )
+    assert stack_device is not None
+    assert stack_device.via_device_id == endpoint_device.id
 
 
 async def test_new_container_callback(
@@ -467,3 +483,77 @@ async def test_new_stack_callback(
     assert len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     ) > len(entities)
+
+
+async def test_stack_recreated_with_new_id(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a stack recreated with the same name but a new ID re-registers its device.
+
+    The stack device identifier and a container's via device are keyed by the stack
+    ID, so a stack recreated with a new ID must be detected as new and its device
+    registered before a container in it resolves the stack as its via device. Tracking
+    only the name would skip registration and the via device lookup would then raise,
+    aborting the refresh.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    endpoint_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1"), mock_config_entry.entry_id
+    )
+    assert endpoint_device is not None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{mock_config_entry.entry_id}_1_stack_1"),
+            mock_config_entry.entry_id,
+        )
+        is not None
+    )
+
+    stacks = cast(
+        list[dict[str, Any]],
+        await async_load_json_array_fixture(hass, "stacks.json", DOMAIN),
+    )
+    for stack in stacks:
+        if stack["Name"] == "webstack":
+            stack["Id"] = 99
+    mock_portainer_client.get_stacks.return_value = [
+        Stack.from_dict(stack) for stack in stacks
+    ]
+
+    containers = cast(
+        list[dict[str, Any]],
+        await async_load_json_array_fixture(hass, "containers.json", DOMAIN),
+    )
+    new_container = {
+        **next(c for c in containers if c["Names"] == ["/serene_banach"]),
+        "Names": ["/brave_newton"],
+        "Id": "cc97facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf",
+    }
+    mock_portainer_client.get_containers.return_value = [
+        DockerContainer.from_dict(container)
+        for container in (*containers, new_container)
+    ]
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success
+
+    new_stack_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_stack_99"),
+        mock_config_entry.entry_id,
+    )
+    assert new_stack_device is not None
+    assert new_stack_device.via_device_id == endpoint_device.id
+
+    new_container_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_brave_newton"),
+        mock_config_entry.entry_id,
+    )
+    assert new_container_device is not None
+    assert new_container_device.via_device_id == new_stack_device.id
