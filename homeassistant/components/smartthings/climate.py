@@ -26,6 +26,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -165,7 +166,9 @@ async def async_setup_entry(
         )
     )
     entities.extend(
-        SmartThingsHeatPumpZone(entry_data.client, device, component)
+        SmartThingsHeatPumpZone(
+            hass, entry_data.client, device, component, entry.entry_id
+        )
         for device in entry_data.devices.values()
         for component in device.status
         if component in {"INDOOR", "INDOOR1", "INDOOR2"}
@@ -682,7 +685,14 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
 
     _attr_name = None
 
-    def __init__(self, client: SmartThings, device: FullDevice, component: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        client: SmartThings,
+        device: FullDevice,
+        component: str,
+        entry_id: str,
+    ) -> None:
         """Init the class."""
         super().__init__(
             client,
@@ -699,7 +709,11 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         self._attr_hvac_modes = self._determine_hvac_modes()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{device.device.device_id}_{component}")},
-            via_device=(DOMAIN, device.device.device_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, device.device.device_id),
+                config_entry_id=entry_id,
+            ),
             name=f"{device.device.label} {component}",
         )
 
