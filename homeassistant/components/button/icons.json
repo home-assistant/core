@@ -19,6 +19,9 @@
     }
   },
   "triggers": {
+    "being_held": {
+      "trigger": "mdi:gesture-tap-hold"
+    },
     "double_pressed": {
       "trigger": "mdi:gesture-double-tap"
     },
