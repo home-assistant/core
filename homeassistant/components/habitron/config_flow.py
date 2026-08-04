@@ -17,12 +17,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.components import network
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.selector import (
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
-)
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_SERIAL,
     ATTR_UPNP_UDN,
@@ -33,14 +29,11 @@ from .const import CONF_DEFAULT_HOST, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-KEY_HOST = "habitron_host"
-KEY_TOKEN = "websock_token"
-
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    host_input = data[KEY_HOST]
+    host_input = data[CONF_HOST]
 
     # The hub runs on this machine when the entered address is *any* of HA's own
     # local addresses -- not just the route-selected one. A multi-homed host, or
@@ -51,7 +44,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     own_ips = {str(ip) for ip in await network.async_get_enabled_source_ips(hass)}
     if host_input in own_ips:
         host_input = "local"
-        data[KEY_HOST] = "local"
+        data[CONF_HOST] = "local"
 
     host_to_test = host_input
     if host_to_test == "local":
@@ -91,7 +84,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for habitron."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -193,7 +186,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return None
         canonical = {await self._async_canonical_host(host) for host in candidates}
         for entry in entries:
-            entry_host = entry.data.get(KEY_HOST)
+            entry_host = entry.data.get(CONF_HOST)
             if not entry_host:
                 continue
             if entry_host in candidates:
@@ -260,7 +253,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # overwriting a ``local`` entry with the discovered IP would leave setup
         # pointing at a stale address once that IP changes.
         self._abort_if_unique_id_configured(
-            updates={KEY_HOST: await self._async_stored_host(host_str)},
+            updates={CONF_HOST: await self._async_stored_host(host_str)},
             reload_on_update=False,
         )
 
@@ -304,10 +297,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             # Create entry with discovered data
-            data = {
-                KEY_HOST: self._discovered_device.get("ip"),
-                KEY_TOKEN: "",
-            }
+            data = {CONF_HOST: self._discovered_device.get("ip")}
             try:
                 info = await validate_input(self.hass, data)
                 return self.async_create_entry(title=info["title"], data=data)
@@ -353,7 +343,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Try a discovery probe to obtain a stable serial-based unique_id;
             # fall back to the host string when no probe response arrives.
-            host_input = user_input[KEY_HOST]
+            host_input = user_input[CONF_HOST]
             # The probe reports the address it was reached at, so match it
             # against what the user submitted -- canonicalising first would
             # discard the serial of a hub running on this machine.
@@ -377,7 +367,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # so a DHCP change does not leave the entry on the old one. The
             # entry's update listener handles the reload.
             self._abort_if_unique_id_configured(
-                updates={KEY_HOST: stored_host}, reload_on_update=False
+                updates={CONF_HOST: stored_host}, reload_on_update=False
             )
 
             # A hub already added via SSDP is keyed by its UDN, so the serial-
@@ -402,16 +392,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-            default_host = user_input[KEY_HOST]
+            default_host = user_input[CONF_HOST]
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(KEY_HOST, default=default_host): str,
-                    vol.Optional(KEY_TOKEN, default=""): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
-                    ),
+                    vol.Required(CONF_HOST, default=default_host): str,
                 }
             ),
             errors=errors,

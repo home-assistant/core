@@ -40,7 +40,7 @@ def smart_hub_stub() -> SmartHub:
     config = MagicMock()
     config.title = "Habitron"
     config.entry_id = "entry-id"
-    config.data = {"websock_token": "tok"}
+    config.data = {}
     return SmartHub(hass, config, comm)
 
 

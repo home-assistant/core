@@ -10,9 +10,12 @@ from homeassistant.components.habitron import (
     async_remove_config_entry_device,
 )
 from homeassistant.components.habitron.const import DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+
+from .const import MOCK_HOST, MOCK_NAME, MOCK_UDN
 
 from tests.common import MockConfigEntry
 
@@ -50,7 +53,7 @@ async def test_update_listener_triggers_reload(
     ) as mock_reload:
         hass.config_entries.async_update_entry(
             entry,
-            options={**entry.options, "websock_token": "rotated-token"},
+            options={**entry.options, CONF_HOST: "192.168.1.99"},
         )
         await hass.async_block_till_done()
         mock_reload.assert_called_with(entry.entry_id)
@@ -236,6 +239,60 @@ async def test_setup_entry_removes_stale_device(
     await hass.async_block_till_done()
 
     assert device_registry.async_get(stale.id) is None
+
+
+async def test_migrate_v1_entry_renames_host_and_drops_the_token(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+) -> None:
+    """A v1 entry keeps working: the host is renamed, the token dropped.
+
+    Entries created before this integration moved to core carry the
+    integration-specific ``habitron_host`` key and a websocket token that
+    nothing consumes any more; re-adding the hub by hand must not be needed.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_UDN,
+        version=1,
+        data={"habitron_host": MOCK_HOST, "websock_token": "rotated-token"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 2
+    assert entry.data == {CONF_HOST: MOCK_HOST}
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_migrate_v1_entry_without_the_old_key_is_a_no_op(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+) -> None:
+    """A v1 entry that already uses the shared key is only version-bumped."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_UDN,
+        version=1,
+        data={CONF_HOST: MOCK_HOST},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 2
+    assert entry.data == {CONF_HOST: MOCK_HOST}
 
 
 async def test_cleanup_keeps_a_device_with_one_live_identifier(

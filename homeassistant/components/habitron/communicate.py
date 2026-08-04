@@ -15,6 +15,7 @@ from habitron_client import (
 
 from homeassistant.components import network
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 
@@ -30,7 +31,7 @@ class HbtnComm:
     def __init__(self, hass: HomeAssistant, config: ConfigEntry) -> None:
         """Init CommTest for connection test."""
         self._name: str = "HbtnComm"
-        self._host_conf: str = config.data["habitron_host"]
+        self._host_conf: str = config.data[CONF_HOST]
         self.logger = logging.getLogger(__name__)
 
         if self.is_valid_ipv4(self._host_conf):
@@ -181,17 +182,6 @@ class HbtnComm:
             return False
         else:
             return True
-
-    async def send_network_info(self, tok: str) -> None:
-        """Send home assistant ipv4."""
-        await self.client.send_network_info(
-            self._network_ip,
-            tok.encode("utf-8"),
-            bytes.fromhex(self._mac.replace(":", "").replace("-", "")),
-            is_addon=self.is_addon,
-            version=self._hbtn_version,
-        )
-        self.logger.debug("Sent network info to hub - ip: %s", self._network_ip)
 
     async def reinit_hub(self, mode: int) -> bytes:
         """Restart event server on hub."""

@@ -149,7 +149,6 @@ class SmartHub:
         # while Home Assistant retries the setup.
         await self.comm.reinit_hub(0)
         try:
-            await self.comm.send_network_info(self.config.data["websock_token"])
             self.router = await async_build_system(self.comm.client, b_uid=self.uid)
             self.comm.set_router(self.router)
             await self._register_bus_devices()
