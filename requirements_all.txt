@@ -1278,7 +1278,7 @@ hole==0.9.2
 holidays==0.101
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260729.3
+home-assistant-frontend==20260729.4
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.7.30
@@ -1992,7 +1992,7 @@ pyEmby==1.10
 pyHik==0.4.3
 
 # homeassistant.components.homee
-pyHomee==1.4.2
+pyHomee==1.4.3
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -2405,10 +2405,10 @@ pynetio==0.1.9.1
 pynina==1.0.2
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoauth==1.0.2
+pynintendoauth==1.0.3
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==2.4.0.1
+pynintendoparental==2.5.0
 
 # homeassistant.components.nobo_hub
 pynobo==1.9.0
