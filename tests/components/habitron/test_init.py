@@ -5,7 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from habitron_client import HabitronError, HabitronTimeoutError
 import pytest
 
-from homeassistant.components.habitron import async_remove_config_entry_device
+from homeassistant.components.habitron import (
+    _async_cleanup_stale_devices,
+    async_remove_config_entry_device,
+)
 from homeassistant.components.habitron.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -232,4 +235,42 @@ async def test_setup_entry_removes_stale_device(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert device_registry.async_get(stale.id) is None
+
+
+async def test_cleanup_keeps_a_device_with_one_live_identifier(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A device is stale only when *none* of its Habitron uids is on the bus.
+
+    Device entries can carry several identifiers; removing on the first stale
+    one would delete a device that is still live under another -- the opposite
+    of what ``async_remove_config_entry_device`` allows.
+
+    Driven directly: the config-entry fixtures stub the first refresh, and
+    ``SmartHub.async_setup`` runs inside it, so the uids never reach the
+    registry through that path.
+    """
+    mock_config_entry.add_to_hass(hass)
+    survivor = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "gone-uid"), (DOMAIN, "module-uid")},
+        name="Module, re-identified",
+    )
+    stale = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "gone-uid-2")},
+        name="Gone module",
+    )
+
+    smhub = MagicMock()
+    smhub.uid = "hub-uid"
+    smhub.router.uid = "router-uid"
+    smhub.router.modules = [MagicMock(uid="module-uid")]
+
+    _async_cleanup_stale_devices(hass, mock_config_entry, smhub)
+
+    assert device_registry.async_get(survivor.id) is not None
     assert device_registry.async_get(stale.id) is None

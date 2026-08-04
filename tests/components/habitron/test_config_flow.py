@@ -425,6 +425,116 @@ async def test_ssdp_matches_entry_stored_under_host_name(
     assert named_entry.unique_id == MOCK_UDN
 
 
+async def test_ssdp_update_keeps_the_local_sentinel(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """A hub stored as ``local`` is not rewritten to the discovered IP.
+
+    The sentinel resolves to whatever address this machine currently has;
+    replacing it with the IP seen at discovery time would leave setup pointing
+    at a stale address as soon as that changes.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_UDN,
+        data={KEY_HOST: "local", "websock_token": ""},
+    )
+    entry.add_to_hass(hass)
+
+    discovery = SsdpServiceInfo(
+        ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
+        ssdp_st="urn:habitron-com:device:SmartHub:1",
+        ssdp_location=f"http://{MOCK_HOST}:80/desc.xml",
+        upnp={ATTR_UPNP_UDN: MOCK_UDN},
+    )
+    with patch(
+        "homeassistant.components.habitron.config_flow.network."
+        "async_get_enabled_source_ips",
+        new=AsyncMock(return_value=[IPv4Address(MOCK_HOST)]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=discovery,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert entry.data[KEY_HOST] == "local"
+
+
+async def test_ssdp_keeps_a_serial_id_when_only_a_udn_is_advertised(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """A serial-keyed entry is not downgraded to a UDN.
+
+    Rewriting it would flip the id back and forth as discoveries with and
+    without a serial alternate; only a host-based fallback may be replaced.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        data={KEY_HOST: MOCK_HOST, "websock_token": ""},
+    )
+    entry.add_to_hass(hass)
+
+    discovery = SsdpServiceInfo(
+        ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
+        ssdp_st="urn:habitron-com:device:SmartHub:1",
+        ssdp_location=f"http://{MOCK_HOST}:80/desc.xml",
+        upnp={ATTR_UPNP_UDN: MOCK_UDN},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert entry.unique_id == MOCK_SERIAL
+
+
+async def test_user_step_updates_the_stored_host_of_a_known_hub(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """Re-adding a known hub at a new address moves the entry to it.
+
+    The serial identifies the same hub, so aborting without the update would
+    leave the entry pointing at the address it no longer answers on.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        data={KEY_HOST: "192.168.1.99", "websock_token": ""},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.habitron.config_flow.discover_smarthubs",
+        new=AsyncMock(return_value=[{"ip": MOCK_HOST, "serial": MOCK_SERIAL}]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={KEY_HOST: MOCK_HOST}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert entry.data[KEY_HOST] == MOCK_HOST
+
+
 async def test_ssdp_no_host(
     hass: HomeAssistant,
     setup_homeassistant: None,

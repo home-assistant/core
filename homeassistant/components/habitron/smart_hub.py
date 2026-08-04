@@ -156,9 +156,6 @@ class SmartHub:
         finally:
             await self.comm.reinit_hub(1)
 
-        # 5. First hub-diagnostics update.
-        await self.update()
-
     async def _register_bus_devices(self) -> None:
         """Register the router + module devices and push their registry ids."""
         dev_reg = dr.async_get(self.hass)

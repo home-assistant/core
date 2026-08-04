@@ -128,7 +128,10 @@ def _async_cleanup_stale_devices(
 
     dev_reg = dr.async_get(hass)
     for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
-        for identifier in device.identifiers:
-            if identifier[0] == DOMAIN and identifier[1] not in keep_uids:
-                dev_reg.async_remove_device(device.id)
-                break
+        # A device entry can carry several identifiers; it is only stale when
+        # *none* of its Habitron uids is on the bus any more. Removing on the
+        # first stale one would delete a live device -- the same rule
+        # ``async_remove_config_entry_device`` applies above.
+        habitron_uids = {uid for domain, uid in device.identifiers if domain == DOMAIN}
+        if habitron_uids and habitron_uids.isdisjoint(keep_uids):
+            dev_reg.async_remove_device(device.id)
