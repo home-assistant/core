@@ -37,6 +37,26 @@ class GridxSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Mapping[str, Any]], StateType | None]
 
 
+def _sum_power(entries: Any) -> float | None:
+    """Sum the power of every subsystem entry reported by the account."""
+    values = [
+        entry["power"]
+        for entry in entries or ()
+        if isinstance(entry, Mapping) and entry.get("power") is not None
+    ]
+    return sum(values) if values else None
+
+
+def _mean_temperature(entries: Any) -> float | None:
+    """Average the temperature of every subsystem entry reported by the account."""
+    values = [
+        entry["temperature"]
+        for entry in entries or ()
+        if isinstance(entry, Mapping) and entry.get("temperature") is not None
+    ]
+    return sum(values) / len(values) if values else None
+
+
 BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
     GridxSensorEntityDescription(
         key="photovoltaic",
@@ -347,7 +367,7 @@ HEATPUMP_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        value_fn=lambda d: (d.get("heatPumps") or [{}])[0].get("power"),
+        value_fn=lambda d: _sum_power(d.get("heatPumps")),
     ),
 )
 
@@ -359,7 +379,7 @@ HEATER_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        value_fn=lambda d: (d.get("heaters") or [{}])[0].get("power"),
+        value_fn=lambda d: _sum_power(d.get("heaters")),
     ),
     GridxSensorEntityDescription(
         key="heater_temperature",
@@ -368,7 +388,7 @@ HEATER_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        value_fn=lambda d: (d.get("heaters") or [{}])[0].get("temperature"),
+        value_fn=lambda d: _mean_temperature(d.get("heaters")),
     ),
 )
 

@@ -142,6 +142,49 @@ async def test_optional_subsystem_sensors_created_when_present(
         )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_subsystem_sensors_aggregate_every_entry(
+    hass: HomeAssistant, mock_gridx_connector: MagicMock
+) -> None:
+    """Heat pump and heater sensors cover every entry, not just the first one."""
+    live_multi = {
+        **MOCK_LIVE_DATA,
+        "heatPumps": [{"power": 1500}, {"power": 500}],
+        "heaters": [
+            {"power": 2000, "temperature": 40.0},
+            {"power": 1000, "temperature": 50.0},
+        ],
+    }
+    mock_gridx_connector.retrieve_live_data.return_value = [live_multi]
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "multi@example.com",
+            CONF_PASSWORD: PASSWORD,
+        },
+        title="multi@example.com",
+        unique_id="multi@example.com",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    for key, expected in (
+        ("heatpump_power", 2000.0),
+        ("heater_power", 3000.0),
+        ("heater_temperature", 45.0),
+    ):
+        entity_id = registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{entry.unique_id}_{key}"
+        )
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert float(state.state) == pytest.approx(expected)
+
+
 async def test_grid_meter_ws_to_wh_conversion(
     hass: HomeAssistant, setup_integration: MockConfigEntry
 ) -> None:
