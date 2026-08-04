@@ -777,6 +777,43 @@ async def test_user_step_keeps_a_mac_keyed_entry_id(
     assert entry.data[CONF_HOST] == MOCK_HOST
 
 
+async def test_user_step_probes_the_resolved_ip_for_the_local_sentinel(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+    mock_hub_mac: AsyncMock,
+) -> None:
+    """``local`` is resolved before the hub is dialled.
+
+    It is our own sentinel, not a name any resolver knows, so probing it
+    directly would fail -- and with it the stable-id fallback for a hub running
+    on this very machine.
+    """
+    mock_hub_mac.return_value = "d83addbae72e"
+    with (
+        patch(
+            "homeassistant.components.habitron.config_flow.discover_smarthubs",
+            new=AsyncMock(return_value=[]),
+        ),
+        patch(
+            "homeassistant.components.habitron.config_flow.network.async_get_source_ip",
+            new=AsyncMock(return_value=MOCK_HOST),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: "local"}
+        )
+        await hass.async_block_till_done()
+
+    mock_hub_mac.assert_awaited_with(MOCK_HOST)
+    assert result["result"].unique_id == "d83addbae72e"
+
+
 async def test_ssdp_no_host(
     hass: HomeAssistant,
     setup_homeassistant: None,

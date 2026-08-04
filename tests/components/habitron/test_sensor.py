@@ -289,7 +289,8 @@ def test_described_text_sensor_has_no_state_class() -> None:
         module, sensor_desc, coord, 0, EKEY_USER_NAME_DESCRIPTION
     )
     assert entity._attr_state_class is None
-    assert entity._attr_native_value == "None"
+    # No seeded value: the entity stays unknown until the bus reports a user.
+    assert entity._attr_native_value is None
 
 
 def test_finger_name_sensor_sets_options() -> None:
@@ -487,14 +488,14 @@ def _ekey_module() -> MagicMock:
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [
-        (0, "None"),
+        (0, None),  # no current user -> unknown, like the finger sensor
         (255, "Error"),
         (1, "Alice"),  # ids[0]
         (-1, "Alice-disabled"),  # disabled finger → negative id
         (99, "Unknown"),  # out of range
     ],
 )
-def test_ekey_user_value_fn_translates(raw: int, expected: str) -> None:
+def test_ekey_user_value_fn_translates(raw: int, expected: str | None) -> None:
     """The user-name value_fn maps the raw identifier to a user string."""
     mod = _ekey_module()
     user = MagicMock()

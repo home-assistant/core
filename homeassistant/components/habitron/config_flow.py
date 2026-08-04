@@ -178,13 +178,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return CONF_DEFAULT_HOST if host in own_ips else host
 
+    async def _async_probe_host(self, host: str) -> str:
+        """Return an address the hub client can actually dial.
+
+        ``local`` is our own sentinel, not a name any resolver knows -- unlike
+        ``HbtnComm``, the direct client calls here would just fail on it, and
+        with them the stable-id fallback and the legacy-MAC lookup.
+        """
+        if host == CONF_DEFAULT_HOST:
+            return await network.async_get_source_ip(self.hass)
+        return host
+
     async def _async_resolved_host(self, host: str) -> str:
         """Return ``host`` as an address, or unchanged when it does not resolve.
 
         Unlike ``_async_canonical_host`` this keeps a local address as-is: the
         UDP probe reports the address it answered at, so a hub on this machine
-        has to be matched by that address, not by the ``local`` sentinel.
+        has to be matched by that address, not by the ``local`` sentinel -- the
+        sentinel is mapped to that address first, since no resolver knows it.
         """
+        host = await self._async_probe_host(host)
         with contextlib.suppress(OSError):
             return await self.hass.async_add_executor_job(socket.gethostbyname, host)
         return host
@@ -208,7 +221,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         if not macs:
             return None
-        hub_mac = await _async_hub_mac(host)
+        hub_mac = await _async_hub_mac(await self._async_probe_host(host))
         return macs.get(hub_mac) if hub_mac else None
 
     async def _async_matching_entry(
@@ -423,7 +436,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # The MAC identifies the hub across address changes; a
                 # host-based id would produce a second entry for the same hub
                 # after every DHCP lease change.
-                unique_id = await _async_hub_mac(host_input)
+                unique_id = await _async_hub_mac(
+                    await self._async_probe_host(host_input)
+                )
             if unique_id is None:
                 unique_id = f"habitron_{stored_host}"
 
