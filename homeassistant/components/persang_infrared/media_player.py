@@ -1,6 +1,7 @@
 """Media player platform for the Persang Infrared integration."""
 
-from typing import override
+from dataclasses import dataclass
+from typing import Any, override
 
 from infrared_protocols.codes.persang.speaker import PersangSpeakerCode
 
@@ -13,12 +14,36 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from .const import CONF_INFRARED_EMITTER_ENTITY_ID
 from .entity import PersangIrEntity
 
 PARALLEL_UPDATES = 1
+
+RESTORED_STATES = (
+    MediaPlayerState.ON,
+    MediaPlayerState.OFF,
+    MediaPlayerState.PLAYING,
+    MediaPlayerState.PAUSED,
+)
+
+
+@dataclass
+class _PersangSpeakerExtraData(ExtraStoredData):
+    """Persisted assumed-state data for a Persang speaker.
+
+    Stored separately from the entity state because while the speaker is OFF,
+    ``MediaPlayerEntity.state_attributes`` strips mute, so a restart in the OFF
+    state would otherwise lose it.
+    """
+
+    is_volume_muted: bool | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Serialize for the restore-state store."""
+        return {"is_volume_muted": self.is_volume_muted}
 
 
 async def async_setup_entry(
@@ -52,21 +77,26 @@ class PersangIrMediaPlayer(PersangIrEntity, MediaPlayerEntity, RestoreEntity):
         """Initialize the Persang IR media player."""
         super().__init__(entry, infrared_entity_id, unique_id_suffix="media_player")
 
+    @property
+    @override
+    def extra_restore_state_data(self) -> ExtraStoredData:
+        """Persist mute regardless of the ON/OFF state."""
+        return _PersangSpeakerExtraData(is_volume_muted=self._attr_is_volume_muted)
+
     @override
     async def async_added_to_hass(self) -> None:
-        """Restore the last assumed state."""
+        """Restore the last assumed state and mute."""
         await super().async_added_to_hass()
 
         if (last_state := await self.async_get_last_state()) is not None and (
-            last_state.state
-            in (
-                MediaPlayerState.ON,
-                MediaPlayerState.OFF,
-                MediaPlayerState.PLAYING,
-                MediaPlayerState.PAUSED,
-            )
+            last_state.state in RESTORED_STATES
         ):
             self._attr_state = MediaPlayerState(last_state.state)
+
+        if (extra := await self.async_get_last_extra_data()) is not None and (
+            muted := extra.as_dict().get("is_volume_muted")
+        ) is not None:
+            self._attr_is_volume_muted = bool(muted)
 
     @override
     async def async_turn_on(self) -> None:

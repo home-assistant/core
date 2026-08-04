@@ -26,7 +26,12 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID
 
-from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 from tests.components.common import assert_availability_follows_source_entity
 from tests.components.infrared.common import MockInfraredEmitterEntity
 
@@ -175,6 +180,42 @@ async def test_restore_state(
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state
     assert state.state == restored_state
+
+
+@pytest.mark.parametrize("restored_mute", [True, False])
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_restore_mute(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    platforms: list[Platform],
+    restored_mute: bool,
+) -> None:
+    """Test mute is restored even from the OFF state, which strips it."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(MEDIA_PLAYER_ENTITY_ID, MediaPlayerState.OFF),
+                {"is_volume_muted": restored_mute},
+            )
+        ],
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.persang_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is restored_mute
 
 
 @pytest.mark.usefixtures("init_integration")
