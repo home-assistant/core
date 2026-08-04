@@ -887,7 +887,7 @@
     },
     "/api/brands/hardware/{category}/{image}": {
       "get": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/brands/__init__.py#L277)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/brands/__init__.py#L278)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/brands"
         },
@@ -916,9 +916,19 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         },
-        "security": [],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "queryToken": []
+          }
+        ],
         "summary": "Handle GET request for a hardware brand image.",
         "tags": [
           "brands"
@@ -929,7 +939,7 @@
     },
     "/api/brands/integration/{domain}/{image}": {
       "get": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/brands/__init__.py#L243)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/brands/__init__.py#L244)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/brands"
         },
@@ -958,9 +968,19 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         },
-        "security": [],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "queryToken": []
+          }
+        ],
         "summary": "Handle GET request for an integration brand image.",
         "tags": [
           "brands"
@@ -1446,6 +1466,125 @@
         "x-home-assistant-integration": "api"
       }
     },
+    "/api/config/automation/config/{config_key}": {
+      "delete": {
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/view.py#L138)",
+        "externalDocs": {
+          "url": "https://www.home-assistant.io/integrations/config"
+        },
+        "operationId": "api_config_automation_config_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "config_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remove an entry.",
+        "tags": [
+          "config"
+        ],
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
+      },
+      "get": {
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/view.py#L82)",
+        "externalDocs": {
+          "url": "https://www.home-assistant.io/integrations/config"
+        },
+        "operationId": "api_config_automation_config_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "config_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Fetch device specific config.",
+        "tags": [
+          "config"
+        ],
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
+      },
+      "post": {
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/view.py#L95)",
+        "externalDocs": {
+          "url": "https://www.home-assistant.io/integrations/config"
+        },
+        "operationId": "api_config_automation_config_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "config_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Validate config and return results.",
+        "tags": [
+          "config"
+        ],
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
+      }
+    },
     "/api/config/config_entries/entry": {
       "get": {
         "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/config_entries.py#L85)",
@@ -1648,7 +1787,7 @@
     },
     "/api/config/config_entries/flow/{flow_id}": {
       "delete": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/config_entries.py#L128)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/data_entry_flow.py#L128)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
@@ -1827,7 +1966,7 @@
     },
     "/api/config/config_entries/options/flow/{flow_id}": {
       "delete": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/config_entries.py#L128)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/data_entry_flow.py#L128)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
@@ -1999,7 +2138,7 @@
     },
     "/api/config/config_entries/subentries/flow/{flow_id}": {
       "delete": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/config_entries.py#L128)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/data_entry_flow.py#L128)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
@@ -2139,6 +2278,244 @@
           }
         ],
         "summary": "Validate configuration and return results.",
+        "tags": [
+          "config"
+        ],
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
+      }
+    },
+    "/api/config/scene/config/{config_key}": {
+      "delete": {
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/view.py#L138)",
+        "externalDocs": {
+          "url": "https://www.home-assistant.io/integrations/config"
+        },
+        "operationId": "api_config_scene_config_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "config_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remove an entry.",
+        "tags": [
+          "config"
+        ],
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
+      },
+      "get": {
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/view.py#L82)",
+        "externalDocs": {
+          "url": "https://www.home-assistant.io/integrations/config"
+        },
+        "operationId": "api_config_scene_config_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "config_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Fetch device specific config.",
+        "tags": [
+          "config"
+        ],
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
+      },
+      "post": {
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/view.py#L95)",
+        "externalDocs": {
+          "url": "https://www.home-assistant.io/integrations/config"
+        },
+        "operationId": "api_config_scene_config_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "config_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Validate config and return results.",
+        "tags": [
+          "config"
+        ],
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
+      }
+    },
+    "/api/config/script/config/{config_key}": {
+      "delete": {
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/view.py#L138)",
+        "externalDocs": {
+          "url": "https://www.home-assistant.io/integrations/config"
+        },
+        "operationId": "api_config_script_config_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "config_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remove an entry.",
+        "tags": [
+          "config"
+        ],
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
+      },
+      "get": {
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/view.py#L82)",
+        "externalDocs": {
+          "url": "https://www.home-assistant.io/integrations/config"
+        },
+        "operationId": "api_config_script_config_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "config_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Fetch device specific config.",
+        "tags": [
+          "config"
+        ],
+        "x-home-assistant-integration": "config",
+        "x-home-assistant-requires-admin": true
+      },
+      "post": {
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/view.py#L95)",
+        "externalDocs": {
+          "url": "https://www.home-assistant.io/integrations/config"
+        },
+        "operationId": "api_config_script_config_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "config_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Validate config and return results.",
         "tags": [
           "config"
         ],
@@ -3052,7 +3429,7 @@
     },
     "/api/hassio/{path}": {
       "get": {
-        "description": "Return a client request with proxy origin for Hass.io supervisor.\n\nUse cases:\n- Load Supervisor panel and add-on logo unauthenticated\n- Admin users upload/restore backups and access logs\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/hassio/http.py#L128)",
+        "description": "Return a client request with proxy origin for Hass.io supervisor.\n\nUse cases:\n- Load Supervisor panel and add-on logo unauthenticated\n- Admin users upload/restore backups and access logs\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/hassio/http.py#L130)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/hassio"
         },
@@ -3073,9 +3450,17 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         },
-        "security": [],
+        "security": [
+          {},
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Return a client request with proxy origin for Hass.io supervisor.",
         "tags": [
           "hassio"
@@ -3084,7 +3469,7 @@
         "x-home-assistant-integration": "hassio"
       },
       "post": {
-        "description": "Return a client request with proxy origin for Hass.io supervisor.\n\nUse cases:\n- Load Supervisor panel and add-on logo unauthenticated\n- Admin users upload/restore backups and access logs\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/hassio/http.py#L128)",
+        "description": "Return a client request with proxy origin for Hass.io supervisor.\n\nUse cases:\n- Load Supervisor panel and add-on logo unauthenticated\n- Admin users upload/restore backups and access logs\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/hassio/http.py#L130)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/hassio"
         },
@@ -3105,9 +3490,17 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
         },
-        "security": [],
+        "security": [
+          {},
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Return a client request with proxy origin for Hass.io supervisor.",
         "tags": [
           "hassio"
@@ -3745,7 +4138,7 @@
     },
     "/api/hls/{token}/init.mp4": {
       "get": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/stream/hls.py#L380)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/stream/core.py#L380)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/stream"
         },
@@ -3779,7 +4172,7 @@
     },
     "/api/hls/{token}/master_playlist.m3u8": {
       "get": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/stream/hls.py#L380)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/stream/core.py#L380)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/stream"
         },
@@ -3813,7 +4206,7 @@
     },
     "/api/hls/{token}/playlist.m3u8": {
       "get": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/stream/hls.py#L380)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/stream/core.py#L380)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/stream"
         },
@@ -3847,7 +4240,7 @@
     },
     "/api/hls/{token}/segment/{sequence}.m4s": {
       "get": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/stream/hls.py#L380)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/stream/core.py#L380)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/stream"
         },
@@ -3889,7 +4282,7 @@
     },
     "/api/hls/{token}/segment/{sequence}.{part_num}.m4s": {
       "get": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/stream/hls.py#L380)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/stream/core.py#L380)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/stream"
         },
@@ -6000,7 +6393,7 @@
     },
     "/api/repairs/issues/fix/{flow_id}": {
       "delete": {
-        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/repairs/websocket_api.py#L128)",
+        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/data_entry_flow.py#L128)",
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/repairs"
         },

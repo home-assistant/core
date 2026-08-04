@@ -54,6 +54,21 @@ def test_contracts_cover_core_interfaces() -> None:
         "/api/media_player_proxy/{entity_id}/browse_media/{media_content_type}/{media_content_id}"
         in openapi["paths"]
     )
+    assert {
+        "/api/config/automation/config/{config_key}",
+        "/api/config/scene/config/{config_key}",
+        "/api/config/script/config/{config_key}",
+    } <= openapi["paths"].keys()
+    assert openapi["paths"]["/api/brands/integration/{domain}/{image}"]["get"][
+        "security"
+    ] == [{"bearerAuth": []}, {"queryToken": []}]
+    assert openapi["paths"]["/api/hassio/{path}"]["get"]["security"] == [
+        {},
+        {"bearerAuth": []},
+    ]
+    hls = openapi["paths"]["/api/hls/{token}/master_playlist.m3u8"]["get"]
+    assert "components/stream/core.py#L" in hls["description"]
+    assert "components/stream/hls.py#L" not in hls["description"]
     assert set(openapi["paths"]["/api/webhook/{webhook_id}"]) == {
         "get",
         "head",

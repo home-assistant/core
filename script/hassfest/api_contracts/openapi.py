@@ -32,6 +32,7 @@ class Endpoint(Interface):
     class_name: str
     requires_auth: bool | None
     security: list[str] | None
+    security_optional: bool
     requires_admin: bool
     documentation: str
     request: dict[str, Any] | None
@@ -68,7 +69,10 @@ class Endpoint(Interface):
             operation["parameters"] = parameters
 
         if self.security:
-            operation["security"] = [{name: []} for name in self.security]
+            security = [{name: []} for name in self.security]
+            if self.security_optional:
+                security.insert(0, {})
+            operation["security"] = security
             operation["responses"]["401"] = {
                 "$ref": "#/components/responses/Unauthorized"
             }
@@ -152,15 +156,15 @@ class View:
                 return value
         return None
 
-    def handlers(self) -> dict[str, Handler]:
+    def handlers(self) -> dict[str, tuple[str, Handler]]:
         """Resolve inherited HTTP handlers and local method aliases."""
-        handlers: dict[str, Handler] = {}
+        handlers: dict[str, tuple[str, Handler]] = {}
         # Mirror Python lookup order: earlier bases win, then the subclass wins.
         for base in reversed(self.bases()):
             handlers.update(base.handlers())
 
         local = {
-            node.name: node
+            node.name: (self.module, node)
             for node in self.node.body
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         }
@@ -232,14 +236,14 @@ def _endpoints(
             if not isinstance(raw_path, str):
                 continue
             path = _normalise_path(raw_path)
-            for method, handler in view.handlers().items():
+            for method, (handler_module, handler) in view.handlers().items():
                 # Optional integrations can register competing routes.
                 if (path, method) in seen:
                     continue
                 seen.add((path, method))
 
                 summary, description = interface_metadata(
-                    index, module, handler, class_node
+                    index, handler_module, handler, class_node
                 )
                 request: dict[str, Any] | None = None
                 request_required = False
@@ -252,15 +256,17 @@ def _endpoints(
                     ):
                         continue
                     if decorator.args and (
-                        mapping := schema_mapping(index, module, decorator.args[0])
+                        mapping := schema_mapping(
+                            index, handler_module, decorator.args[0]
+                        )
                     ):
                         request = mapping_schema(index, *mapping)
                         allow_empty = (
-                            index.value(module, decorator.args[1])
+                            index.value(handler_module, decorator.args[1])
                             if len(decorator.args) > 1
                             else next(
                                 (
-                                    index.value(module, keyword.value)
+                                    index.value(handler_module, keyword.value)
                                     for keyword in decorator.keywords
                                     if keyword.arg == "allow_empty"
                                 ),
@@ -270,7 +276,7 @@ def _endpoints(
                         request_required = allow_empty is not True
                     response = next(
                         (
-                            annotation_schema(index, module, keyword.value)
+                            annotation_schema(index, handler_module, keyword.value)
                             for keyword in decorator.keywords
                             if keyword.arg == "response"
                         ),
@@ -289,6 +295,9 @@ def _endpoints(
                         class_name=class_name,
                         requires_auth=requires_auth,
                         security=security,
+                        security_optional=(
+                            view.value("openapi_security_optional") is True
+                        ),
                         requires_admin=any(
                             decorator_name(item) == "require_admin"
                             for item in handler.decorator_list

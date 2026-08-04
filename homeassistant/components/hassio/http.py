@@ -119,6 +119,8 @@ class HassIOView(HomeAssistantView):
     name = "api:hassio"
     url = "/api/hassio/{path:.+}"
     requires_auth = False
+    openapi_security = ["bearerAuth"]
+    openapi_security_optional = True
 
     def __init__(self, host: str, websession: aiohttp.ClientSession) -> None:
         """Initialize a Hass.io base view."""

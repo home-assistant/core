@@ -41,8 +41,6 @@ def async_setup(hass: HomeAssistant) -> bool:
 
     hass.http.register_view(
         EditAutomationConfigView(
-            AUTOMATION_DOMAIN,
-            "config",
             AUTOMATION_CONFIG_PATH,
             cv.string,
             post_write_hook=hook,
@@ -54,6 +52,9 @@ def async_setup(hass: HomeAssistant) -> bool:
 
 class EditAutomationConfigView(EditIdBasedConfigView):
     """Edit automation config."""
+
+    name = f"api:config:{AUTOMATION_DOMAIN}:config"
+    url = f"/api/config/{AUTOMATION_DOMAIN}/config/{{config_key}}"
 
     @override
     def _write_value(

@@ -109,6 +109,7 @@ class _BrandsBaseView(HomeAssistantView):
     """Base view for serving brand images."""
 
     requires_auth = False
+    openapi_security = ["bearerAuth", "queryToken"]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the view."""
