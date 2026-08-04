@@ -740,13 +740,29 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             # since the placeholder identity is true regardless of staleness.
             # On true first load last_image_fetch is the boot sentinel, so
             # cache_stale is True and this still fetches immediately.
-            fresh: bytes | None = await self.coordinator.async_fetch_live_snapshot(
-                self._cam_id, jpeg_size=req_jpeg_size
-            )
-            if not fresh:
-                # REMOTE snap.jpg returns 401 on CAMERA_360 — try LOCAL Digest fallback
-                fresh = await self.coordinator.async_fetch_live_snapshot_local(
-                    self._cam_id, jpeg_size=req_jpeg_size
+            # Bounded the same way as the stale-cache branch below — without
+            # this, a slow/hanging REMOTE+LOCAL chain here has no internal
+            # cutoff at all (unlike the stale-cache branch), so HA-core's own
+            # CAMERA_IMAGE_TIMEOUT (10s) can cancel the whole call before we
+            # ever reach the outage-snap/event-snapshot fallback tiers below
+            # (suppressed Copilot finding, round 20, PR #176545).
+            fresh: bytes | None = None
+            try:
+                async with asyncio.timeout(REFRESH_ON_STALE_CACHE_BUDGET_SEC):
+                    fresh = await self.coordinator.async_fetch_live_snapshot(
+                        self._cam_id, jpeg_size=req_jpeg_size
+                    )
+                    if not fresh:
+                        # REMOTE snap.jpg returns 401 on CAMERA_360 — try LOCAL Digest fallback
+                        fresh = await self.coordinator.async_fetch_live_snapshot_local(
+                            self._cam_id, jpeg_size=req_jpeg_size
+                        )
+            except TimeoutError:
+                _LOGGER.debug(
+                    "%s: first-load fetch exceeded %ds budget — falling "
+                    "through to outage/event-snapshot tiers",
+                    self._display_name,
+                    REFRESH_ON_STALE_CACHE_BUDGET_SEC,
                 )
             if fresh:
                 # Only a full-resolution fetch may update the shared cache —
@@ -816,7 +832,12 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
                 outage_data = await self._async_local_outage_snap(
                     session, req_jpeg_size
                 )
-                return outage_data or self.cached_image
+                # privacy_unknown forced this fetch attempt specifically to
+                # verify the cached frame is safe to serve; a failed attempt
+                # must not fall back to it anyway (Copilot review round 20,
+                # PR #176545) — None here falls through to the public
+                # wrapper's placeholder, same as never having a cache.
+                return outage_data or (None if privacy_unknown else self.cached_image)
             if fresh2:
                 # See the tier-1a comment above: only a full-resolution fetch
                 # may update the shared cache.
@@ -836,9 +857,19 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
                 int(cache_age),
             )
             outage_data = await self._async_local_outage_snap(session, req_jpeg_size)
-            return outage_data or self.cached_image
+            # Same fail-closed reasoning as the TimeoutError branch above.
+            return outage_data or (None if privacy_unknown else self.cached_image)
         else:
-            return self.cached_image
+            # A failed verification attempt above stamps last_image_fetch
+            # even on fail-closed paths (so the throttle still engages and
+            # doesn't hammer the network) — which means the very next
+            # request within PRIVACY_UNKNOWN_RETRY_SEC would otherwise land
+            # here with cache_stale now False and unconditionally serve the
+            # frame just withheld. Keep failing closed for the whole
+            # throttle window instead of only the single request that
+            # actually attempted verification (bug-hunt, round 20,
+            # PR #176545).
+            return None if privacy_unknown else self.cached_image
 
         outage_data = await self._async_local_outage_snap(session, req_jpeg_size)
         if outage_data:
@@ -850,8 +881,19 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         # The placeholder is a real (truthy) 1x1 black JPEG, so `if
         # self.cached_image:` alone would intercept it here too, before tier 4
         # (the actual last resort) ever runs on a genuine cold start — use the
-        # identity check too, mirroring the tier-2 guard above.
-        if self.cached_image and self.cached_image is not self._PLACEHOLDER_JPEG:
+        # identity check too, mirroring the tier-2 guard above. `not
+        # privacy_unknown`: this tier is only reached via the tier-1a
+        # ("first load") branch's fall-through, whose own precondition was an
+        # empty/placeholder cache at entry — but `cached_image` can be
+        # concurrently set by `async_added_to_hass`'s disk restore or
+        # `async_trigger_image_refresh` while this branch's fetch awaits, so
+        # the same fail-closed guarantee as the elif branch above applies
+        # here too (suppressed Copilot finding, round 20, PR #176545).
+        if (
+            self.cached_image
+            and self.cached_image is not self._PLACEHOLDER_JPEG
+            and not privacy_unknown
+        ):
             return self.cached_image
 
         # ── 4. Latest event snapshot (last resort — first startup before cloud fetch runs) ──
@@ -894,7 +936,8 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
                                 "%s: token expired — update via integration options",
                                 self._display_name,
                             )
-                            return self.cached_image
+                            # Same fail-closed reasoning as tier 3 above.
+                            return None if privacy_unknown else self.cached_image
                         # e.g. 403/404/410 = expired URL — try next event
                         _LOGGER.debug(
                             "%s: event snapshot HTTP %d @ %s — trying next",
@@ -905,7 +948,10 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             except (TimeoutError, aiohttp.ClientError) as err:
                 _LOGGER.debug("%s: event snapshot error: %s", self._display_name, err)
 
-        # Return last cached image if all methods failed
+        # Return last cached image if all methods failed. Same fail-closed
+        # reasoning as tier 3 above — withhold it if privacy is still unknown.
+        if privacy_unknown:
+            return self._PLACEHOLDER_JPEG
         return self.cached_image or self._PLACEHOLDER_JPEG
 
     async def _async_local_outage_snap(

@@ -191,7 +191,14 @@ async def test_unknown_privacy_state_throttled_within_retry_window(
     Otherwise a sustained outage (or a camera whose cloud payload never
     carries privacyMode) would re-run the full REMOTE+LOCAL fetch chain on
     every single camera-proxy request, defeating CLOUD_SNAP_CACHE_TTL's
-    backoff entirely.
+    backoff entirely. But not re-fetching must not mean trusting the stale
+    cached frame either — serve the placeholder for the whole throttle
+    window, not just the single request that attempted verification (a
+    real bug caught by a 3-agent bug-hunt on the round-20 fail-closed fix:
+    the fail-closed return path stamps last_image_fetch even on failure so
+    the throttle itself can engage, which meant the very NEXT request
+    within the window used to see cache_stale go False and fall straight
+    into the old unconditional `else: return self.cached_image`).
     """
     entity = await _setup_camera_entity(hass)
     entity.cached_image = b"a-real-cached-frame-from-before-privacy-was-enabled"
@@ -204,7 +211,42 @@ async def test_unknown_privacy_state_throttled_within_retry_window(
         image = await entity.async_camera_image()
 
     mock_fetch.assert_not_called()
-    assert image == b"a-real-cached-frame-from-before-privacy-was-enabled"
+    assert image == entity._PLACEHOLDER_JPEG
+
+
+async def test_unknown_privacy_state_stays_fail_closed_across_two_requests(
+    hass: HomeAssistant,
+) -> None:
+    """A failed verification must not unlock the stale frame on the very next request.
+
+    Direct end-to-end regression test for the bug fixed above: request 1
+    attempts verification (fails, stamps last_image_fetch, serves the
+    placeholder); request 2 arrives moments later — inside the throttle
+    window created by that very stamp — and must still serve the
+    placeholder, not the withheld cached frame.
+    """
+    entity = await _setup_camera_entity(hass)
+    entity.cached_image = b"a-real-cached-frame-from-before-privacy-was-enabled"
+    entity.last_image_fetch = time.monotonic() - PRIVACY_UNKNOWN_RETRY_SEC
+    assert CAM_ID not in entity.coordinator.shc_state_cache
+
+    with (
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot", return_value=None
+        ) as mock_fetch,
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot_local", return_value=None
+        ),
+        patch.object(entity, "_async_local_outage_snap", return_value=None),
+    ):
+        first = await entity.async_camera_image()
+        second = await entity.async_camera_image()
+
+    assert mock_fetch.await_count == 1, (
+        "Request 2 must not re-attempt verification within the throttle window"
+    )
+    assert first == entity._PLACEHOLDER_JPEG
+    assert second == entity._PLACEHOLDER_JPEG
 
 
 async def test_unknown_privacy_state_falls_back_to_placeholder_when_no_cache(
@@ -227,6 +269,108 @@ async def test_unknown_privacy_state_falls_back_to_placeholder_when_no_cache(
         image = await entity.async_camera_image()
 
     mock_fetch.assert_awaited_once()
+    assert image == entity._PLACEHOLDER_JPEG
+
+
+async def test_unknown_privacy_state_fails_closed_when_verification_fetch_fails(
+    hass: HomeAssistant,
+) -> None:
+    """A failed verification attempt must not fall back to the stale cached frame.
+
+    Regression test for a suppressed Copilot finding on PR #176545
+    (2026-08-04, round 20): privacy_unknown only forced a fetch *attempt* —
+    if that attempt (REMOTE + LOCAL + outage snap all failing) didn't
+    resolve the unknown state, the branch still fell back to
+    `self.cached_image`, which can be the exact pre-privacy frame this
+    whole mechanism exists to protect. Must serve the placeholder instead.
+    """
+    entity = await _setup_camera_entity(hass)
+    entity.cached_image = b"a-real-cached-frame-from-before-privacy-was-enabled"
+    entity.last_image_fetch = time.monotonic() - PRIVACY_UNKNOWN_RETRY_SEC
+    assert CAM_ID not in entity.coordinator.shc_state_cache
+
+    with (
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot", return_value=None
+        ),
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot_local", return_value=None
+        ),
+        patch.object(entity, "_async_local_outage_snap", return_value=None),
+    ):
+        image = await entity.async_camera_image()
+
+    assert image == entity._PLACEHOLDER_JPEG
+
+
+async def test_unknown_privacy_state_fails_closed_on_racy_first_load_cache_fill(
+    hass: HomeAssistant,
+) -> None:
+    """Tier 3 must also fail closed if the cache fills in mid-fetch.
+
+    Regression test for a suppressed Copilot finding on PR #176545
+    (2026-08-04, round 20): the first-load branch's own precondition is an
+    empty/placeholder cache at entry, but `cached_image` can be concurrently
+    set by `async_added_to_hass`'s disk restore while this branch's fetch is
+    still awaiting — simulated here by having the mocked fetch itself write
+    a real frame as a side effect before returning None. Tier 3 (the "cached
+    image" fallback a few lines below) must not serve that frame while
+    privacy is still unknown.
+    """
+    entity = await _setup_camera_entity(hass)
+    entity.cached_image = entity._PLACEHOLDER_JPEG  # first-load branch precondition
+    entity.last_image_fetch = time.monotonic() - 3600
+    assert CAM_ID not in entity.coordinator.shc_state_cache
+
+    async def _fetch_then_race_in_a_real_frame(*_a: object, **_kw: object) -> None:
+        entity.cached_image = b"a-real-frame-that-raced-in-mid-fetch"
+
+    with (
+        patch.object(
+            entity.coordinator,
+            "async_fetch_live_snapshot",
+            side_effect=_fetch_then_race_in_a_real_frame,
+        ),
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot_local", return_value=None
+        ),
+        patch.object(entity, "_async_local_outage_snap", return_value=None),
+    ):
+        image = await entity.async_camera_image()
+
+    assert image == entity._PLACEHOLDER_JPEG
+
+
+async def test_unknown_privacy_state_fails_closed_on_verification_timeout(
+    hass: HomeAssistant,
+) -> None:
+    """Same fail-closed guarantee when the verification fetch times out.
+
+    Regression test for the same round-20 Copilot finding, exercising the
+    TimeoutError branch specifically rather than a clean REMOTE+LOCAL
+    failure.
+    """
+    entity = await _setup_camera_entity(hass)
+    entity.cached_image = b"a-real-cached-frame-from-before-privacy-was-enabled"
+    entity.last_image_fetch = time.monotonic() - PRIVACY_UNKNOWN_RETRY_SEC
+    assert CAM_ID not in entity.coordinator.shc_state_cache
+
+    async def _hangs_forever(*_args: object, **_kwargs: object) -> bytes | None:
+        await asyncio.sleep(10)
+        return b"too-late"
+
+    with (
+        patch(
+            "homeassistant.components.bosch_shc_camera.camera.REFRESH_ON_STALE_CACHE_BUDGET_SEC",
+            0.01,
+        ),
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot", side_effect=_hangs_forever
+        ),
+        patch.object(entity, "_async_local_outage_snap", return_value=None),
+    ):
+        image = await entity.async_camera_image()
+
     assert image == entity._PLACEHOLDER_JPEG
 
 
@@ -322,6 +466,9 @@ async def test_slow_refresh_falls_back_to_cached_image_within_budget(
     cached_frame = b"last-known-good-frame"
     entity.cached_image = cached_frame
     entity.last_image_fetch = time.monotonic() - 3600  # stale
+    # Known-safe privacy state — an unknown state would (correctly, per the
+    # round-20 fail-closed fix) withhold this cached frame instead.
+    entity.coordinator.shc_state_cache[CAM_ID] = {"privacy_mode": False}
 
     async def _hangs_forever(*_args: object, **_kwargs: object) -> bytes | None:
         await asyncio.sleep(10)
@@ -339,6 +486,47 @@ async def test_slow_refresh_falls_back_to_cached_image_within_budget(
         image = await entity.async_camera_image()
 
     assert image == cached_frame
+
+
+async def test_first_load_slow_refresh_falls_through_to_outage_snap_within_budget(
+    hass: HomeAssistant,
+) -> None:
+    """The first-load branch's fetch is also bounded, not just the stale-cache one.
+
+    Regression test for a suppressed Copilot finding on PR #176545
+    (2026-08-04, round 20): unlike the stale-cache `elif` branch below it,
+    the "first load" `if` branch had no internal timeout at all on its
+    REMOTE+LOCAL fetch chain, so a hanging fetch here had no cutoff before
+    HA-core's own CAMERA_IMAGE_TIMEOUT could cancel the whole call. Must
+    fall through to the outage-snap tier within budget, same as the
+    stale-cache branch.
+    """
+    entity = await _setup_camera_entity(hass)
+    entity.cached_image = entity._PLACEHOLDER_JPEG  # no cache yet — first-load branch
+    entity.last_image_fetch = (
+        time.monotonic() - 3600
+    )  # stale (boot sentinel equivalent)
+
+    async def _hangs_forever(*_args: object, **_kwargs: object) -> bytes | None:
+        await asyncio.sleep(10)
+        return b"too-late"
+
+    with (
+        patch(
+            "homeassistant.components.bosch_shc_camera.camera.REFRESH_ON_STALE_CACHE_BUDGET_SEC",
+            0.01,
+        ),
+        patch.object(
+            entity.coordinator, "async_fetch_live_snapshot", side_effect=_hangs_forever
+        ),
+        patch.object(
+            entity, "_async_local_outage_snap", return_value=b"local-outage-frame"
+        ) as mock_outage,
+    ):
+        image = await entity.async_camera_image()
+
+    mock_outage.assert_awaited_once()
+    assert image == b"local-outage-frame"
 
 
 async def test_stale_cache_both_fetches_fail_tries_local_outage_snap_first(

@@ -540,6 +540,9 @@ async def test_camera_image_tier3_serves_frame_raced_in_during_tier1a_fetch(
     """
     entity = await _setup_camera_entity(hass)
     raced_in_frame = b"\xff\xd8raced-in-during-fetch"
+    # Known-safe privacy state — an unknown state would (correctly, per the
+    # round-20 fail-closed fix) withhold this raced-in frame instead.
+    entity.coordinator.shc_state_cache[CAM_ID] = {"privacy_mode": False}
 
     async def _fetch_live(*_a: object, **_k: object) -> None:
         entity.cached_image = raced_in_frame
