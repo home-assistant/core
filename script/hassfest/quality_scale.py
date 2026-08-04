@@ -1742,7 +1742,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "rympro",
     "saj",
     "sanix",
-    "schlage",
     "schluter",
     "scrape",
     "screenlogic",

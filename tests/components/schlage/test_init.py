@@ -21,7 +21,7 @@ from tests.common import async_fire_time_changed
 
 
 @patch(
-    "pyschlage.Auth",
+    "homeassistant.components.schlage.pyschlage.Auth",
     side_effect=WarrantException,
 )
 async def test_auth_failed(

@@ -4,22 +4,14 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      The error paths do not recover to a created config entry, and the unique
-      ID is not asserted in the user flow test.
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions: done
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.
-  docs-high-level-description:
-    status: todo
-    comment: |
-      The description does not explain what Schlage is or link to the
-      manufacturer.
+  docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   docs-triggers:
@@ -82,9 +74,7 @@ rules:
     status: exempt
     comment: |
       Every entity maps to a lock feature a user is expected to want.
-  entity-translations:
-    status: todo
-    comment: Switch names are not sentence cased.
+  entity-translations: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
