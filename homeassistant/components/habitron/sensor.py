@@ -57,11 +57,15 @@ def _device_info(uid: str) -> DeviceInfo:
     return DeviceInfo(identifiers={(DOMAIN, uid)})
 
 
-def _ekey_user_value(module: Any, idx: int) -> str:
-    """Translate a raw ekey identifier value into a user-name string."""
+def _ekey_user_value(module: Any, idx: int) -> str | None:
+    """Translate a raw ekey identifier value into a user-name string.
+
+    Raw 0 means "no current user"; reporting that as unknown matches the finger
+    sensor and avoids publishing the literal text ``None`` as a state.
+    """
     id_val = int(module.sensors[idx].value or 0)
     if id_val == 0:
-        return "None"
+        return None
     if id_val == 255:
         return "Error"
     if (id_val - 1) in range(len(module.ids)):
@@ -388,7 +392,6 @@ class HbtnSensorEntityDescription(SensorEntityDescription):
     subscribe_fn: Callable[[Any, int], Any] | None = None
     diag_check: bool = False
     translated_name: bool = False
-    initial_value: Any = None
 
 
 class HbtnDescribedSensor(HbtnSensor):
@@ -422,8 +425,6 @@ class HbtnDescribedSensor(HbtnSensor):
         # its own, this needs an explicit assignment: the class-level default
         # above would otherwise shadow the description's value.
         self._attr_state_class = description.state_class
-        if description.initial_value is not None:
-            self._attr_native_value = description.initial_value
         if description.translated_name:
             # Let the translation_key (not the bus name) drive the display name.
             del self._attr_name
@@ -603,7 +604,6 @@ EKEY_USER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     key="ekey_user_name",
     translation_key="ekey_user_name",
     translated_name=True,
-    initial_value="None",
     value_fn=_ekey_user_value,
     subscribe_fn=lambda module, idx: module.sensors[idx],
 )
