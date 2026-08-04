@@ -179,3 +179,36 @@ async def test_discovery_preserves_hubs_before_timeout(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+
+@pytest.mark.usefixtures("mock_hub_run")
+async def test_create_entry_from_discovered_hubs(
+    hass: HomeAssistant, mock_hub_discover
+) -> None:
+    """Test that selecting a hub from discovered hubs creates an entry."""
+
+    dummy_hub_1 = aiopulse.Hub(DUMMY_HOST1)
+    dummy_hub_1.id = "ABC123"
+
+    dummy_hub_2 = aiopulse.Hub(DUMMY_HOST2)
+    dummy_hub_2.id = "DEF456"
+
+    mock_hub_discover.return_value = async_generator([dummy_hub_1, dummy_hub_2])
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"id": "ABC123"},
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "ABC123"
+    assert result2["result"].data == {
+        CONF_HOST: DUMMY_HOST1,
+    }
