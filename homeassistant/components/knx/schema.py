@@ -32,6 +32,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.components.text import TextMode
 from homeassistant.const import (
+    CONF_DEVICE,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
@@ -209,6 +210,7 @@ def _entity_base_schema(platform: Platform) -> vol.Schema:
     return vol.Schema(
         {
             vol.Optional(CONF_NAME, default=""): cv.string,
+            vol.Optional(CONF_DEVICE): cv.string,
             vol.Optional(CONF_DEFAULT_ENTITY_ID): vol.All(
                 cv.entity_id, cv.entity_domain(platform)
             ),

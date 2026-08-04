@@ -6,7 +6,12 @@ from typing import TYPE_CHECKING, Any, override
 from xknx.devices import Device as XknxDevice
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress
 
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, EntityCategory
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -16,6 +21,7 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.util import slugify
 
 from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN
 from .storage.config_store import PlatformControllerBase
@@ -194,6 +200,16 @@ class KnxYamlEntity(_KnxEntityBase):
         self._attr_name = entity_config[CONF_NAME] or None
         self._attr_unique_id = new_unique_id
         self._attr_entity_category = entity_config.get(CONF_ENTITY_CATEGORY)
+
+        if device_name := entity_config.get(CONF_DEVICE):
+            # Entities sharing the same device name are grouped into one device.
+            # The `knx_yaml_device_` prefix keeps the identifier separate from
+            # UI-created devices (`knx_vdev_`).
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, f"knx_yaml_device_{slugify(device_name)}")},
+                name=device_name,
+                manufacturer="KNX",
+            )
 
         default_entity_id: str | None
         if (default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
