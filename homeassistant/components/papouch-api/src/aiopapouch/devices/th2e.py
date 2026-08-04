@@ -8,12 +8,12 @@ import defusedxml.ElementTree as defused_ET
 
 from ..client import PapouchHTTPClient, PapouchTransport
 from ..exceptions import DeviceLogicError, DeviceParseError, DeviceResponseError
-from .base import PapouchDevice, find_tag
+from .base import HTTPMixin, PapouchDevice, find_tag
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class TH2E(PapouchDevice):
+class TH2E(PapouchDevice, HTTPMixin):
     """Represents TH2E device."""
 
     SENSOR_TYPES = [
@@ -50,6 +50,9 @@ class TH2E(PapouchDevice):
 
     def __init__(self, api_client: PapouchTransport, settings: str, info: str) -> None:
         """Constructor for TH2E device."""
+
+        super().__init__()
+
         self.api_client = cast(PapouchHTTPClient, api_client)
 
         self.info_root = defused_ET.fromstring(info)
@@ -63,7 +66,7 @@ class TH2E(PapouchDevice):
         self.type_sensor = 0
 
     @override
-    def parse_fresh_data(self, xml_data: str) -> dict:
+    async def parse_fresh_data(self, xml_data: str) -> dict:
         """Parse XML data into dictionary to feed the coordinator.
 
         Note that it also sets the type of the sensor. (Global one)
@@ -156,36 +159,39 @@ class TH2E(PapouchDevice):
             sns_type = sns["type"]
             unit_code = sns["unit"]
 
-            if sns_type == "1":
-                sensors.append(
-                    {
-                        "item_id": item_id,
-                        "type": "sensor",
-                        "name": "Temperature",
-                        "device_class": "temperature",
-                        "unit": unit_map.get(unit_code, "°C"),
-                    }
-                )
-            elif sns_type == "2":
-                sensors.append(
-                    {
-                        "item_id": item_id,
-                        "type": "sensor",
-                        "name": "Humidity",
-                        "device_class": "humidity",
-                        "unit": "%",
-                    }
-                )
-            elif sns_type == "3":
-                sensors.append(
-                    {
-                        "item_id": item_id,
-                        "type": "sensor",
-                        "name": "Dew Point",
-                        "device_class": "temperature",
-                        "unit": unit_map.get(unit_code, "°C"),
-                    }
-                )
+            match sns_type:
+                case self.TEMPERATURE_SNS_TYPE:
+                    sensors.append(
+                        {
+                            "item_id": item_id,
+                            "type": "sensor",
+                            "name": "Temperature",
+                            "device_class": "temperature",
+                            "unit": unit_map.get(unit_code, "°C"),
+                        }
+                    )
+
+                case self.HUMIDITY_SNS_TYPE:
+                    sensors.append(
+                        {
+                            "item_id": item_id,
+                            "type": "sensor",
+                            "name": "Humidity",
+                            "device_class": "humidity",
+                            "unit": "%",
+                        }
+                    )
+
+                case self.DEW_POINT_SNS_TYPE:
+                    sensors.append(
+                        {
+                            "item_id": item_id,
+                            "type": "sensor",
+                            "name": "Dew Point",
+                            "device_class": "temperature",
+                            "unit": unit_map.get(unit_code, "°C"),
+                        }
+                    )
 
         return sensors
 

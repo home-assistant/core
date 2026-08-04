@@ -1,8 +1,15 @@
 """This file contains base classes that define Papouch devices."""
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Protocol
 import xml.etree.ElementTree as ET
+
+import defusedxml.ElementTree as defused_ET
+
+from ..client import PapouchHTTPClient
+from ..exceptions import DeviceResponseError
+
+ERROR_STATUS = "0"
 
 
 def find_tag(root: ET.Element, tag_name: str) -> ET.Element | None:
@@ -11,6 +18,73 @@ def find_tag(root: ET.Element, tag_name: str) -> ET.Element | None:
         if element.tag.endswith(tag_name):
             return element
     return None
+
+
+class HttpMixinHost(Protocol):
+    """Defines protocol which tells what methods/variables should have a class that uses that protocol. Used for mixin HTTPMixin."""
+
+    @property
+    def name(self) -> str:
+        """Get the name of the device. MixinHost."""
+
+    @property
+    def location(self) -> str:
+        """Get the location of the device. MixinHost."""
+
+    api_client: PapouchHTTPClient
+
+
+class HTTPMixin(HttpMixinHost):
+    """Mixin for ETH devices for sending command and checking its response."""
+
+    TEMPERATURE_SNS_TYPE = "1"
+    HUMIDITY_SNS_TYPE = "2"
+    DEW_POINT_SNS_TYPE = "3"
+
+    async def _send_command(
+        self,
+        cmd_type: str,
+        item_id: str | None = None,
+        counter: str | None = None,
+        time: str | None = None,
+        value: str | None = None,
+    ) -> None:
+        """Send command via network on SET.XML. Parameters will be used in a query."""
+
+        raw_params = {
+            "type": cmd_type,
+            "id": item_id,
+            "cnt": counter,
+            "time": time,
+            "val": value,
+        }
+        params = {key: value for key, value in raw_params.items() if value is not None}
+
+        response = await self.api_client.read_command(
+            params, f"{self.name} ({self.location})"
+        )
+
+        self._check_response(response, str(params))
+
+    def _check_response(self, response_text: str, request_text: str) -> None:
+        """Checks the response of the requests."""
+
+        root = defused_ET.fromstring(response_text)
+        result_tag = find_tag(root, "result")
+
+        if result_tag is not None:
+            status = result_tag.attrib.get("status")
+
+            if status == ERROR_STATUS:
+                raise DeviceResponseError(
+                    f"{self.name} ({self.location}) - {self.api_client.ip_address} returned an error, "
+                    f"whole response: {response_text} and whole request text: {request_text}, "
+                    f"whole request text: {request_text}"
+                )
+        else:
+            raise DeviceResponseError(
+                f"Response doesn't have the result tag! In the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
+            )
 
 
 class PapouchDevice(ABC):
@@ -40,7 +114,7 @@ class PapouchDevice(ABC):
         """Return device's MAC address."""
 
     @abstractmethod
-    def parse_fresh_data(self, xml_data: str) -> dict:
+    async def parse_fresh_data(self, xml_data: str) -> dict:
         """Parse the device-specific XML and return normalized data.
 
         The returned dictionary must map the parsed data to standard keys,
@@ -109,7 +183,7 @@ class PapouchDevice(ABC):
 
         Expected dictionary structure:
         {
-            "item_id": str,
+            "item_id": int,
             "type": str,
             "name": str,
             "device_class": str  (Optional),

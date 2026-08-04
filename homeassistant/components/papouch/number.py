@@ -54,7 +54,7 @@ class PapouchNumber(PapouchEntity, NumberEntity):
 
         self._attr_mode = NumberMode(number_data.get("mode", "box"))
 
-        self._current_value = 1
+        self._current_value: float = 1
 
     @override
     @property
@@ -65,11 +65,12 @@ class PapouchNumber(PapouchEntity, NumberEntity):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Send the command and update the UI."""
+
         await self.coordinator.device.set_number_value(
             self.category, self.item_id, value
         )
 
-        self._current_value = int(value)
+        self._current_value = value
         self.async_write_ha_state()
 
         await self.coordinator.async_request_refresh()

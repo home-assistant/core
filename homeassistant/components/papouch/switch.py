@@ -58,10 +58,18 @@ class PapouchSwitch(PapouchEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.device.turn_on_switch(self.item_id)
-        await self.coordinator.async_request_refresh()
+
+        if self.coordinator.data and "switch" in self.coordinator.data:
+            self.coordinator.data["switch"][self.item_id] = True
+
+        self.async_write_ha_state()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.device.turn_off_switch(self.item_id)
-        await self.coordinator.async_request_refresh()
+
+        if self.coordinator.data and "switch" in self.coordinator.data:
+            self.coordinator.data["switch"][self.item_id] = False
+
+        self.async_write_ha_state()

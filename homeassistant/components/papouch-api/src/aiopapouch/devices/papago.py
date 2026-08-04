@@ -8,7 +8,7 @@ import defusedxml.ElementTree as defused_ET
 
 from ..client import PapouchHTTPClient, PapouchTransport
 from ..exceptions import DeviceLogicError, DeviceParseError, DeviceResponseError
-from .base import PapouchDevice, find_tag
+from .base import HTTPMixin, PapouchDevice, find_tag
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,16 +26,18 @@ class InputSettings:
     box_num: int
 
 
-class PapagoETH(PapouchDevice):
+@dataclass
+class OutputSettings:
+    """Contains information about 1 output of Papago."""
+
+    name: str
+
+
+class PapagoETH(PapouchDevice, HTTPMixin):
     """Represents Papago device family.
 
     Note that it uses unified code that
     will be applicable to all of Papago devices.
-
-    In case if there will be a new Papago
-    that uses a different XML this will be wrong
-    and the best option will be to create X classes
-    for every concrete device. YAGNI.
     """
 
     api_client: PapouchHTTPClient
@@ -111,6 +113,8 @@ class PapagoETH(PapouchDevice):
     ) -> None:
         """Constructor for Papago device."""
 
+        super().__init__()
+
         self.api_client = cast(PapouchHTTPClient, api_client)
 
         self.settings_root = defused_ET.fromstring(settings)
@@ -118,6 +122,8 @@ class PapagoETH(PapouchDevice):
         self._name = device_name
         self._location = location
         self._mac_address = self.get_mac_address()
+
+        self.size_counter_bits = 32
 
         # Base class contains nested sensor and their types
         # although not every Papago device even has more than 1 sensor
@@ -128,57 +134,122 @@ class PapagoETH(PapouchDevice):
         self.number_outputs = 0
 
         self.inputs: dict[str, InputSettings] = {}
+        self.outputs: dict[str, OutputSettings] = {}
 
         self._parse_initial_settings()
 
     @override
-    def parse_fresh_data(self, xml_data: str) -> dict:
+    async def parse_fresh_data(self, xml_data: str) -> dict:
         root = defused_ET.fromstring(xml_data)
-        parsed_data: dict[str, dict[str, Any]] = {"sensor": {}}
+
+        parsed_data: dict[str, dict[str, Any]] = {
+            "sensor": {},
+            "input": {},
+            "counter": {},
+            "switch": {},
+        }
 
         for element in root.iter():
-            if not element.tag.endswith("sns"):
-                continue
+            tag = element.tag
 
-            base_item_id = element.attrib.get("id")
-            base_name = element.attrib.get("name", "Unknown")
-
-            if not base_item_id:
-                continue
-
-            if base_item_id not in self.units_sensors:
-                self.units_sensors[base_item_id] = {
-                    "name": base_name,
-                    "sub_sensors": dict[str, str](),
-                }
-
-            idx = 1
-            while True:
-                suffix = "" if idx == 1 else str(idx)
-                sns_type = element.attrib.get(f"type{suffix}")
-
-                if sns_type is None:
-                    break
-
-                item_id = base_item_id if idx == 1 else f"{base_item_id}_{idx}"
-                unit_code = element.attrib.get(f"unit{suffix}", "0")
-                status = element.attrib.get(f"status{suffix}", "0")
-
-                self.units_sensors[base_item_id]["sub_sensors"][item_id] = {
-                    "type": sns_type,
-                    "unit": unit_code,
-                }
-
-                if status in ("1", "4"):
-                    parsed_data["sensor"][item_id] = None
-                else:
-                    parsed_data["sensor"][item_id] = float(
-                        element.attrib.get(f"val{suffix}", "0")
-                    )
-
-                idx += 1
+            match tag:
+                case "sns":
+                    await self._parse_sns_element(element, parsed_data)
+                case "din":
+                    await self._parse_din_element(element, parsed_data)
+                case "dout":  # codespell:ignore dout
+                    await self._parse_dout_element(element, parsed_data)
+                case _:
+                    continue
 
         return parsed_data
+
+    async def _parse_sns_element(
+        self, element: defused_ET.Element, parsed_data: dict[str, dict[str, Any]]
+    ) -> None:
+        """Parse XML element containing sensor data (temperature, humidity...)."""
+        base_item_id = element.attrib.get("id")
+        base_name = element.attrib.get("name", "Unknown")
+
+        if not base_item_id:
+            return
+
+        if base_item_id not in self.units_sensors:
+            self.units_sensors[base_item_id] = {
+                "name": base_name,
+                "sub_sensors": dict[str, str](),
+            }
+
+        idx = 1
+        while True:
+            suffix = "" if idx == 1 else str(idx)
+            sns_type = element.attrib.get(f"type{suffix}")
+
+            if sns_type is None:
+                break
+
+            item_id = base_item_id if idx == 1 else f"{base_item_id}_{idx}"
+            unit_code = element.attrib.get(f"unit{suffix}", "0")
+            status = element.attrib.get(f"status{suffix}", "0")
+
+            self.units_sensors[base_item_id]["sub_sensors"][item_id] = {
+                "type": sns_type,
+                "unit": unit_code,
+            }
+
+            if status in ("1", "4"):
+                parsed_data["sensor"][item_id] = None
+            else:
+                parsed_data["sensor"][item_id] = float(
+                    element.attrib.get(f"val{suffix}", "0")
+                )
+
+            idx += 1
+
+    async def _parse_din_element(
+        self, element: defused_ET.Element, parsed_data: dict[str, dict[str, Any]]
+    ) -> None:
+        """Parse XML element containing digital input and counter data."""
+        item_id = element.attrib.get("id")
+        if not item_id:
+            return
+
+        name = element.attrib.get("name")
+        if name and item_id in self.inputs:
+            self.inputs[item_id].name = name
+
+        bin_val = element.attrib.get("bin")
+        if bin_val is not None:
+            parsed_data["input"][item_id] = bin_val == "1"
+
+        val_str = element.attrib.get("val")
+        if val_str is not None:
+            try:
+                parts = val_str.split()
+
+                clean_val = parts[0]
+
+                parsed_data["counter"][item_id] = float(clean_val)
+            except ValueError, IndexError:
+                parsed_data["counter"][item_id] = None
+
+    async def _parse_dout_element(
+        self, element: defused_ET.Element, parsed_data: dict[str, dict[str, Any]]
+    ) -> None:
+        """Parse XML element containing digital output data."""
+        item_id = element.attrib.get("id")
+        if not item_id:
+            return
+
+        bin_val = element.attrib.get("bin")
+
+        if bin_val is not None:
+            parsed_data["switch"][item_id] = int(bin_val)
+
+        name_val = element.attrib.get("name")
+
+        if name_val is not None and item_id in self.outputs:
+            self.outputs[item_id].name = name_val
 
     @override
     def get_location(self) -> str:
@@ -217,17 +288,67 @@ class PapagoETH(PapouchDevice):
 
     @override
     def get_supported_binary_sensors(self) -> list[dict[str, Any]]:
-        """Unused in Papago."""
-        return []
+        """Return the configuration data for binary sensors."""
+        result: list[dict[str, Any]] = []
+        result.extend(
+            [
+                {
+                    "item_id": item_id,
+                    "type": "input",
+                    "name": item_data.name,
+                }
+                for item_id, item_data in self.inputs.items()
+            ]
+        )
+
+        return result
 
     @override
     def get_supported_numbers(self) -> list[dict[str, Any]]:
-        """Unused in Papago."""
-        return []
+        """Return the configuration data for number entities."""
+        result = []
+
+        for item_id, input_data in self.inputs.items():
+            result.extend(
+                [
+                    {
+                        "item_id": item_id,
+                        "category": "decrease_counter",
+                        "type": "counter",
+                        "name": f"Decrease counter {input_data.name} by:",
+                        "min_value": 0,
+                        "max_value": (2**self.size_counter_bits) - 1,
+                        "step": 10 ** (-int(input_data.decimal_count)),
+                    },
+                    {
+                        "item_id": f"{item_id}",
+                        "category": "set_counter",
+                        "type": "counter",
+                        "name": f"Set counter {input_data.name} on:",
+                        "min_value": 0,
+                        "max_value": (2**self.size_counter_bits) - 1,
+                        "step": 10 ** (-int(input_data.decimal_count)),
+                    },
+                ]
+            )
+
+        return result
 
     @override
     def get_supported_sensors(self) -> list[dict[str, Any]]:
         sensors = []
+
+        for item_id, item_data in self.inputs.items():
+            sensors.append(
+                {
+                    "item_id": item_id,
+                    "type": "counter",
+                    "name": item_data.name,
+                    "state_class": "total_increasing",
+                    "unit": item_data.unit,
+                }
+            )
+
         unit_map = {"0": "°C", "1": "°F", "2": "K"}
 
         for sensor_data in self.units_sensors.values():
@@ -237,43 +358,52 @@ class PapagoETH(PapouchDevice):
                 sns_type = sub_data["type"]
                 unit_code = sub_data["unit"]
 
-                if sns_type == "1":
-                    sensors.append(
-                        {
-                            "item_id": sub_id,
-                            "type": "sensor",
-                            "name": f"{sensor_name} Temperature",
-                            "device_class": "temperature",
-                            "unit": unit_map.get(unit_code, "°C"),
-                        }
-                    )
-                elif sns_type == "2":
-                    sensors.append(
-                        {
-                            "item_id": sub_id,
-                            "type": "sensor",
-                            "name": f"{sensor_name} Humidity",
-                            "device_class": "humidity",
-                            "unit": "%",
-                        }
-                    )
-                elif sns_type == "3":
-                    sensors.append(
-                        {
-                            "item_id": sub_id,
-                            "type": "sensor",
-                            "name": f"{sensor_name} Dew Point",
-                            "device_class": "temperature",
-                            "unit": unit_map.get(unit_code, "°C"),
-                        }
-                    )
+                match sns_type:
+                    case self.TEMPERATURE_SNS_TYPE:
+                        sensors.append(
+                            {
+                                "item_id": sub_id,
+                                "type": "sensor",
+                                "name": f"{sensor_name} Temperature",
+                                "device_class": "temperature",
+                                "unit": unit_map.get(unit_code, "°C"),
+                            }
+                        )
+
+                    case self.HUMIDITY_SNS_TYPE:
+                        sensors.append(
+                            {
+                                "item_id": sub_id,
+                                "type": "sensor",
+                                "name": f"{sensor_name} Humidity",
+                                "device_class": "humidity",
+                                "unit": "%",
+                            }
+                        )
+
+                    case self.DEW_POINT_SNS_TYPE:
+                        sensors.append(
+                            {
+                                "item_id": sub_id,
+                                "type": "sensor",
+                                "name": f"{sensor_name} Dew Point",
+                                "device_class": "temperature",
+                                "unit": unit_map.get(unit_code, "°C"),
+                            }
+                        )
 
         return sensors
 
     @override
     def get_supported_switches(self) -> list[dict[str, Any]]:
-        """Unused in Papago."""
-        return []
+        """Return the configuration data for switches."""
+        return [
+            {
+                "item_id": item_id,
+                "name": item_data.name,
+            }
+            for item_id, item_data in self.outputs.items()
+        ]
 
     @override
     def get_supported_selects(self) -> list[dict[str, Any]]:
@@ -301,6 +431,16 @@ class PapagoETH(PapouchDevice):
             )
 
         return selects
+
+    @override
+    async def turn_on_switch(self, item_id: str) -> None:
+        """Command for turning the coil on by its id."""
+        await self._send_command("s", item_id)
+
+    @override
+    async def turn_off_switch(self, item_id: str) -> None:
+        """Command for turning the coil off by its id."""
+        await self._send_command("r", item_id)
 
     async def _update_settings(self) -> None:
         settings = await self.api_client.fetch_settings()
@@ -410,7 +550,7 @@ class PapagoETH(PapouchDevice):
 
         xml_payload = f'<?xml version="1.0" encoding="iso-8859-2"?>\n<root>{" ".join(payload_parts)}</root>'
 
-        self._save_setting(xml_payload)
+        await self._save_setting(xml_payload)
 
         self.type_sensors[item_id] = str(type_idx)
 
@@ -512,19 +652,21 @@ class PapagoETH(PapouchDevice):
         input_item.type_cnt = type_idx
 
     @override
-    async def turn_on_switch(self, item_id: str) -> None:
-        """Unused in Papago."""
-        return
+    async def set_number_value(
+        self, category: str, _item_id: str, _value: float
+    ) -> None:
 
-    @override
-    async def turn_off_switch(self, item_id: str) -> None:
-        """Unused in Papago."""
-        return
+        formatted_value = str(_value).removesuffix(".0")
 
-    @override
-    async def set_number_value(self, category: str, item_id: str, value: float) -> None:
-        """Unused in Papago."""
-        return
+        match category:
+            case "decrease_counter":
+                await self._send_command(
+                    "m", item_id=_item_id, value=str(formatted_value)
+                )
+            case "set_counter":
+                await self._send_command(
+                    "n", item_id=_item_id, value=str(formatted_value)
+                )
 
     @override
     def get_select_option(self, category: str, item_id: str) -> str | None:
@@ -660,7 +802,9 @@ class PapagoETH_1TH_2DI_1DO(PapagoETH):
                     }
 
                 case self.BOX_OUTPUT_BASE:
-                    # TODO
+                    # We don't need anything from settings in case of outputs.
+                    # The name can be (and will be) set from fresh.xml
+                    self.outputs["1"] = OutputSettings("")
                     continue
 
                 case x if self.BOX_INPUT_BASE <= x < self.BOX_SENSOR_BASE:
@@ -696,8 +840,12 @@ async def async_setup_papago(transport: PapouchTransport) -> PapagoETH:
 
     root_info = defused_ET.fromstring(info)
     heartbeat_tag = find_tag(root_info, "heartbeat")
+
+    if heartbeat_tag is None:
+        raise DeviceParseError("This Papago doesn't have heartbeat tag.")
+
     device_name = heartbeat_tag.attrib.get("device")
-    location = heartbeat_tag.attrib.get("location")
+    location = heartbeat_tag.attrib.get("location", "NONAME")
 
     if device_name == "Papago 2TH ETH":
         return PapagoETH_2TH(transport, settings, device_name, location)

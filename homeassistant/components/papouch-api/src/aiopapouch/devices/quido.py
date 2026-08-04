@@ -8,11 +8,10 @@ import xml.etree.ElementTree as ET
 import defusedxml.ElementTree as defused_ET
 
 from ..client import PapouchHTTPClient, PapouchTransport
-from ..exceptions import DeviceLogicError, DeviceParseError, DeviceResponseError
-from .base import PapouchDevice, find_tag
+from ..exceptions import DeviceLogicError, DeviceParseError
+from .base import HTTPMixin, PapouchDevice, find_tag
 
 _LOGGER = logging.getLogger(__name__)
-ERROR_STATUS = "0"
 
 
 class QuidoBase(PapouchDevice, ABC):
@@ -177,16 +176,17 @@ class QuidoBase(PapouchDevice, ABC):
     @override
     async def execute_button_command(self, cmd_type: str) -> None:
         """Route the button press to the correct method."""
-        if cmd_type == "connect_all_coils":
-            await self._connect_all_coils()
-        elif cmd_type == "disconnect_all_coils":
-            await self._disconnect_all_coils()
-        elif cmd_type == "reset_all_counters":
-            await self._reset_all_counters()
-        else:
-            raise DeviceLogicError(
-                f"Unsupported command: {cmd_type}, in the device: {self.name} ({self.location})"
-            )
+        match cmd_type:
+            case "connect_all_coils":
+                await self._connect_all_coils()
+            case "disconnect_all_coils":
+                await self._disconnect_all_coils()
+            case "reset_all_counters":
+                await self._reset_all_counters()
+            case _:
+                raise DeviceLogicError(
+                    f"Unsupported command: {cmd_type}, in the device: {self.name} ({self.location})"
+                )
 
     @override
     async def turn_on_switch(self, item_id: str) -> None:
@@ -225,7 +225,7 @@ class QuidoBase(PapouchDevice, ABC):
         pass
 
 
-class QuidoETH(QuidoBase):
+class QuidoETH(QuidoBase, HTTPMixin):
     """Represents devices of Quido family."""
 
     api_client: PapouchHTTPClient
@@ -253,7 +253,7 @@ class QuidoETH(QuidoBase):
         self._parse_initial_settings()
 
     @override
-    def parse_fresh_data(self, xml_data: str) -> dict:
+    async def parse_fresh_data(self, xml_data: str) -> dict:
         """Defines parser method for QuidoETH."""
         root = defused_ET.fromstring(xml_data)
         parsed_data: dict[str, dict[str, Any]] = {
@@ -266,32 +266,36 @@ class QuidoETH(QuidoBase):
         for element in root:
             item_id = element.attrib.get("id")
 
-            if element.tag == "temp":
-                val_str = element.attrib.get("val", "0")
-                if val_str == "":
-                    val_str = 0
-                parsed_data["temperature"][item_id] = float(val_str)
+            match element.tag:
+                case "temp":
+                    val_str = element.attrib.get("val", "0")
+                    if val_str == "":
+                        val_str = 0
+                    parsed_data["temperature"][item_id] = float(val_str)
 
-            elif element.tag == "dout":  # codespell:ignore dout
-                val_str = element.attrib.get("val", "0")
-                parsed_data["switch"][item_id] = int(val_str)
+                case "dout":  # codespell:ignore dout
+                    val_str = element.attrib.get("val", "0")
+                    parsed_data["switch"][item_id] = int(val_str)
 
-            elif element.tag == "din":
-                parsed_data["input"][item_id] = int(element.attrib.get("val", "0"))
-                parsed_data["counter"][item_id] = int(element.attrib.get("cnt", "0"))
+                case "din":
+                    parsed_data["input"][item_id] = int(element.attrib.get("val", "0"))
+                    parsed_data["counter"][item_id] = int(
+                        element.attrib.get("cnt", "0")
+                    )
 
         return parsed_data
 
     @override
     async def set_number_value(self, category: str, item_id: str, value: float) -> None:
-        if category == "decrease_counter":
-            await self._decrease_value_counter(item_id, int(value))
-        elif category == "output_on_time":
-            time_units = max(1, min(255, int(value * 2)))
-            await self._send_command("s", item_id=item_id, time=str(time_units))
-        elif category == "output_off_time":
-            time_units = max(1, min(255, int(value * 2)))
-            await self._send_command("r", item_id=item_id, time=str(time_units))
+        match category:
+            case "decrease_counter":
+                await self._decrease_value_counter(item_id, int(value))
+            case "output_on_time":
+                time_units = max(1, min(255, int(value * 2)))
+                await self._send_command("s", item_id=item_id, time=str(time_units))
+            case "output_off_time":
+                time_units = max(1, min(255, int(value * 2)))
+                await self._send_command("r", item_id=item_id, time=str(time_units))
 
     @override
     def get_select_option(self, category: str, item_id: str) -> str | None:
@@ -342,7 +346,7 @@ class QuidoETH(QuidoBase):
         response = await self.api_client.write_command(
             xml_payload, f"{self.name} ({self.location})"
         )
-        self._check_response(response)
+        self._check_response(response, xml_payload)
 
     @override
     async def _connect_all_coils(self) -> None:
@@ -416,7 +420,7 @@ class QuidoETH(QuidoBase):
         response = await self.api_client.write_command(
             xml_payload, f"{self.name} ({self.location})"
         )
-        self._check_response(response)
+        self._check_response(response, xml_payload)
 
         self.counter_states[item_id] = mode
 
@@ -457,12 +461,13 @@ class QuidoETH(QuidoBase):
             box_elem = self.settings_root.find(".//set[@box='8']")
             if box_elem is not None:
                 unit = box_elem.get("units")
-                if unit == "C":
-                    self.temperature_unit = "°C"
-                elif unit == "F":
-                    self.temperature_unit = "°F"
-                else:
-                    self.temperature_unit = "K"
+                match unit:
+                    case "C":
+                        self.temperature_unit = "°C"
+                    case "F":
+                        self.temperature_unit = "°F"
+                    case _:
+                        self.temperature_unit = "K"
 
         except (defused_ET.ParseError, ValueError, TypeError) as err:
             raise DeviceParseError(
@@ -505,45 +510,6 @@ class QuidoETH(QuidoBase):
     async def _turn_off_coil(self, item_id: str) -> None:
         """Command for turning off the coil by its id."""
         await self._send_command("r", item_id)
-
-    async def _send_command(
-        self,
-        cmd_type: str,
-        item_id: str | None = None,
-        counter: str | None = None,
-        time: str | None = None,
-    ) -> None:
-        raw_params = {
-            "type": cmd_type,
-            "id": item_id,
-            "cnt": counter,
-            "time": time,
-        }
-        params = {key: value for key, value in raw_params.items() if value is not None}
-
-        response = await self.api_client.read_command(
-            params, f"{self.name} ({self.location})"
-        )
-
-        self._check_response(response)
-
-    def _check_response(self, response_text: str) -> None:
-        """Checks the response of the requests."""
-
-        root = defused_ET.fromstring(response_text)
-        result_tag = find_tag(root, "result")
-
-        if result_tag is not None:
-            status = result_tag.attrib.get("status")
-
-            if status == ERROR_STATUS:
-                raise DeviceResponseError(
-                    f"{self.name} ({self.location}) - {self.api_client.ip_address} returned an error, whole response: {response_text}"
-                )
-        else:
-            raise DeviceResponseError(
-                f"Response doesn't have the result tag! In the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
-            )
 
 
 class QuidoRS485(QuidoBase):

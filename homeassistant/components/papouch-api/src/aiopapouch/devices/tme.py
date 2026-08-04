@@ -60,7 +60,7 @@ class TME(PapouchDevice):
         self._parse_initial_settings()
 
     @override
-    def parse_fresh_data(self, xml_data: str) -> dict:
+    async def parse_fresh_data(self, xml_data: str) -> dict:
         root = defused_ET.fromstring(xml_data)
         parsed_data: dict[str, dict[str, Any]] = {"sensor": {}}
 

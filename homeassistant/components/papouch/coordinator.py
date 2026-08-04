@@ -43,6 +43,6 @@ class PapouchDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from the device."""
         try:
             fresh_data = await self.api_client.fetch_data()
-            return self.device.parse_fresh_data(fresh_data)
+            return await self.device.parse_fresh_data(fresh_data)
         except aiohttp.ClientError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from None
