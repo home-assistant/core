@@ -1,6 +1,7 @@
 """HTTP endpoints for conversation integration."""
 
 from dataclasses import asdict
+from http import HTTPStatus
 from typing import Any
 
 from aiohttp import web
@@ -244,6 +245,7 @@ class ConversationProcessView(http.HomeAssistantView):
     url = "/api/conversation/process"
     name = "api:conversation:process"
 
+    @http.api_response(HTTPStatus.OK, ConversationResultDict)
     @RequestDataValidator(
         vol.Schema(
             {
@@ -254,8 +256,7 @@ class ConversationProcessView(http.HomeAssistantView):
                 vol.Optional("device_id"): vol.Any(str, None),
                 vol.Optional("satellite_id"): vol.Any(str, None),
             }
-        ),
-        response=ConversationResultDict,
+        )
     )
     async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Send a request for processing."""

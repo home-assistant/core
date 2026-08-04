@@ -268,7 +268,7 @@ class SourceIndex:
     def source_url(module: str, node: ast.stmt | ast.expr) -> str:
         """Return the GitHub link for an indexed source definition."""
         path = module.replace(".", "/") + ".py"
-        return f"https://github.com/home-assistant/core/blob/dev/{path}#L{node.lineno}"
+        return f"https://github.com/home-assistant/core/blob/dev/{path}"
 
     def _class_symbol(
         self,

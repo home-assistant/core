@@ -56,7 +56,7 @@ from .const import (  # noqa: F401
     SSL_INTERMEDIATE,
     SSL_MODERN,
 )
-from .decorators import require_admin  # noqa: F401
+from .decorators import api_response, require_admin  # noqa: F401
 from .server import (
     DEFAULT_BIND,
     HassioHTTPConfigView,

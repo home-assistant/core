@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
+from http import HTTPStatus
 from typing import Any, Concatenate, overload
 
 from aiohttp.web import Request, Response, StreamResponse
@@ -15,6 +16,17 @@ type _ResponseType = Response | StreamResponse
 type _FuncType[_T, **_P, _R] = Callable[
     Concatenate[_T, Request, _P], Coroutine[Any, Any, _R]
 ]
+
+
+def api_response[_CallableT: Callable[..., Any]](
+    status: HTTPStatus, schema: Any | None = None
+) -> Callable[[_CallableT], _CallableT]:
+    """Declare an HTTP response for API contract generation."""
+
+    def decorator(func: _CallableT) -> _CallableT:
+        return func
+
+    return decorator
 
 
 @overload

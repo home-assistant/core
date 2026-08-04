@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import ast
 from dataclasses import dataclass
-from http import HTTPMethod
+from http import HTTPMethod, HTTPStatus
 from typing import Any
 
 from .common import (
@@ -37,17 +37,14 @@ class Endpoint(Interface):
     documentation: str
     request: dict[str, Any] | None
     request_required: bool
-    response: dict[str, Any] | None
+    responses: dict[str, dict[str, Any] | None]
 
     def render(self, operation_id: str) -> dict[str, Any]:
         """Render this endpoint as an OpenAPI operation."""
         operation: dict[str, Any] = {
             "operationId": operation_id,
             "tags": [self.integration],
-            "responses": {
-                "200": {"$ref": "#/components/responses/Success"},
-                "400": {"$ref": "#/components/responses/BadRequest"},
-            },
+            "responses": {"400": {"$ref": "#/components/responses/BadRequest"}},
             "externalDocs": {"url": self.documentation},
         }
 
@@ -69,10 +66,12 @@ class Endpoint(Interface):
             operation["parameters"] = parameters
 
         if self.security:
-            security = [{name: []} for name in self.security]
+            security_requirements: list[dict[str, list[str]]] = [
+                {name: []} for name in self.security
+            ]
             if self.security_optional:
-                security.insert(0, {})
-            operation["security"] = security
+                security_requirements.insert(0, {})
+            operation["security"] = security_requirements
             operation["responses"]["401"] = {
                 "$ref": "#/components/responses/Unauthorized"
             }
@@ -96,11 +95,13 @@ class Endpoint(Interface):
                 "content": {"application/json": {"schema": self.request}},
             }
 
-        if self.response:
-            operation["responses"]["200"] = {
-                "description": "Successful response",
-                "content": {"application/json": {"schema": self.response}},
-            }
+        if not self.responses:
+            operation["responses"]["200"] = {"$ref": "#/components/responses/Success"}
+        for status, schema in self.responses.items():
+            response: dict[str, Any] = {"description": HTTPStatus(int(status)).phrase}
+            if schema is not None:
+                response["content"] = {"application/json": {"schema": schema}}
+            operation["responses"][status] = response
 
         return operation
 
@@ -198,6 +199,20 @@ def _normalise_path(path: str) -> str:
     return PATH_PARAMETER.sub(lambda match: "{" + match.group(1) + "}", path)
 
 
+def _response_status(index: SourceIndex, module: str, node: ast.expr) -> int | None:
+    """Resolve an integer or stdlib HTTPStatus member."""
+    if isinstance(status := index.value(module, node), int):
+        return status
+    if (
+        isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Name)
+        and index.imported(module, node.value.id) == ("http", "HTTPStatus")
+        and node.attr in HTTPStatus.__members__
+    ):
+        return HTTPStatus[node.attr]
+    return None
+
+
 def _endpoints(
     index: SourceIndex, integrations: dict[str, IntegrationMetadata]
 ) -> list[Endpoint]:
@@ -247,13 +262,27 @@ def _endpoints(
                 )
                 request: dict[str, Any] | None = None
                 request_required = False
-                response: dict[str, Any] | None = None
+                responses: dict[str, dict[str, Any] | None] = {}
 
                 for decorator in handler.decorator_list:
-                    if (
-                        not isinstance(decorator, ast.Call)
-                        or decorator_name(decorator) != "RequestDataValidator"
-                    ):
+                    if not isinstance(decorator, ast.Call):
+                        continue
+                    name = decorator_name(decorator)
+                    if name == "api_response" and decorator.args:
+                        if (
+                            status := _response_status(
+                                index, handler_module, decorator.args[0]
+                            )
+                        ) is not None:
+                            responses[str(status)] = (
+                                annotation_schema(
+                                    index, handler_module, decorator.args[1]
+                                )
+                                if len(decorator.args) > 1
+                                else None
+                            )
+                        continue
+                    if name != "RequestDataValidator":
                         continue
                     if decorator.args and (
                         mapping := schema_mapping(
@@ -274,15 +303,6 @@ def _endpoints(
                             )
                         )
                         request_required = allow_empty is not True
-                    response = next(
-                        (
-                            annotation_schema(index, handler_module, keyword.value)
-                            for keyword in decorator.keywords
-                            if keyword.arg == "response"
-                        ),
-                        None,
-                    )
-
                 endpoints.append(
                     Endpoint(
                         name=name,
@@ -305,7 +325,7 @@ def _endpoints(
                         documentation=_documentation(integration, metadata),
                         request=request,
                         request_required=request_required,
-                        response=response,
+                        responses=responses,
                     )
                 )
     return endpoints

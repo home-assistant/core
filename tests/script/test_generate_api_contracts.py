@@ -66,9 +66,25 @@ def test_contracts_cover_core_interfaces() -> None:
         {},
         {"bearerAuth": []},
     ]
+    assert openapi["paths"]["/api/doorbird/{event}"]["get"]["security"] == [
+        {"queryToken": []}
+    ]
+    assert openapi["paths"]["/api/homekit/pairingqr"]["get"]["security"] == [
+        {"queryToken": []}
+    ]
     hls = openapi["paths"]["/api/hls/{token}/master_playlist.m3u8"]["get"]
-    assert "components/stream/core.py#L" in hls["description"]
-    assert "components/stream/hls.py#L" not in hls["description"]
+    assert "components/stream/core.py)" in hls["description"]
+    assert "components/stream/hls.py)" not in hls["description"]
+    registration_responses = openapi["paths"]["/api/mobile_app/registrations"]["post"][
+        "responses"
+    ]
+    assert "200" not in registration_responses
+    assert registration_responses["201"]["content"]["application/json"]["schema"][
+        "required"
+    ] == ["cloudhook_url", "remote_ui_url", "secret", "webhook_id"]
+    mcp_responses = openapi["paths"]["/api/mcp"]["post"]["responses"]
+    assert mcp_responses["200"]["content"]["application/json"]["schema"]["anyOf"]
+    assert mcp_responses["202"] == {"description": "Accepted"}
     assert set(openapi["paths"]["/api/webhook/{webhook_id}"]) == {
         "get",
         "head",
@@ -127,7 +143,10 @@ def test_contracts_cover_core_interfaces() -> None:
     ]["payload"]["properties"]["result"]["properties"]["entities"]["items"]
     assert entity["required"] == ["ei", "pl"]
     assert entity["properties"]["dp"]["type"] == "integer"
-    assert "#L" in entity["properties"]["dp"]["description"]
+    assert (
+        "homeassistant/helpers/entity_registry.py)"
+        in entity["properties"]["dp"]["description"]
+    )
     extract_reply = asyncapi["operations"]["receive_extract_from_target"]["reply"]
     assert extract_reply == {
         "channel": {"$ref": "#/channels/extract_from_target_reply"},
