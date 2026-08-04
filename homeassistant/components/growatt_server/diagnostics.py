@@ -9,6 +9,12 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_PLANT_ID
 from .coordinator import GrowattConfigEntry
 
+try:
+    # See the matching import in __init__.py for why this is optional.
+    from . import _build_info
+except ImportError:
+    _build_info = None
+
 TO_REDACT = {
     CONF_PASSWORD,
     CONF_TOKEN,
@@ -46,6 +52,14 @@ async def async_get_config_entry_diagnostics(
     total_data = runtime_data.total_coordinator.data or {}
     return async_redact_data(
         {
+            "build": (
+                {
+                    "commit": _build_info.BUILD_COMMIT,
+                    "deployed": _build_info.BUILD_TIME,
+                }
+                if _build_info is not None
+                else None
+            ),
             "config_entry": config_entry.as_dict(),
             "total_coordinator": {
                 k: v for k, v in total_data.items() if k in _TOTAL_SAFE_KEYS

@@ -1,6 +1,7 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
+    'build': None,
     'config_entry': dict({
       'data': dict({
         'auth_type': 'api_token',
@@ -99,6 +100,7 @@
 # ---
 # name: test_diagnostics_classic_api
   dict({
+    'build': None,
     'config_entry': dict({
       'data': dict({
         'auth_type': 'password',
