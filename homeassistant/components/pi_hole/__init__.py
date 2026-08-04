@@ -146,7 +146,13 @@ async def determine_api_version(
     debugging.
     """
 
-    hole_v6 = api_by_version(hass, entry, 6, password="wrong_password")
+    # Do not probe with a deliberately wrong password. Pi-hole v6
+    # rate-limits login attempts, so the real login that follows a few
+    # hundred milliseconds later in async_setup_entry is rejected as
+    # well and setup fails permanently. Using the configured password
+    # still identifies v6: if the v6 auth endpoint answers at all -
+    # with success or with 401 - it is a v6 instance.
+    hole_v6 = api_by_version(hass, entry, 6)
     try:
         await hole_v6.authenticate()
     except HoleConnectionError as err:
@@ -160,7 +166,8 @@ async def determine_api_version(
     except HoleError as ex_v6:
         if str(ex_v6) == "Authentication failed: Invalid password":
             _LOGGER.debug(
-                "Success connecting to Pi-hole at %s without auth, API version is : %s",
+                "Pi-hole at %s answered the v6 auth endpoint (password"
+                " rejected), API version is : %s",
                 hole_v6.base_url,
                 6,
             )
@@ -169,13 +176,10 @@ async def determine_api_version(
             "Connection to %s failed: %s, trying API version 5", hole_v6.base_url, ex_v6
         )
     else:
-        # It seems that occasionally the auth can succeed
-        # unexpectedly when there is a valid session
-        _LOGGER.warning(
-            "Authenticated with %s through v6 API, but"
-            " succeeded with an incorrect password."
-            " This is a known bug",
+        _LOGGER.debug(
+            "Authenticated with %s through v6 API, API version is : %s",
             hole_v6.base_url,
+            6,
         )
         return 6
     hole_v5 = api_by_version(hass, entry, 5, password="wrong_token")
