@@ -41,6 +41,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -103,6 +104,7 @@ async def async_setup_entry(
         config_entry.options,
         config_entry.entry_id,
         async_add_entities,
+        device=async_entity_id_to_device(hass, config_entry.options[CONF_HUMIDIFIER]),
     )
 
 
@@ -117,6 +119,7 @@ async def _async_setup_config(
     config: Mapping[str, Any],
     unique_id: str | None,
     async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
+    device: DeviceEntry | None = None,
 ) -> None:
     name: str = config[CONF_NAME]
     switch_entity_id: str = config[CONF_HUMIDIFIER]
@@ -141,7 +144,6 @@ async def _async_setup_config(
     async_add_entities(
         [
             GenericHygrostat(
-                hass,
                 name=name,
                 switch_entity_id=switch_entity_id,
                 sensor_entity_id=sensor_entity_id,
@@ -158,6 +160,7 @@ async def _async_setup_config(
                 away_fixed=away_fixed,
                 sensor_stale_duration=sensor_stale_duration,
                 unique_id=unique_id,
+                device=device,
             )
         ]
     )
@@ -170,7 +173,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         *,
         name: str,
         switch_entity_id: str,
@@ -188,15 +190,13 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         away_fixed: bool | None,
         sensor_stale_duration: timedelta | None,
         unique_id: str | None,
+        device: DeviceEntry | None = None,
     ) -> None:
         """Initialize the hygrostat."""
         self._name = name
         self._switch_entity_id = switch_entity_id
         self._sensor_entity_id = sensor_entity_id
-        self.device_entry = async_entity_id_to_device(
-            hass,
-            switch_entity_id,
-        )
+        self.device_entry = device
         self._device_class = device_class or HumidifierDeviceClass.HUMIDIFIER
         self._min_cycle_duration = min_cycle_duration
         self._dry_tolerance = dry_tolerance

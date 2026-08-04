@@ -195,7 +195,12 @@ class RpcBluTrvSensor(RpcSensor):
         ble_addr: str = coordinator.device.config[key]["addr"]
         fw_ver = coordinator.device.status[key].get("fw_ver")
         self._attr_device_info = get_blu_trv_device_info(
-            coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            coordinator.device.config[key],
+            ble_addr,
+            coordinator.mac,
+            fw_ver,
         )
 
 

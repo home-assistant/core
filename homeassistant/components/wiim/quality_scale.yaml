@@ -31,10 +31,7 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   # Silver
-  action-exceptions:
-    status: todo
-    comment: |
-      - The calls to the api can be changed to return bool, and services can then raise HomeAssistantError
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -45,14 +42,11 @@ rules:
   log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow: todo
-  test-coverage:
-    status: todo
-    comment: |
-      - Increase test coverage for the media_player platform
+  test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: done
   discovery: done
   docs-data-update: todo
@@ -72,7 +66,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No known use cases for repair issues or flows, yet
