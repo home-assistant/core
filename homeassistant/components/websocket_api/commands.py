@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from functools import lru_cache, partial
 import json
 import logging
-from typing import Any, cast
+from typing import Any, TypedDict, cast
 
 import voluptuous as vol
 
@@ -103,6 +103,18 @@ ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_js
 ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_trigger_descriptions_json"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class ExtractFromTargetResult(TypedDict):
+    """Entities, devices, and areas resolved from a target."""
+
+    referenced_entities: set[str]
+    referenced_devices: set[str]
+    referenced_areas: set[str]
+    missing_devices: set[str]
+    missing_areas: set[str]
+    missing_floors: set[str]
+    missing_labels: set[str]
 
 
 @callback
@@ -881,12 +893,18 @@ def handle_entity_source(
         vol.Required("target"): cv.TARGET_FIELDS,
         vol.Optional("expand_group", default=False): bool,
         vol.Optional("primary_entities_only", default=True): bool,
-    }
+    },
+    result=ExtractFromTargetResult,
 )
 def handle_extract_from_target(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Handle extract from target command."""
+    """Resolve the entities, devices, and areas selected by a target.
+
+    Referenced entities include entities selected through devices, areas, floors,
+    and labels. Missing identifiers are returned separately. When `expand_group` is
+    true, group entities are replaced by their members.
+    """
 
     target_selection = target_helpers.TargetSelection(msg["target"])
     extracted = target_helpers.async_extract_referenced_entity_ids(
@@ -896,7 +914,7 @@ def handle_extract_from_target(
         primary_entities_only=msg["primary_entities_only"],
     )
 
-    extracted_dict = {
+    extracted_dict: ExtractFromTargetResult = {
         "referenced_entities": extracted.referenced.union(
             extracted.indirectly_referenced
         ),
@@ -916,7 +934,8 @@ def handle_extract_from_target(
         vol.Required("type"): "get_triggers_for_target",
         vol.Required("target"): cv.TARGET_FIELDS,
         vol.Optional("expand_group", default=True): bool,
-    }
+    },
+    result=list[str],
 )
 @decorators.async_response
 async def handle_get_triggers_for_target(
@@ -939,7 +958,8 @@ async def handle_get_triggers_for_target(
         vol.Required("type"): "get_conditions_for_target",
         vol.Required("target"): cv.TARGET_FIELDS,
         vol.Optional("expand_group", default=True): bool,
-    }
+    },
+    result=list[str],
 )
 @decorators.async_response
 async def handle_get_conditions_for_target(
@@ -962,7 +982,8 @@ async def handle_get_conditions_for_target(
         vol.Required("type"): "get_services_for_target",
         vol.Required("target"): cv.TARGET_FIELDS,
         vol.Optional("expand_group", default=True): bool,
-    }
+    },
+    result=list[str],
 )
 @decorators.async_response
 async def handle_get_services_for_target(

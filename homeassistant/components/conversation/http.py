@@ -22,7 +22,7 @@ from .agent_manager import (
 from .chat_log import DATA_CHAT_LOGS, async_get_chat_log, async_subscribe_chat_logs
 from .const import DATA_COMPONENT, ChatLogEventType
 from .entity import ConversationEntity
-from .models import ConversationInput
+from .models import ConversationInput, ConversationResultDict
 
 
 @callback
@@ -48,7 +48,8 @@ def async_setup(hass: HomeAssistant) -> None:
         vol.Optional("agent_id"): agent_id_validator,
         vol.Optional("device_id"): vol.Any(str, None),
         vol.Optional("satellite_id"): vol.Any(str, None),
-    }
+    },
+    result=ConversationResultDict,
 )
 @websocket_api.async_response
 async def websocket_process(
@@ -253,7 +254,8 @@ class ConversationProcessView(http.HomeAssistantView):
                 vol.Optional("device_id"): vol.Any(str, None),
                 vol.Optional("satellite_id"): vol.Any(str, None),
             }
-        )
+        ),
+        response=ConversationResultDict,
     )
     async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Send a request for processing."""

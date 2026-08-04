@@ -178,6 +178,31 @@ type EventEntityRegistryUpdatedData = (
 type EntityOptionsType = Mapping[str, Mapping[str, Any]]
 type ReadOnlyEntityOptionsType = ReadOnlyDict[str, ReadOnlyDict[str, Any]]
 
+
+class EntityRegistryDisplayEntry(TypedDict):
+    """Compact entity registry entry used by display clients."""
+
+    ei: str
+    pl: str
+    ai: NotRequired[str]
+    lb: NotRequired[list[str]]
+    di: NotRequired[str]
+    ic: NotRequired[str]
+    tk: NotRequired[str]
+    ec: NotRequired[int]
+    hb: NotRequired[bool]
+    hn: NotRequired[bool]
+    en: NotRequired[str]
+    dp: NotRequired[int]
+
+
+class EntityRegistryDisplayResult(TypedDict):
+    """Entity registry data optimized for display clients."""
+
+    entity_categories: dict[int, str]
+    entities: list[EntityRegistryDisplayEntry]
+
+
 DISPLAY_DICT_OPTIONAL = (
     # key, attr_name, convert_to_list
     ("ai", "area_id", False),
@@ -274,13 +299,16 @@ class RegistryEntry:
         return self.hidden_by is not None
 
     @property
-    def _as_display_dict(self) -> dict[str, Any] | None:
+    def _as_display_dict(self) -> EntityRegistryDisplayEntry | None:
         """Return a partial dict representation of the entry.
 
         This version only includes what's needed for display.
         Returns None if there's no data needed for display.
         """
-        display_dict: dict[str, Any] = {"ei": self.entity_id, "pl": self.platform}
+        display_dict: EntityRegistryDisplayEntry = {
+            "ei": self.entity_id,
+            "pl": self.platform,
+        }
         for key, attr_name, convert_list in DISPLAY_DICT_OPTIONAL:
             if (attr_val := getattr(self, attr_name)) is not None:
                 # Convert sets and tuples to lists

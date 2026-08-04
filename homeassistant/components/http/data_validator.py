@@ -26,7 +26,11 @@ class RequestDataValidator:
     """
 
     def __init__(
-        self, schema: VolDictType | vol.Schema, allow_empty: bool = False
+        self,
+        schema: VolDictType | vol.Schema,
+        allow_empty: bool = False,
+        *,
+        response: Any | None = None,
     ) -> None:
         """Initialize the decorator."""
         if isinstance(schema, dict):
@@ -34,6 +38,7 @@ class RequestDataValidator:
 
         self._schema = schema
         self._allow_empty = allow_empty
+        self._response = response
 
     def __call__[_HassViewT: HomeAssistantView, **_P](
         self,
@@ -71,4 +76,5 @@ class RequestDataValidator:
 
             return await method(view, request, data, *args, **kwargs)
 
+        wrapper._ha_response = self._response  # type: ignore[attr-defined]  # noqa: SLF001
         return wrapper

@@ -649,7 +649,8 @@ class IntentHandleView(http.HomeAssistantView):
                 vol.Optional("device_id"): vol.Any(cv.string, None),
                 vol.Optional("satellite_id"): vol.Any(cv.string, None),
             }
-        )
+        ),
+        response=intent.IntentResponseDict,
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle intent with name/data."""
