@@ -665,6 +665,118 @@ async def test_user_step_mac_match_normalises_and_falls_through(
     assert result["type"] is expected_type
 
 
+async def test_user_step_falls_back_to_the_hub_mac(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+    mock_hub_mac: AsyncMock,
+) -> None:
+    """Without a serial the MAC keys the entry, not the address.
+
+    A host-based id changes with every DHCP lease, which is what lets the same
+    hub be configured twice.
+    """
+    mock_hub_mac.return_value = "d83addbae72e"
+    with patch(
+        "homeassistant.components.habitron.config_flow.discover_smarthubs",
+        new=AsyncMock(return_value=[]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "d83addbae72e"
+
+
+async def test_ssdp_falls_back_to_the_hub_mac(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+    mock_hub_mac: AsyncMock,
+) -> None:
+    """A hub advertising neither UDN nor serial is still keyed stably."""
+    mock_hub_mac.return_value = "d83addbae72e"
+    discovery = SsdpServiceInfo(
+        ssdp_usn="dummy",
+        ssdp_st="urn:habitron-com:device:SmartHub:1",
+        ssdp_location=f"http://{MOCK_HOST}:80/desc.xml",
+        upnp={},
+    )
+    with patch(
+        "homeassistant.components.habitron.config_flow.discover_smarthubs",
+        new=AsyncMock(return_value=[]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=discovery,
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result["result"].unique_id == "d83addbae72e"
+
+
+@pytest.mark.parametrize(
+    "probed",
+    [
+        # No serial: the MAC becomes the unique id, so the entry matches on it.
+        [],
+        # A serial is advertised, so the derived id differs from the stored MAC
+        # and only the MAC lookup can still recognise the hub.
+        [{"ip": MOCK_HOST, "serial": MOCK_SERIAL}],
+    ],
+    ids=["no_serial", "serial_advertised"],
+)
+async def test_user_step_keeps_a_mac_keyed_entry_id(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_hub_mac: AsyncMock,
+    probed: list[dict[str, str]],
+) -> None:
+    """Re-adding a MAC-keyed hub corrects its address, not its id.
+
+    The MAC is the most stable identifier available here, so replacing it with
+    a serial- or host-based id would undo exactly what it protects against.
+    """
+    mock_hub_mac.return_value = "d83addbae72e"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="d83addbae72e",
+        data={CONF_HOST: "192.168.1.99"},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.habitron.config_flow.discover_smarthubs",
+        new=AsyncMock(return_value=probed),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert entry.unique_id == "d83addbae72e"
+    assert entry.data[CONF_HOST] == MOCK_HOST
+
+
 async def test_ssdp_no_host(
     hass: HomeAssistant,
     setup_homeassistant: None,

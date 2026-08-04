@@ -48,10 +48,10 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: |
-      The SmartHub is reached over the local network without per-user
-      credentials. A WebSocket access token can be supplied but is
-      optional; there is no upstream authentication state that can
-      transition into a "needs re-authentication" failure.
+      The SmartHub is reached over the local network without any
+      credentials -- the config flow asks for the host only. There is no
+      upstream authentication state that could transition into a "needs
+      re-authentication" failure.
   test-coverage: done
   # Gold
   devices: done

@@ -285,8 +285,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_device = target_device or {"ip": host_str}
 
         if not unique_id:
+            # No stable id advertised: the MAC still identifies the hub across
+            # address changes, the host does not.
+            unique_id = await _async_hub_mac(host_str)
+        if not unique_id:
             _LOGGER.warning(
-                "Habitron at %s exposed no UDN/serial; using host as fallback id",
+                "Habitron at %s exposed no UDN/serial/MAC; using host as fallback id",
                 host_str,
             )
             unique_id = f"habitron_{host_str}"
@@ -416,6 +420,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 unique_id = target.get("serial") or None
             stored_host = await self._async_stored_host(host_input)
             if unique_id is None:
+                # The MAC identifies the hub across address changes; a
+                # host-based id would produce a second entry for the same hub
+                # after every DHCP lease change.
+                unique_id = await _async_hub_mac(host_input)
+            if unique_id is None:
                 unique_id = f"habitron_{stored_host}"
 
             await self.async_set_unique_id(unique_id)
@@ -441,10 +450,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # re-adding the same hub at a new address would otherwise duplicate
             # it, since neither its id nor its stored host still matches.
             if entry := await self._async_mac_matching_entry(host_input):
+                # Only the address needs correcting: the entry is already keyed
+                # by the MAC, which is the most stable id available here --
+                # replacing it with a host-based fallback would undo that.
                 self.hass.config_entries.async_update_entry(
-                    entry,
-                    unique_id=unique_id,
-                    data={**entry.data, CONF_HOST: stored_host},
+                    entry, data={**entry.data, CONF_HOST: stored_host}
                 )
                 return self.async_abort(reason="already_configured")
 

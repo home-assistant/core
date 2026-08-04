@@ -164,6 +164,27 @@ async def test_update_short_circuits_when_no_info(smart_hub_stub: SmartHub) -> N
     smart_hub_stub.comm.get_smhub_update.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    "raised",
+    [HabitronError("bus"), OSError("no route"), TimeoutError()],
+)
+async def test_update_swallows_transport_errors(
+    smart_hub_stub: SmartHub, raised: Exception
+) -> None:
+    """A failing diagnostics read never reaches the coordinator.
+
+    ``update()`` runs outside the coordinator's guarded bus refresh, so a socket
+    error or timeout would otherwise fail the whole tick and mark every entity
+    unavailable -- for readings the contract calls non-essential.
+    """
+    smart_hub_stub.diags = [Diagnostic(name="Status", nmbr=0, type=1)]
+    smart_hub_stub.comm.get_smhub_update.side_effect = raised
+
+    await smart_hub_stub.update()
+
+    assert smart_hub_stub.host_diags_valid is False
+
+
 async def test_update_swallows_habitron_error(smart_hub_stub: SmartHub) -> None:
     """A library error during the diagnostics read is non-fatal (swallowed).
 
