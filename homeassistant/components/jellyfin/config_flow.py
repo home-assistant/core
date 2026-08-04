@@ -87,11 +87,15 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 # Migrate a legacy config entry whose unique_id is the bare
                 # user_id (pre-scoped format) before checking the new format.
+                new_unique_id = f"{server_info['Id']}-{user_id}"
                 await self.async_set_unique_id(user_id)
-                self._abort_if_unique_id_configured(
-                    updates={"unique_id": f"{server_info['Id']}-{user_id}"}
-                )
-                await self.async_set_unique_id(f"{server_info['Id']}-{user_id}")
+                if legacy_entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                    DOMAIN, user_id
+                ):
+                    self.hass.config_entries.async_update_entry(
+                        legacy_entry, unique_id=new_unique_id
+                    )
+                await self.async_set_unique_id(new_unique_id)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
