@@ -85,6 +85,28 @@ def test_contracts_cover_core_interfaces() -> None:
     mcp_responses = openapi["paths"]["/api/mcp"]["post"]["responses"]
     assert mcp_responses["200"]["content"]["application/json"]["schema"]["anyOf"]
     assert mcp_responses["202"] == {"description": "Accepted"}
+    core_state = openapi["paths"]["/api/core/state"]["get"]["responses"]["200"][
+        "content"
+    ]["application/json"]["schema"]
+    assert core_state["required"] == ["state", "recorder_state"]
+    assert core_state["properties"]["recorder_state"]["required"] == [
+        "migration_in_progress",
+        "migration_is_live",
+    ]
+    event_listeners = openapi["paths"]["/api/events"]["get"]["responses"]["200"][
+        "content"
+    ]["application/json"]["schema"]
+    assert event_listeners["items"]["required"] == ["event", "listener_count"]
+    components = openapi["paths"]["/api/components"]["get"]["responses"]["200"][
+        "content"
+    ]["application/json"]["schema"]
+    assert components == {"type": "array", "items": {"type": "string"}}
+    assert openapi["paths"]["/api/mcp/{api_id}"]["post"]["operationId"] == (
+        "mcp_server_streamable_api_post"
+    )
+    assert openapi["paths"]["/auth/link_user"]["post"]["operationId"] == (
+        "api_auth_link_user_post"
+    )
     assert set(openapi["paths"]["/api/webhook/{webhook_id}"]) == {
         "get",
         "head",
@@ -227,6 +249,18 @@ def test_contracts_cover_core_interfaces() -> None:
     assert "/tests/" not in json.dumps(openapi)
     assert "/tests/" not in json.dumps(asyncapi)
     assert asyncapi["operations"]["send_event_stream"]["messages"]
+    assert asyncapi["components"]["messages"]["zha_network_change_channel"]["payload"][
+        "properties"
+    ]["new_channel"]["anyOf"][1] == {
+        "minimum": 11,
+        "maximum": 26,
+    }
+    assert (
+        asyncapi["components"]["messages"]["assist_pipeline_device_capture"]["payload"][
+            "properties"
+        ]["timeout"]["exclusiveMinimum"]
+        == 0
+    )
 
 
 def test_source_index_allows_repeated_constants(tmp_path: Path) -> None:
@@ -300,6 +334,7 @@ SCHEMA = vol.Schema(
         vol.Required("fixed"): "value",
         vol.Required("number"): vol.Any(float, int),
         vol.Required("nullable"): vol.Any(None, str),
+        vol.Required("range"): vol.Range(1, 10, False, False),
         vol.Required("unknown"): cv.datetime,
     },
     extra=vol.ALLOW_EXTRA,
@@ -324,6 +359,8 @@ PLAIN = {vol.Required("value"): str}
         "null",
         "string",
     }
+    assert rendered["properties"]["range"]["exclusiveMinimum"] == 1
+    assert rendered["properties"]["range"]["exclusiveMaximum"] == 10
     assert "unknown" in rendered["properties"]
     assert "unknown" in rendered["required"]
 

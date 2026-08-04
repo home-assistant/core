@@ -1889,8 +1889,8 @@
             },
             "timeout": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/assist_pipeline/websocket_api.py)",
+              "exclusiveMinimum": 0,
               "maximum": 60.0,
-              "minimum": 0,
               "type": "number"
             },
             "type": {
@@ -11941,20 +11941,28 @@
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)",
               "properties": {
                 "data1": {
-                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)"
+                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)",
+                  "maximum": 255,
+                  "minimum": 0
                 },
                 "data2": {
-                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)"
+                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)",
+                  "maximum": 255,
+                  "minimum": 0
                 },
                 "data3": {
-                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)"
+                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)",
+                  "maximum": 255,
+                  "minimum": 0
                 },
                 "dirty": {
                   "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)",
                   "type": "boolean"
                 },
                 "group": {
-                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)"
+                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)",
+                  "maximum": 255,
+                  "minimum": 0
                 },
                 "highwater": {
                   "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)",
@@ -12033,20 +12041,28 @@
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)",
               "properties": {
                 "data1": {
-                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)"
+                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)",
+                  "maximum": 255,
+                  "minimum": 0
                 },
                 "data2": {
-                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)"
+                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)",
+                  "maximum": 255,
+                  "minimum": 0
                 },
                 "data3": {
-                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)"
+                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)",
+                  "maximum": 255,
+                  "minimum": 0
                 },
                 "dirty": {
                   "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)",
                   "type": "boolean"
                 },
                 "group": {
-                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)"
+                  "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)",
+                  "maximum": 255,
+                  "minimum": 0
                 },
                 "highwater": {
                   "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/insteon/api/aldb.py)",
@@ -14564,10 +14580,14 @@
                     },
                     "register": {
                       "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/lcn/schemas.py)",
+                      "maximum": 9,
+                      "minimum": 0,
                       "type": "integer"
                     },
                     "scene": {
                       "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/lcn/schemas.py)",
+                      "maximum": 9,
+                      "minimum": 0,
                       "type": "integer"
                     },
                     "transition": {
@@ -14965,10 +14985,14 @@
                     },
                     "register": {
                       "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/lcn/schemas.py)",
+                      "maximum": 9,
+                      "minimum": 0,
                       "type": "integer"
                     },
                     "scene": {
                       "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/lcn/schemas.py)",
+                      "maximum": 9,
+                      "minimum": 0,
                       "type": "integer"
                     },
                     "transition": {
@@ -21720,6 +21744,16 @@
               "type": "integer"
             },
             "new_channel": {
+              "anyOf": [
+                {
+                  "const": "auto",
+                  "type": "string"
+                },
+                {
+                  "maximum": 26,
+                  "minimum": 11
+                }
+              ],
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/zha/websocket_api.py)"
             },
             "type": {

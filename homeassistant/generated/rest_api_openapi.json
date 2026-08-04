@@ -799,7 +799,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/cloud"
         },
-        "operationId": "cloud_cloudregisterview_post",
+        "operationId": "api_cloud_register_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -855,7 +855,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/cloud"
         },
-        "operationId": "cloud_cloudresendconfirmview_post",
+        "operationId": "api_cloud_resend_confirm_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -940,7 +940,17 @@
         "operationId": "api_components_get",
         "responses": {
           "200": {
-            "$ref": "#/components/responses/Success"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
@@ -1226,7 +1236,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
-        "operationId": "requestdatavalidator_get",
+        "operationId": "api_config_config_entries_flow_get",
         "responses": {
           "200": {
             "$ref": "#/components/responses/Success"
@@ -1254,7 +1264,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
-        "operationId": "config_configmanagerflowindexview_post",
+        "operationId": "api_config_config_entries_flow_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1317,7 +1327,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
-        "operationId": "require_admin_delete",
+        "operationId": "api_config_config_entries_flow_resource_delete",
         "parameters": [
           {
             "in": "path",
@@ -1355,7 +1365,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
-        "operationId": "require_admin_get",
+        "operationId": "api_config_config_entries_flow_resource_get",
         "parameters": [
           {
             "in": "path",
@@ -1394,7 +1404,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
-        "operationId": "require_admin_post",
+        "operationId": "api_config_config_entries_flow_resource_post",
         "parameters": [
           {
             "in": "path",
@@ -1465,7 +1475,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
-        "operationId": "config_optionmanagerflowindexview_post",
+        "operationId": "api_config_config_entries_option_flow_post",
         "responses": {
           "200": {
             "$ref": "#/components/responses/Success"
@@ -1496,7 +1506,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
-        "operationId": "config_optionmanagerflowresourceview_delete",
+        "operationId": "api_config_config_entries_options_flow_resource_delete",
         "parameters": [
           {
             "in": "path",
@@ -1534,7 +1544,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
-        "operationId": "config_optionmanagerflowresourceview_get",
+        "operationId": "api_config_config_entries_options_flow_resource_get",
         "parameters": [
           {
             "in": "path",
@@ -1573,7 +1583,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
-        "operationId": "config_optionmanagerflowresourceview_post",
+        "operationId": "api_config_config_entries_options_flow_resource_post",
         "parameters": [
           {
             "in": "path",
@@ -1614,7 +1624,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
-        "operationId": "config_subentrymanagerflowindexview_post",
+        "operationId": "api_config_config_entries_subentries_flow_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1668,7 +1678,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
-        "operationId": "config_subentrymanagerflowresourceview_delete",
+        "operationId": "api_config_config_entries_subentries_flow_resource_delete",
         "parameters": [
           {
             "in": "path",
@@ -1706,7 +1716,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
-        "operationId": "config_subentrymanagerflowresourceview_get",
+        "operationId": "api_config_config_entries_subentries_flow_resource_get",
         "parameters": [
           {
             "in": "path",
@@ -1745,7 +1755,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/config"
         },
-        "operationId": "config_subentrymanagerflowresourceview_post",
+        "operationId": "api_config_config_entries_subentries_flow_resource_post",
         "parameters": [
           {
             "in": "path",
@@ -2055,7 +2065,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/conversation"
         },
-        "operationId": "conversation_conversationprocessview_post",
+        "operationId": "api_conversation_process_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2415,7 +2425,43 @@
         "operationId": "api_core_state_get",
         "responses": {
           "200": {
-            "$ref": "#/components/responses/Success"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Current Core and recorder state.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/api/__init__.py)",
+                  "properties": {
+                    "recorder_state": {
+                      "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/api/__init__.py)",
+                      "properties": {
+                        "migration_in_progress": {
+                          "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/api/__init__.py)",
+                          "type": "boolean"
+                        },
+                        "migration_is_live": {
+                          "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/api/__init__.py)",
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "migration_in_progress",
+                        "migration_is_live"
+                      ],
+                      "type": "object"
+                    },
+                    "state": {
+                      "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/api/__init__.py)",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "state",
+                    "recorder_state"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
@@ -2701,7 +2747,32 @@
         "operationId": "api_event_listeners_get",
         "responses": {
           "200": {
-            "$ref": "#/components/responses/Success"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "description": "Registered event type and its listener count.\n\n[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/api/__init__.py)",
+                    "properties": {
+                      "event": {
+                        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/api/__init__.py)",
+                        "type": "string"
+                      },
+                      "listener_count": {
+                        "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/api/__init__.py)",
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "event",
+                      "listener_count"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
@@ -2769,7 +2840,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/file_upload"
         },
-        "operationId": "file_upload_fileuploadview_delete",
+        "operationId": "api_file_upload_delete",
         "requestBody": {
           "content": {
             "application/json": {
@@ -3055,7 +3126,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/hassio"
         },
-        "operationId": "hassio_hassioauth_post",
+        "operationId": "api_hassio_auth_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -3115,7 +3186,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/hassio"
         },
-        "operationId": "hassio_hassiopasswordreset_post",
+        "operationId": "api_hassio_auth_password_reset_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4193,7 +4264,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/intent"
         },
-        "operationId": "intent_intenthandleview_post",
+        "operationId": "api_intent_handle_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4663,7 +4734,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/mcp_server"
         },
-        "operationId": "mcp_server_modelcontextprotocolstreamableview_post",
+        "operationId": "mcp_server_streamable_post",
         "responses": {
           "200": {
             "content": {
@@ -4786,7 +4857,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/mcp_server"
         },
-        "operationId": "api_response_post",
+        "operationId": "mcp_server_streamable_api_post",
         "parameters": [
           {
             "in": "path",
@@ -5097,7 +5168,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/mobile_app"
         },
-        "operationId": "mobile_app_registrationsview_post",
+        "operationId": "api_mobile_app_register_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -5581,7 +5652,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/backup"
         },
-        "operationId": "backup_restorebackupview_post",
+        "operationId": "api_onboarding_backup_restore_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -5817,7 +5888,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/onboarding"
         },
-        "operationId": "onboarding_integrationonboardingview_post",
+        "operationId": "api_onboarding_integration_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -5872,7 +5943,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/onboarding"
         },
-        "operationId": "onboarding_waitintegrationonboardingview_post",
+        "operationId": "api_onboarding_integration_wait_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -5915,7 +5986,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/onboarding"
         },
-        "operationId": "onboarding_useronboardingview_post",
+        "operationId": "api_onboarding_users_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -6128,7 +6199,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/repairs"
         },
-        "operationId": "repairs_repairsflowindexview_post",
+        "operationId": "api_repairs_issues_fix_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -6184,7 +6255,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/repairs"
         },
-        "operationId": "repairs_repairsflowresourceview_delete",
+        "operationId": "api_repairs_issues_fix_resource_delete",
         "parameters": [
           {
             "in": "path",
@@ -6222,7 +6293,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/repairs"
         },
-        "operationId": "repairs_repairsflowresourceview_get",
+        "operationId": "api_repairs_issues_fix_resource_get",
         "parameters": [
           {
             "in": "path",
@@ -6261,7 +6332,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/repairs"
         },
-        "operationId": "repairs_repairsflowresourceview_post",
+        "operationId": "api_repairs_issues_fix_resource_post",
         "parameters": [
           {
             "in": "path",
@@ -6463,7 +6534,7 @@
         "externalDocs": {
           "url": "https://www.home-assistant.io/integrations/shopping_list"
         },
-        "operationId": "shopping_list_createshoppinglistitemview_post",
+        "operationId": "api_shopping_list_item_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -7623,7 +7694,7 @@
         "externalDocs": {
           "url": "https://developers.home-assistant.io/docs/auth_api/"
         },
-        "operationId": "requestdatavalidator_post",
+        "operationId": "api_auth_link_user_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -7695,7 +7766,7 @@
         "externalDocs": {
           "url": "https://developers.home-assistant.io/docs/auth_api/"
         },
-        "operationId": "auth_loginflowindexview_post",
+        "operationId": "api_auth_login_flow_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -7753,7 +7824,7 @@
         "externalDocs": {
           "url": "https://developers.home-assistant.io/docs/auth_api/"
         },
-        "operationId": "requestdatavalidator_delete",
+        "operationId": "api_auth_login_flow_resource_delete",
         "parameters": [
           {
             "in": "path",
@@ -7815,7 +7886,7 @@
         "externalDocs": {
           "url": "https://developers.home-assistant.io/docs/auth_api/"
         },
-        "operationId": "auth_loginflowresourceview_post",
+        "operationId": "api_auth_login_flow_resource_post",
         "parameters": [
           {
             "in": "path",

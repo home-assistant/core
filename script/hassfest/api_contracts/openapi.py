@@ -232,9 +232,9 @@ def _endpoints(
         if not isinstance(url := view.value("url"), str) or not url.startswith("/"):
             continue
 
-        name = view.value("name")
-        if not isinstance(name, str):
-            name = class_name
+        view_name = view.value("name")
+        if not isinstance(view_name, str):
+            view_name = class_name
         auth = view.value("requires_auth")
         requires_auth = auth if isinstance(auth, bool) else None
         security = view.value("openapi_security")
@@ -266,8 +266,8 @@ def _endpoints(
                 for decorator in handler.decorator_list:
                     if not isinstance(decorator, ast.Call):
                         continue
-                    name = decorator_name(decorator)
-                    if name == "api_response" and decorator.args:
+                    decorator_kind = decorator_name(decorator)
+                    if decorator_kind == "api_response" and decorator.args:
                         if (
                             status := _response_status(
                                 index, handler_module, decorator.args[0]
@@ -281,7 +281,7 @@ def _endpoints(
                                 else None
                             )
                         continue
-                    if name != "RequestDataValidator":
+                    if decorator_kind != "RequestDataValidator":
                         continue
                     if decorator.args and (
                         mapping := schema_mapping(
@@ -304,7 +304,7 @@ def _endpoints(
                         request_required = allow_empty is not True
                 endpoints.append(
                     Endpoint(
-                        name=name,
+                        name=view_name,
                         integration=integration,
                         summary=summary,
                         description=description,

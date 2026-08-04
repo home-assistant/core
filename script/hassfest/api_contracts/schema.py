@@ -123,12 +123,31 @@ def _validator_call_schema(
                 for key, value in _primitive_schema(index, module, argument).items()
             }
         case "Range":
-            return {
-                "minimum" if keyword.arg == "min" else "maximum": value
+            values = {
+                keyword.arg: index.value(module, keyword.value)
                 for keyword in node.keywords
-                if keyword.arg in {"min", "max"}
-                and (value := index.value(module, keyword.value)) is not None
+                if keyword.arg is not None
             }
+            # Voluptuous accepts min, max, and their inclusivity flags positionally.
+            for position, name in enumerate(
+                ("min", "max", "min_included", "max_included")
+            ):
+                if position < len(arguments):
+                    values[name] = index.value(module, arguments[position])
+            result: dict[str, Any] = {}
+            if values.get("min") is not None:
+                result[
+                    "exclusiveMinimum"
+                    if values.get("min_included") is False
+                    else "minimum"
+                ] = values["min"]
+            if values.get("max") is not None:
+                result[
+                    "exclusiveMaximum"
+                    if values.get("max_included") is False
+                    else "maximum"
+                ] = values["max"]
+            return result
         case "ExactSequence" if arguments and isinstance(
             arguments[0], (ast.List, ast.Tuple)
         ):
