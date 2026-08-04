@@ -34,7 +34,7 @@ class QuidoBase(PapouchDevice, ABC):
         self.number_temp = 1
         self.counter_states: dict[str, str] = {}
         self.temperature_unit = "°C"
-        self.size_counter_bits = -1
+        self.size_counter_bits = 16
         self._name = ""
         self._location = ""
         self._mac_address = ""
@@ -242,13 +242,6 @@ class QuidoETH(QuidoBase, HTTPMixin):
         self._name = self.get_name()
         self._location = self.get_location()
         self._mac_address = self.get_mac_address()
-
-        self.number_inputs = -1
-        self.number_outputs = -1
-        self.number_temp = 1
-        self.counter_states: dict[str, str] = {}
-        self.size_counter_bits = 16
-        self.temperature_unit = "°C"  # default
 
         self._parse_initial_settings()
 
