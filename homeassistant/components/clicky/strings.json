@@ -11,12 +11,10 @@
     "step": {
       "user": {
         "data": {
-          "nickname": "Nickname",
           "site_id": "Site ID",
           "sitekey": "Site Key"
         },
         "data_description": {
-          "nickname": "Nickname for your website in Home Assistant",
           "site_id": "Site ID for your website on Clicky",
           "sitekey": "Site Key for your website on Clicky"
         },
