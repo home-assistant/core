@@ -136,7 +136,7 @@ async def test_media_player_music(
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry
-    assert entry.device_id is not None
+    assert entry.device_id is None  # ephemeral device has no device registry entry
     assert entry.entity_category is None
     assert entry.unique_id == "SERVER-UUID-USER-UUID-DEVICE-UUID-FOUR"
 
