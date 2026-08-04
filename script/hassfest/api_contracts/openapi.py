@@ -17,7 +17,6 @@ from .common import (
     decorator_name,
     interface_metadata,
     slug,
-    source_description,
 )
 from .schema import annotation_schema, mapping_schema, schema_mapping
 
@@ -331,51 +330,6 @@ def _endpoints(
     return endpoints
 
 
-def _mobile_app_schemas(index: SourceIndex) -> dict[str, dict[str, Any]]:
-    """Generate mobile app webhook payloads from their registered validators."""
-    module = "homeassistant.components.mobile_app.webhook"
-    schemas: dict[str, dict[str, Any]] = {}
-
-    for (handler_module, _), handler in index.functions.items():
-        if handler_module != module:
-            continue
-
-        command: str | None = None
-        data: dict[str, Any] | None = None
-
-        for decorator in handler.decorator_list:
-            if not isinstance(decorator, ast.Call) or not decorator.args:
-                continue
-            if decorator_name(decorator) == "register" and isinstance(
-                value := index.value(module, decorator.args[0]), str
-            ):
-                command = value
-            elif decorator_name(decorator) == "validate_schema" and (
-                mapping := schema_mapping(index, module, decorator.args[0])
-            ):
-                data = mapping_schema(index, *mapping)
-
-        if command is None:
-            continue
-
-        properties: dict[str, Any] = {"type": {"type": "string", "const": command}}
-        required = ["type"]
-
-        if data is not None:
-            properties["data"] = data
-            required.append("data")
-
-        schemas[f"mobile_app_{slug(command)}"] = {
-            "type": "object",
-            "description": source_description(
-                index, module, handler, ast.get_docstring(handler) or ""
-            ),
-            "required": required,
-            "properties": properties,
-        }
-    return schemas
-
-
 def generate_rest_openapi(
     index: SourceIndex,
     integrations: dict[str, IntegrationMetadata],
@@ -406,6 +360,10 @@ def generate_rest_openapi(
             "title": "Home Assistant Core HTTP API",
             "version": "1",
             "description": "HTTP interfaces provided by Home Assistant Core and its bundled integrations.",
+            "contact": {
+                "name": "Home Assistant",
+                "url": "https://www.home-assistant.io/",
+            },
         },
         "servers": [
             {
@@ -439,7 +397,6 @@ def generate_rest_openapi(
                 "bearerAuth": {"type": "http", "scheme": "bearer"},
                 "queryToken": {"type": "apiKey", "in": "query", "name": "token"},
             },
-            "schemas": _mobile_app_schemas(index),
             "responses": {
                 "Success": {
                     "description": "Successful response",

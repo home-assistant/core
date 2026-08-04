@@ -2892,6 +2892,7 @@
                 "include_folders": {
                   "anyOf": [
                     {
+                      "items": {},
                       "type": "array"
                     },
                     {
@@ -2968,6 +2969,7 @@
                 "days": {
                   "anyOf": [
                     {
+                      "items": {},
                       "type": "array"
                     }
                   ],
@@ -3132,6 +3134,7 @@
             },
             "include_folders": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/backup/websocket.py)",
+              "items": {},
               "type": "array"
             },
             "include_homeassistant": {
@@ -3273,6 +3276,7 @@
             },
             "restore_folders": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/backup/websocket.py)",
+              "items": {},
               "type": "array"
             },
             "restore_homeassistant": {
@@ -4960,6 +4964,7 @@
             },
             "tts_default_voice": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/cloud/http_api.py)",
+              "items": false,
               "maxItems": 2,
               "minItems": 2,
               "prefixItems": [
@@ -5053,6 +5058,7 @@
           "properties": {
             "aliases": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/area_registry.py)",
+              "items": {},
               "type": "array"
             },
             "floor_id": {
@@ -5238,6 +5244,7 @@
           "properties": {
             "aliases": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/area_registry.py)",
+              "items": {},
               "type": "array"
             },
             "area_id": {
@@ -6856,6 +6863,7 @@
                   "type": "null"
                 },
                 {
+                  "items": {},
                   "type": "array"
                 }
               ],
@@ -7418,6 +7426,7 @@
           "properties": {
             "aliases": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/floor_registry.py)",
+              "items": {},
               "type": "array"
             },
             "icon": {
@@ -7577,6 +7586,7 @@
           "properties": {
             "aliases": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/config/floor_registry.py)",
+              "items": {},
               "type": "array"
             },
             "floor_id": {
@@ -9504,6 +9514,7 @@
                 }
               ],
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/websocket_api/commands.py)",
+              "items": {},
               "type": "array"
             },
             "type": {
@@ -10059,6 +10070,7 @@
                   "type": "object"
                 },
                 {
+                  "items": {},
                   "type": "array"
                 },
                 {
@@ -10120,6 +10132,7 @@
                   "type": "object"
                 },
                 {
+                  "items": {},
                   "type": "array"
                 },
                 {
@@ -12706,6 +12719,7 @@
             "value": {
               "anyOf": [
                 {
+                  "items": {},
                   "type": "array"
                 },
                 {
@@ -14066,6 +14080,7 @@
           "properties": {
             "address": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/lcn/websocket.py)",
+              "items": {},
               "type": "array"
             },
             "entry_id": {
@@ -14105,6 +14120,7 @@
           "properties": {
             "address": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/lcn/websocket.py)",
+              "items": {},
               "type": "array"
             },
             "entry_id": {
@@ -14178,6 +14194,7 @@
           "properties": {
             "address": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/lcn/websocket.py)",
+              "items": {},
               "type": "array"
             },
             "entry_id": {
@@ -14216,6 +14233,7 @@
           "properties": {
             "address": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/lcn/websocket.py)",
+              "items": {},
               "type": "array"
             },
             "domain": {
@@ -14616,6 +14634,7 @@
           "properties": {
             "address": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/lcn/websocket.py)",
+              "items": {},
               "type": "array"
             },
             "domain": {
@@ -15860,6 +15879,7 @@
                 }
               ],
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/__init__.py)",
+              "items": {},
               "type": "array"
             },
             "search_query": {
@@ -16005,6 +16025,7 @@
             },
             "media_filter_classes": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_source/http.py)",
+              "items": {},
               "type": "array"
             },
             "search_query": {
@@ -17134,26 +17155,7 @@
             },
             "types": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/recorder/websocket_api.py)",
-              "items": {
-                "anyOf": [
-                  {
-                    "const": "max",
-                    "type": "string"
-                  },
-                  {
-                    "const": "mean",
-                    "type": "string"
-                  },
-                  {
-                    "const": "min",
-                    "type": "string"
-                  },
-                  {
-                    "const": "change",
-                    "type": "string"
-                  }
-                ]
-              },
+              "items": {},
               "type": "array"
             },
             "units": {
@@ -17331,38 +17333,7 @@
             },
             "types": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/recorder/websocket_api.py)",
-              "items": {
-                "anyOf": [
-                  {
-                    "const": "change",
-                    "type": "string"
-                  },
-                  {
-                    "const": "last_reset",
-                    "type": "string"
-                  },
-                  {
-                    "const": "max",
-                    "type": "string"
-                  },
-                  {
-                    "const": "mean",
-                    "type": "string"
-                  },
-                  {
-                    "const": "min",
-                    "type": "string"
-                  },
-                  {
-                    "const": "state",
-                    "type": "string"
-                  },
-                  {
-                    "const": "sum",
-                    "type": "string"
-                  }
-                ]
-              },
+              "items": {},
               "type": "array"
             },
             "units": {
@@ -18418,6 +18389,7 @@
                         }
                       ],
                       "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/config_validation.py)",
+                      "items": {},
                       "type": "array"
                     }
                   },
@@ -18451,6 +18423,7 @@
                         }
                       ],
                       "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/config_validation.py)",
+                      "items": {},
                       "type": "array"
                     }
                   },
@@ -18520,6 +18493,7 @@
                         }
                       ],
                       "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/config_validation.py)",
+                      "items": {},
                       "type": "array"
                     }
                   },
@@ -19068,6 +19042,7 @@
                         }
                       ],
                       "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/config_validation.py)",
+                      "items": {},
                       "type": "array"
                     }
                   },
@@ -19101,6 +19076,7 @@
                         }
                       ],
                       "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/config_validation.py)",
+                      "items": {},
                       "type": "array"
                     }
                   },
@@ -19170,6 +19146,7 @@
                         }
                       ],
                       "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/config_validation.py)",
+                      "items": {},
                       "type": "array"
                     }
                   },
@@ -22274,6 +22251,7 @@
                 }
               ],
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/zwave_js/api.py)",
+              "items": {},
               "type": "array"
             },
             "type": {
@@ -22393,6 +22371,7 @@
             },
             "parameters": {
               "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/zwave_js/api.py)",
+              "items": {},
               "type": "array"
             },
             "type": {
@@ -22823,6 +22802,7 @@
                     }
                   ],
                   "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/zwave_js/api.py)",
+                  "items": {},
                   "type": "array"
                 },
                 "securityClasses": {
@@ -22837,6 +22817,7 @@
                     }
                   ],
                   "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/zwave_js/api.py)",
+                  "items": {},
                   "type": "array"
                 },
                 "specificDeviceClass": {
@@ -22858,6 +22839,7 @@
                     }
                   ],
                   "description": "[View source](https://github.com/home-assistant/core/blob/dev/homeassistant/components/zwave_js/api.py)",
+                  "items": {},
                   "type": "array"
                 },
                 "uuid": {

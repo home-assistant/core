@@ -211,16 +211,18 @@ def test_contracts_cover_core_interfaces() -> None:
         "x-home-assistant-requires-admin"
     ]
     assert "github.com/home-assistant/core/blob/dev/" in intent_response["description"]
-    update_location = openapi["components"]["schemas"]["mobile_app_update_location"][
-        "properties"
-    ]["data"]
-    assert update_location["properties"]["gps"]["prefixItems"] == [
-        {"type": "number", "minimum": -90, "maximum": 90},
-        {"type": "number", "minimum": -180, "maximum": 180},
-    ]
-    assert update_location["properties"]["gps_accuracy"]["minimum"] == 0
+    assert openapi["info"]["contact"]["url"] == "https://www.home-assistant.io/"
     assert (
-        "GPS accuracy" in update_location["properties"]["gps_accuracy"]["description"]
+        openapi["paths"]["/api/config/config_entries/flow"]["post"]["requestBody"][
+            "content"
+        ]["application/json"]["schema"]["properties"]["handler"]["anyOf"][1]["items"]
+        == {}
+    )
+    assert (
+        openapi["paths"]["/api/onboarding/backup/restore"]["post"]["requestBody"][
+            "content"
+        ]["application/json"]["schema"]["properties"]["restore_folders"]["items"]
+        == {}
     )
     assert "/tests/" not in json.dumps(openapi)
     assert "/tests/" not in json.dumps(asyncapi)

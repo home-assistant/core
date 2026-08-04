@@ -87,22 +87,17 @@ def _primitive_schema(
         return scalar
     match node:
         case ast.Name(id="list") | ast.Name(id="set") | ast.Name(id="tuple"):
-            return {"type": "array"}
+            return {"type": "array", "items": {}}
         case ast.Name(id="dict"):
             return {"type": "object"}
         case ast.Dict():
             return mapping_schema(index, module, node)
         case ast.List(elts=[]):
-            return {"type": "array"}
+            return {"type": "array", "items": {}}
         case ast.List(elts=items) | ast.Tuple(elts=items):
             return {
                 "type": "array",
-                **(
-                    {"items": item_schema}
-                    if items
-                    and (item_schema := _primitive_schema(index, module, items[0]))
-                    else {}
-                ),
+                "items": (_primitive_schema(index, module, items[0]) if items else {}),
             }
         case ast.Call():
             return _validator_call_schema(index, module, node)
@@ -143,6 +138,7 @@ def _validator_call_schema(
             return {
                 "type": "array",
                 "prefixItems": items,
+                "items": False,
                 "minItems": len(items),
                 "maxItems": len(items),
             }
@@ -254,6 +250,7 @@ def annotation_schema(
                     return {
                         "type": "array",
                         "prefixItems": items,
+                        "items": False,
                         "minItems": len(items),
                         "maxItems": len(items),
                     }
