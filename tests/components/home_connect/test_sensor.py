@@ -936,6 +936,14 @@ async def _send_active_program_event(
             "BSH.Common.Program.Favorite.001",
             "Favorite 001",
         ),
+        (
+            "ConsumerProducts.CoffeeMaker.Program.Beverage.XLCoffee",
+            "XL Coffee",
+        ),
+        (
+            "Cooking.Oven.Program.HeatingMode.3DHotAir",
+            "3D Hot Air",
+        ),
     ],
 )
 async def test_active_program_sensor_states(
@@ -952,8 +960,9 @@ async def test_active_program_sensor_states(
     Regardless of whether the program is known to aiohomeconnect or not, only
     the last segment of the key is used, except for favorites - reported as
     an opaque "Favorite.NNN" key - where the "Favorite" segment is kept too,
-    since the trailing number alone would not be descriptive. The raw value
-    is always exposed as-is via the raw_value attribute.
+    since the trailing number alone would not be descriptive. Acronyms and
+    dimensions are kept as one word. The raw value is always exposed as-is
+    via the raw_value attribute.
     """
     entity_id = "sensor.dishwasher_active_program"
     assert await integration_setup(client)
