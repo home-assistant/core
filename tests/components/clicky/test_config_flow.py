@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from pyclicky import AuthenticationError, ConnectionError
+from pyclicky import AuthenticationError, ClickyAPIError, ConnectionError
 
 from homeassistant import config_entries
 from homeassistant.components.clicky.const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN
@@ -163,4 +163,30 @@ async def test_form_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_form_api_error(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test that ConfigEntryAuthFailed is mapped to unknown."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.clicky.config_flow.ClickyClient",
+    ) as mock_lib:
+        client = mock_lib.return_value
+        client.query = AsyncMock(side_effect=ClickyAPIError)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SITE_ID: TEST_SITE_ID,
+                CONF_SITEKEY: TEST_SITEKEY,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
     assert len(mock_setup_entry.mock_calls) == 0
