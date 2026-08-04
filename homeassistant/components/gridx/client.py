@@ -1,22 +1,36 @@
 """Client helpers for the GridX integration."""
 
-from importlib.resources import files
-import json
 from typing import Any
 
 from gridx_connector.async_connector import AsyncGridboxConnector
 import httpx
 
-from .const import LOGGER, OEM
+from .const import (
+    LOGGER,
+    LOGIN_AUDIENCE,
+    LOGIN_CLIENT_ID,
+    LOGIN_GRANT_TYPE,
+    LOGIN_REALM,
+    LOGIN_SCOPE,
+    LOGIN_URL,
+)
 
 
-def load_oem_config(username: str, password: str) -> dict[str, Any]:
-    """Load the packaged OEM endpoint config and inject the credentials."""
-    config_path = files("gridx_connector").joinpath("config", f"{OEM}.config.json")
-    config: dict[str, Any] = json.loads(config_path.read_text())
-    config["login"]["username"] = username
-    config["login"]["password"] = password
-    return config
+def build_connector_config(username: str, password: str) -> dict[str, Any]:
+    """Build the connector endpoint config for the given credentials."""
+    return {
+        "urls": {"login": LOGIN_URL},
+        "login": {
+            "grant_type": LOGIN_GRANT_TYPE,
+            "username": username,
+            "password": password,
+            "audience": LOGIN_AUDIENCE,
+            "client_id": LOGIN_CLIENT_ID,
+            "scope": LOGIN_SCOPE,
+            "realm": LOGIN_REALM,
+            "client_secret": "",
+        },
+    }
 
 
 async def async_create_connector(

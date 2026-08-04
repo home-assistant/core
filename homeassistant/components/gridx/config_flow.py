@@ -10,7 +10,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 
-from .client import async_create_connector, load_oem_config
+from .client import async_create_connector, build_connector_config
 from .const import API_BASE_URL, DOMAIN, LOGGER
 
 UNEXPECTED_AUTH_ERRORS = (RuntimeError, TypeError, ValueError)
@@ -32,7 +32,7 @@ async def _validate_credentials(
         ConnectionError: On network / timeout issues.
         httpx.HTTPError: On HTTP errors from the underlying client.
     """
-    config = await hass.async_add_executor_job(load_oem_config, username, password)
+    config = build_connector_config(username, password)
     httpx_client = create_async_httpx_client(
         hass,
         auto_cleanup=False,

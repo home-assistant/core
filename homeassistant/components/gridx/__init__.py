@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 
-from .client import async_create_connector, load_oem_config
+from .client import async_create_connector, build_connector_config
 from .const import API_BASE_URL, DOMAIN
 from .coordinator import GridxLiveCoordinator
 from .types import GridxConfigEntry, GridxData
@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GridxConfigEntry) -> boo
     username: str = entry.data[CONF_USERNAME]
     password: str = entry.data[CONF_PASSWORD]
 
-    config = await hass.async_add_executor_job(load_oem_config, username, password)
+    config = build_connector_config(username, password)
     httpx_client = create_async_httpx_client(
         hass,
         auto_cleanup=False,
