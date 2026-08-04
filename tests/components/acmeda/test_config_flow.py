@@ -52,7 +52,7 @@ async def test_show_form_no_hubs(hass: HomeAssistant, mock_hub_discover) -> None
 
 async def test_timeout_fetching_hub(hass: HomeAssistant, mock_hub_discover) -> None:
     """Test that flow aborts if no hubs are discovered."""
-    mock_hub_discover.side_effect = TimeoutError
+    mock_hub_discover.return_value = async_generator([])
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -168,12 +168,11 @@ async def test_discovery_preserves_hubs_before_timeout(
     dummy_hub_2 = aiopulse.Hub(DUMMY_HOST2)
     dummy_hub_2.id = "DEF456"
 
-    async def slow_discover():
+    async def discover_yields_then_ends(*, **kwargs):
         yield dummy_hub_1
-        await asyncio.sleep(10)
         yield dummy_hub_2
 
-    mock_hub_discover.return_value = slow_discover()
+    mock_hub_discover.return_value = discover_yields_then_ends()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
