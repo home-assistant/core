@@ -43,8 +43,10 @@ class DROPEntity(CoordinatorEntity[DROPDeviceDataUpdateCoordinator]):
             identifiers={(DOMAIN, unique_id)},
         )
         if entry_data[CONF_DEVICE_TYPE] != DEV_HUB:
-            # The owner hub lives in a separate config entry created independently by
-            # MQTT discovery, so it may not exist yet. Link best-effort when present.
+            # The owner hub lives in a separate config entry created independently
+            # by MQTT discovery, so it may not exist yet. Link best-effort when
+            # present; an identifier can match devices from several config entries
+            # and we can't tell which is the owner hub, so link to the first.
             via_devices = dr.async_get(coordinator.hass).async_get_devices(
                 identifiers={(DOMAIN, entry_data[CONF_DEVICE_OWNER_ID])}
             )
