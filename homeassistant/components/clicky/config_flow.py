@@ -10,6 +10,11 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN, METRICS
 
@@ -17,8 +22,10 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SITE_ID): str,
-        vol.Required(CONF_SITEKEY): str,
+        vol.Required(CONF_SITE_ID): TextSelector(),
+        vol.Required(CONF_SITEKEY): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
     }
 )
 
