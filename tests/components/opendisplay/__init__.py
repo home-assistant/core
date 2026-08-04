@@ -13,8 +13,11 @@ from opendisplay import (
     ManufacturerData,
     PowerOption,
     SecurityConfig,
+    SensorType,
     SystemConfig,
 )
+from opendisplay.models.advertisement import SHT40_DEFAULT_MSD_START
+from opendisplay.models.config import SensorData
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
@@ -212,6 +215,46 @@ def make_button_device_config(binary_inputs: list[BinaryInputs]) -> GlobalConfig
         displays=DEVICE_CONFIG.displays,
         binary_inputs=binary_inputs,
     )
+
+
+def make_sht40_sensor(
+    instance_number: int = 0,
+    msd_data_start_byte: int = 0,
+) -> SensorData:
+    """Create a SensorData config entry for an SHT40."""
+    return SensorData(
+        instance_number=instance_number,
+        sensor_type=SensorType.SHT40,
+        bus_id=0,
+        msd_data_start_byte=msd_data_start_byte,
+        reserved=b"\x00" * 24,
+    )
+
+
+def make_sensor_device_config(sensors: list[SensorData]) -> GlobalConfig:
+    """Return a GlobalConfig with the given sensors list."""
+    return GlobalConfig(
+        system=DEVICE_CONFIG.system,
+        manufacturer=DEVICE_CONFIG.manufacturer,
+        power=DEVICE_CONFIG.power,
+        displays=DEVICE_CONFIG.displays,
+        sensors=sensors,
+    )
+
+
+def make_sht40_dynamic_data(
+    temperature_c: float,
+    humidity_percent: float,
+    start_byte: int = SHT40_DEFAULT_MSD_START,
+) -> bytes:
+    """Build an 11-byte dynamic block holding one SHT40 reading.
+
+    The firmware packs the reading as a little-endian 24-bit word:
+    ((temperature * 10 + 400) << 10) | (humidity * 10).
+    """
+    packed = (round(temperature_c * 10) + 400) << 10 | round(humidity_percent * 10)
+    block = packed.to_bytes(3, "little")
+    return (b"\x00" * start_byte + block).ljust(11, b"\x00")
 
 
 VALID_SERVICE_INFO = make_service_info()
