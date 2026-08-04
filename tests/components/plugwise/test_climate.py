@@ -377,13 +377,16 @@ async def test_adam_off_regulation_mode_change(
 
 @pytest.mark.parametrize("chosen_env", ["m_adam_cooling"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
-async def test_adam_4_climate_entity_attributes(
+async def test_adam_climate_entity_attributes(
     hass: HomeAssistant,
     mock_smile_adam_heat_cool: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test creation of adam climate device environment."""
+    """Test creation of adam climate device environment.
+
+    Restored data is according to the plugwise v1.14.3 updated format.
+    """
     mock_restore_cache_with_extra_data(
         hass,
         [
