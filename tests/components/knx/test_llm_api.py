@@ -143,12 +143,15 @@ async def test_store_tool_without_store_raises(hass: HomeAssistant) -> None:
         llm_api._build_tools(_mock_knx(store=None)),
         "get_store_stats",
     )
-    with pytest.raises(HomeAssistantError, match="telegram store"):
+    with pytest.raises(
+        HomeAssistantError, match="llm_telegram_store_unavailable"
+    ) as err:
         await tool.async_call(
             hass,
             llm.ToolInput(tool_name="get_store_stats", tool_args={}),
             _llm_context(),
         )
+    assert err.value.translation_key == "llm_telegram_store_unavailable"
 
 
 async def test_project_tool_without_project_raises(hass: HomeAssistant) -> None:
@@ -157,9 +160,10 @@ async def test_project_tool_without_project_raises(hass: HomeAssistant) -> None:
         llm_api._build_tools(_mock_knx(project=None)),
         "get_project_info",
     )
-    with pytest.raises(HomeAssistantError, match="project"):
+    with pytest.raises(HomeAssistantError, match="llm_no_project_loaded") as err:
         await tool.async_call(
             hass,
             llm.ToolInput(tool_name="get_project_info", tool_args={}),
             _llm_context(),
         )
+    assert err.value.translation_key == "llm_no_project_loaded"
