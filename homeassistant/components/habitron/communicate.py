@@ -34,13 +34,12 @@ class HbtnComm:
         self._host_conf: str = config.data[CONF_HOST]
         self.logger = logging.getLogger(__name__)
 
-        if self.is_valid_ipv4(self._host_conf):
-            self._host = self._host_conf
-        else:
-            # Hostname/"local" resolution happens in ``async_setup`` to keep
-            # blocking DNS off the event loop. The client is constructed
-            # there once the resolved host is known.
-            self._host = ""
+        # Hostname/"local" resolution happens in ``async_setup`` to keep blocking
+        # DNS off the event loop, so a non-IP host starts out empty and is
+        # filled in there; the client is constructed once the host is known.
+        # Annotated because ``async_setup`` assigns from an untyped resolver and
+        # ``com_ip`` returns this value.
+        self._host: str = self._host_conf if self.is_valid_ipv4(self._host_conf) else ""
 
         self.logger.debug(
             "Initializing hub, host conf: %s, initial ip: %s",
