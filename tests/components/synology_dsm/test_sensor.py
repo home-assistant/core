@@ -399,10 +399,33 @@ async def test_hub_device_info_mac_connections(
     setup_dsm_with_usb: MagicMock,
 ) -> None:
     """Test that the hub DeviceInfo includes MAC address connections."""
-    dev_reg = dr.async_get(hass)
+    dev_reg = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     device = dev_reg.async_get_device(identifiers={(DOMAIN, SERIAL)})
     assert device is not None
     assert device.connections == {
         ("mac", "00:11:32:xx:xx:59"),
         ("mac", "00:11:32:xx:xx:5a"),
     }
+
+
+async def test_storage_device_via_device(
+    hass: HomeAssistant,
+    setup_dsm_with_usb: MagicMock,
+) -> None:
+    """Test that storage/USB child devices link to the hub via via_device_id."""
+    dev_reg = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+    entry_id = setup_dsm_with_usb.mock_entry.entry_id
+    hub_device = dev_reg.async_get_device_by_identifier((DOMAIN, SERIAL), entry_id)
+    assert hub_device is not None
+
+    volume_device = dev_reg.async_get_device_by_identifier(
+        (DOMAIN, f"{SERIAL}_volume_1"), entry_id
+    )
+    assert volume_device is not None
+    assert volume_device.via_device_id == hub_device.id
+
+    usb_partition_device = dev_reg.async_get_device_by_identifier(
+        (DOMAIN, f"{SERIAL}_USB Disk 1 Partition 1"), entry_id
+    )
+    assert usb_partition_device is not None
+    assert usb_partition_device.via_device_id == hub_device.id

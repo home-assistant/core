@@ -12,6 +12,7 @@ from homeassistant.components.gardena_bluetooth.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from . import (
     MISSING_MANUFACTURER_DATA_SERVICE_INFO,
@@ -163,14 +164,16 @@ async def test_no_devices_at_all(
     assert result.get("reason") == "no_devices_found"
 
 
+@pytest.mark.parametrize(
+    ("service_info"), [WATER_TIMER_SERVICE_INFO, WATER_TIMER_UNNAMED_SERVICE_INFO]
+)
 async def test_bluetooth(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
+    hass: HomeAssistant, snapshot: SnapshotAssertion, service_info: BluetoothServiceInfo
 ) -> None:
     """Test bluetooth device discovery."""
 
     # Inject the service info will trigger the flow to start
-    inject_bluetooth_service_info(hass, WATER_TIMER_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, service_info)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     result = next(iter(hass.config_entries.flow.async_progress_by_handler(DOMAIN)))

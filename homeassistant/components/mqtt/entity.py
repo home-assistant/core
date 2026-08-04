@@ -959,9 +959,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         self, event: Event[EventDeviceRegistryUpdatedData]
     ) -> None:
         """Handle the manual removal of a device."""
-        if self._skip_device_removal or not async_removed_from_device(
-            self.hass, event, cast(str, self._device_id), self._config_entry_id
-        ):
+        if self._skip_device_removal or not async_removed_from_device(event):
             return
         # Prevent a second cleanup round after the device is removed
         self._remove_device_updated()
@@ -1321,8 +1319,8 @@ def ensure_via_device_exists(
     if (
         device_info is None
         or CONF_VIA_DEVICE not in device_info
-        or (device_registry := dr.async_get(hass)).async_get_device(
-            identifiers={device_info["via_device"]}
+        or (device_registry := dr.async_get(hass)).async_get_device_by_identifier(
+            device_info["via_device"], config_entry.entry_id
         )
     ):
         return
@@ -1603,7 +1601,7 @@ class MqttEntity(
 
     def _set_entity_name(self, config: ConfigType) -> None:
         """Help setting the entity name if needed."""
-        entity_name: str | None | UndefinedType = config.get(CONF_NAME, UNDEFINED)
+        entity_name: str | UndefinedType | None = config.get(CONF_NAME, UNDEFINED)
         # Only set _attr_name if it is needed
         if entity_name is not UNDEFINED:
             self._attr_name = entity_name
@@ -1747,20 +1745,11 @@ def update_device(
 
 @callback
 def async_removed_from_device(
-    hass: HomeAssistant,
     event: Event[EventDeviceRegistryUpdatedData],
-    mqtt_device_id: str,
-    config_entry_id: str,
 ) -> bool:
-    """Check if the passed event indicates MQTT was removed from a device."""
-    if event.data["action"] == "update":
-        if "config_entries" not in event.data["changes"]:
-            return False
-        device_registry = dr.async_get(hass)
-        if (
-            device_entry := device_registry.async_get(mqtt_device_id)
-        ) and config_entry_id in device_entry.config_entries:
-            # Not removed from device
-            return False
+    """Check if the passed event indicates MQTT was removed from a device.
 
-    return True
+    A device is associated with a single config entry, so MQTT is removed from a
+    device only when the device itself is removed.
+    """
+    return event.data["action"] == "remove"

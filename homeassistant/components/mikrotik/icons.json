@@ -1,5 +1,13 @@
 {
   "entity": {
+    "button": {
+      "backup": {
+        "default": "mdi:backup-restore"
+      },
+      "shutdown": {
+        "default": "mdi:power"
+      }
+    },
     "sensor": {
       "cpu_load": {
         "default": "mdi:chip"
@@ -9,6 +17,14 @@
       },
       "memory_usage": {
         "default": "mdi:memory"
+      }
+    },
+    "switch": {
+      "ether": {
+        "default": "mdi:lan"
+      },
+      "wlan": {
+        "default": "mdi:wifi"
       }
     }
   }
