@@ -57,8 +57,19 @@ def test_contracts_cover_core_interfaces() -> None:
     assert len(grouped_tags) == len(set(grouped_tags))
 
     assert asyncapi["asyncapi"] == "3.1.0"
+    assert asyncapi["servers"]["secure_websocket"]["protocol"] == "wss"
+    assert asyncapi["servers"]["https"]["protocol"] == "https"
+    assert {"$ref": "#/servers/secure_websocket"} in asyncapi["channels"]["websocket"][
+        "servers"
+    ]
     assert "subscribe_events" in asyncapi["components"]["messages"]
     assert asyncapi["channels"]["event_stream"]["address"] == "/api/stream"
+    assert {"$ref": "#/servers/https"} in asyncapi["channels"]["event_stream"][
+        "servers"
+    ]
+    assert asyncapi["operations"]["send_event_stream"][
+        "x-home-assistant-requires-admin"
+    ]
     usage_prediction = asyncapi["components"]["messages"][
         "usage_prediction_common_control"
     ]
@@ -88,13 +99,23 @@ def test_contracts_cover_core_interfaces() -> None:
     assert entity["required"] == ["ei", "pl"]
     assert entity["properties"]["dp"]["type"] == "integer"
     assert "#L" in entity["properties"]["dp"]["description"]
-    assert asyncapi["operations"]["receive_extract_from_target"]["reply"][
-        "messages"
-    ] == [
-        {
-            "$ref": "#/components/messages/extract_from_target_result",
-        },
-        {"$ref": "#/components/messages/result_error"},
+    extract_reply = asyncapi["operations"]["receive_extract_from_target"]["reply"]
+    assert extract_reply == {
+        "channel": {"$ref": "#/channels/extract_from_target_reply"},
+        "messages": [
+            {
+                "$ref": "#/channels/extract_from_target_reply/messages/extract_from_target_result"
+            },
+            {"$ref": "#/channels/extract_from_target_reply/messages/result_error"},
+        ],
+    }
+    assert set(asyncapi["channels"]["extract_from_target_reply"]["messages"]) == {
+        "extract_from_target_result",
+        "result_error",
+    }
+    assert asyncapi["channels"]["extract_from_target_reply"]["servers"] == [
+        {"$ref": "#/servers/websocket"},
+        {"$ref": "#/servers/secure_websocket"},
     ]
     assert (
         "extract_from_target_result"

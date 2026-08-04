@@ -321,6 +321,24 @@ def generate_websocket_asyncapi(
         for command in commands
         if command.result is not None
     }
+    # A channel's messages must be exclusive, so each typed result gets a reply channel.
+    reply_channels = {
+        f"{slug(command.name)}_reply": {
+            "address": "/api/websocket",
+            "servers": [
+                {"$ref": "#/servers/websocket"},
+                {"$ref": "#/servers/secure_websocket"},
+            ],
+            "messages": {
+                f"{slug(command.name)}_result": {
+                    "$ref": f"#/components/messages/{slug(command.name)}_result"
+                },
+                "result_error": {"$ref": "#/components/messages/result_error"},
+            },
+        }
+        for command in commands
+        if command.result is not None
+    }
     protocol_messages = _protocol_messages(index, websocket_docs)
     messages = {**command_messages, **result_messages, **protocol_messages}
     return {
@@ -337,9 +355,19 @@ def generate_websocket_asyncapi(
                 "protocol": "ws",
                 "variables": {"host": {"default": "homeassistant.local:8123"}},
             },
+            "secure_websocket": {
+                "host": "{host}",
+                "protocol": "wss",
+                "variables": {"host": {"default": "homeassistant.local:8123"}},
+            },
             "http": {
                 "host": "{host}",
                 "protocol": "http",
+                "variables": {"host": {"default": "homeassistant.local:8123"}},
+            },
+            "https": {
+                "host": "{host}",
+                "protocol": "https",
                 "variables": {"host": {"default": "homeassistant.local:8123"}},
             },
         },
@@ -347,7 +375,10 @@ def generate_websocket_asyncapi(
             "websocket": {
                 "address": "/api/websocket",
                 "description": "Authenticated command and event channel.",
-                "servers": [{"$ref": "#/servers/websocket"}],
+                "servers": [
+                    {"$ref": "#/servers/websocket"},
+                    {"$ref": "#/servers/secure_websocket"},
+                ],
                 "messages": {
                     key: {"$ref": f"#/components/messages/{key}"}
                     for key in command_messages.keys()
@@ -357,9 +388,13 @@ def generate_websocket_asyncapi(
             "event_stream": {
                 "address": "/api/stream",
                 "description": "Authenticated Server-Sent Events stream.",
-                "servers": [{"$ref": "#/servers/http"}],
+                "servers": [
+                    {"$ref": "#/servers/http"},
+                    {"$ref": "#/servers/https"},
+                ],
                 "messages": {"event": {"$ref": "#/components/messages/sse_event"}},
             },
+            **reply_channels,
         },
         # AsyncAPI actions are from the server's perspective. A received command may
         # link to its typed result; commands without one use the generic result frame.
@@ -403,17 +438,27 @@ def generate_websocket_asyncapi(
                         {"$ref": f"#/channels/websocket/messages/{slug(command.name)}"}
                     ],
                     "reply": {
-                        "channel": {"$ref": "#/channels/websocket"},
+                        "channel": {
+                            "$ref": (
+                                f"#/channels/{slug(command.name)}_reply"
+                                if command.result is not None
+                                else "#/channels/websocket"
+                            )
+                        },
                         "messages": [
                             {
                                 "$ref": (
-                                    f"#/components/messages/{slug(command.name)}_result"
+                                    f"#/channels/{slug(command.name)}_reply/messages/{slug(command.name)}_result"
                                     if command.result is not None
                                     else "#/channels/websocket/messages/result"
                                 )
                             },
                             *(
-                                [{"$ref": "#/components/messages/result_error"}]
+                                [
+                                    {
+                                        "$ref": f"#/channels/{slug(command.name)}_reply/messages/result_error"
+                                    }
+                                ]
                                 if command.result is not None
                                 else []
                             ),
@@ -435,6 +480,7 @@ def generate_websocket_asyncapi(
             "send_event_stream": {
                 "action": "send",
                 "title": "server-sent events",
+                "x-home-assistant-requires-admin": True,
                 "channel": {"$ref": "#/channels/event_stream"},
                 "messages": [{"$ref": "#/channels/event_stream/messages/event"}],
             },

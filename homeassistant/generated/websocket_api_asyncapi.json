@@ -1,6 +1,44 @@
 {
   "asyncapi": "3.1.0",
   "channels": {
+    "config_entity_registry_list_for_display_reply": {
+      "address": "/api/websocket",
+      "messages": {
+        "config_entity_registry_list_for_display_result": {
+          "$ref": "#/components/messages/config_entity_registry_list_for_display_result"
+        },
+        "result_error": {
+          "$ref": "#/components/messages/result_error"
+        }
+      },
+      "servers": [
+        {
+          "$ref": "#/servers/websocket"
+        },
+        {
+          "$ref": "#/servers/secure_websocket"
+        }
+      ]
+    },
+    "conversation_process_reply": {
+      "address": "/api/websocket",
+      "messages": {
+        "conversation_process_result": {
+          "$ref": "#/components/messages/conversation_process_result"
+        },
+        "result_error": {
+          "$ref": "#/components/messages/result_error"
+        }
+      },
+      "servers": [
+        {
+          "$ref": "#/servers/websocket"
+        },
+        {
+          "$ref": "#/servers/secure_websocket"
+        }
+      ]
+    },
     "event_stream": {
       "address": "/api/stream",
       "description": "Authenticated Server-Sent Events stream.",
@@ -12,6 +50,123 @@
       "servers": [
         {
           "$ref": "#/servers/http"
+        },
+        {
+          "$ref": "#/servers/https"
+        }
+      ]
+    },
+    "extract_from_target_reply": {
+      "address": "/api/websocket",
+      "messages": {
+        "extract_from_target_result": {
+          "$ref": "#/components/messages/extract_from_target_result"
+        },
+        "result_error": {
+          "$ref": "#/components/messages/result_error"
+        }
+      },
+      "servers": [
+        {
+          "$ref": "#/servers/websocket"
+        },
+        {
+          "$ref": "#/servers/secure_websocket"
+        }
+      ]
+    },
+    "get_conditions_for_target_reply": {
+      "address": "/api/websocket",
+      "messages": {
+        "get_conditions_for_target_result": {
+          "$ref": "#/components/messages/get_conditions_for_target_result"
+        },
+        "result_error": {
+          "$ref": "#/components/messages/result_error"
+        }
+      },
+      "servers": [
+        {
+          "$ref": "#/servers/websocket"
+        },
+        {
+          "$ref": "#/servers/secure_websocket"
+        }
+      ]
+    },
+    "get_panels_reply": {
+      "address": "/api/websocket",
+      "messages": {
+        "get_panels_result": {
+          "$ref": "#/components/messages/get_panels_result"
+        },
+        "result_error": {
+          "$ref": "#/components/messages/result_error"
+        }
+      },
+      "servers": [
+        {
+          "$ref": "#/servers/websocket"
+        },
+        {
+          "$ref": "#/servers/secure_websocket"
+        }
+      ]
+    },
+    "get_services_for_target_reply": {
+      "address": "/api/websocket",
+      "messages": {
+        "get_services_for_target_result": {
+          "$ref": "#/components/messages/get_services_for_target_result"
+        },
+        "result_error": {
+          "$ref": "#/components/messages/result_error"
+        }
+      },
+      "servers": [
+        {
+          "$ref": "#/servers/websocket"
+        },
+        {
+          "$ref": "#/servers/secure_websocket"
+        }
+      ]
+    },
+    "get_triggers_for_target_reply": {
+      "address": "/api/websocket",
+      "messages": {
+        "get_triggers_for_target_result": {
+          "$ref": "#/components/messages/get_triggers_for_target_result"
+        },
+        "result_error": {
+          "$ref": "#/components/messages/result_error"
+        }
+      },
+      "servers": [
+        {
+          "$ref": "#/servers/websocket"
+        },
+        {
+          "$ref": "#/servers/secure_websocket"
+        }
+      ]
+    },
+    "homeassistant_expose_entity_list_reply": {
+      "address": "/api/websocket",
+      "messages": {
+        "homeassistant_expose_entity_list_result": {
+          "$ref": "#/components/messages/homeassistant_expose_entity_list_result"
+        },
+        "result_error": {
+          "$ref": "#/components/messages/result_error"
+        }
+      },
+      "servers": [
+        {
+          "$ref": "#/servers/websocket"
+        },
+        {
+          "$ref": "#/servers/secure_websocket"
         }
       ]
     },
@@ -1478,6 +1633,9 @@
       "servers": [
         {
           "$ref": "#/servers/websocket"
+        },
+        {
+          "$ref": "#/servers/secure_websocket"
         }
       ]
     }
@@ -27225,14 +27383,14 @@
       ],
       "reply": {
         "channel": {
-          "$ref": "#/channels/websocket"
+          "$ref": "#/channels/config_entity_registry_list_for_display_reply"
         },
         "messages": [
           {
-            "$ref": "#/components/messages/config_entity_registry_list_for_display_result"
+            "$ref": "#/channels/config_entity_registry_list_for_display_reply/messages/config_entity_registry_list_for_display_result"
           },
           {
-            "$ref": "#/components/messages/result_error"
+            "$ref": "#/channels/config_entity_registry_list_for_display_reply/messages/result_error"
           }
         ]
       },
@@ -28189,14 +28347,14 @@
       ],
       "reply": {
         "channel": {
-          "$ref": "#/channels/websocket"
+          "$ref": "#/channels/conversation_process_reply"
         },
         "messages": [
           {
-            "$ref": "#/components/messages/conversation_process_result"
+            "$ref": "#/channels/conversation_process_reply/messages/conversation_process_result"
           },
           {
-            "$ref": "#/components/messages/result_error"
+            "$ref": "#/channels/conversation_process_reply/messages/result_error"
           }
         ]
       },
@@ -28874,14 +29032,14 @@
       ],
       "reply": {
         "channel": {
-          "$ref": "#/channels/websocket"
+          "$ref": "#/channels/extract_from_target_reply"
         },
         "messages": [
           {
-            "$ref": "#/components/messages/extract_from_target_result"
+            "$ref": "#/channels/extract_from_target_reply/messages/extract_from_target_result"
           },
           {
-            "$ref": "#/components/messages/result_error"
+            "$ref": "#/channels/extract_from_target_reply/messages/result_error"
           }
         ]
       },
@@ -29342,14 +29500,14 @@
       ],
       "reply": {
         "channel": {
-          "$ref": "#/channels/websocket"
+          "$ref": "#/channels/get_conditions_for_target_reply"
         },
         "messages": [
           {
-            "$ref": "#/components/messages/get_conditions_for_target_result"
+            "$ref": "#/channels/get_conditions_for_target_reply/messages/get_conditions_for_target_result"
           },
           {
-            "$ref": "#/components/messages/result_error"
+            "$ref": "#/channels/get_conditions_for_target_reply/messages/result_error"
           }
         ]
       },
@@ -29407,14 +29565,14 @@
       ],
       "reply": {
         "channel": {
-          "$ref": "#/channels/websocket"
+          "$ref": "#/channels/get_panels_reply"
         },
         "messages": [
           {
-            "$ref": "#/components/messages/get_panels_result"
+            "$ref": "#/channels/get_panels_reply/messages/get_panels_result"
           },
           {
-            "$ref": "#/components/messages/result_error"
+            "$ref": "#/channels/get_panels_reply/messages/result_error"
           }
         ]
       },
@@ -29472,14 +29630,14 @@
       ],
       "reply": {
         "channel": {
-          "$ref": "#/channels/websocket"
+          "$ref": "#/channels/get_services_for_target_reply"
         },
         "messages": [
           {
-            "$ref": "#/components/messages/get_services_for_target_result"
+            "$ref": "#/channels/get_services_for_target_reply/messages/get_services_for_target_result"
           },
           {
-            "$ref": "#/components/messages/result_error"
+            "$ref": "#/channels/get_services_for_target_reply/messages/result_error"
           }
         ]
       },
@@ -29537,14 +29695,14 @@
       ],
       "reply": {
         "channel": {
-          "$ref": "#/channels/websocket"
+          "$ref": "#/channels/get_triggers_for_target_reply"
         },
         "messages": [
           {
-            "$ref": "#/components/messages/get_triggers_for_target_result"
+            "$ref": "#/channels/get_triggers_for_target_reply/messages/get_triggers_for_target_result"
           },
           {
-            "$ref": "#/components/messages/result_error"
+            "$ref": "#/channels/get_triggers_for_target_reply/messages/result_error"
           }
         ]
       },
@@ -29912,14 +30070,14 @@
       ],
       "reply": {
         "channel": {
-          "$ref": "#/channels/websocket"
+          "$ref": "#/channels/homeassistant_expose_entity_list_reply"
         },
         "messages": [
           {
-            "$ref": "#/components/messages/homeassistant_expose_entity_list_result"
+            "$ref": "#/channels/homeassistant_expose_entity_list_reply/messages/homeassistant_expose_entity_list_result"
           },
           {
-            "$ref": "#/components/messages/result_error"
+            "$ref": "#/channels/homeassistant_expose_entity_list_reply/messages/result_error"
           }
         ]
       },
@@ -38704,7 +38862,8 @@
           "$ref": "#/channels/event_stream/messages/event"
         }
       ],
-      "title": "server-sent events"
+      "title": "server-sent events",
+      "x-home-assistant-requires-admin": true
     },
     "send_websocket": {
       "action": "send",
@@ -38729,6 +38888,24 @@
     "http": {
       "host": "{host}",
       "protocol": "http",
+      "variables": {
+        "host": {
+          "default": "homeassistant.local:8123"
+        }
+      }
+    },
+    "https": {
+      "host": "{host}",
+      "protocol": "https",
+      "variables": {
+        "host": {
+          "default": "homeassistant.local:8123"
+        }
+      }
+    },
+    "secure_websocket": {
+      "host": "{host}",
+      "protocol": "wss",
       "variables": {
         "host": {
           "default": "homeassistant.local:8123"
