@@ -998,22 +998,27 @@ async def test_browse_media_service_returns_wiim_library(
 async def test_browse_media_does_not_refresh_entity_state(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
 ) -> None:
     """Test browsing media does not refresh entity state after success."""
     await setup_integration(hass, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.wiim.media_player.WiimMediaPlayerEntity._update_ha_state_from_sdk_cache"
-    ) as mock_update:
-        await hass.services.async_call(
-            MEDIA_PLAYER_DOMAIN,
-            SERVICE_BROWSE_MEDIA,
-            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
-            blocking=True,
-            return_response=True,
-        )
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    original_volume = state.attributes[ATTR_MEDIA_VOLUME_LEVEL]
+    mock_wiim_device.volume = 75
 
-    mock_update.assert_not_called()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_BROWSE_MEDIA,
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == original_volume
 
 
 async def test_browse_media_service_includes_media_sources_when_supported(
