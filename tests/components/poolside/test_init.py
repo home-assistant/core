@@ -2,17 +2,15 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.poolside.client import (
+from aiopoolside import (
     PoolsideAuthError,
     PoolsideConnectionError,
+    PoolsideDevice,
+    PoolsideSite,
 )
-from homeassistant.components.poolside.const import (
-    DOMAIN,
-    LAST_TIME_SITE_WAS_LOADED_FIELD,
-    ControlType,
-    GroupKind,
-)
-from homeassistant.components.poolside.models import PoolsideDevice, PoolsideSite
+from aiopoolside.const import LAST_TIME_SITE_WAS_LOADED_FIELD, ControlType, GroupKind
+
+from homeassistant.components.poolside.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er

@@ -2,20 +2,8 @@
 
 from typing import Any, override
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_EFFECT,
-    ColorMode,
-    LightEntity,
-    LightEntityFeature,
-)
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-from . import PoolsideConfigEntry
-from .client import PoolsideClient
-from .const import (
+from aiopoolside import PoolsideClient, PoolsideControl
+from aiopoolside.const import (
     AVAILABLE_COLORS_FIELD,
     AVAILABLE_SHOWS_FIELD,
     BRIGHTNESS_FIELD,
@@ -28,8 +16,20 @@ from .const import (
     TWINKLE_FIELD,
     StatusState,
 )
-from .entity import PoolsideEntity
-from .models import PoolsideControl
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_EFFECT,
+    ColorMode,
+    LightEntity,
+    LightEntityFeature,
+)
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import PoolsideConfigEntry
+from .entity import PoolsideEntity, control_platform
 
 # The controller coerces a written Brightness <= 0 to 100 rather than off;
 # never send 0 while turning/keeping a light on.
@@ -46,7 +46,7 @@ async def async_setup_entry(
     async_add_entities(
         PoolsideLight(data.client, control)
         for control in data.controls
-        if control.platform is Platform.LIGHT
+        if control_platform(control) is Platform.LIGHT
     )
 
 

@@ -2,16 +2,17 @@
 
 from typing import Any, override
 
+from aiopoolside import PoolsideClient, PoolsideControl
+from aiopoolside.const import POWER_LEVEL_FIELD, StatusState
+
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PoolsideConfigEntry
-from .client import PoolsideClient
-from .const import ICON_TRANSLATION_KEYS, POWER_LEVEL_FIELD, StatusState
-from .entity import PoolsideEntity
-from .models import PoolsideControl
+from .const import ICON_TRANSLATION_KEYS
+from .entity import PoolsideEntity, control_platform
 
 
 async def async_setup_entry(
@@ -24,7 +25,7 @@ async def async_setup_entry(
     async_add_entities(
         PoolsideFan(data.client, control)
         for control in data.controls
-        if control.platform is Platform.FAN
+        if control_platform(control) is Platform.FAN
     )
 
 

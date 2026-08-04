@@ -5,6 +5,8 @@ from collections.abc import Callable, Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from aiopoolside import PoolsideControl, PoolsideDevice, PoolsideGroup, PoolsideSite
+from aiopoolside.const import ControlType, GroupKind
 import pytest
 
 from homeassistant.components.poolside.const import (
@@ -13,14 +15,6 @@ from homeassistant.components.poolside.const import (
     CONF_CONTROLLER_PUBLIC_KEY,
     CONF_CONTROLLER_UUID,
     DOMAIN,
-    ControlType,
-    GroupKind,
-)
-from homeassistant.components.poolside.models import (
-    PoolsideControl,
-    PoolsideDevice,
-    PoolsideGroup,
-    PoolsideSite,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant

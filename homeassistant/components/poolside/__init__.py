@@ -4,6 +4,17 @@ from base64 import b64decode
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from aiopoolside import (
+    PoolsideAuthError,
+    PoolsideClient,
+    PoolsideCommandError,
+    PoolsideConnectionError,
+    PoolsideControl,
+    PoolsideDevice,
+    PoolsideSite,
+)
+from aiopoolside.const import LAST_TIME_SITE_WAS_LOADED_FIELD, ControlType
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -14,12 +25,6 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
-from .client import (
-    PoolsideAuthError,
-    PoolsideClient,
-    PoolsideCommandError,
-    PoolsideConnectionError,
-)
 from .const import (
     CONF_CLIENT_PRIVATE_KEY,
     CONF_CONTROLLER_PUBLIC_KEY,
@@ -27,12 +32,10 @@ from .const import (
     CONF_EXPOSE_POOL_DEVICES,
     DEFAULT_EXPOSE_POOL_DEVICES,
     DOMAIN,
-    LAST_TIME_SITE_WAS_LOADED_FIELD,
     LOGGER,
     SITE_MODE_KEY,
-    ControlType,
 )
-from .models import PoolsideControl, PoolsideDevice, PoolsideSite
+from .entity import control_platform
 
 PLATFORMS = [
     Platform.CLIMATE,
@@ -180,7 +183,7 @@ def _async_prune_stale_registry_entries(
     valid_identifiers: set[tuple[str, str]] = {(DOMAIN, controller_uuid)}
     for control in controls:
         domains = allowed_domains.setdefault(control.uuid, set())
-        domains.add(control.platform.value)
+        domains.add(control_platform(control).value)
         # Every control also carries diagnostic sensors (disabled reason).
         domains.add(Platform.SENSOR.value)
         if control.control_type is ControlType.TEMPERATURE:

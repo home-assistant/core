@@ -3,11 +3,10 @@
 import json
 from typing import Any
 
+from aiopoolside import PoolsideCommandError, PoolsideDevice
 import pytest
 
-from homeassistant.components.poolside.client import PoolsideCommandError
 from homeassistant.components.poolside.const import CONF_EXPOSE_POOL_DEVICES, DOMAIN
-from homeassistant.components.poolside.models import PoolsideDevice
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,

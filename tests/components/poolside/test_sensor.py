@@ -2,10 +2,10 @@
 
 from typing import Any
 
+from aiopoolside import PoolsideControl, PoolsideSite
+from aiopoolside.const import ControlType, GroupKind
 import pytest
 
-from homeassistant.components.poolside.const import ControlType, GroupKind
-from homeassistant.components.poolside.models import PoolsideControl, PoolsideSite
 from homeassistant.components.sensor import ATTR_OPTIONS
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,

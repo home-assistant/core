@@ -4,13 +4,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import override
 
-from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-from . import PoolsideConfigEntry
-from .client import PoolsideClient
-from .const import (
+from aiopoolside import PoolsideClient, PoolsideControl
+from aiopoolside.const import (
     COOLING_MODE_FIELD,
     COOLING_MODES_SUPPORTED_FIELD,
     HEATING_MODE_FIELD,
@@ -19,8 +14,13 @@ from .const import (
     CoolingMode,
     HeatingMode,
 )
+
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import PoolsideConfigEntry
 from .entity import PoolsideEntity, confirmed_json
-from .models import PoolsideControl
 
 
 @dataclass(frozen=True, kw_only=True)

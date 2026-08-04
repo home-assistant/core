@@ -2,16 +2,17 @@
 
 from typing import Any, override
 
+from aiopoolside import PoolsideClient, PoolsideControl
+from aiopoolside.const import StatusState
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PoolsideConfigEntry
-from .client import PoolsideClient
-from .const import ICON_TRANSLATION_KEYS, StatusState
-from .entity import PoolsideEntity
-from .models import PoolsideControl
+from .const import ICON_TRANSLATION_KEYS
+from .entity import PoolsideEntity, control_platform
 
 
 async def async_setup_entry(
@@ -32,7 +33,7 @@ async def async_setup_entry(
     async_add_entities(
         PoolsideSwitch(data.client, control)
         for control in data.controls
-        if control.platform is Platform.SWITCH
+        if control_platform(control) is Platform.SWITCH
     )
 
 

@@ -2,6 +2,16 @@
 
 from typing import Any, override
 
+from aiopoolside import PoolsideClient, PoolsideControl
+from aiopoolside.const import (
+    CONTROL_MODE_FIELD,
+    CONTROL_MODES_SUPPORTED_FIELD,
+    CURRENT_TEMPERATURE_FIELD,
+    SET_POINT_FIELD,
+    ControlMode,
+    StatusState,
+)
+
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
     ClimateEntity,
@@ -13,17 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PoolsideConfigEntry
-from .client import PoolsideClient
-from .const import (
-    CONTROL_MODE_FIELD,
-    CONTROL_MODES_SUPPORTED_FIELD,
-    CURRENT_TEMPERATURE_FIELD,
-    SET_POINT_FIELD,
-    ControlMode,
-    StatusState,
-)
-from .entity import PoolsideEntity
-from .models import PoolsideControl
+from .entity import PoolsideEntity, control_platform
 
 _HVAC_MODE_BY_CONTROL_MODE = {
     ControlMode.HEAT: HVACMode.HEAT,
@@ -43,7 +43,7 @@ async def async_setup_entry(
     async_add_entities(
         PoolsideThermostat(data.client, control)
         for control in data.controls
-        if control.platform is Platform.CLIMATE
+        if control_platform(control) is Platform.CLIMATE
     )
 
 

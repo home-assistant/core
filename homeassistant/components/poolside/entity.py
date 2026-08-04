@@ -3,22 +3,51 @@
 import json
 from typing import Any, override
 
+from aiopoolside import (
+    PoolsideClient,
+    PoolsideCommandError,
+    PoolsideConnectionError,
+    PoolsideControl,
+    PoolsideDevice,
+    PoolsideGroup,
+)
+from aiopoolside.const import (
+    ACTUAL_POWER_STATE_FIELD,
+    DISABLED_REASONS_FIELD,
+    POWER_STATE_FIELD,
+    STATUS_FIELD,
+    UNKNOWN_POWER_STATE,
+    VARIABLE_SPEED_CONTROL_TYPES,
+    ControlType,
+    SiteMode,
+)
+
+from homeassistant.const import Platform
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .client import PoolsideClient, PoolsideCommandError, PoolsideConnectionError
-from .const import (
-    ACTUAL_POWER_STATE_FIELD,
-    DISABLED_REASONS_FIELD,
-    DOMAIN,
-    LOGGER,
-    POWER_STATE_FIELD,
-    STATUS_FIELD,
-    UNKNOWN_POWER_STATE,
-    SiteMode,
-)
-from .models import PoolsideControl, PoolsideDevice, PoolsideGroup
+from .const import DOMAIN, LOGGER
+
+
+def control_platform(control: PoolsideControl) -> Platform:
+    """Return the HA platform this control is rendered on.
+
+    A control's platform can change between layouts (e.g. a filter
+    reconfigured from single- to variable-speed moves from switch to
+    fan), so this is the single source of truth for both entity setup
+    and stale-registry pruning.
+    """
+    if control.control_type is ControlType.TEMPERATURE:
+        return Platform.CLIMATE
+    if control.control_type is ControlType.LIGHT:
+        return Platform.LIGHT
+    if (
+        control.control_type in VARIABLE_SPEED_CONTROL_TYPES
+        and control.is_variable_speed
+    ):
+        return Platform.FAN
+    return Platform.SWITCH
 
 
 def confirmed_status(

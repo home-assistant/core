@@ -1,5 +1,7 @@
 """Tests for Poolside variable-speed controls exposed as fan entities."""
 
+from aiopoolside import PoolsideControl
+from aiopoolside.const import ControlType
 import pytest
 
 from homeassistant.components.fan import (
@@ -9,8 +11,6 @@ from homeassistant.components.fan import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.poolside.const import ControlType
-from homeassistant.components.poolside.models import PoolsideControl
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

@@ -7,6 +7,23 @@ import contextlib
 from typing import Any, override
 
 import aiohttp
+from aiopoolside import (
+    PairingApproved,
+    PairingBusy,
+    PairingError,
+    PairingInvalid,
+    PairingRejected,
+    PairingTimedOut,
+    PoolsideAuthError,
+    PoolsideClient,
+    PoolsideCommandError,
+    PoolsideConnectionError,
+    async_await_pairing_result,
+    async_request_pairing,
+    generate_keypair,
+    public_key_from_private,
+)
+from aiopoolside.const import DEFAULT_PORT
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -21,12 +38,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .client import (
-    PoolsideAuthError,
-    PoolsideClient,
-    PoolsideCommandError,
-    PoolsideConnectionError,
-)
 from .const import (
     CONF_CLIENT_NAME,
     CONF_CLIENT_PRIVATE_KEY,
@@ -34,21 +45,9 @@ from .const import (
     CONF_CONTROLLER_UUID,
     CONF_EXPOSE_POOL_DEVICES,
     DEFAULT_EXPOSE_POOL_DEVICES,
-    DEFAULT_PORT,
     DOMAIN,
     ZEROCONF_PROP_NAME,
     ZEROCONF_PROP_UUID,
-)
-from .noise_transport import generate_keypair, public_key_from_private
-from .pairing import (
-    PairingApproved,
-    PairingBusy,
-    PairingError,
-    PairingInvalid,
-    PairingRejected,
-    PairingTimedOut,
-    async_await_pairing_result,
-    async_request_pairing,
 )
 
 STEP_USER_DATA_SCHEMA = vol.Schema(

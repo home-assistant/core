@@ -1,5 +1,7 @@
 """Tests for Poolside TEMPERATURE controls exposed as climate entities."""
 
+from aiopoolside import PoolsideControl
+from aiopoolside.const import ControlType
 import pytest
 
 from homeassistant.components.climate import (
@@ -10,8 +12,6 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.components.poolside.const import ControlType
-from homeassistant.components.poolside.models import PoolsideControl
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError

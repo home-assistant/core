@@ -1,5 +1,7 @@
 """Tests for Poolside LIGHT controls."""
 
+from aiopoolside import PoolsideControl
+from aiopoolside.const import ControlType
 import pytest
 
 from homeassistant.components.light import (
@@ -12,8 +14,6 @@ from homeassistant.components.light import (
     SERVICE_TURN_ON,
     ColorMode,
 )
-from homeassistant.components.poolside.const import ControlType
-from homeassistant.components.poolside.models import PoolsideControl
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.core import HomeAssistant
 

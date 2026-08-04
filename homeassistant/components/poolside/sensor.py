@@ -7,6 +7,42 @@ from datetime import datetime
 import json
 from typing import Any, override
 
+from aiopoolside import (
+    PoolsideClient,
+    PoolsideControl,
+    PoolsideDevice,
+    PoolsideGroup,
+    PoolsideSite,
+)
+from aiopoolside.const import (
+    ACTUAL_POWER_STATE_FIELD,
+    ACTUATOR_FRIENDLY_STATE_FIELD,
+    ACTUATOR_POSITION_FIELD,
+    BRIGHTNESS_FIELD,
+    CALIBRATED_LEFT_TO_RIGHT_FIELD,
+    CALIBRATED_RIGHT_TO_LEFT_FIELD,
+    CURRENT_STATE_FIELD,
+    CURRENT_TEMPERATURE_FIELD,
+    FIELD_DISPLAY_NAME_KEY,
+    FIELD_DISPLAY_ORDER_KEY,
+    FIELD_NAME_KEY,
+    FIELD_PROCESSING_LOGIC_KEY,
+    FIELD_TYPES_KEY,
+    FREEZE_PROTECT_REASON,
+    INFORMATION_FIELD_TYPE,
+    INFORMATION_FIELDS_FIELD,
+    LIGHT_NAME_FIELD,
+    POWER_STATE_FIELD,
+    SPEED_FIELD,
+    TWINKLE_FIELD,
+    TWINKLE_INCREMENTS_FIELD,
+    WINTERIZED_FIELD,
+    WINTERIZED_REASON,
+    ActuatorFriendlyState,
+    BodyOfWaterState,
+    SiteMode,
+)
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -32,45 +68,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import PoolsideConfigEntry
-from .client import PoolsideClient
-from .const import (
-    ACTUAL_POWER_STATE_FIELD,
-    ACTUATOR_FRIENDLY_STATE_FIELD,
-    ACTUATOR_POSITION_FIELD,
-    BRIGHTNESS_FIELD,
-    CALIBRATED_LEFT_TO_RIGHT_FIELD,
-    CALIBRATED_RIGHT_TO_LEFT_FIELD,
-    CURRENT_STATE_FIELD,
-    CURRENT_TEMPERATURE_FIELD,
-    DOMAIN,
-    FIELD_DISPLAY_NAME_KEY,
-    FIELD_DISPLAY_ORDER_KEY,
-    FIELD_NAME_KEY,
-    FIELD_PROCESSING_LOGIC_KEY,
-    FIELD_TYPES_KEY,
-    FREEZE_PROTECT_REASON,
-    INFORMATION_FIELD_TYPE,
-    INFORMATION_FIELDS_FIELD,
-    LIGHT_NAME_FIELD,
-    LOGGER,
-    POWER_STATE_FIELD,
-    SITE_MODE_KEY,
-    SPEED_FIELD,
-    TWINKLE_FIELD,
-    TWINKLE_INCREMENTS_FIELD,
-    WINTERIZED_FIELD,
-    WINTERIZED_REASON,
-    ActuatorFriendlyState,
-    BodyOfWaterState,
-    SiteMode,
-)
+from .const import DOMAIN, LOGGER, SITE_MODE_KEY
 from .entity import (
     PoolsideBaseEntity,
     PoolsideDeviceEntity,
     PoolsideEntity,
     PoolsideGroupEntity,
 )
-from .models import PoolsideControl, PoolsideDevice, PoolsideGroup, PoolsideSite
 
 
 @dataclass(frozen=True, kw_only=True)

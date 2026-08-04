@@ -1,9 +1,9 @@
 """Tests for Poolside heating/cooling mode select entities."""
 
+from aiopoolside import PoolsideControl
+from aiopoolside.const import ControlType
 import pytest
 
-from homeassistant.components.poolside.const import ControlType
-from homeassistant.components.poolside.models import PoolsideControl
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,

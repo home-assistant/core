@@ -1,9 +1,9 @@
 """Tests for Poolside BLOWER controls exposed as switch entities."""
 
+from aiopoolside import PoolsideControl
+from aiopoolside.const import ControlType
 import pytest
 
-from homeassistant.components.poolside.const import ControlType
-from homeassistant.components.poolside.models import PoolsideControl
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,

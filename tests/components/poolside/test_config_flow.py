@@ -5,20 +5,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
-import pytest
-
-from homeassistant.components.poolside.client import (
-    PoolsideAuthError,
-    PoolsideConnectionError,
-)
-from homeassistant.components.poolside.const import (
-    CONF_CLIENT_PRIVATE_KEY,
-    CONF_CONTROLLER_PUBLIC_KEY,
-    CONF_CONTROLLER_UUID,
-    CONF_EXPOSE_POOL_DEVICES,
-    DOMAIN,
-)
-from homeassistant.components.poolside.pairing import (
+from aiopoolside import (
     PairingApproved,
     PairingBusy,
     PairingError,
@@ -26,6 +13,17 @@ from homeassistant.components.poolside.pairing import (
     PairingPending,
     PairingRejected,
     PairingTimedOut,
+    PoolsideAuthError,
+    PoolsideConnectionError,
+)
+import pytest
+
+from homeassistant.components.poolside.const import (
+    CONF_CLIENT_PRIVATE_KEY,
+    CONF_CONTROLLER_PUBLIC_KEY,
+    CONF_CONTROLLER_UUID,
+    CONF_EXPOSE_POOL_DEVICES,
+    DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
