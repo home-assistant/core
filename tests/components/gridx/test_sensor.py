@@ -35,11 +35,10 @@ async def setup_integration(
 
 
 async def test_sensor_unique_ids(
-    hass: HomeAssistant, setup_integration: MockConfigEntry
+    entity_registry: er.EntityRegistry, setup_integration: MockConfigEntry
 ) -> None:
     """All sensor entities must have a unique_id."""
     entry = setup_integration
-    entity_registry = er.async_get(hass)
     entities = [
         e
         for e in entity_registry.entities.values()
@@ -51,13 +50,14 @@ async def test_sensor_unique_ids(
 
 
 async def test_live_sensor_values(
-    hass: HomeAssistant, setup_integration: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_integration: MockConfigEntry,
 ) -> None:
     """Test that live sensor values match the mock data."""
     entry = setup_integration
     # Entity names depend on translation; check via unique_id pattern
-    registry = er.async_get(hass)
-    entity = registry.async_get_entity_id(
+    entity = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.unique_id}_photovoltaic"
     )
     assert entity is not None
@@ -67,12 +67,13 @@ async def test_live_sensor_values(
 
 
 async def test_battery_sensor_present(
-    hass: HomeAssistant, setup_integration: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_integration: MockConfigEntry,
 ) -> None:
     """Battery sensors should be available when battery data is present."""
     entry = setup_integration
-    registry = er.async_get(hass)
-    entity = registry.async_get_entity_id(
+    entity = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.unique_id}_battery_state_of_charge"
     )
     assert entity is not None
@@ -83,7 +84,9 @@ async def test_battery_sensor_present(
 
 
 async def test_battery_sensors_not_created_without_battery(
-    hass: HomeAssistant, mock_gridx_connector: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_gridx_connector: MagicMock,
 ) -> None:
     """Battery sensors are not created when no battery data is present."""
     live_no_battery = {k: v for k, v in MOCK_LIVE_DATA.items() if k != "battery"}
@@ -102,15 +105,16 @@ async def test_battery_sensors_not_created_without_battery(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    registry = er.async_get(hass)
-    entity = registry.async_get_entity_id(
+    entity = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.unique_id}_battery_state_of_charge"
     )
     assert entity is None
 
 
 async def test_optional_subsystem_sensors_created_when_present(
-    hass: HomeAssistant, mock_gridx_connector: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_gridx_connector: MagicMock,
 ) -> None:
     """EV, heat pump and heater sensors are created when their data exists."""
     live_full = {
@@ -134,17 +138,20 @@ async def test_optional_subsystem_sensors_created_when_present(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    registry = er.async_get(hass)
     for key in ("ev_power", "heatpump_power", "heater_temperature"):
         assert (
-            registry.async_get_entity_id("sensor", DOMAIN, f"{entry.unique_id}_{key}")
+            entity_registry.async_get_entity_id(
+                "sensor", DOMAIN, f"{entry.unique_id}_{key}"
+            )
             is not None
         )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_subsystem_sensors_aggregate_every_entry(
-    hass: HomeAssistant, mock_gridx_connector: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_gridx_connector: MagicMock,
 ) -> None:
     """Heat pump and heater sensors cover every entry, not just the first one."""
     live_multi = {
@@ -170,13 +177,12 @@ async def test_subsystem_sensors_aggregate_every_entry(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    registry = er.async_get(hass)
     for key, expected in (
         ("heatpump_power", 2000.0),
         ("heater_power", 3000.0),
         ("heater_temperature", 45.0),
     ):
-        entity_id = registry.async_get_entity_id(
+        entity_id = entity_registry.async_get_entity_id(
             "sensor", DOMAIN, f"{entry.unique_id}_{key}"
         )
         assert entity_id is not None
@@ -186,12 +192,13 @@ async def test_subsystem_sensors_aggregate_every_entry(
 
 
 async def test_grid_meter_ws_to_wh_conversion(
-    hass: HomeAssistant, setup_integration: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_integration: MockConfigEntry,
 ) -> None:
     """GridMeterReadingPositive is in Ws and must be divided by 3600 to get Wh."""
     entry = setup_integration
-    registry = er.async_get(hass)
-    entity = registry.async_get_entity_id(
+    entity = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.unique_id}_grid_meter_reading_positive"
     )
     assert entity is not None
@@ -202,7 +209,9 @@ async def test_grid_meter_ws_to_wh_conversion(
 
 
 async def test_live_sensor_value_fn_type_error(
-    hass: HomeAssistant, setup_integration: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_integration: MockConfigEntry,
 ) -> None:
     """Live sensor returns STATE_UNKNOWN when value_fn raises TypeError on bad data."""
     entry = setup_integration
@@ -211,8 +220,7 @@ async def test_live_sensor_value_fn_type_error(
     entry.runtime_data.coordinator.async_set_updated_data(bad_data)
     await hass.async_block_till_done()
 
-    registry = er.async_get(hass)
-    entity_id = registry.async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.unique_id}_grid_meter_reading_positive"
     )
     assert entity_id is not None
@@ -222,7 +230,9 @@ async def test_live_sensor_value_fn_type_error(
 
 
 async def test_sensor_value_fn_value_error(
-    hass: HomeAssistant, setup_integration: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_integration: MockConfigEntry,
 ) -> None:
     """Sensor returns STATE_UNKNOWN when value_fn raises ValueError."""
     entry = setup_integration
@@ -231,8 +241,7 @@ async def test_sensor_value_fn_value_error(
     entry.runtime_data.coordinator.async_set_updated_data(bad_data)
     await hass.async_block_till_done()
 
-    registry = er.async_get(hass)
-    entity_id = registry.async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.unique_id}_self_consumption_rate"
     )
     assert entity_id is not None
