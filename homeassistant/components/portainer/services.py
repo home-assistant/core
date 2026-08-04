@@ -196,7 +196,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_PRUNE_IMAGES_SCHEMA,
     )
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_RECREATE_CONTAINER,
         recreate_container,
