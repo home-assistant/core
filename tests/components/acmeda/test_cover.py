@@ -213,5 +213,5 @@ async def test_async_stop_cover_tilt(acmeda_cover: AcmedaCover) -> None:
 async def test_async_set_cover_tilt_position(acmeda_cover: AcmedaCover) -> None:
     """Test async_set_cover_tilt_position calls move_to with correct position."""
     acmeda_cover.roller.move_to = AsyncMock()
-    await acmeda_cover.async_set_cover_tilt_position(tilt_position=75)
+    await acmeda_cover.async_set_cover_tilt_position(position=75)
     acmeda_cover.roller.move_to.assert_called_once_with(25)
