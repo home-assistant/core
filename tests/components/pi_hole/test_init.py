@@ -82,6 +82,21 @@ async def test_version_probe_uses_configured_password(hass: HomeAssistant) -> No
     mocked_hole.instances[0].logout.assert_awaited_once()
 
 
+async def test_version_probe_survives_failing_logout(hass: HomeAssistant) -> None:
+    """Test setup still succeeds when releasing the probe session fails.
+
+    Releasing the session is a courtesy, not a requirement, so a failure there
+    must not turn a working configuration into a failed setup.
+    """
+    mocked_hole = _create_mocked_hole(api_version=6, logout_error=True)
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS})
+    entry.add_to_hass(hass)
+    with _patch_init_hole(mocked_hole):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.LOADED
+
+
 @pytest.mark.parametrize(
     ("config_entry_data", "expected_api_token"),
     [({**CONFIG_DATA_DEFAULTS}, API_KEY)],
