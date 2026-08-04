@@ -8,8 +8,8 @@
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
-        'auto-on',
-        'forced-on',
+        'auto_on',
+        'forced_on',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -48,8 +48,8 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ether1 PoE (out)',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
-        'auto-on',
-        'forced-on',
+        'auto_on',
+        'forced_on',
       ]),
     }),
     'context': <ANY>,
@@ -57,6 +57,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'auto-on',
+    'state': 'auto_on',
   })
 # ---

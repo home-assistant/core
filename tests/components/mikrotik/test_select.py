@@ -54,7 +54,7 @@ async def test_select_option(hass: HomeAssistant, mock_api: MagicMock) -> None:
 
     entity_id = "select.ether1_poe_out"
     assert (state := hass.states.get(entity_id))
-    assert state.state == "auto-on"
+    assert state.state == "auto_on"
 
     def command_side_effect(cmd: str, **params: Any) -> list[dict[str, Any]]:
         """Reflect the PoE change the coordinator refresh will pick up."""
@@ -69,7 +69,7 @@ async def test_select_option(hass: HomeAssistant, mock_api: MagicMock) -> None:
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "forced-on"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "forced_on"},
         blocking=True,
     )
 
@@ -78,4 +78,4 @@ async def test_select_option(hass: HomeAssistant, mock_api: MagicMock) -> None:
     )
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == "forced-on"
+    assert state.state == "forced_on"

@@ -12,13 +12,19 @@ from .entity import MikrotikDeviceEntity
 
 PARALLEL_UPDATES = 0
 
+OPTION_TO_KEY: Final = {
+    "off": "off",
+    "auto_on": "auto-on",
+    "forced_on": "forced-on",
+}
+KEY_TO_OPTION: Final = {value: key for key, value in OPTION_TO_KEY.items()}
 
 SELECTS: Final = (
     SelectEntityDescription(
         key="poe-out",
         translation_key="poe_out",
         entity_category=EntityCategory.CONFIG,
-        options=["off", "auto-on", "forced-on"],
+        options=list(OPTION_TO_KEY.keys()),
     ),
 )
 
@@ -48,7 +54,9 @@ class MikrotikSelectEntity(MikrotikDeviceEntity, SelectEntity):
     @override
     def current_option(self) -> str | None:
         """Return the state of the select."""
-        return self._interface.get(self.entity_description.key)
+        if (value := self._interface.get(self.entity_description.key)) is None:
+            return None
+        return KEY_TO_OPTION[value]
 
     @override
     async def async_select_option(self, option: str) -> None:
@@ -58,7 +66,10 @@ class MikrotikSelectEntity(MikrotikDeviceEntity, SelectEntity):
             await self.hass.async_add_executor_job(
                 self.coordinator.api.command,
                 "/interface/ethernet/poe/set",
-                {".id": self._interface[".id"], self.entity_description.key: option},
+                {
+                    ".id": self._interface[".id"],
+                    self.entity_description.key: OPTION_TO_KEY[option],
+                },
             )
 
         await self.coordinator.async_request_refresh()

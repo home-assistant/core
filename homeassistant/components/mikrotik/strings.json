@@ -54,8 +54,8 @@
       "poe_out": {
         "name": "PoE (out)",
         "state": {
-          "auto-on": "On (automatic)",
-          "forced-on": "On (forced)",
+          "auto_on": "On (automatic)",
+          "forced_on": "On (forced)",
           "off": "[%key:common::state::off%]"
         }
       }
