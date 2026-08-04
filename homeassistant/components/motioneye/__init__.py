@@ -433,12 +433,12 @@ def _get_media_event_data(
     event_file_path: str,
     event_file_type: int,
 ) -> dict[str, str]:
-    config_entry_id = next(iter(device.config_entries), None)
-    if (
-        not config_entry_id
-        or not (entry := hass.config_entries.async_get_entry(config_entry_id))
-        or entry.state is not ConfigEntryState.LOADED
-    ):
+    config_entry_id: str | None = None
+    for config_entry_id in device.config_entries:
+        entry = hass.config_entries.async_get_entry(config_entry_id)
+        if entry is not None and entry.domain == DOMAIN:
+            break
+    if entry is None or entry.state is not ConfigEntryState.LOADED:
         return {}
 
     coordinator: MotionEyeUpdateCoordinator = entry.runtime_data
