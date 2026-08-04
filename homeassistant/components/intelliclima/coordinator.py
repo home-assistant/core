@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for IntelliClima."""
 
+import asyncio
 from dataclasses import dataclass
 from typing import override
 
@@ -76,14 +77,24 @@ class IntelliClimaFilterCoordinator(
 
     @override
     async def _async_update_data(self) -> dict[str, IntelliClimaFilterStatus]:
-        """Fetch filter status for all devices."""
-        try:
-            return {
-                serial: await self.api.get_filter_status(serial)
-                for serial in self._device_serials
-            }
-        except IntelliClimaAPIError as err:
-            raise UpdateFailed(f"Failed to update filter status: {err}") from err
+        """Fetch filter status for all devices, isolating per-device failures."""
+        results = await asyncio.gather(
+            *(self.api.get_filter_status(serial) for serial in self._device_serials),
+            return_exceptions=True,
+        )
+
+        statuses: dict[str, IntelliClimaFilterStatus] = {}
+        for serial, result in zip(self._device_serials, results, strict=True):
+            if isinstance(result, IntelliClimaAPIError):
+                LOGGER.warning(
+                    "Failed to update filter status for %s: %s", serial, result
+                )
+                continue
+            if isinstance(result, BaseException):
+                raise result
+            statuses[serial] = result
+
+        return statuses
 
 
 @dataclass

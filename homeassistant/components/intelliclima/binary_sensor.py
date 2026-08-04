@@ -26,7 +26,7 @@ async def async_setup_entry(
     entry: IntelliClimaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up a IntelliClima On/Off Sensor."""
+    """Set up the IntelliClima binary sensor platform."""
     data = entry.runtime_data
 
     async_add_entities(

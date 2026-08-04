@@ -30,7 +30,6 @@ async def setup_intelliclima_binary_sensor_only(
         ),
     ):
         await setup_integration(hass, mock_config_entry)
-        # Let tests run against this initialized state
         yield
 
 
@@ -46,7 +45,6 @@ async def test_all_binary_sensor_entities(
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    # There should be exactly one filter_cleaning binary_sensor entity per device
     binary_sensor_entries = [
         entry
         for entry in entity_registry.entities.values()
@@ -55,7 +53,6 @@ async def test_all_binary_sensor_entities(
     assert len(binary_sensor_entries) == 1
 
     for entity_entry in binary_sensor_entries:
-        # Device should exist and match snapshot
         assert entity_entry.device_id
         assert (device_entry := device_registry.async_get(entity_entry.device_id))
         assert device_entry == snapshot
