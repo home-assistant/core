@@ -197,7 +197,7 @@ class TME(PapouchDevice):
         pass
 
 
-async def async_setup_tme(transport: PapouchTransport) -> TME:
+async def async_setup_tme(transport: PapouchTransport) -> TME | None:
     """Async factory for TME device."""
     fresh = await transport.fetch_data()
     info = await transport.fetch_info()

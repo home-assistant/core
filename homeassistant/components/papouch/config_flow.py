@@ -57,6 +57,11 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict
     ) -> tuple[dict[str, str], ConfigFlowResult | None]:
         """Process user input, test connection, and determine the next routing step."""
+
+        for entry in self._async_current_entries():
+            if entry.data.get("ip_address") == user_input["ip_address"]:
+                return {}, self.async_abort(reason="already_configured")
+
         errors, mode_device = await self._test_connection(user_input["ip_address"])
 
         if not errors:
@@ -186,11 +191,22 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self._discovered_ips is None:
             results = await async_discover_papouch_devices(self.hass)
-            sorted_ips = sorted(results.keys(), key=ipaddress.ip_address)
+
+            configured_ips = {
+                entry.data.get("ip_address")
+                for entry in self._async_current_entries()
+                if entry.data.get("ip_address")
+            }
+
+            filtered_results = {
+                ip: data for ip, data in results.items() if ip not in configured_ips
+            }
+
+            sorted_ips = sorted(filtered_results.keys(), key=ipaddress.ip_address)
             self._discovered_ips = {}
 
             for ip in sorted_ips:
-                location, name = results[ip]
+                location, name = filtered_results[ip]
                 self._discovered_ips[ip] = f"{ip} - {name} ({location})"
 
         if not self._discovered_ips and not self.discovered_ip and not errors:

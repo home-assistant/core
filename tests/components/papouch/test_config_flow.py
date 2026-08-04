@@ -592,3 +592,50 @@ async def test_user_step_web_mode_redirect(
 
     assert result3["type"] == data_entry_flow.FlowResultType.MENU
     assert result3["step_id"] == "web_mode"
+
+
+async def test_udp_discovery_all_configured_routes_to_manual(
+    hass: HomeAssistant, mock_discover_found
+) -> None:
+    """Test that if all discovered devices are already configured, it routes to manual."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"ip_address": "192.168.1.50", "refresh_rate": 60}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "ip_setup"}
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["step_id"] == "manual"
+
+
+async def test_manual_already_configured(
+    hass: HomeAssistant, mock_discover_none, mock_api_client
+) -> None:
+    """Test that manual IP entry aborts if the IP is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"ip_address": "192.168.1.50", "refresh_rate": 60}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "ip_setup"}
+    )
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {"ip_address": "192.168.1.50", "refresh_rate": 60},
+    )
+
+    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result3["reason"] == "already_configured"

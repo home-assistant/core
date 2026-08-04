@@ -831,7 +831,7 @@ class PapagoETH_1TH_2DI_1DO(PapagoETH):
                     continue
 
 
-async def async_setup_papago(transport: PapouchTransport) -> PapagoETH:
+async def async_setup_papago(transport: PapouchTransport) -> PapagoETH | None:
     """Async factory for Papago devices."""
     settings = await transport.fetch_settings()
     info = await transport.fetch_info()
@@ -852,4 +852,5 @@ async def async_setup_papago(transport: PapouchTransport) -> PapagoETH:
     if device_name == "Papago 1TH 2DI 1DO ETH":
         return PapagoETH_1TH_2DI_1DO(transport, settings, device_name, location)
 
-    raise DeviceLogicError(f"Unsupported Papago: {device_name}, location: {location}")
+    _LOGGER.warning("Unsupported Papago: %s, location: %s", device_name, location)
+    return None

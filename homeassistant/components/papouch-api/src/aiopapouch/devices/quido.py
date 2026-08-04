@@ -516,7 +516,7 @@ class QuidoRS485(QuidoBase):
     """NotImplemented."""
 
 
-async def async_setup_quido(transport: PapouchTransport) -> QuidoBase:
+async def async_setup_quido(transport: PapouchTransport) -> QuidoBase | None:
     """Async factory for Quido devices."""
     settings = await transport.fetch_settings()
     info = await transport.fetch_info()
@@ -526,3 +526,5 @@ async def async_setup_quido(transport: PapouchTransport) -> QuidoBase:
     #     return QuidoETH(transport, settings, info)
 
     # return QuidoRS485(transport, settings, info)
+
+    # return None in case unsupported Quido
