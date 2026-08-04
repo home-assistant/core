@@ -339,18 +339,14 @@ async def async_setup_entry(
 
             # Remove any stale devices
             device_registry = dr.async_get(hass)
+            active_identifiers = {(DOMAIN, entry.entry_id)} | {
+                (DOMAIN, device_id) for device_id in current_device_ids
+            }
             for device_entry in dr.async_entries_for_config_entry(
                 device_registry, entry.entry_id
             ):
-                for identifier in device_entry.identifiers:
-                    if identifier[0] == DOMAIN:
-                        device_id = identifier[1]
-                        if (
-                            device_id != entry.entry_id
-                            and device_id not in current_device_ids
-                        ):
-                            device_registry.async_remove_device(device_entry.id)
-                        break
+                if not set(device_entry.identifiers) & active_identifiers:
+                    device_registry.async_remove_device(device_entry.id)
 
         async_add_device_entities()
         entry.async_on_unload(
