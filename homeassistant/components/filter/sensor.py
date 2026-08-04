@@ -271,17 +271,19 @@ class SensorFilter(SensorEntity):
                 "While updating filter %s, the new_state is None", self.name
             )
             self._state = None
+            self._async_forget_source_state()
             self.async_write_ha_state()
             return
 
         if new_state.state == STATE_UNKNOWN:
             self._state = None
+            self._async_forget_source_state()
             self.async_write_ha_state()
             return
 
         if new_state.state == STATE_UNAVAILABLE:
             self._attr_available = False
-            self._async_cancel_expiry_listener()
+            self._async_forget_source_state()
             self.async_write_ha_state()
             return
 
@@ -301,7 +303,6 @@ class SensorFilter(SensorEntity):
                     "skip" if filt.skip_processing else filtered_state.state,
                 )
                 if filt.skip_processing:
-                    self._async_schedule_next_expiry()
                     return
                 temp_state = filtered_state
         except ValueError:
@@ -344,12 +345,24 @@ class SensorFilter(SensorEntity):
             self._expiry_listener = None
 
     @callback
+    def _async_forget_source_state(self) -> None:
+        """Drop the source value so no stale value is fed back in."""
+        self._last_source_state = None
+        self._async_cancel_expiry_listener()
+
+    @callback
     def _async_schedule_next_expiry(self) -> None:
         """Schedule a re-evaluation for when a sample leaves a time window."""
         self._async_cancel_expiry_listener()
 
+        # An expiry in the past belongs to a filter the chain did not reach,
+        # so re-evaluating would not move it forward. Ignoring it keeps the
+        # callback from rearming itself on the same timestamp.
+        now = dt_util.utcnow()
         expiries = [
-            expiry for filt in self._filters if (expiry := filt.next_expiry) is not None
+            expiry
+            for filt in self._filters
+            if (expiry := filt.next_expiry) is not None and expiry > now
         ]
         if not expiries:
             return
@@ -771,6 +784,16 @@ class TimeSMAFilter(Filter, SensorEntity):
         """Return when the oldest sample leaves the window."""
         if not self.queue:
             return None
+
+        # With a single value held across the whole window the average no
+        # longer moves, so there is nothing to wake up for until the source
+        # reports something different.
+        values = {state.state for state in self.queue}
+        if self.last_leak is not None:
+            values.add(self.last_leak.state)
+        if len(values) == 1:
+            return None
+
         return self.queue[0].timestamp + self._time_window
 
     def _leak(self, left_boundary: datetime) -> None:
