@@ -13,6 +13,8 @@ from homeassistant.helpers import llm
 
 from .conftest import KNXTestKit
 
+from tests.common import MockUser
+
 _BUS_TOOLS = {"read_group_value", "send_group_value_read", "send_group_value_write"}
 
 
@@ -30,10 +32,10 @@ def _mock_knx(
     return knx
 
 
-def _llm_context() -> llm.LLMContext:
+def _llm_context(user_id: str | None = None) -> llm.LLMContext:
     return llm.LLMContext(
         platform="knx",
-        context=Context(),
+        context=Context(user_id=user_id),
         language="en",
         assistant="conversation",
         device_id=None,
@@ -45,16 +47,29 @@ def _tool(tools: list[llm.Tool], name: str) -> llm.Tool:
 
 
 async def test_llm_api_registered_after_setup(
-    hass: HomeAssistant, knx: KNXTestKit
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
 ) -> None:
-    """Setting up the integration registers the KNX API exposing all tools."""
+    """Setup registers the API; bus tools are only exposed to admins."""
     await knx.setup_integration()
 
-    instance = await llm.async_get_api(hass, llm_api.LLM_API_ID, _llm_context())
-    tool_names = {tool.name for tool in instance.tools}
+    admin_instance = await llm.async_get_api(
+        hass, llm_api.LLM_API_ID, _llm_context(hass_admin_user.id)
+    )
+    admin_tools = {tool.name for tool in admin_instance.tools}
+    assert "query_telegrams" in admin_tools
+    assert admin_tools >= _BUS_TOOLS
 
-    assert tool_names >= _BUS_TOOLS
-    assert "query_telegrams" in tool_names
+    # Non-admin (and anonymous) users get read-only tools without the bus tools.
+    for user_id in (hass_read_only_user.id, None):
+        instance = await llm.async_get_api(
+            hass, llm_api.LLM_API_ID, _llm_context(user_id)
+        )
+        tool_names = {tool.name for tool in instance.tools}
+        assert "query_telegrams" in tool_names
+        assert tool_names.isdisjoint(_BUS_TOOLS)
 
     await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -64,7 +79,7 @@ async def test_llm_api_registered_after_setup(
 
 def test_schema_from_dataclass_defaults_and_descriptions() -> None:
     """Optional fields carry defaults and their library metadata descriptions."""
-    tool = _tool(llm_api._build_tools(None), "query_telegrams")
+    tool = _tool(llm_api._build_tools(None, include_bus_tools=False), "query_telegrams")
 
     descriptions = {
         marker.schema: marker.description for marker in tool.parameters.schema
@@ -89,20 +104,22 @@ def test_schema_from_dataclass_defaults_and_descriptions() -> None:
 )
 def test_schema_coercion_and_nullable(args: dict, expected: int | None) -> None:
     """Integer coercion works and nullable defaults are accepted."""
-    tool = _tool(llm_api._build_tools(None), "list_dpts")
+    tool = _tool(llm_api._build_tools(None, include_bus_tools=False), "list_dpts")
     assert tool.parameters(args)["main"] == expected
 
 
 def test_schema_required_field_is_enforced() -> None:
     """A field without a default (ad-hoc arg) is required."""
-    tool = _tool(llm_api._build_tools(None), "describe_dpt")
+    tool = _tool(llm_api._build_tools(None, include_bus_tools=False), "describe_dpt")
     with pytest.raises(vol.Invalid):
         tool.parameters({})
 
 
 async def test_describe_dpt_tool_call(hass: HomeAssistant) -> None:
     """A DPT tool needs no KNX runtime state and returns a serialized result."""
-    tool = _tool(llm_api._build_tools(_mock_knx()), "describe_dpt")
+    tool = _tool(
+        llm_api._build_tools(_mock_knx(), include_bus_tools=False), "describe_dpt"
+    )
     result = await tool.async_call(
         hass,
         llm.ToolInput(tool_name="describe_dpt", tool_args={"dpt": "9.001"}),
@@ -125,7 +142,9 @@ async def test_query_telegrams_tool_call(hass: HomeAssistant) -> None:
         query = AsyncMock(return_value=lib_result)
         # Patch before building the tool: the factory captures the function reference.
         mp.setattr(llm_api.kts_mcp, "query_telegrams", query)
-        tool = _tool(llm_api._build_tools(knx), "query_telegrams")
+        tool = _tool(
+            llm_api._build_tools(knx, include_bus_tools=False), "query_telegrams"
+        )
         result = await tool.async_call(
             hass,
             llm.ToolInput(tool_name="query_telegrams", tool_args={"limit": "5"}),
@@ -140,7 +159,7 @@ async def test_query_telegrams_tool_call(hass: HomeAssistant) -> None:
 async def test_store_tool_without_store_raises(hass: HomeAssistant) -> None:
     """A store tool errors clearly when the telegram store is unavailable."""
     tool = _tool(
-        llm_api._build_tools(_mock_knx(store=None)),
+        llm_api._build_tools(_mock_knx(store=None), include_bus_tools=False),
         "get_store_stats",
     )
     with pytest.raises(
@@ -157,7 +176,7 @@ async def test_store_tool_without_store_raises(hass: HomeAssistant) -> None:
 async def test_project_tool_without_project_raises(hass: HomeAssistant) -> None:
     """A project tool errors clearly when no ETS project is loaded."""
     tool = _tool(
-        llm_api._build_tools(_mock_knx(project=None)),
+        llm_api._build_tools(_mock_knx(project=None), include_bus_tools=False),
         "get_project_info",
     )
     with pytest.raises(HomeAssistantError, match="llm_no_project_loaded") as err:

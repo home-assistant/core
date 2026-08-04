@@ -408,9 +408,15 @@ def _bus_tool_specs() -> list[tuple[str, str, vol.Schema, _ToolFunc]]:
     ]
 
 
-def _build_tools(knx: KNXModule) -> list[llm.Tool]:
-    """Build the KNX LLM tools for the given module."""
-    specs = _read_tool_specs() + _bus_tool_specs()
+def _build_tools(knx: KNXModule, *, include_bus_tools: bool) -> list[llm.Tool]:
+    """Build the KNX LLM tools for the given module.
+
+    Bus tools transmit on the KNX bus, so they are only built for admins; the
+    configured MCP endpoint (``/api/mcp``) does not itself require admin access.
+    """
+    specs = _read_tool_specs()
+    if include_bus_tools:
+        specs += _bus_tool_specs()
     return [
         KNXTool(knx, name, description, parameters, func)
         for name, description, parameters, func in specs
@@ -432,8 +438,17 @@ class KNXLLMAPI(llm.API):
             api=self,
             api_prompt=API_PROMPT,
             llm_context=llm_context,
-            tools=_build_tools(self.knx),
+            tools=_build_tools(
+                self.knx, include_bus_tools=await self._user_is_admin(llm_context)
+            ),
         )
+
+    async def _user_is_admin(self, llm_context: llm.LLMContext) -> bool:
+        """Whether the requesting user is a known administrator."""
+        if (context := llm_context.context) is None or not (user_id := context.user_id):
+            return False
+        user = await self.hass.auth.async_get_user(user_id)
+        return user is not None and user.is_admin
 
 
 def async_register_llm_api(hass: HomeAssistant, knx: KNXModule) -> CALLBACK_TYPE:
