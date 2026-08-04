@@ -133,6 +133,12 @@ def execute(qry: Query) -> list[Row]:
 
             if tryno == RETRIES - 1:
                 raise
+            # A failed query leaves the transaction in a state that has to be
+            # rolled back before the connection can be used again. Without this,
+            # retrying after a lost connection raises PendingRollbackError instead
+            # of reconnecting, so the retry can never succeed for the one error
+            # class it exists to handle.
+            qry.session.rollback()
             time.sleep(QUERY_RETRY_WAIT)
         else:
             return result
@@ -174,6 +180,9 @@ def execute_stmt_lambda_element(
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
                 raise
+            # See the note in execute(): the transaction must be rolled back before
+            # the connection can be reused, or the retry raises PendingRollbackError.
+            session.rollback()
             time.sleep(QUERY_RETRY_WAIT)
 
     # Unreachable
