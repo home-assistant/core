@@ -23,7 +23,7 @@
     },
     "flow_title": "{username}",
     "progress": {
-      "login": "Logging in and scanning for Alexa devices. This can take up to {seconds} seconds if you have many devices linked to your Amazon account."
+      "login": "Logging in and scanning for Alexa devices. This can take several minutes if you have many devices linked to your Amazon account."
     },
     "step": {
       "reauth_confirm": {

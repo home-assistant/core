@@ -46,7 +46,6 @@ async def test_full_flow(
     )
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "login"
-    assert result["description_placeholders"] == {"seconds": "60"}
 
     await hass.async_block_till_done()
 

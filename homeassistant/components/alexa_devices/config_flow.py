@@ -5,10 +5,6 @@ from collections.abc import Mapping
 from typing import Any, override
 
 from aioamazondevices.api import AmazonEchoApi
-from aioamazondevices.const.metadata import (
-    CUSTOMER_ACCOUNT_DELAY_BETWEEN_RETRIES,
-    CUSTOMER_ACCOUNT_MAX_RETRIES,
-)
 from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
@@ -116,12 +112,6 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_progress(
             step_id="login",
             progress_action="login",
-            description_placeholders={
-                "seconds": str(
-                    CUSTOMER_ACCOUNT_MAX_RETRIES
-                    * CUSTOMER_ACCOUNT_DELAY_BETWEEN_RETRIES
-                )
-            },
             progress_task=self._login_task,
         )
 
