@@ -35,6 +35,36 @@ async def test_setup_platforms(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("mock_entry_unique_id", ["00:04:a3:de:ad:ff"])
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_incomfort: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that child devices link to the gateway via via_device_id."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    gateway_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert gateway_device is not None
+
+    boiler_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "c0ffeec0ffee"), mock_config_entry.entry_id
+    )
+    assert boiler_device is not None
+    assert boiler_device.via_device_id == gateway_device.id
+
+    thermostat_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "c0ffeec0ffee_1"), mock_config_entry.entry_id
+    )
+    assert thermostat_device is not None
+    assert thermostat_device.via_device_id == gateway_device.id
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     "mock_heater_status", [MOCK_HEATER_STATUS | {"serial_no": "c01d00c0ffee"}]
 )

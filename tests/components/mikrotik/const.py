@@ -189,6 +189,33 @@ SYSTEM_DATA = [
     }
 ]
 
+ETHER1_INTERFACE = {
+    ".id": "*1",
+    "name": "ether1",
+    "type": "ether",
+    "mac-address": "00:0C:29:00:00:01",
+    "running": True,
+    "disabled": False,
+}
+WLAN1_INTERFACE = {
+    ".id": "*2",
+    "name": "wlan1",
+    "type": "wlan",
+    "mac-address": "00:0C:29:00:00:02",
+    "running": False,
+    "disabled": True,
+}
+BRIDGE1_INTERFACE = {
+    ".id": "*3",
+    "name": "bridge1",
+    "type": "bridge",
+    "mac-address": "00:0C:29:00:00:03",
+    "running": True,
+    "disabled": False,
+}
+
+INTERFACE_DATA = [ETHER1_INTERFACE, WLAN1_INTERFACE, BRIDGE1_INTERFACE]
+
 ROUTERBOARD_DATA = [
     {
         ATTR_MODEL: TEST_MODEL,
@@ -206,3 +233,35 @@ UPDATE_DATA = [
         "status": "System is already up to date",
     }
 ]
+
+ETHER1_INTERFACE = {
+    ".id": "*1",
+    "name": "ether1",
+    "type": "ether",
+    "mac-address": "00:0C:29:00:00:01",
+    "running": True,
+    "disabled": False,
+}
+WLAN1_INTERFACE = {
+    ".id": "*2",
+    "name": "wlan1",
+    "type": "wlan",
+    "mac-address": "00:0C:29:00:00:02",
+    "running": False,
+    "disabled": True,
+}
+BRIDGE1_INTERFACE = {
+    ".id": "*3",
+    "name": "bridge1",
+    "type": "bridge",
+    "mac-address": "00:0C:29:00:00:03",
+    "running": True,
+    "disabled": False,
+}
+
+INTERFACE_DATA = [ETHER1_INTERFACE, WLAN1_INTERFACE, BRIDGE1_INTERFACE]
+
+ETHER1_POE = {".id": "*1", "poe-out": "auto-on"}
+WLAN1_POE = {".id": "*2", "poe-out": "off"}
+
+POE_DATA = [ETHER1_POE, WLAN1_POE]
