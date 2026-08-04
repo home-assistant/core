@@ -40,7 +40,6 @@ from .const import (
     CONF_KNX_DEFAULT_STATE_UPDATER,
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_KNXKEY_PASSWORD,
-    CONF_KNX_LLM_BUS_TOOLS,
     CONF_KNX_LOCAL_IP,
     CONF_KNX_MCAST_GRP,
     CONF_KNX_MCAST_PORT,
@@ -976,7 +975,6 @@ class KNXOptionsFlow(OptionsFlowWithReload):
             self.new_entry_options |= KNXConfigEntryOptions(
                 state_updater=user_input[CONF_KNX_STATE_UPDATER],
                 rate_limit=user_input[CONF_KNX_RATE_LIMIT],
-                llm_bus_tools=user_input[CONF_KNX_LLM_BUS_TOOLS],
                 telegram_db_load_hours=telegram_store_section[
                     CONF_KNX_TELEGRAM_DB_LOAD_HOURS
                 ],
@@ -1011,10 +1009,6 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 ),
                 vol.Coerce(int),
             ),
-            vol.Required(
-                CONF_KNX_LLM_BUS_TOOLS,
-                default=self.initial_options.get(CONF_KNX_LLM_BUS_TOOLS, False),
-            ): selector.BooleanSelector(),
             vol.Required(CONF_KNX_TELEGRAM_STORE_SECTION): data_entry_flow.section(
                 vol.Schema(
                     {

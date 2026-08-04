@@ -19,13 +19,12 @@ from xknx import mcp as xknx_mcp
 from xknx.exceptions import XKNXException
 from xknxproject import mcp as xknxproject_mcp
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.util.json import JsonObjectType
 
-from .const import CONF_KNX_LLM_BUS_TOOLS, DOMAIN
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
@@ -35,7 +34,7 @@ LLM_API_NAME = "KNX"
 API_PROMPT = (
     "Tools to inspect a KNX installation: stored bus telegrams, the loaded ETS "
     "project (group addresses, devices, communication objects, functions, "
-    "topology, locations), KNX data point types, and — when enabled — live bus "
+    "topology, locations), KNX data point types, and live bus "
     'reads and writes. Address formats: group addresses like "1/2/3", individual '
     'device addresses like "1.1.5", DPTs like "9.001".'
 )
@@ -368,7 +367,6 @@ def _read_tool_specs() -> list[tuple[str, str, vol.Schema, _ToolFunc]]:
     ]
 
 
-# Bus tools that transmit on the KNX bus; only exposed when explicitly enabled.
 def _bus_tool_specs() -> list[tuple[str, str, vol.Schema, _ToolFunc]]:
     return [
         (
@@ -392,11 +390,9 @@ def _bus_tool_specs() -> list[tuple[str, str, vol.Schema, _ToolFunc]]:
     ]
 
 
-def _build_tools(knx: KNXModule, *, include_bus_tools: bool) -> list[llm.Tool]:
+def _build_tools(knx: KNXModule) -> list[llm.Tool]:
     """Build the KNX LLM tools for the given module."""
-    specs = _read_tool_specs()
-    if include_bus_tools:
-        specs += _bus_tool_specs()
+    specs = _read_tool_specs() + _bus_tool_specs()
     return [
         KNXTool(knx, name, description, parameters, func)
         for name, description, parameters, func in specs
@@ -408,7 +404,6 @@ class KNXLLMAPI(llm.API):
     """LLM API exposing the KNX tools."""
 
     knx: KNXModule
-    include_bus_tools: bool
 
     async def async_get_api_instance(
         self, llm_context: llm.LLMContext
@@ -418,13 +413,11 @@ class KNXLLMAPI(llm.API):
             api=self,
             api_prompt=API_PROMPT,
             llm_context=llm_context,
-            tools=_build_tools(self.knx, include_bus_tools=self.include_bus_tools),
+            tools=_build_tools(self.knx),
         )
 
 
-def async_register_llm_api(
-    hass: HomeAssistant, entry: ConfigEntry, knx: KNXModule
-) -> CALLBACK_TYPE:
+def async_register_llm_api(hass: HomeAssistant, knx: KNXModule) -> CALLBACK_TYPE:
     """Register the KNX LLM API and return a callback to unregister it."""
     return llm.async_register_api(
         hass,
@@ -433,6 +426,5 @@ def async_register_llm_api(
             id=LLM_API_ID,
             name=LLM_API_NAME,
             knx=knx,
-            include_bus_tools=entry.options.get(CONF_KNX_LLM_BUS_TOOLS, False),
         ),
     )

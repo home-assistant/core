@@ -58,8 +58,6 @@ CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: Final = "telegram_db_retention_days"
 CONF_KNX_TELEGRAM_DB_LOAD_HOURS: Final = "telegram_db_load_hours"
 CONF_KNX_TELEGRAM_DB_POSTGRES_DSN: Final = "telegram_db_postgres_dsn"
 
-CONF_KNX_LLM_BUS_TOOLS: Final = "llm_bus_tools"
-
 CONF_KNX_TELEGRAM_DB_HOST: Final = "host"
 CONF_KNX_TELEGRAM_DB_PORT: Final = "port"
 CONF_KNX_TELEGRAM_DB_USER: Final = "user"
@@ -156,7 +154,6 @@ class KNXConfigEntryOptions(TypedDict, total=False):
     telegram_db_load_hours: int
     telegram_db_backend: str  # sqlite | postgres
     telegram_db_postgres_dsn: str
-    llm_bus_tools: bool
 
 
 class ColorTempModes(Enum):

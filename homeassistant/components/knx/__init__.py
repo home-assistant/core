@@ -132,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[KNX_MODULE_KEY] = knx_module
 
-    entry.async_on_unload(async_register_llm_api(hass, entry, knx_module))
+    entry.async_on_unload(async_register_llm_api(hass, knx_module))
 
     knx_module.ui_time_server_controller.start(
         knx_module.xknx, knx_module.config_store.get_time_server_config()

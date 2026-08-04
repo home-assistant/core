@@ -1225,13 +1225,11 @@
       "communication_settings": {
         "data": {
           "rate_limit": "Rate limit",
-          "state_updater": "State updater",
-          "llm_bus_tools": "Allow AI to write to the KNX bus"
+          "state_updater": "State updater"
         },
         "data_description": {
           "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: `0` or between `20` and `40`",
-          "state_updater": "Sets the default behavior for reading state addresses from the KNX Bus.\nWhen enabled, Home Assistant will monitor each group address and read it from the bus if no value has been received for one hour.\nWhen disabled, state addresses will only be read once after a bus connection is established.\nThis behavior can be overridden for individual entities using the `sync_state` option.",
-          "llm_bus_tools": "When enabled, the KNX LLM API additionally exposes tools that read from and write to the live KNX bus (group value read/write). The read-only inspection tools (telegram store, ETS project, data point types) are always available. Leave disabled unless you want conversation agents to actuate the bus."
+          "state_updater": "Sets the default behavior for reading state addresses from the KNX Bus.\nWhen enabled, Home Assistant will monitor each group address and read it from the bus if no value has been received for one hour.\nWhen disabled, state addresses will only be read once after a bus connection is established.\nThis behavior can be overridden for individual entities using the `sync_state` option."
         },
         "sections": {
           "telegram_store_section": {
