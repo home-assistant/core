@@ -490,8 +490,6 @@ async def test_new_node_registers_device_before_children(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.runtime_data.last_update_success
-
     entry_id = mock_config_entry.entry_id
     node_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{entry_id}_node_node/pve2"), entry_id
@@ -503,6 +501,11 @@ async def test_new_node_registers_device_before_children(
     )
     assert vm_device is not None
     assert vm_device.via_device_id == node_device.id
+
+    # The new node's VM entity was built and populated from the refresh.
+    state = hass.states.get("binary_sensor.vm_pve2_status")
+    assert state is not None
+    assert state.state == STATE_ON
 
 
 async def test_stale_devices_removed(
