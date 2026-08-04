@@ -1,7 +1,7 @@
 """Creates a switch entity for the mower."""
 
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from aioautomower.model import MowerModes, StayOutZones, Zone
 
@@ -140,31 +140,42 @@ class StayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
         self._attr_unique_id = (
             f"{self.mower_id}_{stay_out_zone_uid}_{self._attr_translation_key}"
         )
-        self._attr_translation_placeholders = {"stay_out_zone": self.stay_out_zone.name}
+        if (stay_out_zone := self.stay_out_zone) is not None:
+            self._attr_translation_placeholders = {"stay_out_zone": stay_out_zone.name}
 
     @property
-    def stay_out_zones(self) -> StayOutZones:
+    def stay_out_zones(self) -> StayOutZones | None:
         """Return all stay out zones."""
-        if TYPE_CHECKING:
-            assert self.mower_attributes.stay_out_zones is not None
         return self.mower_attributes.stay_out_zones
 
     @property
-    def stay_out_zone(self) -> Zone:
+    def stay_out_zone(self) -> Zone | None:
         """Return the specific stay out zone."""
-        return self.stay_out_zones.zones[self.stay_out_zone_uid]
+        if (
+            stay_out_zones := self.stay_out_zones
+        ) is None or stay_out_zones.zones is None:
+            return None
+        return stay_out_zones.zones.get(self.stay_out_zone_uid)
 
     @property
     @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        return self.stay_out_zone.enabled
+        if (stay_out_zone := self.stay_out_zone) is None:
+            return False
+        return stay_out_zone.enabled
 
     @property
     @override
     def available(self) -> bool:
-        """Return True if the device is available and the zones are not `dirty`."""
-        return super().available and not self.stay_out_zones.dirty
+        if not super().available:
+            return False
+        stay_out_zones = self.stay_out_zones
+        if stay_out_zones is None or stay_out_zones.zones is None:
+            return False
+        if self.stay_out_zone_uid not in stay_out_zones.zones:
+            return False
+        return not stay_out_zones.dirty
 
     @handle_sending_exception(poll_after_sending=True)
     @override
@@ -197,18 +208,20 @@ class WorkAreaSwitchEntity(WorkAreaControlEntity, SwitchEntity):
         key = "work_area"
         self._attr_translation_key = _work_area_translation_key(work_area_id, key)
         self._attr_unique_id = f"{mower_id}_{work_area_id}_{key}"
-        if self.work_area_attributes.name == "my_lawn":
-            self._attr_translation_placeholders = {
-                "work_area": self.work_area_attributes.name
-            }
+        if (work_area := self.work_area_attributes) is None:
+            return
+        if work_area.name == "my_lawn":
+            self._attr_translation_placeholders = {"work_area": work_area.name}
         else:
-            self._attr_name = self.work_area_attributes.name
+            self._attr_name = work_area.name
 
     @property
     @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        return self.work_area_attributes.enabled
+        if (work_area := self.work_area_attributes) is None:
+            return False
+        return work_area.enabled
 
     @handle_sending_exception(poll_after_sending=True)
     @override
