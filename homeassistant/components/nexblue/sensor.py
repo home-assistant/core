@@ -139,7 +139,10 @@ class NexBlueStatusSensor(
     @override
     def available(self) -> bool:
         """Return whether this charger is currently reachable."""
-        return self.coordinator.data.get(self._serial_number) is not None
+        return (
+            super().available
+            and self.coordinator.data.get(self._serial_number) is not None
+        )
 
     @property
     @override

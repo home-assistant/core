@@ -84,6 +84,8 @@ class NexBlueDataUpdateCoordinator(
             token = await self.client.async_login(
                 self.config_entry.data[CONF_USERNAME], password
             )
+            if not token.refresh_token:
+                raise NexBlueAuthError from None
 
         if (
             token

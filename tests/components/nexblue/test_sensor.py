@@ -56,3 +56,16 @@ async def test_offline_charger_does_not_block_other_chargers(
 
     assert hass.states.get("sensor.nb123456_charging_state").state == "Charging"
     assert hass.states.get("sensor.nb654321_charging_state").state == "unavailable"
+
+
+async def test_sensors_unavailable_when_coordinator_update_fails(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a failed coordinator update makes all charger entities unavailable."""
+    coordinator = init_integration.runtime_data.coordinator
+    coordinator.last_update_success = False
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.nb123456_charging_state").state == "unavailable"

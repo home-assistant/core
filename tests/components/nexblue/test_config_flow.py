@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from nexblue_api import NexBlueAuthError, NexBlueConnectionError
+from nexblue_api.models import TokenBundle
 import pytest
 
 from homeassistant.components.nexblue.const import CONF_REFRESH_TOKEN, DOMAIN
@@ -94,3 +95,57 @@ async def test_user_flow_duplicate_entry(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_retries_with_corrected_credentials(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+) -> None:
+    """Test the user can correct credentials without restarting the flow."""
+    mock_client.async_login.side_effect = [NexBlueAuthError, TOKEN]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "user@example.com",
+            CONF_PASSWORD: "incorrect-password",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "user@example.com",
+            CONF_PASSWORD: "correct-password",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_flow_rejects_login_without_refresh_token(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+) -> None:
+    """Test a login response without a refresh token is rejected."""
+    mock_client.async_login.return_value = TokenBundle(
+        access_token="access-token",
+        refresh_token=None,
+        expires_in=3600,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_USERNAME: "user@example.com",
+            CONF_PASSWORD: "password",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
