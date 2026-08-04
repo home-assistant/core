@@ -17,6 +17,7 @@ from homeassistant.components.http.ban import (
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
     IpBanManager,
+    ban_middleware,
     process_success_login,
     setup_bans,
 )
@@ -247,21 +248,23 @@ async def test_access_from_supervisor_ip(
 
 
 async def test_ban_middleware_not_loaded_by_config(hass: HomeAssistant) -> None:
-    """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.server.setup_bans") as mock_setup:
-        await async_setup_component(
-            hass, DOMAIN, {"http": {http.CONF_IP_BAN_ENABLED: False}}
-        )
+    """Ensure ban middleware is not installed when feature is off."""
 
-    assert len(mock_setup.mock_calls) == 0
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5, False)
+
+    assert ban_middleware not in app.middlewares
 
 
 async def test_ban_middleware_loaded_by_default(hass: HomeAssistant) -> None:
-    """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.server.setup_bans") as mock_setup:
-        await async_setup_component(hass, DOMAIN, {"http": {}})
+    """Ensure ban middleware is installed when feature is on."""
 
-    assert len(mock_setup.mock_calls) == 1
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5, True)
+
+    assert ban_middleware in app.middlewares
 
 
 async def test_ip_bans_notifications(
