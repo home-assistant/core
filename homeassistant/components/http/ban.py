@@ -283,7 +283,7 @@ class IpBanManager:
                 self.ip_bans_lookup = self._data_from_load(list_) if list_ else {}
                 await self.store.async_save(self._data_to_save())
                 stored_list_ = await self.store.async_load()
-                if list_ == stored_list_:
+                if self.ip_bans_lookup == self._data_from_load(stored_list_):
                     await self.hass.async_add_executor_job(os.remove, path)
                     _LOGGER.info(
                         "Migrated %d IP bans from %s",
