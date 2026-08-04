@@ -1,5 +1,6 @@
 """Config flow for Midea."""
 
+from functools import partial
 from operator import itemgetter
 from typing import Any, override
 
@@ -46,6 +47,40 @@ def _connect_and_close(dm: MideaDevice) -> bool:
         return dm.connect(check_protocol=True)
     finally:
         dm.close_socket()
+
+
+def _select_and_connect(
+    *,
+    device_id: int,
+    device_type: int,
+    ip_address: str,
+    port: int,
+    token: str,
+    key: str,
+    device_protocol: ProtocolVersion,
+    model: str,
+    subtype: int,
+) -> bool | None:
+    """Select the device implementation and connect to it in a single executor job.
+
+    Returns None if there is no device implementation for device_type.
+    """
+    dm = device_selector(
+        "",
+        device_id,
+        device_type,
+        ip_address,
+        port,
+        token,
+        key,
+        device_protocol,
+        model,
+        subtype,
+        "",
+    )
+    if dm is None:
+        return None
+    return _connect_and_close(dm)
 
 
 class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -370,28 +405,27 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         error = "connect_error"
         # use token/key to connect device and confirm token result
         for k, value in keys.items():
-            dm = await self.hass.async_add_executor_job(
-                device_selector,
-                "",
-                appliance_id,
-                device.get(CONF_TYPE),
-                device.get(CONF_IP_ADDRESS),
-                device.get(CONF_PORT),
-                value["token"],
-                value["key"],
-                ProtocolVersion.V3,
-                device.get(CONF_MODEL),
-                device.get(CONF_SUBTYPE, 0),
-                "",
+            connected = await self.hass.async_add_executor_job(
+                partial(
+                    _select_and_connect,
+                    device_id=appliance_id,
+                    device_type=device.get(CONF_TYPE),
+                    ip_address=device.get(CONF_IP_ADDRESS),
+                    port=device.get(CONF_PORT),
+                    token=value["token"],
+                    key=value["key"],
+                    device_protocol=ProtocolVersion.V3,
+                    model=device.get(CONF_MODEL),
+                    subtype=device.get(CONF_SUBTYPE, 0),
+                ),
             )
-            if dm is None:
+            if connected is None:
                 LOGGER.debug(
                     "No device implementation for device_type %s",
                     device.get(CONF_TYPE),
                 )
                 error = "no_device_implementation"
                 break
-            connected = await self.hass.async_add_executor_job(_connect_and_close, dm)
             if connected:
                 return value
             # return debug log with failed key
@@ -522,23 +556,20 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(str(device_id))
         self._abort_if_unique_id_configured()
 
-        dm = await self.hass.async_add_executor_job(
-            device_selector,
-            "",
-            device_id,
-            user_input[CONF_TYPE],
-            user_input[CONF_IP_ADDRESS],
-            user_input[CONF_PORT],
-            user_input[CONF_TOKEN],
-            user_input[CONF_KEY],
-            user_input[CONF_PROTOCOL],
-            user_input[CONF_MODEL],
-            user_input[CONF_SUBTYPE],
-            "",
+        connected = await self.hass.async_add_executor_job(
+            partial(
+                _select_and_connect,
+                device_id=device_id,
+                device_type=user_input[CONF_TYPE],
+                ip_address=user_input[CONF_IP_ADDRESS],
+                port=user_input[CONF_PORT],
+                token=user_input[CONF_TOKEN],
+                key=user_input[CONF_KEY],
+                device_protocol=user_input[CONF_PROTOCOL],
+                model=user_input[CONF_MODEL],
+                subtype=user_input[CONF_SUBTYPE],
+            ),
         )
-        if dm is None:
-            return self._show_manually_form(user_input, error="device_auth_failed")
-        connected = await self.hass.async_add_executor_job(_connect_and_close, dm)
         if connected:
             device_type = user_input[CONF_TYPE]
             found_name = self.found_device.get(CONF_NAME)

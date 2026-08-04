@@ -1,16 +1,17 @@
 """Tests for the Midea config flow."""
 
+from functools import partial
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.device import MideaDevice
-from midealocal.devices import device_selector
 import pytest
 
 from homeassistant.components.midea.config_flow import (
     DEFAULT_CLOUD,
     LOGIN_MODE_ACCOUNT,
     LOGIN_MODE_PRESET,
+    _select_and_connect,
 )
 from homeassistant.components.midea.const import (
     CONF_ACCOUNT,
@@ -1489,9 +1490,10 @@ async def test_manual_step_v3_missing_token_key_sets_retrieved_values(
     assert result["step_id"] == "manually"
     assert result["errors"] == {"base": "device_auth_failed"}
 
-    # device_selector() is called positionally (name, device_id, device_type,
-    # ip_address, port, token, key, ...) so it can run via
-    # hass.async_add_executor_job without a wrapping partial/lambda.
+    # _select_and_connect() calls device_selector() positionally (name,
+    # device_id, device_type, ip_address, port, token, key, ...); it is itself
+    # submitted to hass.async_add_executor_job via functools.partial so device
+    # selection and the connection attempt share a single executor job.
     assert mock_device_selector.call_args.args[5] == TEST_TOKEN
     assert mock_device_selector.call_args.args[6] == TEST_KEY
 
@@ -1725,7 +1727,9 @@ async def test_manually_flow_runs_device_selector_in_executor(
     Regression test: device_selector() calls importlib.import_module() to
     dynamically load the concrete device subclass. That is a blocking call,
     so it must never run directly on the event loop - Home Assistant's
-    blocking-call detector flags exactly that.
+    blocking-call detector flags exactly that. device_selector() is invoked
+    from within _select_and_connect(), which is what actually gets dispatched
+    to the executor (wrapped in a functools.partial).
     """
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -1768,7 +1772,10 @@ async def test_manually_flow_runs_device_selector_in_executor(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     dispatched_funcs = [call.args[0] for call in mock_executor_job.call_args_list]
-    assert device_selector in dispatched_funcs
+    assert any(
+        isinstance(func, partial) and func.func is _select_and_connect
+        for func in dispatched_funcs
+    )
 
 
 async def test_login_credentials_step_falls_back_to_default_cloud(
