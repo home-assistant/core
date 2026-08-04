@@ -250,6 +250,7 @@ def _create_mocked_hole(
             mocked_hole.data = FTL_ERROR
 
         mocked_hole.authenticate = AsyncMock(side_effect=authenticate_side_effect)
+        mocked_hole.logout = AsyncMock()
         mocked_hole.get_data = AsyncMock(side_effect=get_data_side_effect)
 
         if ftl_error:

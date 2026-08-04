@@ -146,12 +146,10 @@ async def determine_api_version(
     debugging.
     """
 
-    # Do not probe with a deliberately wrong password. Pi-hole v6
-    # rate-limits login attempts, so the real login that follows a few
-    # hundred milliseconds later in async_setup_entry is rejected as
-    # well and setup fails permanently. Using the configured password
-    # still identifies v6: if the v6 auth endpoint answers at all -
-    # with success or with 401 - it is a v6 instance.
+    # Pi-hole v6 rate-limits login attempts, so probing with a deliberately
+    # wrong password makes the real login that follows shortly after fail as
+    # well. Probe with the configured password instead: a 401 identifies v6
+    # just as well as a success does.
     hole_v6 = api_by_version(hass, entry, 6)
     try:
         await hole_v6.authenticate()
@@ -176,6 +174,15 @@ async def determine_api_version(
             "Connection to %s failed: %s, trying API version 5", hole_v6.base_url, ex_v6
         )
     else:
+        # Release the probe session again: the operational client
+        # authenticates separately and Pi-hole allows only a limited
+        # number of concurrent sessions.
+        try:
+            await hole_v6.logout()
+        except HoleError as err:
+            _LOGGER.debug(
+                "Could not release the probe session at %s: %s", hole_v6.base_url, err
+            )
         _LOGGER.debug(
             "Authenticated with %s through v6 API, API version is : %s",
             hole_v6.base_url,
