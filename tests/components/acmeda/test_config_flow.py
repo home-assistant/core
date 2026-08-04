@@ -168,7 +168,7 @@ async def test_discovery_preserves_hubs_before_timeout(
     dummy_hub_2 = aiopulse.Hub(DUMMY_HOST2)
     dummy_hub_2.id = "DEF456"
 
-    async def discover_yields_then_ends(*, **kwargs):
+    async def discover_yields_then_ends(**kwargs: object):
         yield dummy_hub_1
         yield dummy_hub_2
 
