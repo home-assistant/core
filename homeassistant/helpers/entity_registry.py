@@ -203,16 +203,6 @@ class EntityRegistryDisplayResult(TypedDict):
     entities: list[EntityRegistryDisplayEntry]
 
 
-DISPLAY_DICT_OPTIONAL = (
-    # key, attr_name, convert_to_list
-    ("ai", "area_id", False),
-    ("lb", "labels", True),
-    ("di", "device_id", False),
-    ("ic", "icon", False),
-    ("tk", "translation_key", False),
-)
-
-
 def _protect_entity_options(
     data: EntityOptionsType | None,
 ) -> ReadOnlyEntityOptionsType:
@@ -309,12 +299,15 @@ class RegistryEntry:
             "ei": self.entity_id,
             "pl": self.platform,
         }
-        for key, attr_name, convert_list in DISPLAY_DICT_OPTIONAL:
-            if (attr_val := getattr(self, attr_name)) is not None:
-                # Convert sets and tuples to lists
-                # so the JSON serializer does not have to do
-                # it every time
-                display_dict[key] = list(attr_val) if convert_list else attr_val
+        if self.area_id is not None:
+            display_dict["ai"] = self.area_id
+        display_dict["lb"] = list(self.labels)
+        if self.device_id is not None:
+            display_dict["di"] = self.device_id
+        if self.icon is not None:
+            display_dict["ic"] = self.icon
+        if self.translation_key is not None:
+            display_dict["tk"] = self.translation_key
         if (category := self.entity_category) is not None:
             display_dict["ec"] = ENTITY_CATEGORY_VALUE_TO_INDEX[category]
         if self.hidden_by is not None:
