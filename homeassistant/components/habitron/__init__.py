@@ -32,8 +32,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -
             data[CONF_HOST] = data.pop("habitron_host")
         # ``websock_token`` belonged to the SmartController Touch/Assist push
         # path, which this integration does not implement; drop the credential
-        # rather than keep storing it unused.
+        # rather than keep storing it unused. ``update_interval`` predates the
+        # move to a fixed ``SCAN_INTERVAL`` and has not been read since.
         data.pop("websock_token", None)
+        data.pop("update_interval", None)
         hass.config_entries.async_update_entry(entry, data=data, version=2)
     return True
 
