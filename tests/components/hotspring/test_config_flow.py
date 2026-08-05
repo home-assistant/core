@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from hotspring import HotSpringConnectionError, HotSpringError
+from hotspring import HotSpringConnectionError, HotSpringError, Spa, SpaInfo
 import pytest
 
 from homeassistant.components.hotspring.const import DOMAIN
@@ -87,3 +87,30 @@ async def test_form_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == "192.168.1.100"
     assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_no_mac_address(
+    hass: HomeAssistant, mock_hotspring: MagicMock, device_fixture: Spa
+) -> None:
+    """Test we show user form on missing MAC address."""
+    device_fixture.info = SpaInfo(
+        hostname="ConnectedSpa_DDEEFF",
+        root_topic="unknownTopic123",
+        sna_ready=True,
+        brand_name="Hot Spring",
+        collection_type="Highlife",
+        model_type="Relay",
+        volume=335,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.100"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}

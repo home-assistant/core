@@ -16,7 +16,10 @@ from .const import DOMAIN
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Spa:
     """Validate the user input allows us to connect."""
     api = HotSpring(data[CONF_HOST], session=async_get_clientsession(hass))
-    return await api.update()
+    spa = await api.update()
+    if not spa.info.mac_address:
+        raise HotSpringError("No MAC address found")
+    return spa
 
 
 class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -36,9 +39,7 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
             except HotSpringConnectionError, HotSpringError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(
-                    spa.info.mac_address or spa.info.root_topic
-                )
+                await self.async_set_unique_id(spa.info.mac_address)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=spa.info.hostname or "Hot Spring Spa",

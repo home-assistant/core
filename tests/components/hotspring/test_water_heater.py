@@ -2,11 +2,10 @@
 
 from unittest.mock import MagicMock
 
-from hotspring import HotSpringConnectionError, HotSpringError, Spa, SpaInfo
+from hotspring import HotSpringConnectionError, HotSpringError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.hotspring.const import DOMAIN
 from homeassistant.components.water_heater import (
     ATTR_TEMPERATURE,
     DOMAIN as WATER_HEATER_DOMAIN,
@@ -15,7 +14,7 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
 
@@ -95,38 +94,3 @@ async def test_set_temperature_error(
             },
             blocking=True,
         )
-
-
-async def test_water_heater_no_mac_address(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_hotspring: MagicMock,
-    device_fixture: Spa,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test the water heater entity when mac_address is not available."""
-    device_fixture.info = SpaInfo(
-        hostname="ConnectedSpa_DDEEFF",
-        root_topic="unknownTopic123",
-        sna_ready=True,
-        brand_name="Hot Spring",
-        collection_type="Highlife",
-        model_type="Relay",
-        volume=335,
-    )
-    await setup_with_selected_platforms(
-        hass, mock_config_entry, [Platform.WATER_HEATER]
-    )
-
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-
-    entry = entity_registry.async_get(ENTITY_ID)
-    assert entry is not None
-    assert entry.unique_id == "unknownTopic123_water_heater"
-
-    device = device_registry.async_get(entry.device_id)
-    assert device is not None
-    assert (DOMAIN, "unknownTopic123") in device.identifiers
-    assert not device.connections
