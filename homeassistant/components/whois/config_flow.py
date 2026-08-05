@@ -5,12 +5,12 @@ from typing import Any, override
 import voluptuous as vol
 import whoisdomain
 from whoisdomain.exceptions import (
-    FailedParsingWhoisOutput,
-    UnknownDateFormat,
-    UnknownTld,
-    WhoisCommandFailed,
-    WhoisPrivateRegistry,
-    WhoisQuotaExceeded,
+    FailedParsingWhoisOutputError,
+    UnknownDateFormatError,
+    UnknownTldError,
+    WhoisCommandFailedError,
+    WhoisPrivateRegistryError,
+    WhoisQuotaExceededError,
 )
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -41,17 +41,17 @@ class WhoisFlowHandler(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.async_add_executor_job(whoisdomain.query, domain)
-            except UnknownTld:
+            except UnknownTldError:
                 errors["base"] = "unknown_tld"
-            except WhoisCommandFailed:
+            except WhoisCommandFailedError:
                 errors["base"] = "whois_command_failed"
-            except FailedParsingWhoisOutput:
+            except FailedParsingWhoisOutputError:
                 errors["base"] = "unexpected_response"
-            except UnknownDateFormat:
+            except UnknownDateFormatError:
                 errors["base"] = "unknown_date_format"
-            except WhoisPrivateRegistry:
+            except WhoisPrivateRegistryError:
                 errors["base"] = "private_registry"
-            except WhoisQuotaExceeded:
+            except WhoisQuotaExceededError:
                 errors["base"] = "quota_exceeded"
             else:
                 return self.async_create_entry(

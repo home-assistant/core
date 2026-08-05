@@ -4,10 +4,10 @@ from typing import override
 
 from whoisdomain import Domain, query as whoisdomain_query
 from whoisdomain.exceptions import (
-    FailedParsingWhoisOutput,
-    UnknownDateFormat,
-    UnknownTld,
-    WhoisCommandFailed,
+    FailedParsingWhoisOutputError,
+    UnknownDateFormatError,
+    UnknownTldError,
+    WhoisCommandFailedError,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -42,7 +42,11 @@ class WhoisCoordinator(DataUpdateCoordinator[Domain | None]):
             return await self.hass.async_add_executor_job(
                 whoisdomain_query, self.config_entry.data[CONF_DOMAIN]
             )
-        except UnknownTld as ex:
+        except UnknownTldError as ex:
             raise UpdateFailed("Could not set up whois, TLD is unknown") from ex
-        except (FailedParsingWhoisOutput, WhoisCommandFailed, UnknownDateFormat) as ex:
+        except (
+            FailedParsingWhoisOutputError,
+            WhoisCommandFailedError,
+            UnknownDateFormatError,
+        ) as ex:
             raise UpdateFailed("An error occurred during WHOIS lookup") from ex

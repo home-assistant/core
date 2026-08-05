@@ -5,12 +5,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from whoisdomain.exceptions import (
-    FailedParsingWhoisOutput,
-    UnknownDateFormat,
-    UnknownTld,
-    WhoisCommandFailed,
-    WhoisPrivateRegistry,
-    WhoisQuotaExceeded,
+    FailedParsingWhoisOutputError,
+    UnknownDateFormatError,
+    UnknownTldError,
+    WhoisCommandFailedError,
+    WhoisPrivateRegistryError,
+    WhoisQuotaExceededError,
 )
 
 from homeassistant.components.whois.const import DOMAIN
@@ -50,12 +50,32 @@ async def test_full_user_flow(
 @pytest.mark.parametrize(
     ("throw", "reason"),
     [
-        (UnknownTld, "unknown_tld"),
-        (FailedParsingWhoisOutput, "unexpected_response"),
-        (UnknownDateFormat, "unknown_date_format"),
-        (WhoisCommandFailed, "whois_command_failed"),
-        (WhoisPrivateRegistry, "private_registry"),
-        (WhoisQuotaExceeded, "quota_exceeded"),
+        pytest.param(UnknownTldError, "unknown_tld", id="UnknownTld-unknown_tld"),
+        pytest.param(
+            FailedParsingWhoisOutputError,
+            "unexpected_response",
+            id="FailedParsingWhoisOutput-unexpected_response",
+        ),
+        pytest.param(
+            UnknownDateFormatError,
+            "unknown_date_format",
+            id="UnknownDateFormat-unknown_date_format",
+        ),
+        pytest.param(
+            WhoisCommandFailedError,
+            "whois_command_failed",
+            id="WhoisCommandFailed-whois_command_failed",
+        ),
+        pytest.param(
+            WhoisPrivateRegistryError,
+            "private_registry",
+            id="WhoisPrivateRegistry-private_registry",
+        ),
+        pytest.param(
+            WhoisQuotaExceededError,
+            "quota_exceeded",
+            id="WhoisQuotaExceeded-quota_exceeded",
+        ),
     ],
 )
 async def test_full_flow_with_error(
