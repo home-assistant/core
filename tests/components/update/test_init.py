@@ -388,13 +388,23 @@ async def test_entity_with_updates_available(
     assert "Installed latest update" in caplog.text
 
 
-async def test_install_requires_admin(
+@pytest.mark.parametrize(
+    ("service", "state_after_admin_call"),
+    [
+        pytest.param(SERVICE_INSTALL, STATE_OFF, id="install"),
+        pytest.param(SERVICE_SKIP, STATE_OFF, id="skip"),
+        pytest.param("clear_skipped", STATE_ON, id="clear_skipped"),
+    ],
+)
+async def test_services_require_admin(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
     hass_read_only_user: MockUser,
     mock_update_entities: list[MockUpdateEntity],
+    service: str,
+    state_after_admin_call: str,
 ) -> None:
-    """Test installing an update requires an admin user."""
+    """Test the update services require an admin user."""
     # Grant control of all entities, so the call is only rejected for not being admin
     hass_read_only_user.mock_policy({"entities": {"all": {"control": True}}})
     setup_test_component_platform(hass, DOMAIN, mock_update_entities)
@@ -405,7 +415,7 @@ async def test_install_requires_admin(
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_INSTALL,
+            service,
             {ATTR_ENTITY_ID: "update.update_available"},
             blocking=True,
             context=Context(user_id=hass_read_only_user.id),
@@ -417,7 +427,7 @@ async def test_install_requires_admin(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_INSTALL,
+        service,
         {ATTR_ENTITY_ID: "update.update_available"},
         blocking=True,
         context=Context(user_id=hass_admin_user.id),
@@ -425,7 +435,7 @@ async def test_install_requires_admin(
 
     state = hass.states.get("update.update_available")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == state_after_admin_call
 
 
 async def test_entity_with_unknown_version(
