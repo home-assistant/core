@@ -131,11 +131,6 @@ type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
 _RETRY_DELAY = 1  # 1 second delay between retries
 
 
-def _is_non_empty_str(value: Any) -> bool:
-    """Return True if value is a string with content."""
-    return isinstance(value, str) and bool(value)
-
-
 def _get_bot_info(bot: Bot, config_entry: ConfigEntry) -> dict[str, Any]:
     return {
         "config_entry_id": config_entry.entry_id,
@@ -409,27 +404,29 @@ class TelegramNotificationService:
                         callback_data = entry.get(ATTR_CALLBACK_DATA)
                         # `text` is required, and exactly one of `url` /
                         # `callback_data` must be a non-empty string.
-                        actions = [
-                            value for value in (url, callback_data) if value is not None
-                        ]
-                        if (
-                            not _is_non_empty_str(text)
-                            or len(actions) != 1
-                            or not _is_non_empty_str(actions[0])
-                        ):
+                        if not isinstance(text, str) or not text:
                             raise ServiceValidationError(
                                 translation_domain=DOMAIN,
                                 translation_key="invalid_inline_keyboard_button",
                             )
-                        if url is not None:
+                        if isinstance(url, str) and url and callback_data is None:
                             buttons.append(
                                 InlineKeyboardButton(text, url=url, style=style)
                             )
-                        else:
+                        elif (
+                            isinstance(callback_data, str)
+                            and callback_data
+                            and url is None
+                        ):
                             buttons.append(
                                 InlineKeyboardButton(
                                     text, callback_data=callback_data, style=style
                                 )
+                            )
+                        else:
+                            raise ServiceValidationError(
+                                translation_domain=DOMAIN,
+                                translation_key="invalid_inline_keyboard_button",
                             )
                         continue
                     # Deprecated: remove in 2026.12.0

@@ -686,14 +686,17 @@ def _service_call_origin(service: ServiceCall) -> str:
     """Return the automation, script, or frontend that made the call."""
     # default: service was called using frontend such as
     # developer tools or automation editor
+    service_call_origin: str = "call_service"
+
     origin = service.context.origin_event
     if origin and ATTR_ENTITY_ID in origin.data:
         # automation
-        return origin.data[ATTR_ENTITY_ID]
-    if origin and origin.data.get(ATTR_DOMAIN) == SCRIPT_DOMAIN:
+        service_call_origin = origin.data[ATTR_ENTITY_ID]
+    elif origin and origin.data.get(ATTR_DOMAIN) == SCRIPT_DOMAIN:
         # script
-        return f"{origin.data[ATTR_DOMAIN]}.{origin.data[ATTR_SERVICE]}"
-    return "call_service"
+        service_call_origin = f"{origin.data[ATTR_DOMAIN]}.{origin.data[ATTR_SERVICE]}"
+
+    return service_call_origin
 
 
 # Deprecated: remove in 2026.12.0
