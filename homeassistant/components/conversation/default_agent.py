@@ -197,15 +197,27 @@ async def async_setup_default_agent(
     await get_agent_manager(hass).async_setup_default_agent(agent)
 
     @callback
+    def async_freeze_exposure(entity_id: str) -> None:
+        """Persist the exposure of an entity, freezing it at its current default.
+
+        Entities without a registry entry are stored by entity_id in a store that
+        is never pruned, so freezing transient ones (e.g. geo_location) would
+        accumulate records forever. Their exposure is computed on demand instead.
+        """
+        if er.async_get(hass).async_get(entity_id) is None:
+            return
+        async_should_expose(hass, DOMAIN, entity_id)
+
+    @callback
     def async_entity_state_listener(event: Event[EventStateChangedData]) -> None:
         """Set expose flag on new entities."""
-        async_should_expose(hass, DOMAIN, event.data["entity_id"])
+        async_freeze_exposure(event.data["entity_id"])
 
     @callback
     def async_hass_started(hass: HomeAssistant) -> None:
         """Set expose flag on all entities."""
         for state in hass.states.async_all():
-            async_should_expose(hass, DOMAIN, state.entity_id)
+            async_freeze_exposure(state.entity_id)
         async_track_state_added_domain(hass, MATCH_ALL, async_entity_state_listener)
 
     ha_start.async_at_started(hass, async_hass_started)
