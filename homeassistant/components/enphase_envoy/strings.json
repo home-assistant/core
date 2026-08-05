@@ -834,6 +834,11 @@
       "grid_enabled": {
         "name": "Grid enabled"
       }
+    },
+    "time": {
+      "generator_exercise_start_time": {
+        "name": "Exercise start time"
+      }
     }
   },
   "exceptions": {

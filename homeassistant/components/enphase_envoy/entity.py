@@ -159,6 +159,16 @@ class EnvoyGeneratorModeEntity(EnvoyGeneratorEntity):
         return super().available and self.data.generator_mode is not None
 
 
+class EnvoyGeneratorScheduleEntity(EnvoyGeneratorEntity):
+    """Defines a generator entity backed by the generator schedule endpoint."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the generator schedule is available."""
+        return super().available and self.data.generator_schedule is not None
+
+
 class EnvoyACBBatteryEntity(EnvoyBaseEntity):
     """Defines a base entity on an individual AC Battery device."""
 

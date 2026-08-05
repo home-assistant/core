@@ -151,6 +151,11 @@
           "off": "mdi:electric-switch"
         }
       }
+    },
+    "time": {
+      "generator_exercise_start_time": {
+        "default": "mdi:clock-start"
+      }
     }
   }
 }
