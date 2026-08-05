@@ -21,7 +21,7 @@ from .utils import async_remove_entity_from_virtual_group, async_update_unique_i
 
 PARALLEL_UPDATES = 1
 
-TYPE_SENSOR = "sensor"
+TYPE_DND = "dnd"
 TYPE_COMMUNICATION = "communication"
 
 
@@ -29,7 +29,7 @@ TYPE_COMMUNICATION = "communication"
 class AmazonSwitchEntityDescription(SwitchEntityDescription):
     """Alexa Devices switch entity description."""
 
-    is_on_fn: Callable[[AmazonDevice], bool]
+    is_on_fn: Callable[[AmazonDevice], bool] | None = None
     is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
         device.online
         and (sensor := device.sensors.get(key)) is not None
@@ -39,14 +39,12 @@ class AmazonSwitchEntityDescription(SwitchEntityDescription):
     switch_type: str
 
 
-SENSOR_SWITCHES: Final = (
-    AmazonSwitchEntityDescription(
-        key="dnd",
-        translation_key="do_not_disturb",
-        is_on_fn=lambda device: bool(device.sensors["dnd"].value),
-        method="set_do_not_disturb",
-        switch_type=TYPE_SENSOR,
-    ),
+DND_SWITCH: Final = AmazonSwitchEntityDescription(
+    key="dnd",
+    translation_key="do_not_disturb",
+    is_available_fn=lambda device, key: device.online,
+    method="set_do_not_disturb",
+    switch_type=TYPE_DND,
 )
 COMMUNICATION_SWITCHES: Final = (
     AmazonSwitchEntityDescription(
@@ -104,11 +102,10 @@ async def async_setup_entry(
         new_devices = current_devices - known_devices
         if new_devices:
             known_devices.update(new_devices)
-            sensor_switches = [
-                AmazonSwitchEntity(coordinator, serial_num, switch_desc)
-                for switch_desc in SENSOR_SWITCHES
+            dnd_switches = [
+                AmazonSwitchEntity(coordinator, serial_num, DND_SWITCH)
                 for serial_num in new_devices
-                if switch_desc.key in coordinator.data[serial_num].sensors
+                if serial_num in coordinator.dnd_states
             ]
             communication_switches = [
                 AmazonSwitchEntity(coordinator, serial_num, switch_desc)
@@ -117,7 +114,7 @@ async def async_setup_entry(
                 if switch_desc.key
                 in coordinator.data[serial_num].communication_settings
             ]
-            async_add_entities(sensor_switches + communication_switches)
+            async_add_entities(dnd_switches + communication_switches)
 
     _check_device()
     entry.async_on_unload(coordinator.async_add_listener(_check_device))
@@ -137,10 +134,8 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
 
         async with alexa_api_call(self.coordinator):
             await method(self.device, state)
-        if self.entity_description.switch_type == TYPE_SENSOR:
-            self.coordinator.data[self.device.serial_number].sensors[
-                self.entity_description.key
-            ].value = state
+        if self.entity_description.switch_type == TYPE_DND:
+            self.coordinator.dnd_states[self.device.serial_number] = state
         elif self.entity_description.switch_type == TYPE_COMMUNICATION:
             self.coordinator.data[self.device.serial_number].communication_settings[
                 self.entity_description.key
@@ -161,6 +156,11 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
     @override
     def is_on(self) -> bool:
         """Return True if switch is on."""
+        if self.entity_description.switch_type == TYPE_DND:
+            return self.coordinator.dnd_states.get(self.device.serial_number, False)
+
+        if TYPE_CHECKING:
+            assert self.entity_description.is_on_fn is not None
         return self.entity_description.is_on_fn(self.device)
 
     @property

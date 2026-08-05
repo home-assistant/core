@@ -170,6 +170,10 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self.api.on_media_state_event.append(self.media_state_event_handler)
         self.api.on_media_state_event.freeze()
 
+        self._dnd_states: dict[str, bool] = {}
+        self.api.on_dnd_event.append(self.dnd_event_handler)
+        self.api.on_dnd_event.freeze()
+
     @override
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
@@ -366,3 +370,18 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     def volume_states(self) -> dict[str, AmazonVolumeState]:
         """Volumes of devices."""
         return self._volume_states
+
+    async def sync_dnd_state(self) -> None:
+        """Sync dnd state."""
+        async with alexa_config_entry_errors():
+            await self.api.sync_dnd_state()
+
+    async def dnd_event_handler(self, dnd_states: dict[str, bool]) -> None:
+        """Handle pushed dnd events."""
+        self._dnd_states = dnd_states
+        self.async_update_listeners()
+
+    @property
+    def dnd_states(self) -> dict[str, bool]:
+        """DND states of devices."""
+        return self._dnd_states
