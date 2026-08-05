@@ -1,13 +1,4 @@
-"""Tests for the one-shot garage fetch (``async_fetch_garage``).
-
-The telemetry coordinator is a thin push coordinator whose HA-side policy is
-covered in ``test_telemetry_state.py``; all wire parsing / merge / monotonicity
-/ reconnect machinery now lives in :mod:`aioabrp` and is tested there. What
-remains here is :func:`async_fetch_garage`: the setup-time fetch of the
-authenticated user's vehicles that resolves each vehicle's device-card display
-per typecode (degrading per-vehicle on failure) and pairs each raw vehicle with
-its :class:`aioabrp.VehicleModelDisplay` (or ``None`` on a miss).
-"""
+"""Tests for the one-shot garage fetch (``async_fetch_garage``)."""
 
 import logging
 from unittest.mock import AsyncMock, patch
@@ -32,12 +23,7 @@ from .conftest import (
 
 @pytest.fixture(name="client")
 async def client_fixture(hass: HomeAssistant) -> AbrpClient:
-    """An ``AbrpClient`` whose methods are patched by ``mock_abrp_client``.
-
-    Async so the aiohttp client session is grabbed inside a running event loop.
-    The class-level patches in ``mock_abrp_client`` cover this instance, so the
-    static auth here is never exercised against a real endpoint.
-    """
+    """An ``AbrpClient`` whose methods are patched by ``mock_abrp_client``."""
     return AbrpClient(
         async_get_clientsession(hass), ABRP_APP_KEY, StaticAuth("test-tok")
     )
@@ -47,13 +33,7 @@ async def test_fetch_pairs_vehicles_with_display(
     client: AbrpClient,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """A fetch returns each raw vehicle paired with its display.
-
-    ``mock_abrp_client`` returns the 2-vehicle fixture garage; with no display
-    fixtures the default mock 404s every typecode, so each pair carries the raw
-    identity fields with a ``None`` display (the raw-typecode fallback happens
-    later at the DeviceInfo layer).
-    """
+    """A fetch returns each raw vehicle paired with its display."""
     paired = await async_fetch_garage(client)
 
     assert len(paired) == 2
@@ -92,13 +72,7 @@ async def test_display_failure_degrades_only_that_vehicle(
     mock_abrp_client: AsyncMock,
     display_error: Exception,
 ) -> None:
-    """A per-vehicle display failure falls that vehicle back; the fetch succeeds.
-
-    The first vehicle's display fails (auth / api / timeout) → its display is
-    ``None`` (raw-typecode fallback); the second vehicle still enriches. An
-    ``AbrpAuthError`` here does NOT raise ``ConfigEntryAuthFailed`` — only the
-    garage-list call's auth error does (covered separately).
-    """
+    """A per-vehicle display failure falls that vehicle back; the fetch succeeds."""
     mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = display_error
     mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL_2] = (
         build_vehicle_model_display(manufacturer="Rivian", model="R1S")
@@ -117,12 +91,7 @@ async def test_unexpected_display_error_degrades_and_warns(
     mock_abrp_client: AsyncMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """An unexpected (non-aioabrp) display error degrades the vehicle and WARNs.
-
-    Unlike the expected auth / api / timeout failures (logged at DEBUG), an
-    unforeseen ``Exception`` is logged at WARNING so it surfaces. The vehicle
-    still falls back (display ``None``) and the whole fetch still succeeds.
-    """
+    """An unexpected (non-aioabrp) display error degrades the vehicle and WARNs."""
     caplog.set_level(logging.WARNING)
     mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = ValueError("boom")
 
@@ -140,12 +109,7 @@ async def test_garage_auth_error_raises_config_entry_auth_failed(
     client: AbrpClient,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """An ``AbrpAuthError`` from the garage fetch maps to ``ConfigEntryAuthFailed``.
-
-    A revoked/rotated refresh token surfaces from the auth wrapper as
-    ``AbrpAuthError``; the fetch converts it so setup fails into ``SETUP_ERROR``
-    (reauth-eligible) rather than retrying.
-    """
+    """An ``AbrpAuthError`` from the garage fetch maps to ``ConfigEntryAuthFailed``."""
     mock_abrp_client.side_effect = AbrpAuthError("invalid session")
 
     with pytest.raises(ConfigEntryAuthFailed):
@@ -156,10 +120,7 @@ async def test_garage_api_error_raises_config_entry_not_ready(
     client: AbrpClient,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """An ``AbrpApiError`` from the garage fetch maps to ``ConfigEntryNotReady``.
-
-    A transient backend failure maps to a retry rather than an auth-error state.
-    """
+    """An ``AbrpApiError`` from the garage fetch maps to ``ConfigEntryNotReady``."""
     mock_abrp_client.side_effect = AbrpApiError("backend overloaded")
 
     with pytest.raises(ConfigEntryNotReady):

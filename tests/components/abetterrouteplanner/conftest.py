@@ -30,22 +30,17 @@ from tests.typing import ClientSessionGenerator
 USER_SUB = "user-sub-12345"
 REDIRECT_URI = "https://example.com/auth/external/callback"
 
-# Sample vehicle identity used across the tests.
 MOCK_VEHICLE_ID = 941349991303
 MOCK_VEHICLE_NAME = "Rivian R2 2027 Standard Long Range"
 MOCK_VEHICLE_MODEL = "rivian:r2:26:ncma91:rwd:w21"
 MOCK_PAINT = "WHITE"
 
-# Second vehicle for multi-vehicle scenarios (snapshot + disappearance).
 MOCK_VEHICLE_ID_2 = 524289123456
 MOCK_VEHICLE_NAME_2 = "Rivian R1S 2024 Quad Max"
 MOCK_VEHICLE_MODEL_2 = "rivian:r1s:24:max:tri:w22"
 MOCK_PAINT_2 = "BLACK"
 
-# Deterministic, on-domain ``sub`` for sensor / device tests so Syrupy
-# snapshots stay readable and stable across runs. Distinct from the broader
-# ``USER_SUB`` used by config-flow / init tests so a snapshot diff that
-# accidentally picks up an unscoped identifier is visually obvious.
+# Distinct from ``USER_SUB`` so a snapshot picking up the wrong one is obvious.
 SENSOR_TEST_SUB = "abrp-test-sub"
 
 
@@ -58,13 +53,7 @@ def build_vehicle_model_display(
     start_year: int | None = 2026,
     end_year: int | None = None,
 ) -> VehicleModelDisplay:
-    """Build a typed VehicleModelDisplay for device-enrichment tests.
-
-    Default fields compose (via ``aioabrp.VehicleModelDisplay.display_name``)
-    to ``"Rivian R2 2026 Standard Long Range RWD"`` — the same string the old
-    ``build_catalog_entry`` produced — so device-model assertions are
-    unchanged.
-    """
+    """Build a typed VehicleModelDisplay for device-enrichment tests."""
     return VehicleModelDisplay(
         manufacturer=manufacturer,
         model=model,
@@ -102,17 +91,7 @@ async def complete_oauth_callback(
 
 
 def build_id_token(sub: str = USER_SUB, *, email: str | None = None) -> str:
-    """Build a fake JWT id_token with the given ``sub`` (and optional ``email``).
-
-    The returned token has the form ``header.payload.signature``; only the
-    payload is real (base64-urlsafe JSON), the header and signature are opaque
-    placeholders since the integration only inspects the payload.
-
-    ``email`` is omitted from the payload when ``None`` (the default) so existing
-    call sites that only pass ``sub`` produce the same shape as before. Pass
-    an explicit ``""`` to exercise the empty-string branch in callers that
-    treat ``not email`` as absent.
-    """
+    """Build a fake JWT id_token with the given ``sub`` (and optional ``email``)."""
     payload_dict: dict[str, Any] = {"sub": sub}
     if email is not None:
         payload_dict["email"] = email
@@ -147,14 +126,7 @@ def mock_token_entry(expires_at: float, id_token_sub: str) -> dict[str, Any]:
 
 @pytest.fixture(name="config_entry")
 def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
-    """Return the default mocked config entry.
-
-    ``CONF_VEHICLE_IDS`` is set to an empty list: ``__init__.py`` reads it via
-    direct ``entry.data[CONF_VEHICLE_IDS]`` access, so the key must be present
-    or setup raises ``KeyError``. An empty list keeps these legacy fixtures
-    minimal — no vehicles selected means no telemetry stream is spawned, so
-    tests using this fixture don't need ``fake_stream``.
-    """
+    """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=USER_SUB,
@@ -178,11 +150,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture(name="mock_abrp_vehicles")
 def mock_abrp_vehicles() -> list[AbrpVehicle]:
-    """Default 2-vehicle garage returned by the patched ``AbrpClient``.
-
-    Sensor + coordinator tests parametrize on this fixture to vary the
-    coordinator payload without re-patching the client per-test.
-    """
+    """Default 2-vehicle garage returned by the patched ``AbrpClient``."""
     return [
         AbrpVehicle(
             vehicle_id=MOCK_VEHICLE_ID,
@@ -203,43 +171,7 @@ def mock_abrp_vehicles() -> list[AbrpVehicle]:
 def mock_abrp_client(
     mock_abrp_vehicles: list[AbrpVehicle],
 ) -> Generator[AsyncMock]:
-    """Patch the ``aioabrp.AbrpClient`` boundary with configurable mocks.
-
-    Patches the three client methods on the library class object itself, so a
-    single fixture covers every ``AbrpClient`` instance the integration builds:
-    the setup-time client (which backs the garage fetch, the seed poll, and the
-    SSE stream) and the config-flow client share the same class object, so
-    patching the class methods patches all instances.
-
-    - ``async_get_vehicles`` (autospec): returns the 2-vehicle
-      ``mock_abrp_vehicles`` list.
-    - ``async_get_vehicle_model_display`` (autospec): per-typecode configurable
-      typed returns. Tests populate ``mock_abrp_client.display_responses`` keyed
-      by typecode with either a ``VehicleModelDisplay`` (returned) or a
-      ``BaseException`` (raised). Any typecode absent from the table raises
-      ``AbrpApiError`` (404), so by default every vehicle's device card falls
-      back to the raw typecode — matching the old empty-catalog default.
-    - ``async_get_current_telemetry`` (the coordinator seed path, autospec):
-      per-vehicle configurable typed returns. Tests populate
-      ``mock_abrp_client.seed_responses`` keyed by vehicle id with either a
-      ``Telemetry`` (returned) or a ``BaseException`` (raised),
-      e.g.::
-
-          mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry(
-              soc=build_metric_value(42.0)
-          )
-
-      Any vehicle id absent from the table seeds an empty ``Telemetry()``.
-
-    Autospec/self decision: all three patches use ``autospec=True``. Because
-    autospec preserves the bound-method signature, the ``async_get_current_telemetry``
-    side_effect receives ``self`` as its first positional arg (the real
-    signature is ``(self, vehicle_id)``), so ``_seed`` is defined as
-    ``_seed(self, vehicle_id)``.
-
-    The ``async_get_vehicles`` mock is yielded as the primary handle, with
-    ``.seed_responses`` attached to it for ergonomic per-vehicle seeding.
-    """
+    """Patch the ``aioabrp.AbrpClient`` boundary with configurable mocks."""
     seed_responses: dict[int, Telemetry | BaseException] = {}
 
     async def _seed(self: Any, vehicle_id: int) -> Telemetry:
@@ -284,19 +216,7 @@ def mock_abrp_client(
 def mock_config_entry_with_vehicles(
     token_entry: dict[str, Any],
 ) -> MockConfigEntry:
-    """Return a config entry with the first vehicle preselected.
-
-    Used by sensor + coordinator tests that need a populated
-    ``CONF_VEHICLE_IDS`` list without driving the full config-flow picker step.
-    Only the first vehicle is selected so snapshot tests can assert the
-    filter behaviour (selected entity emitted, unselected vehicle ignored).
-
-    ``unique_id`` is set to :data:`SENSOR_TEST_SUB` (the deterministic
-    on-domain stand-in for a JWT ``sub`` claim) because both device
-    identifiers and entity unique_ids are scoped by ``entry.unique_id`` —
-    keeping the value stable and readable across runs is required for the
-    Syrupy snapshots to diff cleanly.
-    """
+    """Return a config entry with the first vehicle preselected."""
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=SENSOR_TEST_SUB,
@@ -306,9 +226,6 @@ def mock_config_entry_with_vehicles(
             CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID)],
         },
     )
-
-
-# Telemetry fixtures -----------------------------------------------------------
 
 
 class _StreamDriver:
@@ -340,24 +257,10 @@ class _StreamDriver:
 
 @pytest.fixture(name="fake_stream")
 def fake_stream() -> Generator[_StreamDriver]:
-    """Patch the integration's TelemetryStream with a synchronous test driver.
-
-    Captures the constructor-injected on_update / on_connection_change
-    callbacks and exposes fire_frame / fire_connection so tests drive
-    push telemetry deterministically without a real SSE consumer.
-
-    The fake stream class is defined inside the fixture so each test gets a
-    fresh class with its own ``instances`` list — no cross-test leakage.
-    """
+    """Patch the integration's TelemetryStream with a synchronous test driver."""
 
     class _FakeTelemetryStream:
-        """Test double for aioabrp.TelemetryStream.
-
-        Captures the constructor-injected coordinator callbacks so a test can
-        drive frames / connection transitions synchronously via the fixture's
-        driver, instead of running a real SSE consumer. start()/stop() are
-        awaitable no-ops that record their call for lifecycle assertions.
-        """
+        """Test double for aioabrp.TelemetryStream."""
 
         instances: list[Any] = []
 

@@ -1,12 +1,4 @@
-"""Tests for ``async_remove_config_entry_device``.
-
-The "Delete from this integration" link is refused while a device's vehicle is
-still in the ``selected ∩ present`` set (selected in ``CONF_VEHICLE_IDS`` AND
-live in the garage), and permitted once the vehicle drops out of either — so an
-orphaned device card can be cleaned up. A vehicle that is selected but has
-vanished from the garage and one that is present but unselected both fall on the
-"permitted" side because neither is in ``selected ∩ present``.
-"""
+"""Tests for ``async_remove_config_entry_device``."""
 
 from typing import Any
 
@@ -22,8 +14,7 @@ from .conftest import MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2, SENSOR_TEST_SUB
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
-# A vehicle id absent from the 2-vehicle garage (``mock_abrp_vehicles``), used
-# for the selected-but-vanished case.
+# Absent from the 2-vehicle garage: the selected-but-vanished case.
 ABSENT_VEHICLE_ID = 123456789
 
 
@@ -82,9 +73,7 @@ async def test_remove_config_entry_device(
     )
     await _setup_entry(hass, entry)
 
-    # ``async_get_or_create`` is idempotent: for the active vehicle it returns
-    # the device the setup anchor already created; for the other cases (not
-    # anchored at setup) it materialises the card the test needs to delete.
+    # Idempotent: returns the anchored device, or materialises one to delete.
     scope = f"{entry.unique_id}_{device_vehicle_id}"
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,

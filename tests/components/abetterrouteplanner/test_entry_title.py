@@ -1,10 +1,4 @@
-"""Tests for config-entry title construction on the initial-add path.
-
-The flow appends ``identity.display_name`` to ``self.flow_impl.name`` when the
-library resolves one, falling back to the bare implementation name otherwise.
-Deriving the display name from the OIDC claims is the library's concern
-(``aioabrp.parse_unverified_identity``); these tests only cover the title wiring.
-"""
+"""Tests for config-entry title construction on the initial-add path."""
 
 import base64
 import json
@@ -26,28 +20,12 @@ from tests.typing import ClientSessionGenerator
 
 @pytest.fixture(autouse=True)
 async def setup_auth(hass: HomeAssistant) -> None:
-    """Set up the auth component so /auth/external/callback is registered.
-
-    Mirrors the ``setup_auth`` autouse fixture in ``test_config_flow.py``:
-    the integration's own component is intentionally NOT loaded so the
-    config-flow exercises the lazy-impl-registration path that happens when
-    the user opens "Add integration" without an existing entry.
-    """
+    """Set up the auth component so /auth/external/callback is registered."""
     assert await async_setup_component(hass, "auth", {})
 
 
 def _build_id_token_with_payload(payload: dict[str, Any]) -> str:
-    """Build a ``header.payload.signature`` id_token from a payload dict.
-
-    The integration only inspects the payload (the OAuth code exchange already
-    authenticated the issuer over TLS), so the header and signature are opaque
-    placeholders.
-
-    ``conftest.build_id_token`` only supports ``sub`` + optional ``email``,
-    but these tests need to inject a ``name`` claim too, so the payload is
-    built inline here (the conftest contract explicitly allows building the
-    token inline in the test for ``name``-claim cases).
-    """
+    """Build a ``header.payload.signature`` id_token from a payload dict."""
     payload_b64 = (
         base64.urlsafe_b64encode(json.dumps(payload).encode()).rstrip(b"=").decode()
     )
@@ -93,11 +71,7 @@ async def test_entry_title_uses_display_name(
     payload: dict[str, Any],
     expected_title: str,
 ) -> None:
-    """The title appends ``display_name`` when present, else uses the bare name.
-
-    Resolving the display name from the OIDC claims is the library's concern;
-    this only covers the two title-construction branches the flow itself owns.
-    """
+    """The title appends ``display_name`` when present, else uses the bare name."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

@@ -49,12 +49,9 @@ class AbetterrouteplannerFlowHandler(
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initialized by the user.
-
-        The integration ships a built-in public OIDC client (no Application
-        Credentials platform), so the implementation must be registered on
-        demand here — ``async_setup`` only runs once a config entry exists.
-        """
+        """Handle a flow initialized by the user."""
+        # The built-in implementation has no Application Credentials entry, so
+        # the first flow must register it before any config entry exists.
         if not await config_entry_oauth2_flow.async_get_implementations(
             self.hass, DOMAIN
         ):
@@ -65,21 +62,14 @@ class AbetterrouteplannerFlowHandler(
 
     @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle a successful OAuth2 authorization.
-
-        Fetch the user's garage, stash it, and hand off to
-        ``async_step_pick_vehicles`` so the user can pick which vehicles to
-        track.
-        """
-        # The IdP issues id_token via the authorization_code grant (the scope
-        # is ``oidc``). A missing id_token here means the IdP misbehaved; abort
-        # safely rather than silently accept a token that we can't bind to a
-        # verified account.
+        """Handle a successful OAuth2 authorization."""
+        # The ``oidc`` scope guarantees an id_token; without one we cannot bind
+        # the entry to a verified account.
         id_token = data["token"].get("id_token")
         if id_token is None:
             return self.async_abort(reason="oauth_error")
-        # AbrpAuthError here means a bad id_token — distinct from the API-auth
-        # use of the same exception in the async_get_vehicles call below.
+        # A bad id_token — distinct from the API-auth use of the same exception
+        # in ``async_get_vehicles`` below.
         try:
             identity = parse_unverified_identity(id_token)
         except AbrpAuthError:
@@ -120,14 +110,9 @@ class AbetterrouteplannerFlowHandler(
         errors: dict[str, str] = {}
         if user_input is not None:
             if user_input[CONF_VEHICLE_IDS]:
-                # Re-check unique_id at submission time so a parallel flow
-                # that completed between OAuth and picker doesn't race past
-                # the earlier ``_abort_if_unique_id_configured`` call.
+                # A parallel flow may have completed between OAuth and the picker.
                 self._abort_if_unique_id_configured()
-                # Bypass ``super().async_oauth_create_entry`` and call
-                # ``async_create_entry`` directly so the ``vehicle_ids`` key we
-                # add to ``data`` doesn't rely on the base class forwarding
-                # unknown keys verbatim.
+                # Called directly: the base class doesn't forward extra data keys.
                 return self.async_create_entry(
                     title=self._title,
                     data={
@@ -144,9 +129,6 @@ class AbetterrouteplannerFlowHandler(
             )
             for vehicle in self._vehicles
         ]
-        # On first render: suggest selecting all vehicles. On error-driven
-        # re-render: preserve the user's last selection so the rejected
-        # submission isn't silently overwritten with the default set.
         if user_input is None:
             suggested: list[str] = [str(v.vehicle_id) for v in self._vehicles]
         else:

@@ -63,14 +63,7 @@ def _mock_token_post(aioclient_mock: AiohttpClientMocker) -> None:
 
 @pytest.fixture(autouse=True)
 async def setup_auth(hass: HomeAssistant) -> None:
-    """Set up the auth component so /auth/external/callback is registered.
-
-    The integration's own component is intentionally NOT loaded here so the
-    tests mirror the UI behaviour: opening the config flow from the
-    "Add integration" dialog does not call ``async_setup`` first. The flow
-    handler is responsible for ensuring the OAuth2 implementation is
-    registered before the flow proceeds.
-    """
+    """Set up the auth component so /auth/external/callback is registered."""
     assert await async_setup_component(hass, "auth", {})
 
 
@@ -146,8 +139,6 @@ async def test_full_flow(
     code_verifier = data["code_verifier"]
     assert isinstance(code_verifier, str)
     assert code_verifier
-    # Round-trip: challenge published in authorize URL matches verifier sent
-    # to the token endpoint.
     assert _compute_expected_challenge(code_verifier) == code_challenge
 
 
@@ -295,12 +286,7 @@ async def test_initial_add_unusable_id_token_aborts(
     aioclient_mock: AiohttpClientMocker,
     id_token: str | None,
 ) -> None:
-    """An absent or unparsable id_token aborts the initial add (finding D).
-
-    The flow owns two guards: a missing ``id_token`` and an ``AbrpAuthError``
-    raised by ``parse_unverified_identity``. Enumerating the malformed-payload
-    shapes that raise that error is the library's concern, not the integration's.
-    """
+    """An absent or unparsable id_token aborts the initial add (finding D)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -332,12 +318,7 @@ async def test_pick_vehicles_aborts_if_entry_appeared_during_picker(
     mock_abrp_client: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Picker submission re-runs the duplicate check (finding F race coverage).
-
-    If a parallel flow lands an entry with the same ``sub`` while the user is
-    still on the picker form, submitting the picker must abort with
-    ``already_configured`` rather than creating a second entry.
-    """
+    """Picker submission re-runs the duplicate check (finding F race coverage)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -348,8 +329,7 @@ async def test_pick_vehicles_aborts_if_entry_appeared_during_picker(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pick_vehicles"
 
-    # Simulate a parallel flow that completed and landed an entry with the
-    # same unique_id between picker render and picker submission.
+    # A parallel flow landed the same unique_id between render and submission.
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_configure(
@@ -358,7 +338,6 @@ async def test_pick_vehicles_aborts_if_entry_appeared_during_picker(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    # Only the racing entry remains; no second entry was created.
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
@@ -369,13 +348,7 @@ async def test_pick_vehicles_empty_selection_rejected(
     aioclient_mock: AiohttpClientMocker,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """An empty picker submission re-renders the form with a ``base`` error.
-
-    Validation lives in the step body (not the schema): the developer found
-    that ``vol.Length(min=1)`` at the schema layer raises ``vol.Invalid`` →
-    ``data_entry_flow.InvalidData`` rather than re-rendering the form, so the
-    flow handler returns ``async_show_form(errors={"base": ...})`` itself.
-    """
+    """An empty picker submission re-renders the form with a ``base`` error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -420,11 +393,7 @@ async def test_garage_fetch_error_aborts(
     side_effect: Exception,
     expected_reason: str,
 ) -> None:
-    """An API error between OAuth and the picker aborts the flow.
-
-    ``AbrpAuthError`` maps to ``api_unauthorized`` and ``AbrpApiError`` maps to
-    ``cannot_connect``.
-    """
+    """An API error between OAuth and the picker aborts the flow."""
     mock_abrp_client.side_effect = side_effect
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

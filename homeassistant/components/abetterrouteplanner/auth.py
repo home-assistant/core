@@ -1,22 +1,12 @@
 """HA-side authentication adapter for the aioabrp library.
 
-The library drives a long-lived telemetry stream from a background task and
-asks for a fresh access token via :class:`aioabrp.AbstractAuth`. Its contract
-is failure-containment: a raised :class:`aioabrp.AbrpAuthError` is treated as a
-*terminal* auth failure (the library stops the stream and fires
-``AUTH_FAILED``), while any other exception is treated as *transient* (the
-library backs off and retries).
-
-:class:`AbetterrouteplannerAuth` wraps HA's ``OAuth2Session`` and maps the
-OAuth-refresh failure shapes onto that contract: a refresh
-:class:`aiohttp.ClientResponseError` in the 4xx range — a revoked or rotated
-refresh token — becomes terminal ``AbrpAuthError``; everything else (5xx,
-generic ``ClientError``, timeouts) propagates unchanged so the library retries.
-
-Deliberately, this does NOT raise ``ConfigEntryAuthFailed`` — that exception is
-inert inside the library's background task. The setup-time garage fetch
-(:func:`.coordinator.async_fetch_garage`) is the site that surfaces auth
-failure to HA as ``ConfigEntryAuthFailed``.
+The library treats ``AbrpAuthError`` as terminal (it stops the stream and fires
+``AUTH_FAILED``) and every other exception as transient (it backs off and
+retries), so a 4xx refresh failure — a revoked or rotated refresh token — maps
+to ``AbrpAuthError`` while 5xx, generic ``ClientError`` and timeouts propagate
+unchanged. ``ConfigEntryAuthFailed`` is deliberately not raised here: it is
+inert inside the library's background task, so the setup-time garage fetch in
+``coordinator.async_fetch_garage`` is where HA learns about auth failure.
 """
 
 from http import HTTPStatus
@@ -37,12 +27,7 @@ class AbetterrouteplannerAuth(AbstractAuth):
 
     @override
     async def async_get_access_token(self) -> str:
-        """Return a valid access token, refreshing it if needed.
-
-        A refresh ``ClientResponseError`` in the 4xx range (revoked/rotated
-        refresh token) is terminal and surfaces as ``AbrpAuthError``. Any other
-        failure propagates unchanged so the library treats it as transient.
-        """
+        """Return a valid access token, refreshing it if needed."""
         try:
             await self._oauth_session.async_ensure_token_valid()
         except ClientResponseError as err:

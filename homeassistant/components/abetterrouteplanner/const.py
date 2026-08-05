@@ -11,25 +11,13 @@ OAUTH2_CLIENT_ID = "ha-abrp-integration"
 OAUTH2_SCOPES: list[str] = ["oidc", "profile", "email", "offline_access"]
 
 # Partner API key issued by ABRP (Iternio) for the Home Assistant integration.
-# Passed to ``aioabrp.AbrpClient`` / ``aioabrp.TelemetryStream`` as the API
-# key; all endpoint/header/base-URL wiring now lives in the library.
 ABRP_APP_KEY = "97b4bb90-b8f5-413b-9f28-09789a3777ed"
 
-# Config entry key holding the list of tracked vehicle IDs.
-#
-# Wire and dataclass use ``int`` (the API returns int64 ``vehicle_id``), but
-# this value is stored as ``list[str]`` because HA's ``SelectSelector`` only
-# accepts string option values. Callers reading ``entry.data[CONF_VEHICLE_IDS]``
-# must therefore round-trip through ``int(...)`` before comparing against
-# ``AbrpVehicle.vehicle_id``. The conversion lives at the picker/coordinator
-# boundary, not in the dataclass.
+# Callers must ``int()`` before comparing against ``AbrpVehicle.vehicle_id``:
+# ABRP returns an int64 id, but a selector can only store it as a string.
 CONF_VEHICLE_IDS = "vehicle_ids"
 
 
 def signal_new_metric(entry_id: str) -> str:
-    """Return the dispatcher signal name for first-time metric arrivals.
-
-    Domain-prefixed and entry-scoped so two ABRP accounts on the same HA
-    instance never crosstalk metric-arrival events.
-    """
+    """Return the entry-scoped dispatcher signal for first-time metric arrivals."""
     return f"{DOMAIN}_new_metric_{entry_id}"

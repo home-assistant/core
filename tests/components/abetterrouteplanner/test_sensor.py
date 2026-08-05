@@ -1,31 +1,4 @@
-"""Tests for the A Better Routeplanner sensor platform.
-
-Surface under test:
-
-* One HA device per ``vehicle_id`` in ``entry.data[CONF_VEHICLE_IDS]``,
-  anchored at integration setup with full DeviceInfo metadata.
-* Lazily-created telemetry sensors per device.
-* Filter is applied at ``async_setup_entry`` time: vehicles not in
-  ``CONF_VEHICLE_IDS`` are dropped silently; selected ``vehicle_id`` values
-  missing from the coordinator payload log a warning and skip (no
-  entity, no device, no repair issue).
-
-Telemetry data model
---------------------
-The coordinator surfaces typed library state, not raw SSE wire frames:
-``coordinator.data`` is ``dict[int, dict[Metric, MetricValue]]``. Tests drive
-it through the two committed seams in ``conftest.py``:
-
-* ``mock_abrp_client.seed_responses[vid] = {Metric.X: build_metric_value(...)}``
-  for the setup-time seed snapshot, and
-* ``fake_stream.fire_frame(vid, {Metric.X: build_metric_value(...)})`` for a
-  post-setup push frame (the dispatcher / lazy-create path).
-
-Wire-shape parsing, per-metric delta merge, null-leaf retention, and the raw
-``chargingState`` member mapping are owned by ``aioabrp`` and covered by the
-library's own suite — the integration test only asserts behaviour on the typed
-``MetricValue`` boundary.
-"""
+"""Tests for the A Better Routeplanner sensor platform."""
 
 from datetime import UTC, datetime
 import json
@@ -73,9 +46,8 @@ VOLTAGE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_voltage"
 CHARGING_STATE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_charging_state"
 CHARGING_STATE_UNIQUE_ID = f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_charging_state"
 
-# Integration package dir — the cross-pin guard reads the source
-# ``strings.json`` / ``icons.json`` (not the generated ``translations/en.json``)
-# so a missing label or icon for a charging-state option fails loudly.
+# The source files, not the generated ``translations/en.json``, so a missing
+# label or icon fails loudly.
 _INTEGRATION_DIR = Path(abrp_module.__file__).parent
 
 
@@ -84,11 +56,8 @@ async def _setup_integration(
 ) -> MockConfigEntry:
     """Register the integration's OAuth implementation and set up the entry.
 
-    Tests that complete setup with a non-empty ``CONF_VEHICLE_IDS`` selection
-    MUST also request the ``fake_stream`` fixture: a real
-    :class:`aioabrp.TelemetryStream` would otherwise be constructed and try to
-    open an SSE connection. ``fake_stream`` patches the stream class with a
-    synchronous test double, so setup returns without opening a connection.
+    Callers that select vehicles must also request ``fake_stream``, or a real
+    TelemetryStream opens an SSE connection.
     """
     assert await async_setup_component(hass, "auth", {})
     assert await async_setup_component(hass, DOMAIN, {})
@@ -107,21 +76,10 @@ async def test_unselected_vehicle_absent_from_registries(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Unselected vehicles never appear in device or entity registries.
-
-    Only the first vehicle is in ``CONF_VEHICLE_IDS``; the second vehicle must
-    not surface as a device, and no entity must carry its ``vehicle_id``
-    in its unique_id. The selected vehicle's device anchor is verified by
-    :func:`test_per_vehicle_device_anchored_at_setup`; this test isolates
-    the filter behaviour for the unselected case.
-    """
+    """Unselected vehicles never appear in device or entity registries."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    # Device identifiers and entity unique_ids are scoped by
-    # ``entry.unique_id`` (the JWT ``sub``) so two ABRP accounts on the same
-    # HA can't collide on a shared ``vehicle_id``. Read the sub off the
-    # fixture rather than the bare constant so the assertion stays correct
-    # if the fixture's unique_id is ever parametrized.
+    # Read the sub off the fixture so this survives a parametrized unique_id.
     scope = config_entry_with_vehicles.unique_id
     selected_device = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{scope}_{MOCK_VEHICLE_ID}")}
@@ -148,12 +106,7 @@ async def test_selected_vehicle_missing_from_garage_logs_and_skips(
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A selected ``vehicle_id`` missing from the garage emits nothing + logs.
-
-    Mirrors the user-visible behaviour when a vehicle was removed from
-    the ABRP account between picker submission and the first coordinator
-    refresh: no entity, no device, no repair — just a debug log line.
-    """
+    """A selected ``vehicle_id`` missing from the garage emits nothing + logs."""
     bogus_id = "99999999"
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -176,9 +129,6 @@ async def test_selected_vehicle_missing_from_garage_logs_and_skips(
     assert bogus_id in caplog.text
 
 
-# Telemetry sensor tests ------------------------------------------------------
-
-
 @pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
@@ -189,31 +139,11 @@ async def test_telemetry_sensors_snapshot(
     fake_stream: Any,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Entity registry + states snapshot for the full per-vehicle metric set.
-
-    Every metric is fired for the selected vehicle so all 11 telemetry
-    entities exist (entity creation is lazy — a metric entity surfaces only
-    after its metric first carries a value). The snapshot pins:
-
-    * One entity per metric (soc / power / voltage / soe / odometer /
-      calibrated_ref_cons / battery_capacity / soh / range /
-      battery_temperature / charging_state).
-    * Each unique_id scoped by ``entry.unique_id`` —
-      ``f"{sub}_{vehicle_id}_{description.key}"`` — so two ABRP accounts on
-      one HA can't collide.
-    * ``device_class``, ``state_class``, ``unit_of_measurement``, and
-      ``entity_category`` per the SENSORS registry, plus the rendered native
-      state and the deterministic ``last_reported_at`` stamp.
-    """
+    """Entity registry + states snapshot for the full per-vehicle metric set."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    # Fire one frame carrying EVERY metric so the snapshot captures all
-    # entities with rendered states (not just registry metadata). Freeze
-    # time around the push so the receipt-stamped ``last_reported_at`` is
-    # deterministic. SOC / SOH are PERCENT values on the typed boundary
-    # (the library scales the wire ``frac`` before HA sees it). The
-    # charging-state metric carries a typed ``ChargingState`` member, mapped
-    # to its HA option string by the enum sensor.
+    # Every metric in one frame so the snapshot captures rendered states, with
+    # time frozen so the receipt-stamped ``last_reported_at`` is deterministic.
     with freeze_time("2026-05-24T12:00:00+00:00"):
         fake_stream.fire_frame(
             MOCK_VEHICLE_ID,
@@ -246,13 +176,7 @@ async def test_soc_native_value_is_percent(
     config_entry_with_vehicles: MockConfigEntry,
     fake_stream: Any,
 ) -> None:
-    """SoC surfaces the typed PERCENT ``MetricValue.value`` with one decimal.
-
-    The library scales the wire ``frac`` to a percentage before HA sees it,
-    so the sensor's ``native_value`` is the float percent directly. With
-    ``suggested_display_precision=1`` a ``85.7`` percent reading renders as
-    ``"85.7"``.
-    """
+    """SoC surfaces the typed PERCENT ``MetricValue.value`` with one decimal."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
     fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(soc=build_metric_value(85.7)))
@@ -269,14 +193,7 @@ async def test_seeded_metric_surfaces_at_setup(
     config_entry_with_vehicles: MockConfigEntry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """A metric present in the setup seed snapshot creates its entity eagerly.
-
-    The seed path (``mock_abrp_client.seed_responses``) populates
-    ``coordinator.data`` before the platform forwards, so the platform's
-    seed-frame scan creates the entity at setup time without a post-setup
-    push frame. SOC is a PERCENT value on the typed boundary, so a seeded
-    ``42.0`` renders as ``"42.0"``.
-    """
+    """A metric present in the setup seed snapshot creates its entity eagerly."""
     mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry(
         soc=build_metric_value(42.0)
     )
@@ -296,11 +213,7 @@ async def test_available_follows_native_value(
     config_entry_with_vehicles: MockConfigEntry,
     fake_stream: Any,
 ) -> None:
-    """``available`` tracks ``native_value is not None``.
-
-    A live frame carrying a non-None value makes the sensor available; the
-    entity surfaces a rendered state rather than ``unavailable``.
-    """
+    """``available`` tracks ``native_value is not None``."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
     fake_stream.fire_frame(
@@ -314,29 +227,7 @@ async def test_available_follows_native_value(
     assert state.state == "12000.0"
 
 
-#
-# * Range: HA ``translation_key="range"``. DISTANCE class, MEASUREMENT
-#   state_class (instantaneous level, not accumulating). Native ``m``,
-#   suggested unit ``km`` with display precision 0 — mirrors odometer's
-#   unit-conversion shape so the user reads km on the dashboard while the
-#   recorder keeps the canonical meter scale for unit-flip safety.
-# * Battery Temperature: HA ``translation_key="battery_temperature"``.
-#   TEMPERATURE class, MEASUREMENT state_class. Display precision 1 — one
-#   decimal is enough to read true thermal fluctuation without fake precision.
-#
-# The typed ``MetricValue.value`` is the canonical-unit float (meters for
-# range, Celsius for battery temperature); HA's unit conversion handles the
-# km display.
-#
-# Entity_id slug rendering (``has_entity_name=True`` + device name +
-# translation_key):
-#   sensor.rivian_r2_2027_standard_long_range_range
-#   sensor.rivian_r2_2027_standard_long_range_battery_temperature
-#
-# The "range_range" doubling in the Range entity_id is the natural
-# consequence of the device name containing "range" and the
-# translation_key being "range"; HA sensor key = ``range`` remains
-# authoritative.
+# The "range_range" doubling below is the device name meeting translation_key.
 
 
 RANGE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_range"
@@ -362,16 +253,7 @@ async def test_range_sensor_state(
     range_m: float,
     expected_state: str,
 ) -> None:
-    """Range sensor surfaces the meters ``MetricValue.value`` rendered in km.
-
-    Native ``METERS`` + ``suggested_unit_of_measurement=KILOMETERS`` +
-    ``suggested_display_precision=0`` mirror the existing odometer
-    sensor's meters-to-display-km translation, so the user sees a familiar
-    km value on the dashboard while the LTS pipeline keeps the canonical
-    meter scale for unit-flip / locale conversions.
-
-    The entity surfaces on the first frame carrying ``Metric.RANGE``.
-    """
+    """Range sensor surfaces the meters ``MetricValue.value`` rendered in km."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
     fake_stream.fire_frame(
@@ -403,16 +285,7 @@ async def test_battery_temperature_sensor_state(
     temp_c: float,
     expected_state: str,
 ) -> None:
-    """Battery Temperature sensor surfaces the Celsius ``MetricValue.value``.
-
-    Native unit is Celsius; ``suggested_display_precision=1`` gives one
-    decimal place — enough to read meaningful thermal fluctuation
-    (charging warm-up, ambient pre-conditioning) without inflating
-    noise. Negative values are pinned because winter operation is a
-    real shape, not a degenerate one.
-
-    The entity surfaces on the first frame carrying ``Metric.BATTERY_TEMPERATURE``.
-    """
+    """Battery Temperature sensor surfaces the Celsius ``MetricValue.value``."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
     fake_stream.fire_frame(
@@ -425,17 +298,6 @@ async def test_battery_temperature_sensor_state(
     assert state.state == expected_state
 
 
-# Each vehicle's device-card model/manufacturer are composed at setup from the
-# per-typecode display fetch (``async_get_vehicle_model_display`` →
-# ``VehicleModelDisplay.display_name``); a display miss leaves the display
-# ``None`` and the card falls back to the raw typecode.
-#
-# Tests pin via the entity_registry surface (translation_key / unique_id
-# / entity_category as registry-options fields). Strings.json slug
-# choices stay decoupled from the assertions — translation_keys are the
-# contract.
-
-
 def _make_vehicle(
     *,
     vehicle_id: int = MOCK_VEHICLE_ID,
@@ -443,14 +305,7 @@ def _make_vehicle(
     vehicle_model: str = MOCK_VEHICLE_MODEL,
     paint: str | None = "WHITE",
 ) -> AbrpVehicle:
-    """Build an AbrpVehicle from its four identity fields.
-
-    :class:`AbrpVehicle` carries only ``vehicle_id`` / ``name`` /
-    ``vehicle_model`` / ``paint`` — no composed device-card columns. The
-    device-card model/manufacturer are composed separately from the
-    per-typecode display endpoint, so this builder constructs the minimal
-    raw vehicle the integration receives from the garage.
-    """
+    """Build an AbrpVehicle from its four identity fields."""
     return AbrpVehicle(
         vehicle_id=vehicle_id,
         name=name,
@@ -470,22 +325,14 @@ def _lookup_sensor_entity_id(
     vehicle_id: int,
     translation_key: str,
 ) -> str | None:
-    """Return the entity_id for a per-vehicle sensor, or ``None`` if absent.
-
-    Lookup keyed by the integration's convention ``unique_id`` shape
-    ``f"{scope}_{translation_key}"``. Decoupled from ``strings.json``
-    slug choices so a friendly-name change doesn't ripple through the
-    assertions.
-    """
+    """Return the entity_id for a per-vehicle sensor, or ``None`` if absent."""
     return entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{_scope(entry, vehicle_id)}_{translation_key}"
     )
 
 
-# Vehicle typecode with paint+option suffix decoration. The catalog
-# carries the ancestor ``rivian:r1s:25:c3-53g:dual`` — legacy
-# ``dict.get(raw.vehicle_model)`` misses, current longest-prefix match
-# resolves correctly.
+# Suffix-decorated typecode: an exact dict lookup misses where longest-prefix
+# match resolves.
 _PREFIX_MATCH_VEHICLE_MODEL = "rivian:r1s:25:c3-53g:dual:perf"
 
 
@@ -496,14 +343,7 @@ async def test_device_info_model_uses_display_endpoint(
     device_registry: dr.DeviceRegistry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """``DeviceInfo.model`` reflects the composed display string.
-
-    The display endpoint resolves the vehicle's typecode to its display
-    metadata; the integration lands that display's ``display_name`` on the
-    per-vehicle device's ``DeviceInfo.model`` slot. The composition itself is
-    the library's concern, so this pins the wiring against the display's own
-    ``display_name`` rather than a hardcoded composed literal.
-    """
+    """``DeviceInfo.model`` reflects the composed display string."""
     display = build_vehicle_model_display(
         manufacturer="Rivian",
         model="R1S",
@@ -533,13 +373,7 @@ async def test_device_info_model_falls_back_to_typecode_on_display_miss(
     device_registry: dr.DeviceRegistry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """``DeviceInfo.model`` falls back to the raw typecode on display miss.
-
-    The default ``mock_abrp_client`` fixture 404s the display endpoint for
-    every typecode, so the display fetch returns ``None`` → ``DeviceInfo.model``
-    falls back to the raw ``vehicle_model`` (typecode). The device card's Model
-    field is never blank.
-    """
+    """``DeviceInfo.model`` falls back to the raw typecode on display miss."""
     mock_abrp_client.return_value = [_make_vehicle()]
 
     await _setup_integration(hass, config_entry_with_vehicles)
@@ -558,12 +392,7 @@ async def test_device_info_name_falls_back_to_typecode_when_unnamed(
     device_registry: dr.DeviceRegistry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """``DeviceInfo.name`` falls back to the raw typecode for an unnamed vehicle.
-
-    A vehicle with no user-set nickname (``name=None``) anchors its device with
-    ``name = vehicle.name or vehicle.vehicle_model`` → the raw typecode, so the
-    device card's Name is never blank.
-    """
+    """``DeviceInfo.name`` falls back to the raw typecode for an unnamed vehicle."""
     mock_abrp_client.return_value = [_make_vehicle(name=None)]
 
     await _setup_integration(hass, config_entry_with_vehicles)
@@ -575,20 +404,13 @@ async def test_device_info_name_falls_back_to_typecode_when_unnamed(
     assert device.name == MOCK_VEHICLE_MODEL
 
 
-# Two-make display fixtures used by the per-vehicle manufacturer test below.
-# The second vehicle resolves to Polestar so the two selected vehicles have
-# distinct manufacturers — a single-make setup couldn't distinguish
-# "manufacturer per-vehicle bound" from "hard-coded to first make."
+# Two makes: a single-make setup can't tell per-vehicle binding from a
+# hard-coded first make.
 _POLESTAR_VEHICLE_MODEL = "polestar:2:24:bev:awd"
 
 
 def _set_two_make_displays(mock_abrp_client: AsyncMock) -> None:
-    """Register display fixtures for the two distinct-make vehicles.
-
-    ``MOCK_VEHICLE_MODEL`` resolves to Rivian; ``_POLESTAR_VEHICLE_MODEL`` to
-    Polestar — so each per-vehicle device's manufacturer/model is pinned
-    independently.
-    """
+    """Register display fixtures for the two distinct-make vehicles."""
     mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = (
         build_vehicle_model_display(
             manufacturer="Rivian",
@@ -618,12 +440,7 @@ async def test_device_info_manufacturer_uses_display_make(
     device_registry: dr.DeviceRegistry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """Each per-vehicle device's ``manufacturer`` reflects its display-derived make.
-
-    Two vehicles whose typecodes resolve to two distinct display makes
-    prove per-instance binding of ``DeviceInfo.manufacturer`` (not
-    hard-coded-to-first or hard-coded-to-integration-name).
-    """
+    """Each per-vehicle device's ``manufacturer`` reflects its display-derived make."""
     mock_abrp_client.return_value = [
         _make_vehicle(),
         _make_vehicle(
@@ -664,13 +481,7 @@ async def test_device_info_manufacturer_unset_on_display_miss(
     config_entry_with_vehicles: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """``DeviceInfo.manufacturer`` stays unset on display miss.
-
-    The default ``mock_abrp_client`` fixture 404s the display endpoint for
-    every typecode → the display fetch returns ``None`` →
-    ``DeviceInfo.manufacturer`` is left unset rather than guessed. A blank
-    Manufacturer field is preferable to an incorrect make.
-    """
+    """``DeviceInfo.manufacturer`` stays unset on display miss."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
     device = device_registry.async_get_device(
@@ -688,12 +499,7 @@ async def test_device_info_configuration_url_is_per_vehicle_deep_link(
     token_entry: dict[str, Any],
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Each per-vehicle device's ``configuration_url`` deep-links to its own ABRP page.
-
-    Two distinct vehicles are selected so the assertion proves per-instance
-    binding of ``configuration_url`` rather than a coincidental match
-    against a single id substring.
-    """
+    """Each device's ``configuration_url`` deep-links to its own ABRP page."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=SENSOR_TEST_SUB,
@@ -748,14 +554,7 @@ async def test_diagnostic_telemetry_sensors_moved_out_of_diagnostic(
     metric: Metric,
     value: float,
 ) -> None:
-    """Four telemetry sensors no longer carry ``EntityCategory.DIAGNOSTIC``.
-
-    Voltage, calibrated ref cons, battery capacity, and state of health
-    move from the device card's diagnostic drawer into the main sensor
-    bucket. ``entity_category`` is a registry-options field; assert via
-    ``entity_registry.async_get(...).entity_category``, not via
-    ``state.attributes`` (which omits the field when it is ``None``).
-    """
+    """Four telemetry sensors no longer carry ``EntityCategory.DIAGNOSTIC``."""
     await _setup_integration(hass, config_entry_with_vehicles)
     fake_stream.fire_frame(
         MOCK_VEHICLE_ID, Telemetry(**{metric.value: build_metric_value(value)})
@@ -780,15 +579,7 @@ async def test_calibrated_ref_cons_renamed_to_short_form(
     entity_registry: er.EntityRegistry,
     fake_stream: Any,
 ) -> None:
-    """The calibrated ref cons sensor's friendly name translates to the short form.
-
-    The device card width is dominated by the longest sensor name; the
-    full ``Calibrated reference consumption`` wraps or truncates on
-    narrow viewports. The translation string shortens to
-    ``Calibrated ref cons``. Asserted via the registry's
-    ``original_name`` — the resolved translation at registration time,
-    independent of friendly-name composition with the device prefix.
-    """
+    """The calibrated ref cons sensor's friendly name translates to the short form."""
     await _setup_integration(hass, config_entry_with_vehicles)
     fake_stream.fire_frame(
         MOCK_VEHICLE_ID, Telemetry(calibrated_ref_cons=build_metric_value(175.0))
@@ -814,15 +605,7 @@ async def test_per_vehicle_device_anchored_at_setup(
     device_registry: dr.DeviceRegistry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """Each selected vehicle's device exists with full metadata after setup completes.
-
-    The per-vehicle device is anchored to the entry at setup time —
-    before any telemetry entity is created — so the device card is
-    present immediately and survives a vehicle going silent (no
-    telemetry frames). Two distinct vehicles with two distinct catalog
-    makes prove per-instance binding of every device-info field
-    (``manufacturer``, ``model``, ``name``, ``configuration_url``).
-    """
+    """Each selected vehicle's device exists with full metadata after setup."""
     polestar_name = "Polestar 2 Long Range"
     mock_abrp_client.return_value = [
         _make_vehicle(),
@@ -882,14 +665,7 @@ async def test_no_type_code_entity_created(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """No entity with a ``_type_code`` unique-id suffix is registered.
-
-    The catalog model name (with raw-typecode fallback) surfaces only
-    via ``DeviceInfo.model`` on the per-vehicle device card; there is
-    no standalone Type Code sensor. Asserts the absence by enumerating
-    every registry entry for the config entry and confirming none of
-    their unique_ids end with ``_type_code``.
-    """
+    """No entity with a ``_type_code`` unique-id suffix is registered."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
     entries = er.async_entries_for_config_entry(
@@ -901,15 +677,6 @@ async def test_no_type_code_entity_created(
         if registry_entry.unique_id.endswith("_type_code")
     ]
     assert type_code_entries == []
-
-
-# A single ``SensorDeviceClass.ENUM`` sensor surfacing the categorical
-# ``charging_state`` metric. The library emits a typed ``ChargingState``
-# member; the integration maps it to its HA option string
-# (charging_ac / charging_dc / charging_unknown / not_charging /
-# plugged_in) via ``CHARGING_STATE_OPTIONS``. Shares the generic
-# telemetry-sensor base, so lazy create + restore + ``last_reported_at`` /
-# ``provider`` attributes come for free.
 
 
 @pytest.mark.parametrize(
@@ -928,14 +695,7 @@ def test_charging_state_options_map_every_member(
     charging_state: ChargingState,
     expected_option: str,
 ) -> None:
-    """Every ``ChargingState`` member maps to its lowercase HA option key.
-
-    ``CHARGING_STATE_OPTIONS`` is the HA-owned, total-over-``ChargingState``
-    map the enum sensor reads to coerce a typed library member to a valid
-    ``options`` string. Pairs with the cross-pin guard (which proves the
-    option set stays in sync with the entity description ``options`` and the
-    ``strings.json`` / ``icons.json`` per-state maps).
-    """
+    """Every ``ChargingState`` member maps to its lowercase HA option key."""
     assert CHARGING_STATE_OPTIONS[charging_state] == expected_option
 
 
@@ -957,17 +717,9 @@ async def test_charging_state_lazy_create_via_dispatcher(
     charging_state: ChargingState,
     expected_option: str,
 ) -> None:
-    """First ``charging_state`` frame after setup lazily creates the enum sensor.
-
-    Routes the frame through the stream's ``on_update`` *after* the platform
-    has registered its presence predicates, exercising the dispatcher
-    ``_on_new_metric`` path (the primary path for an event-driven field
-    rarely present in the seed snapshot). The entity must be absent before
-    the frame and surface the mapped lowercase option afterwards.
-    """
+    """First ``charging_state`` frame after setup lazily creates the enum sensor."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    # Negation: no charging_state frame yet → no entity.
     assert hass.states.get(CHARGING_STATE_ENTITY_ID) is None
 
     fake_stream.fire_frame(
@@ -989,13 +741,7 @@ async def test_charging_state_registry_shape(
     config_entry_with_vehicles: MockConfigEntry,
     fake_stream: Any,
 ) -> None:
-    """The enum sensor is ENUM device_class, the 5 options, and no state_class.
-
-    Pins the static description shape (mirrors the ``battery_capacity``
-    static-pin precedent for ``state_class is None`` so a future
-    copy-paste from a numeric sensor can't attach one). ENUM sensors carry
-    no unit and are LTS-ineligible.
-    """
+    """The enum sensor is ENUM device_class, the 5 options, and no state_class."""
     description = SENSORS_BY_METRIC[Metric.CHARGING_STATE]
     assert description.device_class is SensorDeviceClass.ENUM
     assert description.options == list(CHARGING_STATE_OPTIONS.values())
@@ -1025,14 +771,7 @@ async def test_charging_state_provider_and_stamp_attributes(
     config_entry_with_vehicles: MockConfigEntry,
     fake_stream: Any,
 ) -> None:
-    """The enum sensor surfaces ``provider`` + ``last_reported_at`` like numerics.
-
-    The generic base composes both attributes for the enum sensor with no
-    enum-specific override — a live frame carrying a provider stamps both
-    the per-metric ``last_provider`` and ``last_reported_at`` maps, and the
-    entity surfaces them. ``last_reported_at`` is the RECEIPT time (stamped
-    by the coordinator), so freezing time around the push pins it.
-    """
+    """The enum sensor surfaces ``provider`` + ``last_reported_at`` like numerics."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
     stamp = datetime(2026, 5, 24, 12, 0, 0, tzinfo=UTC)
@@ -1060,12 +799,7 @@ def _charging_restored_state(
     last_reported_at: str | None = None,
     provider: str | None = None,
 ) -> tuple[State, dict[str, Any]]:
-    """Build a (State, extra_data) tuple for ``mock_restore_cache_with_extra_data``.
-
-    The ENUM sensor carries no unit, so ``native_unit_of_measurement`` is
-    ``None`` in the recorder's extra-data blob. ``native_value`` is the
-    lowercase HA option string (what the live path wrote at persist time).
-    """
+    """Build a (State, extra_data) tuple for ``mock_restore_cache_with_extra_data``."""
     attributes: dict[str, Any] = {}
     if last_reported_at is not None:
         attributes["last_reported_at"] = last_reported_at
@@ -1090,16 +824,7 @@ async def _charging_restart_setup(
     entity_registry: er.EntityRegistry,
     restored_states: list[tuple[State, dict[str, Any]]] | None = None,
 ) -> None:
-    """Set up the integration simulating an HA restart with a prior enum row.
-
-    Pre-seeds the entity registry with the charging_state row (using the
-    slug the integration computes from ``has_entity_name`` + device name +
-    translation_key) so the eager-from-registry probe re-creates the entity
-    BEFORE the first wake frame, and wires the recorder restore cache.
-
-    The TelemetryStream is faked by the ``fake_stream`` fixture, so this helper
-    drives a real ``async_setup`` without opening an SSE connection.
-    """
+    """Set up the integration simulating an HA restart with a prior enum row."""
     hass.set_state(CoreState.not_running)
     if restored_states is not None:
         mock_restore_cache_with_extra_data(hass, restored_states)
@@ -1138,26 +863,7 @@ async def test_charging_state_restore_native_value(
     restored_value: str,
     expected_state: str,
 ) -> None:
-    """Restored enum state survives restart only when it is a valid option.
-
-    Four trajectories share the restore-setup → assert-state structure:
-
-    - ``parked_not_charging_survives`` — a parked/unplugged vehicle whose
-      last seen state was ``not_charging`` restores ``not_charging`` (not
-      ``unavailable``) before any wake frame.
-    - ``in_options_survives`` — any other in-``options`` string restores
-      verbatim.
-    - ``wire_form_not_in_options_rejected`` / ``unknown_value_rejected`` —
-      a restored value outside ``options`` (the raw UPPER wire member, or
-      arbitrary junk) is coerced to ``None`` by
-      ``AbrpEnumSensor._restore_native_value`` → entity ``unavailable``.
-      This mirrors HA core's ENUM rejection and prevents a ``ValueError``
-      at state write.
-
-    No seed is configured for the vehicle (the seed table defaults to an
-    empty dict), so the entity is re-created purely from the pre-seeded
-    registry row, exercising the restore path without a live wake frame.
-    """
+    """Restored enum state survives restart only when it is a valid option."""
     await _charging_restart_setup(
         hass,
         config_entry_with_vehicles,
@@ -1176,11 +882,7 @@ async def test_charging_state_restores_provider_and_stamp(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Restored ``provider`` + ``last_reported_at`` surface on the enum sensor.
-
-    The enum sensor inherits the shared base's stamp/provider restore, so a
-    parked vehicle keeps both attributes across restart without a wake frame.
-    """
+    """Restored ``provider`` + ``last_reported_at`` surface on the enum sensor."""
     stamp_iso = "2026-05-20T12:00:00+00:00"
     stamp_dt = datetime(2026, 5, 20, 12, 0, 0, tzinfo=UTC)
 
@@ -1205,21 +907,7 @@ async def test_charging_state_restores_provider_and_stamp(
 
 
 def test_charging_state_options_cross_pinned() -> None:
-    """The truth stays in sync across every copy.
-
-    Three copies of the closed enum must agree, or a drift goes RED:
-
-    1. ``CHARGING_STATE_OPTIONS`` keys cover every library ``ChargingState``
-       member (the map must be total so ``native_value`` always resolves to
-       a valid option).
-    2. ``CHARGING_STATE_OPTIONS`` values ↔ the enum entity description's
-       ``options`` list.
-    3. + 4. ``CHARGING_STATE_OPTIONS`` values ↔ the
-       ``entity.sensor.charging_state.state`` keyset in BOTH ``strings.json``
-       and ``icons.json`` (a missing label / icon silently renders the raw
-       option key in the UI). The source files are read directly (not the
-       generated ``translations/en.json``).
-    """
+    """Option map matches ChargingState, the description options, strings and icons."""
     assert set(CHARGING_STATE_OPTIONS) == set(ChargingState)
 
     description = SENSORS_BY_METRIC[Metric.CHARGING_STATE]

@@ -1,12 +1,4 @@
-"""Tests for the HA-side OAuth2Session-backed AbstractAuth.
-
-:class:`AbetterrouteplannerAuth` adapts HA's ``OAuth2Session`` to the
-library's :class:`aioabrp.AbstractAuth` contract. The library treats an
-:class:`aioabrp.AbrpAuthError` as a terminal auth failure (stop the stream +
-fire ``AUTH_FAILED``) and any other exception as transient (back off + retry),
-so the mapping here must turn a refresh 4xx (revoked/rotated refresh token)
-into ``AbrpAuthError`` while letting everything else propagate unchanged.
-"""
+"""Tests for the HA-side OAuth2Session-backed AbstractAuth."""
 
 from unittest.mock import AsyncMock, MagicMock
 

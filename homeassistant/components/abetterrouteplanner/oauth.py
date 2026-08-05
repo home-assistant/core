@@ -1,10 +1,8 @@
 """OAuth2 implementation for A Better Routeplanner.
 
-ABRP's identity provider is a public OIDC client
-(``token_endpoint_auth_methods_supported`` includes ``none``), so this
-integration does not use the Application Credentials platform — the
-``client_id`` is built in and PKCE secures the token exchange instead of a
-client secret.
+ABRP's identity provider is a public OIDC client, so this integration ships a
+built-in ``client_id`` instead of using the Application Credentials platform,
+and PKCE secures the token exchange in place of a client secret.
 """
 
 from typing import Any, override
