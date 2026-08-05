@@ -88,7 +88,7 @@ async def async_setup_entry(
 
 
 # Minimum time between two position telegrams while travelling. Without it every
-# travel calculator update would be sent - about one telegram per second and cover.
+# travel calculator update would be sent - about one telegram per second per cover.
 POSITION_SEND_COOLDOWN = 2.0
 
 
@@ -215,9 +215,10 @@ class _KnxCover(CoverEntity, RestoreEntity):
         after_update_callback: that method comes from the KNX entity mixin, which
         is only applied in the concrete YAML and UI classes.
 
-        The cached value skips a repeated publish while the cover stands still;
-        skip_unchanged is a redundant second guard against sending an
-        unchanged payload.
+        The cached value skips a repeated publish while the cover stands still.
+        It is deliberately read again when the task runs, so that closely
+        following updates collapse into one telegram carrying the newest
+        position - skip_unchanged then drops the trailing duplicates.
         """
         if (
             self._position_publisher is not None
@@ -232,7 +233,7 @@ class _KnxCover(CoverEntity, RestoreEntity):
 
         The task outlives async_will_remove_from_hass, and sending goes through
         the telegram queue rather than the device list - without this check a
-        reload during a travel would still put one stale value on the bus.
+        reload during a travel could still put a stale value on the bus.
         """
         if self._position_publisher is None or self._published_position is None:
             return
