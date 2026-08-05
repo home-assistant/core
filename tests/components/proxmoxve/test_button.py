@@ -268,7 +268,7 @@ async def test_node_buttons_exceptions(
             SSLError("ssl error"),
         ),
         (
-            "button.vm_web_hibernate",
+            "button.vm_web_suspend",
             100,
             "suspend",
             ConnectTimeout("timeout"),
