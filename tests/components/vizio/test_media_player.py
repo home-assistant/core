@@ -896,7 +896,7 @@ async def test_select_invalid_sound_mode(
             service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_SOUND_MODE: "invalid"},
             blocking=True,
         )
-    assert not set_setting.called
+    set_setting.assert_not_called()
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
