@@ -29,6 +29,8 @@ class Fixture:
 
     roles: set[str]
     data_file: str
+    # Opt-in shared gateway serial; defaults to a per-fixture gateway when unset.
+    gateway_id: str | None = None
 
 
 class MockPyViCare:
@@ -39,7 +41,10 @@ class MockPyViCare:
         self.devices = []
         for idx, fixture in enumerate(fixtures):
             service = MockViCareService(
-                f"installation{idx}", f"gateway{idx}", f"deviceId{idx}", fixture
+                f"installation{idx}",
+                fixture.gateway_id or f"gateway{idx}",
+                f"deviceId{idx}",
+                fixture,
             )
             self.devices.append(
                 PyViCareDeviceConfig(
