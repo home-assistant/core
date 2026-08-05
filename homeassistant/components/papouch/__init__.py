@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
         identifiers={(DOMAIN, device.mac_address)},
         name=device.name,
         manufacturer=device.manufacturer,
-        model=device.__class__.__name__,
+        model=device.name,
         suggested_area=device.location,
     )
 

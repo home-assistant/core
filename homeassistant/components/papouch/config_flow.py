@@ -72,7 +72,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
                 return {}, await self.async_step_web_mode()
 
             return {}, self.async_create_entry(
-                title=f"Papouch {user_input['ip_address']}", data=user_input
+                title=f"Papouch ({user_input['ip_address']})", data=user_input
             )
 
         return errors, None
@@ -160,7 +160,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             # serial and tests TODO
             self._saved_input = user_input
             return self.async_create_entry(
-                title=f"Papouch {user_input['serial_port']}", data=user_input
+                title=f"Papouch ({user_input['serial_port']})", data=user_input
             )
 
         schema = vol.Schema(
@@ -291,7 +291,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             await device.switch_to_web_mode()
 
             return self.async_create_entry(
-                title=f"Papouch {self._saved_input['ip_address']}",
+                title=f"Papouch ({self._saved_input['ip_address']})",
                 data=self._saved_input,
                 description="web_mode_success",
             )

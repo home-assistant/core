@@ -447,8 +447,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
     def get_supported_selects(self) -> list[dict[str, Any]]:
         selects = []
 
-        for item_id, sensor_data in self.sensors.items():
-            sensor_name = sensor_data.get("name", f"Sensor {item_id}")
+        for item_id in self.sensors_types:
+            sensor_name = self.sensors[item_id].get("name", f"Sensor {item_id}")
             selects.append(
                 {
                     "item_id": item_id,
@@ -794,6 +794,24 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
             box_num,
         )
 
+    def _parse_standard_sensor_setting(
+        self, box_num: int, element: defused_ET.Element, sensor_base: int
+    ) -> None:
+        """Helper for parsing standard sensor ports from settings.xml."""
+        sensor_id = str(box_num - sensor_base + 1)
+        sns_type = element.attrib.get("type", "0")
+        sensor_name = element.attrib.get("name", f"Sensor {sensor_id}")
+
+        self.sensors_types[sensor_id] = sns_type
+
+        if sensor_id not in self.sensors:
+            self.sensors[sensor_id] = {
+                "name": sensor_name,
+                "sub_sensors": {},
+            }
+        else:
+            self.sensors[sensor_id]["name"] = sensor_name
+
 
 class PapagoETH_2TH(PapagoETH):
     """Represents Papago 2TH ETH."""
@@ -820,10 +838,7 @@ class PapagoETH_2TH(PapagoETH):
     @override
     def _process_box(self, box_num: int, element: defused_ET.Element) -> None:
         if self.BOX_SENSOR_BASE <= box_num <= self.BOX_SENSOR_BASE + 1:
-            sns_type = element.attrib.get("type")
-            if sns_type is not None:
-                sensor_id = str(box_num - self.BOX_SENSOR_BASE + 1)
-                self.sensors_types[sensor_id] = str(sns_type)
+            self._parse_standard_sensor_setting(box_num, element, self.BOX_SENSOR_BASE)
 
 
 class PapagoETH_1TH_2DI_1DO(PapagoETH):
@@ -854,15 +869,9 @@ class PapagoETH_1TH_2DI_1DO(PapagoETH):
     def _process_box(self, box_num: int, element: defused_ET.Element) -> None:
         match box_num:
             case self.BOX_SENSOR_BASE:
-                sns_type = element.attrib.get("type")
-                if sns_type is None:
-                    raise DeviceParseError(f"No sensor type in device: {self.name}")
-
-                self.sensors_types["1"] = str(sns_type)
-                self.sensors["1"] = {
-                    "name": "Sensor",
-                    "sub_sensors": {"1": {"type": str(sns_type), "unit": "0"}},
-                }
+                self._parse_standard_sensor_setting(
+                    box_num, element, self.BOX_SENSOR_BASE
+                )
 
             case self.BOX_OUTPUT_BASE:
                 self.outputs["1"] = OutputSettings("")
@@ -892,13 +901,38 @@ class PapagoETH_METEO(PapagoETH):
 
     BOX_SENSOR_BASE = 30
 
+    SENSOR_SETTINGS_KEYS = [
+        ("num01", "type"),
+        ("num02", "watch"),
+        ("num03", "watch2"),
+        ("num04", "watch3"),
+        ("str00", "name"),
+        ("str01", "min"),
+        ("str02", "max"),
+        ("str03", "hyst"),
+        ("str04", "min2"),
+        ("str05", "max2"),
+        ("str06", "hyst2"),
+        ("str07", "min3"),
+        ("str08", "max3"),
+        ("str09", "hyst3"),
+    ]
+
+    SENSOR_TYPES = [
+        "Unused",
+        "Temperature (DS)",
+        "Temperature / Humidity (TH3x)",
+        "Temperature (TMP)",
+        "CO2 concentration (T6713)",
+        "CO2 concentration (SCD4x)",
+        "Rain gauge",
+        "Atmospheric pressure",
+    ]
+
     @override
     def _process_box(self, box_num: int, element: defused_ET.Element) -> None:
         if self.BOX_SENSOR_BASE <= box_num <= self.BOX_SENSOR_BASE + 2:
-            sns_type = element.attrib.get("type")
-            if sns_type is not None:
-                sensor_id = str(box_num - self.BOX_SENSOR_BASE + 1)
-                self.sensors_types[sensor_id] = str(sns_type)
+            self._parse_standard_sensor_setting(box_num, element, self.BOX_SENSOR_BASE)
 
 
 async def async_setup_papago(transport: PapouchTransport) -> PapagoETH | None:
