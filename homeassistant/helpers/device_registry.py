@@ -1007,8 +1007,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
 
         if old_major_version < 3 or (old_major_version == 3 and old_minor_version < 3):
             # Version 3.3, introduced in 2026.8, clears via_device_id self-references,
-            # which are no longer allowed. The version 3.2 remapping above can also turn
-            # a link to a split composite parent into a self-reference, so this runs last.
+            # which are no longer allowed.
             for device in old_data["devices"]:
                 if device["via_device_id"] == device["id"]:
                     device["via_device_id"] = None
