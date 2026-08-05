@@ -135,7 +135,6 @@ class DeviceInfo(TypedDict, total=False):
     hw_version: str | None
     translation_key: str | None
     translation_placeholders: Mapping[str, str] | None
-    via_device: tuple[str, str]  # Deprecated, use via_device_id instead
     via_device_id: str
 
 
@@ -1532,6 +1531,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         one owned by the calling integration is preferred, falling back to the first
         match.
         """
+        report_usage(
+            "calls `device_registry.async_get_device`, which is deprecated because "
+            "device identifiers and connections are no longer unique across config "
+            "entries; use `async_get_device_by_identifier`, "
+            "`async_get_device_by_connection` or `async_get_devices` instead",
+            core_behavior=ReportBehavior.ERROR,
+            core_integration_behavior=ReportBehavior.ERROR,
+            breaks_in_ha_version="2027.8.0",
+        )
         matches = self._async_matching_devices(identifiers, connections)
         if len(matches) <= 1:
             return matches[0] if matches else None
@@ -1966,6 +1974,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             name = default_name
 
         if via_device is not None and via_device is not UNDEFINED:
+            report_usage(
+                "calls `device_registry.async_get_or_create` with a `via_device`, "
+                "which is deprecated because device identifiers are no longer unique; "
+                "pass `via_device_id` instead",
+                core_behavior=ReportBehavior.ERROR,
+                core_integration_behavior=ReportBehavior.ERROR,
+                breaks_in_ha_version="2027.8.0",
+            )
             # Resolve the deprecated via_device to a device id. The identifier is not
             # unique across config entries, so prefer a via device in the same config
             # entry, then one from the same integration (domain), falling back to any
@@ -2518,13 +2534,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         A device belongs to a single config entry and subentry. To move a device to
         another config entry or subentry, pass new_config_entry_id and/or
-        new_config_subentry_id. To remove a device, pass remove_config_entry_id with the
-        device's config entry.
+        new_config_subentry_id. To remove a device, call async_remove_device.
 
         :param add_config_entry_id: Deprecated. Combined with remove_config_entry_id it
-            moves the device; on its own it does nothing.
+            moves the device; on its own it does nothing. Use new_config_entry_id
+            instead.
         :param add_config_subentry_id: Deprecated. Combined with remove_config_subentry_id
-            it moves the device to another subentry; on its own it does nothing.
+            it moves the device to another subentry; on its own it does nothing. Use
+            new_config_subentry_id instead.
         :param disabled_by: Disable or enable the device. Must be consistent with the
             disabled state of the config entry owning the device after the update:
             a device can't be enabled when the owning config entry is disabled, and
@@ -2536,10 +2553,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             passed explicitly, the device's disabled state is updated to reflect the
             new config entry's disabled state.
         :param new_config_subentry_id: Move the device to this subentry.
-        :param remove_config_entry_id: Remove the device if it is the device's config
-            entry, unless combined with add_config_entry_id to move the device.
-        :param remove_config_subentry_id: Remove the device from a specific subentry of
-            remove_config_entry_id.
+        :param remove_config_entry_id: Deprecated. Remove the device if it is the
+            device's config entry, unless combined with add_config_entry_id to move the
+            device. Use new_config_entry_id to move, or async_remove_device to remove.
+        :param remove_config_subentry_id: Deprecated. Remove the device from a specific
+            subentry of remove_config_entry_id. Use new_config_subentry_id to move, or
+            async_remove_device to remove.
         """
         if (
             underlying_ids := self._async_device_ids_for_composite_device_id(device_id)
@@ -2575,6 +2594,23 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             }
             return self._async_update_composite_device(
                 device_id, underlying_ids, update_args
+            )
+        if (
+            add_config_entry_id is not UNDEFINED
+            or add_config_subentry_id is not UNDEFINED
+            or remove_config_entry_id is not UNDEFINED
+            or remove_config_subentry_id is not UNDEFINED
+        ):
+            report_usage(
+                "calls `device_registry.async_update_device` with one of "
+                "`add_config_entry_id`, `add_config_subentry_id`, "
+                "`remove_config_entry_id` or `remove_config_subentry_id`; a device now "
+                "belongs to a single config entry and subentry. Move a device with "
+                "`new_config_entry_id` and/or `new_config_subentry_id`, or remove it "
+                "with `async_remove_device`",
+                core_behavior=ReportBehavior.ERROR,
+                core_integration_behavior=ReportBehavior.ERROR,
+                breaks_in_ha_version="2027.8.0",
             )
         if suggested_area is not UNDEFINED:
             report_usage(
