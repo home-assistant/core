@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/v2c",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["pytrydan==1.0.3"]
+  "requirements": ["pytrydan==1.0.4"]
 }

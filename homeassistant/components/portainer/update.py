@@ -112,9 +112,7 @@ async def async_setup_entry(
 class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity):
     """Representation of a Portainer container update."""
 
-    _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
-    )
+    _attr_supported_features = UpdateEntityFeature.INSTALL
 
     entity_description: PortainerContainerUpdateEntityDescription
 
@@ -130,7 +128,6 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
         super().__init__(coordinator, entity_description, device_info, via_device)
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
-        self._in_progress_old_version: str | None = None
 
     @override
     @property
@@ -153,17 +150,10 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
         return self.entity_description.latest_version(self.container_data.image_status)
 
     @override
-    @property
-    def in_progress(self) -> bool:
-        """Return if an update is in progress."""
-        return self._in_progress_old_version == self.installed_version
-
-    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install update."""
-        self._in_progress_old_version = self.installed_version
         try:
             await self.entity_description.update_func(
                 self.coordinator.portainer,
@@ -183,5 +173,3 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
             ) from ex
         else:
             await self.coordinator.async_request_refresh()
-        finally:
-            self._in_progress_old_version = None

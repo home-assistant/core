@@ -10,10 +10,10 @@ import pytest
 import requests
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.growatt_server import _CACHED_APIS
 from homeassistant.components.growatt_server.const import (
     AUTH_API_TOKEN,
     AUTH_PASSWORD,
-    CACHED_API_KEY,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
     DEFAULT_PLANT_ID,
@@ -733,10 +733,8 @@ async def test_setup_reuses_cached_api_from_migration(
     # This confirms setup did NOT resolve plant_id again (optimization working)
     mock_growatt_classic_api.plant_list.assert_called_once_with(123456)
 
-    # Verify the cached API was removed after use (should not be in hass.data anymore)
-    assert f"{CACHED_API_KEY}{mock_config_entry.entry_id}" not in hass.data.get(
-        DOMAIN, {}
-    )
+    # Verify the cached API was removed after use (one-time handoff)
+    assert mock_config_entry.entry_id not in _CACHED_APIS
 
 
 async def test_migrate_failure_returns_false(
@@ -869,7 +867,7 @@ async def test_dynamic_device_added(
     # Verify multiple entity types to confirm end-to-end dynamic device support
     assert hass.states.get("switch.new456789_charge_from_grid") is not None
     # Additional check: verify entities exist in the entity registry
-    entity_registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     new_device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "NEW456789")}
     )

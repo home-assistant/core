@@ -1,5 +1,6 @@
 """Tests for the BSBLan integration."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -288,6 +289,37 @@ async def test_coordinator_dhw_config_update_error(
 
     # Verify the error handling paths were executed
     assert mock_bsblan.hot_water_config.called
+    assert mock_bsblan.hot_water_schedule.called
+
+
+async def test_setup_does_not_block_on_slow_fetch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test setup does not wait for the background slow-data fetch."""
+    release = asyncio.Event()
+    config_value = mock_bsblan.hot_water_config.return_value
+
+    async def _blocking_config(*args: object, **kwargs: object) -> object:
+        await release.wait()
+        return config_value
+
+    mock_bsblan.hot_water_config.side_effect = _blocking_config
+
+    mock_config_entry.add_to_hass(hass)
+    try:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Setup finished even though the slow-data fetch is still pending.
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert not mock_bsblan.hot_water_schedule.called
+    finally:
+        # Release the fetch so it can complete and clean up.
+        release.set()
+        await hass.async_block_till_done()
+
     assert mock_bsblan.hot_water_schedule.called
 
 
