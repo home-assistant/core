@@ -239,3 +239,69 @@ async def test_keypad_integer_to_uuid_migration(
     device = device_registry.async_get_device(identifiers={(DOMAIN, new_unique_id)})
     assert device is not None
     assert device.name == "Test Keypad"
+
+
+async def test_via_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that devices are linked to the main repeater via via_device_id."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    controller_guid = mock_lutron.guid
+    repeater_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, controller_guid), mock_config_entry.entry_id
+    )
+    assert repeater_device is not None
+    assert repeater_device.via_device_id is None
+
+    light = mock_lutron.areas[0].outputs[0]
+    light_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{controller_guid}_{light.uuid}"), mock_config_entry.entry_id
+    )
+    assert light_device is not None
+    assert light_device.via_device_id == repeater_device.id
+
+    # The mocked keypad is not the main repeater's own keypad, so it links to
+    # the repeater via via_device_id like any other device.
+    keypad = mock_lutron.areas[0].keypads[0]
+    keypad_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{controller_guid}_{keypad.uuid}"), mock_config_entry.entry_id
+    )
+    assert keypad_device is not None
+    assert keypad_device.via_device_id == repeater_device.id
+
+
+async def test_via_device_id_main_repeater_keypad(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the main repeater's own keypad stays the root device."""
+    mock_config_entry.add_to_hass(hass)
+    mock_lutron.areas[0].keypads[0].type = "MAIN_REPEATER"
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    controller_guid = mock_lutron.guid
+    repeater_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, controller_guid), mock_config_entry.entry_id
+    )
+    assert repeater_device is not None
+    assert repeater_device.via_device_id is None
+
+    keypad = mock_lutron.areas[0].keypads[0]
+    keypad_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{controller_guid}_{keypad.uuid}"), mock_config_entry.entry_id
+    )
+    # A MAIN_REPEATER keypad shares the controller's identifier, so it
+    # resolves to the same root device instead of a separate child device.
+    assert keypad_device is not None
+    assert keypad_device.id == repeater_device.id
