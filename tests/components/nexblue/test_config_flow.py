@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from nexblue_api import NexBlueAuthError, NexBlueConnectionError
+from nexblue_api import NexBlueAuthError, NexBlueConnectionError, NexBlueError
 from nexblue_api.models import TokenBundle
 import pytest
 
@@ -53,13 +53,14 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     [
         (NexBlueAuthError, "invalid_auth"),
         (NexBlueConnectionError, "cannot_connect"),
+        (NexBlueError, "unknown"),
         (Exception, "unknown"),
     ],
 )
 async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_client: MagicMock,
-    side_effect: Exception,
+    side_effect: type[Exception],
     expected_error: str,
 ) -> None:
     """Test errors returned by the user flow."""

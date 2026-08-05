@@ -106,7 +106,8 @@ class NexBlueStatusSensor(
 
         if metric in DIAGNOSTIC_METRICS:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        elif metric == "power":
+
+        if metric == "power":
             self._attr_native_unit_of_measurement = UnitOfPower.KILO_WATT
             self._attr_device_class = SensorDeviceClass.POWER
             self._attr_state_class = SensorStateClass.MEASUREMENT

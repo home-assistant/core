@@ -6,7 +6,9 @@ from nexblue_api import NexBlueAuthError, NexBlueConnectionError
 from nexblue_api.models import TokenBundle
 import pytest
 
+from homeassistant.components.nexblue.const import CONF_REFRESH_TOKEN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -39,6 +41,26 @@ async def test_setup_entry_recovers_from_invalid_refresh_token(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_client.async_login.assert_awaited_once()
+
+
+async def test_setup_entry_persists_rotated_refresh_token(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test setup persists a rotated refresh token."""
+    mock_client.async_ensure_access_token.return_value = TokenBundle(
+        access_token="access-token",
+        refresh_token="rotated-refresh-token",
+        expires_in=3600,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.data[CONF_REFRESH_TOKEN] == "rotated-refresh-token"
 
 
 @pytest.mark.parametrize(
@@ -82,3 +104,42 @@ async def test_setup_entry_fails_when_fallback_login_has_no_refresh_token(
 
     assert mock_config_entry.state is not ConfigEntryState.LOADED
     mock_client.async_login.assert_awaited_once()
+
+
+async def test_setup_entry_fails_without_saved_password(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test setup does not retry login without a saved password."""
+    mock_client.async_ensure_access_token.side_effect = NexBlueAuthError
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            key: value
+            for key, value in mock_config_entry.data.items()
+            if key != CONF_PASSWORD
+        },
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is not ConfigEntryState.LOADED
+    mock_client.async_login.assert_not_awaited()
+
+
+async def test_setup_entry_retries_when_charger_status_request_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test a charger-status connection error retries setup."""
+    mock_client.async_get_charger_status.side_effect = NexBlueConnectionError
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
