@@ -21,6 +21,7 @@ from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 from tests.common import async_capture_events, mock_restore_cache
+from tests.typing import WebSocketGenerator
 
 
 async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -518,6 +519,38 @@ async def test_cover_ui_position_state_send(
     await knx.receive_write("1/0/2", (0xFF,))
     state = hass.states.get("cover.test")
     assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+
+
+async def test_cover_ui_position_state_send_requires_address(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the UI schema rejects position_state_send without a position state address."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "knx/validate_entity",
+            "platform": Platform.COVER,
+            "data": {
+                "entity": {"name": "test"},
+                "knx": {
+                    "ga_up_down": {"write": "1/0/0"},
+                    CoverConf.POSITION_STATE_SEND: True,
+                    CoverConf.TRAVELLING_TIME_UP: 10,
+                    CoverConf.TRAVELLING_TIME_DOWN: 10,
+                },
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is False
+    assert res["result"]["error_base"].startswith(
+        "'Actively send the calculated position' requires a"
+        " 'Current position' group address."
+    )
 
 
 async def test_cover_position_state_send_while_travelling(
