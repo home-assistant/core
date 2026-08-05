@@ -97,9 +97,9 @@ class _KnxSelect(SelectEntity, RestoreEntity):
         if last_state := await self.async_get_last_state():
             if (
                 last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-                and (option := self._option_payloads.get(last_state.state)) is not None
+                and (payload := self._option_payloads.get(last_state.state)) is not None
             ):
-                self._device.remote_value.update_value(option)
+                self._device.remote_value.update_value(payload)
 
     def option_from_payload(self, payload: int | None) -> str | None:
         """Return the option a given payload is assigned to."""

@@ -274,8 +274,18 @@ async def test_select_ui_create(
             [{"option": "A", "payload": 64}],
             "'payload: 64' for 'option: A' exceeds possible maximum",
         ),
+        (
+            # coerced to an int first, so the maximum is reported, not a type error
+            [{"option": "A", "payload": "70"}],
+            "'payload: 70' for 'option: A' exceeds possible maximum",
+        ),
     ],
-    ids=["duplicate_option", "duplicate_payload", "payload_too_large"],
+    ids=[
+        "duplicate_option",
+        "duplicate_payload",
+        "payload_too_large",
+        "payload_string_too_large",
+    ],
 )
 async def test_select_ui_invalid_options(
     hass: HomeAssistant,
@@ -305,3 +315,79 @@ async def test_select_ui_invalid_options(
     assert res["success"], res
     assert res["result"]["success"] is False
     assert res["result"]["error_base"].startswith(error_start)
+
+
+async def test_select_ui_payload_is_coerced_to_int(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test non-integer payloads are truncated, like cv.positive_int does for YAML."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.SELECT,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_select": {"write": "1/1/1"},
+            "payload_length": 0,
+            # the number field in the frontend allows this - it must not reach xknx
+            "options": [
+                {"option": "A", "payload": 1.0},
+                {"option": "B", "payload": 2.5},
+            ],
+        },
+    )
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": "select.test", "option": "B"},
+        blocking=True,
+    )
+    await knx.assert_write("1/1/1", 2)
+    knx.assert_state("select.test", "B")
+
+
+async def test_select_ui_update(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a stored configuration can be read back and saved again unchanged."""
+    await knx.setup_integration()
+    entity = await create_ui_entity(
+        platform=Platform.SELECT,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_select": {"write": "1/1/1"},
+            "payload_length": 0,
+            "options": [{"option": "A", "payload": 0}, {"option": "B", "payload": 2}],
+        },
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "knx/get_entity_config", "entity_id": entity.entity_id}
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    stored = res["result"]["data"]
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/update_entity",
+            "platform": Platform.SELECT,
+            "entity_id": entity.entity_id,
+            "data": stored,
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is True, res["result"]
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity.entity_id, "option": "B"},
+        blocking=True,
+    )
+    await knx.assert_write("1/1/1", 2)

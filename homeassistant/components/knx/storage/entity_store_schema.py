@@ -55,6 +55,7 @@ from ..const import (
     SceneConf,
 )
 from ..dpt import get_supported_dpts
+from ..schema import max_payload_value
 from ..validation import validate_number_attributes, validate_sensor_attributes
 from .const import (
     CONF_ALWAYS_CALLBACK,
@@ -584,7 +585,7 @@ def _select_options_validator(config: dict[str, Any]) -> dict[str, Any]:
     Mirrors select_options_sub_validator for YAML configuration.
     """
     payload_length: int = config[CONF_PAYLOAD_LENGTH]
-    max_payload = 0x3F if payload_length == 0 else 256**payload_length - 1
+    max_payload = max_payload_value(payload_length)
     options_seen: set[str] = set()
     payloads_seen: set[int] = set()
     for item in config[CONF_OPTIONS]:
@@ -640,6 +641,9 @@ SELECT_KNX_SCHEMA = AllSerializeFirst(
                     },
                     multiple=True,
                     label_field=CONF_OPTION,
+                    # so a collapsed row shows which payload it sends without
+                    # having to be opened
+                    description_field=CONF_PAYLOAD,
                     translation_key=(
                         "component.knx.config_panel.entities.create.select.knx.options"
                     ),
@@ -651,9 +655,21 @@ SELECT_KNX_SCHEMA = AllSerializeFirst(
             vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
         },
     ),
-    # NumberSelector yields a float - RawValue needs an int.
+    # The selectors yield floats and accept numeric strings, while RawValue needs
+    # ints and the validator below compares payloads against a maximum. An
+    # ObjectSelector validates each field but discards the coerced value, so the
+    # payloads have to be coerced here - cv.positive_int does it for YAML.
     vol.Schema(
-        {vol.Required(CONF_PAYLOAD_LENGTH): vol.Coerce(int)}, extra=vol.ALLOW_EXTRA
+        {
+            vol.Required(CONF_PAYLOAD_LENGTH): vol.Coerce(int),
+            vol.Required(CONF_OPTIONS): [
+                vol.Schema(
+                    {vol.Required(CONF_PAYLOAD): vol.Coerce(int)},
+                    extra=vol.ALLOW_EXTRA,
+                )
+            ],
+        },
+        extra=vol.ALLOW_EXTRA,
     ),
     _select_options_validator,
 )

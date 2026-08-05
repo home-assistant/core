@@ -2132,6 +2132,7 @@
         'required': True,
         'selector': dict({
           'object': dict({
+            'description_field': 'payload',
             'fields': dict({
               'option': dict({
                 'required': True,

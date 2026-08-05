@@ -93,7 +93,8 @@ def _number_limit_sub_validator(config: dict) -> dict:
     return validate_number_attributes(transcoder, config)
 
 
-def _max_payload_value(payload_length: int) -> int:
+def max_payload_value(payload_length: int) -> int:
+    """Return the highest payload a raw value of that length can carry."""
     if payload_length == 0:
         return 0x3F
     return int(256**payload_length) - 1
@@ -121,7 +122,7 @@ def button_payload_sub_validator(entity_config: OrderedDict) -> OrderedDict:
 
     _payload = entity_config[CONF_PAYLOAD]
     _payload_length = entity_config[CONF_PAYLOAD_LENGTH]
-    if _payload > (max_payload := _max_payload_value(_payload_length)):
+    if _payload > (max_payload := max_payload_value(_payload_length)):
         raise vol.Invalid(
             f"'payload: {_payload}' exceeds possible maximum for "
             f"payload_length {_payload_length}: {max_payload}"
@@ -138,7 +139,7 @@ def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
     for opt in entity_config[SelectSchema.CONF_OPTIONS]:
         option = opt[SelectSchema.CONF_OPTION]
         payload = opt[CONF_PAYLOAD]
-        if payload > (max_payload := _max_payload_value(payload_length)):
+        if payload > (max_payload := max_payload_value(payload_length)):
             raise vol.Invalid(
                 f"'payload: {payload}' for 'option: {option}' exceeds possible"
                 f" maximum of 'payload_length: {payload_length}': {max_payload}"
