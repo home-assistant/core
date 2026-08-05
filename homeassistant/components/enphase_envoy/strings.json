@@ -100,6 +100,12 @@
       "cutoff_battery_level": {
         "name": "Cutoff battery level"
       },
+      "generator_exercise_duration": {
+        "name": "Exercise duration"
+      },
+      "generator_exercise_interval": {
+        "name": "Exercise interval"
+      },
       "reserve_soc": {
         "name": "Reserve battery level"
       },
@@ -131,6 +137,18 @@
           "85-90": "85 - 90%",
           "90-95": "90 - 95%",
           "95-100": "95 - 100%"
+        }
+      },
+      "generator_exercise_day": {
+        "name": "Exercise day",
+        "state": {
+          "fri": "Friday",
+          "mon": "Monday",
+          "sat": "Saturday",
+          "sun": "Sunday",
+          "thu": "Thursday",
+          "tue": "Tuesday",
+          "wed": "Wednesday"
         }
       },
       "relay_generator_action": {
@@ -830,6 +848,9 @@
     "switch": {
       "charge_from_grid": {
         "name": "Charge from grid"
+      },
+      "generator_charge_from_generator": {
+        "name": "Battery charging"
       },
       "grid_enabled": {
         "name": "Grid enabled"

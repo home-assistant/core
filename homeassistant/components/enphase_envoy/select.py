@@ -18,7 +18,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ACB_SLEEP_SOC_BANDS, DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .entity import EnvoyACBAggregateControlEntity, EnvoyBaseEntity, exception_handler
+from .entity import (
+    EnvoyACBAggregateControlEntity,
+    EnvoyBaseEntity,
+    EnvoyGeneratorScheduleEntity,
+    exception_handler,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -133,6 +138,18 @@ ACB_SLEEP_SOC_ENTITY = SelectEntityDescription(
     entity_category=EntityCategory.CONFIG,
 )
 
+# The Envoy reports and accepts the capitalized short day name, but the
+# library normalizes the day it is given, so the lowercase option can be
+# passed straight through.
+GENERATOR_EXERCISE_DAY_OPTIONS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+GENERATOR_EXERCISE_DAY_ENTITY = SelectEntityDescription(
+    key="generator_exercise_day",
+    translation_key="generator_exercise_day",
+    options=GENERATOR_EXERCISE_DAY_OPTIONS,
+    entity_category=EntityCategory.CONFIG,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -160,6 +177,12 @@ async def async_setup_entry(
         )
     if envoy_data.acb_inventory:
         entities.append(EnvoyACBSleepSocSelectEntity(coordinator, ACB_SLEEP_SOC_ENTITY))
+    if envoy_data.generator_schedule:
+        entities.append(
+            EnvoyGeneratorExerciseDaySelectEntity(
+                coordinator, GENERATOR_EXERCISE_DAY_ENTITY
+            )
+        )
     async_add_entities(entities)
 
 
@@ -287,3 +310,33 @@ class EnvoyACBSleepSocSelectEntity(EnvoyACBAggregateControlEntity, SelectEntity)
         """Store the selected ACB sleep SOC band."""
         self.coordinator.acb_sleep_soc_band = option
         self.async_write_ha_state()
+
+
+class EnvoyGeneratorExerciseDaySelectEntity(EnvoyGeneratorScheduleEntity, SelectEntity):
+    """Representation of the standby generator exercise day select entity."""
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: SelectEntityDescription,
+    ) -> None:
+        """Initialize the generator exercise day select entity."""
+        super().__init__(coordinator, description)
+        self.envoy = coordinator.envoy
+
+    @property
+    @override
+    def current_option(self) -> str | None:
+        """Return the day of the week the generator exercise runs on."""
+        if (schedule := self.data.generator_schedule) is None:
+            return None
+        return schedule.exercise_day.lower()
+
+    @exception_handler
+    @override
+    async def async_select_option(self, option: str) -> None:
+        """Update the exercise day, keeping the rest of the schedule."""
+        await self.envoy.update_generator_schedule(
+            {"exercise_day": option}, refresh=True
+        )
+        await self.coordinator.async_request_refresh()

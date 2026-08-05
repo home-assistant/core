@@ -34,9 +34,20 @@
         "default": "mdi:sleep-off"
       }
     },
+    "number": {
+      "generator_exercise_duration": {
+        "default": "mdi:timer-outline"
+      },
+      "generator_exercise_interval": {
+        "default": "mdi:calendar-refresh-outline"
+      }
+    },
     "select": {
       "acb_sleep_soc": {
         "default": "mdi:battery-clock"
+      },
+      "generator_exercise_day": {
+        "default": "mdi:calendar-week"
       }
     },
     "sensor": {
@@ -139,6 +150,12 @@
       }
     },
     "switch": {
+      "generator_charge_from_generator": {
+        "default": "mdi:battery-charging",
+        "state": {
+          "off": "mdi:battery-off-outline"
+        }
+      },
       "grid_enabled": {
         "default": "mdi:transmission-tower",
         "state": {

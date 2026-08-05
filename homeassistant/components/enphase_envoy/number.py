@@ -7,6 +7,7 @@ from typing import Any, override
 
 from pyenphase import Envoy, EnvoyDryContactSettings
 from pyenphase.const import SupportedFeatures
+from pyenphase.models.generator import EnvoyGeneratorSchedule
 from pyenphase.models.tariff import EnvoyStorageSettings
 
 from homeassistant.components.number import (
@@ -14,7 +15,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -22,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .entity import EnvoyBaseEntity, exception_handler
+from .entity import EnvoyBaseEntity, EnvoyGeneratorScheduleEntity, exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -40,6 +41,14 @@ class EnvoyStorageSettingsNumberEntityDescription(NumberEntityDescription):
 
     value_fn: Callable[[EnvoyStorageSettings], float]
     update_fn: Callable[[Envoy, float], Awaitable[dict[str, Any]]]
+
+
+@dataclass(frozen=True, kw_only=True)
+class EnvoyGeneratorScheduleNumberEntityDescription(NumberEntityDescription):
+    """Describes a standby generator exercise schedule number entity."""
+
+    value_fn: Callable[[EnvoyGeneratorSchedule], float]
+    update_fn: Callable[[Envoy, int], Awaitable[dict[str, Any]]]
 
 
 RELAY_ENTITIES = (
@@ -68,6 +77,39 @@ STORAGE_RESERVE_SOC_ENTITY = EnvoyStorageSettingsNumberEntityDescription(
     update_fn=lambda envoy, value: envoy.set_reserve_soc(int(value)),
 )
 
+# The value domains match the Enphase app. The firmware accepts and
+# persists out-of-domain durations, but the Enlighten UI can not display
+# them.
+GENERATOR_SCHEDULE_ENTITIES = (
+    EnvoyGeneratorScheduleNumberEntityDescription(
+        key="generator_exercise_duration",
+        translation_key="generator_exercise_duration",
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_min_value=10,
+        native_max_value=60,
+        native_step=10,
+        entity_category=EntityCategory.CONFIG,
+        value_fn=attrgetter("exercise_duration"),
+        update_fn=lambda envoy, value: envoy.update_generator_schedule(
+            {"exercise_duration": value}, refresh=True
+        ),
+    ),
+    EnvoyGeneratorScheduleNumberEntityDescription(
+        key="generator_exercise_interval",
+        translation_key="generator_exercise_interval",
+        native_unit_of_measurement=UnitOfTime.WEEKS,
+        native_min_value=1,
+        native_max_value=4,
+        native_step=1,
+        entity_category=EntityCategory.CONFIG,
+        value_fn=attrgetter("exercise_freq_in_weeks"),
+        update_fn=lambda envoy, value: envoy.update_generator_schedule(
+            {"exercise_freq_in_weeks": value}, refresh=True
+        ),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -92,6 +134,11 @@ async def async_setup_entry(
     ):
         entities.append(
             EnvoyStorageSettingsNumberEntity(coordinator, STORAGE_RESERVE_SOC_ENTITY)
+        )
+    if envoy_data.generator_schedule:
+        entities.extend(
+            EnvoyGeneratorScheduleNumberEntity(coordinator, description)
+            for description in GENERATOR_SCHEDULE_ENTITIES
         )
     async_add_entities(entities)
 
@@ -202,4 +249,34 @@ class EnvoyStorageSettingsNumberEntity(EnvoyBaseEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Update the storage setting."""
         await self.entity_description.update_fn(self.envoy, value)
+        await self.coordinator.async_request_refresh()
+
+
+class EnvoyGeneratorScheduleNumberEntity(EnvoyGeneratorScheduleEntity, NumberEntity):
+    """Representation of a standby generator exercise schedule number entity."""
+
+    entity_description: EnvoyGeneratorScheduleNumberEntityDescription
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: EnvoyGeneratorScheduleNumberEntityDescription,
+    ) -> None:
+        """Initialize the generator exercise schedule number entity."""
+        super().__init__(coordinator, description)
+        self.envoy = coordinator.envoy
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the state of the exercise schedule entity."""
+        if (schedule := self.data.generator_schedule) is None:
+            return None
+        return self.entity_description.value_fn(schedule)
+
+    @exception_handler
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the schedule setting, keeping the rest of the schedule."""
+        await self.entity_description.update_fn(self.envoy, int(value))
         await self.coordinator.async_request_refresh()

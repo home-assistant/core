@@ -10,6 +10,7 @@ from pyenphase.models.dry_contacts import DryContactStatus
 from pyenphase.models.tariff import EnvoyStorageSettings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -17,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .entity import EnvoyBaseEntity, exception_handler
+from .entity import EnvoyBaseEntity, EnvoyGeneratorConfigEntity, exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -73,6 +74,12 @@ CHARGE_FROM_GRID_SWITCH = EnvoyStorageSettingsSwitchEntityDescription(
     turn_off_fn=lambda envoy: envoy.disable_charge_from_grid(),
 )
 
+GENERATOR_CHARGE_SWITCH = SwitchEntityDescription(
+    key="generator_charge_from_generator",
+    translation_key="generator_charge_from_generator",
+    entity_category=EntityCategory.CONFIG,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -108,6 +115,11 @@ async def async_setup_entry(
             EnvoyStorageSettingsSwitchEntity(
                 coordinator, CHARGE_FROM_GRID_SWITCH, envoy_data.enpower
             )
+        )
+
+    if envoy_data.generator_config:
+        entities.append(
+            EnvoyGeneratorChargeSwitchEntity(coordinator, GENERATOR_CHARGE_SWITCH)
         )
 
     async_add_entities(entities)
@@ -288,4 +300,39 @@ class EnvoyStorageSettingsSwitchEntity(EnvoyBaseEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the storage switch."""
         await self.entity_description.turn_off_fn(self.envoy)
+        await self.coordinator.async_request_refresh()
+
+
+class EnvoyGeneratorChargeSwitchEntity(EnvoyGeneratorConfigEntity, SwitchEntity):
+    """Representation of the charge batteries from generator switch entity."""
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: SwitchEntityDescription,
+    ) -> None:
+        """Initialize the charge from generator switch entity."""
+        super().__init__(coordinator, description)
+        self.envoy = coordinator.envoy
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return whether charging the batteries from the generator is allowed."""
+        if (config := self.data.generator_config) is None:
+            return None
+        return config.charge_from_generator
+
+    @exception_handler
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Allow charging the batteries from the generator."""
+        await self.envoy.set_generator_charge_from_generator(True)
+        await self.coordinator.async_request_refresh()
+
+    @exception_handler
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disallow charging the batteries from the generator."""
+        await self.envoy.set_generator_charge_from_generator(False)
         await self.coordinator.async_request_refresh()
