@@ -8,6 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import (
     CONF_NAME,
+    CONF_OPTIONS,
     CONF_PAYLOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -38,7 +39,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import SelectSchema
-from .storage.const import CONF_ENTITY, CONF_GA_SELECT, CONF_OPTION, CONF_OPTIONS
+from .storage.const import CONF_ENTITY, CONF_GA_SELECT, CONF_OPTION
 from .storage.util import ConfigExtractor
 
 

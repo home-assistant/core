@@ -80,7 +80,7 @@ CONF_GA_SCENE: Final = "ga_scene"
 
 # Select
 CONF_GA_SELECT: Final = "ga_select"
-CONF_OPTIONS: Final = "options"
+# CONF_OPTIONS comes from homeassistant.const
 CONF_OPTION: Final = "option"
 
 # Sensor

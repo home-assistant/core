@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_MODE,
     CONF_NAME,
+    CONF_OPTIONS,
     CONF_PAYLOAD,
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
@@ -116,7 +117,6 @@ from .const import (
     CONF_GA_WHITE_SWITCH,
     CONF_IGNORE_AUTO_MODE,
     CONF_OPTION,
-    CONF_OPTIONS,
     CONF_SPEED,
     CONF_TARGET_TEMPERATURE,
 )
