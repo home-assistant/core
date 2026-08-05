@@ -2116,7 +2116,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.18.3
+pydaikin==2.18.4
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2198,7 +2198,6 @@ pyezvizapi==1.0.0.7
 pyfibaro==0.8.3
 
 # homeassistant.components.fido
-pyfido==2.1.2
 
 # homeassistant.components.firefly_iii
 pyfirefly==0.1.12
