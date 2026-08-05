@@ -98,11 +98,15 @@ class ViCareEntity(Entity):
                 _, zigbee_ieee, _ = parts
                 config_entry = self.platform.config_entry
                 assert config_entry is not None
-                device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
-                    self.hass,
+                # Link best effort: the gateway may be absent (its main device
+                # was omitted or its serial could not be retrieved), in which
+                # case the channel stays unlinked rather than aborting setup.
+                gateway_device = dr.async_get(self.hass).async_get_device_by_identifier(
                     (DOMAIN, f"{self._gateway_serial}_zigbee_{zigbee_ieee}"),
-                    config_entry_id=config_entry.entry_id,
+                    config_entry.entry_id,
                 )
+                if gateway_device is not None:
+                    device_info["via_device_id"] = gateway_device.id
             elif (
                 len(parts) == 2
                 and len(zigbee_ieee := device_serial.removeprefix("zigbee-")) == 16

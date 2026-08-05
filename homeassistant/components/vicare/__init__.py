@@ -193,7 +193,7 @@ async def _async_register_zigbee_gateway_devices(
     """
     device_registry = dr.async_get(hass)
     for device in entry.runtime_data.devices:
-        device_serial = await hass.async_add_executor_job(get_device_serial, device.api)
+        device_serial = device.serial
         # A gateway (main) device has a two-part zigbee serial; its channels add
         # a third part and link back to it.
         if (
@@ -247,11 +247,14 @@ def _setup_vicare_api(
             str(device.isOnline()),
         )
 
-    devices = [
-        ViCareDevice(config=device_config, api=device_config.asAutoDetectDevice())
-        for device_config in device_config_list
-        if bool(device_config.isOnline())
-    ]
+    devices = []
+    for device_config in device_config_list:
+        if not bool(device_config.isOnline()):
+            continue
+        api = device_config.asAutoDetectDevice()
+        devices.append(
+            ViCareDevice(config=device_config, api=api, serial=get_device_serial(api))
+        )
     return ViCareData(client=client, devices=devices)
 
 
@@ -269,9 +272,7 @@ async def async_migrate_devices_and_entities(
 
     gateway_serial: str = device.config.getConfig().serial
     device_id = device.config.getId()
-    device_serial: str | None = await hass.async_add_executor_job(
-        get_device_serial, device.api
-    )
+    device_serial: str | None = device.serial
     device_model = device.config.getModel()
 
     old_identifier = gateway_serial
