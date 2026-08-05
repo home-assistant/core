@@ -5,19 +5,15 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Image tag or digest to test (e.g. dev, 2026.7.1, 2026.8.0b0, sha256:0a1b2c3d…)"
+        description: "Image tag to test (e.g. dev, 2026.7.1, 2026.8.0b0)"
         default: "dev"
         required: true
   workflow_call:
     inputs:
       version:
-        description: "Image tag or digest to test (e.g. dev, 2026.7.1, 2026.8.0b0, sha256:0a1b2c3d…). With per_arch_images, only full version tags are valid (e.g. 2026.7.1)."
+        description: "Image tag to test (e.g. dev, 2026.7.1, 2026.8.0b0)"
         required: true
         type: string
-      per_arch_images:
-        description: "Test the per-architecture images instead of the multi-arch manifest"
-        default: false
-        type: boolean
 
 permissions: {}
 
@@ -27,26 +23,41 @@ concurrency:
 
 jobs:
   boot_check:
-    name: Boot check ${{ matrix.arch }} core image
+    name: Boot check ${{ matrix.machine }} image
     if: github.repository_owner == 'home-assistant'
     runs-on: ${{ matrix.runs-on }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
+        # Keep in sync with the build_machine matrix in builder.yml
+        machine:
+          - generic-x86-64
+          - khadas-vim3
+          - odroid-c2
+          - odroid-c4
+          - odroid-m1
+          - odroid-n2
+          - qemuarm-64
+          - qemux86-64
+          - raspberrypi3-64
+          - raspberrypi4-64
+          - raspberrypi5-64
+          - yellow
+          - green
         include:
-          - arch: amd64
+          # Default: aarch64 on native ARM runner
+          - runs-on: ubuntu-24.04-arm
+          # Overrides for amd64 machines
+          - machine: generic-x86-64
             runs-on: ubuntu-24.04
-            image_name: amd64-homeassistant
-          - arch: aarch64
-            runs-on: ubuntu-24.04-arm
-            image_name: aarch64-homeassistant
+          - machine: qemux86-64
+            runs-on: ubuntu-24.04
     env:
       BASE_URL: http://localhost:8123
     services:
       homeassistant:
-        # Digests are referenced with '@', tags with ':'
-        image: ghcr.io/home-assistant/${{ inputs.per_arch_images && matrix.image_name || 'home-assistant' }}${{ startsWith(inputs.version, 'sha256:') && '@' || ':' }}${{ inputs.version }} # zizmor: ignore[unpinned-images]
+        image: ghcr.io/home-assistant/${{ matrix.machine }}-homeassistant:${{ inputs.version }} # zizmor: ignore[unpinned-images]
         ports:
           - 8123:8123
         # Gate steps until Home Assistant answers (60 x 5s ≈ 300s startup budget)
@@ -89,7 +100,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-report-${{ matrix.arch }}
+          name: playwright-report-${{ matrix.machine }}
           path: |
             tests/e2e/playwright-report/
             tests/e2e/test-results/
@@ -104,5 +115,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: container-logs-${{ matrix.arch }}
+          name: container-logs-${{ matrix.machine }}
           path: homeassistant.log
