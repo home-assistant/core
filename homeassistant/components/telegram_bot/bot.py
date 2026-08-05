@@ -385,9 +385,9 @@ class TelegramNotificationService:
                     if isinstance(entry, dict):
                         text = entry.get(ATTR_TEXT)
                         style = entry.get(ATTR_STYLE)
-                        if (
-                            style is not None
-                            and style not in VALID_INLINE_KEYBOARD_BUTTON_STYLES
+                        if style is not None and (
+                            not isinstance(style, str)
+                            or style not in VALID_INLINE_KEYBOARD_BUTTON_STYLES
                         ):
                             raise ServiceValidationError(
                                 translation_domain=DOMAIN,
@@ -400,8 +400,10 @@ class TelegramNotificationService:
                                 },
                             )
 
-                        url = entry.get(ATTR_URL)
-                        callback_data = entry.get(ATTR_CALLBACK_DATA)
+                        # NOTE: distinct names from the deprecated branch above,
+                        # which binds `url` to a str and would narrow these.
+                        button_url = entry.get(ATTR_URL)
+                        button_data = entry.get(ATTR_CALLBACK_DATA)
                         # `text` is required, and exactly one of `url` /
                         # `callback_data` must be a non-empty string.
                         if not isinstance(text, str) or not text:
@@ -409,18 +411,22 @@ class TelegramNotificationService:
                                 translation_domain=DOMAIN,
                                 translation_key="invalid_inline_keyboard_button",
                             )
-                        if isinstance(url, str) and url and callback_data is None:
+                        if (
+                            isinstance(button_url, str)
+                            and button_url
+                            and button_data is None
+                        ):
                             buttons.append(
-                                InlineKeyboardButton(text, url=url, style=style)
+                                InlineKeyboardButton(text, url=button_url, style=style)
                             )
                         elif (
-                            isinstance(callback_data, str)
-                            and callback_data
-                            and url is None
+                            isinstance(button_data, str)
+                            and button_data
+                            and button_url is None
                         ):
                             buttons.append(
                                 InlineKeyboardButton(
-                                    text, callback_data=callback_data, style=style
+                                    text, callback_data=button_data, style=style
                                 )
                             )
                         else:
