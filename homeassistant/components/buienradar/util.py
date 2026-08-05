@@ -1,6 +1,6 @@
 """Shared utilities for different supported platforms."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -158,7 +158,7 @@ class BrData:
 
         _LOGGER.debug("Buienradar parsed data: %s", result)
         if result.get(SUCCESS) is not True:
-            if int(datetime.now().strftime("%H")) > 0:  # pylint: disable=home-assistant-enforce-naive-now
+            if dt_util.now().hour > 0:
                 _LOGGER.warning(
                     "Unable to parse data from Buienradar. (Msg: %s)",
                     result.get(MESSAGE),
