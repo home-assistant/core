@@ -469,8 +469,7 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
     MideaSensorEntityDescription(
         key="fan_level",
         translation_key="fan_level",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        models=[DeviceType.B6],
     ),
     MideaSensorEntityDescription(
         key="water_temperature",
