@@ -573,9 +573,19 @@ async def test_send_message_with_invalid_inline_keyboard_button(
     assert err.value.translation_key == "invalid_inline_keyboard_button"
 
 
+@pytest.mark.parametrize(
+    "style",
+    [
+        pytest.param("purple", id="unknown_style"),
+        pytest.param(["primary"], id="list_style"),
+        pytest.param({"style": "primary"}, id="dict_style"),
+        pytest.param(1, id="int_style"),
+    ],
+)
 async def test_send_message_with_invalid_inline_keyboard_style(
     hass: HomeAssistant,
     webhook_bot: None,
+    style: Any,
 ) -> None:
     """Test the send_message service with an invalid inline keyboard button style."""
 
@@ -590,7 +600,7 @@ async def test_send_message_with_invalid_inline_keyboard_style(
                         {
                             ATTR_TEXT: "mock_text",
                             ATTR_CALLBACK_DATA: "/cmd",
-                            ATTR_STYLE: "purple",
+                            ATTR_STYLE: style,
                         }
                     ]
                 ],
@@ -602,7 +612,7 @@ async def test_send_message_with_invalid_inline_keyboard_style(
     await hass.async_block_till_done()
     assert err.value.translation_key == "invalid_inline_keyboard_style"
     assert err.value.translation_placeholders == {
-        "style": "purple",
+        "style": str(style),
         "valid_styles": "danger, primary, success",
     }
 
