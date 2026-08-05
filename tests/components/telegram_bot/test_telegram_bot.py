@@ -408,8 +408,7 @@ async def test_send_sticker_error(hass: HomeAssistant, webhook_bot) -> None:
 @pytest.mark.parametrize(
     ("keyboard", "expected_styles"),
     [
-        (
-            # one row, three buttons, all styles
+        pytest.param(
             [
                 [
                     {
@@ -430,9 +429,9 @@ async def test_send_sticker_error(hass: HomeAssistant, webhook_bot) -> None:
                 ]
             ],
             [["success", "danger", "primary"]],
+            id="all_styles_single_row",
         ),
-        (
-            # style is optional and must stay unset when omitted
+        pytest.param(
             [
                 [
                     {ATTR_TEXT: "No style", ATTR_CALLBACK_DATA: "/plain"},
@@ -444,9 +443,9 @@ async def test_send_sticker_error(hass: HomeAssistant, webhook_bot) -> None:
                 ]
             ],
             [[None, "success"]],
+            id="style_omitted_and_url_button",
         ),
-        (
-            # text and callback_data containing the legacy separators
+        pytest.param(
             [
                 [
                     {
@@ -456,12 +455,13 @@ async def test_send_sticker_error(hass: HomeAssistant, webhook_bot) -> None:
                 ]
             ],
             [[None]],
+            id="text_and_data_with_legacy_separators",
         ),
     ],
 )
 async def test_send_message_with_inline_keyboard_dict_format(
     hass: HomeAssistant,
-    webhook_bot,
+    webhook_bot: None,
     keyboard: list[list[dict[str, Any]]],
     expected_styles: list[list[str | None]],
 ) -> None:
@@ -527,21 +527,21 @@ async def test_send_message_with_inline_keyboard_dict_format(
 @pytest.mark.parametrize(
     "button",
     [
-        # missing text
-        {ATTR_CALLBACK_DATA: "/cmd"},
-        # neither url nor callback_data
-        {ATTR_TEXT: "mock_text"},
-        # both url and callback_data
-        {
-            ATTR_TEXT: "mock_text",
-            ATTR_URL: "https://mock_link",
-            ATTR_CALLBACK_DATA: "/cmd",
-        },
+        pytest.param({ATTR_CALLBACK_DATA: "/cmd"}, id="missing_text"),
+        pytest.param({ATTR_TEXT: "mock_text"}, id="missing_url_and_callback_data"),
+        pytest.param(
+            {
+                ATTR_TEXT: "mock_text",
+                ATTR_URL: "https://mock_link",
+                ATTR_CALLBACK_DATA: "/cmd",
+            },
+            id="both_url_and_callback_data",
+        ),
     ],
 )
 async def test_send_message_with_invalid_inline_keyboard_button(
     hass: HomeAssistant,
-    webhook_bot,
+    webhook_bot: None,
     button: dict[str, Any],
 ) -> None:
     """Test the send_message service with an invalid inline keyboard button."""
@@ -564,7 +564,7 @@ async def test_send_message_with_invalid_inline_keyboard_button(
 
 async def test_send_message_with_invalid_inline_keyboard_style(
     hass: HomeAssistant,
-    webhook_bot,
+    webhook_bot: None,
 ) -> None:
     """Test the send_message service with an invalid inline keyboard button style."""
 
@@ -599,23 +599,25 @@ async def test_send_message_with_invalid_inline_keyboard_style(
 @pytest.mark.parametrize(
     ("keyboard", "expected"),
     [
-        (
+        pytest.param(
             "mock_link:http://mock_link",
             InlineKeyboardMarkup(
                 [[InlineKeyboardButton(url="http://mock_link", text="mock_link")]]
             ),
+            id="deprecated_string_format",
         ),
-        (
+        pytest.param(
             [[["mock_link", "http://mock_link"]]],
             InlineKeyboardMarkup(
                 [[InlineKeyboardButton(url="http://mock_link", text="mock_link")]]
             ),
+            id="deprecated_list_format",
         ),
     ],
 )
 async def test_send_message_with_deprecated_inline_keyboard_http_url(
     hass: HomeAssistant,
-    webhook_bot,
+    webhook_bot: None,
     keyboard: Any,
     expected: InlineKeyboardMarkup,
 ) -> None:
@@ -650,13 +652,13 @@ async def test_send_message_with_deprecated_inline_keyboard_http_url(
 @pytest.mark.parametrize(
     "keyboard",
     [
-        "command1:/cmd1",
-        [[["command1", "/cmd1"]]],
+        pytest.param("command1:/cmd1", id="deprecated_string_format"),
+        pytest.param([[["command1", "/cmd1"]]], id="deprecated_list_format"),
     ],
 )
 async def test_deprecated_inline_keyboard_creates_issue(
     hass: HomeAssistant,
-    webhook_bot,
+    webhook_bot: None,
     issue_registry: IssueRegistry,
     keyboard: Any,
 ) -> None:
@@ -697,7 +699,7 @@ async def test_deprecated_inline_keyboard_creates_issue(
 
 async def test_inline_keyboard_dict_format_creates_no_issue(
     hass: HomeAssistant,
-    webhook_bot,
+    webhook_bot: None,
     issue_registry: IssueRegistry,
 ) -> None:
     """Test that the dict based format does not create a repair issue."""
