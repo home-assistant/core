@@ -192,6 +192,7 @@ class _KnxCover(CoverEntity, RestoreEntity):
         if self._position_publisher is not None:
             self._device.unregister_device_updated_cb(self._publish_position)
             self._position_publisher.xknx.devices.async_remove(self._position_publisher)
+            self._position_publisher = None
         await super().async_will_remove_from_hass()
 
     def _payload_position(self) -> int | None:
@@ -224,9 +225,20 @@ class _KnxCover(CoverEntity, RestoreEntity):
             and position != self._published_position
         ):
             self._published_position = position
-            self.hass.async_create_task(
-                self._position_publisher.set(position, skip_unchanged=True)
-            )
+            self.hass.async_create_task(self._async_publish_position())
+
+    async def _async_publish_position(self) -> None:
+        """Send the cached position unless the entity was removed meanwhile.
+
+        The task outlives async_will_remove_from_hass, and sending goes through
+        the telegram queue rather than the device list - without this check a
+        reload during a travel would still put one stale value on the bus.
+        """
+        if self._position_publisher is None or self._published_position is None:
+            return
+        await self._position_publisher.set(
+            self._published_position, skip_unchanged=True
+        )
 
     @property
     @override
