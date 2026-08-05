@@ -26,11 +26,11 @@
   },
   "entity": {
     "sensor": {
-      "power_consumed": {
-        "name": "Total power consumed"
+      "energy_consumed": {
+        "name": "Energy consumed"
       },
-      "power_supplied": {
-        "name": "Total power supplied"
+      "energy_supplied": {
+        "name": "Energy supplied"
       }
     }
   }

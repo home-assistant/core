@@ -19,18 +19,18 @@ from .entity import ConexaSMGWEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-# So far the Conexa 3.0 provides only total energy in and out.
+# So far the Conexa 3.0 provides only total active energy in and out.
 KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     OBIS_IN: SensorEntityDescription(
         key=OBIS_IN,
-        translation_key="power_consumed",
+        translation_key="energy_consumed",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OBIS_OUT: SensorEntityDescription(
         key=OBIS_OUT,
-        translation_key="power_supplied",
+        translation_key="energy_supplied",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,

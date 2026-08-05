@@ -1,10 +1,10 @@
 {
   "entity": {
     "sensor": {
-      "power_consumed": {
+      "energy_consumed": {
         "default": "mdi:home-import-outline"
       },
-      "power_supplied": {
+      "energy_supplied": {
         "default": "mdi:home-export-outline"
       }
     }
