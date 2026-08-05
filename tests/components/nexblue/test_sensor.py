@@ -5,12 +5,6 @@ from unittest.mock import MagicMock
 from nexblue_api import NexBlueDeviceOfflineError, NexBlueError
 import pytest
 
-from homeassistant.components.nexblue.sensor import (
-    NexBlueStatusSensor,
-    _bool_text,
-    _sensor_icon,
-)
-from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -30,6 +24,13 @@ async def test_sensors(
     assert hass.states.get("sensor.nb123456_charging_state").state == "Charging"
     assert hass.states.get("sensor.nb123456_charging_power").state == "7.2"
     assert hass.states.get("sensor.nb123456_session_energy").state == "1.5"
+    assert hass.states.get("sensor.nb123456_cable_lock_state").state == "Locked"
+    assert hass.states.get("sensor.nb123456_network_status").state == "Wi-Fi"
+
+    brightness = hass.states.get("sensor.nb123456_led_brightness")
+    assert brightness.state == "100"
+    assert brightness.attributes["unit_of_measurement"] == PERCENTAGE
+    assert brightness.attributes["state_class"] == "measurement"
 
     device = device_registry.async_get_device(
         identifiers={("nexblue", CHARGER.serial_number)}
@@ -79,33 +80,3 @@ async def test_sensors_unavailable_when_coordinator_update_fails(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.nb123456_charging_state").state == "unavailable"
-
-
-async def test_sensor_handles_missing_values_and_brightness_metadata(
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test sensor fallback values and brightness metadata."""
-    coordinator = init_integration.runtime_data.coordinator
-
-    brightness_sensor = NexBlueStatusSensor(
-        coordinator, CHARGER.serial_number, "brightness"
-    )
-    assert brightness_sensor.native_unit_of_measurement == PERCENTAGE
-    assert brightness_sensor.state_class is SensorStateClass.MEASUREMENT
-    assert brightness_sensor.icon == "mdi:brightness-percent"
-
-    assert (
-        NexBlueStatusSensor(coordinator, CHARGER.serial_number, "current").native_value
-        is None
-    )
-    assert (
-        NexBlueStatusSensor(
-            coordinator, CHARGER.serial_number, "voltage", phase=3
-        ).native_value
-        is None
-    )
-
-    coordinator.data[CHARGER.serial_number] = None
-    assert brightness_sensor.native_value is None
-    assert _bool_text(None, true_text="Enabled", false_text="Disabled") is None
-    assert _sensor_icon("unknown") is None

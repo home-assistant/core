@@ -1,10 +1,15 @@
 """Sensors for the NexBlue integration."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import override
+
+from nexblue_api.models import ChargerStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -21,20 +26,189 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NexBlueConfigEntry
-from .coordinator import NexBlueDataUpdateCoordinator
+from .coordinator import NexBlueConfigEntry, NexBlueDataUpdateCoordinator
 
-DIAGNOSTIC_METRICS = {
-    "access_level",
-    "brightness",
-    "cable_current_limit",
-    "cable_lock_mode",
-    "circuit_fuse",
-    "is_disable",
-    "is_lock",
-    "network_status",
-    "phase_charging",
+
+def _enum_value(values: dict[int, str], value: int | None) -> str | None:
+    """Return a known text value or a safe fallback for a protocol value."""
+    if value is None:
+        return None
+    return values.get(value, f"Unknown ({value})")
+
+
+def _bool_value(value: bool | None, *, true_value: str, false_value: str) -> str | None:
+    """Return a text value for an optional boolean."""
+    if value is None:
+        return None
+    return true_value if value else false_value
+
+
+CHARGING_STATE_MAP = {
+    0: "Connect cable to charge",
+    1: "Ready to charge",
+    2: "Charging",
+    3: "Charging complete",
+    4: "Charging unavailable",
+    5: "Waiting for available power",
+    6: "Schedule waiting",
+    7: "Waiting for car response",
 }
+
+NETWORK_STATUS_MAP = {0: "None", 1: "Wi-Fi", 2: "4G", 3: "Ethernet"}
+
+CABLE_LOCK_MODE_MAP = {0: "Locked while charging", 1: "Always locked"}
+
+ACCESS_LEVEL_MAP = {0: "Authorized users only", 1: "No restrictions"}
+
+PHASE_CHARGING_MAP = {0: "Three-phase", 1: "Single-phase"}
+
+
+@dataclass(frozen=True, kw_only=True)
+class NexBlueSensorEntityDescription(SensorEntityDescription):
+    """Describe a NexBlue charger sensor."""
+
+    value_fn: Callable[[ChargerStatus], StateType]
+
+
+SENSOR_DESCRIPTIONS: tuple[NexBlueSensorEntityDescription, ...] = (
+    NexBlueSensorEntityDescription(
+        key="charging_state",
+        translation_key="charging_state",
+        value_fn=lambda status: _enum_value(CHARGING_STATE_MAP, status.charging_state),
+    ),
+    NexBlueSensorEntityDescription(
+        key="is_lock",
+        translation_key="is_lock",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda status: _bool_value(
+            status.is_lock, true_value="Locked", false_value="Unlocked"
+        ),
+    ),
+    NexBlueSensorEntityDescription(
+        key="cable_lock_mode",
+        translation_key="cable_lock_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda status: _enum_value(
+            CABLE_LOCK_MODE_MAP, status.cable_lock_mode
+        ),
+    ),
+    NexBlueSensorEntityDescription(
+        key="is_disable",
+        translation_key="is_disable",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda status: _bool_value(
+            status.is_disable, true_value="Disabled", false_value="Enabled"
+        ),
+    ),
+    NexBlueSensorEntityDescription(
+        key="access_level",
+        translation_key="access_level",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda status: _enum_value(ACCESS_LEVEL_MAP, status.access_level),
+    ),
+    NexBlueSensorEntityDescription(
+        key="phase_charging",
+        translation_key="phase_charging",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda status: _enum_value(PHASE_CHARGING_MAP, status.phase_charging),
+    ),
+    NexBlueSensorEntityDescription(
+        key="power",
+        translation_key="power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: status.power_kw,
+    ),
+    NexBlueSensorEntityDescription(
+        key="energy",
+        translation_key="energy",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda status: status.energy_kwh,
+    ),
+    NexBlueSensorEntityDescription(
+        key="lifetime_energy",
+        translation_key="lifetime_energy",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.lifetime_energy_kwh,
+    ),
+    NexBlueSensorEntityDescription(
+        key="current_limit",
+        translation_key="current_limit",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: status.current_limit_a,
+    ),
+    NexBlueSensorEntityDescription(
+        key="cable_current_limit",
+        translation_key="cable_current_limit",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: status.cable_current_limit_a,
+    ),
+    NexBlueSensorEntityDescription(
+        key="circuit_fuse",
+        translation_key="circuit_fuse",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: status.circuit_fuse_a,
+    ),
+    *(
+        NexBlueSensorEntityDescription(
+            key=f"current_{phase}",
+            translation_key=f"current_{phase}",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=value_fn,
+        )
+        for phase, value_fn in (
+            (1, lambda status: status.current_a[0]),
+            (2, lambda status: status.current_a[1]),
+            (3, lambda status: status.current_a[2]),
+        )
+    ),
+    *(
+        NexBlueSensorEntityDescription(
+            key=f"voltage_{phase}",
+            translation_key=f"voltage_{phase}",
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=value_fn,
+        )
+        for phase, value_fn in (
+            (1, lambda status: status.voltage_v[0]),
+            (2, lambda status: status.voltage_v[1]),
+            (3, lambda status: status.voltage_v[2]),
+        )
+    ),
+    NexBlueSensorEntityDescription(
+        key="network_status",
+        translation_key="network_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda status: _enum_value(NETWORK_STATUS_MAP, status.network_status),
+    ),
+    NexBlueSensorEntityDescription(
+        key="brightness",
+        translation_key="brightness",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: status.brightness_percent,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -45,32 +219,9 @@ async def async_setup_entry(
     """Set up NexBlue sensors for every discovered charger."""
     coordinator = entry.runtime_data.coordinator
     async_add_entities(
-        entity
+        NexBlueStatusSensor(coordinator, serial_number, description)
         for serial_number in coordinator.data
-        for entity in (
-            NexBlueStatusSensor(coordinator, serial_number, "charging_state"),
-            NexBlueStatusSensor(coordinator, serial_number, "is_lock"),
-            NexBlueStatusSensor(coordinator, serial_number, "cable_lock_mode"),
-            NexBlueStatusSensor(coordinator, serial_number, "is_disable"),
-            NexBlueStatusSensor(coordinator, serial_number, "access_level"),
-            NexBlueStatusSensor(coordinator, serial_number, "phase_charging"),
-            NexBlueStatusSensor(coordinator, serial_number, "power"),
-            NexBlueStatusSensor(coordinator, serial_number, "energy"),
-            NexBlueStatusSensor(coordinator, serial_number, "lifetime_energy"),
-            NexBlueStatusSensor(coordinator, serial_number, "current_limit"),
-            NexBlueStatusSensor(coordinator, serial_number, "cable_current_limit"),
-            NexBlueStatusSensor(coordinator, serial_number, "circuit_fuse"),
-            *(
-                NexBlueStatusSensor(coordinator, serial_number, "current", phase)
-                for phase in range(3)
-            ),
-            *(
-                NexBlueStatusSensor(coordinator, serial_number, "voltage", phase)
-                for phase in range(3)
-            ),
-            NexBlueStatusSensor(coordinator, serial_number, "network_status"),
-            NexBlueStatusSensor(coordinator, serial_number, "brightness"),
-        )
+        for description in SENSOR_DESCRIPTIONS
     )
 
 
@@ -80,61 +231,24 @@ class NexBlueStatusSensor(
     """Expose normalized NexBlue charger telemetry."""
 
     _attr_has_entity_name = True
+    entity_description: NexBlueSensorEntityDescription
 
     def __init__(
         self,
         coordinator: NexBlueDataUpdateCoordinator,
         serial_number: str,
-        metric: str,
-        phase: int | None = None,
+        description: NexBlueSensorEntityDescription,
     ) -> None:
         """Initialize a sensor for one charger metric."""
         super().__init__(coordinator)
         self._serial_number = serial_number
-        self._metric = metric
-        self._phase = phase
-
-        suffix = f"_{phase + 1}" if phase is not None else ""
-        self._attr_unique_id = f"{serial_number}_{metric}{suffix}"
-        self._attr_translation_key = f"{metric}{suffix}"
-        self._attr_icon = _sensor_icon(metric)
+        self.entity_description = description
+        self._attr_unique_id = f"{serial_number}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={("nexblue", serial_number)},
             manufacturer="NexBlue",
             name=serial_number,
         )
-
-        if metric in DIAGNOSTIC_METRICS:
-            self._attr_entity_category = EntityCategory.DIAGNOSTIC
-
-        if metric == "power":
-            self._attr_native_unit_of_measurement = UnitOfPower.KILO_WATT
-            self._attr_device_class = SensorDeviceClass.POWER
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-        elif metric == "energy":
-            self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-            self._attr_device_class = SensorDeviceClass.ENERGY
-            self._attr_state_class = SensorStateClass.TOTAL
-        elif metric == "lifetime_energy":
-            self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-            self._attr_device_class = SensorDeviceClass.ENERGY
-            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        elif metric in {
-            "current",
-            "current_limit",
-            "cable_current_limit",
-            "circuit_fuse",
-        }:
-            self._attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
-            self._attr_device_class = SensorDeviceClass.CURRENT
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-        elif metric == "voltage":
-            self._attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
-            self._attr_device_class = SensorDeviceClass.VOLTAGE
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-        elif metric == "brightness":
-            self._attr_native_unit_of_measurement = PERCENTAGE
-            self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     @override
@@ -152,121 +266,4 @@ class NexBlueStatusSensor(
         status = self.coordinator.data.get(self._serial_number)
         if status is None:
             return None
-
-        if self._metric == "charging_state":
-            return CHARGING_STATE_MAP.get(
-                status.charging_state, f"Unknown ({status.charging_state})"
-            )
-        if self._metric == "network_status":
-            return NETWORK_STATUS_MAP.get(
-                status.network_status, f"Unknown ({status.network_status})"
-            )
-        if self._metric == "is_disable":
-            return _bool_text(
-                status.is_disable, true_text="Disabled", false_text="Enabled"
-            )
-        if self._metric == "is_lock":
-            return _bool_text(status.is_lock, true_text="Locked", false_text="Unlocked")
-        if self._metric == "power":
-            return status.power_kw
-        if self._metric == "energy":
-            return status.energy_kwh
-        if self._metric == "lifetime_energy":
-            return status.lifetime_energy_kwh
-        if self._metric == "current_limit":
-            return status.current_limit_a
-        if self._metric == "cable_current_limit":
-            return status.cable_current_limit_a
-        if self._metric == "circuit_fuse":
-            return status.circuit_fuse_a
-        if self._metric == "cable_lock_mode":
-            return CABLE_LOCK_MODE_MAP.get(
-                status.cable_lock_mode, f"Unknown ({status.cable_lock_mode})"
-            )
-        if self._metric == "access_level":
-            return ACCESS_LEVEL_MAP.get(
-                status.access_level, f"Unknown ({status.access_level})"
-            )
-        if self._metric == "phase_charging":
-            return PHASE_CHARGING_MAP.get(
-                status.phase_charging, f"Unknown ({status.phase_charging})"
-            )
-        if self._metric == "brightness":
-            return status.brightness_percent
-
-        values = status.current_a if self._metric == "current" else status.voltage_v
-        if self._phase is None or len(values) <= self._phase:
-            return None
-        return values[self._phase]
-
-
-CHARGING_STATE_MAP = {
-    0: "Connect cable to charge",
-    1: "Ready to charge",
-    2: "Charging",
-    3: "Charging complete",
-    4: "Charging unavailable",
-    5: "Waiting for available power",
-    6: "Schedule waiting",
-    7: "Waiting for car response",
-}
-
-NETWORK_STATUS_MAP = {
-    0: "None",
-    1: "Wi-Fi",
-    2: "4G",
-    3: "Ethernet",
-}
-
-CABLE_LOCK_MODE_MAP = {
-    0: "Locked while charging",
-    1: "Always locked",
-}
-
-ACCESS_LEVEL_MAP = {
-    0: "Authorized users only",
-    1: "No restrictions",
-}
-
-PHASE_CHARGING_MAP = {
-    0: "Three-phase",
-    1: "Single-phase",
-}
-
-
-def _bool_text(value: bool | None, *, true_text: str, false_text: str) -> str | None:
-    """Return a friendly text value for an optional boolean."""
-    if value is None:
-        return None
-    return true_text if value else false_text
-
-
-def _sensor_icon(metric: str) -> str | None:
-    """Return a suitable Material Design Icon for a metric."""
-    if metric == "charging_state":
-        return "mdi:ev-station"
-    if metric == "network_status":
-        return "mdi:network-outline"
-    if metric == "is_disable":
-        return "mdi:check-circle-outline"
-    if metric == "is_lock":
-        return "mdi:lock-check"
-    if metric == "power":
-        return "mdi:flash"
-    if metric == "energy":
-        return "mdi:lightning-bolt"
-    if metric == "lifetime_energy":
-        return "mdi:counter"
-    if metric in {"current", "current_limit", "cable_current_limit"}:
-        return "mdi:current-ac"
-    if metric == "circuit_fuse":
-        return "mdi:fuse"
-    if metric == "cable_lock_mode":
-        return "mdi:lock-clock"
-    if metric == "access_level":
-        return "mdi:account-lock"
-    if metric in {"phase_charging", "voltage"}:
-        return "mdi:sine-wave"
-    if metric == "brightness":
-        return "mdi:brightness-percent"
-    return None
+        return self.entity_description.value_fn(status)

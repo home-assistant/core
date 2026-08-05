@@ -1,6 +1,7 @@
 """Data update coordinator for NexBlue."""
 
-from typing import TYPE_CHECKING, override
+from dataclasses import dataclass
+from typing import override
 
 from nexblue_api import (
     NexBlueAuthError,
@@ -12,6 +13,7 @@ from nexblue_api import (
 )
 from nexblue_api.models import ChargerStatus
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -19,8 +21,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_REFRESH_TOKEN, LOGGER, UPDATE_INTERVAL
 
-if TYPE_CHECKING:
-    from . import NexBlueConfigEntry
+
+@dataclass(kw_only=True, slots=True)
+class NexBlueRuntimeData:
+    """Runtime-only data for a NexBlue config entry."""
+
+    coordinator: NexBlueDataUpdateCoordinator
+
+
+type NexBlueConfigEntry = ConfigEntry[NexBlueRuntimeData]
 
 
 class NexBlueDataUpdateCoordinator(
@@ -78,11 +87,9 @@ class NexBlueDataUpdateCoordinator(
                 self.config_entry.data[CONF_REFRESH_TOKEN]
             )
         except NexBlueAuthError:
-            password = self.config_entry.data.get(CONF_PASSWORD)
-            if not password:
-                raise
             token = await self.client.async_login(
-                self.config_entry.data[CONF_USERNAME], password
+                self.config_entry.data[CONF_USERNAME],
+                self.config_entry.data[CONF_PASSWORD],
             )
             if not token.refresh_token:
                 raise NexBlueAuthError from None

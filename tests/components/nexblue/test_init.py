@@ -8,7 +8,6 @@ import pytest
 
 from homeassistant.components.nexblue.const import CONF_REFRESH_TOKEN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -104,30 +103,6 @@ async def test_setup_entry_fails_when_fallback_login_has_no_refresh_token(
 
     assert mock_config_entry.state is not ConfigEntryState.LOADED
     mock_client.async_login.assert_awaited_once()
-
-
-async def test_setup_entry_fails_without_saved_password(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test setup does not retry login without a saved password."""
-    mock_client.async_ensure_access_token.side_effect = NexBlueAuthError
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        data={
-            key: value
-            for key, value in mock_config_entry.data.items()
-            if key != CONF_PASSWORD
-        },
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is not ConfigEntryState.LOADED
-    mock_client.async_login.assert_not_awaited()
 
 
 async def test_setup_entry_retries_when_charger_status_request_fails(

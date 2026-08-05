@@ -28,7 +28,6 @@ class NexBlueConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a NexBlue config flow."""
 
     VERSION = 1
-    logger = LOGGER
 
     @override
     async def async_step_user(
