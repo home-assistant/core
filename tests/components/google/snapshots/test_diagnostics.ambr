@@ -76,7 +76,6 @@
         'sync_token_version': 2,
       }),
     }),
-    'system_timezone': 'tzlocal()',
     'timezone': 'America/Regina',
   })
 # ---
