@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
-from .conftest import MOCK_VEHICLE_ID, USER_SUB, complete_oauth_callback
+from .conftest import USER_SUB, complete_oauth_callback
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
@@ -79,12 +79,6 @@ async def test_entry_title_uses_display_name(
     _queue_token_post(aioclient_mock, _build_id_token_with_payload(payload))
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pick_vehicles"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"vehicle_ids": [str(MOCK_VEHICLE_ID)]}
-    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].title == expected_title

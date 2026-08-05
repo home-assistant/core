@@ -10,8 +10,5 @@
       'refresh_token': 'mock-refresh-token',
       'token_type': 'Bearer',
     }),
-    'vehicle_ids': list([
-      '941349991303',
-    ]),
   })
 # ---

@@ -18,19 +18,15 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
-    "error": {
-      "select_at_least_one": "Select at least one vehicle to track."
-    },
     "step": {
-      "pick_vehicles": {
+      "pick_implementation": {
         "data": {
-          "vehicle_ids": "Vehicles to track"
+          "implementation": "[%key:common::config_flow::data::implementation%]"
         },
         "data_description": {
-          "vehicle_ids": "Each selected vehicle is added as a device in Home Assistant. Unselect vehicles you don't want to track here."
+          "implementation": "[%key:common::config_flow::description::implementation%]"
         },
-        "description": "Choose which of your A Better Routeplanner vehicles you'd like to manage in Home Assistant.",
-        "title": "Pick vehicles"
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       }
     }
   },

@@ -6,17 +6,13 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aioabrp import AbrpApiError, AbrpAuthError, Telemetry
+from aioabrp import AbrpApiError, AbrpAuthError, AbrpVehicle, Telemetry
 from aiohttp import ClientError
 import pytest
 from yarl import URL
 
 from homeassistant.components.abetterrouteplanner import AbrpData
-from homeassistant.components.abetterrouteplanner.const import (
-    CONF_VEHICLE_IDS,
-    DOMAIN,
-    OAUTH2_TOKEN,
-)
+from homeassistant.components.abetterrouteplanner.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -31,7 +27,6 @@ from .conftest import (
     MOCK_VEHICLE_ID,
     MOCK_VEHICLE_ID_2,
     MOCK_VEHICLE_MODEL,
-    SENSOR_TEST_SUB,
     USER_SUB,
     build_id_token,
     complete_oauth_callback,
@@ -49,7 +44,7 @@ async def setup_integration(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
 
 
-@pytest.mark.usefixtures("mock_abrp_client")
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
 async def test_setup_and_unload(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -64,7 +59,7 @@ async def test_setup_and_unload(
     runtime_data = config_entry.runtime_data
     assert isinstance(runtime_data, AbrpData)
     assert isinstance(runtime_data.session, OAuth2Session)
-    assert runtime_data.stream is None
+    assert runtime_data.stream is not None
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -74,7 +69,7 @@ async def test_setup_and_unload(
 
 
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
-@pytest.mark.usefixtures("mock_abrp_client")
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
 async def test_setup_token_refresh_success(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -194,12 +189,6 @@ async def test_full_flow_end_to_end(
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pick_vehicles"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"vehicle_ids": [str(MOCK_VEHICLE_ID)]}
-    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
@@ -213,7 +202,6 @@ async def test_full_flow_end_to_end(
     assert isinstance(runtime_data, AbrpData)
     assert isinstance(runtime_data.session, OAuth2Session)
     assert entry.data["token"]["access_token"] == "mock-access-token"
-    assert entry.data["vehicle_ids"] == [str(MOCK_VEHICLE_ID)]
     assert entry.unique_id == USER_SUB
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -267,12 +255,6 @@ async def test_full_flow_stale_token_refresh_unauthorized(
     aioclient_mock.post(OAUTH2_TOKEN, side_effect=_sequential_token_response)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pick_vehicles"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"vehicle_ids": [str(MOCK_VEHICLE_ID)]}
-    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
@@ -357,12 +339,12 @@ async def test_setup_succeeds_with_degraded_device_card(
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
-async def test_stream_spawned_with_filtered_vehicle_ids(
+async def test_stream_spawned_for_every_garage_vehicle(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     fake_stream: Any,
 ) -> None:
-    """Setup spawns the telemetry stream for the selected ∩ present vehicles."""
+    """Setup spawns the telemetry stream covering the whole garage."""
     config_entry_with_vehicles.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(config_entry_with_vehicles.entry_id)
@@ -372,7 +354,7 @@ async def test_stream_spawned_with_filtered_vehicle_ids(
 
     stream = fake_stream.stream
     assert stream is not None
-    assert stream.vehicle_ids == [MOCK_VEHICLE_ID]
+    assert stream.vehicle_ids == [MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2]
     assert stream.started is True
     assert stream.name == config_entry_with_vehicles.title
 
@@ -381,39 +363,14 @@ async def test_stream_spawned_with_filtered_vehicle_ids(
     assert runtime_data.stream is stream
 
 
-@pytest.mark.usefixtures("mock_abrp_client")
-async def test_stream_vehicle_ids_filtered_against_garage(
-    hass: HomeAssistant,
-    token_entry: dict[str, Any],
-    fake_stream: Any,
-) -> None:
-    """A selected vehicle absent from the live garage is dropped from the stream."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=SENSOR_TEST_SUB,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": token_entry,
-            CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID), "999999999999"],
-        },
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    stream = fake_stream.stream
-    assert stream is not None
-    assert stream.vehicle_ids == [MOCK_VEHICLE_ID]
-
-
-@pytest.mark.usefixtures("mock_abrp_client")
-async def test_no_stream_when_no_vehicles_selected(
+async def test_no_stream_when_garage_is_empty(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
-    """An entry with an empty selection spawns NO telemetry stream."""
+    """An account whose garage is empty spawns NO telemetry stream."""
+    mock_abrp_client.return_value = []
     config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -452,20 +409,12 @@ async def test_unload_stops_stream(
 @pytest.mark.usefixtures("mock_abrp_client")
 async def test_seed_runs_for_each_vehicle_before_stream_spawn(
     hass: HomeAssistant,
-    token_entry: dict[str, Any],
+    config_entry_with_vehicles: MockConfigEntry,
     mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
-    """Setup seeds telemetry once per selected vehicle, before the stream starts."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=SENSOR_TEST_SUB,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": token_entry,
-            CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID), str(MOCK_VEHICLE_ID_2)],
-        },
-    )
+    """Setup seeds telemetry once per garage vehicle, before the stream starts."""
+    entry = config_entry_with_vehicles
     entry.add_to_hass(hass)
 
     # No autospec: conftest already patched this attribute, and an unbound
@@ -487,3 +436,48 @@ async def test_seed_runs_for_each_vehicle_before_stream_spawn(
     assert stream is not None
     assert set(stream.vehicle_ids) == {MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2}
     assert stream.started is True
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_duplicate_garage_entry_yields_one_stream_id(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
+    mock_abrp_vehicles: list[AbrpVehicle],
+    fake_stream: Any,
+) -> None:
+    """A garage that repeats a vehicle subscribes that id only once."""
+    mock_abrp_client.return_value = [*mock_abrp_vehicles, mock_abrp_vehicles[0]]
+    config_entry_with_vehicles.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry_with_vehicles.entry_id)
+    await hass.async_block_till_done()
+
+    assert fake_stream.stream.vehicle_ids == [MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2]
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_vehicle_added_to_garage_appears_after_reload(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
+    mock_abrp_vehicles: list[AbrpVehicle],
+    device_registry: dr.DeviceRegistry,
+    fake_stream: Any,
+) -> None:
+    """A vehicle added to the ABRP garage becomes a device on the next reload."""
+    mock_abrp_client.return_value = mock_abrp_vehicles[:1]
+    config_entry_with_vehicles.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry_with_vehicles.entry_id)
+    await hass.async_block_till_done()
+
+    scope = config_entry_with_vehicles.unique_id
+    identifiers = {(DOMAIN, f"{scope}_{MOCK_VEHICLE_ID_2}")}
+    assert device_registry.async_get_device(identifiers=identifiers) is None
+
+    mock_abrp_client.return_value = mock_abrp_vehicles
+    await hass.config_entries.async_reload(config_entry_with_vehicles.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device(identifiers=identifiers) is not None
+    assert fake_stream.stream.vehicle_ids == [MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2]

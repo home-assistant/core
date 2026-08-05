@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 from aioabrp import Telemetry
 import pytest
 
-from homeassistant.components.abetterrouteplanner.const import CONF_VEHICLE_IDS, DOMAIN
+from homeassistant.components.abetterrouteplanner.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -34,6 +34,10 @@ async def _lazy_setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+
+# Not in the mocked garage, so the stream never subscribes to it.
+_ABSENT_VEHICLE_ID = 999999999999
 
 
 def _unique_id_lookup(
@@ -178,7 +182,7 @@ async def test_dispatcher_idempotent_on_repeated_frames(
 )
 async def test_multi_vehicle_entity_isolation(
     hass: HomeAssistant,
-    token_entry: dict[str, Any],
+    config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
     fake_stream: Any,
@@ -187,15 +191,7 @@ async def test_multi_vehicle_entity_isolation(
     absent_entity_id: str,
 ) -> None:
     """Voltage arriving for vehicle A must not create a voltage entity for vehicle B."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=SENSOR_TEST_SUB,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": token_entry,
-            CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID), str(MOCK_VEHICLE_ID_2)],
-        },
-    )
+    entry = config_entry_with_vehicles
     mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
     mock_abrp_client.seed_responses[MOCK_VEHICLE_ID_2] = Telemetry()
 
@@ -494,21 +490,13 @@ async def test_battery_capacity_recalibration_jump_updates_state(
 @pytest.mark.usefixtures("mock_abrp_client")
 async def test_new_sensor_multi_vehicle_isolation(
     hass: HomeAssistant,
-    token_entry: dict[str, Any],
+    config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """A metric frame for vehicle A must not create the entity on vehicle B."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=SENSOR_TEST_SUB,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": token_entry,
-            CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID), str(MOCK_VEHICLE_ID_2)],
-        },
-    )
+    entry = config_entry_with_vehicles
     mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
     mock_abrp_client.seed_responses[MOCK_VEHICLE_ID_2] = Telemetry()
 
@@ -527,3 +515,9 @@ async def test_new_sensor_multi_vehicle_isolation(
         _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID_2, "calibrated_ref_cons")
         is None
     )
+
+    # A frame for an id outside the garage must not mint an entity either.
+    fake_stream.fire_frame(_ABSENT_VEHICLE_ID, Telemetry(soc=build_metric_value(50.0)))
+    await hass.async_block_till_done()
+
+    assert _unique_id_lookup(entity_registry, _ABSENT_VEHICLE_ID, "soc") is None

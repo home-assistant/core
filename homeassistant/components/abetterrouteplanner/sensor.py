@@ -4,7 +4,6 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
-import logging
 from typing import Any, override
 
 from aioabrp import ChargingState, Metric, MetricValue, Telemetry
@@ -33,10 +32,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_VEHICLE_IDS, DOMAIN, signal_new_metric
+from .const import DOMAIN, signal_new_metric
 from .coordinator import AbetterrouteplannerConfigEntry, AbrpTelemetryCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -266,28 +263,18 @@ async def async_setup_entry(
     entry: AbetterrouteplannerConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Create telemetry sensors for the selected vehicles."""
+    """Create telemetry sensors for every vehicle in the ABRP garage."""
     runtime = entry.runtime_data
     vehicles = runtime.vehicles
     telemetry_coordinator = runtime.telemetry_coordinator
 
-    selected_ids = {int(vehicle_id) for vehicle_id in entry.data[CONF_VEHICLE_IDS]}
     present_ids = {raw.vehicle_id for raw, _ in vehicles}
-
-    missing = selected_ids - present_ids
-    for vehicle_id in missing:
-        _LOGGER.debug(
-            "Selected vehicle %d is not in the ABRP garage; skipping",
-            vehicle_id,
-        )
 
     entity_registry = er.async_get(hass)
     added: set[tuple[int, Metric]] = set()
     entities: list[SensorEntity] = []
     for raw, _ in vehicles:
         vehicle_id = raw.vehicle_id
-        if vehicle_id not in selected_ids:
-            continue
         # Recreate wake-only metrics so a parked vehicle doesn't flash Unavailable.
         for description in SENSORS:
             unique_id = _telemetry_unique_id(entry, vehicle_id, description.key)
@@ -338,11 +325,9 @@ async def async_setup_entry(
             return
         if (vehicle_id, metric) in added:
             return
-        if vehicle_id not in selected_ids:
-            return
-        description = SENSORS_BY_METRIC[metric]
         if vehicle_id not in present_ids:
             return
+        description = SENSORS_BY_METRIC[metric]
         added.add((vehicle_id, metric))
         async_add_entities(
             [

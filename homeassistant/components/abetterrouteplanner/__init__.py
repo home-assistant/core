@@ -18,7 +18,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .auth import AbetterrouteplannerAuth
-from .const import ABRP_APP_KEY, CONF_VEHICLE_IDS, DOMAIN
+from .const import ABRP_APP_KEY, DOMAIN
 from .coordinator import (
     AbetterrouteplannerConfigEntry,
     AbrpData,
@@ -87,10 +87,7 @@ async def async_setup_entry(
 
     # Create devices before forwarding platforms so silent vehicles get a card.
     device_registry = dr.async_get(hass)
-    selected_ids = {int(vehicle_id) for vehicle_id in entry.data[CONF_VEHICLE_IDS]}
     for raw, display in vehicles:
-        if raw.vehicle_id not in selected_ids:
-            continue
         scope = f"{entry.unique_id}_{raw.vehicle_id}"
         if display is None:
             # INFO, not DEBUG: a catalog miss should be greppable by default.
@@ -113,13 +110,9 @@ async def async_setup_entry(
 
     telemetry_coordinator = AbrpTelemetryCoordinator(hass, entry)
 
-    # The v2 endpoint rejects an unknown id as a whole-subscription failure.
-    present_ids = {raw.vehicle_id for raw, _ in vehicles}
-    vehicle_ids = [
-        int(vehicle_id)
-        for vehicle_id in entry.data[CONF_VEHICLE_IDS]
-        if int(vehicle_id) in present_ids
-    ]
+    # Deduplicated: the stream sends one comma-joined id list, which the v2
+    # endpoint rejects as a whole if it is malformed.
+    vehicle_ids = list(dict.fromkeys(raw.vehicle_id for raw, _ in vehicles))
 
     # Seed before starting the stream so the snapshot is the merge baseline.
     stream: TelemetryStream | None = None

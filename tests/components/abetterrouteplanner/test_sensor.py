@@ -2,7 +2,6 @@
 
 from datetime import UTC, datetime
 import json
-import logging
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock
@@ -13,7 +12,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import abetterrouteplanner as abrp_module
-from homeassistant.components.abetterrouteplanner.const import CONF_VEHICLE_IDS, DOMAIN
+from homeassistant.components.abetterrouteplanner.const import DOMAIN
 from homeassistant.components.abetterrouteplanner.sensor import (
     CHARGING_STATE_OPTIONS,
     SENSORS_BY_METRIC,
@@ -57,7 +56,7 @@ async def _setup_integration(
 ) -> MockConfigEntry:
     """Register the integration's OAuth implementation and set up the entry.
 
-    Callers that select vehicles must also request ``fake_stream``, or a real
+    Callers with a non-empty garage must also request ``fake_stream``, or a real
     TelemetryStream opens an SSE connection.
     """
     assert await async_setup_component(hass, "auth", {})
@@ -68,66 +67,61 @@ async def _setup_integration(
     return entry
 
 
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
+@pytest.mark.parametrize(
+    "vehicle_id",
+    [
+        pytest.param(MOCK_VEHICLE_ID, id="first_garage_vehicle"),
+        pytest.param(MOCK_VEHICLE_ID_2, id="second_garage_vehicle"),
+    ],
 )
-async def test_unselected_vehicle_absent_from_registries(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_abrp_client")
+async def test_every_garage_vehicle_present_in_registries(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    fake_stream: Any,
+    vehicle_id: int,
 ) -> None:
-    """Unselected vehicles never appear in device or entity registries."""
+    """Every vehicle in the garage gets a device and entities, with no opt-in step."""
     await _setup_integration(hass, config_entry_with_vehicles)
 
     # Read the sub off the fixture so this survives a parametrized unique_id.
     scope = config_entry_with_vehicles.unique_id
-    selected_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{scope}_{MOCK_VEHICLE_ID}")}
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{scope}_{vehicle_id}")}
+        )
+        is not None
     )
-    assert selected_device is not None
 
-    unselected_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{scope}_{MOCK_VEHICLE_ID_2}")}
+    # Entities are created lazily, so drive a frame for this vehicle.
+    fake_stream.fire_frame(vehicle_id, Telemetry(soc=build_metric_value(85.0)))
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{scope}_{vehicle_id}_soc"
+        )
+        is not None
     )
-    assert unselected_device is None
-
-    unselected_marker = f"_{MOCK_VEHICLE_ID_2}_"
-    for registry_entry in er.async_entries_for_config_entry(
-        entity_registry, config_entry_with_vehicles.entry_id
-    ):
-        assert unselected_marker not in registry_entry.unique_id
 
 
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_selected_vehicle_missing_from_garage_logs_and_skips(
+async def test_empty_garage_creates_no_devices_or_entities(
     hass: HomeAssistant,
-    token_entry: dict[str, Any],
+    config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    caplog: pytest.LogCaptureFixture,
+    mock_abrp_client: AsyncMock,
 ) -> None:
-    """A selected ``vehicle_id`` missing from the garage emits nothing + logs."""
-    bogus_id = "99999999"
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=SENSOR_TEST_SUB,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": token_entry,
-            CONF_VEHICLE_IDS: [bogus_id],
-        },
-    )
+    """An empty garage loads the entry but registers nothing."""
+    mock_abrp_client.return_value = []
 
-    with caplog.at_level(
-        logging.DEBUG, logger="homeassistant.components.abetterrouteplanner"
-    ):
-        await _setup_integration(hass, entry)
+    await _setup_integration(hass, config_entry)
 
-    assert entry.state is ConfigEntryState.LOADED
-    assert not er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    assert not dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-    assert bogus_id in caplog.text
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert not er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+    assert not dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
 
 
 @pytest.mark.usefixtures(
@@ -463,11 +457,11 @@ async def test_calibrated_ref_cons_renamed_to_short_form(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
 async def test_per_vehicle_device_anchored_at_setup(
     hass: HomeAssistant,
-    token_entry: dict[str, Any],
+    config_entry_with_vehicles: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """Each selected vehicle's device exists with full metadata after setup."""
+    """Each garage vehicle's device exists with full metadata after setup."""
     polestar_name = "Polestar 2 Long Range"
     mock_abrp_client.return_value = [
         _make_vehicle(),
@@ -477,15 +471,7 @@ async def test_per_vehicle_device_anchored_at_setup(
             vehicle_model=_POLESTAR_VEHICLE_MODEL,
         ),
     ]
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=SENSOR_TEST_SUB,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": token_entry,
-            CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID), str(MOCK_VEHICLE_ID_2)],
-        },
-    )
+    entry = config_entry_with_vehicles
 
     displays = _set_two_make_displays(mock_abrp_client)
     await _setup_integration(hass, entry)

@@ -7,23 +7,15 @@ from aioabrp import (
     AbrpApiError,
     AbrpAuthError,
     AbrpClient,
-    AbrpVehicle,
     StaticAuth,
     parse_unverified_identity,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import (
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-)
 
-from .const import ABRP_APP_KEY, CONF_VEHICLE_IDS, DOMAIN
+from .const import ABRP_APP_KEY, DOMAIN
 from .oauth import AbetterrouteplannerOAuth2Implementation
 
 
@@ -34,10 +26,6 @@ class AbetterrouteplannerFlowHandler(
 
     DOMAIN = DOMAIN
     VERSION = 1
-
-    _oauth_data: dict[str, Any]
-    _vehicles: list[AbrpVehicle]
-    _title: str
 
     @property
     @override
@@ -78,7 +66,7 @@ class AbetterrouteplannerFlowHandler(
 
         self._abort_if_unique_id_configured()
 
-        self._title = (
+        title = (
             f"{self.flow_impl.name} ({identity.display_name})"
             if identity.display_name
             else self.flow_impl.name
@@ -96,57 +84,9 @@ class AbetterrouteplannerFlowHandler(
         except AbrpApiError:
             return self.async_abort(reason="cannot_connect")
 
+        # The garage is only re-read at setup, so an entry created against an
+        # empty garage would load green and stay empty until a manual reload.
         if not vehicles:
             return self.async_abort(reason="no_vehicles")
 
-        self._oauth_data = data
-        self._vehicles = vehicles
-        return await self.async_step_pick_vehicles()
-
-    async def async_step_pick_vehicles(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Ask the user which of their ABRP vehicles to track in Home Assistant."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            if user_input[CONF_VEHICLE_IDS]:
-                # A parallel flow may have completed between OAuth and the picker.
-                self._abort_if_unique_id_configured()
-                # Called directly: the base class doesn't forward extra data keys.
-                return self.async_create_entry(
-                    title=self._title,
-                    data={
-                        **self._oauth_data,
-                        CONF_VEHICLE_IDS: user_input[CONF_VEHICLE_IDS],
-                    },
-                )
-            errors["base"] = "select_at_least_one"
-
-        options = [
-            SelectOptionDict(
-                value=str(vehicle.vehicle_id),
-                label=vehicle.name or vehicle.vehicle_model,
-            )
-            for vehicle in self._vehicles
-        ]
-        if user_input is None:
-            suggested: list[str] = [str(v.vehicle_id) for v in self._vehicles]
-        else:
-            suggested = user_input[CONF_VEHICLE_IDS]
-        schema = self.add_suggested_values_to_schema(
-            vol.Schema(
-                {
-                    vol.Required(CONF_VEHICLE_IDS): SelectSelector(
-                        SelectSelectorConfig(
-                            options=options,
-                            multiple=True,
-                            mode=SelectSelectorMode.LIST,
-                        )
-                    ),
-                }
-            ),
-            {CONF_VEHICLE_IDS: suggested},
-        )
-        return self.async_show_form(
-            step_id="pick_vehicles", data_schema=schema, errors=errors
-        )
+        return self.async_create_entry(title=title, data=data)

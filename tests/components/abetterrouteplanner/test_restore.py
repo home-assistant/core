@@ -8,7 +8,7 @@ from aioabrp import Telemetry
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.abetterrouteplanner.const import CONF_VEHICLE_IDS, DOMAIN
+from homeassistant.components.abetterrouteplanner.const import DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -34,6 +34,13 @@ RESTORED_PROVIDER = "RIVIAN_STREAM"
 RESTORED_VOLTAGE = 410.0
 RESTORED_STAMP_ISO = "2026-05-20T12:00:00+00:00"
 RESTORED_STAMP_DT = datetime(2026, 5, 20, 12, 0, 0, tzinfo=UTC)
+
+# Object-id stems matching each mock vehicle's name, so the restore cache
+# (keyed by entity_id) hits instead of falling back to the auto-slug.
+_OBJECT_ID_STEM = {
+    MOCK_VEHICLE_ID: "rivian_r2_2027_standard_long_range",
+    MOCK_VEHICLE_ID_2: "rivian_r1s_2024_quad_max",
+}
 
 
 def _fire_voltage(
@@ -81,6 +88,7 @@ async def _restart_setup(
     *,
     entity_registry: er.EntityRegistry | None = None,
     preseed_registry_keys: list[str] | None = None,
+    preseed_vehicle_ids: tuple[int, ...] = (MOCK_VEHICLE_ID,),
     restored_states: list[tuple[State, dict[str, Any]]] | None = None,
 ) -> None:
     """Set up the integration simulating an HA restart with optional prior state."""
@@ -91,16 +99,17 @@ async def _restart_setup(
     assert await async_setup_component(hass, DOMAIN, {})
     entry.add_to_hass(hass)
     if preseed_registry_keys and entity_registry is not None:
-        for key in preseed_registry_keys:
-            # Without this the auto-slug is ``f"{platform}_{unique_id}"`` and
-            # the restore cache, keyed by entity_id, misses.
-            entity_registry.async_get_or_create(
-                domain="sensor",
-                platform=DOMAIN,
-                unique_id=f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_{key}",
-                config_entry=entry,
-                suggested_object_id=f"rivian_r2_2027_standard_long_range_{key}",
-            )
+        for vehicle_id in preseed_vehicle_ids:
+            for key in preseed_registry_keys:
+                # Without this the auto-slug is ``f"{platform}_{unique_id}"`` and
+                # the restore cache, keyed by entity_id, misses.
+                entity_registry.async_get_or_create(
+                    domain="sensor",
+                    platform=DOMAIN,
+                    unique_id=f"{SENSOR_TEST_SUB}_{vehicle_id}_{key}",
+                    config_entry=entry,
+                    suggested_object_id=f"{_OBJECT_ID_STEM[vehicle_id]}_{key}",
+                )
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -447,24 +456,17 @@ async def test_provider_attribute_absent_when_restored_value_malformed(
 
 
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_deselected_vehicle_skips_eager_create_with_restore_cache(
+async def test_vehicle_absent_from_garage_skips_eager_create_with_restore_cache(
     hass: HomeAssistant,
-    token_entry: dict[str, Any],
+    config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """Registry + recorder hold a voltage row but CONF_VEHICLE_IDS = [] → skip."""
+    """Registry + recorder hold a voltage row but the garage is empty → skip."""
     mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
-    # The entry exists but the user just deselected every vehicle.
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=SENSOR_TEST_SUB,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": token_entry,
-            CONF_VEHICLE_IDS: [],
-        },
-    )
+    # The vehicle was removed from the ABRP garage since the last run.
+    mock_abrp_client.return_value = []
+    entry = config_entry_with_vehicles
 
     await _restart_setup(
         hass,
@@ -530,7 +532,6 @@ async def test_foreign_config_entry_voltage_row_skipped_by_eager_probe(
         data={
             "auth_implementation": DOMAIN,
             "token": token_entry,
-            CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID)],
         },
     )
     foreign_entry.add_to_hass(hass)
@@ -555,39 +556,26 @@ async def test_foreign_config_entry_voltage_row_skipped_by_eager_probe(
     assert refetched.config_entry_id == foreign_entry.entry_id
 
 
+@pytest.mark.parametrize(
+    ("preseed_vehicle_ids", "expected_polled_ids"),
+    [
+        pytest.param((), {MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2}, id="no_vehicle_known"),
+        pytest.param((MOCK_VEHICLE_ID,), {MOCK_VEHICLE_ID_2}, id="one_vehicle_known"),
+        pytest.param(
+            (MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2), set(), id="whole_garage_known"
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_setup_polls_new_vehicle_without_registered_sensors(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    fake_stream: Any,
-) -> None:
-    """A selected vehicle with NO registry rows is polled once at setup."""
-
-    async def _record_poll(vehicle_id: int) -> Telemetry:
-        return Telemetry()
-
-    with patch(
-        "aioabrp.AbrpClient.async_get_current_telemetry",
-        side_effect=_record_poll,
-    ) as mock_poll:
-        await _restart_setup(hass, config_entry_with_vehicles)
-
-    polled_ids = {call.args[0] for call in mock_poll.call_args_list}
-    assert polled_ids == {MOCK_VEHICLE_ID}
-
-    stream = fake_stream.stream
-    assert stream is not None
-    assert stream.seed is None
-
-
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_setup_skips_poll_for_known_vehicle_with_registered_sensor(
+async def test_setup_polls_only_vehicles_without_registered_sensors(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     fake_stream: Any,
+    preseed_vehicle_ids: tuple[int, ...],
+    expected_polled_ids: set[int],
 ) -> None:
-    """A selected vehicle WITH a registered sensor is NOT polled at setup."""
+    """Only garage vehicles lacking a registry row are seed-polled at setup."""
 
     async def _record_poll(vehicle_id: int) -> Telemetry:
         return Telemetry()
@@ -601,52 +589,12 @@ async def test_setup_skips_poll_for_known_vehicle_with_registered_sensor(
             config_entry_with_vehicles,
             entity_registry=entity_registry,
             preseed_registry_keys=["voltage"],
+            preseed_vehicle_ids=preseed_vehicle_ids,
         )
 
-    assert mock_poll.call_count == 0
+    assert {call.args[0] for call in mock_poll.call_args_list} == expected_polled_ids
 
-    stream = fake_stream.stream
-    assert stream is not None
-    assert stream.seed is None
-
-
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_setup_polls_only_new_vehicle_in_mixed_garage(
-    hass: HomeAssistant,
-    token_entry: dict[str, Any],
-    entity_registry: er.EntityRegistry,
-    fake_stream: Any,
-) -> None:
-    """Mixed garage: only the new vehicle is polled; the known one is skipped."""
-    # Same SENSOR_TEST_SUB scope so the registry unique_id formula matches.
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=SENSOR_TEST_SUB,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": token_entry,
-            CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID), str(MOCK_VEHICLE_ID_2)],
-        },
-    )
-
-    async def _record_poll(vehicle_id: int) -> Telemetry:
-        return Telemetry()
-
-    with patch(
-        "aioabrp.AbrpClient.async_get_current_telemetry",
-        side_effect=_record_poll,
-    ) as mock_poll:
-        # Preseeds MOCK_VEHICLE_ID only, leaving MOCK_VEHICLE_ID_2 with none.
-        await _restart_setup(
-            hass,
-            entry,
-            entity_registry=entity_registry,
-            preseed_registry_keys=["voltage"],
-        )
-
-    polled_ids = {call.args[0] for call in mock_poll.call_args_list}
-    assert polled_ids == {MOCK_VEHICLE_ID_2}
-
+    # The stream always covers the whole garage, seeded or not.
     stream = fake_stream.stream
     assert stream is not None
     assert stream.seed is None

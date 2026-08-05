@@ -20,7 +20,7 @@ from aioabrp import (
 )
 import pytest
 
-from homeassistant.components.abetterrouteplanner.const import CONF_VEHICLE_IDS, DOMAIN
+from homeassistant.components.abetterrouteplanner.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -133,7 +133,6 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
         data={
             "auth_implementation": DOMAIN,
             "token": token_entry,
-            CONF_VEHICLE_IDS: [],
         },
     )
 
@@ -216,14 +215,13 @@ def mock_abrp_client(
 def mock_config_entry_with_vehicles(
     token_entry: dict[str, Any],
 ) -> MockConfigEntry:
-    """Return a config entry with the first vehicle preselected."""
+    """Return a config entry scoped to the sensor tests' OIDC subject."""
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=SENSOR_TEST_SUB,
         data={
             "auth_implementation": DOMAIN,
             "token": token_entry,
-            CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID)],
         },
     )
 

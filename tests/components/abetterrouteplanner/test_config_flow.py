@@ -22,13 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
-from .conftest import (
-    MOCK_VEHICLE_ID,
-    REDIRECT_URI,
-    USER_SUB,
-    build_id_token,
-    complete_oauth_callback,
-)
+from .conftest import REDIRECT_URI, USER_SUB, build_id_token, complete_oauth_callback
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -83,7 +77,7 @@ async def test_full_flow(
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Happy-path OAuth flow + picker creates a config entry with PKCE + vehicle_ids."""
+    """Happy-path OAuth flow creates a config entry with a verified PKCE round-trip."""
     # Freeze time so the token ``expires_at`` is stable for the snapshot.
     freezer.move_to("2026-01-01 00:00:00+00:00")
 
@@ -115,17 +109,9 @@ async def test_full_flow(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pick_vehicles"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"vehicle_ids": [str(MOCK_VEHICLE_ID)]}
-    )
-
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == USER_SUB
     assert result["result"].data["token"]["access_token"] == "mock-access-token"
-    assert result["result"].data["vehicle_ids"] == [str(MOCK_VEHICLE_ID)]
     assert result["result"].data == snapshot
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -147,6 +133,7 @@ async def test_duplicate_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_abrp_client: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """A second flow for the same ``sub`` aborts with ``already_configured``."""
@@ -173,6 +160,8 @@ async def test_duplicate_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    # The guard must short-circuit before any garage request.
+    mock_abrp_client.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -205,52 +194,30 @@ async def test_token_endpoint_error(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
-@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
-async def test_pick_vehicles_no_vehicles_aborts(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_abrp_client: AsyncMock,
-) -> None:
-    """An empty garage aborts the flow with ``no_vehicles``."""
-    mock_abrp_client.return_value = []
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
-    _mock_token_post(aioclient_mock)
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_vehicles"
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-
-
 @pytest.mark.parametrize(
-    ("vehicle_ids", "picked_ids"),
+    ("garage_ids", "expected_type", "expected_reason", "expected_entries"),
     [
-        pytest.param([1001], ["1001"], id="single_picked"),
-        pytest.param([1001, 1002, 1003], ["1001", "1003"], id="multi_subset_picked"),
+        pytest.param([], FlowResultType.ABORT, "no_vehicles", 0, id="empty_garage"),
+        pytest.param([1001], FlowResultType.CREATE_ENTRY, None, 1, id="one_vehicle"),
         pytest.param(
-            [1001, 1002, 1003],
-            ["1001", "1002", "1003"],
-            id="multi_all_picked",
+            [1001, 1002, 1003], FlowResultType.CREATE_ENTRY, None, 1, id="many_vehicles"
         ),
     ],
 )
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
-async def test_pick_vehicles_creates_entry(
+async def test_garage_size_decides_entry_creation(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_abrp_client: AsyncMock,
-    vehicle_ids: list[int],
-    picked_ids: list[str],
+    garage_ids: list[int],
+    expected_type: FlowResultType,
+    expected_reason: str | None,
+    expected_entries: int,
 ) -> None:
-    """Picker shows for 1/N vehicles; selected ids land in entry.data['vehicle_ids']."""
+    """Only an empty garage blocks setup; any non-empty garage creates the entry."""
     mock_abrp_client.return_value = [
-        _vehicle(vid, f"Vehicle {vid}") for vid in vehicle_ids
+        _vehicle(vid, f"Vehicle {vid}") for vid in garage_ids
     ]
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -260,16 +227,9 @@ async def test_pick_vehicles_creates_entry(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pick_vehicles"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"vehicle_ids": picked_ids}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].data["vehicle_ids"] == picked_ids
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert result["type"] is expected_type
+    assert result.get("reason") == expected_reason
+    assert len(hass.config_entries.async_entries(DOMAIN)) == expected_entries
 
 
 @pytest.mark.parametrize(
@@ -310,65 +270,6 @@ async def test_initial_add_unusable_id_token_aborts(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
-@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
-async def test_pick_vehicles_aborts_if_entry_appeared_during_picker(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_abrp_client: AsyncMock,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Picker submission re-runs the duplicate check (finding F race coverage)."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
-    _mock_token_post(aioclient_mock)
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pick_vehicles"
-
-    # A parallel flow landed the same unique_id between render and submission.
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"vehicle_ids": [str(MOCK_VEHICLE_ID)]}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-
-@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
-async def test_pick_vehicles_empty_selection_rejected(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_abrp_client: AsyncMock,
-) -> None:
-    """An empty picker submission re-renders the form with a ``base`` error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
-    _mock_token_post(aioclient_mock)
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pick_vehicles"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"vehicle_ids": []}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pick_vehicles"
-    assert result.get("errors") == {"base": "select_at_least_one"}
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-
-
 @pytest.mark.parametrize(
     ("side_effect", "expected_reason"),
     [
@@ -393,7 +294,7 @@ async def test_garage_fetch_error_aborts(
     side_effect: Exception,
     expected_reason: str,
 ) -> None:
-    """An API error between OAuth and the picker aborts the flow."""
+    """An API error during the garage fetch aborts the flow."""
     mock_abrp_client.side_effect = side_effect
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
