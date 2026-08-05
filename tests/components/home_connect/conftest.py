@@ -12,6 +12,7 @@ from aiohomeconnect.model import (
     ArrayOfCommands,
     ArrayOfEvents,
     ArrayOfHomeAppliances,
+    ArrayOfImages,
     ArrayOfOptions,
     ArrayOfPrograms,
     ArrayOfSettings,
@@ -36,7 +37,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.components.home_connect.const import DOMAIN, ENTRY_DATA_IMAGES_SCOPE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -89,6 +90,7 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
         data={
             "auth_implementation": FAKE_AUTH_IMPL,
             "token": token_entry,
+            ENTRY_DATA_IMAGES_SCOPE: True,
         },
         minor_version=3,
         unique_id="1234567890",
@@ -118,6 +120,21 @@ def mock_config_entry_v1_2(token_entry: dict[str, Any]) -> MockConfigEntry:
             "token": token_entry,
         },
         minor_version=2,
+    )
+
+
+@pytest.fixture(name="config_entry_no_images_scope")
+def mock_config_entry_no_image_scope(token_entry: dict[str, Any]) -> MockConfigEntry:
+    """Fixture for a config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": FAKE_AUTH_IMPL,
+            "token": token_entry,
+            ENTRY_DATA_IMAGES_SCOPE: False,
+        },
+        minor_version=3,
+        unique_id="1234567890",
     )
 
 
@@ -424,6 +441,7 @@ def mock_client(
     mock.get_settings = AsyncMock(side_effect=_get_settings_side_effect)
     mock.get_setting = AsyncMock(side_effect=_get_setting_side_effect)
     mock.get_status = AsyncMock(return_value=copy.deepcopy(MOCK_STATUS))
+    mock.get_images = AsyncMock(return_value=ArrayOfImages([]))
     mock.get_all_programs = AsyncMock(side_effect=_get_all_programs_side_effect)
     mock.get_available_commands = AsyncMock(
         side_effect=_get_available_commands_side_effect
@@ -487,6 +505,7 @@ def mock_client_with_exception(
     mock.get_settings = AsyncMock(side_effect=exception)
     mock.get_setting = AsyncMock(side_effect=exception)
     mock.get_status = AsyncMock(side_effect=exception)
+    mock.get_images = AsyncMock(side_effect=exception)
     mock.get_all_programs = AsyncMock(side_effect=exception)
     mock.get_available_commands = AsyncMock(side_effect=exception)
     mock.put_command = AsyncMock(side_effect=exception)

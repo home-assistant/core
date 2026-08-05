@@ -11,7 +11,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DOMAIN
+from .const import DOMAIN, ENTRY_DATA_IMAGES_SCOPE
 
 INPUT_IMAGES_SCOPE: Final = "images_scope"
 
@@ -93,6 +93,7 @@ class OAuth2FlowHandler(
                 data["token"]["access_token"], options={"verify_signature": False}
             )["sub"]
         )
+        data[ENTRY_DATA_IMAGES_SCOPE] = self.images_scope
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="wrong_account")
             return self.async_update_reload_and_abort(

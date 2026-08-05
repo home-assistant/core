@@ -29,6 +29,7 @@ from aiohomeconnect.model.error import (
     TooManyRequestsError,
     UnauthorizedError,
 )
+from aiohomeconnect.model.image import Image
 from aiohomeconnect.model.program import EnumerateProgram, ProgramDefinitionOption
 
 from homeassistant.config_entries import ConfigEntry
@@ -42,6 +43,7 @@ from .const import (
     APPLIANCES_WITH_PROGRAMS,
     BSH_OPERATION_STATE_PAUSE,
     DOMAIN,
+    ENTRY_DATA_IMAGES_SCOPE,
     FAVORITE_PROGRAMS,
 )
 from .utils import get_dict_from_home_connect_error
@@ -65,6 +67,7 @@ class HomeConnectApplianceData:
     programs: list[EnumerateProgram]
     settings: dict[SettingKey, GetSetting]
     status: dict[StatusKey, Status]
+    images: dict[str, Image]
 
     def update(self, other: HomeConnectApplianceData) -> None:
         """Update data with data from other instance."""
@@ -78,6 +81,7 @@ class HomeConnectApplianceData:
         self.programs.extend(other.programs)
         self.settings.update(other.settings)
         self.status.update(other.status)
+        self.images.update(other.images)
 
     @classmethod
     def empty(cls, appliance: HomeAppliance) -> HomeConnectApplianceData:
@@ -90,6 +94,7 @@ class HomeConnectApplianceData:
             programs=[],
             settings={},
             status={},
+            images={},
         )
 
 
@@ -268,6 +273,9 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         self.global_listeners = global_listeners
         self.data = HomeConnectApplianceData.empty(appliance)
         self._execution_tracker: list[float] = []
+        self.should_fetch_images = (
+            self._config_entry.data.get(ENTRY_DATA_IMAGES_SCOPE) is True
+        )
 
     def _get_listeners_for_event_key(self, event_key: EventKey) -> list[CALLBACK_TYPE]:
         return [
@@ -567,6 +575,18 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         except HomeConnectError:
             commands = set()
 
+        try:
+            images = await self.get_latest_images() if self.should_fetch_images else {}
+        except TooManyRequestsError:
+            raise
+        except HomeConnectError as error:
+            _LOGGER.debug(
+                "Error fetching images for %s: %s",
+                appliance.ha_id,
+                error,
+            )
+            images = {}
+
         self.data.update(
             HomeConnectApplianceData(
                 commands=commands,
@@ -576,6 +596,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 programs=programs,
                 settings=settings,
                 status=status,
+                images=images,
             )
         )
 
@@ -645,6 +666,33 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         for option_key in options_to_notify:
             for listener in self._get_listeners_for_event_key(EventKey(option_key)):
                 listener()
+
+    async def get_latest_images(self) -> dict[str, Image]:
+        """Get the latest images for the appliance."""
+        try:
+            new_images = await self.client.get_images(self.data.info.ha_id)
+        except TooManyRequestsError:
+            raise
+        except HomeConnectError as error:
+            _LOGGER.debug(
+                "Error fetching images for %s: %s",
+                self.data.info.ha_id,
+                error,
+            )
+            return {}
+
+        latest_images: dict[str, Image] = {}
+        for image in new_images.images:
+            if (
+                existing_image := latest_images.get(image.key)
+            ) is None or image.timestamp > existing_image.timestamp:
+                latest_images[image.key] = image
+
+        return latest_images
+
+    async def update_images(self) -> None:
+        """Update images for appliance."""
+        self.data.images.update(await self.get_latest_images())
 
     def refreshed_too_often_recently(self) -> bool:
         """Check if the appliance data hasn't been refreshed too often recently."""
