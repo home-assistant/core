@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["whoisdomain"],
-  "requirements": ["whoisdomain==1.20260326.1"]
+  "requirements": ["whoisdomain==2.20260709.1"]
 }
