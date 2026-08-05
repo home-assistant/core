@@ -537,6 +537,17 @@ async def test_send_message_with_inline_keyboard_dict_format(
             },
             id="both_url_and_callback_data",
         ),
+        pytest.param({ATTR_TEXT: "mock_text", ATTR_URL: None}, id="null_url"),
+        pytest.param(
+            {ATTR_TEXT: "mock_text", ATTR_CALLBACK_DATA: None}, id="null_callback_data"
+        ),
+        pytest.param(
+            {ATTR_TEXT: "mock_text", ATTR_URL: None, ATTR_CALLBACK_DATA: None},
+            id="both_null",
+        ),
+        pytest.param({ATTR_TEXT: "", ATTR_CALLBACK_DATA: "/cmd"}, id="empty_text"),
+        pytest.param({ATTR_TEXT: "mock_text", ATTR_URL: ""}, id="empty_url"),
+        pytest.param({ATTR_TEXT: 123, ATTR_CALLBACK_DATA: "/cmd"}, id="non_str_text"),
     ],
 )
 async def test_send_message_with_invalid_inline_keyboard_button(
@@ -686,15 +697,17 @@ async def test_deprecated_inline_keyboard_creates_issue(
         )
         await hass.async_block_till_done()
 
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     issue = issue_registry.async_get_issue(
         domain=DOMAIN,
-        issue_id=f"deprecated_inline_keyboard_{config_entry.entry_id}",
+        issue_id="deprecated_inline_keyboard_call_service",
     )
     assert issue is not None
     assert issue.translation_key == "deprecated_inline_keyboard"
     assert issue.breaks_in_ha_version == "2026.12.0"
-    assert issue.translation_placeholders == {"entry_title": config_entry.title}
+    assert issue.translation_placeholders == {
+        "action": f"{DOMAIN}.{SERVICE_SEND_MESSAGE}",
+        "action_origin": "call_service",
+    }
 
 
 async def test_inline_keyboard_dict_format_creates_no_issue(
@@ -728,9 +741,8 @@ async def test_inline_keyboard_dict_format_creates_no_issue(
         )
         await hass.async_block_till_done()
 
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert not issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_inline_keyboard_{config_entry.entry_id}"
+        DOMAIN, "deprecated_inline_keyboard_call_service"
     )
 
 
