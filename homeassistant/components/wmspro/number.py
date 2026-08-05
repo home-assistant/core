@@ -29,12 +29,20 @@ async def async_setup_entry(
     entities: list[WebControlProGenericEntity] = []
     for dest in hub.dests.values():
         if dest.hasAction(ACTION_DESC.SlatRotate):
-            entities.append(WebControlProSlatRangeMin(config_entry.entry_id, dest))
-            entities.append(WebControlProSlatRangeMax(config_entry.entry_id, dest))
-            entities.append(WebControlProSlatRotationRaw(config_entry.entry_id, dest))
+            entities.append(
+                WebControlProSlatRangeMin(hass, config_entry.entry_id, dest)
+            )
+            entities.append(
+                WebControlProSlatRangeMax(hass, config_entry.entry_id, dest)
+            )
+            entities.append(
+                WebControlProSlatRotationRaw(hass, config_entry.entry_id, dest)
+            )
             if not dest.hasAction(ACTION_DESC.SlatDrive):
                 # Only add the numeric slat rotation entity if no cover entity exists
-                entities.append(WebControlProSlatRotation(config_entry.entry_id, dest))
+                entities.append(
+                    WebControlProSlatRotation(hass, config_entry.entry_id, dest)
+                )
 
     async_add_entities(entities)
 

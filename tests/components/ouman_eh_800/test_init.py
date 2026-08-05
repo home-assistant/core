@@ -8,10 +8,37 @@ from ouman_eh_800_api import (
 )
 import pytest
 
+from homeassistant.components.ouman_eh_800.const import DOMAIN, OumanDevice
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
+
+
+@pytest.mark.usefixtures("mock_ouman_client")
+async def test_sub_devices_link_to_main_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that the L1/L2 sub-devices link to the main device via via_device_id."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    entry_id = mock_config_entry.entry_id
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry_id), config_entry_id=entry_id
+    )
+    assert main_device is not None
+
+    for sub_device in (OumanDevice.L1, OumanDevice.L2):
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{entry_id}_{sub_device}"), config_entry_id=entry_id
+        )
+        assert device is not None
+        assert device.via_device_id == main_device.id
 
 
 @pytest.mark.usefixtures("mock_ouman_client")

@@ -23,6 +23,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
 )
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import UNDEFINED
@@ -467,6 +468,10 @@ async def test_loading_saving_data(
     assert len(entity_registry.entities) == 2
     assert len(entity_registry.deleted_entities) == 2
 
+    entity_registry.async_update_settings(
+        entity_id_parts=[er.EntityNamePart.ENTITY, er.EntityNamePart.DEVICE]
+    )
+
     # Now load written data in new registry
     registry2 = er.EntityRegistry(hass)
     await flush_store(entity_registry._store)
@@ -475,6 +480,11 @@ async def test_loading_saving_data(
     # Ensure same order
     assert list(entity_registry.entities) == list(registry2.entities)
     assert list(entity_registry.deleted_entities) == list(registry2.deleted_entities)
+    assert registry2.settings == entity_registry.settings
+    assert registry2.settings.entity_id_parts == (
+        er.EntityNamePart.ENTITY,
+        er.EntityNamePart.DEVICE,
+    )
     new_entry1 = entity_registry.async_get_or_create("light", "hue", "1234")
     new_entry2 = entity_registry.async_get_or_create("light", "hue", "5678")
     new_entry3 = entity_registry.async_get_or_create("light", "hue", "ABCD")
@@ -779,6 +789,419 @@ def test_generate_entity_id(
     assert new_entity_id == expected_entity_id
 
 
+@pytest.mark.parametrize(
+    (
+        "entity_id_parts",
+        "device_name",
+        "device_area_name",
+        "floor_name",
+        "has_entity_name",
+        "object_id_base",
+        "suggested_object_id",
+        "user_name",
+        "expected_initial_entity_id",
+        "expected_entity_id",
+    ),
+    [
+        pytest.param(
+            [
+                er.EntityNamePart.FLOOR,
+                er.EntityNamePart.AREA,
+                er.EntityNamePart.DEVICE,
+                er.EntityNamePart.ENTITY,
+            ],
+            "Lamp",
+            "Kitchen",
+            "First Floor",
+            True,
+            "Temperature",
+            None,
+            None,
+            "sensor.first_floor_kitchen_lamp_temperature",
+            "sensor.first_floor_kitchen_lamp_temperature",
+            id="all_parts",
+        ),
+        pytest.param(
+            [
+                er.EntityNamePart.FLOOR,
+                er.EntityNamePart.AREA,
+                er.EntityNamePart.DEVICE,
+                er.EntityNamePart.ENTITY,
+            ],
+            "Lamp",
+            "Kitchen",
+            None,
+            True,
+            "Temperature",
+            None,
+            None,
+            "sensor.kitchen_lamp_temperature",
+            "sensor.kitchen_lamp_temperature",
+            id="area_without_floor",
+        ),
+        pytest.param(
+            [er.EntityNamePart.DEVICE, er.EntityNamePart.ENTITY],
+            "Lamp",
+            "Kitchen",
+            "First Floor",
+            True,
+            "Temperature",
+            None,
+            None,
+            "sensor.lamp_temperature",
+            "sensor.lamp_temperature",
+            id="area_not_included",
+        ),
+        pytest.param(
+            [
+                er.EntityNamePart.FLOOR,
+                er.EntityNamePart.DEVICE,
+                er.EntityNamePart.ENTITY,
+            ],
+            "Lamp",
+            "Kitchen",
+            "First Floor",
+            True,
+            "Temperature",
+            None,
+            None,
+            "sensor.first_floor_lamp_temperature",
+            "sensor.first_floor_lamp_temperature",
+            id="floor_without_area",
+        ),
+        pytest.param(
+            [er.EntityNamePart.ENTITY, er.EntityNamePart.DEVICE],
+            "Lamp",
+            "Kitchen",
+            None,
+            True,
+            "Temperature",
+            None,
+            None,
+            "sensor.temperature_lamp",
+            "sensor.temperature_lamp",
+            id="reordered",
+        ),
+        pytest.param(
+            [er.EntityNamePart.DEVICE, er.EntityNamePart.ENTITY],
+            "Lamp",
+            None,
+            None,
+            False,
+            "Lamp Temperature",
+            None,
+            None,
+            "sensor.lamp_temperature",
+            "sensor.lamp_temperature",
+            id="legacy_name_stripped",
+        ),
+        pytest.param(
+            [er.EntityNamePart.ENTITY, er.EntityNamePart.DEVICE],
+            "Lamp",
+            None,
+            None,
+            False,
+            "Lamp Temperature",
+            None,
+            None,
+            "sensor.temperature_lamp",
+            "sensor.temperature_lamp",
+            id="legacy_name_reordered",
+        ),
+        pytest.param(
+            [er.EntityNamePart.DEVICE, er.EntityNamePart.ENTITY],
+            None,
+            None,
+            None,
+            True,
+            "My Sensor",
+            None,
+            None,
+            "sensor.my_sensor",
+            "sensor.my_sensor",
+            id="no_device",
+        ),
+        pytest.param(
+            [er.EntityNamePart.DEVICE, er.EntityNamePart.ENTITY],
+            "Lamp",
+            None,
+            None,
+            True,
+            "Temperature",
+            "custom_id",
+            None,
+            "sensor.custom_id",
+            "sensor.custom_id",
+            id="suggested_object_id_respected",
+        ),
+        pytest.param(
+            [er.EntityNamePart.ENTITY, er.EntityNamePart.DEVICE],
+            "Lamp",
+            None,
+            None,
+            True,
+            "Temperature",
+            None,
+            "Lamp Humidity",
+            "sensor.temperature_lamp",
+            "sensor.humidity_lamp",
+            id="user_name_unprefixed",
+        ),
+        pytest.param(
+            [er.EntityNamePart.ENTITY, er.EntityNamePart.DEVICE],
+            "Lamp",
+            None,
+            None,
+            True,
+            "Temperature",
+            "custom_id",
+            "Lamp Humidity",
+            "sensor.custom_id",
+            "sensor.humidity_lamp",
+            id="user_name_over_suggested_object_id",
+        ),
+        pytest.param(
+            [er.EntityNamePart.DEVICE, er.EntityNamePart.ENTITY],
+            None,
+            None,
+            None,
+            True,
+            None,
+            None,
+            None,
+            "sensor.test_1234",
+            "sensor.test_1234",
+            id="all_parts_empty",
+        ),
+    ],
+)
+def test_generate_entity_id_parts(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+    entity_id_parts: list[er.EntityNamePart],
+    device_name: str | None,
+    device_area_name: str | None,
+    floor_name: str | None,
+    has_entity_name: bool,
+    object_id_base: str | None,
+    suggested_object_id: str | None,
+    user_name: str | None,
+    expected_initial_entity_id: str,
+    expected_entity_id: str,
+) -> None:
+    """Test generating and regenerating entity IDs with configured parts."""
+    config_entry = MockConfigEntry(domain="sensor")
+    config_entry.add_to_hass(hass)
+
+    entity_registry.async_update_settings(entity_id_parts=entity_id_parts)
+
+    device_id: str | None = None
+    if device_name is not None:
+        device_entry = device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            name=device_name,
+        )
+        device_id = device_entry.id
+        if device_area_name is not None:
+            device_area = area_registry.async_create(device_area_name)
+            if floor_name is not None:
+                floor = floor_registry.async_create(floor_name)
+                area_registry.async_update(device_area.id, floor_id=floor.floor_id)
+            device_registry.async_update_device(device_id, area_id=device_area.id)
+
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_id,
+        has_entity_name=has_entity_name,
+        object_id_base=object_id_base,
+        original_name=object_id_base,
+        suggested_object_id=suggested_object_id,
+    )
+    assert entry.entity_id == expected_initial_entity_id
+
+    if user_name is not None:
+        entry = entity_registry.async_update_entity(entry.entity_id, name=user_name)
+
+    new_entity_id = entity_registry.async_regenerate_entity_id(entry)
+    assert new_entity_id == expected_entity_id
+
+
+def test_generate_entity_id_parts_entity_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test the entity area override drives the floor part."""
+    config_entry = MockConfigEntry(domain="sensor")
+    config_entry.add_to_hass(hass)
+
+    entity_registry.async_update_settings(
+        entity_id_parts=[
+            er.EntityNamePart.FLOOR,
+            er.EntityNamePart.AREA,
+            er.EntityNamePart.DEVICE,
+            er.EntityNamePart.ENTITY,
+        ]
+    )
+
+    first_floor = floor_registry.async_create("First Floor")
+    second_floor = floor_registry.async_create("Second Floor")
+    kitchen = area_registry.async_create("Kitchen")
+    area_registry.async_update(kitchen.id, floor_id=first_floor.floor_id)
+    garage = area_registry.async_create("Garage")
+    area_registry.async_update(garage.id, floor_id=second_floor.floor_id)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="Lamp",
+    )
+    device_registry.async_update_device(device_entry.id, area_id=kitchen.id)
+
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        object_id_base="Temperature",
+        original_name="Temperature",
+    )
+    assert entry.entity_id == "sensor.first_floor_kitchen_lamp_temperature"
+
+    entry = entity_registry.async_update_entity(entry.entity_id, area_id=garage.id)
+
+    new_entity_id = entity_registry.async_regenerate_entity_id(entry)
+    assert new_entity_id == "sensor.second_floor_garage_lamp_temperature"
+
+
+def test_regenerate_entity_id_after_settings_change(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test regenerating an entity ID after the parts setting changed."""
+    config_entry = MockConfigEntry(domain="sensor")
+    config_entry.add_to_hass(hass)
+
+    kitchen = area_registry.async_create("Kitchen")
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="Lamp",
+    )
+    device_registry.async_update_device(device_entry.id, area_id=kitchen.id)
+
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        object_id_base="Temperature",
+        original_name="Temperature",
+    )
+    assert entry.entity_id == "sensor.kitchen_lamp_temperature"
+
+    entity_registry.async_update_settings(
+        entity_id_parts=[er.EntityNamePart.DEVICE, er.EntityNamePart.ENTITY]
+    )
+
+    new_entity_id = entity_registry.async_regenerate_entity_id(entry)
+    assert new_entity_id == "sensor.lamp_temperature"
+
+
+def test_entity_id_parts_do_not_affect_full_entity_name(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test the entity ID parts setting does not affect the full entity name."""
+    config_entry = MockConfigEntry(domain="sensor")
+    config_entry.add_to_hass(hass)
+
+    entity_registry.async_update_settings(
+        entity_id_parts=[
+            er.EntityNamePart.FLOOR,
+            er.EntityNamePart.AREA,
+            er.EntityNamePart.ENTITY,
+            er.EntityNamePart.DEVICE,
+        ]
+    )
+
+    floor = floor_registry.async_create("First Floor")
+    kitchen = area_registry.async_create("Kitchen")
+    area_registry.async_update(kitchen.id, floor_id=floor.floor_id)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="Lamp",
+    )
+    device_registry.async_update_device(device_entry.id, area_id=kitchen.id)
+
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        object_id_base="Temperature",
+        original_name="Temperature",
+    )
+    assert entry.entity_id == "sensor.first_floor_kitchen_temperature_lamp"
+
+    assert er.async_get_full_entity_name(hass, entry) == "Lamp Temperature"
+
+
+def test_update_settings(entity_registry: er.EntityRegistry) -> None:
+    """Test updating entity registry settings."""
+    assert entity_registry.settings == er.EntityRegistrySettings(entity_id_parts=None)
+
+    with patch.object(entity_registry, "async_schedule_save") as mock_schedule_save:
+        settings = entity_registry.async_update_settings(
+            entity_id_parts=[er.EntityNamePart.DEVICE, er.EntityNamePart.ENTITY]
+        )
+    assert settings.entity_id_parts == (
+        er.EntityNamePart.DEVICE,
+        er.EntityNamePart.ENTITY,
+    )
+    assert entity_registry.settings == settings
+    assert len(mock_schedule_save.mock_calls) == 1
+
+    # Unchanged settings don't trigger a save
+    with patch.object(entity_registry, "async_schedule_save") as mock_schedule_save:
+        settings = entity_registry.async_update_settings(
+            entity_id_parts=[er.EntityNamePart.DEVICE, er.EntityNamePart.ENTITY]
+        )
+        entity_registry.async_update_settings()
+    assert settings.entity_id_parts == (
+        er.EntityNamePart.DEVICE,
+        er.EntityNamePart.ENTITY,
+    )
+    assert len(mock_schedule_save.mock_calls) == 0
+
+    with patch.object(entity_registry, "async_schedule_save") as mock_schedule_save:
+        settings = entity_registry.async_update_settings(entity_id_parts=None)
+    assert settings.entity_id_parts is None
+    assert entity_registry.settings == settings
+    assert len(mock_schedule_save.mock_calls) == 1
+
+
 def test_is_registered(entity_registry: er.EntityRegistry) -> None:
     """Test that is_registered works."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
@@ -995,6 +1418,7 @@ async def test_load_bad_data(
                     "unique_id": ["also", "not", "valid"],  # Should not load
                 },
             ],
+            "settings": {"entity_id_parts": None},
         },
     }
 
@@ -1422,6 +1846,7 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
                 }
             ],
             "deleted_entities": [],
+            "settings": {"entity_id_parts": None},
         },
     }
 
@@ -1649,6 +2074,7 @@ async def test_migration_1_11(
                     "unique_id": "very_very_unique",
                 }
             ],
+            "settings": {"entity_id_parts": None},
         },
     }
 
@@ -1819,6 +2245,7 @@ async def test_migration_1_18(
                     "unique_id": "very_very_unique",
                 }
             ],
+            "settings": {"entity_id_parts": None},
         },
     }
 
@@ -2021,6 +2448,7 @@ async def test_migration_1_21(
                 },
             ],
             "deleted_entities": [],
+            "settings": {"entity_id_parts": None},
         },
     }
 

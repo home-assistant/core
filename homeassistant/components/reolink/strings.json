@@ -856,6 +856,9 @@
       "privacy_mask": {
         "name": "Privacy mask"
       },
+      "privacy_mask_lens": {
+        "name": "Privacy mask lens {channel}"
+      },
       "privacy_mode": {
         "name": "Privacy mode"
       },
@@ -876,6 +879,14 @@
       },
       "siren_on_event": {
         "name": "Siren on event"
+      }
+    },
+    "time": {
+      "floodlight_schedule_end": {
+        "name": "Floodlight schedule end"
+      },
+      "floodlight_schedule_start": {
+        "name": "Floodlight schedule start"
       }
     }
   },

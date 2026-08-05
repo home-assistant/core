@@ -596,6 +596,12 @@
           "on": "mdi:eye-off"
         }
       },
+      "privacy_mask_lens": {
+        "default": "mdi:eye",
+        "state": {
+          "on": "mdi:eye-off"
+        }
+      },
       "privacy_mode": {
         "default": "mdi:eye",
         "state": {
@@ -622,6 +628,14 @@
       },
       "siren_on_event": {
         "default": "mdi:alarm-light"
+      }
+    },
+    "time": {
+      "floodlight_schedule_end": {
+        "default": "mdi:clock-end"
+      },
+      "floodlight_schedule_start": {
+        "default": "mdi:clock-start"
       }
     }
   },
