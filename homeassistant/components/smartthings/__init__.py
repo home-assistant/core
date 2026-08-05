@@ -35,7 +35,6 @@ from homeassistant.const import (
     ATTR_SERIAL_NUMBER,
     ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
-    ATTR_VIA_DEVICE,
     CONF_ACCESS_TOKEN,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
@@ -248,9 +247,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             (DOMAIN, device_id), entry.entry_id
         )
         if dev_entry is not None:
-            device_registry.async_update_device(
-                dev_entry.id, remove_config_entry_id=entry.entry_id
-            )
+            device_registry.async_remove_device(dev_entry.id)
 
     entry.async_on_unload(
         client.add_device_lifecycle_event_listener(
@@ -501,6 +498,9 @@ def create_devices(
     rooms: dict[str, str],
 ) -> None:
     """Create devices in the device registry."""
+    # Devices are sorted so a parent is always created before its children,
+    # allowing children to reference the parent's registered device id.
+    created_devices: dict[str, dr.DeviceEntry] = {}
     for device in sorted(
         devices.values(), key=lambda d: d.device.parent_device_id or ""
     ):
@@ -523,7 +523,7 @@ def create_devices(
                     )
                 )
         if device.device.parent_device_id and device.device.parent_device_id in devices:
-            kwargs[ATTR_VIA_DEVICE] = (DOMAIN, device.device.parent_device_id)
+            kwargs["via_device_id"] = created_devices[device.device.parent_device_id].id
         if (ocf := device.device.ocf) is not None:
             kwargs.update(
                 {
@@ -601,7 +601,7 @@ def create_devices(
                     )
                 }
             )
-        device_registry.async_get_or_create(
+        created_devices[device.device.device_id] = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.device.device_id)},
             configuration_url="https://account.smartthings.com",

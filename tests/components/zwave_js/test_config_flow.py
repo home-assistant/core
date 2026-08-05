@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Generator
 import dataclasses
+from datetime import UTC, datetime
 from ipaddress import ip_address
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
@@ -993,7 +994,13 @@ async def test_usb_discovery_migration(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes") as mock_file:
+    with (
+        patch("pathlib.Path.write_bytes") as mock_file,
+        patch(
+            "homeassistant.components.zwave_js.config_flow.dt_util.now",
+            return_value=datetime(2026, 8, 2, 12, 34, 56, tzinfo=UTC),
+        ),
+    ):
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -1005,6 +1012,9 @@ async def test_usb_discovery_migration(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
+    assert result["description_placeholders"] == {
+        "file_path": hass.config.path("zwavejs_nvm_backup_2026-08-02_12-34-56.bin")
+    }
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 

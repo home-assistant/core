@@ -407,12 +407,11 @@ async def test_hub_via_device(
         {(DOMAIN, "074fa784-8be8-4c70-8e22-6f5ed6f81b7e")}
     )
     assert hub_device == snapshot
-    assert (
-        device_registry.async_get_device(
-            {(DOMAIN, "374ba6fa-5a08-4ea2-969c-1fa43d86e21f")}
-        ).via_device_id
-        == hub_device.id
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "374ba6fa-5a08-4ea2-969c-1fa43d86e21f"), mock_config_entry.entry_id
     )
+    assert child_device is not None
+    assert child_device.via_device_id == hub_device.id
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])

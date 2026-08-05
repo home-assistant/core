@@ -87,13 +87,14 @@ def decimal_to_rgb_list(color: float) -> list[int]:
 
 
 async def add_light_entities(
+    hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
     """Add homee light entities."""
     async_add_entities(
-        HomeeLight(node, light, config_entry)
+        HomeeLight(hass, node, light, config_entry)
         for node in nodes
         for light in get_light_attribute_sets(node)
         if is_light_node(node)
@@ -107,7 +108,9 @@ async def async_setup_entry(
 ) -> None:
     """Add the homee platform for the light entity."""
 
-    await setup_homee_platform(add_light_entities, async_add_entities, config_entry)
+    await setup_homee_platform(
+        hass, add_light_entities, async_add_entities, config_entry
+    )
 
 
 class HomeeLight(HomeeNodeEntity, LightEntity):
@@ -115,12 +118,13 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         node: HomeeNode,
         light: dict[AttributeType, HomeeAttribute],
         entry: HomeeConfigEntry,
     ) -> None:
         """Initialize a Homee light."""
-        super().__init__(node, entry)
+        super().__init__(hass, node, entry)
 
         self._on_off_attr: HomeeAttribute = light[AttributeType.ON_OFF]
         self._dimmer_attr: HomeeAttribute | None = light.get(
