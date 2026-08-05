@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from .knx_module import KNXModule
 
 
-def _stable_group_address_repr(part: DeviceGroupAddress | None | int | str) -> str:
+def _stable_group_address_repr(part: DeviceGroupAddress | int | str | None) -> str:
     """Render a unique_id part independent of `GroupAddress.address_format`."""
     if isinstance(part, GroupAddress):
         # Always LONG (main/middle/sub) derived from raw, so the representation
@@ -39,7 +39,7 @@ def _stable_group_address_repr(part: DeviceGroupAddress | None | int | str) -> s
 
 
 def build_yaml_unique_id(
-    *parts: DeviceGroupAddress | None | int | str,
+    *parts: DeviceGroupAddress | int | str | None,
 ) -> tuple[str, str]:
     """Return `(new_stable_id, legacy_id)` for a YAML entity.
 

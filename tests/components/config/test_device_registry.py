@@ -675,3 +675,83 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     assert device_registry.async_get(device_entry_1.id).config_entries == {
         entry_1.entry_id
     }
+
+
+async def test_list_linked_devices(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test listing devices sharing a connection or identifier."""
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+    entry_3 = MockConfigEntry()
+    entry_3.add_to_hass(hass)
+
+    mac = (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")
+
+    # device_1 shares its identifier with device_2 and its connection with device_3
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id,
+        connections={mac},
+        identifiers={("bridgeid", "0123")},
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+    device_3 = device_registry.async_get_or_create(
+        config_entry_id=entry_3.entry_id,
+        connections={mac},
+    )
+    # device_4 shares nothing with the others
+    device_4 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id,
+        identifiers={("bridgeid", "9999")},
+    )
+    assert len({device_1.id, device_2.id, device_3.id, device_4.id}) == 4
+
+    async def list_linked(device_id: str) -> dict:
+        await client.send_json_auto_id(
+            {
+                "type": "config/device_registry/list_linked_devices",
+                "device_id": device_id,
+            }
+        )
+        return await client.receive_json()
+
+    # device_1 is linked to both device_2 (identifier) and device_3 (connection)
+    msg = await list_linked(device_1.id)
+    assert msg["success"]
+    assert msg["result"]["linked_devices"] == unordered([device_2.id, device_3.id])
+
+    # device_2 and device_3 each only share with device_1, not with each other
+    msg = await list_linked(device_2.id)
+    assert msg["result"]["linked_devices"] == [device_1.id]
+
+    msg = await list_linked(device_3.id)
+    assert msg["result"]["linked_devices"] == [device_1.id]
+
+    # device_4 has no linked devices
+    msg = await list_linked(device_4.id)
+    assert msg["result"]["linked_devices"] == []
+
+
+async def test_list_linked_devices_unknown_device(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+) -> None:
+    """Test listing linked devices for an unknown device returns an error."""
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/list_linked_devices",
+            "device_id": "does_not_exist",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+    assert msg["error"]["message"] == "Device not found"

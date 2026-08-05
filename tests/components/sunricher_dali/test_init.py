@@ -48,6 +48,36 @@ async def test_devices(
     assert devices == snapshot
 
 
+async def test_via_device_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gateway: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test devices are linked to the gateway device via via_device_id."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    gateway_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_gateway.gw_sn), mock_config_entry.entry_id
+    )
+    assert gateway_device is not None
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    child_devices = [
+        device_entry
+        for device_entry in device_entries
+        if device_entry.id != gateway_device.id
+    ]
+    assert child_devices
+    for device_entry in child_devices:
+        assert device_entry.via_device_id == gateway_device.id
+
+
 async def test_setup_entry_connection_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
