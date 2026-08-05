@@ -2096,6 +2096,12 @@
       dict({
         'name': 'ga_select',
         'options': dict({
+          'dptClasses': list([
+            'numeric',
+            'enum',
+            'complex',
+            'string',
+          ]),
           'passive': True,
           'state': dict({
             'required': False,

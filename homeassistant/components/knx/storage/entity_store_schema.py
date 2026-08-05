@@ -607,7 +607,15 @@ def _select_options_validator(config: dict[str, Any]) -> dict[str, Any]:
 SELECT_KNX_SCHEMA = AllSerializeFirst(
     vol.Schema(
         {
-            vol.Required(CONF_GA_SELECT): GASelector(write_required=True),
+            # A select sends raw payloads, so any DPT is acceptable and none is
+            # needed. The classes are still declared because the frontend accepts
+            # no group address at all when none of validDPTs, dptClasses or
+            # dptSelect is given - same reason as for the button platform.
+            vol.Required(CONF_GA_SELECT): GASelector(
+                write_required=True,
+                dpt=["numeric", "enum", "complex", "string"],
+                dpt_required=False,
+            ),
             vol.Required(CONF_PAYLOAD_LENGTH, default=0): selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=0, max=14, step=1, mode=selector.NumberSelectorMode.BOX
