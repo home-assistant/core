@@ -1,6 +1,6 @@
 """Config flow for Hot Spring."""
 
-from typing import Any, override
+from typing import override
 
 from hotspring import HotSpring, HotSpringConnectionError, HotSpringError, Spa
 import voluptuous as vol
@@ -9,11 +9,18 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import TextSelector
 
 from .const import DOMAIN
 
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): TextSelector(),
+    }
+)
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Spa:
+
+async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> Spa:
     """Validate the user input allows us to connect."""
     api = HotSpring(data[CONF_HOST], session=async_get_clientsession(hass))
     spa = await api.update()
@@ -29,10 +36,10 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @override
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 spa = await validate_input(self.hass, user_input)
@@ -50,6 +57,6 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
