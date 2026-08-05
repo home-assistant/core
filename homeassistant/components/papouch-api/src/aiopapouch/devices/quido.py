@@ -17,18 +17,13 @@ _LOGGER = logging.getLogger(__name__)
 class QuidoBase(PapouchDevice, ABC):
     """Base class for all Quido devices containing shared entity logic."""
 
-    COUNTER_MODES = [
-        "Off",
-        "Counts descending edges",
-        "Counts ascending edges",
-        "Counts ascending and descending edges",
-    ]
-
     def __init__(self) -> None:
         """Constructor for the base of the Quido."""
 
-        # These variables should be populated by the child classes
         self.api_client: PapouchTransport
+
+        # These variables should be populated by the subclasses:
+
         self.number_inputs = -1
         self.number_outputs = -1
         self.number_temp = 1

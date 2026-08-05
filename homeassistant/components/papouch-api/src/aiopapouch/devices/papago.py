@@ -43,27 +43,13 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
 
     api_client: PapouchHTTPClient
 
-    SENSOR_TYPES = [
-        "Unused",
-        "Temperature / Humidity (TH15)",
-        "Temperature (DS)",
-        "Temperature / Humidity (TH3x)",
-        "Temperature (TMP)",
-    ]
-
-    COUNTER_MODES = [
-        "Counter off",
-        "Count falling edges",
-        "Count rising edges",
-        "Count all edges",
-    ]
-
     BOX_SENSOR_BASE: int | None = None
 
     SAVE_ENDPOINT = "savesettings.xml"
 
     SENSOR_SETTINGS_KEYS: list[tuple[str, str]]
 
+    # This constant is used for distinguishing IDs for select entries
     INPUT_ID_INCREMENT = 1000
 
     @override
@@ -111,13 +97,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
 
         self.size_counter_bits = 32
 
-        # Base class contains nested sensor and their types
-        # although not every Papago device even has more than 1 sensor
-
-        self.units_sensors: dict[str, dict[str, Any]] = {}
-        self.type_sensors: dict[str, str] = {}
-
-        self.number_outputs = 0
+        self.sensors: dict[str, dict[str, Any]] = {}
+        self.sensors_types: dict[str, str] = {}
 
         self.inputs: dict[str, InputSettings] = {}
         self.outputs: dict[str, OutputSettings] = {}
@@ -160,8 +141,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
         if not base_item_id:
             return
 
-        if base_item_id not in self.units_sensors:
-            self.units_sensors[base_item_id] = {
+        if base_item_id not in self.sensors:
+            self.sensors[base_item_id] = {
                 "name": base_name,
                 "sub_sensors": dict[str, str](),
             }
@@ -178,7 +159,7 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
             unit_code = element.attrib.get(f"unit{suffix}", "0")
             status = element.attrib.get(f"status{suffix}", "0")
 
-            self.units_sensors[base_item_id]["sub_sensors"][item_id] = {
+            self.sensors[base_item_id]["sub_sensors"][item_id] = {
                 "type": sns_type,
                 "unit": unit_code,
             }
@@ -186,9 +167,12 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
             if status in ("1", "4"):
                 parsed_data["sensor"][item_id] = None
             else:
-                parsed_data["sensor"][item_id] = float(
-                    element.attrib.get(f"val{suffix}", "0")
-                )
+                raw_val = element.attrib.get(f"val{suffix}", "0")
+                try:
+                    parsed_data["sensor"][item_id] = float(raw_val)
+                except ValueError:
+                    # In case there is wind direction e.g. NW
+                    parsed_data["sensor"][item_id] = raw_val
 
             idx += 1
 
@@ -261,7 +245,7 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
     def get_supported_buttons(self) -> list[dict[str, Any]]:
         buttons = []
 
-        for base_id, sensor_data in self.units_sensors.items():
+        for base_id, sensor_data in self.sensors.items():
             sensor_name = sensor_data.get("name", f"Sensor {base_id}")
             buttons.append(
                 {
@@ -335,9 +319,7 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                 }
             )
 
-        unit_map = {"0": "°C", "1": "°F", "2": "K"}
-
-        for sensor_data in self.units_sensors.values():
+        for sensor_data in self.sensors.values():
             sensor_name = sensor_data["name"]
 
             for sub_id, sub_data in sensor_data["sub_sensors"].items():
@@ -352,7 +334,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                                 "type": "sensor",
                                 "name": f"{sensor_name} Temperature",
                                 "device_class": "temperature",
-                                "unit": unit_map.get(unit_code, "°C"),
+                                "state_class": "measurement",
+                                "unit": self._get_unit(sns_type, unit_code),
                             }
                         )
 
@@ -363,7 +346,8 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                                 "type": "sensor",
                                 "name": f"{sensor_name} Humidity",
                                 "device_class": "humidity",
-                                "unit": "%",
+                                "state_class": "measurement",
+                                "unit": self._get_unit(sns_type, unit_code),
                             }
                         )
 
@@ -374,7 +358,72 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                                 "type": "sensor",
                                 "name": f"{sensor_name} Dew Point",
                                 "device_class": "temperature",
-                                "unit": unit_map.get(unit_code, "°C"),
+                                "state_class": "measurement",
+                                "unit": self._get_unit(sns_type, unit_code),
+                            }
+                        )
+
+                    case self.CO2_SNS_TYPE:
+                        sensors.append(
+                            {
+                                "item_id": sub_id,
+                                "type": "sensor",
+                                "name": f"{sensor_name} CO2",
+                                "device_class": "carbon_dioxide",
+                                "state_class": "measurement",
+                                "unit": self._get_unit(sns_type, unit_code),
+                            }
+                        )
+
+                    case self.PRESSURE_SNS_TYPE:
+                        sensors.append(
+                            {
+                                "item_id": sub_id,
+                                "type": "sensor",
+                                "name": f"{sensor_name} Pressure",
+                                "device_class": "atmospheric_pressure",
+                                "state_class": "measurement",
+                                "unit": self._get_unit(sns_type, unit_code),
+                            }
+                        )
+
+                    case self.WIND_DIRECTION_SNS_TYPE:
+                        unit_str = self._get_unit(sns_type, unit_code)
+
+                        sensor_def = {
+                            "item_id": sub_id,
+                            "type": "sensor",
+                            "name": f"{sensor_name} Wind Direction",
+                            "icon": "mdi:compass",
+                        }
+
+                        if unit_str == "°":
+                            sensor_def["unit"] = unit_str
+                            sensor_def["state_class"] = "measurement"
+
+                        sensors.append(sensor_def)
+
+                    case self.WIND_SPEED_SNS_TYPE:
+                        sensors.append(
+                            {
+                                "item_id": sub_id,
+                                "type": "sensor",
+                                "name": f"{sensor_name} Wind Speed",
+                                "device_class": "wind_speed",
+                                "state_class": "measurement",
+                                "unit": self._get_unit(sns_type, unit_code),
+                            }
+                        )
+
+                    case self.RAIN_SNS_TYPE:
+                        sensors.append(
+                            {
+                                "item_id": sub_id,
+                                "type": "sensor",
+                                "name": f"{sensor_name} Rainfall",
+                                "device_class": "precipitation",
+                                "state_class": "total_increasing",
+                                "unit": self._get_unit(sns_type, unit_code),
                             }
                         )
 
@@ -395,7 +444,7 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
     def get_supported_selects(self) -> list[dict[str, Any]]:
         selects = []
 
-        for item_id, sensor_data in self.units_sensors.items():
+        for item_id, sensor_data in self.sensors.items():
             sensor_name = sensor_data.get("name", f"Sensor {item_id}")
             selects.append(
                 {
@@ -484,7 +533,7 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
 
                 if base is not None and base <= box_num <= base + 1:
                     s_id = str(box_num - base + 1)
-                    self.type_sensors[s_id] = sns_type
+                    self.sensors_types[s_id] = sns_type
 
     async def _set_sensor_type(self, item_id: str, type_idx: str) -> None:
         await self._update_settings()
@@ -544,7 +593,7 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
 
         await self._save_setting(xml_payload)
 
-        self.type_sensors[item_id] = str(type_idx)
+        self.sensors_types[item_id] = str(type_idx)
 
     def _check_sensor_response(
         self, response_text: str, expected_status: str, action_msg: str
@@ -663,7 +712,7 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
     @override
     def get_select_option(self, category: str, item_id: str) -> str | None:
         if category == "sensor_type":
-            sns_type = self.type_sensors.get(item_id)
+            sns_type = self.sensors_types.get(item_id)
             if sns_type is not None and sns_type.isdigit():
                 type_idx = int(sns_type)
                 if 0 <= type_idx < len(self.SENSOR_TYPES):
@@ -771,7 +820,7 @@ class PapagoETH_2TH(PapagoETH):
             sns_type = element.attrib.get("type")
             if sns_type is not None:
                 sensor_id = str(box_num - self.BOX_SENSOR_BASE + 1)
-                self.type_sensors[sensor_id] = str(sns_type)
+                self.sensors_types[sensor_id] = str(sns_type)
 
 
 class PapagoETH_1TH_2DI_1DO(PapagoETH):
@@ -806,8 +855,8 @@ class PapagoETH_1TH_2DI_1DO(PapagoETH):
                 if sns_type is None:
                     raise DeviceParseError(f"No sensor type in device: {self.name}")
 
-                self.type_sensors["1"] = str(sns_type)
-                self.units_sensors["1"] = {
+                self.sensors_types["1"] = str(sns_type)
+                self.sensors["1"] = {
                     "name": "Sensor",
                     "sub_sensors": {"1": {"type": str(sns_type), "unit": "0"}},
                 }
@@ -835,6 +884,20 @@ class PapagoETH_5HDI_1DO(PapagoETH):
                 self._parse_standard_input(box_num, element, self.BOX_INPUT_BASE)
 
 
+class PapagoETH_METEO(PapagoETH):
+    """Represents Papago Meteo ETH."""
+
+    BOX_SENSOR_BASE = 30
+
+    @override
+    def _process_box(self, box_num: int, element: defused_ET.Element) -> None:
+        if self.BOX_SENSOR_BASE <= box_num <= self.BOX_SENSOR_BASE + 2:
+            sns_type = element.attrib.get("type")
+            if sns_type is not None:
+                sensor_id = str(box_num - self.BOX_SENSOR_BASE + 1)
+                self.sensors_types[sensor_id] = str(sns_type)
+
+
 async def async_setup_papago(transport: PapouchTransport) -> PapagoETH | None:
     """Async factory for Papago devices."""
     settings = await transport.fetch_settings()
@@ -857,6 +920,8 @@ async def async_setup_papago(transport: PapouchTransport) -> PapagoETH | None:
         return PapagoETH_1TH_2DI_1DO(transport, settings, device_name, location)
     if device_name == "Papago 5HDI 1DO ETH":
         return PapagoETH_5HDI_1DO(transport, settings, device_name, location)
+    if device_name == "Papago METEO ETH":
+        return PapagoETH_METEO(transport, settings, device_name, location)
 
     _LOGGER.warning("Unsupported Papago: %s, location: %s", device_name, location)
     return None

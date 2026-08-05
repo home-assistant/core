@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 import defusedxml.ElementTree as defused_ET
 
 from ..client import PapouchHTTPClient
-from ..exceptions import DeviceResponseError
+from ..exceptions import DeviceLogicError, DeviceResponseError
 
 ERROR_STATUS = "0"
 
@@ -36,10 +36,6 @@ class HttpMixinHost(Protocol):
 
 class HTTPMixin(HttpMixinHost):
     """Mixin for ETH devices for sending command and checking its response."""
-
-    TEMPERATURE_SNS_TYPE = "1"
-    HUMIDITY_SNS_TYPE = "2"
-    DEW_POINT_SNS_TYPE = "3"
 
     async def _send_command(
         self,
@@ -92,6 +88,58 @@ class PapouchDevice(ABC):
 
     Beware of the XML namespaces! Some devices can have some while other don't.
     """
+
+    COUNTER_MODES = [
+        "Off",
+        "Counts descending edges",
+        "Counts ascending edges",
+        "Counts ascending and descending edges",
+    ]
+
+    SENSOR_TYPES = [
+        "Unused",
+        "Temperature / Humidity (TH15)",
+        "Temperature (DS)",
+        "Temperature / Humidity (TH3x)",
+        "Temperature (TMP)",
+    ]
+
+    TEMPERATURE_SNS_TYPE = "1"
+    HUMIDITY_SNS_TYPE = "2"
+    DEW_POINT_SNS_TYPE = "3"
+    CO2_SNS_TYPE = "4"
+    PRESSURE_SNS_TYPE = "5"
+    WIND_DIRECTION_SNS_TYPE = "6"
+    WIND_SPEED_SNS_TYPE = "7"
+    RAIN_SNS_TYPE = "8"
+
+    UNIT_MAP = {
+        TEMPERATURE_SNS_TYPE: {"0": "°C", "1": "°F", "2": "K"},
+        HUMIDITY_SNS_TYPE: {"0": "%"},
+        DEW_POINT_SNS_TYPE: {
+            "0": "°C",
+            "1": "°F",
+            "2": "K",
+        },
+        CO2_SNS_TYPE: {"0": "ppm"},
+        PRESSURE_SNS_TYPE: {"0": "Pa", "1": "hPa", "2": "psi", "3": "atm"},
+        WIND_DIRECTION_SNS_TYPE: {
+            "0": "°",
+            "1": "",  # METEO returns integer value that maps to a string (e.g. 2 is NNE)
+        },
+        WIND_SPEED_SNS_TYPE: {"0": "m/s", "1": "km/h", "2": "mph", "3": "knots"},
+        RAIN_SNS_TYPE: {"0": "mm", "1": "in"},
+    }
+
+    def _get_unit(self, sns_type: str, unit_code: str) -> str:
+        """Get unit from unit matrix. Raises DeviceLogicError if missing."""
+        try:
+            return self.UNIT_MAP[sns_type][unit_code]
+        except KeyError as err:
+            raise DeviceLogicError(
+                f"Unknown unit, device {self.name} sent: '{sns_type}' "
+                f"with code: '{unit_code}', that is missing in UNIT_MAP."
+            ) from err
 
     @property
     @abstractmethod

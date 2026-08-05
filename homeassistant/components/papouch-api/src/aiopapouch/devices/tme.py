@@ -55,7 +55,7 @@ class TME(PapouchDevice):
         self._location = self.get_location()
         self._mac_address = self.get_mac_address()
 
-        self.units_sensor: list[dict[str, str]] = []
+        self.sensors: list[dict[str, str]] = []
 
         self._parse_initial_settings()
 
@@ -64,7 +64,7 @@ class TME(PapouchDevice):
         root = defused_ET.fromstring(xml_data)
         parsed_data: dict[str, dict[str, Any]] = {"sensor": {}}
 
-        populate = len(self.units_sensor) == 0
+        populate = len(self.sensors) == 0
 
         element = find_tag(root, "sns")
 
@@ -75,9 +75,9 @@ class TME(PapouchDevice):
         status = element.attrib.get("status", "0")
 
         if populate:
-            self.units_sensor.append({"id": ITEM_ID, "unit": unit_code})
+            self.sensors.append({"id": ITEM_ID, "unit": unit_code})
         else:
-            self.units_sensor[0]["unit"] = unit_code
+            self.sensors[0]["unit"] = unit_code
 
         if status in ("1", "4"):  # invalid or ready to measure
             parsed_data["sensor"][ITEM_ID] = None
@@ -135,13 +135,12 @@ class TME(PapouchDevice):
 
     @override
     def get_supported_sensors(self) -> list[dict[str, Any]]:
-        if not self.units_sensor:
+        if not self.sensors:
             return []
 
-        unit_map = {"0": "°C", "1": "°F", "2": "K"}
         unit_code = "0"
-        if self.units_sensor:
-            unit_code = self.units_sensor[0].get("unit", "0")
+        if self.sensors:
+            unit_code = self.sensors[0].get("unit", "0")
 
         return [
             {
@@ -149,7 +148,7 @@ class TME(PapouchDevice):
                 "type": "sensor",
                 "name": "Temperature",
                 "device_class": "temperature",
-                "unit": unit_map.get(unit_code, "°C"),
+                "unit": self._get_unit(self.TEMPERATURE_SNS_TYPE, unit_code),
             }
         ]
 

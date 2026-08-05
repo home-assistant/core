@@ -16,14 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 class TH2E(PapouchDevice, HTTPMixin):
     """Represents TH2E device."""
 
-    SENSOR_TYPES = [
-        "Unused",
-        "Temperature / Humidity (TH15)",
-        "Temperature (DS)",
-        "Temperature / Humidity (TH3x)",
-        "Temperature (TMP)",
-    ]
-
     @override
     @property
     def name(self) -> str:
@@ -62,8 +54,8 @@ class TH2E(PapouchDevice, HTTPMixin):
         self._location = self.get_location()
         self._mac_address = self.get_mac_address()
 
-        self.units_sensors: dict[str, dict[str, str]] = {}
-        self.type_sensor = 0
+        self.sensors: dict[str, dict[str, str]] = {}
+        self.sensor_type = 0
 
     @override
     async def parse_fresh_data(self, xml_data: str) -> dict:
@@ -82,7 +74,7 @@ class TH2E(PapouchDevice, HTTPMixin):
                 f"The device doesn't have box status tag in fresh.xml, device: {self.name} ({self.location}) - {self.api_client.ip_address}"
             )
 
-        self.type_sensor = int(status_tag.attrib.get("typesens", "0"))
+        self.sensor_type = int(status_tag.attrib.get("typesens", "0"))
 
         for element in root.iter():
             if not element.tag.endswith("sns"):
@@ -93,7 +85,7 @@ class TH2E(PapouchDevice, HTTPMixin):
             unit_code = element.attrib.get("unit", "0")
             status = element.attrib.get("status", "0")
 
-            self.units_sensors[item_id] = {
+            self.sensors[item_id] = {
                 "id": item_id,
                 "type": sns_type,
                 "unit": unit_code,
@@ -152,9 +144,8 @@ class TH2E(PapouchDevice, HTTPMixin):
     @override
     def get_supported_sensors(self) -> list[dict[str, Any]]:
         sensors = []
-        unit_map = {"0": "°C", "1": "°F", "2": "K"}
 
-        for sns in self.units_sensors.values():
+        for sns in self.sensors.values():
             item_id = sns["id"]
             sns_type = sns["type"]
             unit_code = sns["unit"]
@@ -167,7 +158,7 @@ class TH2E(PapouchDevice, HTTPMixin):
                             "type": "sensor",
                             "name": "Temperature",
                             "device_class": "temperature",
-                            "unit": unit_map.get(unit_code, "°C"),
+                            "unit": self._get_unit(sns_type, unit_code),
                         }
                     )
 
@@ -178,7 +169,7 @@ class TH2E(PapouchDevice, HTTPMixin):
                             "type": "sensor",
                             "name": "Humidity",
                             "device_class": "humidity",
-                            "unit": "%",
+                            "unit": self._get_unit(sns_type, unit_code),
                         }
                     )
 
@@ -189,7 +180,7 @@ class TH2E(PapouchDevice, HTTPMixin):
                             "type": "sensor",
                             "name": "Dew Point",
                             "device_class": "temperature",
-                            "unit": unit_map.get(unit_code, "°C"),
+                            "unit": self._get_unit(sns_type, unit_code),
                         }
                     )
 
@@ -219,8 +210,8 @@ class TH2E(PapouchDevice, HTTPMixin):
                 f"Unsupported command: {cmd_type}, in the device: {self.name} ({self.location}) - {self.api_client.ip_address}"
             )
 
-        self.type_sensor = await self._get_sensor_type()
-        await self._set_sensor_type(self.type_sensor)
+        self.sensor_type = await self._get_sensor_type()
+        await self._set_sensor_type(self.sensor_type)
 
     async def _get_sensor_type(self) -> int:
         request = '<root><set box="19" num1="00001" /></root>'
@@ -351,14 +342,14 @@ class TH2E(PapouchDevice, HTTPMixin):
     @override
     def get_select_option(self, category: str, item_id: str) -> str | None:
         if category == "sensor_type":
-            return self.SENSOR_TYPES[self.type_sensor]
+            return self.SENSOR_TYPES[self.sensor_type]
         return None
 
     @override
     async def set_select_option(self, category: str, item_id: str, option: str) -> None:
         type_idx = self.SENSOR_TYPES.index(option)
         await self._set_sensor_type(type_idx)
-        self.type_sensor = type_idx
+        self.sensor_type = type_idx
 
     @override
     async def switch_to_web_mode(self) -> None:
