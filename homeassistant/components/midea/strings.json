@@ -563,7 +563,17 @@
         "name": "Days of Use"
       },
       "variable_mode": {
-        "name": "Variable Mode"
+        "name": "Variable Mode",
+        "state": {
+          "cold_drink": "Cold Drink",
+          "dry_zone": "Dry Zone",
+          "freeze_warm": "Freeze Warm",
+          "fresh_product": "Fresh Product",
+          "none": "None",
+          "partial_freezing": "Partial Freezing",
+          "soft_freezing": "Soft Freezing",
+          "zero_fresh": "Zero Fresh"
+        }
       },
       "wash_level": {
         "name": "Wash Level"
