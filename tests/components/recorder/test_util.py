@@ -950,24 +950,18 @@ async def test_execute_retries_after_lost_connection(
     hass: HomeAssistant,
     setup_recorder: None,
 ) -> None:
-    """Test execute reaches the database again when the connection is lost.
+    """Test execute rolls back and retries after the connection is lost.
 
-    This test is specific for SQLite: invalidating the in-memory database's only
-    connection discards the database, so the retried query fails with an
-    OperationalError from the database instead of returning rows. Without a rollback
-    between attempts every retry raises PendingRollbackError (an InvalidRequestError,
-    not an OperationalError) without reaching the database, so the retry loop cannot
-    succeed for the one error class it exists to handle -- and the original error is
-    masked in the log.
+    This test is specific for SQLite: the in-memory database is lost with the
+    connection, so the retried query raises OperationalError. Without the rollback
+    every retry would raise PendingRollbackError instead.
     """
     hass.states.async_set("sensor.on", "on")
     await async_wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         query = session.query(StatesMeta).limit(1)
-        # Invalidate the connection the way a database restart or a dropped network
-        # link does: the session object stays intact and unaware, which is exactly
-        # the state the retry loop is meant to handle.
+        # Simulate a lost connection: the session object stays intact and unaware
         session.connection().invalidate()
 
         with pytest.raises(OperationalError):
@@ -981,11 +975,10 @@ async def test_execute_recovers_after_lost_connection(
     hass: HomeAssistant,
     setup_recorder: None,
 ) -> None:
-    """Test execute returns rows when the connection is lost mid-transaction.
+    """Test execute returns rows after the connection is lost.
 
-    This test is specific for MySQL and PostgreSQL, where the database survives the
-    lost connection: the rollback between attempts lets the retry reconnect and
-    return rows. Without it every retry raises PendingRollbackError.
+    This test is specific for MySQL and PostgreSQL, where the database survives
+    the lost connection and the retry can reconnect and succeed.
     """
     hass.states.async_set("sensor.on", "on")
     await async_wait_recording_done(hass)
@@ -1004,10 +997,10 @@ async def test_execute_stmt_lambda_element_retries_after_lost_connection(
     hass: HomeAssistant,
     setup_recorder: None,
 ) -> None:
-    """Test execute_stmt_lambda_element reaches the database after a lost connection.
+    """Test execute_stmt_lambda_element retries after a lost connection.
 
-    Same defect as test_execute_retries_after_lost_connection, in the second of the two
-    retry loops in this module.
+    This test is specific for SQLite, same as
+    test_execute_retries_after_lost_connection.
     """
     instance = recorder.get_instance(hass)
     hass.states.async_set("sensor.on", "on")
@@ -1023,8 +1016,6 @@ async def test_execute_stmt_lambda_element_retries_after_lost_connection(
         )
         session.connection().invalidate()
 
-        # Same reasoning as test_execute_retries_after_lost_connection: the error that
-        # escapes must be a real database error, not PendingRollbackError.
         with pytest.raises(OperationalError):
             util.execute_stmt_lambda_element(session, stmt)
 
@@ -1038,8 +1029,8 @@ async def test_execute_stmt_lambda_element_recovers_after_lost_connection(
 ) -> None:
     """Test execute_stmt_lambda_element returns rows after a lost connection.
 
-    Same recovery as test_execute_recovers_after_lost_connection, in the second of the
-    two retry loops in this module.
+    This test is specific for MySQL and PostgreSQL, same as
+    test_execute_recovers_after_lost_connection.
     """
     instance = recorder.get_instance(hass)
     hass.states.async_set("sensor.on", "on")
