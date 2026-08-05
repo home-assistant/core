@@ -103,6 +103,31 @@ UNITS_CHANGED_ISSUE = "units_changed"
 MEAN_TYPE_CHANGED_ISSUE = "mean_type_changed"
 
 
+def _is_hashable(value: Any) -> bool:
+    """Return True if the value can be used as a dict key or a set member.
+
+    State attributes are not validated, so an integration can set them to a value of
+    any type. The state class, unit of measurement and device class are all used as
+    dict keys or set members when compiling statistics, which raises TypeError for a
+    value which is not hashable.
+    """
+    try:
+        hash(value)
+    except TypeError:
+        return False
+    return True
+
+
+def _parse_state_class(state_class: Any) -> SensorStateClass | None:
+    """Parse the state class attribute of a sensor, None if it is not valid."""
+    if type(state_class) is SensorStateClass:
+        return state_class
+    if not _is_hashable(state_class):
+        # try_parse_enum is cached, so it raises TypeError for an unhashable value
+        return None
+    return try_parse_enum(SensorStateClass, state_class)
+
+
 def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     """Get the current state of all sensors for which to compile statistics."""
     instance = get_instance(hass)
@@ -118,10 +143,12 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
                 SensorEntityCapabilityAttribute.STATE_CLASS
             )
         )
-        and (
-            type(state_class) is SensorStateClass
-            or try_parse_enum(SensorStateClass, state_class)
-        )
+        and _parse_state_class(state_class)
+        # A sensor whose unit or device class is not hashable can't have statistics
+        # compiled for it, and must be excluded here so it does not break the whole
+        # compilation run
+        and _is_hashable(state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT))
+        and _is_hashable(state.attributes.get(EntityStateAttribute.DEVICE_CLASS))
         and (not entity_filter or entity_filter(state.entity_id))
     ]
 
@@ -258,6 +285,9 @@ def _get_unit_class(
     The unit class is determined from the device class and unit if possible,
     otherwise from the unit.
     """
+    if not _is_hashable(device_class) or not _is_hashable(unit):
+        # This is reached from paths which pass unvalidated state attributes
+        return None
     if (
         device_class
         and (conv := UNIT_CONVERTERS.get(device_class))
@@ -890,9 +920,8 @@ def _update_issues(
     for state in sensor_states:
         entity_id = state.entity_id
         numeric = _is_numeric(state)
-        state_class = try_parse_enum(
-            SensorStateClass,
-            state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS),
+        state_class = _parse_state_class(
+            state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS)
         )
         state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         state_unit_class = _get_unit_class(
@@ -1061,9 +1090,8 @@ def validate_statistics(
 
     for state in sensor_states:
         entity_id = state.entity_id
-        state_class = try_parse_enum(
-            SensorStateClass,
-            state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS),
+        state_class = _parse_state_class(
+            state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS)
         )
 
         if entity_id in metadatas:
