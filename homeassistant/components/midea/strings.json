@@ -639,9 +639,6 @@
       "temperature_raw": {
         "name": "Temperature Raw"
       },
-      "time_remaining": {
-        "name": "Time Remaining"
-      },
       "top_compartment_remaining_time": {
         "name": "Top Compartment Remaining Time"
       },
