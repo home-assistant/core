@@ -29,7 +29,6 @@
         },
         "data_description": {
           "access_token": "The access token used to authenticate with your TV. Leave empty to start a pairing process that will provide one.",
-          "device_class": "Whether the device is a TV or a speaker (sound bar).",
           "host": "Hostname or IP address of your VIZIO SmartCast device.",
           "name": "The name used for the device and its entities in Home Assistant."
         },
