@@ -148,6 +148,7 @@ class TME(PapouchDevice):
                 "type": "sensor",
                 "name": "Temperature",
                 "device_class": "temperature",
+                "state_class": "measurement",
                 "unit": self._get_unit(self.TEMPERATURE_SNS_TYPE, unit_code),
             }
         ]

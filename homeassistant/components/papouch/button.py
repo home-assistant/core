@@ -48,6 +48,9 @@ class PapouchCommandButton(PapouchEntity, ButtonEntity):
         self._attr_unique_id = f"{mac}_btn_{self.cmd_type}"
         self._attr_name = btn_data["name"]
 
+        if "icon" in btn_data:
+            self._attr_icon = btn_data["icon"]
+
     @override
     async def async_press(self) -> None:
         """Execute the command."""

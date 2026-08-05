@@ -158,6 +158,7 @@ class TH2E(PapouchDevice, HTTPMixin):
                             "type": "sensor",
                             "name": "Temperature",
                             "device_class": "temperature",
+                            "state_class": "measurement",
                             "unit": self._get_unit(sns_type, unit_code),
                         }
                     )
@@ -169,6 +170,7 @@ class TH2E(PapouchDevice, HTTPMixin):
                             "type": "sensor",
                             "name": "Humidity",
                             "device_class": "humidity",
+                            "state_class": "measurement",
                             "unit": self._get_unit(sns_type, unit_code),
                         }
                     )
@@ -180,6 +182,7 @@ class TH2E(PapouchDevice, HTTPMixin):
                             "type": "sensor",
                             "name": "Dew Point",
                             "device_class": "temperature",
+                            "state_class": "measurement",
                             "unit": self._get_unit(sns_type, unit_code),
                         }
                     )

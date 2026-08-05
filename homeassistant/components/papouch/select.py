@@ -50,6 +50,9 @@ class PapouchSelectEntity(PapouchEntity, SelectEntity):
         self._attr_name = select_data["name"]
         self._attr_options = select_data["options"]
 
+        if "icon" in select_data:
+            self._attr_icon = select_data["icon"]
+
     @override
     @property
     def current_option(self) -> str | None:

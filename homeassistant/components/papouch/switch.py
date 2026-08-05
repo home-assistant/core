@@ -47,6 +47,9 @@ class PapouchSwitch(PapouchEntity, SwitchEntity):
         self._attr_unique_id = f"{mac}_{'switch'}_{self.item_id}"
         self._attr_name = switch_data["name"]
 
+        if "icon" in switch_data:
+            self._attr_icon = switch_data["icon"]
+
     @override
     @property
     def is_on(self) -> bool | None:

@@ -289,6 +289,7 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                         "min_value": 0,
                         "max_value": (2**self.size_counter_bits) - 1,
                         "step": 10 ** (-int(input_data.decimal_count)),
+                        "icon": "mdi:arrow-down-bold-box",
                     },
                     {
                         "item_id": f"{item_id}",
@@ -298,6 +299,7 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                         "min_value": 0,
                         "max_value": (2**self.size_counter_bits) - 1,
                         "step": 10 ** (-int(input_data.decimal_count)),
+                        "icon": "mdi:pencil-box-multiple-outline",
                     },
                 ]
             )
@@ -314,8 +316,9 @@ class PapagoETH(PapouchDevice, HTTPMixin, ABC):
                     "item_id": item_id,
                     "type": "counter",
                     "name": item_data.name,
-                    "state_class": "total_increasing",
+                    "state_class": "total",
                     "unit": item_data.unit,
+                    "icon": "mdi:square-wave",
                 }
             )
 

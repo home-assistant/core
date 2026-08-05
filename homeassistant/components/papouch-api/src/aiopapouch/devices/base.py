@@ -168,13 +168,6 @@ class PapouchDevice(ABC):
         The returned dictionary must map the parsed data to standard keys,
         with each containing a nested dictionary indexed by the string `item_id`:
 
-        tag         |  key
-        -----------------------------
-        temp, sns   -> temperature
-        din         -> input
-        din_cnt     -> counter
-        dout        -> switch # codespell:ignore dout
-
         Example output:
         {
             "temperature": {"1": 25.4, "2": 26.1},
@@ -191,7 +184,8 @@ class PapouchDevice(ABC):
         Expected dictionary structure:
         {
             "name": str,
-            "cmd": str
+            "cmd": str,
+            "icon": str (Optional) # e.g. mdi:gesture-tap-button
         }
         """
 
@@ -204,7 +198,8 @@ class PapouchDevice(ABC):
             "item_id": str,
             "type": str,
             "name": str,
-            "device_class": str  (Optional)
+            "device_class": str  (Optional),
+            "icon": str (Optional) # e.g. mdi:radiobox-blank
         }
         """
 
@@ -221,7 +216,8 @@ class PapouchDevice(ABC):
             "min_value": float | int,
             "max_value": float | int,
             "step": float | int,
-            "unit": str  (Optional)
+            "unit": str  (Optional),
+            "icon": str (Optional) # e.g. mdi:numeric
         }
         """
 
@@ -236,7 +232,8 @@ class PapouchDevice(ABC):
             "name": str,
             "device_class": str  (Optional),
             "state_class": str  (Optional),
-            "unit": str  (Optional)
+            "unit": str  (Optional),
+            "icon": str (Optional) # e.g. mdi:square-wave
         }
         """
 
@@ -247,7 +244,8 @@ class PapouchDevice(ABC):
         Expected dictionary structure:
         {
             "item_id": str,
-            "name": str
+            "name": str,
+            "icon": str (Optional) # e.g. mdi:power
         }
         """
 
@@ -260,7 +258,8 @@ class PapouchDevice(ABC):
             "item_id": str,
             "category": str,
             "name": str,
-            "options": list[str]
+            "options": list[str],
+            "icon": str (Optional) # e.g. mdi:form-dropdown,
         }
         """
 

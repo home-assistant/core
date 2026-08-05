@@ -54,6 +54,9 @@ class PapouchNumber(PapouchEntity, NumberEntity):
 
         self._attr_mode = NumberMode(number_data.get("mode", "box"))
 
+        if "icon" in number_data:
+            self._attr_icon = number_data["icon"]
+
         self._current_value: float = 1
 
     @override
