@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
-from pyclicky import AuthenticationError, ClickyAPIError
+from pyclicky import AuthenticationError, ClickyAPIError, ConnectionError
 import pytest
 
 from homeassistant.components.clicky.const import DOMAIN
@@ -49,6 +49,26 @@ async def test_async_update_data_auth_failure(hass: HomeAssistant) -> None:
     )
 
     with pytest.raises(ConfigEntryAuthFailed, match="API authentication failed"):
+        await coordinator._async_update_data()
+
+
+@pytest.mark.asyncio
+async def test_async_update_data_connection_error(hass: HomeAssistant) -> None:
+    """Test that connection errors become UpdateFailed."""
+
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.__aexit__.return_value = None
+
+    client.visitors_online.side_effect = ConnectionError
+
+    coordinator = ClickyCoordinator(
+        hass=hass,
+        config_entry=Mock(),
+        client=client,
+    )
+
+    with pytest.raises(UpdateFailed, match="Couldn't connect to API"):
         await coordinator._async_update_data()
 
 
