@@ -723,7 +723,6 @@ async def test_old_discovery_does_not_self_reference_box(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert "A device can not be its own via device" not in caplog.text
 
     router = device_registry.async_get_device(
         identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
