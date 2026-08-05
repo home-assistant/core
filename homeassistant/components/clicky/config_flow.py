@@ -41,7 +41,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         session=session,
     )
 
-    # Validate the API connection (and auth details) by making one API call
     try:
         await client.visitors_online()
     except AuthenticationError as error:
