@@ -715,6 +715,29 @@ async def test_devices(
         assert device == snapshot(name=device_id)
 
 
+@pytest.mark.usefixtures("withings")
+async def test_device_via_device_id(
+    hass: HomeAssistant,
+    webhook_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the physical device is linked to the account device via via_device_id."""
+    await setup_integration(hass, webhook_config_entry)
+    await hass.async_block_till_done()
+
+    account_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(webhook_config_entry.unique_id)), webhook_config_entry.entry_id
+    )
+    assert account_device is not None
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d"),
+        webhook_config_entry.entry_id,
+    )
+    assert device is not None
+    assert device.via_device_id == account_device.id
+
+
 async def test_oauth_implementation_not_available(
     hass: HomeAssistant,
     webhook_config_entry: MockConfigEntry,

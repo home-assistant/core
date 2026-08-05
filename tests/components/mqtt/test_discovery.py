@@ -26,6 +26,7 @@ from homeassistant.components.mqtt.discovery import (
     MQTTDiscoveryPayload,
     async_start,
 )
+from homeassistant.components.mqtt.entity import async_removed_from_device
 from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.mqtt.schemas import (
     DEVICE_DISCOVERY_SCHEMA,
@@ -69,6 +70,21 @@ from tests.typing import (
     MqttMockPahoClient,
     WebSocketGenerator,
 )
+
+
+def _get_device_for_config_entry(
+    device_registry: dr.DeviceRegistry,
+    config_entry_id: str,
+    *,
+    identifiers: set[tuple[str, str]] | None = None,
+    connections: set[tuple[str, str]] | None = None,
+) -> dr.DeviceEntry | None:
+    """Return the device for a config entry matching identifiers or connections."""
+    for device in device_registry.devices.get_entries(identifiers, connections):
+        if device.config_entry_id == config_entry_id:
+            return device
+    return None
+
 
 TEST_SINGLE_CONFIGS = [
     (
@@ -2047,15 +2063,24 @@ async def test_cleanup_device_multiple_config_entries(
     )
     await hass.async_block_till_done()
 
-    # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device(
-        connections={("mac", "12:34:56:AB:CD:EF")}
-    )
-    assert device_entry is not None
-    assert device_entry.config_entries == {
+    # Verify device and registry entries are created. Identifiers and connections are
+    # unique per config entry, so MQTT discovery creates a separate device owned by the
+    # MQTT config entry, sharing the connection with the pre-existing device
+    mqtt_device_entry = _get_device_for_config_entry(
+        device_registry,
         mqtt_config_entry.entry_id,
-        config_entry.entry_id,
-    }
+        connections={("mac", "12:34:56:AB:CD:EF")},
+    )
+    assert mqtt_device_entry is not None
+    assert mqtt_device_entry.config_entries == {mqtt_config_entry.entry_id}
+    assert (
+        _get_device_for_config_entry(
+            device_registry,
+            config_entry.entry_id,
+            connections={("mac", "12:34:56:AB:CD:EF")},
+        )
+        is not None
+    )
     entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is not None
 
@@ -2065,7 +2090,7 @@ async def test_cleanup_device_multiple_config_entries(
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     response = await ws_client.remove_device(
-        device_entry.id, mqtt_config_entry.entry_id
+        mqtt_device_entry.id, mqtt_config_entry.entry_id
     )
     assert response["success"]
 
@@ -2165,15 +2190,24 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     )
     await hass.async_block_till_done()
 
-    # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device(
-        connections={("mac", "12:34:56:AB:CD:EF")}
-    )
-    assert device_entry is not None
-    assert device_entry.config_entries == {
+    # Verify device and registry entries are created. Identifiers and connections are
+    # unique per config entry, so MQTT discovery creates a separate device owned by the
+    # MQTT config entry, sharing the connection with the pre-existing device
+    mqtt_device_entry = _get_device_for_config_entry(
+        device_registry,
         mqtt_config_entry.entry_id,
-        config_entry.entry_id,
-    }
+        connections={("mac", "12:34:56:AB:CD:EF")},
+    )
+    assert mqtt_device_entry is not None
+    assert mqtt_device_entry.config_entries == {mqtt_config_entry.entry_id}
+    assert (
+        _get_device_for_config_entry(
+            device_registry,
+            config_entry.entry_id,
+            connections={("mac", "12:34:56:AB:CD:EF")},
+        )
+        is not None
+    )
     entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is not None
 
@@ -3462,3 +3496,40 @@ async def test_shared_qos_with_device_discovery(
     mqtt_mock.async_subscribe.assert_has_calls(
         [call("foobar/sensors/bla2/state", ANY, qos, "utf-8", ANY)]
     )
+
+
+@pytest.mark.parametrize(
+    ("event_data", "expected"),
+    [
+        pytest.param(
+            {"action": "remove", "device_id": "abc", "device": {}},
+            True,
+            id="remove",
+        ),
+        pytest.param(
+            {
+                "action": "update",
+                "device_id": "abc",
+                "changes": {"config_entry_id": "mqtt_entry_id"},
+            },
+            False,
+            id="update-config-entry",
+        ),
+        pytest.param(
+            {"action": "update", "device_id": "abc", "changes": {"name": "New name"}},
+            False,
+            id="update-other",
+        ),
+    ],
+)
+async def test_async_removed_from_device(
+    event_data: dr.EventDeviceRegistryUpdatedData,
+    expected: bool,
+) -> None:
+    """MQTT leaves a device only when the device is removed.
+
+    A device belongs to a single config entry, so a config-entry change on an update
+    event is not a removal; only a 'remove' action is.
+    """
+    event = Event(dr.EVENT_DEVICE_REGISTRY_UPDATED, event_data)
+    assert async_removed_from_device(event) is expected

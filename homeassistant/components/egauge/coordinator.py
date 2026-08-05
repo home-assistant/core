@@ -43,6 +43,7 @@ class EgaugeData:
 class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
     """Class to manage fetching eGauge data."""
 
+    config_entry: EgaugeConfigEntry
     serial_number: str
     hostname: str
 

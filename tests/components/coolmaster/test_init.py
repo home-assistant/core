@@ -36,7 +36,7 @@ async def test_registry_cleanup(
 ) -> None:
     """Test being able to remove a disconnected device."""
     entry_id = load_int.entry_id
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     live_id = "L1.100"
     dead_id = "L2.200"
 

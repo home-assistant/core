@@ -42,6 +42,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_OPTION,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -56,9 +57,11 @@ from .utils import (
     ids_from_device_description,
     init_entry,
     make_public_camera,
+    make_public_light,
     public_device_ws_message,
     remove_entities,
     setup_public_camera,
+    setup_public_light,
 )
 
 
@@ -113,6 +116,7 @@ async def test_select_setup_light(
     """Test select entity setup for light devices."""
 
     light.light_mode_settings.enable_at = LightModeEnableType.DARK
+    setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.SELECT, 2, 2)
 
@@ -415,8 +419,9 @@ async def test_select_update_doorbell_message(
 async def test_select_set_option_light_motion(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
 ) -> None:
-    """Test Light Mode select."""
+    """Test Light Mode select (public API)."""
 
+    setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.SELECT, 2, 2)
 
@@ -425,7 +430,7 @@ async def test_select_set_option_light_motion(
     )
 
     with patch_ufp_method(
-        light, "set_light_settings", new_callable=AsyncMock
+        light, "set_light_mode_public", new_callable=AsyncMock
     ) as mock_method:
         await hass.services.async_call(
             "select",
@@ -435,6 +440,64 @@ async def test_select_set_option_light_motion(
         )
 
         mock_method.assert_called_once_with(LightModeType.MANUAL, enable_at=None)
+
+
+async def test_select_light_motion_public_value(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """Light Mode select reads from the public object and refreshes on a WS update."""
+
+    setup_public_light(ufp)
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, light, LIGHT_SELECTS[0]
+    )
+    assert hass.states.get(entity_id).state == "motion"
+
+    # The private fixture is full-time motion; when_dark proves the public source.
+    public = make_public_light(
+        light,
+        light_mode=LightModeType.WHEN_DARK,
+        light_mode_enable_at=LightModeEnableType.DARK,
+    )
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "when_dark"
+
+
+async def test_select_light_motion_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """The migrated light motion select is unavailable without a public object."""
+
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, light, LIGHT_SELECTS[0]
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_select_light_motion_none(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """A light that does not report a public mode leaves the select unknown."""
+
+    setup_public_light(ufp)
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, light, LIGHT_SELECTS[0]
+    )
+
+    public = make_public_light(light)
+    public.light_mode_settings.mode = None
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 async def test_select_set_option_light_camera(

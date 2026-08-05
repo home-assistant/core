@@ -1,11 +1,17 @@
 """The EHEIM Digital integration."""
 
+from typing import TYPE_CHECKING
+
+from eheimdigital.device import EheimDigitalDevice
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN
 from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
+from .entity import async_device_info
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -27,6 +33,17 @@ async def async_setup_entry(
     coordinator = EheimDigitalUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
+
+    main = coordinator.hub.main
+    if TYPE_CHECKING:
+        # After the first refresh at least one device is found and so there is
+        # always a main device set.
+        assert isinstance(main, EheimDigitalDevice)
+    # Register the main device up front so child devices can resolve their
+    # via_device_id link during concurrent platform setup.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, **async_device_info(coordinator, main)
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

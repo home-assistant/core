@@ -70,8 +70,9 @@ class ZWaveMeController:
     def remove_stale_devices(self, registry: dr.DeviceRegistry):
         """Remove old-format devices in the registry."""
         for device_id in self.device_ids:
-            device = registry.async_get_device(
-                identifiers={(DOMAIN, f"{self.config.unique_id}-{device_id}")}
+            device = registry.async_get_device_by_identifier(
+                (DOMAIN, f"{self.config.unique_id}-{device_id}"),
+                self.config.entry_id,
             )
             if device is not None:
                 registry.async_remove_device(device.id)

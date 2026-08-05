@@ -1,6 +1,7 @@
 """Fixtures for energieleser integration tests."""
 
 from collections.abc import Generator
+from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 
 from energieleser import (
@@ -76,6 +77,14 @@ WASSERLESER_API_RESPONSE: dict = {
 def mock_stromleser_device() -> StromleserOneDevice:
     """Return a parsed stromleser device built from the API fixture."""
     return StromleserOneDevice.from_payload(STROMLESER_API_RESPONSE)
+
+
+@pytest.fixture
+def mock_locked_stromleser_device(
+    mock_stromleser_device: StromleserOneDevice,
+) -> StromleserOneDevice:
+    """Return a stromleser device with PIN locked."""
+    return replace(mock_stromleser_device, pin_locked=True)
 
 
 @pytest.fixture
