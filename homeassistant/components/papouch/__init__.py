@@ -7,6 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -50,6 +51,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
 
     if entry.unique_id is None and device.mac_address:
         hass.config_entries.async_update_entry(entry, unique_id=device.mac_address)
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, device.mac_address)},
+        identifiers={(DOMAIN, device.mac_address)},
+        name=device.name,
+        manufacturer=device.manufacturer,
+        model=device.__class__.__name__,
+        suggested_area=device.location,
+    )
 
     coordinator = PapouchDataUpdateCoordinator(hass, api_client, entry, device)
     await coordinator.async_config_entry_first_refresh()
