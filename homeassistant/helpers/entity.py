@@ -972,6 +972,20 @@ class Entity(
         self._context = context
         self._context_set = time.time()
 
+    @callback
+    def async_get_recent_context(self) -> Context | None:
+        """Return the context the entity operates under if it is still recent.
+
+        A context which is no longer recent is discarded and None is returned.
+        """
+        if (
+            self._context_set is not None
+            and timer() - self._context_set > CONTEXT_RECENT_TIME_SECONDS
+        ):
+            self._context = None
+            self._context_set = None
+        return self._context
+
     async def async_update_ha_state(self, force_refresh: bool = False) -> None:
         """Update Home Assistant with current state of entity.
 
@@ -1283,12 +1297,7 @@ class Entity(
             if custom:
                 attr |= custom
 
-        if (
-            self._context_set is not None
-            and time_now - self._context_set > CONTEXT_RECENT_TIME_SECONDS
-        ):
-            self._context = None
-            self._context_set = None
+        context = self.async_get_recent_context()
 
         # Intentionally called with positional args for performance reasons
         self.hass.states.async_set_internal(
@@ -1296,7 +1305,7 @@ class Entity(
             state,
             attr,
             self.force_update,
-            self._context,
+            context,
             self._state_info,
             time_now,
         )

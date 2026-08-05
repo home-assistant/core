@@ -693,6 +693,25 @@ async def test_set_context_expired(hass: HomeAssistant) -> None:
     assert ent._context_set is None
 
 
+async def test_get_recent_context(hass: HomeAssistant) -> None:
+    """Test getting the context only while it is recent."""
+    context = Context()
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = "hello.world"
+
+    assert ent.async_get_recent_context() is None
+
+    ent.async_set_context(context)
+    assert ent.async_get_recent_context() is context
+
+    with patch("homeassistant.helpers.entity.CONTEXT_RECENT_TIME_SECONDS", -5):
+        assert ent.async_get_recent_context() is None
+
+    assert ent._context is None
+    assert ent._context_set is None
+
+
 async def test_warn_disabled(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

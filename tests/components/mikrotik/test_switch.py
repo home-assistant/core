@@ -1,24 +1,26 @@
 """Tests for the Mikrotik switch platform."""
 
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.auth.const import GROUP_ID_USER
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_mikrotik_entry
 from .const import BRIDGE1_INTERFACE, ETHER1_INTERFACE, INTERFACE_DATA, WLAN1_INTERFACE
 
-from tests.common import snapshot_platform
+from tests.common import MockUser, snapshot_platform
 
 
 async def test_switch_entities_created(
@@ -102,3 +104,35 @@ async def test_switch_turn_on_off(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == final_state
+
+
+async def test_switch_requires_admin_user(
+    hass: HomeAssistant, mock_api: MagicMock
+) -> None:
+    """Test a non-admin user cannot change the state of an interface."""
+    user_group = await hass.auth.async_get_group(GROUP_ID_USER)
+    user = MockUser(groups=[user_group]).add_to_hass(hass)
+
+    with patch("homeassistant.components.mikrotik.PLATFORMS", [Platform.SWITCH]):
+        await setup_mikrotik_entry(hass, interface_data=[ETHER1_INTERFACE])
+
+    entity_id = "switch.ether1_ethernet"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+            context=Context(user_id=user.id),
+        )
+
+    assert (
+        call("/interface/disable", **{".id": ETHER1_INTERFACE[".id"]})
+        not in mock_api.mock_calls
+    )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
