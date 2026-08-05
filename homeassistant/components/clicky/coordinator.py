@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
-from pyclicky import AuthenticationError, ClickyAPIError, ClickyClient
+from pyclicky import AuthenticationError, ClickyAPIError, ClickyClient, ConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -48,6 +48,8 @@ class ClickyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 time_total = await self.client.time_total()
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed("API authentication failed") from error
+        except ConnectionError as error:
+            raise UpdateFailed(f"Couldn't connect to API: {error}") from error
         except ClickyAPIError as error:
             raise UpdateFailed(f"Error fetching data from API: {error}") from error
 
