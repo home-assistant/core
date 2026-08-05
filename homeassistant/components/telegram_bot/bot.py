@@ -47,6 +47,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
@@ -55,6 +56,7 @@ from homeassistant.util.json import JsonValueType
 from .const import (
     ATTR_ARGS,
     ATTR_AUTHENTICATION,
+    ATTR_CALLBACK_DATA,
     ATTR_CAPTION,
     ATTR_CHAT_ID,
     ATTR_CHAT_INSTANCE,
@@ -89,6 +91,7 @@ from .const import (
     ATTR_REPLYMARKUP,
     ATTR_RESIZE_KEYBOARD,
     ATTR_STICKER_ID,
+    ATTR_STYLE,
     ATTR_TEXT,
     ATTR_TIMEOUT,
     ATTR_TITLE,
@@ -117,6 +120,7 @@ from .const import (
     SERVICE_SEND_STICKER,
     SERVICE_SEND_VIDEO,
     SERVICE_SEND_VOICE,
+    VALID_INLINE_KEYBOARD_BUTTON_STYLES,
 )
 from .helpers import signal
 
@@ -205,8 +209,8 @@ class BaseTelegramBot:
             ATTR_MESSAGE_THREAD_ID: message.message_thread_id,
         }
         if filters.COMMAND.filter(message):
-            # This is a command message - set event type
-            # to command and split data into command and args
+            # This is a command message
+            # set event type to command and split data into command and args
             event_type = EVENT_TELEGRAM_COMMAND
             event_data.update(self._get_command_event_data(message.text))
         elif filters.ATTACHMENT.filter(message):
@@ -343,6 +347,25 @@ class TelegramNotificationService:
             inline_message_id = msg_data[ATTR_INLINE_MESSAGE_ID]
         return message_id, inline_message_id
 
+    ###########################
+    # Deprecated - remove in 2026.12.0
+    ###########################
+    def _warn_deprecated_keyboard_format(self) -> None:
+        """Create a repair issue warning about a deprecated inline_keyboard format."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_inline_keyboard_{self.config.entry_id}",
+            breaks_in_ha_version="2026.12.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_inline_keyboard",
+            translation_placeholders={"entry_title": self.config.title},
+        )
+    ###########################
+    # End deprecated block
+    ###########################
+
     def _get_msg_kwargs(self, data: dict[str, Any]) -> dict[str, Any]:
         """Get parameters in message data kwargs."""
 
@@ -350,19 +373,22 @@ class TelegramNotificationService:
             """Make a list of InlineKeyboardButtons.
 
             It can accept:
-              - a list of tuples like:
-                `[(text_b1, data_callback_b1),
-                (text_b2, data_callback_b2), ...]
-              - a string like: `/cmd1, /cmd2, /cmd3`
-              - or a string like: `text_b1:/cmd1, text_b2:/cmd2`
+              - a dict per button (recommended - safe for text/data containing
+                "," ":" or "/", and the only way to set a button style):
+                `{"text": ..., "callback_data": ... | "url": ..., "style": ...}`
+                `style` is one of "primary", "success", "danger".
               - also supports urls instead of callback commands
             """
             buttons = []
+            ###########################
+            # Deprecated - remove in 2026.12.0
+            ###########################
             if isinstance(row_keyboard, str):
+                self._warn_deprecated_keyboard_format()
                 for key in row_keyboard.split(","):
                     if ":/" in key:
                         # check if command or URL
-                        if "https://" in key:
+                        if "https://" in key or "http://" in key:
                             label = key.split(":")[0]
                             url = key[len(label) + 1 :]
                             buttons.append(InlineKeyboardButton(label, url=url))
@@ -377,15 +403,65 @@ class TelegramNotificationService:
                         # commands like: '/cmd' become ('CMD', '/cmd')
                         label = key.strip()[1:].upper()
                         buttons.append(InlineKeyboardButton(label, callback_data=key))
+            ###########################
+            # End deprecated block
+            ###########################
             elif isinstance(row_keyboard, list):
                 for entry in row_keyboard:
+                    if isinstance(entry, dict):
+                        text = entry.get(ATTR_TEXT)
+                        style = entry.get(ATTR_STYLE)
+                        if style is None:
+                            style = "primary"
+                        elif style not in VALID_INLINE_KEYBOARD_BUTTON_STYLES:
+                            raise ServiceValidationError(
+                                translation_domain=DOMAIN,
+                                translation_key="invalid_inline_keyboard_style",
+                                translation_placeholders={
+                                    "style": str(style),
+                                    "valid_styles": ", ".join(
+                                        sorted(VALID_INLINE_KEYBOARD_BUTTON_STYLES)
+                                    ),
+                                },
+                            )
+                        has_url = ATTR_URL in entry
+                        has_callback = ATTR_CALLBACK_DATA in entry
+                        if text is None or has_url == has_callback:
+                            # text is required.
+                            # exactly one of callback_data/url is required.
+                            raise ServiceValidationError(
+                                translation_domain=DOMAIN,
+                                translation_key="invalid_inline_keyboard_button",
+                            )
+                        if has_url:
+                            buttons.append(
+                                InlineKeyboardButton(
+                                    text, url=entry[ATTR_URL], style=style
+                                )
+                            )
+                        else:
+                            buttons.append(
+                                InlineKeyboardButton(
+                                    text,
+                                    callback_data=entry[ATTR_CALLBACK_DATA],
+                                    style=style,
+                                )
+                            )
+                        continue
+                    ###########################
+                    # Deprecated - remove in 2026.12.0
+                    ###########################
+                    self._warn_deprecated_keyboard_format()
                     text_btn, data_btn = entry
-                    if data_btn.startswith("https://"):
+                    if data_btn.startswith(("https://", "http://")):
                         buttons.append(InlineKeyboardButton(text_btn, url=data_btn))
                     else:
                         buttons.append(
                             InlineKeyboardButton(text_btn, callback_data=data_btn)
                         )
+                    ###########################
+                    # End deprecated block
+                    ###########################
             else:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
@@ -404,40 +480,40 @@ class TelegramNotificationService:
             ATTR_MESSAGE_TAG: None,
             ATTR_MESSAGE_THREAD_ID: None,
         }
-        if data is not None:
-            if ATTR_PARSER in data:
-                params[ATTR_PARSER] = data[ATTR_PARSER]
-            if ATTR_TIMEOUT in data:
-                params[ATTR_TIMEOUT] = data[ATTR_TIMEOUT]
-            if ATTR_DISABLE_NOTIF in data:
-                params[ATTR_DISABLE_NOTIF] = data[ATTR_DISABLE_NOTIF]
-            if ATTR_DISABLE_WEB_PREV in data:
-                params[ATTR_DISABLE_WEB_PREV] = data[ATTR_DISABLE_WEB_PREV]
-            if ATTR_REPLY_TO_MSGID in data:
-                params[ATTR_REPLY_TO_MSGID] = data[ATTR_REPLY_TO_MSGID]
-            if ATTR_MESSAGE_TAG in data:
-                params[ATTR_MESSAGE_TAG] = data[ATTR_MESSAGE_TAG]
-            if ATTR_MESSAGE_THREAD_ID in data:
-                params[ATTR_MESSAGE_THREAD_ID] = data[ATTR_MESSAGE_THREAD_ID]
-            # Keyboards:
-            if ATTR_KEYBOARD in data:
-                keys = data[ATTR_KEYBOARD]
-                keys = keys if isinstance(keys, list) else [keys]
-                if keys:
-                    params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
-                        [[key.strip() for key in row.split(",")] for row in keys],
-                        resize_keyboard=data.get(ATTR_RESIZE_KEYBOARD, False),
-                        one_time_keyboard=data.get(ATTR_ONE_TIME_KEYBOARD, False),
-                    )
-                else:
-                    params[ATTR_REPLYMARKUP] = ReplyKeyboardRemove(True)
+        if not data:
+            return params
 
-            elif ATTR_KEYBOARD_INLINE in data:
-                keys = data.get(ATTR_KEYBOARD_INLINE)
-                keys = keys if isinstance(keys, list) else [keys]
-                params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
-                    [_make_row_inline_keyboard(row) for row in keys]
+        for key in (
+            ATTR_PARSER,
+            ATTR_TIMEOUT,
+            ATTR_DISABLE_NOTIF,
+            ATTR_DISABLE_WEB_PREV,
+            ATTR_REPLY_TO_MSGID,
+            ATTR_MESSAGE_TAG,
+            ATTR_MESSAGE_THREAD_ID,
+        ):
+            if key in data:
+                params[key] = data[key]
+
+        # Keyboards:
+        if ATTR_KEYBOARD in data:
+            keys = data[ATTR_KEYBOARD]
+            keys = keys if isinstance(keys, list) else [keys]
+            if keys:
+                params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
+                    [[key.strip() for key in row.split(",")] for row in keys],
+                    resize_keyboard=data.get(ATTR_RESIZE_KEYBOARD, False),
+                    one_time_keyboard=data.get(ATTR_ONE_TIME_KEYBOARD, False),
                 )
+            else:
+                params[ATTR_REPLYMARKUP] = ReplyKeyboardRemove(True)
+
+        elif ATTR_KEYBOARD_INLINE in data:
+            keys = data.get(ATTR_KEYBOARD_INLINE)
+            keys = keys if isinstance(keys, list) else [keys]
+            params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
+                [_make_row_inline_keyboard(row) for row in keys]
+            )
         if params[ATTR_PARSER] == PARSER_PLAIN_TEXT:
             params[ATTR_PARSER] = None
         return params
@@ -620,7 +696,7 @@ class TelegramNotificationService:
         context: Context | None = None,
         **kwargs: Any,
     ) -> Any:
-        "Edit message media of a previously sent message."
+        """Edit message media of a previously sent message."""
         message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug(
