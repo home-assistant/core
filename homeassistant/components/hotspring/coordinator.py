@@ -38,7 +38,7 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[Spa]):
     async def _async_update_data(self) -> Spa:
         """Fetch data from Hot Spring."""
         try:
-            return await self.hotspring.update()
+            spa = await self.hotspring.update()
         except HotSpringConnectionError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -49,3 +49,14 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[Spa]):
                 translation_domain=DOMAIN,
                 translation_key="invalid_response",
             ) from error
+
+        if (
+            not spa.info.mac_address
+            or spa.info.mac_address != self.config_entry.unique_id
+        ):
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response",
+            )
+
+        return spa
