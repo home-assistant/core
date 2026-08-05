@@ -128,7 +128,6 @@ async def test_work_area_sensor(
     state = hass.states.get("sensor.garden_test_mower_1_work_area")
     assert state.state == "no_work_area_active"
 
-    work_areas = values[TEST_MOWER_ID].work_areas
     values[TEST_MOWER_ID].capabilities.work_areas = False
     values[TEST_MOWER_ID].work_areas = None
     mock_automower_client.get_status.return_value = values
@@ -143,9 +142,6 @@ async def test_work_area_sensor(
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_UNAVAILABLE
-
-    values[TEST_MOWER_ID].capabilities.work_areas = True
-    values[TEST_MOWER_ID].work_areas = work_areas
 
 
 async def test_restricted_reason_sensor(
