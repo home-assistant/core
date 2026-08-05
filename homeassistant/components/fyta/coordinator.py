@@ -1,8 +1,9 @@
 """Coordinator for FYTA integration."""
 
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
+import time
 from typing import override
 
 from fyta_cli.fyta_connector import FytaConnector
@@ -56,7 +57,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
 
         if (
             self.fyta.expiration is None
-            or self.fyta.expiration.timestamp() < datetime.now().timestamp()  # pylint: disable=home-assistant-enforce-naive-now
+            or self.fyta.expiration.timestamp() < time.time()
         ):
             await self.renew_authentication()
 
