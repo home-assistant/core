@@ -244,6 +244,9 @@
       },
       "ptz_zoom_out": {
         "name": "PTZ zoom out"
+      },
+      "sync_time": {
+        "name": "Synchronize time"
       }
     },
     "camera": {
